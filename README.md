@@ -1,5 +1,19 @@
 # Dungeon Hunter 2 — source reconstruction
 
+## Current combined source status — 2026-10-04
+
+Start with the [combined reconstruction report](docs/COMBINED-RECONSTRUCTION-STATUS.md):
+the improved project brief, Adam/our contribution table, original-to-source
+mapping, measured source inventory, test limits and remaining milestones.
+
+The strongest current gameplay baseline is Adam's imported native Crypt app at
+`port/android-native`, built from source for API 37, ARM64 and x86_64 with 16 KiB
+alignment. The continuation build adds [validated asset overrides](port/android-native/MODDING.md).
+Our `port/android-app` and Irrlicht SWAMP route remain separate development
+runtimes. Full game reconstruction is still active. The checkpoints below are
+historical evidence for their named APKs; their byte-disassembly and isolated
+component coverage must not be read as game-wide source completion.
+
 ## Current Android 17 source-build checkpoint
 
 The local debug APK is `port/android-app/build/dh2-source-renderer-debug.apk`

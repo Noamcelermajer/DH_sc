@@ -12,6 +12,8 @@ port/lua-character/build/
 port/character-classes/build/
 *.py[cod]
 port/android-app/build/
+port/ambush-spawn-runtime/build/
+port/irrlicht-prototype/build/
 port/nativeinterface/build/
 compatibility/work/fold7-build/out/
 compatibility/work/fold7-build/build-result.json
@@ -69,3 +71,9 @@ port/character-death/build/
 port/quest-kill/build/
 port/quest-data/build/
 port/quest-compile/build/
+
+# Private documents and local compiler crash dumps stay outside source snapshots.
+private-documents/
+*[Aa]greement*.pdf
+*[Ss]igned*.pdf
+hs_err_pid*.log

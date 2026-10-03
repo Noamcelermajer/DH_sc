@@ -44,4 +44,10 @@ port/lua-runtime/combat-*validation.json -text
 port/android-app/combat-*validation.json -text
 port/quest-compile/*validation.json -text whitespace=cr-at-eol
 port/lua-runtime/questcompile-*validation.json -text whitespace=cr-at-eol
+# Pinned upstream and imported reference evidence keep their exact bytes.
+port/irrlicht-android/upstream/** -text -whitespace
+port/irrlicht-prototype/upstream/** -text -whitespace
+port/**/original-functions.json -text
+port/**/reference/** -text -whitespace
+port/**/reports/** -text -whitespace
 port/android-app/questcompile-*validation.json -text whitespace=cr-at-eol
