@@ -21,6 +21,8 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -28,6 +30,12 @@ import javax.microedition.khronos.opengles.GL10;
 /** Bundled, authored encounter for testing recovered source gameplay components. */
 public final class GameplayActivity extends Activity {
     static { System.loadLibrary("dh2lua"); System.loadLibrary("dh2source"); }
+    private static final ExecutorService CHECKPOINT_FLUSHER =
+        Executors.newSingleThreadExecutor(task -> {
+            Thread thread = new Thread(task, "dh2-checkpoint-flush");
+            thread.setDaemon(true);
+            return thread;
+        });
     private static native String loadWorld(byte[] room, byte[] floor, byte[] hero, byte[] texture, byte[] walk);
     private static native String loadMotions(byte[] idle, byte[] attack);
     private static native String surfaceCreated();
@@ -199,7 +207,16 @@ public final class GameplayActivity extends Activity {
         Button reset = button("Reset"); reset.setOnClickListener(v -> resetRequested.set(true));
         Button diagnostics = button("Diagnostics");
         diagnostics.setOnClickListener(v -> startActivity(new Intent(this, MainActivity.class)));
-        actions.addView(reset); actions.addView(diagnostics);
+        Button swamp = button("SWAMP preview");
+        swamp.setOnClickListener(v -> startActivity(new Intent(this, SwampPreviewActivity.class)));
+        Button infectedVillage = button("INFECTED VILLAGE static preview");
+        infectedVillage.setOnClickListener(v -> startActivity(
+            new Intent(this, InfectedVillagePreviewActivity.class)));
+        Button infectedActors = button("Infected actor variants diagnostic");
+        infectedActors.setOnClickListener(v -> startActivity(
+            new Intent(this, InfectedActorPreviewActivity.class)));
+        actions.addView(reset); actions.addView(diagnostics); actions.addView(swamp);
+        actions.addView(infectedVillage); actions.addView(infectedActors);
         FrameLayout.LayoutParams actionLayout = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.RIGHT);
         actionLayout.topMargin = dp(64); actionLayout.rightMargin = dp(12); root.addView(actions, actionLayout);
         Joystick stick = new Joystick();
@@ -254,20 +271,23 @@ public final class GameplayActivity extends Activity {
     }
     @Override protected void onPause() {
         paused = true; moveX = moveY = 0; attackHeld = false; attackTap.set(false);
-        flushCheckpoint();
-        surface.onPause(); super.onPause();
+        if (surface != null) surface.onPause();
+        scheduleCheckpointFlush();
+        super.onPause();
     }
     @Override protected void onStop() {
-        flushCheckpoint();
+        scheduleCheckpointFlush();
         super.onStop();
     }
-    private void flushCheckpoint() {
+    private void scheduleCheckpointFlush() {
+        // Queue the immutable snapshot before returning from the lifecycle
+        // callback, then wait for the disk writer off the UI thread.
         synchronized (stateGuard) {
             if (saveStore != null && allowSave && latestCheckpoint != null) {
                 saveStore.checkpoint(latestCheckpoint, sessionId, true, false);
-                waitForSave();
             }
         }
+        CHECKPOINT_FLUSHER.execute(this::waitForSave);
     }
     private void waitForSave() {
         try {

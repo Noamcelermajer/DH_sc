@@ -37,6 +37,23 @@ jstring result(JNIEnv* env,const std::string& text){return env->NewStringUTF(tex
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_buildInfo(JNIEnv* env,jclass) {
   return result(env,"Native source reconstruction: animated scene nodes");
 }
+extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_modDirectory(JNIEnv* env,jclass,jstring directory){
+  if(!directory){model_renderer::mod_directory("");return;}
+  const char* raw=env->GetStringUTFChars(directory,nullptr);if(!raw)return;
+  const std::string copy(raw);env->ReleaseStringUTFChars(directory,raw);model_renderer::mod_directory(copy);
+}
+extern "C" JNIEXPORT jbyteArray JNICALL Java_com_example_dh2_NativeBridge_readAsset(JNIEnv* env,jclass,jstring name,jobject assets){
+  if(!name||!assets)return nullptr;
+  const char* raw=env->GetStringUTFChars(name,nullptr);if(!raw)return nullptr;
+  const std::string copy(raw);env->ReleaseStringUTFChars(name,raw);
+  try{
+    auto bytes=model_renderer::read_asset(AAssetManager_fromJava(env,assets),copy);
+    auto out=env->NewByteArray(static_cast<jsize>(bytes.size()));
+    if(out)env->SetByteArrayRegion(out,0,bytes.size(),reinterpret_cast<const jbyte*>(bytes.data()));return out;
+  }catch(const std::exception& error){
+    auto type=env->FindClass("java/io/IOException");if(type)env->ThrowNew(type,error.what());return nullptr;
+  }
+}
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_initialize(JNIEnv* env,jclass){
   model_renderer::reset_context();program=0;texture=0;const GLuint vs=compile(GL_VERTEX_SHADER,vs_source),fs=compile(GL_FRAGMENT_SHADER,fs_source);
   if(!vs||!fs){if(vs)glDeleteShader(vs);if(fs)glDeleteShader(fs);return result(env,"Shader initialization failed; see DH2Native Logcat");}

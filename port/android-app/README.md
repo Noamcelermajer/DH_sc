@@ -1,29 +1,109 @@
-# Android 17 source encounter and diagnostics
+# Android 17 source app: Infected Village preview and authored encounter
 
-## Current source encounter checkpoint
+## Current build and test scope
 
-The default launcher opens a bundled development encounter with movement, floor
-collision, original idle/walk/attack clips, enemy attacks, HP, death and a real
-counted objective advancing to **2/2 COMPLETE**. Native ARM64 and x86_64
-libraries are built from repository source. A versioned native checkpoint now
-preserves combat, quest, RNG and actor state through cold process restarts.
+The current local source-built debug APK is
+`build/dh2-source-renderer-debug.apk` (5,465,698 bytes; SHA-256
+`ea9d0aef09125f0dac6b4cdb3d37727aae277e6bdabd2faf92b56e219d09583b`). It
+targets API 37 with minimum API 26, includes `arm64-v8a` and `x86_64`, and its
+native libraries pass 16 KiB ELF load alignment. This checkpoint stays local;
+it has not been uploaded to Drive. Rebuild it from the repository root with JDK,
+Android SDK 37, Build Tools 37.0.0, NDK r29 and the owner-supplied extracted
+cache:
 
-Current APK: 1,234,908 bytes, SHA-256
-`aa557d05aa9d6bdacb63f61f879289402de418f00c43a52d0a2b38c0a3504094`.
-Both Android 17 x86_64 emulators passed install, gameplay victory and cold
-restart restoration: API 37.0 / 4 KiB pages and API 37.2 / 16 KiB pages. The
-installed APK hashes matched the build on both devices. A download is available
-[from Drive](https://drive.google.com/file/d/1ZGjquZoWE-mXx8iB4OtpaqxlhlgyPzPP/view?usp=drivesdk).
+```powershell
+python port/android-app/build.py --sdk ..\emulator-test\sdk --ndk ..\emulator-test\sdk\ndk\29.0.14206865 --cache ..\cache\files
+```
 
-This remains one authored development encounter, not the complete original
-game. It loads required supplied-cache assets automatically; diagnostics remain
-available through **Diagnostics**. See [scope, build and controls](SOURCE-ENCOUNTER.md),
-[persistence integration](PERSISTENCE-INTEGRATION.md), and
-[current device validation](persistence-runtime-validation.json).
+The default launcher is an authored `void_maze` development encounter. It
+retains a durable versioned `DH2S` checkpoint, but that save is not compatible
+with original `.savegame` files. A separate button opens the static
+`INFECTED_VILLAGE_01` source preview. The preview loads the original MLX, both
+module MGP/MVP pairs, the shared module BDAE and three checked sampler textures.
+It imports two authored roots, 50 module records and 20 source draws. The custom
+diagnostic renderer displays 16 of those draws, omitting only these exact pairs:
+
+- `_module_infectedvillage_01-node` and `_module_infectedvillage_02-node` with
+  `ColorMaterial` guide volumes.
+- `_floor_infectedvillage_01-node_PIVOT` and
+  `_floor_infectedvillage_02-node_PIVOT` with untextured `Standard_8` fallback
+  draws.
+
+All records and floor/navigation data remain imported. The filters are
+preview-specific; the original pass/visibility behavior is unresolved, and the
+custom texture shader does not claim original material/effect parity. On
+Android 17/API 37 x86_64 with both 4 KiB and 16 KiB pages, the exact current
+APK passed three open/render/return cycles with camera orbit. It also rendered
+all 18 infected actor model/clip pairs and passed the SWAMP movement,
+pause/resume, off-floor rejection, intro trace and return checks on each page
+size. Installed APK hashes matched; filtered app/EGL/GLES errors were zero.
+Pinch zoom and physical-device behavior remain unverified. No Fold7 was tested. See
+[Infected Village scope](INFECTED-VILLAGE-PREVIEW.md) and the exact current APK
+reports for [Infected Village](infected-village-current-apk-runtime-validation.json),
+[actor previews](infected-actor-current-apk-runtime-validation.json), and
+[SWAMP](swamp-current-apk-runtime-validation.json).
+
+This screen is a static source preview, not gameplay: it starts no player or
+enemy actors, AI, collision, trigger/script execution, quests, camera events,
+or level transitions. The Ambush script requests five Character names; four
+match static MGP records and `_prim_tmp_infected17` is unresolved in the audited
+module data. A host-only port-owned actor registry now passes cache-backed tests, but is not
+integrated into Android or rendering. The four records share a six-variant
+Character template, while their authored `Limbus` AI state has no direct infected
+animation clip mapping. Do not guess a fixed model or initial clip. Read-only
+callback projections now validate exact name/position/state/time/hit-count
+semantics on host, but they are not connected to Android gameplay. See the
+[source gameplay map](../level-runtime/INFECTED-VILLAGE-GAMEPLAY.md), [host actor
+registry](../actor-runtime/README.md), and checked [actor asset closure]
+(../level-runtime/INFECTED-VILLAGE-ACTOR-ASSETS.md).
+
+The SWAMP activity loads source module-zero geometry, selected material
+textures, a source-derived prince idle/walk pose and endpoint-only movement
+using floor tags/path mask 2. It also offers a manually started bounded
+`LizardMan_Intro` trace. Those activities do not activate a native Character,
+full world collision, AI or real level gameplay. The current APK's latest
+Android 17 runtime run and precise coverage are recorded in
+[SWAMP scope](SWAMP-PREVIEW.md) and its [current APK runtime report](swamp-current-apk-runtime-validation.json);
+older APK/page-size results remain historical.
+For a separate local-only build that opens SWAMP module zero through Irrlicht
+from the app's Diagnostics screen, see [the integrated Irrlicht variant](IRRLICHT-SWAMP-IN-APP.md).
+
+Host and exact-build emulator checks can be repeated from the repository root:
+
+```powershell
+python port/android-app/tests/run_infected_actor_skin_mesh_host.py --cache ..\cache\files
+python port/android-app/tests/infected_actor_preview_runtime.py --adb ..\emulator-test\sdk\platform-tools\adb.exe --serial emulator-5558 --page-size 16384 --output port/android-app/build/actor-runtime-api37
+python port/android-app/tests/infected_actor_preview_runtime.py --adb ..\emulator-test\sdk\platform-tools\adb.exe --serial emulator-5556 --page-size 4096 --output port/android-app/build/actor-runtime-api37-4k
+python port/android-app/tests/infected_village_preview_runtime.py --adb ..\emulator-test\sdk\platform-tools\adb.exe --serial emulator-5558 --page-size 16384 --output port/android-app/build/api37-village-final --cycles 3
+python port/android-app/tests/infected_village_preview_runtime.py --adb ..\emulator-test\sdk\platform-tools\adb.exe --serial emulator-5556 --page-size 4096 --output port/android-app/build/api37-village-final-4k --cycles 3
+python port/android-app/tests/swamp_intro_trace_runtime.py --adb ..\emulator-test\sdk\platform-tools\adb.exe --serial emulator-5558 --output port/android-app/build/api37-swamp-runtime-final
+python port/android-app/tests/swamp_intro_trace_runtime.py --adb ..\emulator-test\sdk\platform-tools\adb.exe --serial emulator-5556 --output port/android-app/build/api37-swamp-runtime-4k
+python port/android-app/tests/gameplay_activity_lifecycle_runtime.py --adb ..\emulator-test\sdk\platform-tools\adb.exe --apk port/android-app/build/dh2-source-renderer-debug.apk --serial emulator-5558 --expected-page-size 16384 --output port/android-app/build/gameplay-lifecycle-api37-16k --clear-data
+python port/android-app/tests/gameplay_activity_lifecycle_runtime.py --adb ..\emulator-test\sdk\platform-tools\adb.exe --apk port/android-app/build/dh2-source-renderer-debug.apk --serial emulator-5556 --expected-page-size 4096 --output port/android-app/build/gameplay-lifecycle-api37-4k --clear-data
+python port/android-app/tests/update_current_apk_evidence.py
+```
+
+The exact candidate also passed Home/resume and force-stop/cold-relaunch
+checkpoint checks on API 37 at both 4 KiB and 16 KiB, with matching installed
+APK hashes and zero fatal app-process markers. The authored sentries continue
+to attack an idle player, so HP can fall between UI reads; health stability is
+not part of this lifecycle assertion. See the tracked
+[lifecycle summary](gameplay-activity-current-apk-runtime-validation.json) and
+the local screenshots/logs under `build/gameplay-lifecycle-api37-*`.
+
+These are Android 17/API 37 x86_64 4 KiB and 16 KiB emulator results, not Fold7
+or physical-device results. The candidate APK itself is in the ignored local
+`port/android-app/build/` folder; it is not committed or uploaded to Drive.
+
+The cache and original APK are supplied inputs, not files in this repository.
+`build.py` checks the exact selected input hashes before packaging. See the root
+[provenance and rights notes](../../RIGHTS.md), [authored encounter scope](SOURCE-ENCOUNTER.md),
+and [persistence integration](PERSISTENCE-INTEGRATION.md). This is not the
+complete source rebuild or a game-wide open-source license grant.
 
 ## Earlier quest activation APK milestone
 
-Current source APK: 906,147 bytes, SHA-256 `7580405d76546728dc858a88f397a6ee854f91bc0c62483110f7c14d4abc1f2a`.
+APK at that milestone: 906,147 bytes, SHA-256 `7580405d76546728dc858a88f397a6ee854f91bc0c62483110f7c14d4abc1f2a`.
 Original kill/clear compile rules use owned resolved-ID world snapshots. All 34
 real counted-kill records and four synthetic kill/clear records pass in the APK
 on both Android 17 page sizes (23 imports), with recovered damage/death/progress
@@ -32,7 +112,7 @@ automatic dispatch/persistence/rewards and complete source gameplay are unfinish
 
 ## Earlier real quest data APK milestone
 
-Current source APK: 902,051 bytes, SHA-256 `3de5a72da41717d3be63f9c1a2901007a8cee8858550d5e688655b4d04fcf7c0`.
+APK at that milestone: 902,051 bytes, SHA-256 `3de5a72da41717d3be63f9c1a2901007a8cee8858550d5e688655b4d04fcf7c0`.
 All 64 quest record snapshots and 34 counted-kill objectives run with recovered
 melee damage and owned health/death/progress. Both Android 17 page sizes pass 19
 imports, threshold completion, replacement/rejection and retained generations.
@@ -41,7 +121,7 @@ ownership, persistence/rewards and complete source gameplay remain unfinished.
 
 ## Earlier kill-objective progress APK milestone
 
-Current source APK: 873,379 bytes, SHA-256 `3005249a0ef0ece743c66ed6d67a01687e0b2590ea27c1ddd4997c6366c782cb`.
+APK at that milestone: 873,379 bytes, SHA-256 `3005249a0ef0ece743c66ed6d67a01687e0b2590ea27c1ddd4997c6366c782cb`.
 Recovered melee damage, owned health/death and four reconstructed kill-objective
 counters execute together. Both Android 17 page sizes pass 14 imports, threshold
 completion, repeated/stale/increasing events, rejection and retained state.
@@ -50,7 +130,7 @@ ownership, persistence/rewards and complete source gameplay remain unfinished.
 
 ## Earlier non-player death APK milestone
 
-Current source APK: 869,283 bytes, SHA-256 `7ab0f1e1b8e61405c4221f9e33d4b46c2efc150538306c2e8b643abb3be32599`.
+APK at that milestone: 869,283 bytes, SHA-256 `7ab0f1e1b8e61405c4221f9e33d4b46c2efc150538306c2e8b643abb3be32599`.
 Recovered melee damage feeds the owned health/death transition. Both Android 17
 page sizes pass 14 imports, four ordered quest request IDs/match identifiers,
 loot requests, dead-state retention and repeated-kill no-op. Strict host and
@@ -309,3 +389,13 @@ and add `--blend-animation data/3d/characters/prince/animations/cs_darkqueen_sce
 The script stages four owner fixtures, checks the second import and 0/50/100%
 mixing, then checks advancing Play and stable Pause. Inspect all three mix
 screenshots; status text alone does not prove a changed character pose.
+
+### Local-only Irrlicht cache-scene APK
+
+The opt-in [`--irrlicht-cache-scene` variant](IRRLICHT-CACHE-SCENE-LOCAL.md)
+packages pinned `void_maze` BRES and PVRTC inputs only from an explicit
+external `--cache` directory into ignored build outputs. It uses the checked
+SceneMesh adapter and Irrlicht renderer for a local source-texture diagnostic.
+The separate APK and report are marked local-only, cache-bearing, and
+release-ineligible; this is not a playable level. The ordinary APK and
+`--irrlicht-host` mode keep their existing build paths and behavior.

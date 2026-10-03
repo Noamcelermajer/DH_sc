@@ -1,0 +1,35 @@
+"""Inventory maintained source separately from recovered text and dependencies.
+
+Uses the Git index so it also covers the consolidated pending source snapshot.
+Counts are repository size metrics, never a percentage of the original game.
+"""
+import argparse, collections, hashlib, json, pathlib, subprocess
+
+ROOT=pathlib.Path(__file__).resolve().parents[1]
+EXT={'.cpp','.c','.hpp','.h','.java','.py','.lua','.luac'}
+THIRD={'upstream','vendor','external','3rdparty','dependencies'}
+ADAM={'engine-textures','scene-materials','engine-animation','engine-skinning','game-data','physics-backend','level-world','adam-script-runtime','android-native'}
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=pathlib.Path,default=ROOT/'reports/combined-source-inventory.json');a=p.parse_args()
+    paths=subprocess.check_output(['git','ls-files','-z'],cwd=ROOT).decode().split('\0')
+    groups=collections.defaultdict(lambda:{'source_files':0,'source_lines':0,'source_bytes':0,'test_files':0})
+    files=[]
+    for name in paths:
+        path=pathlib.PurePosixPath(name)
+        if len(path.parts)<3 or path.parts[0]!='port' or path.suffix not in EXT:continue
+        group=path.parts[1]
+        if any(v in THIRD for v in path.parts[2:]) or any('box2d' in v.lower() or v.startswith('lua-5.') for v in path.parts):continue
+        if group=='adam-script-runtime' and path.parts[2]=='lua':continue
+        if any(v in {'reference','fixtures','build','reports'} for v in path.parts[2:]):continue
+        file=ROOT/name
+        if not file.is_file():continue
+        raw=file.read_bytes();lines=len(raw.splitlines())
+        tests=any(v in {'tests','tools','test','androidTest'} for v in path.parts[2:]) or path.name.startswith('test_')
+        row=groups[group];row['test_files']+=int(tests)
+        if not tests:row['source_files']+=1;row['source_lines']+=lines;row['source_bytes']+=len(raw)
+        files.append({'path':name,'bytes':len(raw),'lines':lines,'kind':'test_or_tool' if tests else 'source','sha256':hashlib.sha256(raw).hexdigest()})
+    result={'schema':'dh2-maintained-source-inventory/v1','scope':'Git-index paths with working-tree bytes; excludes recovered evidence, vendor/upstream code, reference corpora and fixtures. Includes repaired/decompiled Java in its own category. Files/lines are not function implementation or game-completion counts.','adam_pinned_commit':'45c5348e807607a2825211bb8f26248067ba9106','modules':[{'module':k,'origin':'Adam import with local adaptations' if k in ADAM else 'Existing reconstruction','source_category':'repaired_decompiled_Java' if k=='android-java' else 'reconstruction_and_port',**v} for k,v in sorted(groups.items())],'totals':{key:sum(v[key] for v in groups.values()) for key in ('source_files','source_lines','source_bytes','test_files')},'reconstruction_and_port_totals':{key:sum(v[key] for k,v in groups.items() if k!='android-java') for key in ('source_files','source_lines','source_bytes','test_files')},'files':files}
+    a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(result,indent=2)+'\n')
+    print(json.dumps({'totals':result['totals'],'modules':len(groups),'report':str(a.output)},indent=2))
+if __name__=='__main__':main()

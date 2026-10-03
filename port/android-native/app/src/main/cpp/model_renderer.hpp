@@ -4,7 +4,10 @@
 #include <cstdint>
 #include <string>
 #include <array>
+#include <vector>
 namespace model_renderer {
+void mod_directory(std::string);
+std::vector<std::uint8_t> read_asset(AAssetManager*,const std::string&);
 void reset_context();
 void deactivate();
 bool active();
@@ -15,7 +18,7 @@ void focus_object(int index);
 std::string set_object_state(int index,const std::string& state);
 std::string set_combat_target(int index,int target);
 std::string player_attack(int target=-1);
-std::array<int,6> player_vitals();
+std::array<int,7> player_vitals();
 void orbit(float dx,float dy,float zoom);
 void set_time(int milliseconds);
 void set_enemy_ai(bool);

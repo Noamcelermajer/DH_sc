@@ -1,4 +1,5 @@
 #include "model_renderer.hpp"
+#include "mod_assets.hpp"
 #include "scene.hpp"
 #include "textures.hpp"
 #include "animation.hpp"
@@ -50,6 +51,7 @@ namespace model_renderer {
 namespace {
 using Matrix=std::array<float,16>;
 using Vertex=dh2::objects::Vertex;
+std::string mod_root;
 struct Draw{GLuint vertices=0,indices=0,diffuse=0,alpha=0;GLsizei count=0;unsigned node=0;dh2::scene::Material material;
  dh2::skinning::Skin skin;std::vector<Vertex> cpu_vertices;std::vector<std::array<float,3>> rest_positions;
  bool environment=false;Matrix placement{};};
@@ -192,7 +194,12 @@ void release_objects(std::vector<ObjectGroup>& groups){std::vector<GLuint> none;
 std::vector<std::uint8_t> read(AAssetManager* assets,const std::string& name,const std::string& folder="textures"){
   auto path=name;
   if(folder=="textures")std::transform(path.begin(),path.end(),path.begin(),[](unsigned char c){return char(std::tolower(c));});
-  auto* a=AAssetManager_open(assets,(folder+"/"+path).c_str(),AASSET_MODE_BUFFER);
+  const auto relative=folder.empty()?path:folder+"/"+path;
+  std::vector<std::uint8_t> override_bytes;std::string mod_error;
+  const auto override_status=dh2::mods::read(mod_root,relative,override_bytes,mod_error);
+  if(override_status==dh2::mods::Lookup::rejected)throw std::runtime_error(mod_error);
+  if(override_status==dh2::mods::Lookup::loaded){__android_log_print(ANDROID_LOG_INFO,"DH2Native","Mod asset loaded | %s | bytes %zu",relative.c_str(),override_bytes.size());return override_bytes;}
+  auto* a=AAssetManager_open(assets,relative.c_str(),AASSET_MODE_BUFFER);
   if(!a)throw std::runtime_error("Bundled asset missing: "+folder+"/"+name);
   const auto n=AAsset_getLength64(a);
   if(n<=0||n>32*1024*1024){AAsset_close(a);throw std::runtime_error("Texture exceeds size limit");}
@@ -233,6 +240,8 @@ Matrix camera(int width,int height){
   return dh2::scene::multiply(projection,view);
 }
 }
+void mod_directory(std::string directory){mod_root=std::move(directory);}
+std::vector<std::uint8_t> read_asset(AAssetManager* assets,const std::string& name){return read(assets,name,"");}
 void reset_context(){native_actor_ready=false;actor_world.clear();prince_body={};resume_world=resume_world||world_mode;if(world_mode){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}world_mode=false;move_x=move_y=0;draws.clear();images.clear();object_groups.clear();world_objects.clear();prince_locomotion=dh2::actor::BlendedPlayback{};prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;inspected_object=-1;current_scene={};player=dh2::animation::Player{};walk_player=dh2::animation::Player{};level={};program=0;enabled=false;}
 void deactivate(){native_actor_ready=false;actor_world.clear();prince_body={};enabled=false;world_mode=false;resume_world=false;move_x=move_y=0;}
 bool active(){return enabled;}
@@ -475,7 +484,7 @@ std::string player_attack(int supplied_target){
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player attack selected | target %d | %s | root %d | clip %d | supplied unarmed equipment | native state %d",target,defender->name.c_str(),prince_state.current_animation,prince_locomotion.current_clip(),prince_state.current);
  return "Attacking";
 }
-std::array<int,6> player_vitals(){return {prince_combat.properties.resolved[36],prince_combat.properties.resolved[38],prince_combat.properties.resolved[41],prince_combat.properties.resolved[43],int(prince_combat.life.dead),int(prince_combat.life.low_health_armed)};}
+std::array<int,7> player_vitals(){return {prince_combat.properties.resolved[36],prince_combat.properties.resolved[38],prince_combat.properties.resolved[41],prince_combat.properties.resolved[43],int(prince_combat.life.dead),int(prince_combat.life.low_health_armed),prince_state.current};}
 namespace {
 void player_authored_event(const dh2::animation::TriggeredEvent& event,int clip){
  const auto& frames=prince_locomotion.scheduler.frames();

@@ -26,6 +26,20 @@ const char* string(const BresView& image, std::uint32_t offset) {
         if (!image.bytes[i]) return reinterpret_cast<const char*>(image.bytes + offset);
     return nullptr;
 }
+Error string_with_size(const BresView& image, std::uint32_t offset,
+                       const char** out, std::size_t* byte_count) {
+    *out = nullptr;
+    *byte_count = 0;
+    if (!offset || !span(image, offset, 1)) return Error::string;
+    for (std::size_t i = offset; i < image.size; ++i) {
+        if (!image.bytes[i]) {
+            *out = reinterpret_cast<const char*>(image.bytes + offset);
+            *byte_count = i - offset + 1U;
+            return Error::ok;
+        }
+    }
+    return Error::string;
+}
 Error node_at(const BresView& image, std::uint64_t offset, Node* out) {
     const auto* p = at(image, offset, 80);
     if (!p) return Error::range;
@@ -40,6 +54,7 @@ Error node_at(const BresView& image, std::uint64_t offset, Node* out) {
     candidate.child_offset = word(p + 0x3c);
     candidate.instances = word(p + 0x40);
     candidate.instance_offset = word(p + 0x44);
+    candidate.user_data_offset = word(p + 0x48);
     candidate.extension_offset = word(p + 0x4c);
     if ((candidate.children && !at(image, candidate.child_offset,
                                   std::uint64_t(candidate.children) * 80))
@@ -167,6 +182,18 @@ Error dh2_scene_instance(const Node* node, std::int32_t index, Instance* out) {
     }
     *out = candidate;
     return Error::ok;
+}
+Error dh2_scene_user_data_string(const Node* node, const char** text,
+                                 std::size_t* byte_count) {
+    if (text) *text = nullptr;
+    if (byte_count) *byte_count = 0;
+    if (!node || !text || !byte_count) return Error::argument;
+    if (!node->user_data_offset) return Error::ok;
+    const auto* record = at(node->image, node->user_data_offset, 4);
+    if (!record) return Error::range;
+    const std::uint32_t text_offset = word(record);
+    if (!text_offset) return Error::ok;
+    return string_with_size(node->image, text_offset, text, byte_count);
 }
 std::int32_t dh2_scene_visual_index(const Scene* scene, const char* url) {
     const auto* id = local_fragment(url);

@@ -1,0 +1,100 @@
+# SceneMesh to Irrlicht adapter slice
+
+This isolated module adapts the repository's checked, flattened
+`dh2::viewer::SceneMesh` and `SceneDrawDescriptor` records into the public
+Irrlicht `SMesh` / `SMeshBuffer` APIs. It adds one mesh buffer per visible draw,
+copies each draw's vertex positions and UVs, remaps its bounded 16-bit indices
+to buffer-local indices, and computes approximate vertex normals from triangle
+winding. Source vertex positions are already world transformed by the
+`SceneMesh` assembly path; this adapter applies no further transform.
+
+It does not open BRES files or source APK assets, extract source materials, map
+materials automatically, create a texture manager, or modify the app renderer.
+Callers can provide a `TextureResolver` to map the source descriptor and its
+sampler records to an `ITexture`; that callback's texture must remain valid for
+the lifetime of the driver's mesh use. The adapter puts the returned texture
+into Irrlicht layer 0. Multiple DH2 samplers/effects, opacity, shader
+parameters, UV transforms, original vertex normals, lighting, and transparency
+semantics are not reconstructed here. Normals are estimated and lighting is
+disabled by default. This output is a static mesh snapshot even when its input
+was assembled from a selected source animation pose.
+
+## Prince source actor adapter
+
+`PrinceActor` is a separate renderer-neutral path used by the local SWAMP
+diagnostic. It loads the four source `_default_warrior-mesh-skin` controllers,
+resolves each primitive's semantic position/color/UV slots through that
+primitive's own `attributes[0]`, `attributes[2]`, and `attributes[4]` mapping,
+and checks the corresponding weight/vertex counts. It retains immutable source
+positions, samples the source Idle and Walk clips, and deforms each pose through
+the checked engine-skinning palette. `prince_mesh_adapter.cpp` copies that pose
+into mutable `SMeshBuffer`s and marks the vertex streams dirty after each
+update. Skinned vertices already include their source joint transforms, so the
+Irrlicht node stays at identity. The portable source visual binding applies the
+owner, helper, authored graph and animated-root compensation. A fixed
+first-Idle bounds offset remains a development placement choice; it is applied
+once so skinned vertices are not translated twice.
+
+The preview is not native Character playback: it does not reproduce full
+Character scale/state, blend slots, locomotion state machine, combat, or
+original effect/shader material behavior. Read the
+[SWAMP source diagnostic](../swamp-smoke/README.md) for the app's scope and
+runtime limits.
+
+Run the host assertions (including per-primitive source stream equivalence):
+
+```powershell
+python port/irrlicht-android/game/tests/run_prince_host.py `
+  --assets port/android-native/app/src/main/assets
+```
+
+The test can also take the extracted cache tree through `--assets`. It stages
+asset copies and writes its JSON evidence below ignored
+`port/irrlicht-android/build/prince-host-checks/`; no Android device is used.
+
+## Provenance
+
+The input ABI comes from `port/android-app/scene_buffers.hpp`. Its source data
+is a bounded projection of checked BRES geometry and retains per-draw node,
+geometry, material, and sampler identifiers. This module is new reconstruction
+code; it does not claim to be part of DH2's recovered `glitch::` engine. It
+uses the separate official Irrlicht OGL-ES branch import pinned at SVN r6038
+(1.9.0 alpha) in `../upstream/`. The adapter and tests are outside that tree;
+the upstream files remain covered by `../upstream-source-manifest.json`.
+
+## Reproducible Android compile proof
+
+From the repository root, with Android NDK r29 installed at the repository's
+usual `work/emulator-test/sdk/ndk/29.0.14206865` path:
+
+```powershell
+python port/irrlicht-android/game/tests/compile_android.py
+```
+
+Set `ANDROID_NDK_HOME` or `ANDROID_NDK_ROOT` to override that location. The
+script verifies the pinned header manifest, compiles this translation unit
+for ARM64 and x86_64 Android API 26 against the r6038 headers, then links a
+standalone shared library against each r6038 static archive. The generated
+adapter libraries also receive 16 KiB `PT_LOAD` alignment checks. If Irrlicht
+archives have not yet been built, run `python port/irrlicht-android/build.py
+--no-apk` first. Objects, linked libraries, and the compile report are written
+under ignored `game/build-compile/`. This command proves compile/link
+compatibility; it does not run a renderer. The separate
+[runtime smoke](../game-smoke/README.md) now exercises this adapter with a
+synthetic pyramid on API 37/16 KiB, and the opt-in
+[app-host diagnostic](../../android-app/IRRLICHT-HOST.md) does so on API
+37/4 KiB. Those runtime fixtures are synthetic geometry, not imported DH2
+assets. A separate cache-backed `void_maze` render is documented in the
+[cache-scene smoke](../cache-scene-smoke/README.md); its texture/material
+result verifies the `env_voidmaze.tga` mapping on its 30 referencing draws.
+Full-scene composition and the other source materials and effect passes remain
+unverified.
+
+## Ownership and validation
+
+`build_mesh` returns an `IMesh*` with its initial Irrlicht reference; the
+caller releases it with `drop()`. The `SceneMesh` and its arrays remain
+caller-owned and can be freed after the call. The adapter rejects absent
+buffers, invalid capacities, non-finite vertex data, non-triangle index
+counts, out-of-range draw spans, invalid texture spans, and indices that refer
+outside their draw's own vertex span before allocating the Irrlicht mesh.

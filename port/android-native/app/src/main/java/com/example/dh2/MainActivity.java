@@ -16,8 +16,6 @@ import android.view.View;
 import android.view.MotionEvent;
 import android.view.Gravity;
 import android.widget.*;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.util.Arrays;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -35,6 +33,7 @@ public final class MainActivity extends Activity {
     private volatile String baseReport;
     private volatile boolean pendingActorCommand;
     private volatile boolean enemyAi=true;
+    private volatile boolean attackDisplayPending;
     private BroadcastReceiver debugAttackReceiver;
     @Override public void onCreate(Bundle state) {
         setTheme(android.R.style.Theme_Material_NoActionBar);super.onCreate(state);
@@ -88,12 +87,16 @@ public final class MainActivity extends Activity {
         surface.setRenderer(new GLSurfaceView.Renderer(){
             long lastVitals;
             @Override public void onSurfaceCreated(GL10 gl,EGLConfig config){
+                java.io.File external=getExternalFilesDir(null);
+                java.io.File mods=new java.io.File(external!=null?external:getFilesDir(),"mods");
+                if(!mods.isDirectory()&&!mods.mkdirs())Log.e("DH2Native","Could not create mod directory");
+                NativeBridge.modDirectory(mods.getAbsolutePath());
                 Log.i("DH2Native",NativeBridge.initialize());loadedAsset=null;ready=true;
                 NativeBridge.enemyAi(enemyAi);
                 if(assets.length>0)loadSelected();else show("No bundled asset fixtures");
             }
             @Override public void onSurfaceChanged(GL10 gl,int w,int h){NativeBridge.resize(w,h);}
-            @Override public void onDrawFrame(GL10 gl){NativeBridge.draw();long now=android.os.SystemClock.uptimeMillis();if(now-lastVitals>=200&&loadedAsset!=null&&loadedAsset.startsWith("worlds/")){lastVitals=now;int[] values=NativeBridge.playerVitals();runOnUiThread(()->{vitals.setText(String.format(java.util.Locale.ROOT,"HP %.1f / %.1f   MP %.1f / %.1f%s",values[0]/256f,values[1]/256f,values[2]/256f,values[3]/256f,values[4]!=0?"   Defeated":""));vitals.setTextColor(values[4]!=0||values[5]==0?Color.rgb(255,150,150):Color.WHITE);});}}
+            @Override public void onDrawFrame(GL10 gl){NativeBridge.draw();long now=android.os.SystemClock.uptimeMillis();if(now-lastVitals>=200&&loadedAsset!=null&&loadedAsset.startsWith("worlds/")){lastVitals=now;int[] values=NativeBridge.playerVitals();if(attackDisplayPending&&values[6]!=5){attackDisplayPending=false;show(baseReport+"\n"+(values[4]!=0?"Defeated":"Attack finished."));}runOnUiThread(()->{vitals.setText(String.format(java.util.Locale.ROOT,"HP %.1f / %.1f   MP %.1f / %.1f%s",values[0]/256f,values[1]/256f,values[2]/256f,values[3]/256f,values[4]!=0?"   Defeated":""));vitals.setTextColor(values[4]!=0||values[5]==0?Color.rgb(255,150,150):Color.WHITE);});}}
         });
         surface.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         FrameLayout viewport=new FrameLayout(this);viewport.addView(surface,new FrameLayout.LayoutParams(-1,-1));
@@ -104,7 +107,7 @@ public final class MainActivity extends Activity {
         padLayout.leftMargin=padLayout.bottomMargin=(int)(16*getResources().getDisplayMetrics().density);viewport.addView(movement,padLayout);
         attack=new Button(this);attack.setText("Attack");attack.setContentDescription("Attack nearby enemy");attack.setVisibility(View.GONE);
         FrameLayout.LayoutParams attackLayout=new FrameLayout.LayoutParams((int)(112*getResources().getDisplayMetrics().density),(int)(64*getResources().getDisplayMetrics().density),Gravity.BOTTOM|Gravity.RIGHT);attackLayout.rightMargin=attackLayout.bottomMargin=(int)(24*getResources().getDisplayMetrics().density);viewport.addView(attack,attackLayout);
-        attack.setOnClickListener(v->surface.queueEvent(()->{String report=NativeBridge.playerAttack(-1);Log.i("DH2Native","Player input | "+report);show(baseReport+"\n"+report);}));
+        attack.setOnClickListener(v->surface.queueEvent(()->{String report=NativeBridge.playerAttack(-1);attackDisplayPending=report.equals("Attacking")||attackDisplayPending;Log.i("DH2Native","Player input | "+report);show(baseReport+"\n"+report);}));
         layout.addView(viewport,new LinearLayout.LayoutParams(-1,0,1));
         TextView attribution=new TextView(this);
         attribution.setText("Dungeon Hunter 2 © Gameloft SE. Published by GOAT Games Company Limited.");
@@ -131,7 +134,7 @@ public final class MainActivity extends Activity {
                         return;
                     }
                     final int target=intent.getIntExtra("player_target_index",-1);
-                    surface.queueEvent(()->{String report=NativeBridge.playerAttack(target);Log.i("DH2Native","Player command applied | "+report);show(baseReport+"\n"+report);});
+                    surface.queueEvent(()->{String report=NativeBridge.playerAttack(target);attackDisplayPending=report.equals("Attacking")||attackDisplayPending;Log.i("DH2Native","Player command applied | "+report);show(baseReport+"\n"+report);});
                 }
             };
             IntentFilter filter=new IntentFilter("com.example.dh2.DEBUG_PLAYER_ATTACK");
@@ -164,10 +167,10 @@ public final class MainActivity extends Activity {
         String name=assets[selected];
         if(name.equals(loadedAsset))return;
         runOnUiThread(()->{movement.setVisibility(name.startsWith("worlds/")?View.VISIBLE:View.GONE);vitals.setVisibility(name.startsWith("worlds/")?View.VISIBLE:View.GONE);attack.setVisibility(name.startsWith("worlds/")?View.VISIBLE:View.GONE);});
-        try(InputStream input=getAssets().open(name);ByteArrayOutputStream out=new ByteArrayOutputStream()){
-            byte[] block=new byte[8192];int n;
-            while((n=input.read(block))!=-1){if(out.size()+n>32*1024*1024)throw new java.io.IOException("Texture too large");out.write(block,0,n);}
-            String report=name.startsWith("worlds/")?NativeBridge.loadWorld(out.toByteArray(),getAssets()):name.startsWith("models/")?NativeBridge.loadModel(out.toByteArray(),getAssets()):NativeBridge.loadTexture(out.toByteArray());
+        try{
+            byte[] encoded=NativeBridge.readAsset(name,getAssets());
+            if(encoded==null)throw new java.io.IOException("Asset read failed");
+            String report=name.startsWith("worlds/")?NativeBridge.loadWorld(encoded,getAssets()):name.startsWith("models/")?NativeBridge.loadModel(encoded,getAssets()):NativeBridge.loadTexture(encoded);
             if(!report.contains("failed")&&!report.contains("error"))loadedAsset=name;
             baseReport=name+"\n"+report;
             if(name.startsWith("models/")||name.startsWith("worlds/"))NativeBridge.animationTime(getIntent().getIntExtra("time_ms",-1));

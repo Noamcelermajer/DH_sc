@@ -9,7 +9,9 @@ import android.os.Looper;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.SeekBar;
 import java.io.ByteArrayOutputStream;
@@ -33,6 +35,10 @@ public final class MainActivity extends Activity {
     private GLSurfaceView surface;
     private TextView status;
     private TextView scriptStatus;
+    private LinearLayout panes;
+    private FrameLayout previewPane;
+    private FrameLayout controlsPane;
+    private int appliedPaneOrientation = -1;
     private long scriptSession;
     private SeekBar timeline;
     private SeekBar mix;
@@ -73,6 +79,45 @@ public final class MainActivity extends Activity {
     private static native void surfaceCreated();
     private static native void surfaceChanged(int width, int height);
     private static native void draw();
+
+    private String diagnosticMetadata(String name, String fallback) {
+        try {
+            android.content.pm.ApplicationInfo application =
+                    getPackageManager().getApplicationInfo(getPackageName(),
+                            android.content.pm.PackageManager.GET_META_DATA);
+            android.os.Bundle metadata = application.metaData;
+            if (metadata == null) return fallback;
+            String value = metadata.getString(name);
+            return value == null || value.trim().isEmpty() ? fallback : value;
+        } catch (android.content.pm.PackageManager.NameNotFoundException missingPackage) {
+            return fallback;
+        }
+    }
+
+    private int dp(float value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    private void updateResponsiveLayout(int widthPx, int heightPx) {
+        float density = getResources().getDisplayMetrics().density;
+        ResponsiveLayoutPolicy.Layout choice =
+                ResponsiveLayoutPolicy.choose(widthPx, heightPx, density);
+        int orientation = choice.sideBySide ? LinearLayout.HORIZONTAL : LinearLayout.VERTICAL;
+        if (orientation == appliedPaneOrientation) return;
+        appliedPaneOrientation = orientation;
+        panes.setOrientation(orientation);
+        LinearLayout.LayoutParams previewParams;
+        LinearLayout.LayoutParams controlsParams;
+        if (choice.sideBySide) {
+            previewParams = new LinearLayout.LayoutParams(0, -1, choice.previewWeight);
+            controlsParams = new LinearLayout.LayoutParams(0, -1, choice.controlsWeight);
+        } else {
+            previewParams = new LinearLayout.LayoutParams(-1, 0, choice.previewWeight);
+            controlsParams = new LinearLayout.LayoutParams(-1, 0, choice.controlsWeight);
+        }
+        previewPane.setLayoutParams(previewParams);
+        controlsPane.setLayoutParams(controlsParams);
+    }
 
     private void updatePosition() {
         int position = animationPosition();
@@ -116,31 +161,39 @@ public final class MainActivity extends Activity {
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(14, 14, 14, 14);
+        layout.setPadding(dp(14), dp(14), dp(14), dp(14));
         layout.setOnApplyWindowInsetsListener((view, insets) -> {
-            layout.setPadding(14, insets.getSystemWindowInsetTop() + 14,
-                              14, insets.getSystemWindowInsetBottom() + 14);
+            layout.setPadding(dp(14), insets.getSystemWindowInsetTop() + dp(14),
+                              dp(14), insets.getSystemWindowInsetBottom() + dp(14));
             return insets;
         });
+        LinearLayout controls = new LinearLayout(this);
+        controls.setOrientation(LinearLayout.VERTICAL);
+        ScrollView controlScroll = new ScrollView(this);
+        controlScroll.setFillViewport(false);
+        controlScroll.setVerticalScrollBarEnabled(true);
+        controlScroll.addView(controls,
+                new ScrollView.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                                            LinearLayout.LayoutParams.WRAP_CONTENT));
         status = new TextView(this);
         status.setText("Source renderer ready. Import a BRES scene and its PVRTC texture from your own cache. Drag the preview to rotate it. This is an asset preview, not gameplay.");
-        layout.addView(status);
+        controls.addView(status);
         Button mesh = new Button(this);
         mesh.setText("Import BRES scene");
         mesh.setOnClickListener(v -> pick(BRES));
-        layout.addView(mesh);
+        controls.addView(mesh);
         Button texture = new Button(this);
         texture.setText("Import PVRTC texture");
         texture.setOnClickListener(v -> pick(TEXTURE));
-        layout.addView(texture);
+        controls.addView(texture);
         Button animation = new Button(this);
         animation.setText("Import character animation");
         animation.setOnClickListener(view -> pick(ANIMATION));
-        layout.addView(animation);
+        controls.addView(animation);
         Button second = new Button(this);
         second.setText("Import second animation");
         second.setOnClickListener(view -> pick(BLEND));
-        layout.addView(second);
+        controls.addView(second);
         playback = new Button(this);
         playback.setText("Play animation");
         playback.setEnabled(false);
@@ -155,7 +208,7 @@ public final class MainActivity extends Activity {
                                         : GLSurfaceView.RENDERMODE_WHEN_DIRTY);
             surface.requestRender();
         });
-        layout.addView(playback);
+        controls.addView(playback);
         timeline = new SeekBar(this);
         timeline.setContentDescription("Animation time");
         timeline.setEnabled(false);
@@ -174,7 +227,7 @@ public final class MainActivity extends Activity {
             @Override public void onStartTrackingTouch(SeekBar bar) {}
             @Override public void onStopTrackingTouch(SeekBar bar) {}
         });
-        layout.addView(timeline);
+        controls.addView(timeline);
         mix = new SeekBar(this);
         mix.setContentDescription("Motion mix");
         mix.setMax(100);
@@ -194,38 +247,53 @@ public final class MainActivity extends Activity {
             @Override public void onStartTrackingTouch(SeekBar bar) {}
             @Override public void onStopTrackingTouch(SeekBar bar) {}
         });
-        layout.addView(mix);
+        controls.addView(mix);
         scriptStatus = new TextView(this);
         scriptStatus.setContentDescription("Script status");
-        layout.addView(scriptStatus);
+        controls.addView(scriptStatus);
         Button scripts = new Button(this);
         scripts.setText("Import script source");
         scripts.setOnClickListener(view -> pick(SCRIPT));
-        layout.addView(scripts);
+        controls.addView(scripts);
         Button properties = new Button(this);
         properties.setText("Import character properties");
         properties.setOnClickListener(view -> pick(PROPERTIES));
-        layout.addView(properties);
+        controls.addView(properties);
         Button classes = new Button(this);
         classes.setText("Import character classes");
         classes.setOnClickListener(view -> pick(CLASSES));
-        layout.addView(classes);
+        controls.addView(classes);
         Button items = new Button(this);
         items.setText("Import item data");
         items.setOnClickListener(view -> pick(ITEMS));
-        layout.addView(items);
+        controls.addView(items);
         Button powers = new Button(this);
         powers.setText("Import item powers");
         powers.setOnClickListener(view -> pick(POWERS));
-        layout.addView(powers);
+        controls.addView(powers);
         Button constants = new Button(this);
         constants.setText("Import script constants");
         constants.setOnClickListener(view -> pick(CONSTANTS));
-        layout.addView(constants);
+        controls.addView(constants);
         Button quests = new Button(this);
         quests.setText("Import quest data");
         quests.setOnClickListener(view -> pick(QUESTS));
-        layout.addView(quests);
+        controls.addView(quests);
+        Intent irrlichtIntent = new Intent().setClassName(
+                getPackageName(), "android.app.NativeActivity");
+        if (irrlichtIntent.resolveActivity(getPackageManager()) != null) {
+            Button irrlicht = new Button(this);
+            irrlicht.setText(diagnosticMetadata(
+                    "local.dh2.sourceviewer.irrlicht_diagnostic_title",
+                    "Irrlicht adapter diagnostic"));
+            irrlicht.setAllCaps(false);
+            irrlicht.setContentDescription(
+                    diagnosticMetadata(
+                            "local.dh2.sourceviewer.irrlicht_diagnostic_description",
+                            "Open the optional Irrlicht NativeActivity render diagnostic"));
+            irrlicht.setOnClickListener(view -> startActivity(irrlichtIntent));
+            controls.addView(irrlicht);
+        }
         startScripts();
         surface = new GLSurfaceView(this);
         surface.setEGLContextClientVersion(2);
@@ -254,7 +322,22 @@ public final class MainActivity extends Activity {
             surface.requestRender();
             return true;
         });
-        layout.addView(surface, new LinearLayout.LayoutParams(-1, 0, 1));
+        previewPane = new FrameLayout(this);
+        previewPane.addView(surface,
+                new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+                                             FrameLayout.LayoutParams.MATCH_PARENT));
+        controlsPane = new FrameLayout(this);
+        controlsPane.addView(controlScroll,
+                new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+                                             FrameLayout.LayoutParams.MATCH_PARENT));
+        panes = new LinearLayout(this);
+        panes.setOrientation(LinearLayout.VERTICAL);
+        panes.addView(previewPane, new LinearLayout.LayoutParams(-1, 0, 0.45f));
+        panes.addView(controlsPane, new LinearLayout.LayoutParams(-1, 0, 0.55f));
+        panes.addOnLayoutChangeListener((view, left, top, right, bottom,
+                                         oldLeft, oldTop, oldRight, oldBottom) ->
+                updateResponsiveLayout(right - left, bottom - top));
+        layout.addView(panes, new LinearLayout.LayoutParams(-1, 0, 1));
         setContentView(layout);
         layout.requestApplyInsets();
     }

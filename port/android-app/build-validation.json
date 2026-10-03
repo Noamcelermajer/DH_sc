@@ -1,12 +1,13 @@
 {
-  "scope": "source-built authored development encounter and asset diagnostics; not the complete original game",
+  "scope": "source-built authored development encounter, static SWAMP and INFECTED_VILLAGE module previews, path-mask-gated endpoint movement, and manually started bounded LizardMan_Intro logical trace; not the complete original game",
   "target_sdk": 37,
   "min_sdk": 26,
+  "build_tools": "37.0.0",
   "abi": {
     "arm64-v8a": {
       "machine": 183,
-      "sha256": "22f4fb24ec615a28cc606c10cb7a6ca28cf7c18d228d81bb46f123423c16d6db",
-      "bytes": 169592,
+      "sha256": "335dbe173209ba43d8b805e72722d032a435462a48b8dbe43c09e6d9218dc81a",
+      "bytes": 302552,
       "pt_load": [
         {
           "alignment": 16384,
@@ -14,15 +15,15 @@
         },
         {
           "alignment": 16384,
-          "offset": 47744
+          "offset": 76828
         },
         {
           "alignment": 16384,
-          "offset": 129504
+          "offset": 240208
         },
         {
           "alignment": 16384,
-          "offset": 131960
+          "offset": 244520
         }
       ],
       "lua_library": {
@@ -47,8 +48,8 @@
     },
     "x86_64": {
       "machine": 62,
-      "sha256": "44f984def83863fe8a05a8a52fb33dd56ed99e3ce7deaae309b96ff9c0983077",
-      "bytes": 175696,
+      "sha256": "854addceb291d28b3b0c61261207ea22eabd96a107e3dbf43d0e64ee1135e316",
+      "bytes": 321352,
       "pt_load": [
         {
           "alignment": 16384,
@@ -56,15 +57,15 @@
         },
         {
           "alignment": 16384,
-          "offset": 46784
+          "offset": 75152
         },
         {
           "alignment": 16384,
-          "offset": 138352
+          "offset": 263520
         },
         {
           "alignment": 16384,
-          "offset": 140816
+          "offset": 267848
         }
       ],
       "lua_library": {
@@ -89,8 +90,8 @@
     }
   },
   "apk": {
-    "sha256": "aa557d05aa9d6bdacb63f61f879289402de418f00c43a52d0a2b38c0a3504094",
-    "bytes": 1234908
+    "sha256": "ea9d0aef09125f0dac6b4cdb3d37727aae277e6bdabd2faf92b56e219d09583b",
+    "bytes": 5465698
   },
   "lua_build_sha256": "bbbe63cc2410a077a37f3ff0f975a7d63be81c8d02429bffed4d28105ce5ff20",
   "lua_build": {
@@ -284,8 +285,12 @@
   },
   "java_source_sha256": {
     "src/local/dh2/sourceviewer/EncounterSaveStore.java": "369e8051d1fb77faa993fe8e0d6850bafde9d3beed50119e98b79a7b9bc76b93",
-    "src/local/dh2/sourceviewer/GameplayActivity.java": "10e2f0c6cdc3b81131c8015fc4e8ebb1b052a67332b0c9a40c7e4fe033f2f6f0",
-    "src/local/dh2/sourceviewer/MainActivity.java": "18829aca0561dbca34b02ed4973c9868cf0f2677899526f94c828ecf62dae157"
+    "src/local/dh2/sourceviewer/GameplayActivity.java": "e579fd618e64c66dbc8a4155f5ac0c85dc0c6b22dc7ec0e4544fbb96680c4c92",
+    "src/local/dh2/sourceviewer/InfectedActorPreviewActivity.java": "ebb1179f2176a98f65df86e740e62995f3a73c435e81d0202803b3d0c20bb129",
+    "src/local/dh2/sourceviewer/InfectedVillagePreviewActivity.java": "ff6ee9d1d65d1b7d87952bc761a98e18e070d3ec5f190cdd779449df0181382f",
+    "src/local/dh2/sourceviewer/MainActivity.java": "c3f034a3a96c5458d07f2a1c26b7689234ac8ce0acd45a5bd4d77d6596e1fd00",
+    "src/local/dh2/sourceviewer/ResponsiveLayoutPolicy.java": "8ca6d6b2a7dc9830fcaf558b1f9fa2b3cf76d5860dfafaea0463f653531fe401",
+    "src/local/dh2/sourceviewer/SwampPreviewActivity.java": "7e00e72f2e025d071c2f94b8402959633ab93665c6e39fbb05eeb05242f378f6"
   },
   "encounter_assets": {
     "room.bdae": {
@@ -348,6 +353,56 @@
       "sha256": "cbbde6ad8aef5f69ed913da5b62b4246a9c8584219c03256c3a2f8de8e8a1b36",
       "bytes": 21817
     },
+    "swamp.bdae": {
+      "source": "data/3d/modules/swamp/swamp.bdae",
+      "sha256": "89da80c60a7ebecd0e8a27a9d46f2625e3a5ec112933e5aa7cab251412b8364d",
+      "bytes": 5585024
+    },
+    "swamp.mlx": {
+      "source": "data/scene/001_swamp.mlx",
+      "sha256": "e3694600f07184567efcdecb79826da8bfe7aa09b7f1505b1bc13eb1eb68a041",
+      "bytes": 6788
+    },
+    "swamp-entry-mgp.mgp": {
+      "source": "data/3d/modules/swamp/mgp/obj_4of4_brdwalk_sw_00.mgp",
+      "sha256": "651eac91518c0a22362c22cb3ffe15972649e259a6af59d04ba028a90a7baf31",
+      "bytes": 9232
+    },
+    "swamp-lizard-intro.mgp": {
+      "source": "data/3d/modules/swamp/mgp/obj_3of4_brdwalk_sw_00.mgp",
+      "sha256": "2ec6ce7053701e9903e4e41f7496f317b7ccf0257a10543797c51919f02a5c41",
+      "bytes": 8900
+    },
+    "swamp-diffuse.tga": {
+      "source": "data/3d/textures/env_swamp.tga",
+      "sha256": "f3eb432f6f2332b65a2bbeeb26528c3a6e3075ada4df9c6425aa1934816b4e4e",
+      "bytes": 524348
+    },
+    "swamp-alpha.tga": {
+      "source": "data/3d/textures/pvr2_env_swamp_alpha.tga",
+      "sha256": "928622d0ef735d0cda4120b5bbe66e2d58e56d81cd7646579a23f683c20e76a0",
+      "bytes": 262204
+    },
+    "common-script-names.bin": {
+      "source": "data/pydata/scripts_pyscriptnames.bin",
+      "sha256": "96c9ba8b4cf6afef1318495f2fa18ca4e6e125b187f4bad086e109d22fcbf3bd",
+      "bytes": 321
+    },
+    "common-script-programs.bin": {
+      "source": "data/pydata/scripts_pyscripts.bin",
+      "sha256": "39bd1a0c3c7b55c996688687b69504c0446175b3b3451bc1e7481ab18135551a",
+      "bytes": 1277
+    },
+    "swamp-script-names.bin": {
+      "source": "data/pydata/scripts/001_swamp_pyscriptnames.bin",
+      "sha256": "7946d599ea1ca9c30081fe0b32f2ff6b70be6bbf93af2b88aa7f852e51a18045",
+      "bytes": 1155
+    },
+    "swamp-script-programs.bin": {
+      "source": "data/pydata/scripts/001_swamp_pyscripts.bin",
+      "sha256": "144447bc17c9b5ac530e308cce86490c04191779b66f4b88914f2a6c8adde836",
+      "bytes": 18117
+    },
     "constants.bin": {
       "sha256": "d375c74e98dff20cdbe2122fc989d36ee1df4bcb32d1bae34a30af992fee1a98",
       "bytes": 5838,
@@ -368,12 +423,235 @@
       ]
     }
   },
+  "infected_village_static_preview": {
+    "level": "INFECTED_VILLAGE_01",
+    "manifest_sha256": "88e0c556c9c763bccb5e548c63c2a648f1e7da3b5671b84d53ce59c227156fd0",
+    "manifest_source": "infected-village-asset-lock.json",
+    "packaged_source_asset_count": 9,
+    "source_assets": {
+      "data/3d/modules/infectedvillage/infectedvillage.bdae": {
+        "sha256": "78277fc02ecb006f23e281560eda789d616415aa2801c00a370d73f67605c07a",
+        "bytes": 629032
+      },
+      "data/3d/modules/infectedvillage/mgp/infected01.mgp": {
+        "sha256": "c3fbe80d3228592cd117012baf2f2151e4ab46c452213911ca5c4d3195e4bbc3",
+        "bytes": 17862
+      },
+      "data/3d/modules/infectedvillage/mgp/infected02.mgp": {
+        "sha256": "a128c22031b9ba64fde81c7951e215cc2999e8ffb95a3a5cf30560cc712e8c5b",
+        "bytes": 991
+      },
+      "data/3d/modules/infectedvillage/mvp/infected01.mvp": {
+        "sha256": "02d255cc6214a3c3d28b2f7e921626344a67e2edded1579da8ad7256e72a9df8",
+        "bytes": 2162
+      },
+      "data/3d/modules/infectedvillage/mvp/infected02.mvp": {
+        "sha256": "8af1f65e45c67d07c11482988d7381fc1dfb15d36a5a9321b48efbe67e6fbf7a",
+        "bytes": 2461
+      },
+      "data/3d/textures/env_infectedvillage.tga": {
+        "sha256": "13c095502316871aafa6cfc557c7b21c434c24a00880941f7bab2b3d25270fdf",
+        "bytes": 524348
+      },
+      "data/3d/textures/env_infectedvillage_spec.tga": {
+        "sha256": "9aad1a5f39f08782c15c0ee4586f27425c683ab4138930b2749917df6d2c3b59",
+        "bytes": 131132
+      },
+      "data/3d/textures/pvr2_env_infectedvillage_alpha.tga": {
+        "sha256": "e56337feadc0b571536a72e0f3a7f0d1f2b8706858494b3d64fc0a83d51693ac",
+        "bytes": 262204
+      },
+      "data/scene/005_infectedvillage.mlx": {
+        "sha256": "4cd2007c7de65d38065f8a5f57faaa57dc56cc332db35cdb50d7d42d5af73ed8",
+        "bytes": 2079
+      }
+    },
+    "sampler_textures": [
+      "data/3d/textures/env_infectedvillage.tga",
+      "data/3d/textures/env_infectedvillage_spec.tga",
+      "data/3d/textures/pvr2_env_infectedvillage_alpha.tga"
+    ],
+    "unresolved_module_sampler_count": 3
+  },
+  "infected_actor_diagnostic_preview": {
+    "format": "dh2.infected-actor-preview-bundle.v1",
+    "scope": "Render-only diagnostic of six source model choices and source-compatible Idle/Walk clips; not gameplay.",
+    "source_asset_manifest_sha256": "d322afdd1f052e771b3fcf697cc5fa4bbd9d930ebc0e8084a82ebc9899136a19",
+    "compatibility_evidence_sha256": "f87698aa63d2fd481b3cd20009a2f55291ea4c48cc218cd1c917270d7ebd52d7",
+    "compatibility_evidence_source": "port/infected-actor-compatibility/validation.json",
+    "models": [
+      {
+        "model_key": "infected",
+        "character_name": "InfectedVillager",
+        "character_table_id": 258,
+        "path": "data/3d/characters/infected/infected.bdae",
+        "skin_controller_id": "zombie02-mesh-skin"
+      },
+      {
+        "model_key": "burned",
+        "character_name": "InfectedBurned",
+        "character_table_id": 252,
+        "path": "data/3d/characters/infected/burned.bdae",
+        "skin_controller_id": "_mesh_burned-mesh-skin"
+      },
+      {
+        "model_key": "inf_blacksmith",
+        "character_name": "InfectedBlacksmith",
+        "character_table_id": 251,
+        "path": "data/3d/characters/infected/inf_blacksmith.bdae",
+        "skin_controller_id": "blacksmith-mesh-skin"
+      },
+      {
+        "model_key": "inf_maid",
+        "character_name": "InfectedMaid",
+        "character_table_id": 255,
+        "path": "data/3d/characters/infected/inf_maid.bdae",
+        "skin_controller_id": "_mesh_castle_worker02-mesh-skin"
+      },
+      {
+        "model_key": "inf_merchant",
+        "character_name": "InfectedMerchant",
+        "character_table_id": 256,
+        "path": "data/3d/characters/infected/inf_merchant.bdae",
+        "skin_controller_id": "_mesh_merchant_skinned_batch-mesh-skin"
+      },
+      {
+        "model_key": "inf_nun",
+        "character_name": "InfectedNun",
+        "character_table_id": 257,
+        "path": "data/3d/characters/infected/inf_nun.bdae",
+        "skin_controller_id": "_mesh_nun-mesh-skin"
+      }
+    ],
+    "clips": [
+      {
+        "label": "Idle A",
+        "state": "Idle",
+        "anim_tpl_id": 321,
+        "path": "data/3d/characters/infected/animations/infected_idle.bdae",
+        "segment": 0
+      },
+      {
+        "label": "Idle B",
+        "state": "Idle",
+        "anim_tpl_id": 321,
+        "path": "data/3d/characters/infected/animations/infected_idle_02.bdae",
+        "segment": 0
+      },
+      {
+        "label": "Walk",
+        "state": "Walk",
+        "anim_tpl_id": 328,
+        "path": "data/3d/characters/infected/animations/infected_walk.bdae",
+        "segment": 0
+      }
+    ],
+    "textures": [
+      "data/3d/textures/atlas_dh2_game_objects_001.tga",
+      "data/3d/textures/atlas_dh2_game_objects_001_alpha.tga",
+      "data/3d/textures/atlas_dh2_game_objects_001_specular.tga",
+      "data/3d/textures/atlas_skinned_characters_animdecor_gameobjects_002.tga"
+    ],
+    "files": [
+      {
+        "path": "data/3d/characters/infected/animations/infected_idle.bdae",
+        "role": "animation",
+        "size_bytes": 16100,
+        "sha256": "9ccedc273d12c596aad4f126ce256501376bb2ba29165b73d8cb0e8ed8b7e092"
+      },
+      {
+        "path": "data/3d/characters/infected/animations/infected_idle_02.bdae",
+        "role": "animation",
+        "size_bytes": 19408,
+        "sha256": "8271bb591d70fea467c5bc40172e0e5c730381737cb2b861f57adecaaa0d9e74"
+      },
+      {
+        "path": "data/3d/characters/infected/animations/infected_walk.bdae",
+        "role": "animation",
+        "size_bytes": 9860,
+        "sha256": "f35fc7fe84fa1b992142a5b4b29073037769ae0ca9a1dab767d317a522b013d9"
+      },
+      {
+        "path": "data/3d/characters/infected/burned.bdae",
+        "role": "model",
+        "size_bytes": 51824,
+        "sha256": "921cbf0fc319f2a6bcb001b822e1ae2760317e978c4787f5b82d3bb9203c1b7d"
+      },
+      {
+        "path": "data/3d/characters/infected/inf_blacksmith.bdae",
+        "role": "model",
+        "size_bytes": 61656,
+        "sha256": "15b516b10b7a2af4e6ef4d0ae2aea4ce6b1c797b3327975581d0af97fa887b9d"
+      },
+      {
+        "path": "data/3d/characters/infected/inf_maid.bdae",
+        "role": "model",
+        "size_bytes": 58448,
+        "sha256": "7a63993af7716cbbca1c994716657e1710076b29948059780d83b6ecbb908e38"
+      },
+      {
+        "path": "data/3d/characters/infected/inf_merchant.bdae",
+        "role": "model",
+        "size_bytes": 61732,
+        "sha256": "de774733db5fd2ef41e3509cc768971bcc443dff40b6c1a3618427346bd9790f"
+      },
+      {
+        "path": "data/3d/characters/infected/inf_nun.bdae",
+        "role": "model",
+        "size_bytes": 55828,
+        "sha256": "6c18b7b16787d2ddd574fa10a93308d5956c6647a926288f32b9372c14bf6e09"
+      },
+      {
+        "path": "data/3d/characters/infected/infected.bdae",
+        "role": "model",
+        "size_bytes": 53840,
+        "sha256": "1be504c45349550464cfa631399ccde212da5195a9ffb924ed980af3ee7a01ef"
+      },
+      {
+        "path": "data/3d/textures/atlas_dh2_game_objects_001.tga",
+        "role": "texture",
+        "size_bytes": 524348,
+        "sha256": "12b326ab884126622721864edb49ab7e30bafb21a269d11db4f185515e4eca7c"
+      },
+      {
+        "path": "data/3d/textures/atlas_dh2_game_objects_001_alpha.tga",
+        "role": "texture",
+        "size_bytes": 524348,
+        "sha256": "4989829958943daff0d0b977ae98c52def30bb0c966dba21d19e949f9321fc79"
+      },
+      {
+        "path": "data/3d/textures/atlas_dh2_game_objects_001_specular.tga",
+        "role": "texture",
+        "size_bytes": 131132,
+        "sha256": "49c66c6eab5b957acadcf1f8216eb4720ed69b60f86a2b8776505bf54a5d7398"
+      },
+      {
+        "path": "data/3d/textures/atlas_skinned_characters_animdecor_gameobjects_002.tga",
+        "role": "texture",
+        "size_bytes": 524348,
+        "sha256": "80bb4294c81a677bca7b2725ca170c4bbd663ccfc6d05c7c57399413f0a44309"
+      }
+    ]
+  },
   "source_sha256": {
     "port/android-app/native.cpp": "eb3753914d1f56a4c8e0eecb51353dc6f015dc75023c61fbf2fdc1182f9c8d67",
     "port/android-app/world_renderer.cpp": "7adcd24d1d59e68ec862c096db96ab7422b7337fd0626e49dfe1f4ab63cceec6",
     "port/android-app/gameplay.cpp": "2bed1cfd6c744d9baa150790fb2a114526418b18ff470febfe652d1879fd6b20",
-    "port/android-app/scene_buffers.cpp": "a28e2bd3008aec56fc8847a742861a7bb965607cebc915c5751c028354fe845f",
+    "port/android-app/scene_buffers.cpp": "5904ff220370214e025740ea11a40fed0feb288a5c753354e5a762b803b79917",
+    "port/android-app/swamp_preview.cpp": "07ef0037f8902fd2bb30601e1af247d85b21a3c537886dd62476f3da4bb1533b",
+    "port/android-app/infected_village_scene.cpp": "14e9f5a91372a7c6ff64bf2506238bd1ee61f47f4da2136e0b93b97acb2098e0",
+    "port/android-app/infected_village_preview.cpp": "84f2f7e9fa6f4829e98d2b0e182ec614472a67e8d072f3020d91069ca094fa0a",
+    "port/android-app/infected_actor_preview.cpp": "4ed347e74a8c6d366d6b203b97bd10ff9018369ab1250b63c677347f61716b45",
+    "port/android-app/swamp_script_jni.cpp": "e04e1aedaf9ab32368a7d598b00963d8dffb19af8449f70daf58f99256a0ccfe",
+    "port/navigation/navigation.cpp": "70c07db798bff463efd7819e6247fede2a1b0541ac690c5f21261f43e6225da2",
+    "port/floor-types/floor_types.cpp": "4761f3ae34d488baba325568f41db9ca35aeb7641aaf277d8040f0a7e76cf1f8",
+    "port/swamp-movement/movement.cpp": "d91fda5ca13d7ba6a6d0aacace81c6c3c0a402becc1cada54dd340bf19d7cd54",
+    "port/world-data/world.cpp": "64d0fc545a11e224f150a4e4611ad906cdb1fd0570ba059331b6846404d28d47",
+    "port/world-data/world_scene.cpp": "cdb4157918cb408cbbffee5bc1bbed1dbfee677dbde03ba1b0222e1141e6af86",
     "port/android-app/scripts.cpp": "d78f7691a8bb4b0e5f6c83072ebe613825221b1964e19ce4595738c96615f25b",
+    "port/android-app/pydata_jni.cpp": "8628409f20bc1d37cb8d36aaa1f32f30e9a6adf6b04a7c60fc6483a76625b866",
+    "port/pydata-scripts/native/pydata_scripts.cpp": "a146a72dc96f20cd1610a2be18beb91d534174c717bed6a8c958a2d4504d5aa0",
+    "port/script-runtime/script_runtime.cpp": "3c3d7a5c8dbb767ed065cade22c674ae2e32c5063b858c3c35304d2b6e880581",
     "port/skin-payloads/skin.cpp": "c3b61a63e47bdd5e37a6f784e5b89f4626fe9499d1232a8f2f3760beb7cc8c83",
     "port/animation-pose/pose.cpp": "95bbbbd840a5e119a31454a5fe7723fea69b0c3cbd5b581d699813ec28a3cab1",
     "port/animation-values/values.cpp": "44cb86790f52c50c0ae2d3811cc983911514a1d5f987f37c2a5a692aeed3cb2c",
@@ -381,7 +659,7 @@
     "port/animation-mixing/mixing.cpp": "356e356741497dd002f917e4ce7109eb2340f6093d230a388f30df25d8113ef5",
     "port/animation-layers/layers.cpp": "4af4d79e5fcbd1b9233701837694fc5e69bfd0ca8eba210e1fcfae1d058a0568",
     "port/scene-draw/draw.cpp": "af6274fadfdc1e9506dd9ec1278ce6bb393b322bb7636b8968f2c96e5e193c48",
-    "port/scene-payloads/scene.cpp": "0f64fd02c282b4bb455f94e0c2afd66e757d21707f5e551dd8bb96c72dd81dae",
+    "port/scene-payloads/scene.cpp": "79006a9bc17af8e1ae554b8af77e523952ebf8e16dcf364da9cf66c8842623b9",
     "port/asset-payloads/payloads.cpp": "f921d16550af1133a8c7fb264c0132381ff7f3643c56fbdc3a13512ff478742b",
     "port/engine-resources/resources.cpp": "5908520d2a2bdd318669c30e0a6863c023b05327366cc0c1cad782700c945b25",
     "port/engine-math/math.cpp": "04baafb69f3520bdee2a9097df8457903c9a3f04d3c1c66c5add870e06179ee6",

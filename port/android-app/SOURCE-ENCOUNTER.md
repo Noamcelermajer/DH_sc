@@ -13,6 +13,19 @@ to reduce the player's health to **DEFEATED**. **Reset** starts a fresh encounte
 and replaces its saved run. **Diagnostics** opens the earlier asset and script
 testing screen.
 
+The **SWAMP preview** button opens a separate static view of original level
+module 0. It does not replace the encounter or modify its save. Only module 0 is
+rendered on-device so far; all nine module subtrees have host-side placement and
+buffer checks. See the [preview scope and runtime evidence](SWAMP-PREVIEW.md).
+
+The **INFECTED VILLAGE static preview** button opens a separate view of the real
+`INFECTED_VILLAGE_01` source geometry and both authored module placements. The
+preview filters two guide-volume draws and two untextured floor fallback draws
+for readability; their source records remain loaded, and native renderer
+visibility is unresolved. It does not start a player, Ambush actors, AI,
+collision, scripts, triggers, or level transitions. See the
+[preview scope](INFECTED-VILLAGE-PREVIEW.md) and [runtime evidence](infected-village-preview-runtime-validation.json).
+
 In-progress and completed encounter state is saved to app-private storage and
 restored after a cold process restart. These are authored development saves,
 not files compatible with the original game. See

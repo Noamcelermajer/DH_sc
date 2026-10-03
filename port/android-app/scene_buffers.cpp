@@ -16,6 +16,7 @@ using dh2::viewer::SceneMeshError;
 constexpr std::uint32_t max_vertices = 65535;
 constexpr std::uint32_t max_indices = 1000000;
 constexpr std::uint32_t max_commands = 8192;
+constexpr std::uint32_t max_texture_references = 32768;
 
 template<typename T>
 bool reserve(T*& buffer, std::uint32_t& capacity, std::uint32_t required,
@@ -114,6 +115,104 @@ void first_diffuse(const dh2::draw::Command* draw, Context& context) {
     }
 }
 
+bool copy_text(char* output, std::size_t capacity, const char* input) {
+    if (!input) input = "";
+    const auto length = std::strlen(input);
+    if (length >= capacity) return false;
+    std::memcpy(output, input, length + 1);
+    return true;
+}
+
+bool append_descriptor(const dh2::draw::Command* draw, Context& context,
+                       std::uint32_t first_vertex, std::uint32_t first_index,
+                       std::uint32_t vertices, std::uint32_t indices) {
+    auto& output = *context.output;
+    dh2::viewer::SceneDrawDescriptor descriptor{};
+    descriptor.first_vertex = first_vertex;
+    descriptor.vertex_count = vertices;
+    descriptor.first_index = first_index;
+    descriptor.index_count = indices;
+    descriptor.visual_index = draw->visual_index;
+    descriptor.node_record = draw->node_record;
+    descriptor.visible = draw->visible;
+    descriptor.geometry_index = draw->geometry_index;
+    descriptor.primitive_index = draw->primitive_index;
+    descriptor.material_index = draw->material_index;
+    if (!copy_text(descriptor.node_id, sizeof(descriptor.node_id), draw->node_id) ||
+        !copy_text(descriptor.geometry_id, sizeof(descriptor.geometry_id), draw->geometry_id) ||
+        !copy_text(descriptor.material_id, sizeof(descriptor.material_id), draw->material_id)) {
+        context.error = SceneMeshError::limit;
+        return false;
+    }
+
+    std::uint32_t texture_count = 0;
+    dh2::materials::Material material{};
+    const bool has_material = draw->material_index >= 0 &&
+        dh2_material_record(&material, context.image, draw->material_index) ==
+            dh2::materials::Error::ok;
+    if (has_material) {
+        if (!copy_text(descriptor.material_name, sizeof(descriptor.material_name), material.name) ||
+            !copy_text(descriptor.external_effect_file, sizeof(descriptor.external_effect_file),
+                       material.external_effect_file) ||
+            !copy_text(descriptor.effect_url, sizeof(descriptor.effect_url), material.effect_url)) {
+            context.error = SceneMeshError::limit;
+            return false;
+        }
+        for (std::uint32_t i = 0; i < material.parameter_count; ++i) {
+            dh2::materials::Parameter parameter{};
+            if (dh2_material_parameter(&parameter, &material, i) !=
+                    dh2::materials::Error::ok) {
+                context.error = SceneMeshError::unsupported;
+                return false;
+            }
+            if (parameter.type_code == 11) ++texture_count;
+        }
+    }
+    if (texture_count > max_texture_references - output.texture_reference_count) {
+        context.error = SceneMeshError::limit;
+        return false;
+    }
+    if (!reserve(output.draws, output.draw_capacity, output.draw_commands + 1,
+                 max_commands) ||
+        !reserve(output.texture_references, output.texture_reference_capacity,
+                 output.texture_reference_count + texture_count,
+                 max_texture_references)) {
+        context.error = SceneMeshError::allocation;
+        return false;
+    }
+    descriptor.first_texture = output.texture_reference_count;
+    descriptor.texture_count = texture_count;
+    std::uint32_t written = 0;
+    if (has_material) {
+        for (std::uint32_t i = 0; i < material.parameter_count; ++i) {
+            dh2::materials::Parameter parameter{};
+            if (dh2_material_parameter(&parameter, &material, i) !=
+                    dh2::materials::Error::ok) {
+                context.error = SceneMeshError::unsupported;
+                return false;
+            }
+            if (parameter.type_code != 11) continue;
+            dh2::viewer::SceneTextureReference reference{};
+            reference.image_index = -1;
+            dh2::materials::ImageRef image{};
+            if (dh2_material_sampler_image(&image, &material, i) !=
+                    dh2::materials::Error::ok ||
+                !copy_text(reference.parameter_id, sizeof(reference.parameter_id), parameter.id) ||
+                !copy_text(reference.image_id, sizeof(reference.image_id), image.id) ||
+                !copy_text(reference.image_name, sizeof(reference.image_name), image.name) ||
+                !copy_text(reference.source_path, sizeof(reference.source_path), image.source_path)) {
+                context.error = SceneMeshError::unsupported;
+                return false;
+            }
+            reference.image_index = image.index;
+            output.texture_references[output.texture_reference_count + written++] = reference;
+        }
+    }
+    output.draws[output.draw_commands] = descriptor;
+    output.texture_reference_count += written;
+    return true;
+}
+
 bool append_draw(const dh2::draw::Command* draw, void* user) {
     auto& context = *static_cast<Context*>(user);
     if (!contains_node(context,draw->node_record)) return true;
@@ -157,6 +256,7 @@ bool append_draw(const dh2::draw::Command* draw, void* user) {
         return false;
     }
     const auto base = output.vertex_count;
+    const auto first_index = output.index_count;
     if (!reserve(output.vertices,output.vertex_capacity,base+mesh.vertices,max_vertices,5) ||
         !reserve(output.indices,output.index_capacity,output.index_count+primitive.index_count,max_indices)) {
         context.error = SceneMeshError::allocation;
@@ -214,17 +314,21 @@ bool append_draw(const dh2::draw::Command* draw, void* user) {
     }
     output.vertex_count += mesh.vertices;
     output.index_count += primitive.index_count;
+    if (!append_descriptor(draw, context, base, first_index, mesh.vertices,
+                           primitive.index_count)) return false;
     ++output.draw_commands;
     first_diffuse(draw, context);
     return true;
 }
-bool append_first_skin(Context& context) {
+bool append_first_skin(Context& context, const char* required_controller_id = nullptr) {
     dh2::scene::Scene scene{};
     if (dh2_scene_open(&scene, context.image) != dh2::scene::Error::ok) return false;
     const auto count = dh2_bres_library_count(context.image, dh2::resources::Library::controller);
     for (std::uint32_t i = 0; i < count; ++i) {
         dh2::skin::Skin skin{};
         if (dh2_skin_open(&skin, context.image, i) != dh2::skin::Error::ok) continue;
+        if (required_controller_id &&
+            (!skin.id || std::strcmp(skin.id, required_controller_id) != 0)) continue;
         // Diagnostic: select the first resolvable controller, not every armour
         // alternative in a modular character file.
         for (std::uint32_t j = 0; j < scene.visuals; ++j) {
@@ -261,6 +365,7 @@ bool append_first_skin(Context& context) {
                 command.geometry_index = skin.geometry_index;
                 command.primitive_index = static_cast<std::int32_t>(k);
                 command.material_index = material_index;
+                command.visible = 1;
                 if (!append_draw(&command, &context)) return false;
             }
             context.skin = nullptr; context.palette = nullptr;
@@ -276,6 +381,8 @@ extern "C" void dh2_viewer_scene_mesh_free(SceneMesh* output) {
     if (!output) return;
     std::free(output->vertices);
     std::free(output->indices);
+    std::free(output->draws);
+    std::free(output->texture_references);
     *output = {};
 }
 
@@ -285,7 +392,8 @@ static SceneMeshError mesh_at(
     const dh2::layers::Layers* layers, bool normalized = true,
     const char* node_prefix = nullptr,
     const std::uint32_t* node_records = nullptr, std::uint32_t node_count = 0,
-    const dh2::math::Matrix4f* placement_correction = nullptr) {
+    const dh2::math::Matrix4f* placement_correction = nullptr,
+    const char* skin_controller_id = nullptr) {
     if (!output) return SceneMeshError::argument;
     *output = {};
     if (!image || !image->bytes || (node_records == nullptr) != (node_count == 0) ||
@@ -296,8 +404,9 @@ static SceneMeshError mesh_at(
                     {-INFINITY, -INFINITY, -INFINITY}, nullptr, nullptr, clip, milliseconds, layers,
                     node_prefix, node_records, node_count, placement_correction};
     dh2::draw::Stats stats{};
-    const auto walked = dh2_static_scene_draws(&stats, image, append_draw,
-                                                &context, 20000, max_commands);
+    const auto walked = skin_controller_id ? dh2::draw::Error::ok
+        : dh2_static_scene_draws(&stats, image, append_draw,
+                                 &context, 20000, max_commands);
     if (context.error != SceneMeshError::ok || walked != dh2::draw::Error::ok) {
         const auto error = context.error != SceneMeshError::ok ? context.error
             : (walked == dh2::draw::Error::node_limit ||
@@ -306,7 +415,8 @@ static SceneMeshError mesh_at(
         dh2_viewer_scene_mesh_free(output);
         return error;
     }
-    if (!output->draw_commands && !node_prefix && !node_records) append_first_skin(context);
+    if (skin_controller_id) append_first_skin(context, skin_controller_id);
+    else if (!output->draw_commands && !node_prefix && !node_records) append_first_skin(context);
     if (context.error != SceneMeshError::ok || !output->vertex_count || !output->index_count ||
         (!output->skin_joints && !node_prefix && !node_records && output->draw_commands != stats.draw_commands)) {
         dh2_viewer_scene_mesh_free(output);
@@ -360,6 +470,15 @@ extern "C" SceneMeshError dh2_world_scene_mesh_at(
     SceneMesh* output, const dh2::resources::BresView* image,
     const dh2::pose::Clip* clip, std::int32_t milliseconds) {
     return mesh_at(output, image, clip, milliseconds, nullptr, false);
+}
+
+extern "C" SceneMeshError dh2_world_scene_skin_mesh_at(
+    SceneMesh* output, const dh2::resources::BresView* image,
+    const dh2::pose::Clip* clip, std::int32_t milliseconds,
+    const char* controller_id) {
+    if (!controller_id || !controller_id[0]) return SceneMeshError::argument;
+    return mesh_at(output, image, clip, milliseconds, nullptr, false,
+                   nullptr, nullptr, 0, nullptr, controller_id);
 }
 
 extern "C" SceneMeshError dh2_world_scene_mesh_nodes(

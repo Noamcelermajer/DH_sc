@@ -30,7 +30,7 @@ struct Node {
     const char* id;
     const char* name;
     std::uint32_t record, children, child_offset, instances, instance_offset;
-    std::uint32_t visible, extension_offset;
+    std::uint32_t visible, user_data_offset, extension_offset;
     float position[3], rotation[4], scale[3];
 };
 struct Instance {
@@ -55,6 +55,13 @@ dh2::scene::Error dh2_scene_child_node(const dh2::scene::Node*, std::int32_t,
                                        dh2::scene::Node*);
 dh2::scene::Error dh2_scene_instance(const dh2::scene::Node*, std::int32_t,
                                      dh2::scene::Instance*);
+// Resolve the node's optional +0x48 UserProperties record to its bounded
+// NUL-terminated text. On success, no user data is represented by null/zero;
+// otherwise byte_count includes the terminator. A malformed record returns
+// range, while an invalid or unterminated string returns string.
+dh2::scene::Error dh2_scene_user_data_string(const dh2::scene::Node*,
+                                             const char** text,
+                                             std::size_t* byte_count);
 // Resolve local #ID references; -1 means absent, external or unresolved.
 std::int32_t dh2_scene_visual_index(const dh2::scene::Scene*, const char* url);
 std::int32_t dh2_scene_geometry_index(const dh2::scene::Scene*, const dh2::scene::Instance*);

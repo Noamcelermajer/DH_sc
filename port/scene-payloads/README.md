@@ -51,7 +51,7 @@ original-instruction differential test of `mult34` itself.
 | Collada root | Visual-scene count/pointer at `0x98/0x9c`; scene-reference count/pointer at `0xb8/0xbc` |
 | Scene reference | Eight-byte type/payload pair; type 6's payload has a URL offset at `+4` |
 | Visual scene | Sixteen bytes: ID/name offsets, root-node count/pointer |
-| Node | Eighty bytes: ID/name, position at `+0x0c`, quaternion at `+0x18`, scale at `+0x28`, visibility at `+0x34`, child count/pointer at `+0x38/+0x3c`, instance count/pointer at `+0x40/+0x44`; `+0x4c` is retained as an opaque extension offset |
+| Node | Eighty bytes: ID/name, position at `+0x0c`, quaternion at `+0x18`, scale at `+0x28`, visibility at `+0x34`, child count/pointer at `+0x38/+0x3c`, instance count/pointer at `+0x40/+0x44`; `+0x48` points to optional UserProperties data and `+0x4c` remains the existing opaque discriminator/metadata word |
 | Instance | Eight-byte type/payload pair; type 3's payload has a geometry URL offset at `+4` |
 
 The parser checks record spans, strings and finite transform values. It keeps
@@ -61,6 +61,16 @@ resolved. A caller can use `dh2_scene_geometry_index` with the existing
 world matrices are available through the bounded walk. Material bindings,
 skinned nodes, animation application, ownership, scene rendering and gameplay
 are not implemented here.
+
+`dh2_scene_user_data_string` follows the node's `+0x48` word to a four-byte
+UserProperties record, then resolves its first word as a BRES string offset.
+The record and string terminator are checked against the image extent; a
+successful absent value returns null/zero, while a present string returns its
+bounded byte count including the NUL. The node's `+0x4c` word is still exposed
+as `extension_offset` and is never used as the UserProperties pointer. The
+pure `port/floor-types` reader consumes this bounded text and implements the
+native `floortypes` masks; its README cites the native parser, floor-loading,
+path-eligibility, and position-validation routines.
 
 ## Validation
 
@@ -93,6 +103,9 @@ python port/scene-payloads/tests/safety.py \
   --sample /path/to/cache/files/data/3d/animateddecors/candle_flame.bdae \
   --library port/scene-payloads/build/libdh2_scene_host.so \
   --report port/scene-payloads/safety-validation.json
+python port/scene-payloads/tests/user_data.py \
+  --cache /path/to/cache/files/data/3d/modules/swamp/swamp.bdae \
+  --library port/scene-payloads/build/libdh2_scene_host.so
 ```
 
 On Windows, the host output suffix is `.dll`. Build outputs are local and

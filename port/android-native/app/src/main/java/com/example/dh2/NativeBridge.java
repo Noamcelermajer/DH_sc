@@ -2,6 +2,8 @@ package com.example.dh2;
 final class NativeBridge {
     static { System.loadLibrary("dh2_native"); }
     static native String buildInfo();
+    static native void modDirectory(String directory);
+    static native byte[] readAsset(String name,android.content.res.AssetManager assets) throws java.io.IOException;
     static native String initialize();
     static native String loadTexture(byte[] encoded);
     static native String loadModel(byte[] encoded,android.content.res.AssetManager assets);

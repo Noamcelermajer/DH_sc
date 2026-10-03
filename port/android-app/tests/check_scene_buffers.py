@@ -26,7 +26,10 @@ class SceneMesh(c.Structure):
                 ('vertex_count', U), ('index_count', U), ('draw_commands', U),
                 ('skin_joints', U),
                 ('first_diffuse_texture', c.c_char * 96),
-                ('vertex_capacity', U), ('index_capacity', U)]
+                ('vertex_capacity', U), ('index_capacity', U),
+                ('draws', P), ('texture_references', P),
+                ('draw_capacity', U), ('texture_reference_count', U),
+                ('texture_reference_capacity', U)]
 
 
 def main() -> None:

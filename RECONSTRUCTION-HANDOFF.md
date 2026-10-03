@@ -1,5 +1,14 @@
 # Dungeon Hunter 2: reconstruction findings, current state and continuation guide
 
+## Current continuation entry point — 2026-10-04
+
+See [COMBINED-RECONSTRUCTION-STATUS.md](docs/COMBINED-RECONSTRUCTION-STATUS.md)
+for the improved goal, combined Adam/our findings, actual source mapping and
+remaining completion gates. The current native gameplay baseline is
+`port/android-native`; `port/android-app`/Irrlicht remains a separate route.
+The older checkpoint identities below are preserved as historical evidence.
+No private-document contents belong in this repository.
+
 ## Current checkpoint — 2026-10-04, Android 17 / API 37
 
 The default source APK remains `port/android-app/build/dh2-source-renderer-debug.apk`:

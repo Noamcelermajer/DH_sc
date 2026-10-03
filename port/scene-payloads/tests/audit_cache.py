@@ -35,7 +35,7 @@ class Visual(c.Structure):
 class Node(c.Structure):
     _fields_ = [('image', Bres), ('id', P), ('name', P)] + [(x, U) for x in
         ['record', 'children', 'child_offset', 'instances', 'instance_offset',
-         'visible', 'extension_offset']] + [('position', c.c_float*3),
+         'visible', 'user_data_offset', 'extension_offset']] + [('position', c.c_float*3),
         ('rotation', c.c_float*4), ('scale', c.c_float*3)]
 
 
@@ -60,6 +60,8 @@ def bind(path):
         'dh2_scene_root_node': (U, [c.POINTER(Visual), I, c.POINTER(Node)]),
         'dh2_scene_child_node': (U, [c.POINTER(Node), I, c.POINTER(Node)]),
         'dh2_scene_instance': (U, [c.POINTER(Node), I, c.POINTER(Instance)]),
+        'dh2_scene_user_data_string': (U, [c.POINTER(Node), c.POINTER(P),
+                                           c.POINTER(c.c_size_t)]),
         'dh2_scene_visual_index': (I, [c.POINTER(Scene), c.c_char_p]),
         'dh2_scene_geometry_index': (I, [c.POINTER(Scene), c.POINTER(Instance)]),
         'dh2_scene_local_matrix': (U, [c.POINTER(Node), c.POINTER(Matrix)]),
