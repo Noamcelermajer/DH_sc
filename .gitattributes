@@ -1,0 +1,47 @@
+# These imported source bytes and tested patch context retain their verified spelling.
+compatibility/16k-port/zettabridge-guest-memory-16k-poc.patch -whitespace
+port/android-java/java/com/gameloft/android/GAND/GloftD2SS/installer/GameInstaller.java -whitespace
+port/android-java/java/com/samsungapps/plasma/CreditCardPaymentMethod.java -whitespace
+recovered/native/decompiled/libDungeonHunter2.so/* -text -whitespace linguist-generated=true
+recovered/native/decompiled/libStormGLOFT.so/* -text -whitespace linguist-generated=true
+recovered/native/decompiled/libnativeinterface.so/* -text -whitespace linguist-generated=true
+recovered/android/java/** -text -whitespace linguist-generated=true
+recovered/android/smali/** -text -whitespace linguist-generated=true
+recovered/native/assembly/** -text -whitespace linguist-generated=true
+recovered/native/symbols/** -text -whitespace linguist-generated=true
+recovered/assets/source-data/** -text -whitespace linguist-generated=true
+recovered/assets/cache-manifest.json -text -whitespace linguist-generated=true
+recovered/native/debug/** -text -whitespace linguist-generated=true
+recovered/scripts/original/** -text -whitespace linguist-language=Lua
+port/lua-scripts/overrides/** -text -whitespace linguist-language=Lua
+port/lua-runtime/vendor/** -text -whitespace
+reports/pydata-array-name-trace.json -text
+reports/pydata-struct-name-trace.json -text
+port/pydata-names/struct-names.h -text
+reports/character-property-reader-trace.json -text
+reports/character-class-reader-trace.json -text
+reports/loot-table-reader-trace.json -text
+reports/equipment-callback-trace.json -text
+reports/item-power-reader-trace.json -text
+port/gear-properties/differential-validation.json -text
+port/random/*validation.json -text
+port/character-health/*validation.json -text whitespace=cr-at-eol
+port/lua-runtime/health-*validation.json -text whitespace=cr-at-eol
+port/android-app/health-*validation.json -text whitespace=cr-at-eol
+port/character-damage/*validation.json -text whitespace=cr-at-eol
+port/character-death/*validation.json -text whitespace=cr-at-eol
+port/quest-kill/*validation.json -text whitespace=cr-at-eol
+port/quest-data/*validation.json -text whitespace=cr-at-eol
+port/lua-runtime/quest-*validation.json -text whitespace=cr-at-eol
+port/lua-runtime/questdata-*validation.json -text whitespace=cr-at-eol
+port/android-app/questdata-*validation.json -text whitespace=cr-at-eol
+port/android-app/quest-*validation.json -text whitespace=cr-at-eol
+port/lua-runtime/death-*validation.json -text whitespace=cr-at-eol
+port/android-app/death-*validation.json -text whitespace=cr-at-eol
+port/lua-runtime/damage-*validation.json -text whitespace=cr-at-eol
+port/android-app/damage-*validation.json -text whitespace=cr-at-eol
+port/lua-runtime/combat-*validation.json -text
+port/android-app/combat-*validation.json -text
+port/quest-compile/*validation.json -text whitespace=cr-at-eol
+port/lua-runtime/questcompile-*validation.json -text whitespace=cr-at-eol
+port/android-app/questcompile-*validation.json -text whitespace=cr-at-eol

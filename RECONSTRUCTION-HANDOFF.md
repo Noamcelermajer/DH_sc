@@ -1,12 +1,368 @@
 # Dungeon Hunter 2: reconstruction findings, current state and continuation guide
 
+## Latest continuation checkpoint — Android 17 persistence and SWAMP source data
+
+The current downloadable APK is a **source-built authored development encounter**,
+not a complete Dungeon Hunter 2 source rebuild. It runs on Android 17/API 37 with
+an NDK-built ARM64 and x86_64 library, and includes the recovered combat/property/
+health/death/counted-kill code wired into one authored `void_maze` cross-room
+encounter. The player can defeat two test sentries; the HUD reaches `2/2 COMPLETE`.
+Touch movement, steering, camera, floor bounds, encounter control flow, sentry
+setup and the room composition remain authored. This app does not execute the
+original engine binary.
+
+The current milestone adds a checksummed `DH2S` encounter checkpoint, candidate
+restore/reset, stable named-spawn matching, exact owned actor/quest/RNG state and
+a two-slot atomic app-private save store. The installed APK passed victory and
+cold-process restore on both Android 17 x86_64 emulators: API 37.0 with 4 KiB
+pages and API 37.2 with 16 KiB pages. The installed APK SHA-256 is
+`aa557d05aa9d6bdacb63f61f879289402de418f00c43a52d0a2b38c0a3504094`;
+size is 1,234,908 bytes. [Download this exact APK from Drive](https://drive.google.com/file/d/1ZGjquZoWE-mXx8iB4OtpaqxlhlgyPzPP/view?usp=drivesdk).
+See [persistence source/test scope](port/android-app/PERSISTENCE-INTEGRATION.md)
+and [device runtime evidence](port/android-app/persistence-runtime-validation.json).
+
+In parallel, `port/world-data/` now parses original SWAMP `001_swamp.mlx` and
+selected MGP/MVP source records and correctly binds all nine module subtrees in
+the catalogue BRES. Independent host checks cover 372 synthetic cases, all 195
+selected original entities and exact placement records; ARM64 compilation
+passes. **That importer is not yet wired to the APK renderer or playable world.**
+See [importer scope, provenance and limitations](port/world-data/README.md).
+
+### Remaining work for the requested complete rebuild
+
+1. Connect SWAMP and then other original levels to runtime rendering; reconstruct
+   per-material/shader/texture batches, correct geometry, lighting and visual
+   decor. The current renderer still loads the authored cross-room floor.
+2. Implement world/module streaming and navigation, collision/height, object
+   factories and stable runtime IDs; activate original actors, doors, triggers,
+   containers, checkpoints, exits and visual objects from recovered records.
+3. Reconstruct original Character lifecycle, default properties/class/equipment,
+   inventory mutation, buffs, AI/state machines, animation transitions/root
+   motion, targeting and combat dispatch. Existing combat/quest kernels cover
+   several methods, not the whole orchestration.
+4. Execute original level scripts and commands safely: conditions, scripts,
+   spawning/limbo, dialogs, tutorials, camera, rewards, loot and story/level
+   transitions. The new save is not compatible with original `.savegame` files
+   and stores no campaign, inventory or reward progression.
+5. Expand automated and interactive Android 17 tests across real source levels,
+   record recoveries/bugs, fix visual/gameplay findings, and rebuild/release after
+   each coherent milestone. ARM64 is currently compiled and structurally checked
+   but not executed on an ARM64 device.
+6. Resolve the [asset/code rights notes](RIGHTS.md) before calling the project
+   fully open-source or redistributing recovered copyrighted material. Authored
+   replacement code and recovered owner-supplied material must be identified
+   separately.
+
+The APK builder and source coverage are in [port/android-app](port/android-app/README.md).
+Historical checkpoint notes below describe older binaries; their sizes and
+limitations refer to those checkpoints rather than the current APK.
+
+**Quest activation in the source APK:** Actual native population helpers and
+four kill/clear Compile methods match 27,516 population and 21,372 compilation
+cases on host/source ARM64. The 906,147-byte source APK passes 23 imports on each
+Android 17 page size: all 34 real counted-kill records compile against owned
+resolved-ID world snapshots and execute recovered damage/death/progress. Four
+synthetic kill/clear records preserve the original level, population, active and
+required-count decisions. Record/world generations survive replacement/rejection
+and collection. Native/strict gates pass. World loading and ID resolution,
+conditions, automatic dispatch, persistence/rewards, loot, full combat/world/AI
+and complete source gameplay remain unfinished. See
+[compile scope](port/quest-compile/README.md) and
+[APK evidence](port/android-app/QUEST-COMPILE-INTEGRATION.md). Earlier entries
+retain their checkpoint identities.
+
+**Real quest data in the source APK:** All 64 cache quest records, 80
+conditions, 194 objective stubs, 222 rewards and 896 script slots match the actual
+original reader on host/source ARM64. All 21,817 host truncations reject. The
+902,051-byte APK passes 19 imports on each Android 17 page size. All 34 supported
+counted-kill objectives use recorded IDs/required counts with recovered melee
+damage, owned health/death and quest progress. Dataset replacement/rejection and
+retained objective generations pass. Native/strict runtime gates pass. Original
+quest compile/world counts, conditions, automatic dispatch, persistence/rewards,
+loot, full combat/world/AI and complete source gameplay remain unfinished. See
+[reader scope](port/quest-data/README.md) and
+[APK evidence](port/android-app/QUEST-DATA-INTEGRATION.md). Earlier entries retain
+their checkpoint identities.
+
+**Kill-objective progress in the source APK:** Four already-dispatched
+native kill/clear handlers pass 14,396 original ARM32/host/source ARM64 comparisons.
+The 873,379-byte source APK passes 14 imports on both Android 17 page sizes:
+three recovered-formula two-hit deaths feed four owned quest counters, complete
+at the second kill and preserve progress after replacement/rejection. Stale and
+increasing synchronization, repeated completion requests, kind/ID filtering and
+argument rollback pass. Native runtime and strict sanitizer checks pass. Actual
+quest data loading/compile, automatic dispatch, persistence/rewards, loot, killer
+credit/XP, player death, full combat/world/AI and complete source gameplay remain
+pending. See [quest scope](port/quest-kill/README.md) and
+[APK evidence](port/android-app/QUEST-INTEGRATION.md). Earlier entries retain
+their checkpoint identities.
+
+**Non-player death in the source APK:** The null-killer Kill projection
+passes 2,510 original ARM32/source ARM64/host comparisons. Owned dead state,
+HP zeroing, loot request/ID and four ordered quest requests match. Event match
+fields are property/template IDs, not quantities. The 869,283-byte source APK
+passes 14 imports on both Android 17 page sizes, including real objective
+constants, melee-to-health-to-death, repeated kills, suppression, rollback and
+retained state after data replacement. Native runtime and strict sanitizer
+checks pass. Actual loot/quest consumers, resolved killer credit/XP, player
+death, full combat dispatch, world/AI, progression and saves remain pending.
+Full source gameplay is unfinished. See [death scope](port/character-death/README.md)
+and [APK evidence](port/android-app/DEATH-INTEGRATION.md). Earlier entries retain
+their checkpoint identities.
+
+**Non-player damage in the source APK:** The numeric non-player HitFor
+projection passes 2,835 original ARM32/source ARM64/host comparisons, including
+health routing, suppression, forced kills, death requests and death reason.
+The 865,187-byte source APK passes 11 imports on Android 17 4 KiB/16 KiB:
+recovered melee formula damage feeds health, two five-point hits request death
+on a ten-point diagnostic actor, policy/argument rollback and retained dataset
+recovery pass, then textured walk preview loads. Native runtime selftests pass
+on both page sizes and strict host sanitizers. Original Character/death command
+ownership, player warnings, resolved attacker achievements, full result dispatch,
+world/AI, progression, saves and source gameplay remain unfinished. See
+[damage scope](port/character-damage/README.md) and
+[APK evidence](port/android-app/DAMAGE-INTEGRATION.md). Earlier entries
+retain their checkpoint identities.
+
+**Recovered health and mana in the source APK:** Health setters/getters,
+validation, regeneration and mana use pass 4,156 original ARM32/source ARM64/host
+comparisons. Owned script actors pass 520 controlled and all 446 real character
+cases / 216,384 final-field queries on host, strict sanitizers and Android 17
+4 KiB/16 KiB. The 848,803-byte source APK passes 14 imports, 86 selected actor
+cases / 19,264 queries, retained generations/error recovery and textured walk
+preview on both page sizes. Full damage/result dispatch, death/events, Character
+ownership, AI and source gameplay remain unfinished. See
+[health scope](port/character-health/README.md) and
+[APK evidence](port/android-app/HEALTH-INTEGRATION.md). Earlier entries
+retain their checkpoint identities.
+
+**Recovered combat calculations in the source APK:** Reconstructed random
+streams match 768 original ARM32/source ARM64/host draws and 351 callbacks.
+The unchanged combat script runs through owned actor projections: 3,568 real
+record/hand/attack cases and 216 controlled cases pass host, strict sanitizers
+and Android 17 4 KiB/16 KiB checks. The 840,611-byte source APK passes 26 imports,
+80 selected real and all 216 controlled cases, constant replacement/recovery
+and textured two-motion preview on both page sizes. Damage application,
+Character/state/buff ownership, AI and full source gameplay remain unfinished.
+See [binding scope](port/lua-character/COMBAT-BINDING.md) and
+[APK evidence](port/android-app/COMBAT-INTEGRATION.md). Earlier entries
+retain their checkpoint identities.
+
+**Gear stats and powers in the source APK:** Item/power stat contributions
+and base/gear/class recalculation now match 7,147 original ARM32 versus source
+ARM64/host comparisons. Owned script objects retain all four datasets and pass
+1,012,032 final-field queries across all 1,322 items and 937 powers in both hands
+on host, strict sanitizers and Android 17 4 KiB/16 KiB. The 836,515-byte source
+APK passes 20 imports / 15,680 selected final-field queries and textured animation
+checks on both page sizes. Original Character/inventory ownership, equip
+requirements, random powers, buffs, combat and full source gameplay remain
+unfinished. See [source scope](port/gear-properties/README.md) and
+[APK evidence](port/android-app/GEAR-INTEGRATION.md). Earlier entries retain
+their checkpoint identities.
+
+**Equipment calculations in the source APK:** All eight loot tables are
+decoded from checked reader layouts, including 1,322 item records. Owned script
+objects retain item data and expose supported attack/critical/damage bonuses and
+shield queries. The reader/query comparison passes 24,670 original ARM32 versus
+source ARM64/host checks; 312 original callback cases match the source bindings.
+All-item script checks pass 18,508 queries on host, strict sanitizers and both
+Android 17 page sizes. The 807,843-byte APK passes item, class, shared-script and
+textured animation integration on both page sizes. Full Character lifecycle,
+inventory mutation, gear contributions/powers, combat and source gameplay remain
+unfinished. See [source scope](port/equipment-bonuses/README.md) and
+[APK evidence](port/android-app/EQUIPMENT-INTEGRATION.md).
+Earlier entries retain their checkpoint identities.
+
+**Class calculations in the source APK:** Owned script property objects now
+retain class datasets and expose authored `ApplyClass`. All 260 real classes /
+116,480 final-field queries pass on host, strict sanitizers and both Android 17
+page sizes. The 779,171-byte source APK imports property/class data and passes
+40 real applications / 8,960 final values, retained generations, guarded failure
+and recovery. Shared-script and textured animation regressions pass in the same
+package. Full Character lifecycle, equipment/buffs, combat and source gameplay
+remain unfinished. See [binding scope](port/lua-character/CLASS-BINDING.md)
+and [APK evidence](port/android-app/CLASS-INTEGRATION.md). Earlier entries keep their checkpoint identities.
+
+**Derived property class rules:** Original readers recover 260 classes / 1,659
+rules. Original application, group traversal and calculation bodies match source
+ARM64/host in 3,270 cases across all four state sheets and temporary storage.
+Strict sanitizers pass 12,000 safety iterations. This standalone checkpoint uses
+empty buffs; complete Character construction, class lifecycle, Lua class binding,
+APK integration and full gameplay remain unfinished. See [source and evidence](port/character-classes/README.md).
+Earlier entries retain their checkpoint scopes and identities.
+
+**Typed script property state in Android:** Numeric/boolean `GetProp`/`SetProp`
+matches original ARM32 and source ARM64/host in 1,586 callback checks. Owned Lua
+userdata checks all 448 real records / 100,352 composed fields on host, strict
+sanitizers and both Android 17 page sizes. The 775,075-byte source APK now imports
+character data through Android's document picker. Real queries, typed calls,
+dataset replacement/rejection/recovery, shared scripts and character animation
+regressions pass on both page sizes. Original Character, derived class stats,
+buffs, real combat and full source gameplay remain unfinished. See [binding
+evidence](port/lua-character/README.md) and [APK checks](port/android-app/PROPERTY-INTEGRATION.md).
+Earlier entries retain their checkpoint scope and binary identities.
+
+**Owned character property writes:** Source state owns four 224-field sheets.
+Original property Set/Add/Int operations and current-final integer reads match
+source ARM64/host in 3,352 checks. Strict sanitizers pass 12,000 safety iterations.
+Lua object methods, derived base stats, Android integration and full source game
+remain unfinished. See [source and evidence](port/character-state/README.md). Earlier entries keep their scope.
+
+**Character stat composition:** The original calculation, tree traversal and
+deque iterator bodies match source ARM64/host across 585 cases, including all
+224 cache types, buff priority and container block boundaries. Strict sanitizers
+pass 10,000 safety iterations. This remains standalone: character ownership,
+property write routing, Lua methods and Android game integration are unfinished.
+See [source scope and evidence](port/property-composition/README.md). Earlier checkpoints retain their identities.
+
+**Character property data:** Original readers fully consume all three tables in
+the 401,608-byte character cache file. Source ARM64/host loading matches all
+100,352 character values, and 2,022 original property-operation checks pass.
+Strict sanitizers pass 12,000 safety iterations. This standalone component has
+no entity ownership, aggregate equipment/buffs, Lua object bridge or APK wiring
+yet; full source gameplay remains unfinished. See [scope and evidence](port/character-properties/README.md).
+
+**Source scripts in the Android APK:** The 730,019-byte source package now
+initializes three exact recovered shared scripts inside the character preview.
+Imports, budget/error rejection and recovery pass in the same process on Android
+17 with both 4 KiB and 16 KiB pages. The same APK passes textured character
+import, seeking, mixing, Play and Pause. Native game objects, real combat and full
+source gameplay remain unfinished. See [APK source and evidence](port/android-app/SCRIPT-INTEGRATION.md).
+Earlier checkpoints below retain their original scope and binary identities.
+
+**Structured fields / first shared-script execution:** Static initialization in
+the original ARM32 engine establishes 636 entries in 71 registered Structs tables
+(67 unique class names), with 693 original lookup checks. The source runtime now
+installs owned field names at creation and supplies `GetPyStruct` through the same
+map as `GetPyOID`. All 1,272 alias queries and controlled execution of three exact
+AI/skill/combat shared sources pass on host, strict sanitizers and Android 17
+4 KiB/16 KiB. Current reports use `structs-`. Array names, constants, arithmetic
+and parse regressions pass on the same current runner. Entity callbacks, includes,
+record layouts, real combat and source APK integration remain unfinished; full
+source gameplay is not complete. See [scope](port/pydata-names/STRUCT-FIELDS.md).
+Earlier entries below retain historical test identities and execution scope.
+
+**Ordered array names:** `port/pydata-names` matches all 8,863 names in 71 array
+tables from 35 files to actual original reader output; 266 original lookup cases
+pass and match source ARM64/host. Constructor tracing captures 142 class and 142
+reader registrations. Source Lua `GetPyOID` owns imported strings/IDs, atomically
+replaces classes and preserves previous mappings on malformed input/OOM.
+All authored ID queries pass on host, strict host sanitizers and both Android 17
+page sizes, with all 74 staged hashes checked per emulator. Updated constant,
+arithmetic and script parse regressions pass. Original record-size agreement,
+Structs field names, includes, game objects and script behavior remain open.
+See [scope](port/pydata-names/README.md).
+
+**Checked PyData constants:** `port/pydata-constants` matches 5,608 integer rows
+from 26 complete files to actual original reader insertion writes. A standalone
+source Lua importer clones staging mappings and commits atomically, preserving
+previous data on malformed input/OOM. Every authored `GetPyCst` query passes on
+host, strict host sanitizers and both Android 17 page sizes; caller buffers are
+released first. The original reader consumes 994/1,283 bytes of the mixed sound
+file and misreads one string length as integer 13; the source rejects it wholly.
+Original map lookup and scripts remain unexecuted. Next reconstruct array IDs,
+structured data and includes/object lifetimes before original AI/skill behavior.
+See [scope and evidence](port/pydata-constants/README.md).
+
+**Source Lua checkpoint:** Official Lua 5.1.4 C/header/license bytes are now
+vendored with a pinned archive/per-file manifest. The owned C runtime uses the
+observed original float32/int32 profile through a separate configuration header.
+504 original arithmetic outputs match host and Android source evaluation;
+13 original numeric push/read cases verify float32 storage. The runtime builds
+for ARM64/x86_64; host selftests/sanitizers pass. The exact x86_64 runner passed
+on Android 17 with 4 KiB and 16 KiB pages, parsing 218 originals and the separate
+sandworm override, with the unchanged malformed original rejected as expected.
+Authored library/budget/error-recovery snippets passed; no game script was
+executed. Original registration callers expose 175 distinct function names,
+117 matching script global reads. Binder installation remains stubbed in that
+trace. Nine numeric callbacks now have source implementations passing 2,375
+original ARM32/compiled ARM64/host comparisons, 54,000 sanitizer calls and
+authored Lua assertions on both Android 17 page sizes. Strict runtime sanitizers
+pass after a separately documented table-key overflow/conversion repair applied
+only to a generated build copy. Vendor bytes remain exact. Next implement
+remaining native callbacks, checked PyData tables and include/object
+lifetimes before executing original AI/skill behavior. The source APK has not
+yet incorporated this runtime. See [runtime scope](port/lua-runtime/README.md)
+and [registration evidence](reports/lua-registration-trace.json).
+
+**Readable game scripts:** The complete cache's 219 `.luac` files are plaintext
+source, not bytecode. All 900,493 original bytes are now preserved with archive
+member hashes. 218 originals pass Lua 5.1.5 syntax, and a separate one-character
+sandworm override passes. Original files remain exact. Engine API integration,
+script execution and full source gameplay remain unfinished.
+See [source scope](recovered/scripts/README.md).
+
+**Original ending timing:** Extra-time and pending fields passed 495 calculations,
+1,980 filtered blender notices and 495 ordinary animator notices against original
+ARM32 and compiled ARM64/host source. 20,000 sanitizer calculation/notification
+calls passed. Active lookup is a controlled stub; object lookup, actual game
+callback effects and Android integration remain open.
+See [ending evidence](port/animation-ending/README.md).
+
+**Original completion dispatch:** Callback registration/checking passed 384
+setters, 768 checks and 144 controlled dispatches against original ARM32 and
+compiled ARM64/host source. Deferred notification, field changes during callback
+and the final pending clear passed, as did 10,000 sanitizer checks. Original
+game callbacks and Android integration remain open.
+See [completion evidence](port/animation-completion/README.md).
+
+**Original animation movement:** Explicit-position movement delta/reset passed
+800 resets, 4,000 calculations and 100,000 sanitizer operations. Source preserves
+the original repeated-timestamp behavior and position history. It is standalone;
+root sampling, scene movement, collisions and source gameplay remain unfinished.
+See [movement evidence](port/animation-motion/README.md).
+
+**Original transition projection:** The original two-child transition request
+and fade/update state passed 300 requests and 4,800 updates against original
+ARM32 and compiled ARM64/host source. Active-child dispatch order passed,
+with child updates/getters and callback checking explicitly stubbed.
+100,000 safety operations passed. This is standalone; original object ownership,
+callback effects, pose application and full gameplay remain unfinished.
+See [scope and exact evidence](port/animation-transition/README.md).
+
+**Two-motion source preview:** Checked absolute layers now combine the warrior's
+dual walk and Dark Queen scene 03a motion. The exact updated APK passed imports,
+midpoint seek, 0/50/100% mix, advancing Play and stable Pause on Android 17 with
+both 4 KiB and 16 KiB pages. Visually inspected screenshots show distinct textured
+poses. Host endpoint/palette and 3,000 damaged-input probes passed.
+See [layer scope](port/animation-layers/README.md) and
+[current runtime evidence](port/android-app/layers-runtime-validation.json).
+Original transition scheduling and full source-built gameplay remain unfinished.
+
+**Original timeline update:** The source Android app now uses reconstructed
+range-clock arithmetic for animation playback, seeking and resume. All 400
+original ARM32/compiled ARM64/host sequences matched (4,000 updates and 400 jumps);
+50,000 sanitizer updates passed. The exact updated APK passed advancing Play,
+stable Pause and visible pose changes on Android 17 with 4 KiB and 16 KiB pages.
+See [the timeline component](port/animation-timeline/README.md) and
+[Android runtime evidence](port/android-app/timeline-runtime-validation.json).
+Full source-built gameplay remains unfinished.
+
+**Player animation audit:** 333 of 342 clips produce checked source poses on
+the warrior model, including 327 animated clips. Negative key times are now
+supported. The current source APK passed dual-walk controls on Android 17 with 4 KiB
+pages and a position-component cutscene on 16 KiB pages. Earlier builds
+passed walk and negative-start aura checks. See the
+[pose audit](port/animation-pose/README.md) for rejected formats and bindings.
+The complete source game remains unfinished.
+
+**2026-10-02 continuation:** Current source modules now include checked textures,
+materials, scenes, static draw commands, software skin controllers, and
+[original-instruction-checked float animation calculations](port/animation-values/README.md).
+The [source Android preview](port/android-app/README.md) displays a textured
+18-bone warrior and a selectable 27-track walk on Android 17 x86_64 with
+both 4 KiB and 16 KiB pages. Its exact build and runtime records are under
+`port/android-app/`; an emulator test script is included. This remains an
+absolute-key diagnostic preview with no source-built gameplay. The older
+dated snapshot below must be read alongside these current module reports.
+
 **Snapshot date:** 2026-10-01, Asia/Jerusalem. **Repository reviewed:** [Noamcelermajer/DH_sc](https://github.com/Noamcelermajer/DH_sc), through [ded2115ee60048666e5fd146f80693613e70dadb](https://github.com/Noamcelermajer/DH_sc/commit/ded2115ee60048666e5fd146f80693613e70dadb).
 
-This report consolidates the source-recovery and native-engine reconstruction work, and records the independently maintained APK compatibility work where it affects the handoff. It is a dated evidence snapshot; later commits, release notes and device reports may supersede individual status entries. Test numbers below come from the existing reports. This documentation update did not rerun the engine tests or build an APK.
+This report consolidates the source-recovery and native-engine reconstruction work, and records the independently maintained APK compatibility work where it affects the handoff. It is a dated evidence snapshot; later commits, release notes and device reports may supersede individual status entries. In particular, the later [verified source import](docs/RECOVERY-SOURCE-IMPORT.md) makes the repaired Java/JNI source and recovery tools browsable in Git; statements below that those paths are absent describe the earlier audited commit. Test numbers below come from the existing reports. This documentation update did not rerun the engine tests or build an APK.
 
 ## 1. Goal and present result
 
-The owner's goal is a complete, reproducible source tree that can be reviewed by the rights holder and used to rebuild Dungeon Hunter 2 for current Android, initially targeting the Galaxy Z Fold7. For the native reconstruction route, completion means an ARM64 engine built from reconstructed source, with the game systems and assets integrated and behavior tested on Android. The final engine must run without translating the supplied ARM32 engine binary. Original source text, comments and the exact historical studio project cannot be recovered merely by decompiling a binary; a faithful reconstructed implementation is the practical target.
+The owner's goal is a complete, reproducible source tree that can be reviewed by the rights holder and used to rebuild Dungeon Hunter 2 for current Android. Earlier work considered a Galaxy Z Fold7; the current work validates on official Android 17 emulators and does not require or perform a Fold7 test. For the native reconstruction route, completion means an ARM64 engine built from reconstructed source, with the game systems and assets integrated and behavior tested on Android. The final engine must run without translating the supplied ARM32 engine binary. Original source text, comments and the exact historical studio project cannot be recovered merely by decompiling a binary; a faithful reconstructed implementation is the practical target. See [the current Android 17 results](docs/ANDROID-17-EMULATOR-RESULTS.md) before using the historical compatibility status below.
 
 **That goal is not complete.** We have a substantial binary/source evidence base, buildable Java and JNI support work in the earlier recovery package, and three published C++ engine components. Math, resource readers/BRES access, and animation accessor/search routines have recorded comparisons against original ARM32 instructions. Mesh payloads can be decoded and exported. Images/materials, scene/controller integration, rendering, most engine services and gameplay still need implementation and validation.
 
@@ -165,7 +521,7 @@ Test 4 diagnostics strongly implicate model input during deferred loading. The s
 
 Test 5 is the first compatibility build to patch the engine binary itself; statements about byte-identical engines apply historically to Tests 1–4. Its released APK hash is `e6b81ec649e25bb32c6ec7f3f477d5ef1c2a79b7af43b7ca7643518c5f5e1b8d`. The APK, work ZIP and checksum asset are retained at the release above. No new APK is provided by this report.
 
-The compatibility agent's next discriminator is its existing same-settings Fold7 retest and diagnostic export: one-root `DH2Model opened:` versus a remaining model failure, then movement/combat/save if loading succeeds. Russian menus, display/input geometry, context handling, the earlier GL error, 16 KiB host pages and sustained gameplay remain unresolved or unverified. The [emulator report](compatibility/work/fold7-build/ANDROID_TESTING.md) records infrastructure limits separately. Older sections in compatibility documents retain historical status; consult the newest test-specific section before drawing conclusions.
+Historically, the compatibility agent's next discriminator was a same-settings Fold7 retest and diagnostic export. The current Android 17 emulator work has since fixed the wrapper's repeated model path and reached short saved-level movement on the 4 KiB image. Russian menus, attack/save behavior, sustained gameplay and 16 KiB host pages remain unresolved or unverified. The [current result](docs/ANDROID-17-EMULATOR-RESULTS.md) supersedes that older device-test plan. Older sections in compatibility documents retain historical status; consult the newest test-specific section before drawing conclusions.
 
 ## 7. Reconstruction roadmap and acceptance gates
 
