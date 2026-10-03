@@ -1,5 +1,112 @@
 # Dungeon Hunter 2 — source reconstruction
 
+## Current Android 17 source-build checkpoint
+
+The local debug APK is `port/android-app/build/dh2-source-renderer-debug.apk`
+(5,465,698 bytes; SHA-256
+`ea9d0aef09125f0dac6b4cdb3d37727aae277e6bdabd2faf92b56e219d09583b`). It targets
+API 37, supports `arm64-v8a` and `x86_64`, and its native libraries use 16 KiB
+ELF load alignment. This is an authored development encounter with source-level
+SWAMP and Infected Village previews plus a diagnostic skinned-actor screen. It
+is not yet the complete game. This remains the default source APK; its hash is
+unchanged by the separate Irrlicht experiments below.
+
+The opt-in in-package Irrlicht diagnostic is a distinct API 37 build:
+`port/android-app/build/dh2-source-renderer-irrlicht-host-debug.apk` (70,148,494
+bytes; SHA-256
+`bab5c28999fe766f6f6bfb337ee088415c7b844fa89d45cbec22ff1447c417f4`). On an
+Android 17/API 37 x86_64 4 KiB emulator, its synthetic SceneMesh pyramid passed
+background/resume with zero app-PID GL errors, missing-shader reports or fatal
+signals. Required Irrlicht and bundled-library notices are included. This is a
+diagnostic, not the default renderer or a playable game level. The main app's
+local-only `--irrlicht-cache-scene` build
+(`port/android-app/build/dh2-source-renderer-irrlicht-cache-scene-local-debug.apk`,
+SHA-256 `17f4ea0bee95b16a03d0cc6f4ea7d876a4acb9c7deda8b1db5a9b91fc9d85981`)
+bundles two hash-pinned owner-supplied inputs under ignored `build/`. On API 37
+with 4 KiB and 16 KiB pages it assembles all 77 `void_maze` draws through
+Irrlicht and maps `env_voidmaze.tga` to the 30 draws that reference it; the
+screenshot is a textured subset, not the full room or a playable level. The
+APK stays local because it contains those cache inputs. A separate
+cache-backed `void_maze` Irrlicht smoke APK
+(`port/irrlicht-android/cache-scene-smoke/build/dh2-irrlicht-cache-scene-smoke-debug.apk`,
+SHA-256 `7a2b0454a5668f51fb3ea7bdc80638ce45c4a42a9f741d3de05ad52d541440b3`)
+renders 30 texture-bearing source draws on Android 17/API 37 with 16 KiB pages;
+it does not yet establish rendering of every scene material. Both experiments
+use the pinned official Irrlicht OGL-ES r6038 baseline, a separate porting
+candidate rather than the original game's custom `glitch::` fork. The game
+engine is Irrlicht. The [DH2Work engine mapping](https://github.com/Noamcelermajer/DH2Work/blob/main/docs/IRRLICHT-MAPPING.md)
+identifies `glitch::` as a namespace-renamed Irrlicht 1.8-family fork; it also
+finds the renderer and scene interfaces were substantially rewritten. This
+supports Irrlicht as the engine and upstream source as a reference, but not as a
+binary-compatible replacement. The exact customized source is not in this
+checkout, cache, recovery archive, or reachable Git history.
+See
+[Irrlicht integration status](port/irrlicht-feasibility/README.md), the
+[in-package diagnostic](port/android-app/IRRLICHT-HOST.md), and the
+[cache-scene smoke](port/irrlicht-android/cache-scene-smoke/README.md).
+
+The latest local-only same-package build also opens SWAMP module zero through
+Irrlicht NativeActivity from **Gameplay → Diagnostics**. APK SHA-256 is
+`1d0d6580560a2168eb62fbd8c8b541802b51028fb695090e539c65f8d3fefc46` (74,319,320
+bytes). Its installed package hash, module assembly, five-activity transitions,
+and fatal/GL/texture-ownership checks passed on the Android 17/API 37 x86_64
+16 KiB emulator. The AlphaMap now drives alpha-reference cutouts for 22
+verified foliage draws; the visual check shows textured trees and bridges, but
+a large black slab and white fallback floor remain. No 4 KiB or Fold7 tests
+were run for this build. This is still a local diagnostic with no player,
+collision, combat, AI, triggers, or progression. See the [in-app test
+report](port/android-app/IRRLICHT-SWAMP-IN-APP.md).
+
+These changes are isolated on branch
+`reconstruction/android17-irrlicht-rebuild-2026-10-03`, separate from PR #1.
+PR #1 remains untouched. No Drive upload was made.
+
+## Adam native-game integration — 2026-10-04
+
+Adam's public `DH_sc` work is now part of this branch: seven source modules and
+his native Android Crypt project are included with attribution. His API 37 app
+was built and walked in the Crypt on a 16 KiB emulator; this is a much stronger
+playable baseline than our Irrlicht SWAMP diagnostic. His app uses GLES2,
+however, so the next task is adapting the imported world/player runtime to our
+Irrlicht scene adapter. The module map, comparison, exact APK evidence, and
+remaining gap are in [the Adam integration comparison](docs/ADAM-WORK-COMPARISON.md).
+Source and dependency provenance are recorded in [RIGHTS.md](RIGHTS.md).
+
+The launcher still opens an authored `void_maze` development encounter with a
+`DH2S` save. Its separate Infected Village screen imports the real level's two
+module roots, all 50 MGP/MVP records, 20 source draw commands and three checked
+sampler textures. The diagnostic view displays 16 draws: it omits two exact
+root `ColorMaterial` guide volumes and two exact untextured `Standard_8` floor
+fallback draws. Source records and floor/navigation data remain available; the
+original renderer's pass visibility for the omitted draws is unresolved. The
+exact current APK passed on Android 17/API 37 x86_64 emulators with both 4 KiB
+and 16 KiB memory pages. On each, all 18 infected actor model/clip pairs
+rendered, the Infected Village preview completed three open/render/orbit/return
+cycles, and the SWAMP movement/trace sequence passed. Installed APK hashes
+matched the candidate; app-scoped error logs were empty. The actor flow also
+confirms pause-save snapshot queueing does not block the UI launch.
+Current exact-build reports: [actor](port/android-app/infected-actor-current-apk-runtime-validation.json),
+[Infected Village](port/android-app/infected-village-current-apk-runtime-validation.json),
+[SWAMP](port/android-app/swamp-current-apk-runtime-validation.json), and
+[gameplay lifecycle](port/android-app/gameplay-activity-current-apk-runtime-validation.json).
+The short authored encounter's sentries attack an idle player; the lifecycle
+report tracks sentry progress but does not treat HP as stable or claim source
+game balance. Pinch-zoom injection and physical-device behavior remain
+unverified. No Fold7 was tested.
+
+This screen is a static source preview, not a playable level. It has no player
+actor, character lifecycle, AI, collision, triggers or transitions. The current
+launcher encounter remains authored, and its `DH2S` checkpoint is not compatible
+with original `.savegame` files. Infected Village gameplay evidence identifies
+four static Ambush characters and one unresolved name. Host-only actor, callback,
+template and Spawn-request projections now pass cache-backed tests; all six
+template alternatives are identified, but runtime model choice, Android actor
+integration and gameplay AI remain unimplemented. Full campaign,
+levels, combat, inventory, progression and original-compatible saves remain
+unfinished. See [preview scope and evidence](port/android-app/INFECTED-VILLAGE-PREVIEW.md),
+[the gameplay map](port/level-runtime/INFECTED-VILLAGE-GAMEPLAY.md), and
+[the continuation handoff](RECONSTRUCTION-HANDOFF.md).
+
 **Quest activation in the source APK:** Actual native population helpers and
 four kill/clear Compile methods match 27,516 population and 21,372 compilation
 cases on host/source ARM64. The 906,147-byte source APK passes 23 imports on each
@@ -374,4 +481,3 @@ See [`docs/FINDINGS.md`](docs/FINDINGS.md) for evidence interpretation and [`doc
 - Give the rights holder this repository, the separate recovery package, the exact input APK and the complete original cache. Ask for original engine/build metadata and asset tooling; source-file names and subsystem inventories help focus that search.
 
 The independent reconstruction modules use owner-supplied inputs. The compatibility snapshot is an explicit exception to their earlier packaging policy: it includes original `.so` inputs, the tested runtime bundle, and a deliberately public development signing-key fixture. Complete art/audio cache archives and external SDK/NDK/JDK/emulator toolchains are not included. The [source inventory](docs/SOURCE-AVAILABILITY.md) identifies which earlier recovery-package paths remain external. Recovered materials carry their original provenance; this repository does not assert an open-source license for the game. See [`RIGHTS.md`](RIGHTS.md).
-
