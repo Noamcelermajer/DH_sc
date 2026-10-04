@@ -48,6 +48,9 @@ target_sources(dh2_level_world PRIVATE
 
 target_sources(dh2_level_world PRIVATE character_ai_attack.cpp)
 
+target_sources(dh2_level_world PRIVATE character_ai_classification.cpp character_zonability.cpp
+ character_update_eligibility.cpp lua_script_load_once.cpp)
+
 target_sources(dh2_level_world PRIVATE character_script_timers.cpp)
 target_sources(dh2_level_world PRIVATE character_enemy_retention.cpp character_target_search.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_master_update.cpp)

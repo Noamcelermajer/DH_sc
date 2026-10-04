@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include "lua_script_load_once.hpp"
+#include "ais_state_callbacks.hpp"
 
 namespace dh2::monster_external_script {
 
@@ -56,7 +58,16 @@ enum class Event : std::uint32_t {
     init = 2,
     init_post = 3,
     init_final = 4,
+    update = 5,
 };
+
+// Logical retained source AIS+0xb4 projection, not an ARM overlay. The current
+// pointer is derived from the real constructor/state-registry producer. A
+// nonnull entry retains the owned name fields corresponding to +0x14/+0x2c.
+// Old/new entries and name backing remain live across synchronous callbacks.
+using StateCallbacks = ais_state_callbacks::Table;
+using CurrentState = ais_state_callbacks::State;
+using LoadResult = lua_script_load_once::Result;
 
 enum class Status : std::int32_t {
     complete = 0,
@@ -66,6 +77,7 @@ enum class Status : std::int32_t {
     unsupported_callback = 4,
     script_error = 5,
     allocation_failed = 6,
+    invalid_source_fact = 7,
 };
 
 enum class Stage : std::uint32_t {
@@ -89,8 +101,10 @@ struct Statistics {
 };
 
 // Owns one source-built float32 Lua5.1.4 VM and its source VFTable alias map.
-// Load order is unchanged ai/_commons.luac, then ai/monster.luac. Only the five
-// events above are dispatchable through explicit source providers. Post/final
+// Load order is unchanged ai/_commons.luac, then ai/monster.luac. The six events
+// above are dispatchable through explicit source providers. OnUpdate receives
+// ZERO explicit Lua arguments, matching original LuaScript::Call(char const*),
+// even though the common Lua declaration names a timestamp argument. Post/final
 // dispatch uses the current alias map and retained VM. The source caller owns
 // skills-before-post/final ordering; adding dispatch support does not perform
 // SetSkillsAndSpells or complete InitScriptProcess. Combat,
@@ -135,6 +149,20 @@ public:
     Status load_common(Source commons, std::string& error);
     Status load_external(Source external, std::string& error);
     Status dispatch(Event event, std::uintptr_t enemy, std::string& error);
+    // Reuse the independent complete20B source CallState wrappers. Each call reads the
+    // current pointer once, skips only an actual null projection, otherwise
+    // reads its selected name and calls the current source alias with no args.
+    // A missing name/function/provider is an explicit failure. These do not
+    // register states or invent a null-state fact for a live AIS.
+    Status call_state_update(const CurrentState*, std::string& error);
+    Status call_state_conditions(const CurrentState*, std::string& error);
+    // Starts AFTER original LuaManager path resolution. The exact supplied key
+    // is cached per this same VM; a hit skips bytes/loading, a miss executes the
+    // real source loader and records only success. Failed misses preserve Lua
+    // effects/error text and are retryable, without faulting an otherwise ready
+    // session. Existing staged common/external loads retain their previous
+    // behavior and are not silently assigned an unproved resolved cache key.
+    Status load_resolved(const char* resolved_path, Source, LoadResult*, std::string& error);
     Status reset(std::string& error);
     bool ready() const noexcept;
     Stage stage() const noexcept;
@@ -149,6 +177,7 @@ public:
     bool contains_source_alias(const char* name, bool& present) const noexcept;
 
 private:
+    Status call_state(const CurrentState*, bool conditions, std::string& error);
     struct Impl;
     std::unique_ptr<Impl> impl_;
     bool busy_ = false;

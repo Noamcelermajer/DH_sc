@@ -13,7 +13,7 @@ def main():
     original_fixture=MODULE/'tests/monster_initialization_debug_persistence.cpp';text=original_fixture.read_text();marker='int main(int argc,char** argv)';assert text.count(marker)==1
     generated=objects/'character-level-runtime-fixture.hpp';generated.write_text(text[:text.index(marker)])
     c_sources=[RUNTIME/'lua'/(name+'.c') for name in CORE]+[RUNTIME/'script_runtime.c',ROOT/'port/lua-numeric/numeric.c',ROOT/'port/pydata-constants/constants.c']
-    names=['ais_native_bindings','monster_external_script_session','lua_script_level_queries','character_script_set_level','character_regeneration','character_init_hp_mp','debug_switches_runtime','debug_switches_persistence','character_level_runtime']
+    names=['ais_native_bindings','monster_external_script_session','lua_script_load_once','ais_state_callbacks','lua_script_level_queries','character_script_set_level','character_regeneration','character_init_hp_mp','debug_switches_runtime','debug_switches_persistence','character_level_runtime']
     cpp_sources=[RUNTIME/'script_function_alias.cpp',*[MODULE/(name+'.cpp') for name in names],*[ROOT/'port/game-data'/(name+'.cpp') for name in ['data','class_tables','properties','vitals','level_tables']],ROOT/'port/gameplay-object-callbacks/gameplay_object_callbacks.cpp',MODULE/'tests/character_level_runtime.cpp']
     commands=[];linked=[];warnings=[]
     for source in c_sources+cpp_sources:

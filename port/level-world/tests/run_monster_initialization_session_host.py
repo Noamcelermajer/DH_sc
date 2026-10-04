@@ -23,6 +23,8 @@ def main():
         RUNTIME/'script_runtime.c',ROOT/'port/lua-numeric/numeric.c',ROOT/'port/pydata-constants/constants.c']
     cpp_sources=[RUNTIME/'script_function_alias.cpp',MODULE/'ais_native_bindings.cpp',
         MODULE/'monster_external_script_session.cpp',MODULE/'lua_script_level_queries.cpp',
+        MODULE/'lua_script_load_once.cpp',
+        MODULE/'ais_state_callbacks.cpp',
         MODULE/'character_script_set_level.cpp',MODULE/'character_regeneration.cpp',
         ROOT/'port/game-data/data.cpp',ROOT/'port/game-data/class_tables.cpp',
         ROOT/'port/game-data/properties.cpp',ROOT/'port/game-data/vitals.cpp',
@@ -50,7 +52,7 @@ def main():
     if result.returncode:raise RuntimeError(result.stdout+result.stderr)
     host=json.loads(result.stdout);assert host['validation']=='PASS' and host['host_cases']==28
     deps=c_sources+cpp_sources+list((RUNTIME/'lua').glob('*.h'))+[
-        MODULE/(n+'.hpp') for n in ['monster_external_script_session','lua_script_level_queries','character_script_set_level','character_regeneration','ais_native_bindings']]
+        MODULE/(n+'.hpp') for n in ['monster_external_script_session','lua_script_load_once','ais_state_callbacks','lua_script_level_queries','character_script_set_level','character_regeneration','ais_native_bindings']]
     deps += list((ROOT/'port/game-data').glob('*.hpp'))+[
         RUNTIME/'script_runtime.h',RUNTIME/'script_function_alias.h',ROOT/'port/lua-numeric/numeric.h',
         ROOT/'port/pydata-constants/constants.h',ROOT/'port/gameplay-object-callbacks/gameplay_object_callbacks.hpp',pathlib.Path(__file__).resolve()]

@@ -59,6 +59,8 @@ def main() -> int:
         MODULE / "character_script_lifecycle.cpp",
         MODULE / "navigation_heading.cpp",
         MODULE / "monster_external_script_session.cpp",
+        MODULE / "lua_script_load_once.cpp",
+        MODULE / "ais_state_callbacks.cpp",
         MODULE / "ghost_ai_session.cpp",
         MODULE / "tests/ghost_ai_session.cpp",
     ]
@@ -134,6 +136,8 @@ def main() -> int:
         MODULE / "character_controller_commands.hpp",
         MODULE / "character_path_commands.hpp",
         MODULE / "monster_external_script_session.hpp",
+        MODULE / "lua_script_load_once.hpp",
+        MODULE / "ais_state_callbacks.hpp",
         MODULE / "ais_native_bindings.hpp",
         Path(__file__).resolve(), common, monster,
     ] + list((RUNTIME / "lua").glob("*.h"))

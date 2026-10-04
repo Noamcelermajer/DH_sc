@@ -42,6 +42,8 @@
 #include "../../../../../../port/level-world/ais_external_init_callbacks.hpp"
 #include "character_ai_initialization.hpp"
 #include "character_ai_association.hpp"
+#include "character_ai_classification.hpp"
+#include "character_zonability.hpp"
 #include "character_level_runtime.hpp"
 #include "character_script_lifecycle.hpp"
 #include "character_script_selection.hpp"
@@ -144,6 +146,61 @@ struct SearchWorld {
 } search_world;
 dh2::native::character_list::Owner native_characters;
 dh2::data::AiTables actor_ai_tables;bool enemy_ai_enabled=true;
+// Typed projection of the actual loaded AI catalogue; its storage stays live
+// through each synchronous source classifier. Native pointers are full-width.
+std::vector<dh2::character_ai_classification::AiRow> actor_ai_classification_rows;
+dh2::character_ai_classification::AiTable actor_ai_classification_table{};
+std::int32_t native_classification_service(void*,dh2::character_ai_classification::State* state,
+        const dh2::character_ai_classification::Request* request,
+        dh2::character_ai_classification::Response* response) {
+ using Operation=dh2::character_ai_classification::Operation;
+ if(!state||!request||!response||request->character!=state->character||
+    actor_ai_classification_rows.size()!=actor_ai_tables.rows.size())return 1;
+ switch(request->operation) {
+ case Operation::ai_count:response->count=std::int32_t(actor_ai_tables.rows.size());return 0;
+ case Operation::faction_count:response->count=std::int32_t(actor_ai_tables.factions.size());return 0;
+ case Operation::ai_table:response->table=&actor_ai_classification_table;return 0;
+ case Operation::find_player_name:
+  if(!request->name)return 1;
+  response->match=std::strstr(request->name,"PlayerCharacter");return 0;
+ }
+ return 1;
+}
+std::uint32_t native_character_classification(ObjectActor& actor,dh2::character_ai_classification::Query query) {
+ using namespace dh2::character_ai_classification;
+ if(actor.kind!=1||actor.combat_state.dead>255)throw std::runtime_error("Native Character classification owner unavailable");
+ // The native port's normalized death owner and DACT instance name are
+ // adapter inputs. Ghost type4 avoids the type0 name branch; exact source
+ // Character name/dead-byte producers for all actors remain to be connected.
+ State state{actor.identity,actor.properties.resolved[1],actor.properties.resolved[0],
+             actor.name.c_str(),std::uint8_t(actor.combat_state.dead)};
+ const Services services{nullptr,native_classification_service};Result result{};
+ if(dh2::character_ai_classification::query(query,&state,&services,&result)!=Status::complete)
+  throw std::runtime_error("Native source Character classification failed");
+ return result.word;
+}
+const dh2::data::AiProps* native_actor_ai_props(ObjectActor& actor) {
+ const auto id=native_character_classification(actor,dh2::character_ai_classification::Query::ai_id);
+ if(id>=actor_ai_tables.rows.size())throw std::runtime_error("Native source Character AI row out of bounds");
+ return &actor_ai_tables.rows[id];
+}
+std::int32_t native_zonability_service(void* raw,dh2::character_zonability::State*,
+        const dh2::character_zonability::Request* request,dh2::character_zonability::Response* response) {
+ if(!raw||!request||!response)return 1;
+ auto& actor=*static_cast<ObjectActor*>(raw);
+ if(request->character!=actor.identity)return 1;
+ const auto query=request->operation==dh2::character_zonability::Operation::is_player?
+  dh2::character_ai_classification::Query::player:dh2::character_ai_classification::Query::faerie;
+ response->word=native_character_classification(actor,query);return 0;
+}
+std::uint32_t native_actor_zonability(ObjectActor& actor) {
+ dh2::character_zonability::State state{actor.identity};
+ const dh2::character_zonability::Services services{&actor,native_zonability_service};
+ dh2::character_zonability::Result result{};
+ if(dh2::character_zonability::evaluate(&state,&services,&result)!=dh2::character_zonability::Status::complete)
+  throw std::runtime_error("Native source Character zonability failed");
+ return result.zonable;
+}
 std::map<int,dh2::animation::Player> prince_attack_clips;
 dh2::data::AnimationBank prince_animation_bank;
 dh2::data::PropertyRules actor_property_rules;
@@ -640,8 +697,8 @@ struct NativeMonsterInitialization {
   const ScriptLifecycleServices16 nested{&s,lifecycle_service};
   switch(request->service) {
    case script_create_step: {
-    const auto* props=dh2::data::ai_props(actor_ai_tables,s.actor().properties.resolved[1]);
-    if(!props||props->type!=4||props->script!="monster")throw std::runtime_error("Native Ghost script selection differs");
+    const auto* props=native_actor_ai_props(s.actor());
+    if(!native_character_classification(s.actor(),dh2::character_ai_classification::Query::monster)||props->script!="monster")throw std::runtime_error("Native Ghost script selection differs");
     ScriptSelectionState16 selection{};const ScriptCreationFacts24 facts{std::uint32_t(props->script.size()),0,props->script.c_str(),s.actor().name.c_str()};
     const ScriptSelectionServices16 services{&s,create_selected};
     if(dh2_character_script_create_step(&selection,&facts,&services)!=1)throw std::runtime_error("Native AIS selection failed");
@@ -746,7 +803,7 @@ struct NativeMonsterInitialization {
  }
  void load(dh2::monster_external_script::Source commons,dh2::monster_external_script::Source monster) {
   common=commons;external=monster;lifecycle={};lifecycle.owner=ai->character_identity;lifecycle.timer33=lifecycle.timer34=-1;
-  const auto* props=dh2::data::ai_props(actor_ai_tables,actor().properties.resolved[1]);if(!props)throw std::runtime_error("Native Ghost AI row missing");
+  const auto* props=native_actor_ai_props(actor());
   lifecycle.delayed=props->delayed_load;
   const dh2::character::ScriptLifecycleServices16 services{this,lifecycle_service};
   if(dh2_character_script_lifecycle(&lifecycle,dh2::character::script_load_and_init,1,&services)!=1||
@@ -1412,7 +1469,7 @@ dh2::data::AiRangeResult actor_player_range(const ObjectActor& actor){
 void update_enemy(ObjectActor& actor,int table){
  if(actor.gated_spawn)return; // Full actor-owned AI/FSM integration is pending.
  if(!enemy_ai_enabled||frozen||actor.combat_state.dead)return;
- const auto* props=dh2::data::ai_props(actor_ai_tables,actor.properties.resolved[1]);if(!props||props->type!=4||props->script!="monster")return;
+ const auto* props=native_actor_ai_props(actor);if(!native_character_classification(actor,dh2::character_ai_classification::Query::monster)||props->script!="monster")return;
  auto range=actor_player_range(actor);
  if(actor.combat_target==-1&&!prince_combat.life.dead&&dh2::data::ai_enemy(actor_ai_tables,actor.properties.resolved[0],prince_combat.properties.resolved[0],false,true)){
   // Current scene has one hostile candidate. The original collision-query
@@ -1968,8 +2025,16 @@ void initialize_native_monster_scripts(AAssetManager* assets) {
  const auto common=read(assets,"ai/_commons.luac","scripts"),monster=read(assets,"ai/monster.luac","scripts");
  unsigned initialized=0;
  for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.gated_spawn&&actor.spawn_owner) {
-  const auto* props=dh2::data::ai_props(actor_ai_tables,actor.properties.resolved[1]);
-  if(!props||props->type!=4||props->script!="monster")continue;
+  const auto* props=native_actor_ai_props(actor);
+  if(!native_character_classification(actor,dh2::character_ai_classification::Query::monster)||props->script!="monster")continue;
+  using Classification=dh2::character_ai_classification::Query;
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Character classification | %s | AI %u | faction %u | type %u | monster %u | player %u | faerie %u | NPC %u | projected death %u | source getters; autonomous frame pending",
+   actor.name.c_str(),native_character_classification(actor,Classification::ai_id),
+   native_character_classification(actor,Classification::faction_id),native_character_classification(actor,Classification::type),
+   native_character_classification(actor,Classification::monster),native_character_classification(actor,Classification::player),
+   native_character_classification(actor,Classification::faerie),native_character_classification(actor,Classification::npc),
+   native_character_classification(actor,Classification::dead));
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Character zonability | %s | zonable %u | source classification; room enrollment pending",actor.name.c_str(),native_actor_zonability(actor));
   const auto found=source_char_ai.by_character.find(actor.identity);
   if(found==source_char_ai.by_character.end())throw std::runtime_error("Native monster CharAI association missing");
   auto pending=found->second->initialization;
@@ -2212,6 +2277,9 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     images.insert(images.end(),textures.begin(),textures.end());textures.clear();
     object_groups=std::move(candidate_groups);world_objects=std::move(object_records);unsigned monsters=0,decors=0,object_triangles=0,object_draws=0;
     actor_animation_tables=std::move(animation_tables);actor_clip_table=std::move(clip_table);actor_random=restore?previous_random:animation_random;actor_property_rules=property_rules;actor_ai_tables=std::move(ai_tables);
+    actor_ai_classification_rows.clear();actor_ai_classification_rows.reserve(actor_ai_tables.rows.size());
+    for(const auto& row:actor_ai_tables.rows)actor_ai_classification_rows.push_back({row.flags,row.type});
+    actor_ai_classification_table={actor_ai_classification_rows.data(),std::uint32_t(actor_ai_classification_rows.size())};
     actor_level_tables=std::move(level_tables);
     actor_class_tables=std::move(class_table);actor_class_rows.clear();actor_class_rows.reserve(actor_class_tables.rows.size());
     actor_skill_catalogue=std::move(skill_catalogue);

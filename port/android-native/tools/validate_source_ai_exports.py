@@ -128,6 +128,15 @@ GHOST_SKILL_INIT_DEPENDENCIES = {
     'owned_skill_tables': cpp_prefix('data','load_skill_tables'),
     'owned_faery_tables': cpp_prefix('data','load_faery_tables'),
 }
+FRAME_FOUNDATION_UNITS = {
+    'character_ai_classification': cpp_prefix('character_ai_classification','query'),
+    'character_zonability': cpp_prefix('character_zonability','evaluate'),
+    'character_update_eligibility': cpp_prefix('character_update_eligibility','evaluate'),
+    'session_state_update': cpp_prefix('monster_external_script','Session')+'17call_state_update',
+    'session_state_conditions': cpp_prefix('monster_external_script','Session')+'21call_state_conditions',
+    'session_resolved_path_load': cpp_prefix('monster_external_script','Session')+'13load_resolved',
+    'per_vm_path_cache': cpp_prefix('lua_script_load_once','load_once'),
+}
 
 
 def main():
@@ -148,6 +157,7 @@ def main():
     parser.add_argument('--require-init-callback-dependencies', action='store_true')
     parser.add_argument('--require-hp-mp-init-dependencies', action='store_true')
     parser.add_argument('--require-ghost-skill-init-dependencies', action='store_true')
+    parser.add_argument('--require-frame-foundation-units', action='store_true')
     args = parser.parse_args()
     initialization = args.require_initialization_units or args.require_debug_persistence_units or args.require_level_construction_unit or args.require_native_monster_dependencies
     lifecycle = args.require_lifecycle_units or initialization
@@ -166,12 +176,14 @@ def main():
              **(CHARACTER_LIST_DEPENDENCIES if args.require_character_list_dependencies else {}),
              **(INIT_CALLBACK_DEPENDENCIES if args.require_init_callback_dependencies else {}),
              **(HP_MP_INIT_DEPENDENCIES if args.require_hp_mp_init_dependencies else {}),
-             **(GHOST_SKILL_INIT_DEPENDENCIES if args.require_ghost_skill_init_dependencies else {})}
+             **(GHOST_SKILL_INIT_DEPENDENCIES if args.require_ghost_skill_init_dependencies else {}),
+             **(FRAME_FOUNDATION_UNITS if args.require_frame_foundation_units else {})}
     # Sight has two overload groups; melee caller and radius share one unit.
     source_units = len(units) - int(acquisition) - int(frame) - 5 * int(runtime_dependencies) - 7 * int(lifecycle) - 3 * int(initialization) - 3 * int(args.require_debug_persistence_units) - 2 * int(args.require_native_monster_dependencies)
     source_units -= 4 * int(args.require_character_list_dependencies) + 3 * int(args.require_init_callback_dependencies)
     source_units -= int(args.require_hp_mp_init_dependencies) # adapter already counted in level unit.
     source_units -= int(args.require_ghost_skill_init_dependencies) # skill/faery readers share one source unit.
+    source_units -= 3 * int(args.require_frame_foundation_units) # three Session methods extend its existing unit.
     raw = args.apk.read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
     artifact = json.loads(args.artifact.read_text())

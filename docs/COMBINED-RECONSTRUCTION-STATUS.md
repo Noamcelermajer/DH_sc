@@ -5,7 +5,7 @@ Adam reference: [`AdamCelermajer/DH_sc`](https://github.com/AdamCelermajer/DH_sc
 
 This report supersedes older documents' descriptions of the current default development build. Historical reports retain their original artifact identities and test scopes.
 
-**Latest tested source milestone:** [Native Ghost skill initialization checkpoint](NATIVE-GHOST-SKILL-INIT-CHECKPOINT-2026-10-04.md), APK `0dbb44c7...` (26,040,516 bytes). Both native ABIs compile 53 bounded AI/script units and pass 84 export groups, ELF64/16 KiB and signing checks. The exact APK passes API37/16 KiB original ambush/spawn/ordered Ghost initialization/reload/rotation tests with 452 frozen actual compiler/build inputs and 255 assets. The source HP/MP, SetSkillsAndSpells, UpdateAllSkills, Post and Final phases now run on the same published VM using real properties, tables, vectors, Debug state and path ownership. Ghost data selects zero ordinary skills and five null-script faeries. Damaged health, VM, vector/catalogue backing and paused source timers survive recreation. The native flat Character list owns 14 nodes. Autonomous AI, nonempty skill scripts, complete combat/campaign and physical ARM64 execution remain unfinished.
+**Latest tested source milestone:** [Native Character frame foundations](NATIVE-FRAME-FOUNDATIONS-CHECKPOINT-2026-10-04.md), APK `1b3a2551...` (26,068,604 bytes). Both native ABIs compile 57 bounded AI/script units and pass 91 export groups, ELF64/16 KiB and signing checks. The APK passes API37/16 KiB original Crypt ambush/spawn/ordered Ghost initialization/reload/rotation with 460 frozen compiler/build inputs and 255 assets. Source cached-ID/type predicates now select Ghost AIS from real native properties/tables; diagnostic zonability stays consistent through recreation. Complete CanUpdate, retained-VM state callbacks and resolved-path caching are compiled and host-tested; their actual native frame/path/culling owners remain pending. Damaged HP, VM, vectors/catalogue backing and source timers survive recreation. The native Character list owns 14 nodes; authored Ghosts have zero ordinary skills/five null-script faeries. Autonomous AI, nonempty skills, complete combat/campaign and physical ARM64 execution remain unfinished. The [project checklist](PROJECT-CHECKLIST.md) separates verified components from remaining gameplay integration.
 
 
 ## Improved project brief
@@ -46,13 +46,13 @@ Use the following concrete measures instead:
 |---|---:|---|
 | Original engine function ranges | 31,018 | Original symbol/assembly inventory; includes engine, libraries and support code. Not a count of reconstructed functions. |
 | Adam original-address mapping reach | 1,455 unique addresses / 137 manifests | 2,210 repeated checkpoint records deduplicated by address. Mapping/evidence reach, not a completed implementation count. |
-| Current Character/engine mapping extension | 524 verified unique ranges / 804 evidence records across 75 manifests; 362 additional addresses; 1,817 combined unique addresses | Bounded game/engine callers, dependencies and cache behavior evidence, including the new skill initialization/update/check work. Duplicate evidence is deduplicated; implementation boundaries are explicit. Not a count of fully rebuilt functions. |
+| Current Character/engine mapping extension | 531 verified unique ranges / 838 evidence records across 79 manifests; 366 additional addresses; 1,821 combined unique addresses | Bounded game/engine callers, dependencies and cache behavior evidence, including classification, zonability, CanUpdate and retained Session callbacks/cache. Duplicate addresses are deduplicated; implementation boundaries are explicit. Not a count of fully rebuilt functions. |
 | Earlier selective-import mapping reach | 133 unique addresses / 9 manifests | Much of Adam's deeper mapping was initially omitted; evidence restoration is part of this continuation. |
 | Original engine pseudocode exports | 31,794 successful exports | Generated decompiler text; not correct compilable C++ and not the same denominator as unique symbol ranges. |
 | Engine `.text` bytes accounted for | 99.989968% | Assembly/disassembly accounting only. No source/game-completion percentage follows from it. |
 | Original plaintext scripts recovered | 219 files / 900,493 bytes | Actual cache Lua source, preserved exactly. Native service ownership and complete live execution remain incomplete. |
 | Repaired/decompiled Android Java | 288 source files | Source recovery/reconstruction of Android glue; distinguish it from independently reconstructed native gameplay. |
-| Maintained reconstruction/port code | 557 source files / 65,996 lines / 3,431,620 bytes; 737 test/tool files | Git-index inventory excludes dependencies, recovered evidence, packaged scripts/assets and unfinished drafts. Includes imported code with local changes. Source size is not game completion. |
+| Maintained reconstruction/port code | 563 source files / 66,752 lines / 3,467,643 bytes; 746 test/tool files | Git-index inventory excludes dependencies, recovered evidence, packaged scripts/assets and unfinished drafts. Includes imported code with local changes. Source size is not game completion. |
 | Adam core modules imported | 577 files / 2,929,226 bytes | Seven modules imported at a pinned commit before dependency-path adaptations; includes headers/tools/tests, not 577 gameplay implementations. |
 | Adam script runtime imported | 158 files / 1,064,065 bytes | Isolated import includes Lua dependency source; do not count all of it as reconstructed game code. |
 | Current native app bundled assets | 255 | A selected Crypt/Prince development bundle, unchanged monster scripts and seven real Skill/Faery table/constants inputs; not the complete game cache. |
@@ -128,6 +128,17 @@ The following are implementation anchors, not claims that entire original classe
 - The two direct Ghost variants resolve actual AIProps row68 (`Ugly_Dog`, Type4, Script=`monster`). Plain `monster` selects `AISExternal` and the recovered `data/scripts/ai/monster.luac`; `__monster__` selects a different built-in AIS. The next enemy integration must preserve the external Lua callback and native candidate-search path. This finding is evidence, not completed AI integration.
 
 ## Test evidence and its limits
+
+The [native frame foundations checkpoint](NATIVE-FRAME-FOUNDATIONS-CHECKPOINT-2026-10-04.md)
+binds APK `1b3a2551...` to 460 unchanged compiler inputs and the actual API37/16 KiB
+Crypt regression. The classifier passes 514 original ARM comparisons/all 130
+instructions; IsZonable passes 45. Complete CanUpdate passes 26 primary/348
+independent original comparisons/all 77 instructions plus pointer/failure guards.
+The six Session-dependent host gates were rerun against the extended VM implementation.
+Actual Ghost selection uses the new classifier; zonability is diagnostic, while
+CanUpdate/state callbacks/resolved-path loading still lack native frame/path owners.
+DACT instance names and normalized port death are adapter inputs; original producers
+remain open. The retained empty-skill/five-null-faery path does not prove nonempty skills.
 
 The [native Ghost skill initialization checkpoint](NATIVE-GHOST-SKILL-INIT-CHECKPOINT-2026-10-04.md) binds APK `0dbb44c7...` to 452 unchanged actual compiler inputs and 495 component source-hash checks. It passes actual Crypt touch/spawn/original OnInit, all five bounded Ghost initialization phases, real private Debug I/O and damaged-health/same-VM/vector/catalogue retention through reload and rotation on API37/16 KiB. Root inspected the restored Prince/Ghost view. All 183 Skill/Faery records match original readers; their owned catalogue and source state predicates are now linked. Independent new OnSkillUpdate and Usable/Active source callers, plus a real-Lua-tested per-VM resolved-path helper, remain unlinked. The world setup adapter omits full Character scheduling gates; five null faery slots do not establish nonempty script support. Earlier reports retain their exact historical build identities.
 

@@ -79,6 +79,10 @@ AI_MANIFESTS = {
     'port/level-world/reference/character-ai-skill-script-check/original-functions.json': 'character_ai_skill_script_check',
     'port/level-world/reference/lua-script-load-once/original-functions.json': 'lua_script_load_once',
     'port/level-world/reference/script-value-boolean/original-functions.json': 'script_value_boolean',
+    'port/level-world/reference/character-ai-classification/original-functions.json': 'character_ai_classification',
+    'port/level-world/reference/character-zonability/original-functions.json': 'character_zonability',
+    'port/level-world/reference/monster-external-script-updates/original-functions.json': 'monster_external_script_session',
+    'port/level-world/reference/character-update-eligibility/original-functions.json': 'character_update_eligibility',
 }
 MANIFESTS.extend(AI_MANIFESTS)
 ENGINE_MANIFESTS = {

@@ -38,6 +38,8 @@ def main():
                         help='require actual native Character enrollment and owned source-list nodes on load/reload/recreation')
     parser.add_argument('--require-native-ghost-skill-initialization', action='store_true',
                         help='require real Ghost null-script vectors and ordered InitScriptProcess without replay')
+    parser.add_argument('--require-native-frame-foundations', action='store_true',
+                        help='require live source classification/zonability across Ghost initialization/recreation; autonomous frames remain pending')
     args = parser.parse_args()
     assert args.serial.startswith('emulator-')
     out = args.output.resolve()
@@ -364,6 +366,23 @@ def main():
             report['native_ghost_skill_scope'] = 'Exact authored Ghost empty SkillList/five zero-script faeries; HP/MP, SetSkillsAndSpells, UpdateAllSkills, Post and Final once on the same VM. Nonempty skill Lua, other AIS factories and autonomous frames remain pending.'
         capture('authored-ambush-restored')
         report['validation'] = 'PASS'
+        if args.require_native_frame_foundations:
+            classifications = re.findall(
+                r'Native Character classification \| ([^|]+) \| AI (\d+) \| faction (\d+) \| type (\d+) \| monster (\d+) \| player (\d+) \| faerie (\d+) \| NPC (\d+) \| projected death (\d+)', text)
+            zonability = re.findall(r'Native Character zonability \| ([^|]+) \| zonable (\d+)', text)
+            verified = {}
+            for name in NAMES:
+                rows = [list(map(int, row[1:])) for row in classifications if row[0] == name]
+                zones = [int(row[1]) for row in zonability if row[0] == name]
+                assert len(rows) >= 7 and len(zones) == len(rows), (name, rows, zones)
+                assert all(row == rows[0] and row[2:] == [4, 1, 0, 0, 0, 0] for row in rows), (name, rows)
+                assert all(value == 1 for value in zones), (name, zones)
+                verified[name] = {'AI_id': rows[0][0], 'faction_id': rows[0][1],
+                                  'type': 4, 'monster': 1, 'player': 0, 'faerie': 0,
+                                  'NPC': 0, 'projected_death': 0, 'zonable': 1,
+                                  'observations': len(rows)}
+            report['native_frame_foundation_character_facts'] = verified
+            report['native_frame_foundation_scope'] = 'Source cached-ID/type/NPC predicates select the native Ghost monster AIS and legacy nongated enemy path; zonability is diagnostic only. Ghost type4 does not use the type0 name branch. DACT instance name and normalized port death are adapter inputs, without original name/dead-byte producer parity. Autonomous frame/culling/zone-enrollment providers remain pending.'
         report['scope'] = 'Original GhostAmbush01 contact/timed spawning on authored placement, approached with actual root-motion touch input from an explicit fan spawn override; source completion/body creation and reload/recreation; no complete-level or full AI claim.'
     except Exception as error:
         report['error'] = str(error)

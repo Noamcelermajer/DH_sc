@@ -11,7 +11,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--compiler',type=pathlib.Path,required=True);p.add_argument('--cache',type=pathlib.Path,required=True);p.add_argument('--output',type=pathlib.Path,default=MODULE/'build/monster-initialization-debug-persistence/host.exe');p.add_argument('--report',type=pathlib.Path,default=MODULE/'build/monster-initialization-debug-persistence/validation.json');a=p.parse_args()
     exe=a.output.resolve();exe.parent.mkdir(parents=True,exist_ok=True);objects=exe.parent/'objects';objects.mkdir(exist_ok=True);cc=a.compiler.with_name(a.compiler.name.replace('g++','gcc'))
     c_sources=[RUNTIME/'lua'/(name+'.c') for name in CORE]+[RUNTIME/'script_runtime.c',ROOT/'port/lua-numeric/numeric.c',ROOT/'port/pydata-constants/constants.c']
-    names=['ais_native_bindings','monster_external_script_session','lua_script_level_queries','character_script_set_level','character_regeneration','debug_switches_runtime','debug_switches_persistence']
+    names=['ais_native_bindings','monster_external_script_session','lua_script_load_once','ais_state_callbacks','lua_script_level_queries','character_script_set_level','character_regeneration','debug_switches_runtime','debug_switches_persistence']
     cpp_sources=[RUNTIME/'script_function_alias.cpp',*[MODULE/(name+'.cpp') for name in names],*[ROOT/'port/game-data'/(name+'.cpp') for name in ['data','class_tables','properties','vitals','level_tables']],ROOT/'port/gameplay-object-callbacks/gameplay_object_callbacks.cpp',MODULE/'tests/monster_initialization_debug_persistence.cpp']
     commands=[];linked=[];warnings=[]
     for source in c_sources+cpp_sources:

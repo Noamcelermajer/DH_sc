@@ -25,6 +25,7 @@ const char* callback_name(Event event) {
         case Event::init: return "OnInit";
         case Event::init_post: return "OnInitPost";
         case Event::init_final: return "OnInitFinal";
+        case Event::update: return "OnUpdate";
     }
     return nullptr;
 }
@@ -73,6 +74,7 @@ struct Session::Impl {
     bool faulted = false;
     Stage stage = Stage::empty;
     std::shared_ptr<void> service_lifetime;
+    lua_script_load_once::State resolved_loads;
 
     explicit Impl(const Services& value) : services(value) {}
     ~Impl() {
@@ -85,6 +87,8 @@ struct Session::Impl {
         vm = dh2_script_vm_create_deferred(memory_limit);
         aliases = dh2_script_alias_create();
         if (!vm || !aliases) return false;
+        if (lua_script_load_once::reset(&resolved_loads, reinterpret_cast<std::uintptr_t>(vm)) !=
+            lua_script_load_once::Status::complete) return false;
         stage = Stage::created;
         return true;
     }
@@ -360,6 +364,13 @@ struct Session::Impl {
         return true;
     }
 
+    static std::int32_t load_same_vm(void* raw, std::uintptr_t identity,
+        const void* bytes, std::size_t size, const char* name) {
+        auto& session = *static_cast<Impl*>(raw);
+        if (!session.vm || identity != reinterpret_cast<std::uintptr_t>(session.vm)) return -1;
+        return dh2_script_vm_load(session.vm, bytes, size, name);
+    }
+
     bool load_external(Source source) {
         if (dh2_script_vm_load(vm, source.bytes, source.size,
                                "data/scripts/ai/monster.luac") != 0 ||
@@ -548,6 +559,67 @@ Status Session::dispatch(Event event, std::uintptr_t enemy, std::string& error) 
     ++impl_->completed;
     error.clear();
     return Status::complete;
+}
+
+Status Session::call_state(const CurrentState* projection, bool conditions, std::string& error) {
+    if (busy_) { error = "monster session busy"; return Status::busy; }
+    if (!projection || reinterpret_cast<std::uintptr_t>(projection) % alignof(CurrentState) || !projection->ais) {
+        error = "invalid retained current-state projection"; return Status::invalid_argument;
+    }
+    if (!ready()) { error = "monster session not ready"; return Status::not_ready; }
+    if (projection->active && reinterpret_cast<std::uintptr_t>(projection->active) % alignof(StateCallbacks)) {
+        error = "invalid retained source state entry"; return Status::invalid_argument;
+    }
+    BusyScope scope(busy_);
+    struct Call { Impl* session; Status status; } context{impl_.get(), Status::complete};
+    const ais_state_callbacks::Services services{&context, [](void* raw, ais_state_callbacks::State*,
+            const ais_state_callbacks::Request* request) -> std::int32_t {
+        auto& call = *static_cast<Call*>(raw);
+        if (!request->name) { call.status = Status::invalid_source_fact; return 1; }
+        if (dh2_script_alias_call_discard_source(call.session->vm, call.session->aliases,
+                request->name, nullptr, 0) != 0) { call.status = Status::script_error; return 1; }
+        return 0;
+    }};
+    ais_state_callbacks::Result result{};
+    // The reused kernel reads this projection but does not write it. Its native
+    // provider signature permits mutations by separately retained owner services;
+    // this bridge itself only forwards the captured name to this same VM.
+    const auto status = ais_state_callbacks::invoke(const_cast<CurrentState*>(projection),
+        conditions ? ais_state_callbacks::Callback::conditions : ais_state_callbacks::Callback::update,
+        &services, &result);
+    if (context.status == Status::invalid_source_fact) {
+        error = "nonnull source state has a null callback name"; return Status::invalid_source_fact;
+    }
+    if (status != ais_state_callbacks::Status::complete) {
+        ++impl_->failed; impl_->faulted = true; error = dh2_script_vm_error(impl_->vm);
+        return Status::script_error;
+    }
+    if (result.called) ++impl_->completed;
+    error.clear(); return Status::complete;
+}
+Status Session::call_state_update(const CurrentState* projection, std::string& error) {
+    return call_state(projection, false, error);
+}
+Status Session::call_state_conditions(const CurrentState* projection, std::string& error) {
+    return call_state(projection, true, error);
+}
+
+Status Session::load_resolved(const char* path, Source bytes, LoadResult* result, std::string& error) {
+    if (busy_) { error = "monster session busy"; return Status::busy; }
+    if (!impl_ || impl_->faulted || (impl_->stage != Stage::functions_bound &&
+        impl_->stage != Stage::common_loaded && impl_->stage != Stage::external_loaded)) {
+        error = "resolved load requires a bound live VM"; return Status::not_ready;
+    }
+    BusyScope scope(busy_);
+    const lua_script_load_once::Source source{reinterpret_cast<std::uintptr_t>(impl_->vm), path, bytes.bytes, bytes.size};
+    const lua_script_load_once::Services services{impl_.get(), Impl::load_same_vm};
+    const auto status = lua_script_load_once::load_once(&impl_->resolved_loads, &source, &services, result);
+    using CacheStatus = lua_script_load_once::Status;
+    if (status == CacheStatus::complete) { error.clear(); return Status::complete; }
+    if (status == CacheStatus::allocation_failed) { error = "resolved load cache allocation failed"; return Status::allocation_failed; }
+    if (status == CacheStatus::load_failed) { error = dh2_script_vm_error(impl_->vm); return Status::script_error; }
+    error = "resolved load input or native loader failed";
+    return status == CacheStatus::service_failed ? Status::script_error : Status::invalid_argument;
 }
 
 Status Session::reset(std::string& error) {

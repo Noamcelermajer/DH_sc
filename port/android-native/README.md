@@ -1,14 +1,14 @@
 # DH2 native Android reconstruction
 
-Current continuation: [original Crypt ambush checkpoint](../../docs/CRYPT-SCRIPT-CHECKPOINT-2026-10-04.md).
-The original GhostAmbush01 trigger now runs its Wait/Spawn script through the
-shared Character owner and native body services. Actual touch travel into the
-authored trigger, both Ghosts and reload/rotation without replay pass on
-API37/16KiB. Source Limbus visibility now hides the Ghosts while timers continue,
-and blur restores enabled-byte visibility. Full Ghost AI/combat and the complete
-game remain pending. Earlier
-[shared Character evidence](../../docs/CHARACTER-RUNTIME-CHECKPOINT-2026-10-04.md)
-retains its own APK identities.
+Current continuation: [native frame foundations checkpoint](../../docs/NATIVE-FRAME-FOUNDATIONS-CHECKPOINT-2026-10-04.md)
+and [full project checklist](../../docs/PROJECT-CHECKLIST.md).
+The source classifier now selects Ghost AIS using actual loaded properties and
+tables. Zonability is diagnostic only; CanUpdate, retained-VM state callbacks and
+resolved-path caching are compiled/host-tested while native frame services remain
+pending. The exact APK passes original Crypt contact/Wait/Spawn, source-ordered
+Ghost initialization and damaged-health/VM/vector retention through reload and
+rotation on API37/16KiB. Autonomous Ghost pursuit, complete skills/combat/campaign
+and physical ARM64 tests remain open. Earlier checkpoints retain their APK identities.
 
 To regenerate the four paired tables and bounded trigger descriptor from the
 known original cache ZIP, after world preparation run:

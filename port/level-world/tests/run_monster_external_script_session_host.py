@@ -45,6 +45,8 @@ def main() -> int:
         RUNTIME / "script_runtime.c", ROOT / "port/lua-numeric/numeric.c"]
     cpp_sources = [RUNTIME / "script_function_alias.cpp", MODULE / "ais_native_bindings.cpp",
                    MODULE / "ais_external_init_callbacks.cpp",
+                   MODULE / "lua_script_load_once.cpp",
+                   MODULE / "ais_state_callbacks.cpp",
                    MODULE / "monster_external_script_session.cpp",
                    MODULE / "tests/monster_external_script_session.cpp"]
     compiled = []
@@ -93,6 +95,8 @@ def main() -> int:
     dependencies = c_sources + cpp_sources + [MODULE / "monster_external_script_session.hpp",
         MODULE / "ais_external_init_callbacks.hpp",
         MODULE / "ais_native_bindings.hpp", ROOT / "port/adam-script-runtime/script_runtime.h",
+        MODULE / "lua_script_load_once.hpp",
+        MODULE / "ais_state_callbacks.hpp",
         RUNTIME / "script_runtime.h", RUNTIME / "script_function_alias.h", ROOT / "port/lua-numeric/numeric.h",
         Path(__file__).resolve()] + list((RUNTIME / "lua").glob("*.h"))
     evidence = {"validation": "PASS", "host_report": host, "compiler_commands": commands,
