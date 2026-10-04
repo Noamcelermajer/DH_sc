@@ -2,6 +2,8 @@
 
 ## Current combined source status — 2026-10-04
 
+**Task overview:** [Project checklist — completed work and everything remaining](docs/PROJECT-CHECKLIST.md).
+
 Start with the [combined reconstruction report](docs/COMBINED-RECONSTRUCTION-STATUS.md):
 the improved project brief, Adam/our contribution table, original-to-source
 mapping, measured source inventory, test limits and remaining milestones.
@@ -9,10 +11,10 @@ mapping, measured source inventory, test limits and remaining milestones.
 The strongest current gameplay baseline is Adam's imported native Crypt app at
 `port/android-native`, built from source for API 37, ARM64 and x86_64 with 16 KiB
 alignment. The continuation build adds [validated asset overrides](port/android-native/MODDING.md).
-The latest [shared Character source checkpoint](docs/CHARACTER-RUNTIME-CHECKPOINT-2026-10-04.md)
-adds two original Crypt Ghosts with source Spawn/body/Idle, shared state/timer
-ownership, and full-bank Prince playback through Irrlicht. Exact builds, tests
-and implementation boundaries are recorded there.
+The latest [tested native checkpoint](docs/NATIVE-CHARACTER-QUERY-INIT-CHECKPOINT-2026-10-04.md)
+adds 14 owned Character-list nodes and a source query fix while retaining original
+Ghost OnInit, damaged health and the same VM across recreation. The checkpoint
+records the downloadable build, tests and remaining integration work.
 Our `port/android-app` and Irrlicht SWAMP route remain separate development
 runtimes. Full game reconstruction is still active. The checkpoints below are
 historical evidence for their named APKs; their byte-disassembly and isolated
