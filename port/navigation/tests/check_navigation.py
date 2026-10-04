@@ -27,14 +27,14 @@ class Surface(c.Structure):
         ('source_geometry_name', c.c_char*128)]
 
 
-class Triangle(c.Structure):
+class SurfaceTriangle(c.Structure):
     _fields_ = [('a', c.c_float*3), ('b', c.c_float*3), ('c', c.c_float*3)] + [
         (name, U) for name in ('surface_index', 'primitive_index', 'source_triangle_index')]
 
 
 class Navigation(c.Structure):
     _fields_ = [('surfaces', c.POINTER(Surface))] + [(name, U) for name in
-        ('surface_count', 'surface_capacity')] + [('triangles', c.POINTER(Triangle))] + [
+        ('surface_count', 'surface_capacity')] + [('triangles', c.POINTER(SurfaceTriangle))] + [
         (name, U) for name in ('triangle_count', 'triangle_capacity')]
 
 
@@ -68,7 +68,7 @@ def load_world_bindings(library):
 
 def _check_synthetic(dll):
     surfaces = (Surface*1)()
-    triangles = (Triangle*1)()
+    triangles = (SurfaceTriangle*1)()
     surfaces[0].floor_type_tag_present = True
     surfaces[0].floor_type_tag = b'water'
     surfaces[0].floor_type_flags = 2
@@ -120,7 +120,7 @@ def _check_synthetic(dll):
     # Six fully overlapping triangles exercise actor eligibility separately
     # from the unrestricted geometric height query. Only Z and metadata vary.
     actor_surfaces = (Surface*6)()
-    actor_triangles = (Triangle*6)()
+    actor_triangles = (SurfaceTriangle*6)()
     tags = (b'hole', b'water', b'hole_water', b'', b'void_water', b'wall')
     masks = (1, 2, 3, 0, 0x01000002, 0x02000000)
     heights = (0.0, 1.0, 2.0, 3.0, 0.1, 0.2)
@@ -193,7 +193,7 @@ def _check_synthetic(dll):
 
     # The segment is finite and includes both endpoints.
     plane_surface = (Surface*1)()
-    plane_triangle = (Triangle*1)()
+    plane_triangle = (SurfaceTriangle*1)()
     plane_surface[0].floor_type_flags_known = True
     plane_surface[0].triangle_count = 1
     plane_triangle[0].a[:] = (0, 0, 0)
@@ -217,7 +217,7 @@ def _check_synthetic(dll):
     checks += 1
     # Projected-vertical triangles remain valid 3D collision surfaces.
     vertical_surface = (Surface*1)()
-    vertical_triangle = (Triangle*1)()
+    vertical_triangle = (SurfaceTriangle*1)()
     vertical_surface[0].triangle_count = 1
     vertical_surface[0].floor_type_flags_known = True
     vertical_triangle[0].a[:] = (1, 0, 0)
@@ -245,7 +245,7 @@ def _check_synthetic(dll):
     # Source surface order dominates global distance; within that first eligible
     # surface, choose its nearest intersection and keep source triangle ties.
     order_surfaces = (Surface*3)()
-    order_triangles = (Triangle*4)()
+    order_triangles = (SurfaceTriangle*4)()
     order_surfaces[0].first_triangle = 0
     order_surfaces[0].triangle_count = 1
     order_surfaces[0].floor_type_flags_known = True
@@ -312,7 +312,7 @@ def _check_cache(dll, world, cache):
     catalogue = cache/'data/3d/modules/swamp/swamp.bdae'
     level_bytes = source.read_bytes()
     catalogue_bytes = catalogue.read_bytes()
-    level = world.Level()
+    level = world.SourceLevel()
     diagnostic = world.Diagnostic()
     assert dll.dh2_world_import_level(c.byref(level), b'SWAMP',
         b'data/scene/001_swamp.mlx', level_bytes, len(level_bytes),
@@ -451,7 +451,7 @@ def main():
     args = parser.parse_args()
     world, dll = load_world_bindings(args.library)
     dll.dh2_nav_build_swamp.restype = U
-    dll.dh2_nav_build_swamp.argtypes = [c.POINTER(Navigation), c.POINTER(world.Level),
+    dll.dh2_nav_build_swamp.argtypes = [c.POINTER(Navigation), c.POINTER(world.SourceLevel),
         c.POINTER(world.scene.Scene), c.POINTER(Diagnostic)]
     dll.dh2_nav_free.restype = None
     dll.dh2_nav_free.argtypes = [c.POINTER(Navigation)]

@@ -19,7 +19,7 @@
 namespace {
 using dh2::navigation::Navigation;
 using dh2::navigation::Surface;
-using dh2::navigation::Triangle;
+using dh2::navigation::SurfaceTriangle;
 
 void require(bool condition, const char* message) {
     if (condition) return;
@@ -35,11 +35,11 @@ std::vector<std::uint8_t> read_file(const std::string& path) {
 
 struct NodeLookup {
     std::uint32_t record;
-    dh2::scene::Node result{};
+    dh2::scene_payload::Node result{};
     bool found = false;
 };
 
-bool find_node(const dh2::scene::Node* node, const dh2::math::Matrix4f*,
+bool find_node(const dh2::scene_payload::Node* node, const dh2::math::Matrix4f*,
                std::uint32_t, void* opaque) {
     auto& lookup = *static_cast<NodeLookup*>(opaque);
     if (node->record == lookup.record) {
@@ -84,9 +84,9 @@ std::map<EdgeKey, float> module_edges(const Navigation& nav, std::uint32_t modul
 }
 
 void append_floor(const dh2::viewer::SceneMesh& mesh, std::uint32_t module_index,
-                  const char* wanted_node, const dh2::scene::Scene& scene,
-                  const dh2::scene::Visual& visual,
-                  std::vector<Surface>& surfaces, std::vector<Triangle>& triangles) {
+                  const char* wanted_node, const dh2::scene_payload::Scene& scene,
+                  const dh2::scene_payload::Visual& visual,
+                  std::vector<Surface>& surfaces, std::vector<SurfaceTriangle>& triangles) {
     const dh2::viewer::SceneDrawDescriptor* draw = nullptr;
     for (std::uint32_t i = 0; i < mesh.draw_commands; ++i) {
         if (std::string(mesh.draws[i].node_id) == wanted_node) {
@@ -103,14 +103,14 @@ void append_floor(const dh2::viewer::SceneMesh& mesh, std::uint32_t module_index
 
     NodeLookup lookup{draw->node_record};
     require(dh2_scene_walk_visual(&visual, find_node, &lookup, 65536) ==
-                dh2::scene::Error::ok && lookup.found,
+                dh2::scene_payload::Error::ok && lookup.found,
             "floor draw node record could not be resolved in source BDAE");
     require(std::string(lookup.result.id) == wanted_node,
             "floor draw record maps to a different source node ID");
     const char* user_properties = nullptr;
     std::size_t user_properties_bytes = 0;
     require(dh2_scene_user_data_string(&lookup.result, &user_properties,
-                &user_properties_bytes) == dh2::scene::Error::ok,
+                &user_properties_bytes) == dh2::scene_payload::Error::ok,
             "floor UserProperties could not be read");
     dh2::floor_types::Property property{};
     if (user_properties)
@@ -150,7 +150,7 @@ void append_floor(const dh2::viewer::SceneMesh& mesh, std::uint32_t module_index
                   draw->geometry_id);
 
     for (std::uint32_t offset = 0; offset < draw->index_count; offset += 3U) {
-        Triangle triangle{};
+        SurfaceTriangle triangle{};
         triangle.surface_index = static_cast<std::uint32_t>(surfaces.size());
         triangle.primitive_index = static_cast<std::uint32_t>(draw->primitive_index);
         triangle.source_triangle_index = offset / 3U;
@@ -224,12 +224,12 @@ int main(int argc, char** argv) {
     require(dh2_bres_open(&bres, catalogue.data(), catalogue.size()) ==
                 dh2::resources::BresError::ok,
             "Infected Village BDAE could not be opened for navigation-source metadata");
-    dh2::scene::Scene scene{};
-    require(dh2_scene_open(&scene, &bres) == dh2::scene::Error::ok,
+    dh2::scene_payload::Scene scene{};
+    require(dh2_scene_open(&scene, &bres) == dh2::scene_payload::Error::ok,
             "Infected Village source scene could not be opened");
 
     std::vector<Surface> surfaces;
-    std::vector<Triangle> triangles;
+    std::vector<SurfaceTriangle> triangles;
     const char* floor_nodes[] = {"_floor_infectedvillage_01-node_PIVOT",
                                  "_floor_infectedvillage_02-node_PIVOT"};
     for (std::uint32_t module = 0; module < 2; ++module) {
@@ -239,9 +239,9 @@ int main(int argc, char** argv) {
         require(dh2_world_bind_module(&binding, &record, &scene,
                     &world_diagnostic) == dh2::world::Error::ok,
                 "MLX module did not bind to its exact BDAE root");
-        dh2::scene::Visual visual{};
+        dh2::scene_payload::Visual visual{};
         require(dh2_scene_visual(&scene, static_cast<std::int32_t>(binding.visual_index),
-                    &visual) == dh2::scene::Error::ok,
+                    &visual) == dh2::scene_payload::Error::ok,
                 "selected module visual scene could not be opened");
         std::uint32_t floor_draws = 0;
         for (std::uint32_t draw = 0; draw < preview.modules[module].draw_commands; ++draw)

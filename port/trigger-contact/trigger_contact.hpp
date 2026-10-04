@@ -23,10 +23,11 @@ struct SourceMetadata {
 };
 
 /* Placement facts are from 005_infectedvillage.mlx and infected01.mgp. The
- * inherited dimensions come from Zone's native default. The local AABB is
- * computed by the recovered Zone::InitPost arithmetic; derived trigger bounds
- * remain an approximation because Zone::IsInside and final world-bound update
- * semantics are unresolved. */
+ * inherited dimensions come from Zone's native default. TriggerZone contact
+ * follows GameObject::GetNumPlayerTouching -> GameObject::IsTouching and uses
+ * absolute AABB overlap; it does not call Zone::IsInside. For this zero-rotation
+ * fixture, InitPost's relative box followed by SetRelativeAABB and
+ * UpdateAbsoluteAABB gives the translated world bounds used by that path. */
 extern const SourceMetadata INFECTED_VILLAGE_AMBUSH;
 
 struct Aabb {
@@ -38,11 +39,12 @@ struct Aabb {
     float max_z;
 };
 
-/* Builds a translation-only trigger-box proxy from the inherited Zone
- * dimensions, scale, and recovered center. Its local AABB uses the recovered
- * Zone::InitPost math; world transforms, final bounds update, and native
- * Zone::IsInside contact semantics remain unresolved, so the proxy is
- * approximate. */
+/* Builds the TriggerZone's world AABB for the historical Infected Village
+ * fixture from its inherited dimensions, scale, and resolved center. This is
+ * the same relative-box then absolute-box translation used by the recovered
+ * Zone/GameObject path. Rotation is zero in this fixture. The helper name is
+ * retained for source/API compatibility; it does not model Zone::IsInside,
+ * which is a separate API and is not used by TriggerZone contact. */
 bool make_approximate_trigger_bounds(Aabb *bounds);
 
 struct PlayerAabb {
@@ -51,7 +53,9 @@ struct PlayerAabb {
 };
 
 struct Frame {
-    /* Must be the caller's chosen Zone proxy; see make_approximate_trigger_bounds. */
+    /* Absolute TriggerZone bounds and absolute Character bounds, matching
+     * GameObject::IsTouching. For the historical fixture helper, see
+     * make_approximate_trigger_bounds. */
     Aabb trigger_bounds;
     const PlayerAabb *players;
     uint32_t player_count;

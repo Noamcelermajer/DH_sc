@@ -14,7 +14,7 @@ struct Collect {
     std::uint32_t capacity, count, selected, depth;
     bool active, found, overflow;
 };
-bool collect(const dh2::scene::Node* node, const dh2::math::Matrix4f*,
+bool collect(const dh2::scene_payload::Node* node, const dh2::math::Matrix4f*,
              std::uint32_t depth, void* user) {
     auto& state = *static_cast<Collect*>(user);
     if (state.active && depth <= state.depth) state.active = false;
@@ -30,7 +30,7 @@ bool collect(const dh2::scene::Node* node, const dh2::math::Matrix4f*,
 }
 }
 extern "C" Error dh2_world_bind_module(ModuleBinding* output, const Module* module,
-    const dh2::scene::Scene* scene, Diagnostic* d) {
+    const dh2::scene_payload::Scene* scene, Diagnostic* d) {
     if (!output || !module || !scene || !module->catalogue_node_id)
         return fail(d, Error::argument, "Missing module/scene binding input");
     const auto& transform = module->record.local;
@@ -39,12 +39,12 @@ extern "C" Error dh2_world_bind_module(ModuleBinding* output, const Module* modu
             return fail(d, Error::unsupported_transform, "Module placement must be finite translation only");
     ModuleBinding candidate{}; bool found = false;
     for (std::uint32_t v = 0; v < scene->visuals; ++v) {
-        dh2::scene::Visual visual{};
-        if (dh2_scene_visual(scene, static_cast<std::int32_t>(v), &visual) != dh2::scene::Error::ok)
+        dh2::scene_payload::Visual visual{};
+        if (dh2_scene_visual(scene, static_cast<std::int32_t>(v), &visual) != dh2::scene_payload::Error::ok)
             return fail(d, Error::scene, "Invalid visual scene");
         for (std::uint32_t r = 0; r < visual.roots; ++r) {
-            dh2::scene::Node node{};
-            if (dh2_scene_root_node(&visual, static_cast<std::int32_t>(r), &node) != dh2::scene::Error::ok)
+            dh2::scene_payload::Node node{};
+            if (dh2_scene_root_node(&visual, static_cast<std::int32_t>(r), &node) != dh2::scene_payload::Error::ok)
                 return fail(d, Error::scene, "Invalid catalogue root");
             if (!node.id || std::strcmp(node.id, module->catalogue_node_id)) continue;
             if (found) return fail(d, Error::ambiguous_node, "Catalogue root ID is not unique");
@@ -67,18 +67,18 @@ extern "C" Error dh2_world_bind_module(ModuleBinding* output, const Module* modu
 }
 extern "C" Error dh2_world_module_records(std::uint32_t* records,
     std::uint32_t capacity, std::uint32_t* count, const ModuleBinding* binding,
-    const dh2::scene::Scene* scene, Diagnostic* d) {
+    const dh2::scene_payload::Scene* scene, Diagnostic* d) {
     if (count) *count = 0;
     if (!records || !count || !binding || !scene || !capacity || capacity > 65536 ||
         binding->visual_index >= scene->visuals)
         return fail(d, Error::argument, "Invalid module record collection input");
-    dh2::scene::Visual visual{};
-    if (dh2_scene_visual(scene, static_cast<std::int32_t>(binding->visual_index), &visual) != dh2::scene::Error::ok)
+    dh2::scene_payload::Visual visual{};
+    if (dh2_scene_visual(scene, static_cast<std::int32_t>(binding->visual_index), &visual) != dh2::scene_payload::Error::ok)
         return fail(d, Error::scene, "Invalid module visual scene");
     Collect state{records, capacity, 0, binding->node_record, 0, false, false, false};
     const auto result = dh2_scene_walk_visual(&visual, collect, &state, 65536);
     if (state.overflow) return fail(d, Error::limit, "Module record output capacity exceeded");
-    if (result != dh2::scene::Error::ok) return fail(d, Error::scene, "Invalid module subtree walk");
+    if (result != dh2::scene_payload::Error::ok) return fail(d, Error::scene, "Invalid module subtree walk");
     if (!state.found) return fail(d, Error::missing_node, "Module binding record absent from scene");
     *count = state.count; if (d) *d = {}; return Error::ok;
 }

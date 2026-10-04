@@ -1,20 +1,30 @@
 {
-  "schema": "dh2-character-runtime-function-map/v1",
+  "schema": "dh2-character-runtime-function-map/v2",
   "scope": "Original evidence and bounded implementation extension; counts do not measure game completion or fully reconstructed functions.",
   "original_library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
   "adam_commit": "45c5348e807607a2825211bb8f26248067ba9106",
   "pinned_ledger": "docs/generated/combined-function-audit.json",
   "extension_manifests": [
     "port/level-world/reference/character-spawn/original-functions.json",
-    "port/level-world/reference/character-template-factory/original-functions.json"
+    "port/level-world/reference/character-template-factory/original-functions.json",
+    "port/level-world/reference/character-template-random/original-functions.json",
+    "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+    "port/level-world/reference/crypt-ghost-scripts/original-functions.json",
+    "port/level-world/reference/character-group-respawn/original-functions.json",
+    "port/level-world/reference/character-aggro-cleanup/original-functions.json",
+    "port/level-world/reference/character-respawn-outer/original-functions.json",
+    "port/level-world/reference/character-limbus-respawn/original-functions.json",
+    "port/level-world/reference/character-group-limbus-blur/original-functions.json",
+    "port/level-world/reference/character-spawn-visibility/original-functions.json"
   ],
   "counts": {
     "pinned_addresses": 1455,
-    "extension_records": 41,
-    "additional_addresses": 25,
-    "combined_unique_addresses": 1480
+    "extension_records": 82,
+    "evidence_records_before_deduplication": 101,
+    "additional_addresses": 58,
+    "combined_unique_addresses": 1513
   },
-  "verification": "All ranges, aliases and 41 complete original byte hashes verified against the original symbol index and assembly exports.",
+  "verification": "All ranges, aliases and 82 complete original byte hashes verified against the original symbol index and assembly exports.",
   "functions": [
     {
       "original_symbol": "_ZN21Script_SpawnCharacter7ExecuteEbi",
@@ -30,7 +40,23 @@
       "source_paths": [
         "port/level-world/character_factory.cpp"
       ],
-      "implementation_limit": "Exact-name request on already-loaded actors. No actor allocation or authored trigger dispatch is implemented here."
+      "implementation_limit": "Exact-name request on already-loaded actors. No actor allocation is implemented here; separate live GhostAmbush01 session supplies authored requests.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json",
+        "port/level-world/reference/crypt-ghost-scripts/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/crypt-ghost-scripts/original-functions.json",
+          "mapping_category": "bounded_crypt_script_session",
+          "source_paths": [
+            "port/level-world/crypt_spawn_script_session.cpp",
+            "port/script-runtime/script_runtime.cpp",
+            "port/android-native/app/src/main/cpp/model_renderer.cpp"
+          ],
+          "implementation_limit": "synchronous existing-Character exact-name request through the bounded factory; current selected pair is uniquely named; original module-ID filtering and full ObjectManager handle ownership remain dependencies; live Wait/Spawn only; full Level and ScriptManager bodies are not reconstructed."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN16CharStateMachine16SM_SetSpawnStateEbb",
@@ -46,7 +72,11 @@
       "source_paths": [
         "port/level-world/character_factory.cpp"
       ],
-      "implementation_limit": "The observed false,false request selects Spawn ID 1; other PreSpawn/cinematic paths remain outside this adapter."
+      "implementation_limit": "The observed false,false request selects Spawn ID 1; other PreSpawn/cinematic paths remain outside this adapter.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN16CharStateMachine9_SetStateEiiPv",
@@ -63,7 +93,11 @@
         "port/level-world/character_state.cpp",
         "port/level-world/character_coordinator.cpp"
       ],
-      "implementation_limit": "Supported state projections, synchronous blur/focus/event dispatch. Not all registered Character states or AI consumers."
+      "implementation_limit": "Supported state projections, synchronous blur/focus/event dispatch. Not all registered Character states or AI consumers.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN16CharStateMachine15RaiseStateEventEiPv",
@@ -80,7 +114,11 @@
         "port/level-world/character_state.cpp",
         "port/level-world/character_coordinator.cpp"
       ],
-      "implementation_limit": "Supported state projections, synchronous blur/focus/event dispatch. Not all registered Character states or AI consumers."
+      "implementation_limit": "Supported state projections, synchronous blur/focus/event dispatch. Not all registered Character states or AI consumers.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN8CSLimbus6OnBlurEiP9CharacterP16CharStateMachinei",
@@ -97,7 +135,30 @@
         "port/level-world/character_state.cpp",
         "port/level-world/character_coordinator.cpp"
       ],
-      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live."
+      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json",
+        "port/level-world/reference/character-group-limbus-blur/original-functions.json",
+        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-group-limbus-blur/original-functions.json",
+          "mapping_category": "host_limbus_blur_group_producer",
+          "source_paths": [
+            "port/level-world/character_group_limbus_blur.cpp"
+          ],
+          "implementation_limit": "bounded role3 group branch at0x3c2c94\u20130x3c2d24; prefix and complete body not claimed; post-Revive role3/any-other-Limbus traversal only; native group/member ownership remains external."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-spawn-visibility/original-functions.json",
+          "mapping_category": "visibility_callsite_and_vtable_evidence",
+          "source_paths": [
+            "port/level-world/reference/character-spawn-visibility/original-functions.json"
+          ],
+          "implementation_limit": "inspected lock-byte reset, true visibility call and role-3 producer; read-only audit adds no implementation body."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN8CSLimbus7OnFocusEiP9CharacterP16CharStateMachineiiPv",
@@ -114,7 +175,51 @@
         "port/level-world/character_state.cpp",
         "port/level-world/character_coordinator.cpp"
       ],
-      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live."
+      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json",
+        "port/level-world/reference/character-aggro-cleanup/original-functions.json",
+        "port/level-world/reference/character-respawn-outer/original-functions.json",
+        "port/level-world/reference/character-limbus-respawn/original-functions.json",
+        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-aggro-cleanup/original-functions.json",
+          "mapping_category": "host_aggro_snapshot_dispatch",
+          "source_paths": [
+            "port/level-world/character_aggro_cleanup.cpp"
+          ],
+          "implementation_limit": "caller: dispatches AI_ClearAllAggro once after the optional respawn-timer branch on every normal return path; host-only ordering/lifetime adapter; native map mutation, OnDeAggro AI consumers and live actor ownership remain external."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-respawn-outer/original-functions.json",
+          "mapping_category": "host_respawn_outer_gates",
+          "source_paths": [
+            "port/level-world/character_respawn_outer.cpp",
+            "port/level-world/character_group_respawn.cpp"
+          ],
+          "implementation_limit": "separate caller policy for respawn timer event 0x2f; explicitly not implemented by this slice; live property/group ownership and hosting/Limbus timer producer remain unbound."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-limbus-respawn/original-functions.json",
+          "mapping_category": "host_limbus_respawn_focus_producer",
+          "source_paths": [
+            "port/level-world/character_limbus_respawn.cpp",
+            "port/level-world/character_respawn_outer.cpp",
+            "port/level-world/character_coordinator.cpp"
+          ],
+          "implementation_limit": "complete normal-flow call ordering and branch policy reconstructed as injected source services; timer and aggro storage delegated; source prefix/two delay reads/hosting gate/timer request/normal cleanup are host-tested; live Android byte, manager and linked-owner producers remain external."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-spawn-visibility/original-functions.json",
+          "mapping_category": "visibility_callsite_and_vtable_evidence",
+          "source_paths": [
+            "port/level-world/reference/character-spawn-visibility/original-functions.json"
+          ],
+          "implementation_limit": "inspected prefix, false visibility call, timer branch and cleanup convergence; read-only audit adds no implementation body."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN8CSLimbus6OnInitEiP9CharacterP16CharStateMachine",
@@ -131,7 +236,11 @@
         "port/level-world/character_state.cpp",
         "port/level-world/character_coordinator.cpp"
       ],
-      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live."
+      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN8CSLimbus8OnUpdateEiP9CharacterP16CharStateMachine",
@@ -148,7 +257,11 @@
         "port/level-world/character_state.cpp",
         "port/level-world/character_coordinator.cpp"
       ],
-      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live."
+      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN8CSLimbus7OnEventEiP9CharacterP16CharStateMachineiPv",
@@ -165,7 +278,11 @@
         "port/level-world/character_state.cpp",
         "port/level-world/character_coordinator.cpp"
       ],
-      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live."
+      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN7CSSpawn6OnBlurEiP9CharacterP16CharStateMachinei",
@@ -182,7 +299,11 @@
         "port/level-world/character_state.cpp",
         "port/level-world/character_coordinator.cpp"
       ],
-      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live."
+      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN7CSSpawn7OnFocusEiP9CharacterP16CharStateMachineiiPv",
@@ -199,7 +320,11 @@
         "port/level-world/character_state.cpp",
         "port/level-world/character_coordinator.cpp"
       ],
-      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live."
+      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN7CSSpawn7OnEventEiP9CharacterP16CharStateMachineiPv",
@@ -216,7 +341,11 @@
         "port/level-world/character_state.cpp",
         "port/level-world/character_coordinator.cpp"
       ],
-      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live."
+      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN7CSSpawn6OnInitEiP9CharacterP16CharStateMachine",
@@ -233,7 +362,11 @@
         "port/level-world/character_state.cpp",
         "port/level-world/character_coordinator.cpp"
       ],
-      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live."
+      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN7CSSpawn8OnUpdateEiP9CharacterP16CharStateMachine",
@@ -250,7 +383,11 @@
         "port/level-world/character_state.cpp",
         "port/level-world/character_coordinator.cpp"
       ],
-      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live."
+      "implementation_limit": "Limbus/Spawn service ordering, flags and registered events. Respawn/group/AI facts remain external; first-spawn Ghost path is live.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN10CSPreSpawn6OnBlurEiP9CharacterP16CharStateMachinei",
@@ -266,7 +403,21 @@
       "source_paths": [
         "port/level-world/reference/character-spawn/original-functions.json"
       ],
-      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md."
+      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json",
+        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-spawn-visibility/original-functions.json",
+          "mapping_category": "visibility_callsite_and_vtable_evidence",
+          "source_paths": [
+            "port/level-world/reference/character-spawn-visibility/original-functions.json"
+          ],
+          "implementation_limit": "inspected true visibility call before Revive and collision enabling; read-only audit adds no implementation body."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN10CSPreSpawn7OnEventEiP9CharacterP16CharStateMachineiPv",
@@ -282,7 +433,11 @@
       "source_paths": [
         "port/level-world/reference/character-spawn/original-functions.json"
       ],
-      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md."
+      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZNK10GameObject11IsUpdatableEv",
@@ -290,15 +445,19 @@
       "elf_address": "0x38aac0",
       "size": 8,
       "sha256": "007f34a6c3441b0240da53f253e513b959105da2d8803255e1856aa48f48db47",
-      "scope": "complete function",
+      "scope": "obsolete virtual-slot candidate retained as evidence; not invoked by the reconstructed Spawn/Limbus path",
       "evidence_manifest": "port/level-world/reference/character-spawn/original-functions.json",
       "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
       "in_pinned_adam_ledger": false,
-      "mapping_category": "source_query_boundary",
+      "mapping_category": "obsolete_virtual_candidate_evidence",
       "source_paths": [
-        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+        "port/level-world/reference/character-spawn/original-functions.json"
       ],
-      "implementation_limit": "Constant-true query; no visibility mutation. Initial hiding is an explicit development presentation policy."
+      "implementation_limit": "Constant-true getter is not the state visibility call. Original evidence retained; no live implementation claim.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN12VisualObject11StartFadeInEf",
@@ -314,7 +473,11 @@
       "source_paths": [
         "port/android-native/app/src/main/cpp/model_renderer.cpp"
       ],
-      "implementation_limit": "Preserves source no-op fade boundary and raw argument. No alpha ramp."
+      "implementation_limit": "Preserves source no-op fade boundary and raw argument. No alpha ramp.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN12VisualObject12UpdateFadeInEv",
@@ -330,7 +493,11 @@
       "source_paths": [
         "port/android-native/app/src/main/cpp/model_renderer.cpp"
       ],
-      "implementation_limit": "Preserves source no-op fade boundary and raw argument. No alpha ramp."
+      "implementation_limit": "Preserves source no-op fade boundary and raw argument. No alpha ramp.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZNK9Character18GetCharAnimTableIdEv",
@@ -347,7 +514,11 @@
         "port/android-native/app/src/main/cpp/model_renderer.cpp",
         "port/game-data/properties.cpp"
       ],
-      "implementation_limit": "Current cached property/table projections provide selected animation and AI type inputs. Full property ownership is incomplete."
+      "implementation_limit": "Current cached property/table projections provide selected animation and AI type inputs. Full property ownership is incomplete.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZNK9Character11GetCharAIIdEv",
@@ -364,7 +535,11 @@
         "port/android-native/app/src/main/cpp/model_renderer.cpp",
         "port/game-data/properties.cpp"
       ],
-      "implementation_limit": "Current cached property/table projections provide selected animation and AI type inputs. Full property ownership is incomplete."
+      "implementation_limit": "Current cached property/table projections provide selected animation and AI type inputs. Full property ownership is incomplete.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZNK9Character9GetCharAIEv",
@@ -381,7 +556,11 @@
         "port/android-native/app/src/main/cpp/model_renderer.cpp",
         "port/game-data/properties.cpp"
       ],
-      "implementation_limit": "Current cached property/table projections provide selected animation and AI type inputs. Full property ownership is incomplete."
+      "implementation_limit": "Current cached property/table projections provide selected animation and AI type inputs. Full property ownership is incomplete.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZNK9Character11GetCharTypeEv",
@@ -398,7 +577,11 @@
         "port/android-native/app/src/main/cpp/model_renderer.cpp",
         "port/game-data/properties.cpp"
       ],
-      "implementation_limit": "Current cached property/table projections provide selected animation and AI type inputs. Full property ownership is incomplete."
+      "implementation_limit": "Current cached property/table projections provide selected animation and AI type inputs. Full property ownership is incomplete.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN9Character6ReviveEP10GameObjectb",
@@ -414,7 +597,11 @@
       "source_paths": [
         "port/level-world/reference/character-spawn/original-functions.json"
       ],
-      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md."
+      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN9Character18InitPhysicalObjectEv",
@@ -431,7 +618,11 @@
         "port/android-native/app/src/main/cpp/model_renderer.cpp",
         "port/level-world/character_body_config.cpp"
       ],
-      "implementation_limit": "Fresh Ghost configuration and real NativeWorld body creation; body replacement and lifecycle tested. Whole Character factory is pending."
+      "implementation_limit": "Fresh Ghost configuration and real NativeWorld body creation; body replacement and lifecycle tested. Whole Character factory is pending.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN9Character14CancelSneakingEv",
@@ -447,7 +638,11 @@
       "source_paths": [
         "port/level-world/reference/character-spawn/original-functions.json"
       ],
-      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md."
+      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN6CharAI12AI_SetTargetEP10GameObjectb",
@@ -463,7 +658,11 @@
       "source_paths": [
         "port/level-world/reference/character-spawn/original-functions.json"
       ],
-      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md."
+      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN6CharAI17AI_SyncLastTargetEv",
@@ -479,7 +678,11 @@
       "source_paths": [
         "port/level-world/reference/character-spawn/original-functions.json"
       ],
-      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md."
+      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN9CharacterC1EN10ObjectBase6GO_IDSE",
@@ -495,7 +698,11 @@
       "source_paths": [
         "port/level-world/reference/character-spawn/original-functions.json"
       ],
-      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md."
+      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN16CharStateMachine13RegisterStateEi",
@@ -511,7 +718,54 @@
       "source_paths": [
         "port/level-world/reference/character-spawn/original-functions.json"
       ],
-      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md."
+      "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN10GameObject10SetVisibleEb",
+      "demangled": "GameObject::SetVisible(bool)",
+      "elf_address": "0x38b0f0",
+      "size": 32,
+      "sha256": "2a8fb1ffd94aced95272d222e42a98747dff5c52f79256153b51fd6678d9e431",
+      "scope": "source virtual visibility contract; selected fresh Ghost enabled-byte adapter; full VisualObject::SyncVisibility and enable-condition/serialized producers external",
+      "evidence_manifest": "port/level-world/reference/character-spawn/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_source_visibility_service",
+      "source_paths": [
+        "port/level-world/character_state.cpp",
+        "port/level-world/character_coordinator.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "Limbus hides and Limbus/PreSpawn blur restores enabled-byte visibility. Selected fresh Ghosts are bound; full visual synchronization and enable/serialized producers remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn/original-functions.json",
+        "port/level-world/reference/character-limbus-respawn/original-functions.json",
+        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-limbus-respawn/original-functions.json",
+          "mapping_category": "host_limbus_respawn_focus_producer",
+          "source_paths": [
+            "port/level-world/character_limbus_respawn.cpp",
+            "port/level-world/character_respawn_outer.cpp",
+            "port/level-world/character_coordinator.cpp"
+          ],
+          "implementation_limit": "exact Character vtable +0x40 target; OnFocus invokes it with false before reading Character+0x530; source prefix/two delay reads/hosting gate/timer request/normal cleanup are host-tested; live Android byte, manager and linked-owner producers remain external."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-spawn-visibility/original-functions.json",
+          "mapping_category": "visibility_callsite_and_vtable_evidence",
+          "source_paths": [
+            "port/level-world/reference/character-spawn-visibility/original-functions.json"
+          ],
+          "implementation_limit": "inspected exact enabled/current-byte update and optional visual synchronization; not newly reconstructed here; read-only audit adds no implementation body."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN6Arrays18Charater_Templates4readEP11IStreamBase",
@@ -528,7 +782,11 @@
       "source_paths": [
         "port/level-world/character_template_factory.cpp"
       ],
-      "implementation_limit": "input evidence: the port consumes a decoded ordered template record; this native table reader is not reimplemented by the C++ kernel; host-only, not live actor factory integration."
+      "implementation_limit": "input evidence: the port consumes a decoded ordered template record; this native table reader is not reimplemented by the C++ kernel; host-only, not live actor factory integration.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-factory/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN7Structs12CharTemplate4readEP11IStreamBase",
@@ -545,7 +803,11 @@
       "source_paths": [
         "port/level-world/character_template_factory.cpp"
       ],
-      "implementation_limit": "input evidence: CharInfo slot count and ordered values are preserved by the existing cache reader and by TemplateRecord; host-only, not live actor factory integration."
+      "implementation_limit": "input evidence: CharInfo slot count and ordered values are preserved by the existing cache reader and by TemplateRecord; host-only, not live actor factory integration.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-factory/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN7Structs12CharInfoName4readEP11IStreamBase",
@@ -562,7 +824,11 @@
       "source_paths": [
         "port/level-world/character_template_factory.cpp"
       ],
-      "implementation_limit": "input evidence: each selected signed CharInfo value is treated as a CharacterTable row ID; host-only, not live actor factory integration."
+      "implementation_limit": "input evidence: each selected signed CharInfo value is treated as a CharacterTable row ID; host-only, not live actor factory integration.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-factory/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN9Character26SafeGetCharPropsTemplateIdEv",
@@ -579,7 +845,11 @@
       "source_paths": [
         "port/level-world/character_template_factory.cpp"
       ],
-      "implementation_limit": "bounded projection: exact runtime template key lookup; ambiguous or missing keys fail closed; host-only, not live actor factory integration."
+      "implementation_limit": "bounded projection: exact runtime template key lookup; ambiguous or missing keys fail closed; host-only, not live actor factory integration.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-factory/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN9Character18SafeGetCharPropsIdEv",
@@ -596,7 +866,22 @@
       "source_paths": [
         "port/level-world/character_template_factory.cpp"
       ],
-      "implementation_limit": "bounded projection only after caller supplies selected slot: ID-to-CharacterTable row/name/class mapping is implemented; native random selection is not; host-only, not live actor factory integration."
+      "implementation_limit": "bounded projection only after caller supplies selected slot: ID-to-CharacterTable row/name/class mapping is implemented; native random selection is not; host-only, not live actor factory integration.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-factory/original-functions.json",
+        "port/level-world/reference/character-template-random/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-template-random/original-functions.json",
+          "mapping_category": "host_random_stream_adapter",
+          "source_paths": [
+            "port/level-world/character_template_random.cpp",
+            "port/random/random.c"
+          ],
+          "implementation_limit": "adapter reproduces only the positive-count, uncached non-player slot-index draw and no-alternatives no-draw boundary; no Character cache/player path is implemented; caller owns ordinary seed/draw order; no live template factory claim."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN6Random9GetRandomEib",
@@ -613,7 +898,22 @@
       "source_paths": [
         "port/level-world/character_template_factory.cpp"
       ],
-      "implementation_limit": "not reproduced: evidence boundary for native weighted-slot selection; no RNG state/draw is fabricated; host-only, not live actor factory integration."
+      "implementation_limit": "not reproduced: evidence boundary for native weighted-slot selection; no RNG state/draw is fabricated; host-only, not live actor factory integration.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-factory/original-functions.json",
+        "port/level-world/reference/character-template-random/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-template-random/original-functions.json",
+          "mapping_category": "host_random_stream_adapter",
+          "source_paths": [
+            "port/level-world/character_template_random.cpp",
+            "port/random/random.c"
+          ],
+          "implementation_limit": "the ordinary/synchronized two-stream LCG is implemented in existing port/random; this adapter selects ordinary stream via sync=0; caller owns ordinary seed/draw order; no live template factory claim."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN6Arrays14CharacterTable4readEP11IStreamBase",
@@ -630,7 +930,11 @@
       "source_paths": [
         "port/level-world/character_template_factory.cpp"
       ],
-      "implementation_limit": "input evidence: the Catalog contract preserves array row-index identity; this native table reader is not reimplemented here; host-only, not live actor factory integration."
+      "implementation_limit": "input evidence: the Catalog contract preserves array row-index identity; this native table reader is not reimplemented here; host-only, not live actor factory integration.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-factory/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZNK9Character12GetClassNameEv",
@@ -647,7 +951,11 @@
       "source_paths": [
         "port/level-world/character_template_factory.cpp"
       ],
-      "implementation_limit": "bounded projection: ClassID row and class name are returned; class formula application is outside this kernel; host-only, not live actor factory integration."
+      "implementation_limit": "bounded projection: ClassID row and class name are returned; class formula application is outside this kernel; host-only, not live actor factory integration.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-factory/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN14CharProperties23PROPS_ApplyClassToSheetEiPN7Structs19CharacterPropertiesE",
@@ -664,7 +972,11 @@
       "source_paths": [
         "port/level-world/character_template_factory.cpp"
       ],
-      "implementation_limit": "downstream source dependency only: the separate game-data class-table subsystem owns formula application; host-only, not live actor factory integration."
+      "implementation_limit": "downstream source dependency only: the separate game-data class-table subsystem owns formula application; host-only, not live actor factory integration.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-factory/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN14CharProperties14RecalcPropertyEi",
@@ -681,7 +993,11 @@
       "source_paths": [
         "port/level-world/character_template_factory.cpp"
       ],
-      "implementation_limit": "downstream source dependency only: 224-property default/type/base/gear/saved resolution is not implemented in this kernel; host-only, not live actor factory integration."
+      "implementation_limit": "downstream source dependency only: 224-property default/type/base/gear/saved resolution is not implemented in this kernel; host-only, not live actor factory integration.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-factory/original-functions.json"
+      ],
+      "additional_mappings": []
     },
     {
       "original_symbol": "_ZN14CharProperties16RecalcPropertiesEb",
@@ -698,7 +1014,983 @@
       "source_paths": [
         "port/level-world/character_template_factory.cpp"
       ],
-      "implementation_limit": "downstream source dependency only: whole-sheet property recalculation is not implemented in this kernel; host-only, not live actor factory integration."
+      "implementation_limit": "downstream source dependency only: whole-sheet property recalculation is not implemented in this kernel; host-only, not live actor factory integration.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-factory/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN6GSInit6UpdateEP12StateMachined",
+      "demangled": "GSInit::Update(StateMachine*, double)",
+      "elf_address": "0x3850c8",
+      "size": 2084,
+      "sha256": "0b704fe8fbf23bb5e3c56c5f211c66139d31aff21686b4217661167893e16299",
+      "scope": "complete function",
+      "port_coverage": "seed-ownership evidence only: initialization state 13 assigns the ordinary seed from Timer::getRealTime and zeros the synchronized seed",
+      "evidence_manifest": "port/level-world/reference/character-template-random/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GSInit-3fe8744551f7-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "host_random_stream_adapter",
+      "source_paths": [
+        "port/level-world/character_template_random.cpp",
+        "port/random/random.c"
+      ],
+      "implementation_limit": "seed-ownership evidence only: initialization state 13 assigns the ordinary seed from Timer::getRealTime and zeros the synchronized seed; caller owns ordinary seed/draw order; no live template factory claim.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-random/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN5Level6UnloadEv",
+      "demangled": "Level::Unload()",
+      "elf_address": "0x3f0690",
+      "size": 288,
+      "sha256": "cd174313a853d9549685d78e9f0ee02f73881ad4d7eedca2c3ff72df8f6083ef",
+      "scope": "complete function",
+      "port_coverage": "seed-ownership evidence only: unload reseeds ordinary stream from Timer::getRealTime and zeros synchronized seed",
+      "evidence_manifest": "port/level-world/reference/character-template-random/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Level-1709305c9fa9-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "host_random_stream_adapter",
+      "source_paths": [
+        "port/level-world/character_template_random.cpp",
+        "port/random/random.c"
+      ],
+      "implementation_limit": "seed-ownership evidence only: unload reseeds ordinary stream from Timer::getRealTime and zeros synchronized seed; caller owns ordinary seed/draw order; no live template factory claim.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-random/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_GLOBAL__I_.._.._sources_Utils_Random.cpp",
+      "demangled": "Random.cpp static initializer",
+      "elf_address": "0x3136dc",
+      "size": 68,
+      "sha256": "5163f37d7b84de91112ce366c498ec8321816cb155891d369a3bad4e48e9799a",
+      "scope": "complete function",
+      "port_coverage": "seed-ownership boundary evidence only: explicitly zeros both debug counters, not the game seed values",
+      "evidence_manifest": "port/level-world/reference/character-template-random/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/global-functions-3d6ca95892b3-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "host_random_stream_adapter",
+      "source_paths": [
+        "port/level-world/character_template_random.cpp",
+        "port/random/random.c"
+      ],
+      "implementation_limit": "seed-ownership boundary evidence only: explicitly zeros both debug counters, not the game seed values; caller owns ordinary seed/draw order; no live template factory claim.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-template-random/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN4Zone17DeclarePropertiesEv",
+      "demangled": "Zone::DeclareProperties()",
+      "elf_address": "0x397df8",
+      "size": 164,
+      "sha256": "e2fe147d411d63836d5cab8cf9f97cd9f67316b82ad99a3e468d1afc76bbd905",
+      "scope": "complete function",
+      "port_coverage": "source default evidence for inherited Zone dimensions (200,200,200)",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Zone-a8a06e4a5695-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "source default evidence for inherited Zone dimensions (200,200,200); GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN4Zone8InitPostEv",
+      "demangled": "Zone::InitPost()",
+      "elf_address": "0x39771c",
+      "size": 1044,
+      "sha256": "84aa1650b4ee777be69d545516ff1681a9a9e74386fb569a37f100f4d69966bd",
+      "scope": "complete function",
+      "port_coverage": "local Zone AABB arithmetic is reproduced by the existing zone_geometry kernel and consumed by the new Crypt adapter",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Zone-a8a06e4a5695-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "local Zone AABB arithmetic is reproduced by the existing zone_geometry kernel and consumed by the new Crypt adapter; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN10GameObject15SetRelativeAABBERK4aabbIfEb",
+      "demangled": "GameObject::SetRelativeAABB(aabb<float> const&, bool)",
+      "elf_address": "0x38b110",
+      "size": 280,
+      "sha256": "0c55f8bb203ac3d1c126f9bdaf956b7ba42237aaa7d7d01e55f2079768d903cf",
+      "scope": "complete function",
+      "port_coverage": "source mapping: copies the relative box and invokes UpdateAbsoluteAABB; authored Crypt dimensions exceed its small-box padding branch",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "source mapping: copies the relative box and invokes UpdateAbsoluteAABB; authored Crypt dimensions exceed its small-box padding branch; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN10GameObject18UpdateAbsoluteAABBEv",
+      "demangled": "GameObject::UpdateAbsoluteAABB()",
+      "elf_address": "0x38aac8",
+      "size": 152,
+      "sha256": "8bdb0944ef983e11a5d18d269aab552dea3f691fa7b03abcc0f56c1b75471297",
+      "scope": "complete function",
+      "port_coverage": "the new adapter reproduces componentwise translation of local faces by resolved owner world position",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "the new adapter reproduces componentwise translation of local faces by resolved owner world position; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10GameObject10IsTouchingEPKS_",
+      "demangled": "GameObject::IsTouching(GameObject const*) const",
+      "elf_address": "0x38b518",
+      "size": 280,
+      "sha256": "2ce5fe45de9bbaa3c36f3759ff59d6ed30819aafe1816f8936ceb55c0bf5075d",
+      "scope": "complete function",
+      "port_coverage": "the existing trigger-contact kernel implements its inclusive absolute-AABB overlap; Crypt host tests exercise boundary contact",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "the existing trigger-contact kernel implements its inclusive absolute-AABB overlap; Crypt host tests exercise boundary contact; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10GameObject20GetNumPlayerTouchingEv",
+      "demangled": "GameObject::GetNumPlayerTouching() const",
+      "elf_address": "0x38b6d4",
+      "size": 132,
+      "sha256": "3eb42cbb8de0fe3bd936c811e04b84cdf85f55d9d7b98bc57bb7edd1eaddb271",
+      "scope": "complete function",
+      "port_coverage": "the Crypt adapter mirrors the non-null Character filter and caller-supplied absolute Character bounds for its one-player slice",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "the Crypt adapter mirrors the non-null Character filter and caller-supplied absolute Character bounds for its one-player slice; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10GameObject13MeetConditionEv",
+      "demangled": "GameObject::MeetCondition() const",
+      "elf_address": "0x38ab60",
+      "size": 8,
+      "sha256": "007f34a6c3441b0240da53f253e513b959105da2d8803255e1856aa48f48db47",
+      "scope": "complete function",
+      "port_coverage": "source body returns true; the existing offline trigger kernel adds no unsupported condition evaluator",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "source body returns true; the existing offline trigger kernel adds no unsupported condition evaluator; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN4Zone8IsInsideEP10GameObject",
+      "demangled": "Zone::IsInside(GameObject*)",
+      "elf_address": "0x3970c8",
+      "size": 1228,
+      "sha256": "087300ca0d5cce82561fda4788bc4214e4db40b93e92b6e79f2736527a0bdd05",
+      "scope": "complete function",
+      "port_coverage": "separate zone_contact-runtime projection preserves its PhysicalObject guard; TriggerZone contact does not call this method",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Zone-a8a06e4a5695-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "separate zone_contact-runtime projection preserves its PhysicalObject guard; TriggerZone contact does not call this method; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN7Trigger6UpdateEv",
+      "demangled": "Trigger::Update()",
+      "elf_address": "0x398838",
+      "size": 60,
+      "sha256": "bb02075437bc971a7898ee940f0e97488fa45c7f9097c26c927ac53cd8f021e6",
+      "scope": "complete function",
+      "port_coverage": "timer-update source mapping; the authored trigger delay is zero and the bounded adapter receives the current timer fact",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Trigger-8b9c643731c9-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "timer-update source mapping; the authored trigger delay is zero and the bounded adapter receives the current timer fact; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK7Trigger11CanActivateEv",
+      "demangled": "Trigger::CanActivate() const",
+      "elf_address": "0x3987ac",
+      "size": 48,
+      "sha256": "2a9df38aa92acc0e1509b4ed2b457fe73114b1245e1859958e59778357efafa3",
+      "scope": "complete function",
+      "port_coverage": "the offline trigger-contact kernel projects the count, timer, and enabled gates",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Trigger-8b9c643731c9-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "the offline trigger-contact kernel projects the count, timer, and enabled gates; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK7Trigger22GetNumPlayerActivatingEv",
+      "demangled": "Trigger::GetNumPlayerActivating() const",
+      "elf_address": "0x3987f8",
+      "size": 4,
+      "sha256": "0d746106b365ca42fbd8f455899e61e62813fa744167b5ccd1eb30e2f4876930",
+      "scope": "complete function",
+      "port_coverage": "tail-call mapping evidence to GameObject::GetNumPlayerTouching",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Trigger-8b9c643731c9-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "tail-call mapping evidence to GameObject::GetNumPlayerTouching; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN7Trigger8ActivateEv",
+      "demangled": "Trigger::Activate()",
+      "elf_address": "0x398794",
+      "size": 24,
+      "sha256": "af18dbe6e3fd23d937f213198ebe66da60c3a2f1dc63b312d317222a1900075a",
+      "scope": "complete function",
+      "port_coverage": "increments source activation count and copies configured delay; script-runtime enter_trigger consumes the one-shot count",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Trigger-8b9c643731c9-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "increments source activation count and copies configured delay; script-runtime enter_trigger consumes the one-shot count; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK11TriggerZone21IsDoorClosedActivatedEv",
+      "demangled": "TriggerZone::IsDoorClosedActivated() const",
+      "elf_address": "0x39b27c",
+      "size": 36,
+      "sha256": "0fa95abc72e95fa7d60c71d62491872c3e7f05904d21ab36ec007e49e36d460b",
+      "scope": "complete function",
+      "port_coverage": "gate mapping evidence; the authored Crypt trigger has no associated door and the adapter does not infer one",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/TriggerZone-86f63f4f8b1e-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "gate mapping evidence; the authored Crypt trigger has no associated door and the adapter does not infer one; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK11TriggerZone23SafeStartScriptOnlyOnceEi",
+      "demangled": "TriggerZone::SafeStartScriptOnlyOnce(int) const",
+      "elf_address": "0x39b2a0",
+      "size": 84,
+      "sha256": "bd8fd84932849d7be95ec9cc17f326aca5d9cae042f43455af92e227721fdcac",
+      "scope": "complete function",
+      "port_coverage": "ordinary trigger script start/already-running outcome is projected through script-runtime::enter_trigger",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/TriggerZone-86f63f4f8b1e-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "ordinary trigger script start/already-running outcome is projected through script-runtime::enter_trigger; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN11TriggerZone6UpdateEv",
+      "demangled": "TriggerZone::Update()",
+      "elf_address": "0x39b458",
+      "size": 756,
+      "sha256": "804ad8da69c6bb32ebad43d589a4952de073344424d81767b45ca4a8dc12b34f",
+      "scope": "complete function",
+      "port_coverage": "bounded offline one-player gates/contact edge are projected by the new Crypt adapter through trigger-contact; online and other modes remain unsupported",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/TriggerZone-86f63f4f8b1e-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "bounded offline one-player gates/contact edge are projected by the new Crypt adapter through trigger-contact; online and other modes remain unsupported; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN11TriggerZone8InitPostEv",
+      "demangled": "TriggerZone::InitPost()",
+      "elf_address": "0x39c0a8",
+      "size": 544,
+      "sha256": "e23e7b64d70411c10cbca384ff8645816e611d1144124ef11b7c6a2e7cc429a6",
+      "scope": "complete function",
+      "port_coverage": "calls Trigger::InitPost/Zone::InitPost and resolves authored script properties; full PropertyMap template resolution is outside this adapter",
+      "evidence_manifest": "port/level-world/reference/crypt-spawn-trigger/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/TriggerZone-86f63f4f8b1e-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_trigger_contact",
+      "source_paths": [
+        "port/level-world/crypt_spawn_trigger.cpp",
+        "port/trigger-contact/trigger_contact.cpp",
+        "port/zone-contact-runtime/zone_geometry.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "calls Trigger::InitPost/Zone::InitPost and resolves authored script properties; full PropertyMap template resolution is outside this adapter; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-spawn-trigger/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN5Level6UpdateEb",
+      "demangled": "Level::Update(bool)",
+      "elf_address": "0x3f82d8",
+      "size": 2408,
+      "sha256": "2e75857c5060415c3708add8ad1a148a734aa25749571f8bd9d29e5495917998",
+      "scope": "complete original ELF byte range; implementation scope is bounded by port_coverage",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Level-1709305c9fa9-001.asm",
+      "port_coverage": "caller phase-order evidence only; bounded Android composition calls script advance before physics/actor and samples contact after updated player absolute AABB",
+      "evidence_manifest": "port/level-world/reference/crypt-ghost-scripts/original-functions.json",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_script_session",
+      "source_paths": [
+        "port/level-world/crypt_spawn_script_session.cpp",
+        "port/script-runtime/script_runtime.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "caller phase-order evidence only; bounded Android composition calls script advance before physics/actor and samples contact after updated player absolute AABB; live Wait/Spawn only; full Level and ScriptManager bodies are not reconstructed.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-ghost-scripts/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN13ScriptManager13ExecuteScriptEi",
+      "demangled": "ScriptManager::ExecuteScript(int)",
+      "elf_address": "0x45c16c",
+      "size": 528,
+      "sha256": "95bbb1413317eadf2d935ab3ffbade7a84881d3f1fdc1d2876794fdd1cc196d4",
+      "scope": "complete original ELF byte range; implementation scope is bounded by port_coverage",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ScriptManager-6a1e69358783-001.asm",
+      "port_coverage": "bounded Wait/Spawn task dispatch with source IsBlocking-before-Update order; arbitrary command implementations and skipping policy are outside this adapter",
+      "evidence_manifest": "port/level-world/reference/crypt-ghost-scripts/original-functions.json",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_script_session",
+      "source_paths": [
+        "port/level-world/crypt_spawn_script_session.cpp",
+        "port/script-runtime/script_runtime.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "bounded Wait/Spawn task dispatch with source IsBlocking-before-Update order; arbitrary command implementations and skipping policy are outside this adapter; live Wait/Spawn only; full Level and ScriptManager bodies are not reconstructed.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-ghost-scripts/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN13ScriptManager17ExecuteAllScriptsEv",
+      "demangled": "ScriptManager::ExecuteAllScripts()",
+      "elf_address": "0x45c37c",
+      "size": 188,
+      "sha256": "7f267a40ddf9b8fa0f6776415ad0b52e684d0865a96a97a08bcb132718ed6392",
+      "scope": "complete original ELF byte range; implementation scope is bounded by port_coverage",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ScriptManager-6a1e69358783-001.asm",
+      "port_coverage": "bounded runnable-context snapshot represented by task tickets; newly started contexts wait for the following manager advance",
+      "evidence_manifest": "port/level-world/reference/crypt-ghost-scripts/original-functions.json",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_script_session",
+      "source_paths": [
+        "port/level-world/crypt_spawn_script_session.cpp",
+        "port/script-runtime/script_runtime.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "bounded runnable-context snapshot represented by task tickets; newly started contexts wait for the following manager advance; live Wait/Spawn only; full Level and ScriptManager bodies are not reconstructed.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-ghost-scripts/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK11Script_Wait10IsBlockingEv",
+      "demangled": "Script_Wait::IsBlocking() const",
+      "elf_address": "0x455754",
+      "size": 24,
+      "sha256": "05e6799e35a81bd7afd1a26cb3efe119206f77f549221ee04aabf5c6ae6cab39",
+      "scope": "complete original ELF byte range; implementation scope is bounded by port_coverage",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Script_Wait-c7dc1f69cbcc-001.asm",
+      "port_coverage": "ordinary positive-duration elapsed/target comparison before Update; exposed uint32 arithmetic uses an explicit saturation boundary",
+      "evidence_manifest": "port/level-world/reference/crypt-ghost-scripts/original-functions.json",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_script_session",
+      "source_paths": [
+        "port/level-world/crypt_spawn_script_session.cpp",
+        "port/script-runtime/script_runtime.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "ordinary positive-duration elapsed/target comparison before Update; exposed uint32 arithmetic uses an explicit saturation boundary; live Wait/Spawn only; full Level and ScriptManager bodies are not reconstructed.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-ghost-scripts/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN11Script_Wait6UpdateEv",
+      "demangled": "Script_Wait::Update()",
+      "elf_address": "0x4597b4",
+      "size": 52,
+      "sha256": "899e4cbb41efc31e42714ac562579a8f03d0ac66c5a0f92b4627e45ae2dd518b",
+      "scope": "complete original ELF byte range; implementation scope is bounded by port_coverage",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Script_Wait-c7dc1f69cbcc-001.asm",
+      "port_coverage": "adds caller-supplied current frame dt once to a blocking Wait and ends that task pass without rechecking",
+      "evidence_manifest": "port/level-world/reference/crypt-ghost-scripts/original-functions.json",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_script_session",
+      "source_paths": [
+        "port/level-world/crypt_spawn_script_session.cpp",
+        "port/script-runtime/script_runtime.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "adds caller-supplied current frame dt once to a blocking Wait and ends that task pass without rechecking; live Wait/Spawn only; full Level and ScriptManager bodies are not reconstructed.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-ghost-scripts/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN11Script_Wait7ExecuteEbi",
+      "demangled": "Script_Wait::Execute(bool, int)",
+      "elf_address": "0x45c438",
+      "size": 160,
+      "sha256": "f7980a6c5064528963e030ffb09b1218933a5eb2e9691186fb5a28eb4a2a25a9",
+      "scope": "complete original ELF byte range; implementation scope is bounded by port_coverage",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Script_Wait-c7dc1f69cbcc-001.asm",
+      "port_coverage": "decoded duration resets elapsed; positive Wait receives current frame dt immediately through the recovered manager order; previous wait overshoot discarded",
+      "evidence_manifest": "port/level-world/reference/crypt-ghost-scripts/original-functions.json",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_crypt_script_session",
+      "source_paths": [
+        "port/level-world/crypt_spawn_script_session.cpp",
+        "port/script-runtime/script_runtime.cpp",
+        "port/android-native/app/src/main/cpp/model_renderer.cpp"
+      ],
+      "implementation_limit": "decoded duration resets elapsed; positive Wait receives current frame dt immediately through the recovered manager order; previous wait overshoot discarded; live Wait/Spawn only; full Level and ScriptManager bodies are not reconstructed.",
+      "evidence_manifests": [
+        "port/level-world/reference/crypt-ghost-scripts/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character10CanRespawnEv",
+      "demangled": "Character::CanRespawn() const",
+      "elf_address": "0x3a5248",
+      "size": 92,
+      "sha256": "27df1bd744d4a5811a3f66dbaa480d14a6ec6fd6b6cf6c2c0fc8f2fbf8355e28",
+      "scope": "caller boundary, respawn eligibility and GroupInfo delegation",
+      "evidence_manifest": "port/level-world/reference/character-group-respawn/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "host_group_respawn_predicate",
+      "source_paths": [
+        "port/level-world/character_group_respawn.cpp"
+      ],
+      "implementation_limit": "caller boundary, respawn eligibility and GroupInfo delegation; outer respawnability/delay, group membership ownership and live SpawnFacts wiring remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-group-respawn/original-functions.json",
+        "port/level-world/reference/character-respawn-outer/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-respawn-outer/original-functions.json",
+          "mapping_category": "host_respawn_outer_gates",
+          "source_paths": [
+            "port/level-world/character_respawn_outer.cpp",
+            "port/level-world/character_group_respawn.cpp"
+          ],
+          "implementation_limit": "complete outer gate and optional GroupInfo delegation; the group leaf is reused separately; live property/group ownership and hosting/Limbus timer producer remain unbound."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN6CharAI9GroupInfo10CanRespawnEP9Character",
+      "demangled": "CharAI::GroupInfo::CanRespawn(Character*)",
+      "elf_address": "0x3d2a34",
+      "size": 180,
+      "sha256": "e237df6da594de9a41e0ce53dde069500048b37988f52724a45ba04807f416f5",
+      "scope": "complete source branch/status kernel, with member predicate supplied synchronously",
+      "evidence_manifest": "port/level-world/reference/character-group-respawn/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI_GroupInfo-926815723c46-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "host_group_respawn_predicate",
+      "source_paths": [
+        "port/level-world/character_group_respawn.cpp"
+      ],
+      "implementation_limit": "complete source branch/status kernel, with member predicate supplied synchronously; outer respawnability/delay, group membership ownership and live SpawnFacts wiring remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-group-respawn/original-functions.json",
+        "port/level-world/reference/character-respawn-outer/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-respawn-outer/original-functions.json",
+          "mapping_category": "host_respawn_outer_gates",
+          "source_paths": [
+            "port/level-world/character_respawn_outer.cpp",
+            "port/level-world/character_group_respawn.cpp"
+          ],
+          "implementation_limit": "reused by direct call into the existing character_group_respawn kernel; not duplicated here; live property/group ownership and hosting/Limbus timer producer remain unbound."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZNK16CharStateMachine13SM_IsInLimbusEv",
+      "demangled": "CharStateMachine::SM_IsInLimbus() const",
+      "elf_address": "0x3c01c0",
+      "size": 20,
+      "sha256": "9a5a7da0e51a2036859e2a5634b8b29dce869733922178f3d9f15430b7c2b3a7",
+      "scope": "complete source predicate, bound as a member query service",
+      "evidence_manifest": "port/level-world/reference/character-group-respawn/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharStateMachine-9e67f9b0cab6-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "host_group_respawn_predicate",
+      "source_paths": [
+        "port/level-world/character_group_respawn.cpp"
+      ],
+      "implementation_limit": "complete source predicate, bound as a member query service; outer respawnability/delay, group membership ownership and live SpawnFacts wiring remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-group-respawn/original-functions.json",
+        "port/level-world/reference/character-group-limbus-blur/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-group-limbus-blur/original-functions.json",
+          "mapping_category": "host_limbus_blur_group_producer",
+          "source_paths": [
+            "port/level-world/character_group_limbus_blur.cpp"
+          ],
+          "implementation_limit": "verified actor-owned query dependency; remains injected rather than reconstructed here; post-Revive role3/any-other-Limbus traversal only; native group/member ownership remains external."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZNK16CharStateMachine11SM_GetStateEv",
+      "demangled": "CharStateMachine::SM_GetState() const",
+      "elf_address": "0x3c01ac",
+      "size": 20,
+      "sha256": "4b5797cd91d4afd7ee3becf1bb65b696146e55fc226838e13c0fbef91b0e4743",
+      "scope": "complete source getter called by SM_IsInLimbus",
+      "evidence_manifest": "port/level-world/reference/character-group-respawn/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharStateMachine-9e67f9b0cab6-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "host_group_respawn_predicate",
+      "source_paths": [
+        "port/level-world/character_group_respawn.cpp"
+      ],
+      "implementation_limit": "complete source getter called by SM_IsInLimbus; outer respawnability/delay, group membership ownership and live SpawnFacts wiring remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-group-respawn/original-functions.json",
+        "port/level-world/reference/character-group-limbus-blur/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-group-limbus-blur/original-functions.json",
+          "mapping_category": "host_limbus_blur_group_producer",
+          "source_paths": [
+            "port/level-world/character_group_limbus_blur.cpp"
+          ],
+          "implementation_limit": "supporting original-code oracle query leaf only; no new implementation claimed; post-Revive role3/any-other-Limbus traversal only; native group/member ownership remains external."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN6CharAI16AI_ClearAllAggroEv",
+      "demangled": "CharAI::AI_ClearAllAggro()",
+      "elf_address": "0x3d5fa8",
+      "size": 480,
+      "sha256": "9cf1065d84a6b5f84f26ef7debd8bec0bc834a646ccd8c9f6f29a5c38eb101a3",
+      "scope": "source-owned lookup, conditional incoming erase, unconditional peer snapshot, owner-map clear, and all-peer dispatch ordering; native maps and callback effects are injected",
+      "evidence_manifest": "port/level-world/reference/character-aggro-cleanup/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "host_aggro_snapshot_dispatch",
+      "source_paths": [
+        "port/level-world/character_aggro_cleanup.cpp"
+      ],
+      "implementation_limit": "source-owned lookup, conditional incoming erase, unconditional peer snapshot, owner-map clear, and all-peer dispatch ordering; native maps and callback effects are injected; host-only ordering/lifetime adapter; native map mutation, OnDeAggro AI consumers and live actor ownership remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-cleanup/original-functions.json",
+        "port/level-world/reference/character-limbus-respawn/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-limbus-respawn/original-functions.json",
+          "mapping_category": "host_limbus_respawn_focus_producer",
+          "source_paths": [
+            "port/level-world/character_limbus_respawn.cpp",
+            "port/level-world/character_respawn_outer.cpp",
+            "port/level-world/character_coordinator.cpp"
+          ],
+          "implementation_limit": "normal-flow terminal service reused from the separate character_aggro_cleanup kernel; no duplicate implementation; source prefix/two delay reads/hosting gate/timer request/normal cleanup are host-tested; live Android byte, manager and linked-owner producers remain external."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN6CharAI9OnDeAggroEP9Character",
+      "demangled": "CharAI::OnDeAggro(Character*)",
+      "elf_address": "0x3d2014",
+      "size": 180,
+      "sha256": "fc26e32d20ebe2196ff1b625d4e2105dc0e427c3bbe209f3214cbbb79b33f42d",
+      "scope": "verified actual vptr +0x3c notification boundary, dispatched once per saved peer; debug work and selected CharAIScript forwarding remain an injected live service",
+      "evidence_manifest": "port/level-world/reference/character-aggro-cleanup/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "host_aggro_snapshot_dispatch",
+      "source_paths": [
+        "port/level-world/character_aggro_cleanup.cpp"
+      ],
+      "implementation_limit": "verified actual vptr +0x3c notification boundary, dispatched once per saved peer; debug work and selected CharAIScript forwarding remain an injected live service; host-only ordering/lifetime adapter; native map mutation, OnDeAggro AI consumers and live actor ownership remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-cleanup/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character15GetRespawnDelayEv",
+      "demangled": "Character::GetRespawnDelay() const",
+      "elf_address": "0x3a4bac",
+      "size": 64,
+      "sha256": "33c33d2c8d084d66c92c6087b380099e9cc9fa7a1db41db3ef5d62a638194557",
+      "scope": "complete source arithmetic-shift/multiply conversion and byte suppression return",
+      "evidence_manifest": "port/level-world/reference/character-respawn-outer/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "host_respawn_outer_gates",
+      "source_paths": [
+        "port/level-world/character_respawn_outer.cpp",
+        "port/level-world/character_group_respawn.cpp"
+      ],
+      "implementation_limit": "complete source arithmetic-shift/multiply conversion and byte suppression return; live property/group ownership and hosting/Limbus timer producer remain unbound.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-respawn-outer/original-functions.json",
+        "port/level-world/reference/character-limbus-respawn/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-limbus-respawn/original-functions.json",
+          "mapping_category": "host_limbus_respawn_focus_producer",
+          "source_paths": [
+            "port/level-world/character_limbus_respawn.cpp",
+            "port/level-world/character_respawn_outer.cpp",
+            "port/level-world/character_coordinator.cpp"
+          ],
+          "implementation_limit": "called independently twice by the new producer; its recovered suppression/property/arithmetic kernel is reused; source prefix/two delay reads/hosting gate/timer request/normal cleanup are host-tested; live Android byte, manager and linked-owner producers remain external."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZNK14CharProperties12_GetPropertyERKN7Structs19CharacterPropertiesEi",
+      "demangled": "CharProperties::_GetProperty(Structs::CharacterProperties const&, int) const",
+      "elf_address": "0x3dedb4",
+      "size": 292,
+      "sha256": "c227dbb320f18ab04022f3d61d90e90285652215e56bce8c89c8146aa0fa706f",
+      "scope": "property query dependency; port binds an ID-11 raw-value provider instead of rebuilding this getter",
+      "evidence_manifest": "port/level-world/reference/character-respawn-outer/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharProperties-bd859354c915-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "host_respawn_outer_gates",
+      "source_paths": [
+        "port/level-world/character_respawn_outer.cpp",
+        "port/level-world/character_group_respawn.cpp"
+      ],
+      "implementation_limit": "property query dependency; port binds an ID-11 raw-value provider instead of rebuilding this getter; live property/group ownership and hosting/Limbus timer producer remain unbound.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-respawn-outer/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9Character11InitSpawnedEiRK7Point3DIfE",
+      "demangled": "Character::InitSpawned(int, Point3D<float> const&)",
+      "elf_address": "0x3b379c",
+      "size": 136,
+      "sha256": "cfca6e8b4d35bfdc2f4bce13e234c2a79768f7ae917d29b86ba289c29ccbed36",
+      "scope": "field-producer evidence: sets Character+0x1481, the byte tested by both outer methods",
+      "evidence_manifest": "port/level-world/reference/character-respawn-outer/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "host_respawn_outer_gates",
+      "source_paths": [
+        "port/level-world/character_respawn_outer.cpp",
+        "port/level-world/character_group_respawn.cpp"
+      ],
+      "implementation_limit": "field-producer evidence: sets Character+0x1481, the byte tested by both outer methods; live property/group ownership and hosting/Limbus timer producer remain unbound.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-respawn-outer/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN13PlayerManager20IsLocalPlayerHostingEv",
+      "demangled": "PlayerManager::IsLocalPlayerHosting()",
+      "elf_address": "0x36f074",
+      "size": 104,
+      "sha256": "58f5e18507c3a03922ee1fa6799a0dac1100efbed60acc2416d12b00873081a5",
+      "scope": "separate source timer-hosting gate called by CSLimbus::OnFocus; explicitly not implemented by this slice",
+      "evidence_manifest": "port/level-world/reference/character-respawn-outer/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/PlayerManager-e1d60abd8e49-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "host_respawn_outer_gates",
+      "source_paths": [
+        "port/level-world/character_respawn_outer.cpp",
+        "port/level-world/character_group_respawn.cpp"
+      ],
+      "implementation_limit": "separate source timer-hosting gate called by CSLimbus::OnFocus; explicitly not implemented by this slice; live property/group ownership and hosting/Limbus timer producer remain unbound.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-respawn-outer/original-functions.json",
+        "port/level-world/reference/character-limbus-respawn/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-limbus-respawn/original-functions.json",
+          "mapping_category": "host_limbus_respawn_focus_producer",
+          "source_paths": [
+            "port/level-world/character_limbus_respawn.cpp",
+            "port/level-world/character_respawn_outer.cpp",
+            "port/level-world/character_coordinator.cpp"
+          ],
+          "implementation_limit": "opaque exact source service called only when the outer online byte+5 is nonzero; source prefix/two delay reads/hosting gate/timer request/normal cleanup are host-tested; live Android byte, manager and linked-owner producers remain external."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN10CharTimers9TMR_StartEjiiPv",
+      "demangled": "CharTimers::TMR_Start(unsigned int, int, int, void*)",
+      "elf_address": "0x3dbe24",
+      "size": 84,
+      "sha256": "7d6993ff7e409b6b319e972d1604b4ee49a1affa167f349a480aad2dd06b1cb6",
+      "scope": "existing timer source leaf; adapter reuses the native Character Coordinator's timer store and verifies arguments/event ownership",
+      "evidence_manifest": "port/level-world/reference/character-limbus-respawn/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharTimers-88562713987f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "host_limbus_respawn_focus_producer",
+      "source_paths": [
+        "port/level-world/character_limbus_respawn.cpp",
+        "port/level-world/character_respawn_outer.cpp",
+        "port/level-world/character_coordinator.cpp"
+      ],
+      "implementation_limit": "existing timer source leaf; adapter reuses the native Character Coordinator's timer store and verifies arguments/event ownership; source prefix/two delay reads/hosting gate/timer request/normal cleanup are host-tested; live Android byte, manager and linked-owner producers remain external.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-limbus-respawn/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN12VisualObject14SyncVisibilityEv",
+      "demangled": "VisualObject::SyncVisibility()",
+      "elf_address": "0x4713d0",
+      "size": 108,
+      "sha256": "c12bd8d5cb7bc0e53560e134f53a090760751b352a917f89beaace5c29e3032d",
+      "scope": "separate inspected visibility consumer; full predicates and scene binding remain outside this audit",
+      "evidence_manifest": "port/level-world/reference/character-spawn-visibility/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/VisualObject-79dd69531261-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "visibility_callsite_and_vtable_evidence",
+      "source_paths": [
+        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+      ],
+      "implementation_limit": "separate inspected visibility consumer; full predicates and scene binding remain outside this audit; read-only audit adds no implementation body.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9CharacterC2EN10ObjectBase6GO_IDSE",
+      "demangled": "Character::Character(ObjectBase::GO_IDS)",
+      "elf_address": "0x3a9340",
+      "size": 1448,
+      "sha256": "ef72da53c9a0ec2014a3fbcf81a04d57cc49859415d822fd932ca11ff0e77ceb",
+      "scope": "supporting address-point proof only",
+      "evidence_manifest": "port/level-world/reference/character-spawn-visibility/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "visibility_callsite_and_vtable_evidence",
+      "source_paths": [
+        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+      ],
+      "implementation_limit": "supporting address-point proof only; read-only audit adds no implementation body.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN10ObjectBaseC1ENS_6GO_IDSE",
+      "demangled": "ObjectBase::ObjectBase(ObjectBase::GO_IDS)",
+      "elf_address": "0x33f15c",
+      "size": 436,
+      "sha256": "0ee65c6207e36d8093719ec258764d35eeecf7bcefe76b5db93889c74b23518a",
+      "scope": "supporting initial enabled-byte=1 proof only",
+      "evidence_manifest": "port/level-world/reference/character-spawn-visibility/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectBase-442c048e89fd-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "visibility_callsite_and_vtable_evidence",
+      "source_paths": [
+        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+      ],
+      "implementation_limit": "supporting initial enabled-byte=1 proof only; read-only audit adds no implementation body.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN10ObjectBaseC2ENS_6GO_IDSE",
+      "demangled": "ObjectBase::ObjectBase(ObjectBase::GO_IDS)",
+      "elf_address": "0x33f310",
+      "size": 436,
+      "sha256": "e15faf2445a48995abf99d8c5d1e59eb2713750e9908e748d4a6b2ae814d6d67",
+      "scope": "supporting initial enabled-byte=1 proof only",
+      "evidence_manifest": "port/level-world/reference/character-spawn-visibility/original-functions.json",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectBase-442c048e89fd-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "visibility_callsite_and_vtable_evidence",
+      "source_paths": [
+        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+      ],
+      "implementation_limit": "supporting initial enabled-byte=1 proof only; read-only audit adds no implementation body.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+      ],
+      "additional_mappings": []
     }
   ],
   "unsupported": [
@@ -706,11 +1998,48 @@
     "Autonomous AI, target selection, movement/combat decisions, and AI event production are not reconstructed.",
     "Caller producers for respawn eligibility, group membership/update, saved Limbus transforms, and complete revive/body ownership remain external.",
     "PreSpawn focus and arbitrary transitions into Spawn outside the bounded fresh-ghost path are not reconstructed.",
-    "Visibility ownership is unresolved; GameObject::IsUpdatable is only a constant-true query. No visibility mutation is claimed.",
+    "General enable-condition/serialized visibility and full VisualObject synchronization remain external; selected fresh Ghost visibility is now source-bound.",
     "Timed alpha fading is not implemented or claimed; VisualObject::StartFadeIn and UpdateFadeIn are return stubs.",
     "This kernel does not decode the original binary tables; its Catalog must preserve CharacterTable row order and the original template slots.",
     "The original random draw and its per-actor seed/call-order effects are not reproduced. No default variant is selected.",
     "The kernel does not resolve the 224 default/type/base/gear/saved property fields, evaluate ClassID formulas, instantiate Character objects, or integrate into the renderer/actor factory.",
-    "MGP editor template inheritance/asset placement semantics beyond the observed exact runtime key are not reconstructed."
+    "MGP editor template inheritance/asset placement semantics beyond the observed exact runtime key are not reconstructed.",
+    "No per-actor original slot is claimed without the timer seed and every preceding ordinary-stream draw/construction-order dependency.",
+    "The adapter does not own, seed, reset, or globalize the random streams; caller supplies and retains their state.",
+    "Cached property-ID early return, player/savegame selection, actor construction, template-to-CharacterTable mapping, and property/class resolution are separate paths or modules.",
+    "Negative slot counts are rejected as malformed adapter input; only the observed empty and positive template-count branches are supported.",
+    "This is not the independent port/game-data CombatRandom stream and does not alter combat RNG semantics.",
+    "This adapter does not resolve generated level/module placement; callers provide the final GameObject world position and scale.",
+    "Zone::IsInside and its PhysicalObject guard remain a separate predicate. The trigger's AABB activation path must not acquire that guard.",
+    "No scene node, _colzone node, selector, Irrlicht collision callback, or renderer state is inferred or required by this contact path.",
+    "Online activation, multi-player policy, move-out scripts, all-player scripts, one-player effects, and associated-door bindings are outside this source record's bounded ordinary one-player slice.",
+    "The host fixture validates original script-table activation but does not prove full Android runtime wiring, frame-order behavior, rendered level completion, or the separate GhostAmbushHallway template path.",
+    "Arbitrary ScriptManager commands, skip/cutscene policy, full task/level save serialization, online/multi-player producers and full original manager body reconstruction are outside this adapter.",
+    "Generic diagnostic scheduler unsupported-command no-ops are not allowed for the selected live Crypt program; SpawnSession accepts only Wait and SpawnCharacter.",
+    "Original ObjectManager lookup filters by module ID (unless global/special-player policy applies). Current uniquely named pair is bounded; repeated-module expansion requires that producer and ownership model, not a global-name assumption.",
+    "Native integration source presence and host tests do not themselves prove Android runtime/rendered gameplay success. Device evidence must be reported separately with the tested APK identity.",
+    "Fresh Ghost Spawn/Idle/body services are bounded. Autonomous combat/AI, broad revival, weighted Hallway actors and full campaign reconstruction remain separate work.",
+    "Original Wait uses signed int elapsed addition. The bounded scheduler uses saturated uint32 elapsed arithmetic for exposed extreme dt; ordinary application frame dt is the reconstructed path.",
+    "CharacterGroup construction, membership add/remove and lifetime ownership are not reconstructed here.",
+    "GroupInfo::OnDied, OnEnemySpotted, broader status producers, and CharAI linked-aggro death/revival cleanup remain separate source work.",
+    "Character::CanRespawn's outer respawnability and delay checks are caller facts and are not implemented by this kernel.",
+    "Native coordinator/SpawnFacts wiring is not part of this host-only source slice.",
+    "CharAI outgoing/incoming tree storage and source map traversal are not owned by this kernel.",
+    "Native map storage, actor-identity mapping, selected AI notification consumer, and the exact effects inside OnDeAggro are adapter responsibilities; no linked actor graph or renderer integration is claimed.",
+    "Actor-owned AI/Lua consumers are not bound by this kernel. CharAI::OnDeAggro forwards to CharAIScript when present; no direct Lua callback is claimed here.",
+    "Implementing strong retained ownership is a caller responsibility; the kernel guarantees all-holds-before-mutation, held-handle lookup/erase/dispatch, and release-after-the-snapshot.",
+    "CharAI::AI_ClearAllAggroTowardMe(bool), including its termination path and optional current-target cleanup, is separate and not implemented.",
+    "CharacterGroup construction, membership registration/removal, aggro acquisition, automatic target selection, combat, and revive presentation remain separate.",
+    "The live Character property sheet, property recalculation pipeline and source object layout are caller-owned; this adapter accepts a raw resolved value through a callback.",
+    "GroupInfo construction, membership storage, member lifetime, OnDied/OnEnemySpotted status producers, and native group ownership are not implemented.",
+    "CSLimbus::OnFocus timer eligibility and PlayerManager local-host policy, timer event 0x2f delivery, and native Character coordinator wiring are deliberately deferred.",
+    "The source byte at Character+0x1481 is not semantically renamed beyond the observed InitSpawned suppression behavior.",
+    "The host kernel is not wired into the current Android actor/state native path; integration must supply live Character+0x520/+0x530/+0x1481, resolved property 11, PlayerManager policy and AI cleanup services.",
+    "PlayerManager::IsLocalPlayerHosting internals and native PlayerManager/OnlineGameState ownership remain outside the adapter.",
+    "The existing Character Coordinator owns the native timer slots, but event 0x2f delivery back into the game's revive/respawn state and source UI/effects are not proven by this kernel.",
+    "Original callbacks do not return adapter failure codes. Port-only callback failures preserve completed prior effects, do not roll back, and do not invoke the normal-path AI cleanup artificially.",
+    "Earlier OnBlur controller/visibility/pose/Revive operations remain separate and are not repeated by this producer.",
+    "Member registration, GroupInfo creation and ownership, network/checkpoint actors, and Native renderer binding remain outside this module.",
+    "Service errors are port protocol; completed callback effects are not rolled back."
   ]
 }

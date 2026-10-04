@@ -2,7 +2,7 @@
 #include <cmath>
 #include <cstring>
 
-using namespace dh2::scene;
+using namespace dh2::scene_payload;
 namespace {
 std::uint32_t word(const std::uint8_t* p) {
     return std::uint32_t(p[0]) | (std::uint32_t(p[1]) << 8)

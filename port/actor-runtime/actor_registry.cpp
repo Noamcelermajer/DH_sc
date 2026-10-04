@@ -57,7 +57,7 @@ bool is_character(const dh2::world::Object& object) {
     return object.gametype && std::strcmp(object.gametype, "Character") == 0;
 }
 
-bool copy_actor(ActorInstance* output, const dh2::world::Level* level,
+bool copy_actor(ActorInstance* output, const dh2::world::SourceLevel* level,
                 const dh2::world::Object* object) {
     if (!output || !level || !object || !is_character(*object) ||
         object->kind != dh2::world::RecordKind::mgp ||
@@ -126,7 +126,7 @@ void saturating_increment(std::uint32_t* value) {
 
 }  // namespace
 
-Error init(Registry* out, const dh2::world::Level* level) {
+Error init(Registry* out, const dh2::world::SourceLevel* level) {
     if (!out || !level || !level->name ||
         (level->module_count && !level->modules) ||
         (level->entity_count && !level->entities)) return Error::argument;

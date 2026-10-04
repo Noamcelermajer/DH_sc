@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
     const bool dump_draws = argc == 3;
     const std::string cache = argv[1];
         const auto mlx_bytes = read_file(cache + "/data/scene/001_swamp.mlx");
-        dh2::world::Level level{};
+        dh2::world::SourceLevel level{};
         dh2::world::Diagnostic diagnostic{};
         auto result = dh2_world_import_level(&level, "SWAMP", "data/scene/001_swamp.mlx",
             mlx_bytes.data(), mlx_bytes.size(), &diagnostic);
@@ -70,8 +70,8 @@ int main(int argc, char** argv) {
         require(dh2_bres_open(&bres, bres_bytes.data(), bres_bytes.size()) ==
                     dh2::resources::BresError::ok,
                 "swamp catalogue BRES parse failed");
-        dh2::scene::Scene scene{};
-        require(dh2_scene_open(&scene, &bres) == dh2::scene::Error::ok,
+        dh2::scene_payload::Scene scene{};
+        require(dh2_scene_open(&scene, &bres) == dh2::scene_payload::Error::ok,
                 "swamp catalogue scene parse failed");
         dh2::draw::Stats scene_stats{};
         require(dh2_static_scene_draws(&scene_stats, &bres, dump_visibility, nullptr,

@@ -23,7 +23,7 @@ std::uint32_t word(const std::uint8_t *p) {
     return p[0] | (std::uint32_t(p[1]) << 8) | (std::uint32_t(p[2]) << 16) |
            (std::uint32_t(p[3]) << 24);
 }
-Error walk(Context &c, const dh2::scene::Node &source, const dh2::math::Matrix4f *parent,
+Error walk(Context &c, const dh2::scene_payload::Node &source, const dh2::math::Matrix4f *parent,
            std::uint32_t depth) {
     if (depth >= 64 || c.nodes >= 20000)
         return Error::limit;
@@ -37,12 +37,12 @@ Error walk(Context &c, const dh2::scene::Node &source, const dh2::math::Matrix4f
         if (target && std::strcmp(target, source.id) == 0)
             ++c.matches[i];
     }
-    dh2::scene::Node posed{};
+    dh2::scene_payload::Node posed{};
     auto e = dh2_pose_node(c.clip, c.time, &source, &posed);
     if (e != Error::ok)
         return e;
     dh2::math::Matrix4f world{};
-    if (dh2_scene_world_matrix(&posed, parent, &world) != dh2::scene::Error::ok)
+    if (dh2_scene_world_matrix(&posed, parent, &world) != dh2::scene_payload::Error::ok)
         return Error::scene;
     const auto &image = source.image;
     if (source.record > image.size || image.size - source.record < 12)
@@ -63,8 +63,8 @@ Error walk(Context &c, const dh2::scene::Node &source, const dh2::math::Matrix4f
         }
     }
     for (std::uint32_t i = 0; i < source.children; ++i) {
-        dh2::scene::Node child{};
-        if (dh2_scene_child_node(&source, i, &child) != dh2::scene::Error::ok)
+        dh2::scene_payload::Node child{};
+        if (dh2_scene_child_node(&source, i, &child) != dh2::scene_payload::Error::ok)
             return Error::scene;
         e = walk(c, child, &world, depth + 1);
         if (e != Error::ok)
@@ -186,8 +186,8 @@ Error dh2_pose_sample(const Clip *clip, std::uint32_t track, std::int32_t ms, fl
         return Error::range;
     }
 }
-Error dh2_pose_node(const Clip *clip, std::int32_t ms, const dh2::scene::Node *source,
-                    dh2::scene::Node *out) {
+Error dh2_pose_node(const Clip *clip, std::int32_t ms, const dh2::scene_payload::Node *source,
+                    dh2::scene_payload::Node *out) {
     if (!clip || !source || !out || !source->id)
         return Error::argument;
     if (!clip->count || clip->count > 128)
@@ -220,7 +220,7 @@ Error dh2_pose_node(const Clip *clip, std::int32_t ms, const dh2::scene::Node *s
     return Error::ok;
 }
 Error dh2_pose_skin_palette(const Clip *clip, std::int32_t ms, const dh2::skin::Skin *skin,
-                            const dh2::scene::Visual *visual, dh2::math::Matrix4f *out,
+                            const dh2::scene_payload::Visual *visual, dh2::math::Matrix4f *out,
                             std::size_t cap) {
     if (!clip || !skin || !visual || !out || skin->image.bytes != visual->image.bytes)
         return Error::argument;
@@ -232,8 +232,8 @@ Error dh2_pose_skin_palette(const Clip *clip, std::int32_t ms, const dh2::skin::
     c.skin = skin;
     c.time = ms;
     for (std::uint32_t i = 0; i < visual->roots; ++i) {
-        dh2::scene::Node node{};
-        if (dh2_scene_root_node(visual, i, &node) != dh2::scene::Error::ok)
+        dh2::scene_payload::Node node{};
+        if (dh2_scene_root_node(visual, i, &node) != dh2::scene_payload::Error::ok)
             return Error::scene;
         const auto e = walk(c, node, nullptr, 0);
         if (e != Error::ok)

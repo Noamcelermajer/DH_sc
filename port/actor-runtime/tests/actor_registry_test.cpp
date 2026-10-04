@@ -32,7 +32,7 @@ bool read_bytes(const std::string& cache, const char* relative,
 }
 
 bool import_infected_village(const std::string& cache,
-                             dh2::world::Level* level) {
+                             dh2::world::SourceLevel* level) {
     std::vector<std::uint8_t> bytes;
     dh2::world::Diagnostic diagnostic{};
     if (!read_bytes(cache, "data/scene/005_infectedvillage.mlx", &bytes)) {
@@ -82,7 +82,7 @@ const ExpectedActor expected_ambush[] = {
     {"_prim_tmp_infected16", 19, {2562.42f, 651.98f, 1325.43f}, 174.741f}
 };
 
-bool verify_imported_actors(const dh2::world::Level& level,
+bool verify_imported_actors(const dh2::world::SourceLevel& level,
                             const dh2::actors::Registry& registry) {
     using namespace dh2::actors;
     if (!require(registry.actor_count == 26, "cache Character record count changed")) return false;
@@ -135,7 +135,7 @@ bool verify_imported_actors(const dh2::world::Level& level,
     return true;
 }
 
-bool registry_transactions_and_requests(const dh2::world::Level& level,
+bool registry_transactions_and_requests(const dh2::world::SourceLevel& level,
                                         dh2::actors::Registry* registry) {
     using namespace dh2::actors;
     if (!require(init(registry, &level) == Error::ok, "registry init failed")) return false;
@@ -269,7 +269,7 @@ int main(int argc, char** argv) {
         std::fprintf(stderr, "usage: actor_registry_test CACHE_FILES\n");
         return 2;
     }
-    dh2::world::Level level{};
+    dh2::world::SourceLevel level{};
     if (!import_infected_village(argv[1], &level)) {
         dh2_world_free(&level);
         return 1;

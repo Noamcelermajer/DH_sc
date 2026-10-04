@@ -18,6 +18,9 @@ target_sources(dh2_level_world PRIVATE physical_world.cpp physical_lifecycle.cpp
 target_sources(dh2_level_world PRIVATE character_state.cpp animation_blender.cpp)
 target_sources(dh2_level_world PRIVATE character_coordinator.cpp)
 target_sources(dh2_level_world PRIVATE character_factory.cpp)
+target_sources(dh2_level_world PRIVATE crypt_spawn_script_session.cpp crypt_spawn_trigger.cpp
+ ../script-runtime/script_runtime.cpp ../pydata-scripts/native/pydata_scripts.cpp
+ ../trigger-contact/trigger_contact.cpp ../zone-contact-runtime/zone_geometry.cpp)
 target_sources(dh2_level_world PRIVATE character_timers.cpp character_stance.cpp)
 target_sources(dh2_level_world PRIVATE character_animation_events.cpp)
 target_sources(dh2_level_world PRIVATE character_animation_ai.cpp)

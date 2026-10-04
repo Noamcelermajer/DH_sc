@@ -50,8 +50,8 @@ Error reserve_triangles(Navigation* nav) {
     if (nav->triangle_count < nav->triangle_capacity) return Error::ok;
     auto capacity = nav->triangle_capacity ? nav->triangle_capacity * 2U : 128U;
     if (capacity > max_triangles) capacity = max_triangles;
-    auto* grown = static_cast<Triangle*>(std::realloc(nav->triangles,
-        std::size_t(capacity) * sizeof(Triangle)));
+    auto* grown = static_cast<SurfaceTriangle*>(std::realloc(nav->triangles,
+        std::size_t(capacity) * sizeof(SurfaceTriangle)));
     if (!grown) return Error::allocation;
     nav->triangles = grown;
     nav->triangle_capacity = capacity;
@@ -65,17 +65,17 @@ void transform_point(const dh2::math::Matrix4f& m, const float in[3], float out[
 
 struct ModuleWalk {
     Navigation* nav;
-    const dh2::world::Level* level;
+    const dh2::world::SourceLevel* level;
     const dh2::world::Module* module;
     dh2::world::ModuleBinding binding;
-    const dh2::scene::Scene* scene;
+    const dh2::scene_payload::Scene* scene;
     bool active, root_found, failed;
     std::uint32_t root_depth;
     Error error;
 };
 
-Error append_geometry(ModuleWalk& state, const dh2::scene::Node& node,
-    const dh2::math::Matrix4f& world, const dh2::scene::Instance& instance) {
+Error append_geometry(ModuleWalk& state, const dh2::scene_payload::Node& node,
+    const dh2::math::Matrix4f& world, const dh2::scene_payload::Instance& instance) {
     const auto geometry_index = dh2_scene_geometry_index(state.scene, &instance);
     if (geometry_index < 0) return Error::scene;
     dh2::assets::Mesh mesh{};
@@ -98,7 +98,7 @@ Error append_geometry(ModuleWalk& state, const dh2::scene::Node& node,
     const char* user_properties = nullptr;
     std::size_t user_properties_size = 0;
     if (dh2_scene_user_data_string(&node, &user_properties, &user_properties_size)
-        != dh2::scene::Error::ok) return Error::scene;
+        != dh2::scene_payload::Error::ok) return Error::scene;
     dh2::floor_types::Property floor_type_property{};
     if (user_properties && dh2::floor_types::find_property(user_properties,
             user_properties_size, {"floortypes", 10U}, &floor_type_property)
@@ -127,7 +127,7 @@ Error append_geometry(ModuleWalk& state, const dh2::scene::Node& node,
         for (std::uint32_t index_offset = 0; index_offset < primitive.index_count; index_offset += 3) {
             if (surface.triangle_count == max_triangles
                 || state.nav->triangle_count == max_triangles) return Error::limit;
-            Triangle triangle{};
+            SurfaceTriangle triangle{};
             triangle.surface_index = state.nav->surface_count;
             triangle.primitive_index = primitive_index;
             triangle.source_triangle_index = index_offset / 3;
@@ -155,7 +155,7 @@ Error append_geometry(ModuleWalk& state, const dh2::scene::Node& node,
     return Error::ok;
 }
 
-bool visit_node(const dh2::scene::Node* node, const dh2::math::Matrix4f* matrix,
+bool visit_node(const dh2::scene_payload::Node* node, const dh2::math::Matrix4f* matrix,
                 std::uint32_t depth, void* opaque) {
     auto& state = *static_cast<ModuleWalk*>(opaque);
     if (state.active && depth <= state.root_depth) state.active = false;
@@ -175,9 +175,9 @@ bool visit_node(const dh2::scene::Node* node, const dh2::math::Matrix4f* matrix,
         state.failed = true; state.error = Error::unsupported_transform; return false;
     }
     for (std::uint32_t i = 0; i < node->instances; ++i) {
-        dh2::scene::Instance instance{};
+        dh2::scene_payload::Instance instance{};
         if (dh2_scene_instance(node, static_cast<std::int32_t>(i), &instance)
-            != dh2::scene::Error::ok) {
+            != dh2::scene_payload::Error::ok) {
             state.failed = true; state.error = Error::scene; return false;
         }
         // PFWorld searches mesh scene nodes. Other node instance kinds are
@@ -191,7 +191,7 @@ bool visit_node(const dh2::scene::Node* node, const dh2::math::Matrix4f* matrix,
     return true;
 }
 
-bool source_is_swamp(const dh2::world::Level* level) {
+bool source_is_swamp(const dh2::world::SourceLevel* level) {
     if (!level || !level->name || std::strcmp(level->name, "SWAMP")
         || level->module_count != 9 || !level->modules) return false;
     for (std::uint32_t i = 0; i < level->module_count; ++i) {
@@ -283,7 +283,7 @@ void cross3(const float a[3], const float b[3], float out[3]) {
     out[2] = a[0] * b[1] - a[1] * b[0];
 }
 
-bool point_in_triangle_3d(const Triangle& triangle, const float point[3]) {
+bool point_in_triangle_3d(const SurfaceTriangle& triangle, const float point[3]) {
     const float* vertices[] = {triangle.a, triangle.b, triangle.c};
     for (unsigned edge_index = 0; edge_index < 3; ++edge_index) {
         const float* edge_start = vertices[edge_index];
@@ -302,7 +302,7 @@ bool point_in_triangle_3d(const Triangle& triangle, const float point[3]) {
 }
 
 bool intersect_segment_triangle(const float start[3], const float direction[3],
-    const Triangle& triangle, float* fraction, float position[3]) {
+    const SurfaceTriangle& triangle, float* fraction, float position[3]) {
     float ab[3], ac[3], normal[3];
     subtract3(triangle.b, triangle.a, ab);
     subtract3(triangle.c, triangle.a, ac);
@@ -335,7 +335,7 @@ bool intersect_segment_triangle(const float start[3], const float direction[3],
 }
 
 extern "C" Error dh2_nav_build_swamp(Navigation* output,
-    const dh2::world::Level* level, const dh2::scene::Scene* scene, Diagnostic* d) {
+    const dh2::world::SourceLevel* level, const dh2::scene_payload::Scene* scene, Diagnostic* d) {
     if (!output || !scene) return fail(d, Error::argument, "Missing navigation build input");
     if (output->surfaces || output->triangles || output->surface_count
         || output->triangle_count || output->surface_capacity || output->triangle_capacity)
@@ -357,15 +357,15 @@ extern "C" Error dh2_nav_build_swamp(Navigation* output,
             dh2_nav_free(&candidate);
             return fail(d, Error::scene, "Failed to bind SWAMP module root");
         }
-        dh2::scene::Visual visual{};
+        dh2::scene_payload::Visual visual{};
         if (state.binding.visual_index >= scene->visuals
             || dh2_scene_visual(scene, static_cast<std::int32_t>(state.binding.visual_index), &visual)
-                != dh2::scene::Error::ok) {
+                != dh2::scene_payload::Error::ok) {
             dh2_nav_free(&candidate);
             return fail(d, Error::scene, "Invalid module visual scene");
         }
         const auto walked = dh2_scene_walk_visual(&visual, visit_node, &state, 65536);
-        if (state.failed || walked != dh2::scene::Error::ok || !state.root_found) {
+        if (state.failed || walked != dh2::scene_payload::Error::ok || !state.root_found) {
             const auto error = state.failed ? state.error : Error::scene;
             dh2_nav_free(&candidate);
             return fail(d, error, state.failed ? "Failed while collecting floor geometry"
@@ -397,8 +397,8 @@ extern "C" Error dh2_nav_surface(const Navigation* nav, std::uint32_t index,
     return Error::ok;
 }
 
-extern "C" Error dh2_nav_triangle(const Navigation* nav, std::uint32_t index,
-                                   Triangle* output) {
+extern "C" Error dh2_nav_get_triangle(const Navigation* nav, std::uint32_t index,
+                                   SurfaceTriangle* output) {
     if (!nav || !output || !nav->triangles || nav->triangle_count > nav->triangle_capacity
         || nav->triangle_count > max_triangles || index >= nav->triangle_count)
         return Error::argument;

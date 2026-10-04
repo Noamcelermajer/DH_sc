@@ -37,9 +37,20 @@ occurrences, resolves KnightPlayerBase properties, and routes touch input
 through recovered Idle/Move state updates. Registered assets with no serialized
 animation payload remain registered without fabricated timing. SceneBinding
 applies owner, helper, authored graph and root-displacement composition once;
-the Irrlicht node stays at identity. The SWAMP floor-checked point movement
-remains an explicit development producer. External Character/AI callbacks,
-native physics, combat, and full game orchestration remain outside this slice.
+the Irrlicht node stays at identity. `SwampActorSession` attaches its real
+NativeWorld body to the source Character only after body creation. It sets
+`Coordinator.state.body_present` while the backend owns that body, so source
+Move focus calls unpin and Move blur calls Stop then pin. The Stop callback
+clears the PF path, target, and heading before pinning. The session detaches
+those callbacks and clears `body_present` before destroying the body/world.
+Keep the `PrinceCharacterRuntime` wrapper at a stable address while the session
+is attached; reloading it or binding a second body owner is rejected.
+
+The SWAMP caller supplies a 20 ms development tick and a source owner position;
+these are not claimed to reproduce the original game loop clock. Only Idle and
+Move body transitions are supported. SWAMP props, other-module seams, walls,
+AI, combat, script-blocked timers, and full game orchestration remain outside
+this slice.
 
 Read the [SWAMP source diagnostic](../swamp-smoke/README.md) for the package
 scope, current APK verification state, build command, and remaining renderer
@@ -54,7 +65,17 @@ python port/irrlicht-android/game/tests/run_prince_host.py `
 
 The test stages the checked APK-format asset tree and writes JSON evidence
 below ignored `port/irrlicht-android/build/prince-character-host-checks/`; no
-Android device is used.
+Android device is used. For source actor body-service order, the actual-property
+radius, +Y floor-boundary redirection, and callback teardown assertions, run:
+
+```powershell
+python port/irrlicht-android/game/tests/run_swamp_actor_session_host.py `
+  --cache ..\cache\files `
+  --output port\irrlicht-android\build\swamp-actor-body-services-host
+```
+
+The report records those host assertions separately from Android runtime
+evidence.
 
 ## Provenance
 

@@ -76,24 +76,25 @@ bool valid_spawn(const State* s,const Facts* f,const SpawnFacts* sf,const Servic
  return valid_base(s,f,c)&&spawn_state_id(s->current)&&sf&&sf->spawn_animation>=0&&
   sf->reserved_zero==0&&sf->visual_present<=1&&std::isfinite(sf->raw_fade_in_argument)&&
   sf->raw_fade_in_argument>=0&&sf->respawn_timer_eligible<=1&&sf->can_respawn<=1&&
-  sf->group_present<=1&&sf->group_has_active_other<=1&&
-  (!sf->group_has_active_other||sf->group_present);
+  sf->group_role3<=1&&sf->group_has_other_in_limbus<=1&&
+  (!sf->group_has_other_in_limbus||sf->group_role3);
 }
 void limbus_blur(State& s,const SpawnFacts& sf,const Services& c){
- // CSLimbus::OnBlur first resets its actor-owned Limbus slot, then invokes
- // Character vtable slot +0x40, restores authored position/rotation and revives.
- call(s,c,limbus_member_reset);
- call(s,c,query_is_updatable,1);
+ // CSLimbus::OnBlur first clears its controller lock byte, then invokes
+ // Character SetVisible(true), restores authored position/rotation and revives.
+ call(s,c,reset_controller_lock);
+ call(s,c,set_visible,1);
  call(s,c,restore_limbus_position);
  call(s,c,restore_limbus_rotation);
  call(s,c,revive_character);
  // The original group update is conditional on the source group role. The
- // caller supplies the already-resolved predicate; active peers select 2.
- if(sf.group_present)call(s,c,set_limbus_group_status,sf.group_has_active_other?2:0);
+ // caller supplies the role3 gate and any-other-member-in-Limbus predicate.
+ // This differs from GroupInfo::CanRespawn's all-members predicate.
+ if(sf.group_role3)call(s,c,set_limbus_group_status,sf.group_has_other_in_limbus?2:0);
 }
 void limbus_focus(State& s,const SpawnFacts& sf,const Services& c){
  s.flags=0;
- call(s,c,query_is_updatable,0);
+ call(s,c,set_visible,0);
  if(sf.respawn_timer_eligible&&sf.respawn_delay_ms)
   call(s,c,start_timer,signed_bits(sf.respawn_delay_ms),0,0x2f);
  call(s,c,clear_all_aggro);
@@ -126,7 +127,7 @@ void source_blur(State& s,const Facts& f,const SpawnFacts& sf,const Services& c)
  case 3:blur(s,f,c);break;
  case 17:
   // CSSPreSpawn::OnBlur: restore virtual actor hook, revive and collisions.
-  call(s,c,query_is_updatable,1);call(s,c,revive_character);call(s,c,enable_collisions);break;
+  call(s,c,set_visible,1);call(s,c,revive_character);call(s,c,enable_collisions);break;
  }
 }
 void source_focus(State& s,const Facts& f,const SpawnFacts& sf,int prior,

@@ -29,8 +29,8 @@ enum Service : std::uint32_t {
  disable_state_fx,disable_self_fx,remove_buffs,cancel_sneaking,
  raise_event,remove_body,idle_common_update,set_heading,
  // Actor-owned source services used by the Limbus/Spawn slice below. The
- // +0x40 virtual resolves to GameObject::IsUpdatable and is a pure query.
- query_is_updatable,limbus_member_reset,restore_limbus_position,
+ // Character vptr +0x40 resolves to GameObject::SetVisible(bool).
+ set_visible,reset_controller_lock,restore_limbus_position,
  restore_limbus_rotation,revive_character,set_limbus_group_status,
  clear_all_aggro,clear_ai_target,sync_last_ai_target,start_fade_in,
  init_physical_object,enable_collisions
@@ -50,7 +50,8 @@ struct Request {
 // Cmd_LookAt(object),2 GameObject.LookAt(target.GetTargetPosition()).
 // raise_event[0]=event, identity=payload. For event1d
 // argument[1] also contains the previous state ID. set_heading arguments carry
-// three IEEE float words; scalar1 means enabled. All other services use zeros.
+// three IEEE float words; scalar1 means enabled. set_visible[0] is bool;
+// true restores ObjectBase enabled-byte visibility. Other services use zeros.
 // Callback is synchronous and may change State or reenter the coordinator.
 // Animation/body/timer/AI/FX services must preserve the emitted call order.
 using Callback=void(*)(void*,State*,const Request*);
@@ -58,7 +59,8 @@ struct Services {void* context;Callback invoke;};
 // Additional source facts for the actor-owned Limbus/Spawn path. These are
 // separate from Facts so existing Character-state fixture and adapter ABI
 // remain unchanged. respawn_timer_eligible is the caller's resolved source
-// gate (Respawnable && delay>0 && offline-or-local-host); group inputs reflect
+// timer gate projected by the caller; live double-delay reads and hosting are
+// implemented separately in character_limbus_respawn. Group inputs reflect
 // the source group predicate and are not reconstructed by this bounded core.
 struct SpawnFacts {
  std::int32_t spawn_animation=-1;
@@ -68,7 +70,7 @@ struct SpawnFacts {
  std::uint32_t reserved_zero=0,visual_present=0;
  float raw_fade_in_argument=0;
  std::uint32_t respawn_timer_eligible=0,respawn_delay_ms=0,
-              can_respawn=0,group_present=0,group_has_active_other=0;
+              can_respawn=0,group_role3=0,group_has_other_in_limbus=0;
 };
 static_assert(sizeof(SpawnFacts)==36);
 static_assert(sizeof(State)==56&&sizeof(Facts)==96);

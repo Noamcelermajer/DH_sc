@@ -48,7 +48,7 @@ struct Resolve {
     bool found[256];
     Error error;
 };
-bool resolve_node(const dh2::scene::Node* node, const Matrix4f* world,
+bool resolve_node(const dh2::scene_payload::Node* node, const Matrix4f* world,
                   std::uint32_t, void* user) {
     auto& r = *static_cast<Resolve*>(user);
     const auto* p = at(node->image, std::uint64_t(node->record) + 8, 4);
@@ -174,7 +174,7 @@ Error dh2_skin_palette(const Skin* s, const Matrix4f* worlds, std::size_t n,
     }
     return Error::ok;
 }
-Error dh2_skin_scene_palette(const Skin* s, const dh2::scene::Visual* visual,
+Error dh2_skin_scene_palette(const Skin* s, const dh2::scene_payload::Visual* visual,
                              Matrix4f* out, std::size_t capacity) {
     if (!s || !visual || !out || s->image.bytes != visual->image.bytes)
         return Error::argument;
@@ -182,7 +182,7 @@ Error dh2_skin_scene_palette(const Skin* s, const dh2::scene::Visual* visual,
     Resolve r{}; r.skin = s;
     const auto walked = dh2_scene_walk_visual(visual, resolve_node, &r, 20000);
     if (r.error != Error::ok) return r.error;
-    if (walked != dh2::scene::Error::ok) return Error::range;
+    if (walked != dh2::scene_payload::Error::ok) return Error::range;
     for (std::uint32_t j = 0; j < s->joints; ++j) if (!r.found[j]) return Error::joint;
     return dh2_skin_palette(s, r.worlds, s->joints, out, capacity);
 }

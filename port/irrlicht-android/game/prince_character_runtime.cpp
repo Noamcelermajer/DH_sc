@@ -105,6 +105,7 @@ struct PrinceCharacterRuntime::Impl {
     data::PropertyRules property_rules;
     data::PropertyState player_properties;
     character::Facts base_facts{};
+    PrinceCharacterBodyServices body_services{};
     std::array<float, 3> heading{};
     std::array<float, 3> owner_position{};
     std::string callback_error;
@@ -112,6 +113,7 @@ struct PrinceCharacterRuntime::Impl {
     std::uint32_t external_state_events = 0;
     std::uint32_t playback_events = 0;
     std::uint32_t timeline_less_resources = 0;
+    bool body_services_bound = false;
     bool initialized = false;
 
     static character::Facts facts_callback(void* context) {
@@ -134,7 +136,27 @@ struct PrinceCharacterRuntime::Impl {
             self.heading = {};
             state->heading_active = 0;
             self.coordinator.refresh_facts();
+            if (state->body_present &&
+                (!self.body_services_bound || !self.body_services.stop ||
+                 !self.body_services.stop(self.body_services.context, error))) {
+                self.callback_error = error.empty()
+                    ? "Source Character Stop body service failed"
+                    : "Source Character Stop body service failed: " + error;
+            }
             break;
+        case character::pin:
+        case character::unpin: {
+            const auto callback = request->service == character::pin
+                ? self.body_services.pin : self.body_services.unpin;
+            if (!state->body_present || !self.body_services_bound || !callback ||
+                !callback(self.body_services.context, error)) {
+                const char* action = request->service == character::pin ? "Pin" : "Unpin";
+                self.callback_error = error.empty()
+                    ? std::string("Source Character ") + action + " body service failed"
+                    : std::string("Source Character ") + action + " body service failed: " + error;
+            }
+            break;
+        }
         case character::set_animation:
             state->current_animation = request->argument[0];
             if (!self.playback.start(self.animation_tables, state->current_animation,
@@ -468,7 +490,41 @@ PrinceCharacterRuntime& PrinceCharacterRuntime::operator=(PrinceCharacterRuntime
 bool PrinceCharacterRuntime::load(PrinceActor& actor, PrinceAssetReader reader,
                                   void* context, std::string& error) {
     error.clear();
-    return impl_ && actor.ready() && impl_->initialize(actor, reader, context, error);
+    if (!impl_ || !actor.ready()) {
+        error = "Prince source Character requires a ready actor";
+        return false;
+    }
+    if (impl_->body_services_bound || impl_->initialized) {
+        error = "Prince source Character cannot be reloaded while initialized or body-bound";
+        return false;
+    }
+    return impl_->initialize(actor, reader, context, error);
+}
+
+bool PrinceCharacterRuntime::bind_body_services(
+    const PrinceCharacterBodyServices& services, std::string& error) {
+    error.clear();
+    if (!impl_ || !impl_->initialized || impl_->body_services_bound ||
+        impl_->coordinator.state.body_present || !services.context ||
+        !services.stop || !services.pin || !services.unpin ||
+        (impl_->coordinator.state.current != 3 &&
+         impl_->coordinator.state.current != 4)) {
+        error = "Source Character body services require an unbound Idle/Move runtime and live callbacks";
+        return false;
+    }
+    impl_->body_services = services;
+    impl_->body_services_bound = true;
+    // The caller binds only after successfully creating the body in its world.
+    impl_->coordinator.state.body_present = 1;
+    return true;
+}
+
+void PrinceCharacterRuntime::unbind_body_services() {
+    if (!impl_ || !impl_->body_services_bound) return;
+    // Clear the source fact before releasing the borrowed callback context.
+    impl_->coordinator.state.body_present = 0;
+    impl_->body_services = {};
+    impl_->body_services_bound = false;
 }
 
 bool PrinceCharacterRuntime::set_input(float x, float y, bool accepted,
@@ -571,6 +627,15 @@ bool PrinceCharacterRuntime::update_pose(const float owner_position[3],
 std::int32_t PrinceCharacterRuntime::state_id() const {
     return impl_ ? impl_->coordinator.state.current : -1;
 }
+std::uint32_t PrinceCharacterRuntime::state_flags() const {
+    return impl_ ? impl_->coordinator.state.flags : 0;
+}
+bool PrinceCharacterRuntime::copy_resolved_properties(
+    std::array<std::int32_t, 224>& output) const {
+    if (!impl_ || !impl_->initialized) return false;
+    output = impl_->player_properties.resolved;
+    return true;
+}
 std::int32_t PrinceCharacterRuntime::sequence_id() const {
     return impl_ ? impl_->coordinator.state.current_animation : -1;
 }
@@ -603,6 +668,12 @@ std::uint32_t PrinceCharacterRuntime::idle_common_update_calls() const {
 }
 std::uint32_t PrinceCharacterRuntime::external_state_events() const {
     return impl_ ? impl_->external_state_events : 0;
+}
+bool PrinceCharacterRuntime::body_present() const {
+    return impl_ && impl_->coordinator.state.body_present != 0;
+}
+bool PrinceCharacterRuntime::body_services_bound() const {
+    return impl_ && impl_->body_services_bound;
 }
 bool PrinceCharacterRuntime::ready() const { return impl_ && impl_->initialized; }
 

@@ -278,7 +278,14 @@ static void run_flow(const dh2_script_table &common,
           "first lizard is not transitioned before 500 ms");
 
     result = advance(&runtime, 1);
-    check(result == ERROR_OK, "finish first wait at exactly 500 ms");
+    check(result == ERROR_OK, "update first wait elapsed to exactly 500 ms");
+    check(find_event(&runtime, EVENT_CHARACTER_SPAWN_STATE_REQUESTED, 32,
+                     30, "_prim_Monster_LizManIntro1", 0) == NULL &&
+          find_task(runtime, 32) != NULL && find_task(runtime, 32)->waiting &&
+          find_task(runtime, 32)->wait_elapsed_ms == 500,
+          "Update reaching target does not recheck IsBlocking in the same pass");
+    result = advance(&runtime, 0);
+    check(result == ERROR_OK, "next manager pass observes the completed first wait");
     const ObjectRecord *lizard1_after = find_object(&runtime,
                                                     "_prim_Monster_LizManIntro1");
     check(lizard1_after != NULL && lizard1_after->spawn_state_requested &&
@@ -296,7 +303,12 @@ static void run_flow(const dh2_script_table &common,
           "1500 ms wait starts after first spawn and keeps the next PC");
 
     result = advance(&runtime, 1500);
-    check(result == ERROR_OK, "finish second wait at exactly 2000 ms");
+    check(result == ERROR_OK, "update second wait elapsed to exactly 1500 ms");
+    check(find_event(&runtime, EVENT_CHARACTER_SPAWN_STATE_REQUESTED, 32,
+                     30, "_prim_Monster_LizManIntro2", 0) == NULL,
+          "second wait blocks its target-reaching update");
+    result = advance(&runtime, 0);
+    check(result == ERROR_OK, "next manager pass observes the completed second wait");
     const ObjectRecord *lizard2_after = find_object(&runtime,
                                                     "_prim_Monster_LizManIntro2");
     check(lizard2_after != NULL && lizard2_after->spawn_state_requested &&
@@ -314,7 +326,12 @@ static void run_flow(const dh2_script_table &common,
           "2000 ms wait starts after second spawn");
 
     result = advance(&runtime, 2000);
-    check(result == ERROR_OK, "finish final wait at exactly 4000 ms");
+    check(result == ERROR_OK, "update final wait elapsed to exactly 2000 ms");
+    check(runtime.player_locked &&
+          find_event(&runtime, EVENT_PLAYER_LOCK_CHANGED, 32, 25, "All", 0) == NULL,
+          "final wait blocks its target-reaching update");
+    result = advance(&runtime, 0);
+    check(result == ERROR_OK, "next manager pass observes the completed final wait");
     check(runtime.time_ms == 4000, "total scripted wait timeline is 500+1500+2000 ms");
     check(lizard1_after->transition_count == 1 && lizard2_after->transition_count == 1,
           "one-shot flow transitions each preloaded lizard once");
@@ -378,6 +395,68 @@ static void run_flow(const dh2_script_table &common,
                   "script activation depth is within the configured bound");
         }
     }
+
+    Runtime fixed_ticks = {};
+    check(init(&fixed_ticks, &common, &swamp, seeds, seed_count,
+               trigger_name, trigger_script, trigger_count, trigger_delay,
+               &options) == ERROR_OK && enter_trigger(&fixed_ticks),
+          "initialize source frame-order fixture with ordinary 25 ms ticks");
+    check(advance(&fixed_ticks, 0) == ERROR_OK,
+          "begin fixed-tick flow with the first Wait at zero elapsed");
+    for (uint32_t i = 0; i < 20; ++i)
+        check(advance(&fixed_ticks, 25) == ERROR_OK, "advance first fixed-tick wait");
+    check(find_event(&fixed_ticks, EVENT_CHARACTER_SPAWN_STATE_REQUESTED,
+                     32, 30, "_prim_Monster_LizManIntro1", 0) == NULL,
+          "500 ms target-reaching frame remains blocked");
+    check(advance(&fixed_ticks, 25) == ERROR_OK,
+          "dispatch first spawn on the next fixed-tick pass");
+    const Task *fixed_task = find_task(fixed_ticks, 32);
+    const Event *fixed_first = find_event(&fixed_ticks,
+        EVENT_CHARACTER_SPAWN_STATE_REQUESTED, 32, 30,
+        "_prim_Monster_LizManIntro1", 0);
+    check(fixed_first != NULL && fixed_first->time_ms == 525 &&
+          fixed_task != NULL && fixed_task->wait_duration_ms == 1500 &&
+          fixed_task->wait_elapsed_ms == 25,
+          "new positive Wait receives this spawn frame's dt immediately");
+    for (uint32_t i = 0; i < 59; ++i)
+        check(advance(&fixed_ticks, 25) == ERROR_OK, "advance second fixed-tick wait");
+    check(find_event(&fixed_ticks, EVENT_CHARACTER_SPAWN_STATE_REQUESTED,
+                     32, 30, "_prim_Monster_LizManIntro2", 0) == NULL,
+          "1500 ms target-reaching frame remains blocked");
+    check(advance(&fixed_ticks, 25) == ERROR_OK,
+          "dispatch second spawn on the next fixed-tick pass");
+    const Event *fixed_second = find_event(&fixed_ticks,
+        EVENT_CHARACTER_SPAWN_STATE_REQUESTED, 32, 30,
+        "_prim_Monster_LizManIntro2", 0);
+    check(fixed_second != NULL && fixed_second->time_ms == 2025,
+          "fixed-tick second spawn records actual manager-frame time");
+    for (uint32_t i = 0; i < 79; ++i)
+        check(advance(&fixed_ticks, 25) == ERROR_OK, "advance final fixed-tick wait");
+    check(fixed_ticks.player_locked && advance(&fixed_ticks, 25) == ERROR_OK,
+          "dispatch unlock only on the next manager pass after final target");
+    const Event *fixed_unlock = find_event(&fixed_ticks,
+        EVENT_PLAYER_LOCK_CHANGED, 32, 25, "All", 0);
+    check(fixed_unlock != NULL && fixed_unlock->time_ms == 4025,
+          "fixed-tick unlock records source blocking/update frame order");
+
+    Runtime large_ticks = {};
+    check(init(&large_ticks, &common, &swamp, seeds, seed_count,
+               trigger_name, trigger_script, trigger_count, trigger_delay,
+               &options) == ERROR_OK && enter_trigger(&large_ticks) &&
+          advance(&large_ticks, 600) == ERROR_OK,
+          "execute a new Wait and update it once with a target-exceeding dt");
+    const Task *large_task = find_task(large_ticks, 32);
+    check(large_task != NULL && large_task->pc == 3 && large_task->waiting &&
+          large_task->wait_elapsed_ms == 600 &&
+          find_event(&large_ticks, EVENT_CHARACTER_SPAWN_STATE_REQUESTED,
+                     32, 30, "_prim_Monster_LizManIntro1", 0) == NULL,
+          "new Wait keeps overshoot and still blocks its execution pass");
+    check(advance(&large_ticks, 100) == ERROR_OK,
+          "next pass observes prior wait overshoot then executes a new wait");
+    large_task = find_task(large_ticks, 32);
+    check(large_task != NULL && large_task->pc == 5 && large_task->waiting &&
+          large_task->wait_elapsed_ms == 100 && large_ticks.time_ms == 700,
+          "next Wait resets elapsed and uses only current dt; no overshoot carry");
 }
 
 int main(int argc, char **argv) {

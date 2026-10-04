@@ -43,7 +43,8 @@ struct Module {
     char* catalogue_node_id;             // Original xrefobject + "-node".
     bool mgp_loaded, mvp_loaded;
 };
-struct Level {
+// Imported MLX records, distinct from the live dh2::world::Level runtime.
+struct SourceLevel {
     char* name;                          // Caller-selected LevelList key.
     char* source_path;
     Object config;
@@ -55,18 +56,18 @@ struct Level {
 }
 
 extern "C" {
-// Initialize Level with {}. On success this replaces its previous contents;
+// Initialize SourceLevel with {}. On success this replaces its previous contents;
 // failures leave it unchanged. All input text is copied. No file I/O occurs.
-dh2::world::Error dh2_world_import_level(dh2::world::Level*, const char* level_name,
+dh2::world::Error dh2_world_import_level(dh2::world::SourceLevel*, const char* level_name,
     const char* source_path, const std::uint8_t* bytes, std::size_t size,
     dh2::world::Diagnostic*);
 // A module's two files may each be imported once. Failures leave Level intact.
 // File path must match the selected module's checked MGP/MVP cache reference.
 // This first implementation supports translation-only module placement.
-dh2::world::Error dh2_world_import_module_objects(dh2::world::Level*,
+dh2::world::Error dh2_world_import_module_objects(dh2::world::SourceLevel*,
     std::uint32_t module_index, dh2::world::RecordKind, const char* source_path,
     const std::uint8_t* bytes, std::size_t size, dh2::world::Diagnostic*);
-void dh2_world_free(dh2::world::Level*);
+void dh2_world_free(dh2::world::SourceLevel*);
 const char* dh2_world_field(const dh2::world::Object*, const char* name);
 // Explicit supplied-cache alias: ASCII lower case, '\\' -> '/', and
 // data/iphone/... -> data/... . Rejects absolute paths, traversal, empty

@@ -198,10 +198,12 @@ public final class MainActivity extends Activity {
                 String attackReport=NativeBridge.playerAttack(getIntent().getIntExtra("player_target_index",-1));report+="\n"+attackReport;
                 Log.i("DH2Native","Player command applied | "+attackReport);pendingActorCommand=false;
             }
-            if(name.startsWith("worlds/")&&getIntent().getStringExtra("object_state")!=null&&(!report.contains("Native combat resumed")||pendingActorCommand)){
+            if(name.startsWith("worlds/")&&(getIntent().getStringExtra("object_state")!=null||(pendingActorCommand&&getIntent().hasExtra("combat_target_index")))&&(!report.contains("Native combat resumed")||pendingActorCommand)){
                 int index=getIntent().getIntExtra("object_index",-1);
                 String targetReport=NativeBridge.combatTarget(index,getIntent().getIntExtra("combat_target_index",-1));
-                report+="\n"+(targetReport.equals("Combat target selected")||targetReport.equals("Combat target cleared")?NativeBridge.objectState(index,getIntent().getStringExtra("object_state")):targetReport);
+                String state=getIntent().getStringExtra("object_state");
+                boolean accepted=targetReport.equals("Combat target selected")||targetReport.equals("Combat target cleared");
+                report+="\n"+(accepted?(state==null?"Actor state unchanged":NativeBridge.objectState(index,state)):targetReport);
             }
             Log.i("DH2Native",name+": "+report);
             if(name.startsWith("worlds/")&&pendingActorCommand){

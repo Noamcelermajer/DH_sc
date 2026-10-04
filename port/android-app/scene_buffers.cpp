@@ -321,8 +321,8 @@ bool append_draw(const dh2::draw::Command* draw, void* user) {
     return true;
 }
 bool append_first_skin(Context& context, const char* required_controller_id = nullptr) {
-    dh2::scene::Scene scene{};
-    if (dh2_scene_open(&scene, context.image) != dh2::scene::Error::ok) return false;
+    dh2::scene_payload::Scene scene{};
+    if (dh2_scene_open(&scene, context.image) != dh2::scene_payload::Error::ok) return false;
     const auto count = dh2_bres_library_count(context.image, dh2::resources::Library::controller);
     for (std::uint32_t i = 0; i < count; ++i) {
         dh2::skin::Skin skin{};
@@ -332,8 +332,8 @@ bool append_first_skin(Context& context, const char* required_controller_id = nu
         // Diagnostic: select the first resolvable controller, not every armour
         // alternative in a modular character file.
         for (std::uint32_t j = 0; j < scene.visuals; ++j) {
-            dh2::scene::Visual visual{}; dh2::math::Matrix4f palette[256]{};
-            if (dh2_scene_visual(&scene, j, &visual) != dh2::scene::Error::ok) continue;
+            dh2::scene_payload::Visual visual{}; dh2::math::Matrix4f palette[256]{};
+            if (dh2_scene_visual(&scene, j, &visual) != dh2::scene_payload::Error::ok) continue;
             if (context.layers) {
                 if (dh2_layers_skin_palette(context.layers, &skin, &visual, palette, 256)
                     != dh2::pose::Error::ok) continue;

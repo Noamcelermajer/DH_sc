@@ -12,13 +12,13 @@ struct ModuleBinding {
 }
 extern "C" {
 dh2::world::Error dh2_world_bind_module(dh2::world::ModuleBinding*,
-    const dh2::world::Module*, const dh2::scene::Scene*, dh2::world::Diagnostic*);
+    const dh2::world::Module*, const dh2::scene_payload::Scene*, dh2::world::Diagnostic*);
 // Preorder IDs of the root and every descendant, without geometry. On failure
 // *count is zero; output may contain an incomplete prefix. Capacity is bounded
 // to 65536 and the entire visual walk uses the same checked node limit.
 dh2::world::Error dh2_world_module_records(std::uint32_t* records,
     std::uint32_t capacity, std::uint32_t* count,
-    const dh2::world::ModuleBinding*, const dh2::scene::Scene*,
+    const dh2::world::ModuleBinding*, const dh2::scene_payload::Scene*,
     dh2::world::Diagnostic*);
 // Left-multiply this translation correction by a catalogue descendant matrix.
 dh2::world::Error dh2_world_placement_matrix(dh2::math::Matrix4f*,

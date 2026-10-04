@@ -239,7 +239,7 @@ static Error execute_tutorial(Runtime *runtime, Task *task,
 
 static Error execute_command(Runtime *runtime, Task *task,
                              const dh2_script_command *command,
-                             uint32_t *step_count, bool *yield_task) {
+                             uint32_t delta_ms, uint32_t *step_count, bool *yield_task) {
     *yield_task = false;
     ++*step_count;
     if (*step_count > MAX_STEPS_PER_ADVANCE) return ERROR_STEP_LIMIT;
@@ -330,7 +330,10 @@ static Error execute_command(Runtime *runtime, Task *task,
                 return ERROR_OK;
             }
             task->wait_duration_ms = (uint32_t)duration;
-            task->wait_elapsed_ms = 0;
+            // Execute resets elapsed to zero; ExecuteScript immediately calls
+            // IsBlocking then Update with this frame's Application::GetDt.
+            // Update must not be followed by another blocking test this pass.
+            task->wait_elapsed_ms = delta_ms;
             task->waiting = 1;
             *yield_task = true;
             return emit(runtime, EVENT_WAIT_STARTED, task,
@@ -355,6 +358,24 @@ static Error execute_command(Runtime *runtime, Task *task,
                             command->command_id, 0, name)
                     ? ERROR_OK : runtime->error;
             }
+            if (runtime->spawn_services.request != NULL) {
+                Event request = {};
+                request.type = EVENT_CHARACTER_SPAWN_STATE_REQUESTED;
+                request.time_ms = runtime->time_ms;
+                request.script_id = task->script_id;
+                request.program_counter = task->pc;
+                request.command_id = command->command_id;
+                request.value = 1;
+                if (!copy_cstring(request.detail, sizeof(request.detail), name))
+                    return ERROR_INVALID_ARGUMENT;
+                const int accepted = runtime->spawn_services.request(
+                    runtime->spawn_services.context, request);
+                if (accepted < 0) return ERROR_CHARACTER_SERVICE;
+                if (accepted == 0)
+                    return emit(runtime, EVENT_OBJECT_LOOKUP_MISS, task,
+                                command->command_id, 0, name)
+                        ? ERROR_OK : runtime->error;
+            }
             object->spawn_state_requested = 1;
             object->state = CHARACTER_STATE_NATIVE_1_REQUESTED;
             object->transition_count++;
@@ -370,41 +391,46 @@ static Error execute_command(Runtime *runtime, Task *task,
     }
 }
 
-static Error drain(Runtime *runtime, uint64_t runnable_ticket_limit) {
+static Error drain(Runtime *runtime, uint64_t runnable_ticket_limit, uint32_t delta_ms) {
     uint32_t steps = 0;
-    for (;;) {
-        bool progressed = false;
-        for (uint32_t i = 0; i < runtime->task_slots_used; ++i) {
-            Task *task = &runtime->tasks[i];
-            if (!task->active || task->waiting ||
-                task->ticket > runnable_ticket_limit) continue;
-            while (task->active && !task->waiting) {
-                if (task->script == NULL || task->pc >= task->script->command_count) {
-                    task->active = 0;
-                    if (!emit(runtime, EVENT_SCRIPT_COMPLETED, task, 0, 0,
-                              script_name(runtime, task->script_id))) {
-                        return runtime->error;
-                    }
-                    progressed = true;
-                    break;
-                }
-                const dh2_script_command *command = &task->script->commands[task->pc];
-                const uint32_t old_pc = task->pc;
-                bool yielded = false;
-                const Error result = execute_command(runtime, task, command,
-                                                     &steps, &yielded);
-                if (result != ERROR_OK) {
-                    runtime->error = result;
-                    return result;
-                }
-                if (!yielded && task->active && task->pc == old_pc) ++task->pc;
-                progressed = true;
-                if (yielded) break;
+    for (uint32_t i = 0; i < runtime->task_slots_used; ++i) {
+        Task *task = &runtime->tasks[i];
+        if (!task->active || task->ticket > runnable_ticket_limit) continue;
+        if (task->waiting) {
+            // Original ExecuteScript tests IsBlocking before Update, then
+            // returns for this task even when Update reaches its target.
+            if (task->wait_elapsed_ms < task->wait_duration_ms) {
+                const uint64_t elapsed = (uint64_t)task->wait_elapsed_ms + delta_ms;
+                task->wait_elapsed_ms = elapsed > UINT32_MAX
+                    ? UINT32_MAX : (uint32_t)elapsed;
+                continue;
             }
+            task->waiting = 0;
+            ++task->pc;
         }
-        if (runtime->error != ERROR_OK) return runtime->error;
-        if (!progressed) return ERROR_OK;
+        while (task->active && !task->waiting) {
+            if (task->script == NULL || task->pc >= task->script->command_count) {
+                task->active = 0;
+                if (!emit(runtime, EVENT_SCRIPT_COMPLETED, task, 0, 0,
+                          script_name(runtime, task->script_id))) {
+                    return runtime->error;
+                }
+                break;
+            }
+            const dh2_script_command *command = &task->script->commands[task->pc];
+            const uint32_t old_pc = task->pc;
+            bool yielded = false;
+            const Error result = execute_command(runtime, task, command,
+                                                 delta_ms, &steps, &yielded);
+            if (result != ERROR_OK) {
+                runtime->error = result;
+                return result;
+            }
+            if (!yielded && task->active && task->pc == old_pc) ++task->pc;
+            if (yielded) break;
+        }
     }
+    return runtime->error;
 }
 
 }  // namespace
@@ -502,18 +528,7 @@ Error advance(Runtime *runtime, uint32_t delta_ms) {
     }
     const uint64_t runnable_ticket_limit = runtime->next_task_ticket;
     runtime->time_ms += delta_ms;
-    for (uint32_t i = 0; i < runtime->task_slots_used; ++i) {
-        Task *task = &runtime->tasks[i];
-        if (!task->active || !task->waiting) continue;
-        const uint64_t elapsed = (uint64_t)task->wait_elapsed_ms + delta_ms;
-        task->wait_elapsed_ms = elapsed > UINT32_MAX ? UINT32_MAX : (uint32_t)elapsed;
-        if (task->wait_elapsed_ms >= task->wait_duration_ms) {
-            task->waiting = 0;
-            task->wait_elapsed_ms = task->wait_duration_ms;
-            ++task->pc;
-        }
-    }
-    return drain(runtime, runnable_ticket_limit);
+    return drain(runtime, runnable_ticket_limit, delta_ms);
 }
 
 const Event *find_event(const Runtime *runtime, EventType type,
@@ -552,6 +567,7 @@ const char *error_name(Error error) {
         case ERROR_TIME_OVERFLOW: return "runtime clock overflow";
         case ERROR_TASK_TICKET_OVERFLOW: return "script task ticket overflow";
         case ERROR_EVENT_CAPACITY: return "event capacity reached";
+        case ERROR_CHARACTER_SERVICE: return "bound Character spawn service failed";
         default: return "unknown scheduler error";
     }
 }

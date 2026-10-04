@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
     require(argc == 2, "usage: swamp_all_modules <cache-root>");
     const std::string cache = argv[1];
     const auto mlx = read_file(cache + "/data/scene/001_swamp.mlx");
-    dh2::world::Level level{};
+    dh2::world::SourceLevel level{};
     dh2::world::Diagnostic diagnostic{};
     require(dh2_world_import_level(&level, "SWAMP", "data/scene/001_swamp.mlx",
         mlx.data(), mlx.size(), &diagnostic) == dh2::world::Error::ok,
@@ -89,8 +89,8 @@ int main(int argc, char** argv) {
     dh2::resources::BresView bres{};
     require(dh2_bres_open(&bres, bres_bytes.data(), bres_bytes.size()) ==
             dh2::resources::BresError::ok, "SWAMP catalogue BRES parse failed");
-    dh2::scene::Scene scene{};
-    require(dh2_scene_open(&scene, &bres) == dh2::scene::Error::ok,
+    dh2::scene_payload::Scene scene{};
+    require(dh2_scene_open(&scene, &bres) == dh2::scene_payload::Error::ok,
             "SWAMP catalogue scene parse failed");
 
     for (std::uint32_t i = 0; i < level.module_count; ++i) {

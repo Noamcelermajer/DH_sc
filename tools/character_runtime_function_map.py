@@ -13,6 +13,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = 'port/level-world/reference/character-spawn/original-functions.json'
 TEMPLATE_MANIFEST = 'port/level-world/reference/character-template-factory/original-functions.json'
+RANDOM_MANIFEST = 'port/level-world/reference/character-template-random/original-functions.json'
+TRIGGER_MANIFEST = 'port/level-world/reference/crypt-spawn-trigger/original-functions.json'
+SCRIPT_MANIFEST = 'port/level-world/reference/crypt-ghost-scripts/original-functions.json'
+GROUP_MANIFEST = 'port/level-world/reference/character-group-respawn/original-functions.json'
+AGGRO_MANIFEST = 'port/level-world/reference/character-aggro-cleanup/original-functions.json'
+RESPAWN_MANIFEST = 'port/level-world/reference/character-respawn-outer/original-functions.json'
+LIMBUS_MANIFEST = 'port/level-world/reference/character-limbus-respawn/original-functions.json'
+GROUP_BLUR_MANIFEST = 'port/level-world/reference/character-group-limbus-blur/original-functions.json'
+VISIBILITY_MANIFEST = 'port/level-world/reference/character-spawn-visibility/original-functions.json'
+MANIFESTS = [MANIFEST, TEMPLATE_MANIFEST, RANDOM_MANIFEST, TRIGGER_MANIFEST, SCRIPT_MANIFEST, GROUP_MANIFEST, AGGRO_MANIFEST, RESPAWN_MANIFEST, LIMBUS_MANIFEST, GROUP_BLUR_MANIFEST, VISIBILITY_MANIFEST]
 OUTPUT = 'docs/generated/character-runtime-function-map.json'
 STATE = ['port/level-world/character_state.cpp',
          'port/level-world/character_coordinator.cpp']
@@ -21,6 +31,40 @@ NATIVE = 'port/android-native/app/src/main/cpp/model_renderer.cpp'
 
 def classify(row):
     symbol = row['demangled']
+    if row.get('evidence_manifest') == VISIBILITY_MANIFEST:
+        return ('visibility_callsite_and_vtable_evidence', [VISIBILITY_MANIFEST],
+                row['scope'] + '; read-only audit adds no implementation body.')
+    if row.get('evidence_manifest') == GROUP_BLUR_MANIFEST:
+        return ('host_limbus_blur_group_producer', ['port/level-world/character_group_limbus_blur.cpp'],
+                row['scope'] + '; post-Revive role3/any-other-Limbus traversal only; native group/member ownership remains external.')
+    if row.get('evidence_manifest') == LIMBUS_MANIFEST:
+        return ('host_limbus_respawn_focus_producer', ['port/level-world/character_limbus_respawn.cpp',
+                'port/level-world/character_respawn_outer.cpp',
+                'port/level-world/character_coordinator.cpp'], row['scope'] +
+                '; source prefix/two delay reads/hosting gate/timer request/normal cleanup are host-tested; live Android byte, manager and linked-owner producers remain external.')
+    if row.get('evidence_manifest') == RESPAWN_MANIFEST:
+        return ('host_respawn_outer_gates', ['port/level-world/character_respawn_outer.cpp',
+                'port/level-world/character_group_respawn.cpp'], row['scope'] +
+                '; live property/group ownership and hosting/Limbus timer producer remain unbound.')
+    if row.get('evidence_manifest') == AGGRO_MANIFEST:
+        return ('host_aggro_snapshot_dispatch', ['port/level-world/character_aggro_cleanup.cpp'],
+                row['scope'] + '; host-only ordering/lifetime adapter; native map mutation, OnDeAggro AI consumers and live actor ownership remain external.')
+    if row.get('evidence_manifest') == GROUP_MANIFEST:
+        return ('host_group_respawn_predicate', ['port/level-world/character_group_respawn.cpp'],
+                row['scope'] + '; outer respawnability/delay, group membership ownership and live SpawnFacts wiring remain external.')
+    if row.get('evidence_manifest') == RANDOM_MANIFEST:
+        return ('host_random_stream_adapter', ['port/level-world/character_template_random.cpp',
+                'port/random/random.c'], row['port_coverage'] +
+                '; caller owns ordinary seed/draw order; no live template factory claim.')
+    if row.get('evidence_manifest') == TRIGGER_MANIFEST:
+        return ('bounded_crypt_trigger_contact', ['port/level-world/crypt_spawn_trigger.cpp',
+                'port/trigger-contact/trigger_contact.cpp',
+                'port/zone-contact-runtime/zone_geometry.cpp', NATIVE], row['port_coverage'] +
+                '; GhostAmbush01 offline one-player contact is live; other trigger policies remain external.')
+    if row.get('evidence_manifest') == SCRIPT_MANIFEST:
+        return ('bounded_crypt_script_session', ['port/level-world/crypt_spawn_script_session.cpp',
+                'port/script-runtime/script_runtime.cpp', NATIVE], row['port_coverage'] +
+                '; live Wait/Spawn only; full Level and ScriptManager bodies are not reconstructed.')
     if row.get('evidence_manifest') == TEMPLATE_MANIFEST:
         category = ('host_template_projection' if row['port_coverage'].startswith('bounded')
                     else 'template_dependency_evidence')
@@ -33,7 +77,7 @@ def classify(row):
     if symbol.startswith('Script_SpawnCharacter::'):
         return ('bounded_factory_request', ['port/level-world/character_factory.cpp'],
                 'Exact-name request on already-loaded actors. No actor allocation '
-                'or authored trigger dispatch is implemented here.')
+                'is implemented here; separate live GhostAmbush01 session supplies authored requests.')
     if symbol.startswith('CharStateMachine::SM_SetSpawnState'):
         return ('bounded_factory_request', ['port/level-world/character_factory.cpp'],
                 'The observed false,false request selects Spawn ID 1; other '
@@ -46,9 +90,14 @@ def classify(row):
         return ('original_return_stub', [NATIVE],
                 'Preserves source no-op fade boundary and raw argument. No alpha ramp.')
     if symbol.startswith('GameObject::IsUpdatable'):
-        return ('source_query_boundary', [NATIVE],
-                'Constant-true query; no visibility mutation. Initial hiding is '
-                'an explicit development presentation policy.')
+        return ('obsolete_virtual_candidate_evidence', [MANIFEST],
+                'Constant-true getter is not the state visibility call. '
+                'Original evidence retained; no live implementation claim.')
+    if symbol.startswith('GameObject::SetVisible'):
+        return ('bounded_source_visibility_service', STATE + [NATIVE],
+                'Limbus hides and Limbus/PreSpawn blur restores enabled-byte '
+                'visibility. Selected fresh Ghosts are bound; full visual '
+                'synchronization and enable/serialized producers remain external.')
     if symbol.startswith(('Character::GetCharAnimTableId', 'Character::GetCharAI',
                           'Character::GetCharType')):
         return ('resolved_data_service', [NATIVE, 'port/game-data/properties.cpp'],
@@ -65,17 +114,18 @@ def classify(row):
 
 
 def build():
-    manifest = json.loads((ROOT / MANIFEST).read_text(encoding='utf-8-sig'))
-    template = json.loads((ROOT / TEMPLATE_MANIFEST).read_text(encoding='utf-8-sig'))
-    assert manifest['original_sha256'] == template['original_sha256']
+    manifests = [(path, json.loads((ROOT / path).read_text(encoding='utf-8-sig')))
+                 for path in MANIFESTS]
+    manifest = manifests[0][1]
+    assert all(source['original_sha256'] == manifest['original_sha256'] for _, source in manifests)
     pinned = json.loads((ROOT / 'docs/generated/combined-function-audit.json').read_text())
     old_addresses = {int(row['address'], 0) for row in pinned['mapped_function_starts']}
     index_path = ROOT / 'recovered/native/symbols/libDungeonHunter2.so/function-index.csv'
     with index_path.open(encoding='utf-8-sig', newline='') as stream:
         index = {int(row['address'], 0): row for row in csv.DictReader(stream)}
-    rows = []
+    by_address = {}
     records = [{**record, 'evidence_manifest': path}
-               for path, source in ((MANIFEST, manifest), (TEMPLATE_MANIFEST, template))
+               for path, source in manifests
                for record in source['functions']]
     for original in records:
         address = int(original['elf_address'], 0)
@@ -97,28 +147,42 @@ def build():
         assert hashlib.sha256(data).hexdigest() == original['sha256'], original['demangled']
         category, paths, scope = classify(original)
         assert all((ROOT / path).is_file() for path in paths)
-        rows.append({**original, 'assembly_file': relative,
+        mapping = {'evidence_manifest': original['evidence_manifest'],
+                   'mapping_category': category, 'source_paths': paths,
+                   'implementation_limit': scope}
+        if address in by_address:
+            row = by_address[address]
+            assert (row['size'], row['sha256']) == (original['size'], original['sha256'])
+            row['evidence_manifests'].append(original['evidence_manifest'])
+            row['additional_mappings'].append(mapping)
+            continue
+        by_address[address] = {**original, 'assembly_file': relative,
                      'in_pinned_adam_ledger': address in old_addresses,
                      'mapping_category': category, 'source_paths': paths,
-                     'implementation_limit': scope})
+                     'implementation_limit': scope,
+                     'evidence_manifests': [original['evidence_manifest']],
+                     'additional_mappings': []}
+    rows = list(by_address.values())
     addresses = {int(row['elf_address'], 0) for row in rows}
     assert len(addresses) == len(rows)
     return {
-        'schema': 'dh2-character-runtime-function-map/v1',
+        'schema': 'dh2-character-runtime-function-map/v2',
         'scope': 'Original evidence and bounded implementation extension; '
                  'counts do not measure game completion or fully reconstructed functions.',
         'original_library_sha256': manifest['original_sha256'],
         'adam_commit': pinned['provenance']['adam_commit'],
         'pinned_ledger': 'docs/generated/combined-function-audit.json',
-        'extension_manifests': [MANIFEST, TEMPLATE_MANIFEST],
+        'extension_manifests': MANIFESTS,
         'counts': {'pinned_addresses': len(old_addresses),
                    'extension_records': len(rows),
+                   'evidence_records_before_deduplication': len(records),
                    'additional_addresses': len(addresses - old_addresses),
                    'combined_unique_addresses': len(old_addresses | addresses)},
         'verification': f'All ranges, aliases and {len(rows)} complete original byte hashes '
                         'verified against the original symbol index and assembly exports.',
         'functions': rows,
-        'unsupported': list(dict.fromkeys(manifest['unsupported'] + template['unsupported'])),
+        'unsupported': list(dict.fromkeys(value for _, source in manifests
+                                         for value in source.get('unsupported', []))),
     }
 
 

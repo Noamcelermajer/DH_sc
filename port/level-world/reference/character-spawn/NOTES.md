@@ -20,7 +20,7 @@ addresses:
 | `CSSpawn::OnBlur` / `OnFocus` / `OnEvent` / `OnInit` | `0x3c2f7c` / `0x3c35ec` / `0x3c0b04` / `0x3c7d0c` | [`CSSpawn-6f640697797f-001.asm`](../../../../recovered/native/assembly/libDungeonHunter2.so/CSSpawn-6f640697797f-001.asm) is the source for fallback body initialization, exact animation-table field `CharAnimTable+0x80`, AI target reset, sneak cancellation, fade call, and registration of completion event `0x22 -> Idle(3)`. |
 | `CharStateMachine::RegisterState` | `0x3c7318` | The character constructor registers state IDs `0..19`; the source registration API and bounded factory's Spawn-registration check are linked by this function. |
 | `VisualObject::StartFadeIn` / `UpdateFadeIn` | `0x470ce4` / `0x470cec` | Both are one-instruction return stubs in [`VisualObject-79dd69531261-001.asm`](../../../../recovered/native/assembly/libDungeonHunter2.so/VisualObject-79dd69531261-001.asm). The property value remains an opaque raw argument; the port does not invent an alpha ramp. |
-| `GameObject::IsUpdatable() const` | `0x38aac0` | Character vtable slot `+0x40` resolves to this constant-true query. It does not set or clear visibility. The call is exposed as `query_is_updatable`; the renderer may ignore its result. |
+| `GameObject::SetVisible(bool)` | `0x38b0f0` | Character vptr `+0x40` resolves to this 32 byte function. False clears current visibility; true restores ObjectBase enabled byte `+0x8a` into current visibility `+0x80`, then optionally calls VisualObject::SyncVisibility. |
 
 `CSSpawn::OnFocus` reads the `Spawn` member at `CharAnimTable` offset `0x80`
 and requests that exact sequence. This path does not add a stance to the
@@ -60,6 +60,22 @@ same-state `_SetState`, synchronous completion callback, and lookup atomicity.
 - PreSpawn focus and arbitrary paths entering Spawn from states outside this
   bounded actor fixture.
 - Timed visual fading: original `StartFadeIn` and `UpdateFadeIn` are stubs.
-- Rendering visibility policy. The observed `+0x40` virtual is only
-  `IsUpdatable`; the app's initial hidden presentation for `auto_spawn=0`
-  records is a development presentation policy, not an inferred source call.
+- General enable-condition/serialized visibility ownership and all visual
+  synchronization branches. The current Native adapter implements the
+  selected fresh Ghosts' enabled-byte visibility and retains it across reload.
+
+## Subsequent source correction
+
+The earlier vtable interpretation used a full-table offset without its `+8`
+address point. `IsUpdatable` is at vptr offset `+0x38`; these state calls use
+`SetVisible` at `+0x40`. Limbus focus hides; Limbus/PreSpawn blur restore enabled
+visibility. Limbus blur resets its controller lock byte, not an auxiliary
+Limbus object. Its role3 group branch queries every other member and selects
+status2 when **any** other member is in Limbus; empty/self-only selects0.
+The separate GroupInfo respawn predicate checks **all** members. The logical
+SpawnFacts names now preserve these distinct meanings without a layout change.
+
+The bounded SpawnFacts timer fields remain pre-resolved observations. Full
+Limbus Focus performs two live delay reads, with mode/hosting gates between
+them; the separate `character_limbus_respawn` producer preserves that behavior.
+The published f811 artifact predates this source correction.

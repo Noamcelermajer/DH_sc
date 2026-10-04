@@ -41,7 +41,7 @@ def main():
     navigation_checks, (world, dll) = load_navigation_bindings(args.library)
     dll.dh2_nav_build_swamp.restype = U
     dll.dh2_nav_build_swamp.argtypes = [
-        c.POINTER(navigation_checks.Navigation), c.POINTER(world.Level),
+        c.POINTER(navigation_checks.Navigation), c.POINTER(world.SourceLevel),
         c.POINTER(world.scene.Scene), c.POINTER(navigation_checks.Diagnostic)]
     dll.dh2_nav_free.restype = None
     dll.dh2_nav_free.argtypes = [c.POINTER(navigation_checks.Navigation)]
@@ -59,7 +59,7 @@ def main():
     catalogue_path = args.cache/'data/3d/modules/swamp/swamp.bdae'
     level_bytes = level_path.read_bytes()
     catalogue_bytes = catalogue_path.read_bytes()
-    level = world.Level()
+    level = world.SourceLevel()
     world_diagnostic = world.Diagnostic()
     assert dll.dh2_world_import_level(c.byref(level), b'SWAMP',
         b'data/scene/001_swamp.mlx', level_bytes, len(level_bytes),
@@ -161,7 +161,7 @@ def main():
     # restricted to module 0. Use a local adjacent-floor fixture to verify the
     # movement-level reject/rollback path without claiming those modules join.
     fixture_surfaces = (navigation_checks.Surface*4)()
-    fixture_triangles = (navigation_checks.Triangle*4)()
+    fixture_triangles = (navigation_checks.SurfaceTriangle*4)()
     fixture_vertices = (
         ((0, 0, 0), (1, 0, 0), (1, 1, 0)),
         ((0, 0, 0), (1, 1, 0), (0, 1, 0)),
@@ -195,7 +195,7 @@ def main():
     # patches: both endpoints are walkable but the accepted 8-unit step crosses
     # a 6-unit gap. This is deliberately an observation, not desired parity.
     gap_surfaces = (navigation_checks.Surface*2)()
-    gap_triangles = (navigation_checks.Triangle*4)()
+    gap_triangles = (navigation_checks.SurfaceTriangle*4)()
     gap_vertices = (
         ((0, 0, 0), (2, 0, 0), (2, 2, 0)),
         ((0, 0, 0), (2, 2, 0), (0, 2, 0)),

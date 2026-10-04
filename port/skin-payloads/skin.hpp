@@ -44,7 +44,7 @@ dh2::skin::Error dh2_skin_palette(const dh2::skin::Skin*,
 // Resolve the serialized SNode scope ID (+8) inside one visual scene. Reject
 // missing/duplicate bones; no identity substitution for unresolved joints.
 dh2::skin::Error dh2_skin_scene_palette(const dh2::skin::Skin*,
-                                       const dh2::scene::Visual*,
+                                       const dh2::scene_payload::Visual*,
                                        dh2::math::Matrix4f*, std::size_t capacity);
 dh2::skin::Error dh2_skin_position(const dh2::skin::Skin*, std::uint32_t vertex,
                                   const dh2::math::Matrix4f* palette,

@@ -1,9 +1,27 @@
 # DH2 native Android reconstruction
 
-Current continuation: [shared Character / Crypt Spawn checkpoint](../../docs/CHARACTER-RUNTIME-CHECKPOINT-2026-10-04.md).
-It adds two original Ghosts, exact-name source Spawn requests, real body
-creation, lifecycle checks and shared state/timer ownership. Full Ghost AI and
-combat remain pending. The complete goal remains active.
+Current continuation: [original Crypt ambush checkpoint](../../docs/CRYPT-SCRIPT-CHECKPOINT-2026-10-04.md).
+The original GhostAmbush01 trigger now runs its Wait/Spawn script through the
+shared Character owner and native body services. Actual touch travel into the
+authored trigger, both Ghosts and reload/rotation without replay pass on
+API37/16KiB. Source Limbus visibility now hides the Ghosts while timers continue,
+and blur restores enabled-byte visibility. Full Ghost AI/combat and the complete
+game remain pending. Earlier
+[shared Character evidence](../../docs/CHARACTER-RUNTIME-CHECKPOINT-2026-10-04.md)
+retains its own APK identities.
+
+To regenerate the four paired tables and bounded trigger descriptor from the
+known original cache ZIP, after world preparation run:
+
+```powershell
+python tools/prepare_crypt_scripts.py "C:\path\Dungeon-Hunter-2-HD-v1-0-2-cache.zip"
+```
+
+The selected Crypt/Prince assets are present in the branch; this preparation
+tool pins original input hashes and verifies the authored module/trigger.
+`scripts/crypt-ghost01.dctr` is a new validated adapter format, not an original
+game format. Script overrides are accepted only if the selected program's
+commands have bound native services. Unsupported programs reject before firing.
 
 Inherited saved checkpoint: [dh2-native-prince-bank-4f5b7d11.apk](build/checkpoints/dh2-native-prince-bank-4f5b7d11.apk),
 20,726,897 bytes, SHA-256 `4f5b7d11891e575793f0b5e99056fe5d3cf3cf7a1a705f7ee0f5b632ba19bd82`.

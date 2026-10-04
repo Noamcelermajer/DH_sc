@@ -20,10 +20,10 @@ int main(int argc, char** argv) {
     assert(dh2_bres_open(&model_view, model.data(), model.size()) == dh2::resources::BresError::ok);
     dh2::skin::Skin skin{};
     assert(dh2_skin_open(&skin, &model_view, 0) == dh2::skin::Error::ok);
-    dh2::scene::Scene scene{};
-    assert(dh2_scene_open(&scene, &model_view) == dh2::scene::Error::ok);
-    dh2::scene::Visual visual{};
-    assert(dh2_scene_visual(&scene, 0, &visual) == dh2::scene::Error::ok);
+    dh2::scene_payload::Scene scene{};
+    assert(dh2_scene_open(&scene, &model_view) == dh2::scene_payload::Error::ok);
+    dh2::scene_payload::Visual visual{};
+    assert(dh2_scene_visual(&scene, 0, &visual) == dh2::scene_payload::Error::ok);
     for (std::uint32_t i = 0; i < 3000; ++i) {
         auto bytes = original;
         if (i % 3 == 0) bytes.resize(next() % bytes.size());

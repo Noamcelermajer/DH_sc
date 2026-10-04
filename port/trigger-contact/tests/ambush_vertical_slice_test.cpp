@@ -28,7 +28,7 @@ bool read_bytes(const std::string &path, std::vector<uint8_t> *output) {
     return file.good() || file.eof();
 }
 
-bool import_level(const std::string &cache, dh2::world::Level *level) {
+bool import_level(const std::string &cache, dh2::world::SourceLevel *level) {
     using namespace dh2::world;
     std::vector<uint8_t> bytes;
     Diagnostic diagnostic{};
@@ -72,7 +72,7 @@ bool read_script_table(const char *names_path, const char *programs_path,
     return true;
 }
 
-const dh2::world::Object *find_entity(const dh2::world::Level &level,
+const dh2::world::Object *find_entity(const dh2::world::SourceLevel &level,
                                       const char *name,
                                       uint32_t module_index) {
     const dh2::world::Object *found = nullptr;
@@ -85,7 +85,7 @@ const dh2::world::Object *find_entity(const dh2::world::Level &level,
     return found;
 }
 
-bool check_source_trigger(const dh2::world::Level &level) {
+bool check_source_trigger(const dh2::world::SourceLevel &level) {
     const auto *trigger = find_entity(level, "_prim_TriggerZone_ambush", 0);
     if (!require(trigger != nullptr, "cache import contains one Ambush Zone")) return false;
     return require(trigger->module_index == 0 &&
@@ -117,7 +117,7 @@ bool test_vertical_slice(const std::string &cache,
     using namespace dh2_script_runtime;
     using namespace dh2_trigger_contact;
 
-    dh2::world::Level level{};
+    dh2::world::SourceLevel level{};
     Registry registry{};
     dh2_script_table common{}, infected{};
     Runtime runtime{};

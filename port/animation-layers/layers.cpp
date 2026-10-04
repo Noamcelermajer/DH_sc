@@ -22,11 +22,11 @@ Error weights(const Layers *layers, float *values) {
         ? Error::ok : Error::nonfinite;
 }
 Error sample_node(const Layers &layers, const float *weights,
-                  const dh2::scene::Node &source, dh2::scene::Node &out) {
+                  const dh2::scene_payload::Node &source, dh2::scene_payload::Node &out) {
     dh2::math::Vector3f positions[8], scales[8];
     dh2::math::Quaternion rotations[8];
     for (std::uint32_t i = 0; i < layers.count; ++i) {
-        dh2::scene::Node posed{};
+        dh2::scene_payload::Node posed{};
         const auto &layer = layers.items[i];
         const auto error = dh2_pose_node(layer.clip, layer.time, &source, &posed);
         if (error != Error::ok) return error;
@@ -57,7 +57,7 @@ struct Context {
 std::uint32_t word(const std::uint8_t *p) {
     return p[0] | (std::uint32_t(p[1]) << 8) | (std::uint32_t(p[2]) << 16) | (std::uint32_t(p[3]) << 24);
 }
-Error walk(Context &c, const dh2::scene::Node &source,
+Error walk(Context &c, const dh2::scene_payload::Node &source,
            const dh2::math::Matrix4f *parent, std::uint32_t depth) {
     if (!source.id) return Error::scene;
     if (depth >= 64 || c.nodes >= 20000) return Error::limit;
@@ -71,11 +71,11 @@ Error walk(Context &c, const dh2::scene::Node &source,
             if (target && std::strcmp(target, source.id) == 0) ++c.matches[layer][track];
         }
     }
-    dh2::scene::Node posed{};
+    dh2::scene_payload::Node posed{};
     const auto error = sample_node(*c.layers, c.weights, source, posed);
     if (error != Error::ok) return error;
     dh2::math::Matrix4f world{};
-    if (dh2_scene_world_matrix(&posed, parent, &world) != dh2::scene::Error::ok) return Error::scene;
+    if (dh2_scene_world_matrix(&posed, parent, &world) != dh2::scene_payload::Error::ok) return Error::scene;
     const auto &image = source.image;
     if (source.record > image.size || image.size - source.record < 12) return Error::range;
     const auto offset = word(image.bytes + source.record + 8);
@@ -89,8 +89,8 @@ Error walk(Context &c, const dh2::scene::Node &source,
         }
     }
     for (std::uint32_t i = 0; i < source.children; ++i) {
-        dh2::scene::Node child{};
-        if (dh2_scene_child_node(&source, i, &child) != dh2::scene::Error::ok) return Error::scene;
+        dh2::scene_payload::Node child{};
+        if (dh2_scene_child_node(&source, i, &child) != dh2::scene_payload::Error::ok) return Error::scene;
         const auto e = walk(c, child, &world, depth + 1);
         if (e != Error::ok) return e;
     }
@@ -102,18 +102,18 @@ bool overlaps(const void *p, std::size_t n, const void *q, std::size_t m) {
 }
 }
 extern "C" Error dh2_layers_node(const Layers *layers,
-    const dh2::scene::Node *source, dh2::scene::Node *out) {
+    const dh2::scene_payload::Node *source, dh2::scene_payload::Node *out) {
     if (!source || !out) return Error::argument;
     float normalized[8];
     const auto e = weights(layers, normalized);
     if (e != Error::ok) return e;
-    dh2::scene::Node result{};
+    dh2::scene_payload::Node result{};
     const auto sampled = sample_node(*layers, normalized, *source, result);
     if (sampled == Error::ok) *out = result;
     return sampled;
 }
 extern "C" Error dh2_layers_skin_palette(const Layers *layers,
-    const dh2::skin::Skin *skin, const dh2::scene::Visual *visual,
+    const dh2::skin::Skin *skin, const dh2::scene_payload::Visual *visual,
     dh2::math::Matrix4f *out, std::size_t capacity) {
     if (!skin || !visual || !out || skin->image.bytes != visual->image.bytes) return Error::argument;
     if (!skin->joints || skin->joints > 256 || capacity < skin->joints) return Error::limit;
@@ -130,8 +130,8 @@ extern "C" Error dh2_layers_skin_palette(const Layers *layers,
             if (overlaps(clip->tracks[j].image.bytes, clip->tracks[j].image.size, out, size)) return Error::argument;
     }
     for (std::uint32_t i = 0; i < visual->roots; ++i) {
-        dh2::scene::Node node{};
-        if (dh2_scene_root_node(visual, i, &node) != dh2::scene::Error::ok) return Error::scene;
+        dh2::scene_payload::Node node{};
+        if (dh2_scene_root_node(visual, i, &node) != dh2::scene_payload::Error::ok) return Error::scene;
         const auto result = walk(c, node, nullptr, 0);
         if (result != Error::ok) return result;
     }

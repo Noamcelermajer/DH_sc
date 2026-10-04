@@ -129,11 +129,11 @@ Status update(dh2_script_runtime::Runtime *runtime,
         }
     }
 
-    /* This host slice approximates the native Zone contact test with a
-     * caller-provided closed-AABB overlap. Native Zone::IsInside semantics
-     * are not proven. Infected Village leaves script_all_player empty, so the
-     * ordinary `script` policy is represented by at least one touching
-     * Character. */
+    /* TriggerZone samples GameObject::GetNumPlayerTouching, which calls
+     * GameObject::IsTouching and compares absolute AABBs. Zone::IsInside is a
+     * separate function and is not part of this path. Infected Village leaves
+     * script_all_player empty, so the ordinary `script` policy is represented
+     * by at least one touching Character. */
     if (touching_players == 0) {
         state->qualifying_contact = 0;
         return STATUS_NO_CONTACT;

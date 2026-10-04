@@ -17,7 +17,7 @@ bool read_bytes(const std::string &path, std::vector<uint8_t> *output) {
     return file.good() || file.eof();
 }
 
-bool import_level(const std::string &cache, dh2::world::Level *level) {
+bool import_level(const std::string &cache, dh2::world::SourceLevel *level) {
     using namespace dh2::world;
     const char *path = "data/scene/005_infectedvillage.mlx";
     std::vector<uint8_t> bytes;
@@ -100,7 +100,7 @@ bool emit_projection(const std::string &cache, const std::string &common_names,
     using namespace dh2_script_runtime;
     using namespace dh2_trigger_contact;
 
-    dh2::world::Level level{};
+    dh2::world::SourceLevel level{};
     Registry registry{};
     dh2_script_table common{}, infected{};
     Runtime runtime{};

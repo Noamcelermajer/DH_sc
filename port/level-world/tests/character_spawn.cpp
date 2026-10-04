@@ -75,18 +75,18 @@ int main(){
   fixture.facts=&facts;fixture.spawn=&spawn;
 
   // Script_SpawnCharacter exact-name lookup: Limbus blur, Spawn focus, then
-  // state-change notification. The vtable slot is a pure IsUpdatable query.
+  // state-change notification. The virtual restores enabled-byte visibility.
   State actor;actor.current=0;actor.flags=0;actor.elapsed_ms=77;
   ActorRef one{"_prim_Monster_SURPRISE_01",&actor,&facts,&spawn,
                source_character_registered_states};
   fixture.calls.clear();
   require(request_spawn_character(&one,1,"_prim_Monster_SURPRISE_01",&services)==
           SpawnResult::requested,"unique exact actor lookup");
-  expect_services(fixture.calls,{limbus_member_reset,query_is_updatable,
+  expect_services(fixture.calls,{reset_controller_lock,set_visible,
       restore_limbus_position,restore_limbus_rotation,revive_character,
       set_animation,clear_ai_target,sync_last_ai_target,cancel_sneaking,
       start_fade_in,raise_event});
-  require(fixture.calls[1].argument[0]==1,"Limbus blur vtable slot arg");
+  require(fixture.calls[1].argument[0]==1,"Limbus blur restores enabled visibility");
   require(fixture.calls[5].argument[0]==213&&actor.current_animation==213,
           "Spawn uses the exact authored CharAnimTable sequence without stance addition");
   require(fixture.calls[9].scalar==3000.0f,"raw fade property argument retained");
@@ -134,9 +134,9 @@ int main(){
   spawn.respawn_delay_ms=900;fixture.calls.clear();
   require(dh2_character_spawn_transition(&limbus,&facts,&spawn,0,&services)==1,
           "same-state Limbus focus");
-  expect_services(fixture.calls,{limbus_member_reset,query_is_updatable,
+  expect_services(fixture.calls,{reset_controller_lock,set_visible,
       restore_limbus_position,restore_limbus_rotation,revive_character,
-      query_is_updatable,start_timer,clear_all_aggro,raise_event});
+      set_visible,start_timer,clear_all_aggro,raise_event});
   require(fixture.calls[5].argument[0]==0&&fixture.calls[6].argument[0]==900&&
           fixture.calls[6].argument[2]==0x2f,"Limbus respawn timer order and event");
   require(dh2_character_spawn_update(&limbus,&spawn)==0&&limbus.current==0,
@@ -157,7 +157,7 @@ int main(){
   fixture.calls.clear();
   require(dh2_character_spawn_transition(&prespawn,&facts,&spawn,1,&services)==1,
           "PreSpawn predecessor to Spawn");
-  expect_services(fixture.calls,{query_is_updatable,revive_character,
+  expect_services(fixture.calls,{set_visible,revive_character,
       enable_collisions,set_animation,clear_ai_target,sync_last_ai_target,
       cancel_sneaking,start_fade_in,raise_event});
   require(prespawn.flags==0x2241,"PreSpawn interactive bit preserved by Spawn focus");

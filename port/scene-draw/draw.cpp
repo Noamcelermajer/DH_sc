@@ -7,8 +7,8 @@ using dh2::draw::Command;
 using dh2::draw::Error;
 using dh2::draw::Stats;
 using dh2::resources::Library;
-using dh2::scene::Node;
-using dh2::scene::Scene;
+using dh2::scene_payload::Node;
+using dh2::scene_payload::Scene;
 
 struct Context {
     Scene scene;
@@ -26,9 +26,9 @@ bool visit_node(const Node* node, const dh2::math::Matrix4f* world,
     ++stats.nodes;
     stats.instances += node->instances;
     for (std::uint32_t i = 0; i < node->instances; ++i) {
-        dh2::scene::Instance instance{};
+        dh2::scene_payload::Instance instance{};
         if (dh2_scene_instance(node, static_cast<std::int32_t>(i), &instance)
-            != dh2::scene::Error::ok) {
+            != dh2::scene_payload::Error::ok) {
             context.error = Error::instance;
             return false;
         }
@@ -109,26 +109,26 @@ extern "C" dh2::draw::Error dh2_static_scene_draws(
     *stats = {};
     if (!image || !callback || !max_nodes || !max_draws) return Error::argument;
     Scene scene{};
-    if (dh2_scene_open(&scene, image) != dh2::scene::Error::ok)
+    if (dh2_scene_open(&scene, image) != dh2::scene_payload::Error::ok)
         return Error::scene;
     Context context{scene, stats, callback, user, 0, max_draws, Error::ok};
     stats->visual_references = scene.references;
     for (std::uint32_t i = 0; i < scene.references; ++i) {
-        dh2::scene::Reference reference{};
+        dh2::scene_payload::Reference reference{};
         const auto result = dh2_scene_reference(&scene, static_cast<std::int32_t>(i),
                                                 &reference);
-        if (result == dh2::scene::Error::unsupported_reference) {
+        if (result == dh2::scene_payload::Error::unsupported_reference) {
             ++stats->skipped_nonvisual_references;
             continue;
         }
-        if (result != dh2::scene::Error::ok) return Error::scene;
+        if (result != dh2::scene_payload::Error::ok) return Error::scene;
         const auto visual_index = dh2_scene_visual_index(&scene, reference.url);
         if (visual_index < 0) {
             ++stats->skipped_unresolved_visuals;
             continue;
         }
-        dh2::scene::Visual visual{};
-        if (dh2_scene_visual(&scene, visual_index, &visual) != dh2::scene::Error::ok)
+        dh2::scene_payload::Visual visual{};
+        if (dh2_scene_visual(&scene, visual_index, &visual) != dh2::scene_payload::Error::ok)
             return Error::visual;
         ++stats->visual_scenes;
         if (!visual.roots) continue;
@@ -138,8 +138,8 @@ extern "C" dh2::draw::Error dh2_static_scene_draws(
         const auto walked = dh2_scene_walk_visual(&visual, visit_node, &context,
                                                    max_nodes - stats->nodes);
         if (context.error != Error::ok) return context.error;
-        if (walked == dh2::scene::Error::walk_limit) return Error::node_limit;
-        if (walked != dh2::scene::Error::ok) return Error::scene;
+        if (walked == dh2::scene_payload::Error::walk_limit) return Error::node_limit;
+        if (walked != dh2::scene_payload::Error::ok) return Error::scene;
     }
     return Error::ok;
 }

@@ -28,8 +28,8 @@ dh2::pose::Error dh2_pose_clip_open(dh2::pose::Clip *, const dh2::resources::Bre
 dh2::pose::Error dh2_pose_sample(const dh2::pose::Clip *, std::uint32_t track,
                                  std::int32_t milliseconds, float *value4);
 dh2::pose::Error dh2_pose_node(const dh2::pose::Clip *, std::int32_t milliseconds,
-                               const dh2::scene::Node *, dh2::scene::Node *);
+                               const dh2::scene_payload::Node *, dh2::scene_payload::Node *);
 dh2::pose::Error dh2_pose_skin_palette(const dh2::pose::Clip *, std::int32_t milliseconds,
-                                       const dh2::skin::Skin *, const dh2::scene::Visual *,
+                                       const dh2::skin::Skin *, const dh2::scene_payload::Visual *,
                                        dh2::math::Matrix4f *, std::size_t capacity);
 }

@@ -211,7 +211,7 @@ jstring snapshot(JNIEnv* env, const TraceSession* session) {
     return string(env, output);
 }
 
-bool read_trigger_and_seeds(dh2::world::Level* level,
+bool read_trigger_and_seeds(dh2::world::SourceLevel* level,
                             ObjectSeed* seeds, std::uint32_t* seed_count,
                             char* trigger_name, char* trigger_script,
                             std::int32_t* trigger_count,
@@ -319,7 +319,7 @@ Java_local_dh2_sourceviewer_SwampPreviewActivity_startIntroTrace(
         return string(env, message);
     }
 
-    dh2::world::Level level{};
+    dh2::world::SourceLevel level{};
     dh2::world::Diagnostic world_error{};
     bool world_ok = dh2_world_import_level(&level, "SWAMP", "data/scene/001_swamp.mlx",
         mlx.data, mlx.size, &world_error) == dh2::world::Error::ok;

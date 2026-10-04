@@ -16,11 +16,13 @@ from PIL import Image
 PACKAGE = "local.dh2.sourceviewer.irrlichtswamp"
 ACTIVITY = f"{PACKAGE}/android.app.NativeActivity"
 TAG = "DH2IrrlichtSwamp"
+LOG_SINCE = ""
 FATAL_MARKERS = (
     "GL_INVALID_OPERATION", "GL_INVALID_ENUM", "Fatal signal",
     "FATAL EXCEPTION", "Tried to set a texture not owned by this driver",
     "Failed to create Irrlicht device",
     "Source Character",
+    "SWAMP source Actor session stopped",
 )
 ASSEMBLY = re.compile(
     r"SWAMP module 0 assembled in Irrlicht r6038: .*?source_draws=(\d+) "
@@ -119,6 +121,22 @@ def move_records(log: str) -> list[dict]:
                      "x": float(x), "y": float(y),
                      "z": float(z), "stick_x": float(stick_x),
                      "stick_y": float(stick_y), "path_mask": int(path_mask, 16)})
+        detail = dict(re.findall(r"\b([a-z_]+)=(-?(?:0x[0-9A-Fa-f]+|[0-9]+(?:\.[0-9]+)?))", line))
+        integer_fields = ('actor_step', 'world_steps', 'actor_phase', 'body_present',
+                          'body_pinned', 'body_service_count', 'floor',
+                          'path_boundary_checked', 'path_direction_valid',
+                          'source_path_segments', 'source_path_requested')
+        float_fields = ('physics_x', 'physics_y', 'desired_x', 'desired_y',
+                        'validated_x', 'validated_y', 'owner_delta_x', 'owner_delta_y',
+                        'animation_root_delta_x', 'animation_root_delta_y',
+                        'desired_rotation', 'current_rotation', 'body_radius',
+                        'body_radius_physics')
+        for name in integer_fields:
+            if name in detail: rows[-1][name] = int(detail[name])
+        for name in float_fields:
+            if name in detail: rows[-1][name] = float(detail[name])
+        if 'source_state_flags' in detail:
+            rows[-1]['source_state_flags'] = int(detail['source_state_flags'], 16)
     return rows
 
 
@@ -131,7 +149,8 @@ def capture_log(adb_path: Path, serial: str, output: Path) -> str:
 
 
 def app_log(adb_path: Path, serial: str, pid: str) -> str:
-    return adb(adb_path, serial, "logcat", "-d", "-v", "time", "--pid=" + pid)
+    boundary = ("-T", LOG_SINCE) if LOG_SINCE else ()
+    return adb(adb_path, serial, "logcat", "-d", *boundary, "-v", "time", "--pid=" + pid)
 
 
 def wait_for_assembly(adb_path: Path, serial: str,
@@ -192,8 +211,10 @@ def idle_stability(adb_path: Path, serial: str) -> tuple[dict, dict]:
     deadline = time.monotonic() + 3.0
     first = last = None
     while time.monotonic() < deadline:
-        log = adb(adb_path, serial, "logcat", "-d", "-v", "time")
-        idle = [row for row in move_records(log) if row["state"] == "IDLE"]
+        pid = adb(adb_path, serial, 'shell', 'pidof', PACKAGE).split()[0]
+        records = move_records(app_log(adb_path, serial, pid))
+        last_move = max((index for index, row in enumerate(records) if row['state'] == 'MOVE'), default=-1)
+        idle = [row for row in records[last_move + 1:] if row['state'] == 'IDLE']
         if len(idle) >= 2:
             first, last = idle[-2:]
             if time.monotonic() >= deadline - 0.25:
@@ -219,7 +240,10 @@ def main() -> int:
                         help="Require the four-part source-skinned Prince and Idle/Walk touch transitions")
     parser.add_argument("--require-prince-character", action="store_true",
                         help="Also require the authored 116-resource bank and shared Character state path")
+    parser.add_argument("--require-source-actor", action="store_true",
+                        help="Require scene/root-motion -> one native Step -> actor_runtime ownership and body pinning")
     args = parser.parse_args()
+    if args.require_source_actor: args.require_prince_character=True
     if args.require_prince_character: args.require_prince=True
 
     apk = args.apk.resolve(strict=True)
@@ -251,6 +275,8 @@ def main() -> int:
         raise RuntimeError(f"installed APK hash mismatch: built={built_hash} installed={installed_hash}")
 
     adb(adb_path, args.serial, "shell", "am", "force-stop", PACKAGE)
+    global LOG_SINCE
+    LOG_SINCE = adb(adb_path, args.serial, "shell", "date", "+%s.%N")
     launch = adb(adb_path, args.serial, "shell", "am", "start", "-W", "-n", ACTIVITY)
     if "Status: ok" not in launch:
         raise RuntimeError(f"NativeActivity launch failed: {launch}")
@@ -292,7 +318,7 @@ def main() -> int:
                 "alpha_map_sampler_refs": 22, "alpha_cutout_draws": 22}
     if {key: geometry[key] for key in expected} != expected:
         raise RuntimeError(f"unexpected SWAMP geometry/assembly summary: {geometry}")
-    if ("Irrlicht is confirmed as the game engine family" not in log or
+    if (not any(marker in log for marker in ("Irrlicht is confirmed as the game engine family", "Irrlicht is confirmed as the engine family")) or
             "exact customized DH2 Irrlicht fork/revision" not in log):
         raise RuntimeError("source report did not identify the confirmed engine and exact-fork boundary")
     if ("depth-write-off" not in log or
@@ -338,8 +364,12 @@ def main() -> int:
             raise RuntimeError("Shared source Character or single owner composition marker is missing")
         character_record={"bank_resources":116,"registration_occurrences":158,
             "shared_coordinator_reported":True,"initial_state":3,"idle_sequence":262,
-            "walk_sequence":280,"scope":"Original bank/playback/state composition; SWAMP movement is a development producer, physics/AI/combat unsupported"}
+            "walk_sequence":280,"scope":"Original bank/playback/state composition; SWAMP fixed clock/input remain development producers, AI/combat unsupported"}
         prince_record["placement"]="source owner/helper/graph composition with Irrlicht node identity; original camera pending"
+    if args.require_source_actor:
+        if 'SOURCE_ACTOR_SESSION_READY:' not in log or 'movement owner is SceneBinding source root' not in log:
+            raise RuntimeError('Source actor/physics session did not initialize')
+        character_record['scope'] = 'Shared bank/Character plus source scene/root-motion, one NativeWorld Step and actor_runtime; fixed20ms development clock/input and Character-owned Stop/pin/unpin services; AI/combat/scripts pending'
 
     width, height = initial["width"], initial["height"]
     center = (round(width * 0.18), round(height * 0.77))
@@ -348,13 +378,13 @@ def main() -> int:
         raise RuntimeError(f"unexpected landscape touch-pad geometry: {width}x{height}")
 
     captures = {}
-    # Drag right for source +X, release, then up for source +Y. Capture one
-    # frame while each pointer remains held and prove release stops drift.
-    for axis, delta in (("x", (round(radius * 0.65), 0)),
-                        ("y", (0, -round(radius * 0.65)))):
+    # Source actor: +X then -Y exercises free movement before the separate
+    # +Y boundary test. The previous point-mover diagnostic retains +Y.
+    y_sign = -1 if args.require_source_actor else 1
+    for axis, sign, delta in (("x", 1, (round(radius * 0.65), 0)),
+                              ("y", y_sign, (0, -y_sign * round(radius * 0.65)))):
         current_pid = adb(adb_path, args.serial, "shell", "pidof", PACKAGE).split()[0]
-        log_before = adb(adb_path, args.serial, "logcat", "-d", "-v", "time",
-                         "--pid=" + current_pid)
+        log_before = app_log(adb_path, args.serial, current_pid)
         prior_rows = move_records(log_before)
         prior_idle = next((row for row in reversed(prior_rows) if row["state"] == "IDLE"), None)
         if prior_idle is None:
@@ -363,17 +393,32 @@ def main() -> int:
         held_capture = swipe(adb_path, args.serial, center, end,
                              args.swipe_ms, output, axis)
         rows = wait_for_mode(adb_path, args.serial, "MOVE")
-        active = [row for row in rows if row["state"] == "MOVE"]
+        active = [row for row in rows[len(prior_rows):] if row["state"] == "MOVE"]
         if not active:
-            raise RuntimeError(f"no source-coordinate MOVE line was emitted for +{axis}")
+                raise RuntimeError(f"no source-coordinate MOVE line was emitted for {sign:+d}{axis}")
         moved = active[-1]
-        if axis == "x":
+        if args.require_source_actor:
+            other = 'y' if axis == 'x' else 'x'
+            along = sign * (moved[axis] - prior_idle[axis])
+            across = moved[other] - prior_idle[other]
+            if along <= 2.5 or along <= abs(across):
+                raise RuntimeError(f'Source root motion did not follow requested {sign:+d}{axis}: {prior_idle} -> {moved}')
+            if (not moved.get('body_present') or
+                    moved['body_service_count'] != prior_idle['body_service_count'] + 1):
+                raise RuntimeError('Move focus did not dispatch exactly one source unpin service')
+            if not moved.get('path_boundary_checked') or not moved.get('path_direction_valid'):
+                raise RuntimeError(f'Moving source actor did not validate its floor/path: {moved}')
+        elif axis == "x":
             if moved["x"] <= prior_idle["x"] + 2.5 or abs(moved["y"] - prior_idle["y"]) > 1.0:
                 raise RuntimeError(f"right drag did not produce clean source +X motion: {prior_idle} -> {moved}")
         else:
             if moved["y"] <= prior_idle["y"] + 2.5 or abs(moved["x"] - prior_idle["x"]) > 1.0:
                 raise RuntimeError(f"up drag did not produce clean source +Y motion: {prior_idle} -> {moved}")
         idle_start, idle_end = idle_stability(adb_path, args.serial)
+        if args.require_source_actor and any(
+                row['body_service_count'] != moved['body_service_count'] + 2
+                for row in (idle_start, idle_end)):
+            raise RuntimeError('Move blur did not issue exactly Stop then pin before stable Idle')
         if args.require_prince and (moved["animation"] != "WALK" or
                                    idle_start["animation"] != "IDLE" or
                                    idle_end["animation"] != "IDLE"):
@@ -385,8 +430,45 @@ def main() -> int:
                 raise RuntimeError("Release did not return to original source Idle selection")
         captures[f"{axis}_movement"] = {"from": prior_idle, "during": moved,
                                           "idle_start": idle_start, "idle_end": idle_end,
+                                          "requested_direction": {"axis": axis, "sign": sign},
+                                          "trajectory_scope": "Source root/turning may include lateral displacement; requested-axis movement dominates" if args.require_source_actor else "Development point-mover axis alignment",
                                           "screenshot": held_capture}
         screen(adb_path, args.serial, output, f"after-{axis}-release")
+
+    boundary_capture = None
+    if args.require_source_actor:
+        prior_rows = move_records(app_log(adb_path, args.serial, pid))
+        held = swipe(adb_path, args.serial, center,
+                     (center[0], center[1] - round(radius * 0.65)),
+                     max(3000, args.swipe_ms), output, 'boundary')
+        sweep = [row for row in move_records(app_log(adb_path, args.serial, pid))[len(prior_rows):]
+                 if row['state'] == 'MOVE' and row['source_state'] == 4]
+        if not sweep or any('validated_x' not in row for row in sweep):
+            raise RuntimeError('Source navigation heading diagnostics missing from boundary sweep')
+        free = [row for row in sweep if row['desired_y'] > .1 and
+                row['validated_y'] > .7 and abs(row['validated_x']) < .3 and
+                row['owner_delta_y'] > .1]
+        redirected = [row for row in sweep if row['desired_y'] > .1 and
+                      row['validated_x'] > .7 and abs(row['validated_y']) < .3 and
+                      row['owner_delta_x'] > .1 and row['path_boundary_checked'] and
+                      row['path_direction_valid'] and row['floor'] == 0]
+        pairs = [(a, b) for a, b in zip(sweep, sweep[1:]) if
+                 a in redirected and b in redirected and
+                 abs(b['y'] - a['y']) < .5 and b['x'] - a['x'] > 2.5]
+        if not free or not pairs:
+            raise RuntimeError(f'+Y sweep must prove free +Y followed by source-validated +X boundary sliding: {sweep}')
+        idle_start, idle_end = idle_stability(adb_path, args.serial)
+        if any(row['source_state'] != 3 or not row['body_pinned'] or
+               row['source_path_requested'] or row['source_path_segments']
+               for row in (idle_start, idle_end)):
+            raise RuntimeError('Boundary input release did not stop, pin and clear its route')
+        boundary_capture = {'requested_direction': {'axis': 'y', 'sign': 1},
+                            'free_y_sample': free[0],
+                            'edge_slide_pair': pairs[0],
+                            'idle_start': idle_start, 'idle_end': idle_end,
+                            'scope': 'Module-zero boardwalk source PF boundary redirect; environment wall/decor collision bodies are not loaded',
+                            'screenshot': held,
+                            'released_screenshot': screen(adb_path, args.serial, output, 'after-boundary-release')}
 
     resume = None
     if args.require_prince:
@@ -418,12 +500,27 @@ def main() -> int:
 
     final_log = capture_log(adb_path, args.serial, output)
     final_rows = move_records(final_log)
+    if args.require_source_actor:
+        if not final_rows or any('actor_step' not in row for row in final_rows):
+            raise RuntimeError('Source actor frame/body diagnostics missing')
+        for row in final_rows:
+            if row.get('body_present') != 1:
+                raise RuntimeError(f'Character body ownership is not bound: {row}')
+            if row['actor_step'] != row['world_steps'] or row['actor_phase'] != (5 if row['actor_step'] else 0):
+                raise RuntimeError(f'Scene/physics/actor frame composition differs: {row}')
+            if (row['source_state_flags'], row['body_pinned']) != ((0x2380, 1) if row['source_state'] == 3 else (0x23c1, 0)):
+                raise RuntimeError(f'Character flags/body pin differ: {row}')
+            if any(abs(row['physics_' + axis] - row[axis] * .01) > .001 for axis in ('x', 'y')):
+                raise RuntimeError(f'Physics body is not synchronized with source owner: {row}')
+        if any(captures[axis + '_movement']['idle_end']['source_path_segments'] or
+               captures[axis + '_movement']['idle_end']['source_path_requested'] for axis in ('x', 'y')):
+            raise RuntimeError('Idle release retained a source path request')
     errors = {marker: final_log.count(marker) for marker in FATAL_MARKERS if marker in final_log}
     if errors:
         raise RuntimeError(f"fatal/native/GL error markers found: {errors}")
     primary_screenshots = {
         "initial.png", "x-held.png", "after-x-release.png",
-        "y-held.png", "after-y-release.png",
+        "y-held.png", "after-y-release.png", "boundary-held.png", "after-boundary-release.png",
     }
     screenshot_records = {
         path.name: {"path": str(path), "bytes": path.stat().st_size,
@@ -433,6 +530,9 @@ def main() -> int:
     }
     report = {
         "scope": "SWAMP module-zero source geometry and source-coordinate touch movement diagnostic; not complete DH2 gameplay",
+        "validation": "PASS",
+        "source_actor_assertions_required": args.require_source_actor,
+        "launch_log_epoch_since": LOG_SINCE,
         "serial": args.serial,
         **properties,
         "renderer": next((line.strip() for line in adb(adb_path, args.serial,
@@ -459,6 +559,7 @@ def main() -> int:
         },
         "startup_log_contains_assembly_before_screenshot": ASSEMBLY.search(startup_log) is not None,
         "movement_assertions": captures,
+        "boundary_navigation": boundary_capture,
         "background_resume": resume,
         "move_log_records": final_rows,
         "screenshots": screenshot_records,

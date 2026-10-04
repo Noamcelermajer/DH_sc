@@ -50,17 +50,20 @@ struct Surface {
     char source_geometry_name[max_source_string];
 };
 
-struct Triangle {
+// Source records retain provenance; the live PF graph's Triangle is a separate
+// 36-byte geometry type. Both readers can be linked in one native image.
+struct SurfaceTriangle {
     float a[3], b[3], c[3];
     std::uint32_t surface_index;
     std::uint32_t primitive_index;
     std::uint32_t source_triangle_index;
 };
+static_assert(sizeof(SurfaceTriangle) == 48);
 
 struct Navigation {
     Surface* surfaces;
     std::uint32_t surface_count, surface_capacity;
-    Triangle* triangles;
+    SurfaceTriangle* triangles;
     std::uint32_t triangle_count, triangle_capacity;
 };
 
@@ -96,13 +99,14 @@ extern "C" {
 // stage is SWAMP's nine selected module instances and its shared swamp.bdae
 // catalogue. On failure output is unchanged.
 dh2::navigation::Error dh2_nav_build_swamp(dh2::navigation::Navigation*,
-    const dh2::world::Level*, const dh2::scene::Scene*,
+    const dh2::world::SourceLevel*, const dh2::scene_payload::Scene*,
     dh2::navigation::Diagnostic*);
 void dh2_nav_free(dh2::navigation::Navigation*);
 dh2::navigation::Error dh2_nav_surface(const dh2::navigation::Navigation*,
     std::uint32_t index, dh2::navigation::Surface*);
-dh2::navigation::Error dh2_nav_triangle(const dh2::navigation::Navigation*,
-    std::uint32_t index, dh2::navigation::Triangle*);
+// Copy one imported record. The live dh2_nav_triangle symbol builds graph nodes.
+dh2::navigation::Error dh2_nav_get_triangle(const dh2::navigation::Navigation*,
+    std::uint32_t index, dh2::navigation::SurfaceTriangle*);
 // Finds the closest geometric floor height in the caller's vertical band.
 // Query coordinates are world X/Y; Z is the reference height. `edge_tolerance`
 // is a barycentric tolerance in [0, 0.25]. The query reports one stable first

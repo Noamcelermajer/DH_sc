@@ -29,7 +29,7 @@ bool read_bytes(const std::string& cache, const char* relative,
 }
 
 bool import_infected_village(const std::string& cache,
-                             dh2::world::Level* level) {
+                             dh2::world::SourceLevel* level) {
     std::vector<std::uint8_t> bytes;
     dh2::world::Diagnostic diagnostic{};
     if (!read_bytes(cache, "data/scene/005_infectedvillage.mlx", &bytes))
@@ -54,7 +54,7 @@ bool import_infected_village(const std::string& cache,
 bool check_cache_projections(const std::string& cache) {
     using namespace dh2::actors;
     using namespace dh2::gameplay::callbacks;
-    dh2::world::Level level{};
+    dh2::world::SourceLevel level{};
     Registry registry{};
     bool ok = import_infected_village(cache, &level) &&
               init(&registry, &level) == Error::ok;

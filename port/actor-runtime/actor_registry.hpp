@@ -77,11 +77,11 @@ struct Registry {
 };
 
 // `out` must be zero initialized or hold a Registry previously initialized by
-// this API. The Level must be a successfully imported dh2::world::Level. On
+// this API. The source must be a successfully imported dh2::world::SourceLevel. On
 // failure, `out` is unchanged; on success, it owns copied records and can
-// outlive/free the source Level. Only gametype="Character" MGP records are
+// outlive/free the SourceLevel. Only gametype="Character" MGP records are
 // copied. Duplicate exact names reject the replacement as ambiguous.
-Error init(Registry* out, const dh2::world::Level* level);
+Error init(Registry* out, const dh2::world::SourceLevel* level);
 void destroy(Registry* registry);
 
 const ActorInstance* find(const Registry* registry, const char* exact_name);

@@ -16,6 +16,7 @@ import zipfile
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
+BOX2D_ROOT = REPO / 'port/physics-backend/box2d-2.0.1'
 SOURCES = [
     HERE / 'native.cpp',
     HERE / 'world_renderer.cpp',
@@ -669,6 +670,31 @@ def build_irrlicht_host(ndk: Path, build: Path, *,
             REPO / 'port/level-world/move_state.cpp',
             REPO / 'port/level-world/decor_scene.cpp',
             REPO / 'port/level-world/decor_body_config.cpp',
+            REPO / 'port/level-world/floors.cpp',
+            REPO / 'port/level-world/floor_source.cpp',
+            REPO / 'port/level-world/octree.cpp',
+            REPO / 'port/level-world/selector.cpp',
+            REPO / 'port/level-world/collision.cpp',
+            REPO / 'port/level-world/navigation.cpp',
+            REPO / 'port/level-world/navigation_world.cpp',
+            REPO / 'port/level-world/navigation_motion.cpp',
+            REPO / 'port/level-world/navigation_search.cpp',
+            REPO / 'port/level-world/navigation_path.cpp',
+            REPO / 'port/level-world/navigation_controller.cpp',
+            REPO / 'port/level-world/navigation_heading.cpp',
+            REPO / 'port/level-world/navigation_objects.cpp',
+            REPO / 'port/level-world/navigation_producers.cpp',
+            REPO / 'port/level-world/navigation_avoidance.cpp',
+            REPO / 'port/level-world/physical_world.cpp',
+            REPO / 'port/level-world/native_body.cpp',
+            REPO / 'port/level-world/physical_controls.cpp',
+            REPO / 'port/level-world/body_transform.cpp',
+            REPO / 'port/level-world/subobjects_update.cpp',
+            REPO / 'port/level-world/actor_runtime.cpp',
+            REPO / 'port/level-world/actor_rotation.cpp',
+            REPO / 'port/level-world/character_body_config.cpp',
+            engine / 'game/swamp_actor_floor_bridge.cpp',
+            engine / 'game/swamp_actor_session.cpp',
             REPO / 'port/engine-skinning/skinning.cpp',
             REPO / 'port/scene-materials/scene.cpp',
             REPO / 'port/game-data/data.cpp',
@@ -686,6 +712,13 @@ def build_irrlicht_host(ndk: Path, build: Path, *,
             REPO / 'port/engine-animation/events.cpp',
             REPO / 'port/engine-animation/event_track.cpp',
         ]
+        box2d_sources = sorted((BOX2D_ROOT / 'Source').rglob('*.cpp'))
+        if len(box2d_sources) != 31 or not (BOX2D_ROOT / 'License.txt').is_file():
+            raise FileNotFoundError('Pinned Box2D 2.0.1 source/license inputs are incomplete')
+        extra_sources.extend(box2d_sources)
+    # Several shared source files are also needed by the Character runtime.
+    # Keep compilation deterministic when the source lists overlap.
+    extra_sources = list(dict.fromkeys(extra_sources))
     outputs: dict[str, Path] = {}
     abi_reports: dict[str, dict] = {}
     for abi, target, machine in (
@@ -698,11 +731,15 @@ def build_irrlicht_host(ndk: Path, build: Path, *,
         output_dir = build / variant / 'obj' / abi
         output_dir.mkdir(parents=True, exist_ok=True)
         flags = [f'--target={target}', f'--sysroot={sysroot}', '-std=c++17',
-                 '-fPIC', '-fno-exceptions', '-fno-rtti', '-O2', '-Wall', '-Wextra',
+                 '-fPIC', '-fno-exceptions', '-fno-rtti', '-O2',
+                 '-fno-fast-math', '-ffp-contract=off', '-include', 'cstring',
+                 '-Wall', '-Wextra',
                  '-Werror', '-Wno-unused-parameter',
                  '-Wno-inconsistent-missing-override',
                  '-Wno-deprecated-copy-with-user-provided-copy',
                  '-I', upstream / 'include', '-I', engine / 'game',
+                 '-I', REPO / 'port/level-world',
+                 '-isystem', BOX2D_ROOT / 'Include',
                  '-I', HERE, '-I', glue]
         objects = []
         compile_sources = [('main', sources['main']), ('adapter', sources['adapter'])]
@@ -711,6 +748,12 @@ def build_irrlicht_host(ndk: Path, build: Path, *,
         for name, source in compile_sources:
             obj = output_dir / (name + '.o')
             source_flags = flags
+            if source.is_relative_to(BOX2D_ROOT):
+                # Pinned Box2D 2.0.1 predates the repository's strict warning
+                # gate; match its host build policy without weakening project
+                # translation units.
+                source_flags = [flag for flag in flags if flag != '-Werror']
+                source_flags.append('-w')
             if source in {
                 REPO / 'port/engine-skinning/skinning.cpp',
                 engine / 'game/prince_character_runtime.cpp',
@@ -720,6 +763,10 @@ def build_irrlicht_host(ndk: Path, build: Path, *,
                 REPO / 'port/level-world/character_coordinator.cpp',
                 REPO / 'port/level-world/character_scene.cpp',
                 REPO / 'port/level-world/decor_scene.cpp',
+                REPO / 'port/level-world/floors.cpp',
+                REPO / 'port/level-world/physical_world.cpp',
+                engine / 'game/swamp_actor_floor_bridge.cpp',
+                engine / 'game/swamp_actor_session.cpp',
                 REPO / 'port/game-data/data.cpp',
                 REPO / 'port/game-data/animation_bank.cpp',
                 REPO / 'port/game-data/animation_tables.cpp',
@@ -839,6 +886,17 @@ def build_irrlicht_host(ndk: Path, build: Path, *,
                            'source': zlib_relative + ' (opening license comment)',
                            'bytes': len(zlib_notice), 'sha256': sha(zlib_target),
                            'source_sha256': zlib_record['sha256']})
+    if swamp:
+        box2d_license = BOX2D_ROOT / 'License.txt'
+        if not box2d_license.is_file() or box2d_license.stat().st_size != 886:
+            raise ValueError(f'Pinned Box2D 2.0.1 license source is missing or changed: {box2d_license}')
+        box2d_target = notices_root / 'Box2D-2.0.1-License.txt'
+        shutil.copy2(box2d_license, box2d_target)
+        notice_reports.append({'path': box2d_target.relative_to(asset_root).as_posix(),
+                               'source': 'port/physics-backend/box2d-2.0.1/License.txt',
+                               'bytes': box2d_target.stat().st_size,
+                               'sha256': sha(box2d_target),
+                               'source_sha256': sha(box2d_license)})
     for source, target_name, expected_hash, source_label in (
             (NATIVE_APP_GLUE_NOTICE, 'native_app_glue-NOTICE.txt',
              NATIVE_APP_GLUE_NOTICE_SHA256,
@@ -868,6 +926,8 @@ def build_irrlicht_host(ndk: Path, build: Path, *,
            if not swamp else '')
         + 'This software is based in part on the work of the Independent JPEG Group.\n'
         + 'Irrlicht also includes code from zlib, libpng, and aesGladman.\n\n'
+        + ('This APK also includes Box2D 2.0.1 source under its included license.\n\n'
+           if swamp else '')
         + 'The Android NativeActivity glue is Apache License 2.0; its attribution notice and full license are included.\n\n'
         + 'The complete applicable notice and license texts are in this directory.\n'
     ).encode('utf-8')
@@ -887,11 +947,17 @@ def build_irrlicht_host(ndk: Path, build: Path, *,
         cache_asset_report = irrlicht_swamp_assets(cache_root, asset_root)
     result = {'abi': abi_reports, 'shaders': shader_reports,
                      'third_party_notices': notice_reports,
+                     'native_compile_inputs': [
+                         {'path': (path.relative_to(REPO).as_posix()
+                                   if REPO in path.parents else str(path)),
+                          'sha256': sha(path)}
+                         for path in [sources['main'], sources['adapter'],
+                                      sources['glue'], *extra_sources]],
                      'upstream_svn_revision': manifest['svn_revision'],
                      'upstream_tree_manifest_sha256': manifest['tree_manifest_sha256'],
                      'scope': ('Local-only cache-backed void_maze texture-subset render diagnostic; not a playable level or release asset.'
                                if cache_scene else
-                               'Development diagnostic: SWAMP module-zero source render and path-mask movement; not full-game parity.'
+                               'Development diagnostic: SWAMP module-zero source render and path-mask movement with the authored Prince Character coordinator, animation bank, actor runtime, and one NativeWorld step per frame; not full-game parity.'
                                if swamp else
                                'Synthetic SceneMesh adapter render diagnostic hosted beside the DH2 source activities; not a DH2 asset or a reconstructed game level.')}
     if cache_asset_report:
@@ -976,12 +1042,13 @@ def build_irrlicht_swamp_package(sdk: Path, ndk: Path, cache: Path,
                  'assets/third-party-notices/zlib-README.txt',
                  'assets/third-party-notices/zlib-LICENSE.txt',
                  'assets/third-party-notices/native_app_glue-NOTICE.txt',
-                 'assets/third-party-notices/Apache-2.0-LICENSE.txt'):
+                 'assets/third-party-notices/Apache-2.0-LICENSE.txt',
+                 'assets/third-party-notices/Box2D-2.0.1-License.txt'):
         if name not in names:
             raise RuntimeError(f'Local SWAMP APK missing required notice/manifest: {name}')
 
     report = {
-        'scope': 'Development diagnostic: SWAMP module-zero Irrlicht source render/path-mask movement plus four Prince warrior skins driven by the authored Character state and BlendedPlayback bank; not full-game parity',
+        'scope': ('Development diagnostic: SWAMP module-zero Irrlicht source scene plus four Prince warrior skins driven by the authored Character Coordinator, animation bank, actor_runtime and one NativeWorld step per accepted frame; not full-game parity'),
         'package_name': 'local.dh2.sourceviewer.irrlichtswamp',
         'launcher_activity': 'android.app.NativeActivity',
         'min_sdk': 26,
@@ -1002,12 +1069,52 @@ def build_irrlicht_swamp_package(sdk: Path, ndk: Path, cache: Path,
             'fixed_step_ms': 20,
             'max_catch_up_steps': 5,
             'max_frame_delta_ms': 100,
-            'speed_units_per_second': 30.0,
+            'movement_timebase': 'developer-selected 20 ms actor logical tick; actor speed/flags come from source Character properties',
             'source_player_path_mask': 2,
             'source_module_index': 0,
-            'collision': 'current and endpoint path-mask floor checks; no sweep or actor radius',
+            'world_step': 'one pinned Box2D 2.0.1 NativeWorld Step per successful actor frame',
+            'collision': 'module-zero PF floor graph/path checks and source Character body pin/unpin; no environment bodies, walls, swept volume, or other actors',
         },
     }
+    # Keep a complete hash list for every translation unit in the native
+    # link, plus the public headers that define the newly composed source
+    # actor/session and its borrowed navigation/physics interfaces. This is
+    # intentionally nested in the isolated SWAMP variant report.
+    source_hashes = {
+        row['path']: row['sha256']
+        for row in native_report['native_compile_inputs']
+    }
+    source_headers = [
+        REPO / 'port/irrlicht-android/swamp-smoke/main.cpp',
+        REPO / 'port/irrlicht-android/game/scene_mesh_adapter.hpp',
+        REPO / 'port/irrlicht-android/game/prince_actor.hpp',
+        REPO / 'port/irrlicht-android/game/prince_character_runtime.hpp',
+        REPO / 'port/irrlicht-android/game/swamp_source_navigation_view.hpp',
+        REPO / 'port/irrlicht-android/game/swamp_actor_floor_bridge.hpp',
+        REPO / 'port/irrlicht-android/game/swamp_actor_session.hpp',
+        REPO / 'port/level-world/actor_runtime.hpp',
+        REPO / 'port/level-world/character_coordinator.hpp',
+        REPO / 'port/level-world/character_scene.hpp',
+        REPO / 'port/level-world/character_state.hpp',
+        REPO / 'port/level-world/character_timers.hpp',
+        REPO / 'port/level-world/floors.hpp',
+        REPO / 'port/level-world/native_body.hpp',
+        REPO / 'port/level-world/navigation_producers.hpp',
+        REPO / 'port/level-world/physical_world.hpp',
+        REPO / 'port/level-world/visual_motion.hpp',
+        REPO / 'port/navigation/navigation.hpp',
+        REPO / 'port/physics-backend/box2d-2.0.1/Include/Box2D.h',
+        HERE / 'build.py',
+        REPO / 'port/irrlicht-android/upstream-source-manifest.json',
+    ]
+    for path in source_headers:
+        if not path.is_file():
+            raise FileNotFoundError(f'SWAMP source manifest input is missing: {path}')
+        key_name = (path.relative_to(REPO).as_posix()
+                    if REPO in path.parents else str(path))
+        source_hashes[key_name] = sha(path)
+    native_report['source_sha256'] = source_hashes
+    report['source_sha256'] = source_hashes
     report_path = build / 'irrlicht-swamp-build-validation.json'
     report_path.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
     print(apk_path)

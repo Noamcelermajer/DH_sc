@@ -26,7 +26,8 @@ enum Error {
     ERROR_STEP_LIMIT,
     ERROR_TIME_OVERFLOW,
     ERROR_TASK_TICKET_OVERFLOW,
-    ERROR_EVENT_CAPACITY
+    ERROR_EVENT_CAPACITY,
+    ERROR_CHARACTER_SERVICE
 };
 
 enum EventType {
@@ -88,6 +89,13 @@ struct Event {
     char detail[MAX_NAME_BYTES];
 };
 
+struct SpawnServices {
+    void* context;
+    // Runs synchronously at the original SpawnCharacter command boundary.
+    // >0 accepted, 0 source lookup miss, <0 bound Character service failure.
+    int (*request)(void*, const Event&);
+};
+
 struct Task {
     const dh2_script *script;
     uint64_t ticket;
@@ -122,6 +130,7 @@ struct Runtime {
     uint8_t cutscene_mode;
     uint8_t camera_target_is_player;
     char camera_target[MAX_NAME_BYTES];
+    SpawnServices spawn_services;
     Error error;
 };
 
@@ -143,8 +152,10 @@ Error init(Runtime *runtime,
  * script already running; the configured count still gates later activations. */
 bool enter_trigger(Runtime *runtime);
 
-/* Advances game time once, updates waits active at tick start, and drains only
- * tasks present at update start. Child tasks wait for the next manager update. */
+/* Advances game time once and executes only tasks present at update start.
+ * A blocking Wait checks prior elapsed, receives this delta, and returns
+ * without rechecking. Newly executed positive Waits also receive this delta.
+ * Child tasks wait for the next manager update. */
 Error advance(Runtime *runtime, uint32_t delta_ms);
 
 const Event *find_event(const Runtime *runtime,

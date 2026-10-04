@@ -8,7 +8,8 @@ grant a license to redistribute the game data or this cache-bearing APK.
 
 Keep this build for local reconstruction, compatibility testing and review by
 the rights holder. The `third-party-notices` package directory contains the
-separate notices and license texts for Irrlicht OGL-ES r6038 and its bundled
-third-party code. The Irrlicht notices do not apply to the game cache files.
+separate notices and license texts for Irrlicht OGL-ES r6038, Box2D 2.0.1, and
+their bundled third-party code. Those notices do not apply to the game cache
+files.
 
 This is a provenance record, not a legal opinion.

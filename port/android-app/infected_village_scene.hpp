@@ -17,7 +17,7 @@ struct SourceFiles {
 };
 
 struct Preview {
-    dh2::world::Level level{};
+    dh2::world::SourceLevel level{};
     dh2::viewer::SceneMesh modules[module_count]{};
     bool ready = false;
 };

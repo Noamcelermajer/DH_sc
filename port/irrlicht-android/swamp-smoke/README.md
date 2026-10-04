@@ -1,4 +1,4 @@
-# SWAMP module-zero Irrlicht movement diagnostic
+# SWAMP module-zero Irrlicht source-actor diagnostic
 
 This separate Android `NativeActivity` assembles the supplied SWAMP module-zero
 source geometry through the checked BRES/MLX readers and the SceneMesh adapter,
@@ -8,20 +8,24 @@ the four selected source Prince default-warrior skins replace the earlier
 colored-sphere marker.
 
 The startup position comes from module zero's original `SpawnPoint` with
-`entrypointID="0"`. Before movement, the code resolves that point against the
-source floor and the constructor-derived object path mask `2`. Movement reuses
-`dh2_swamp_movement_step` at a 20 ms fixed step. It checks both the current
-point and each proposed endpoint against the path-mask-eligible module-zero
-floor and holds position if no accepted floor is found. Speed 30 units/second
-is a preview parameter. Movement still does not instantiate or update the
-game's player Character or native Character state machine.
+`entrypointID="0"`. The app resolves it against source Navigation and the
+constructor-derived player path mask `0x2`, then creates a bounded
+`SwampActorSession`. Each accepted 20 ms development tick is routed through
+the source Character Coordinator, authored animation bank and BlendedPlayback,
+`actor_runtime`, the module-zero source floor graph, and one Box2D
+`NativeWorld::Step`. Source visual-root motion owns the displayed position;
+the native player body is pinned in Idle and unpinned while moving. The old
+point-mover implementation no longer owns app movement.
 
 The touch receiver clears any held stick on Irrlicht's forwarded Android
 `APP_CMD_LOST_FOCUS`, `APP_CMD_PAUSE` and `APP_CMD_TERM_WINDOW` commands, then
-allows Irrlicht to process each lifecycle command. The inactive-window loop
-also clears the stick and resets accumulated frame time as a fallback. Status
-strings decode UTF-8 into wide characters, so the blocked-state middle dot is
-rendered as punctuation rather than separate UTF-8 bytes.
+allows Irrlicht to process each lifecycle command. The frame loop also requires
+both an active Irrlicht window and a non-null Android window, resetting touch
+and accumulated time while the surface is absent. When its dimensions change,
+the app resizes Irrlicht, resets input bounds, updates camera aspect and moves
+the status hint. A failed source frame permanently stops further source ticks;
+the status retains completed-frame diagnostics and does not promise rollback of
+partially sampled source state.
 
 The source module has 103 selected scene records, 54 draw commands, 10,816
 vertices and 13,284 indices. The diagnostic omits exactly the verified
@@ -66,15 +70,29 @@ resources with no serialized animation payload are retained without made-up
 timing. The host check verifies Walk pose deformation, release to Idle, and
 single application of source owner translation.
 
-This remains a bounded source integration, not full-game parity. The SWAMP
-module-zero endpoint/path-mask movement is still a development producer; it
-does not instantiate native Character physics or actor-radius collision.
-External Character/AI services, full combat, triggers, and game-level
-orchestration are not implemented here. Selected source materials use the
-atlas and preserve UV/material-color input, but external Collada effects and
-the original shader are not reconstructed. The four selected primitives have
-no AlphaMap references; other model/material variants remain outside this
-slice.
+The next bounded integration composes those source pieces into
+`SwampActorSession`: source Navigation is copied across an explicit neutral
+boundary into the module-zero floor graph; source `actor_runtime` owns the
+checked visual-root path; one NativeWorld step is ordered before timer/state,
+animation, and actor phases per accepted logical frame. It copies the actual
+224 resolved Character properties and derives the body/world bounds from the
+source Character/decor producers. Its focused host gate checks real cache
+floors, state 3 Idle/state 4 Move, body pinning, route activity/clear, one
+physics step per actor frame, and explicit teardown. It does not invent a
+physics-velocity movement path.
+
+This remains a bounded source integration, not full-game parity. Its player
+has a source-sized NativeWorld body and source actor path/floor checks, but the
+module-zero scene does not create environment bodies, walls, swept-volume
+collision, or contacts against level geometry. The recovered coordinator does
+not yet receive the original Character body-present service, so this adapter
+mirrors source Idle/Move pinning after those state changes. External
+Character/AI services, full combat, triggers, scripts, other-module seams, and
+game-level orchestration are not implemented here. Selected source materials
+use the atlas and preserve UV/material-color input, but external Collada
+effects and the original shader are not reconstructed. The four selected
+primitives have no AlphaMap references; other model/material variants remain
+outside this slice.
 
 ## Rendering and gameplay limits
 
@@ -94,20 +112,20 @@ Irrlicht's default material, which accounts for the broad white floor bands in
 the current screenshot; smaller dark patches also remain. These gaps can
 change the appearance of bridges, water and other transparent or lit surfaces.
 
-Movement uses a point-sized endpoint check. It does not reproduce the original
-player controller's acceleration, actor radius, continuous/swept collision,
-wall response, integrated movement animation, AI, combat, triggers, scripted
-gameplay, camera behavior or save state. This diagnostic currently exercises
-the source Idle and Move state path only; it does not run the full native input,
-physics or gameplay service stack. An endpoint can cross a thin wall or
-narrow gap. The
-full nine-module SWAMP floor collection supports the checked navigation
-queries, while this scene and movement mode are restricted to module zero.
+The source actor path checks use module-zero floor triangles and source
+movement flags, but do not reproduce full controller acceleration, continuous
+or swept collision, environmental wall response, AI, combat, triggers, scripts,
+camera behavior or save state. A sufficiently thin obstacle or a gap between
+checks can still be crossed. This app exercises source Idle and Move only and
+does not run the full Character physics/service stack. The full nine-module
+SWAMP floor collection supports checked navigation queries; this rendered
+scene and session remain restricted to module zero.
 
 ## Local build and status
 
 Build a separate, local-only APK from the extracted supplied cache. Keep the
-candidate output separate from the prior tested build:
+candidate output separate from the previous two-clip artifact. The latest
+source session wiring has not yet received its own APK/device validation:
 
 ```powershell
 python port/android-app/build.py `
@@ -116,7 +134,7 @@ python port/android-app/build.py `
   --cache ..\cache\files `
   --irrlicht-swamp `
   --irrlicht-static-dir port\irrlicht-android\build\variant-curated-api37\static `
-  --build-dir port\android-app\build\irrlicht-swamp-prince-character-candidate
+  --build-dir port\android-app\build\irrlicht-swamp-source-session-candidate
 ```
 
 First build the pinned engine libraries with
@@ -127,25 +145,36 @@ Install the runtime-smoke helper dependency with
 This is a development diagnostic, not full-game parity. It packages the
 owner-supplied cache inputs listed below and has no Drive/GitHub upload step.
 
-The previous runtime-tested artifact lives in
-`port/android-app/build/irrlicht-swamp-prince-preview/`. The full-bank candidate
-is written to
-`port/android-app/build/irrlicht-swamp-prince-character-candidate/`; its APK is
+The previous two-clip runtime-tested artifact lives in
+`port/android-app/build/irrlicht-swamp-prince-preview/`. The full-bank,
+source-session candidate is written to
+`port/android-app/build/irrlicht-swamp-source-session-candidate/`; its APK is
 `dh2-swamp-irrlicht-source-local-debug.apk`. It uses the separate package
 `local.dh2.sourceviewer.irrlichtswamp` and launches directly into the native
-SWAMP activity, so it can be installed alongside the default app. Host source
-Character assertions and Android compile/package gates pass. Device smoke must
-wait for `FIRST_SOURCE_CHARACTER_FRAME`, emitted after the first successful
-renderer buffer swap; the earlier assembly token can arrive before Prince and
-bank startup finish:
+SWAMP activity, so it can be installed alongside the default app. The focused
+host source assertions pass; root owns the APK/device gate. Device smoke must wait for
+`FIRST_SOURCE_CHARACTER_FRAME`, emitted after the first successful renderer
+buffer swap; `SOURCE_ACTOR_SESSION_READY` proves the session initialized, while
+the first-frame marker avoids the earlier assembly/startup timing race. Inspect
+`SOURCE_ACTOR_SESSION_READY`, `MOVE`, `SURFACE_RESIZED`, and
+`FIRST_SOURCE_CHARACTER_FRAME` logs for source state/flags, sequence/clip,
+actor/world counters, `body_present`, body-service calls, path result,
+desired/validated headings, source/physics positions, and body radius. The
+source Character owns body pin transitions: Move focus unpins; Move blur runs
+Stop (clearing the source path/target/heading) and then pins on return to Idle.
+Expected state trace is Idle `3/0x2380`, then held-input Move `4/0x23c1`
+(Walk clip 1126), then release to Idle. Host callback/lifetime evidence is in
+`port/irrlicht-android/build/swamp-actor-body-services-host/validation.json`;
+it is separate from the Android device gate. Root owns device runtime validation.
 
 ```powershell
 python port/android-app/tests/irrlicht_swamp_native_runtime.py `
-  --apk port\android-app\build\irrlicht-swamp-prince-character-candidate\dh2-swamp-irrlicht-source-local-debug.apk `
+  --apk port\android-app\build\irrlicht-swamp-source-session-candidate\dh2-swamp-irrlicht-source-local-debug.apk `
   --adb ..\emulator-test\sdk\platform-tools\adb.exe `
   --serial emulator-5558 `
   --require-prince-character `
-  --output port\android-app\build\irrlicht-swamp-prince-character-candidate\runtime-character-16k
+  --require-source-actor `
+  --output port\android-app\build\irrlicht-swamp-source-session-candidate\runtime-source-session-16k
 ```
 
 The app bundle contains the SWAMP BRES/MLX/entrypoint/diffuse/AlphaMap, Prince
@@ -158,13 +187,12 @@ The bundled `LOCAL-ASSET-NOTICE.txt` records the original cache provenance;
 the `third-party-notices/` directory carries Irrlicht and bundled library
 notices. See the repository [provenance and rights](../../../RIGHTS.md) record.
 
-The current APK is built with Android build tools 37.0.0 and NDK r29 for
+The previous APK was built with Android build tools 37.0.0 and NDK r29 for
 `arm64-v8a` and `x86_64`, signed and checked with `zipalign`, and packaged as an
-API 37 NativeActivity. Host source Character assertions and both ABI 16 KiB ELF
-alignment checks pass. The parent-owned Android 17/API 37 x86_64 16 KiB runtime
-also passes for this exact APK: complete-bank state selection, visible Idle/Walk,
-both touch axes, release stability and same-process resume. The
-separate integrated app has its own record in
+API 37 NativeActivity. Its visual/movement/lifecycle checks apply to that
+two-clip checkpoint only; the new session candidate needs its own 4 KiB and
+16 KiB tests before inheriting any pass claim. The separate integrated app has
+its own record in
 [IRRLICHT-SWAMP-IN-APP.md](../../android-app/IRRLICHT-SWAMP-IN-APP.md).
 
 ```text
@@ -213,7 +241,18 @@ python port/irrlicht-android/swamp-smoke/tests/run_host.py --cache ..\cache\file
 ```
 
 The report is written under the ignored local `port/irrlicht-android/build/`
-directory. The prior source-Prince APK was installed and exercised on the
-16 KiB profile only; the 4 KiB result above belongs to an older geometry-only
-build. The new Character/AnimationBank candidate passes its own 16 KiB device validation.
-The rendering and gameplay limits listed above remain open work.
+directory. Run the focused host bridge and session gates when changing these
+interfaces:
+
+```powershell
+python port/irrlicht-android/game/tests/run_swamp_actor_floor_bridge_host.py `
+  --cache ..\cache\files
+python port/irrlicht-android/game/tests/run_swamp_actor_session_host.py `
+  --cache ..\cache\files `
+  --output port\irrlicht-android\build\swamp-actor-session-final
+```
+
+The prior source-Prince artifact has a 16 KiB device result; the new
+Character/AnimationBank/session candidate still requires its own APK/device
+validation after this integration. These host checks are not an Android runtime
+claim.

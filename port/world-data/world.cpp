@@ -320,7 +320,7 @@ extern "C" Error dh2_world_cache_path(char* output, std::size_t capacity,
     if (length >= capacity) return fail(d, Error::limit, "Cache path output too small");
     std::memcpy(output, buffer, length + 1); return done(d);
 }
-extern "C" void dh2_world_free(Level* level) {
+extern "C" void dh2_world_free(SourceLevel* level) {
     if (!level) return;
     std::free(level->name); std::free(level->source_path); free_object(level->config);
     for (std::uint32_t i = 0; i < level->module_count; ++i) {
@@ -330,12 +330,12 @@ extern "C" void dh2_world_free(Level* level) {
     }
     std::free(level->modules); free_objects(level->entities, level->entity_count); *level = {};
 }
-extern "C" Error dh2_world_import_level(Level* output, const char* name, const char* path,
+extern "C" Error dh2_world_import_level(SourceLevel* output, const char* name, const char* path,
     const std::uint8_t* bytes, std::size_t size, Diagnostic* d) {
     if (!output || !name || !*name || std::strlen(name) > 128 || !bytes || !size)
         return fail(d, Error::argument, "Missing level input");
     if (size > max_xml) return fail(d, Error::limit, "Level XML too large");
-    Level candidate{}; Object* records = nullptr; std::uint32_t count = 0;
+    SourceLevel candidate{}; Object* records = nullptr; std::uint32_t count = 0;
     Error result = normalized_owned(candidate.source_path, path, d);
     if (result != Error::ok) return result;
     candidate.name = copy(name);
@@ -387,7 +387,7 @@ extern "C" Error dh2_world_import_level(Level* output, const char* name, const c
     if (result != Error::ok) { dh2_world_free(&candidate); return result; }
     dh2_world_free(output); *output = candidate; return done(d);
 }
-extern "C" Error dh2_world_import_module_objects(Level* level, std::uint32_t index,
+extern "C" Error dh2_world_import_module_objects(SourceLevel* level, std::uint32_t index,
     RecordKind kind, const char* path, const std::uint8_t* bytes, std::size_t size,
     Diagnostic* d) {
     if (!level || index >= level->module_count || !bytes || !size ||

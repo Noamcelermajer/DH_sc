@@ -38,7 +38,7 @@ class Module(c.Structure):
         ('mgp_loaded', c.c_bool), ('mvp_loaded', c.c_bool)]
 
 
-class Level(c.Structure):
+class SourceLevel(c.Structure):
     _fields_ = [('name', c.c_char_p), ('source_path', c.c_char_p), ('config', Object),
                 ('modules', c.POINTER(Module)), ('module_count', U),
                 ('entities', c.POINTER(Object)), ('entity_count', U)]
@@ -61,11 +61,11 @@ spec.loader.exec_module(scene)
 def bind(path):
     dll = scene.bind(path)
     definitions = {
-        'dh2_world_import_level': (U, [c.POINTER(Level), c.c_char_p, c.c_char_p, P, c.c_size_t, c.POINTER(Diagnostic)]),
-        'dh2_world_import_module_objects': (U, [c.POINTER(Level), U, U, c.c_char_p, P, c.c_size_t, c.POINTER(Diagnostic)]),
+        'dh2_world_import_level': (U, [c.POINTER(SourceLevel), c.c_char_p, c.c_char_p, P, c.c_size_t, c.POINTER(Diagnostic)]),
+        'dh2_world_import_module_objects': (U, [c.POINTER(SourceLevel), U, U, c.c_char_p, P, c.c_size_t, c.POINTER(Diagnostic)]),
         'dh2_world_cache_path': (U, [P, c.c_size_t, c.c_char_p, c.POINTER(Diagnostic)]),
         'dh2_world_field': (c.c_char_p, [c.POINTER(Object), c.c_char_p]),
-        'dh2_world_free': (None, [c.POINTER(Level)]),
+        'dh2_world_free': (None, [c.POINTER(SourceLevel)]),
         'dh2_world_bind_module': (U, [c.POINTER(Binding), c.POINTER(Module), c.POINTER(scene.Scene), c.POINTER(Diagnostic)]),
         'dh2_world_module_records': (U, [c.POINTER(U), U, c.POINTER(U), c.POINTER(Binding), c.POINTER(scene.Scene), c.POINTER(Diagnostic)]),
         'dh2_world_placement_matrix': (U, [c.POINTER(scene.Matrix), c.POINTER(Binding), c.POINTER(Diagnostic)]),
@@ -134,7 +134,7 @@ def synthetic_checks(dll):
     assert dll.dh2_world_cache_path(output, len(output), c.cast(output, c.c_char_p), c.byref(d)) == 0
     assert output.value == b'data/3d/a.mgp'
     count += 1
-    level = Level()
+    level = SourceLevel()
     assert dll.dh2_world_import_level(c.byref(level), b'SYNTHETIC', b'data/scene/test.mlx', SYNTHETIC, len(SYNTHETIC), c.byref(d)) == 0, d.message
     try:
         # Failed replacements keep the successfully imported level intact.
@@ -180,7 +180,7 @@ def cache_checks(dll, cache):
     source = 'data/scene/001_swamp.mlx'
     raw = (cache/source).read_bytes()
     original = ET.fromstring(raw).findall('GameObject')
-    level = Level()
+    level = SourceLevel()
     d = Diagnostic()
     assert dll.dh2_world_import_level(c.byref(level), b'SWAMP', source.encode(), raw, len(raw), c.byref(d)) == 0, d.message
     hashes = {source: hashlib.sha256(raw).hexdigest()}

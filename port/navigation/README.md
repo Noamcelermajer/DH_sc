@@ -54,6 +54,30 @@ unsupported mesh layouts/transforms and uses explicit limits of 256 surfaces,
 record IDs are copied into the owned result. Initialize the output with `{}`;
 call `dh2_nav_free` when finished.
 
+## Link boundary with the live runtime
+
+The importer and the live runtime have distinct C++ types and navigation entry
+points, so they can share one native library without conflicting definitions:
+
+| Imported data | Live runtime |
+| --- | --- |
+| `dh2::scene_payload::{Scene,Node,Instance}` | `dh2::scene::{Scene,Node,Instance}` |
+| `dh2::world::SourceLevel` | `dh2::world::Level` |
+| `dh2::navigation::SurfaceTriangle` (48 bytes, includes source IDs) | `dh2::navigation::Triangle` (36 bytes) |
+| `dh2_nav_get_triangle` copies an imported record | `dh2_nav_triangle` creates PF graph nodes |
+
+These names describe port interfaces; original function names and evidence
+remain unchanged. Convert imported geometry explicitly at the adapter boundary.
+No alias or cast makes an imported record into a live runtime object.
+
+`tests/run_reader_runtime_boundary.py --cache <cache-root> --cxx <compiler>`
+compiles both sets of headers in one translation unit and links both reader and
+live scene/world/navigation implementations in one executable. It loads the
+SWAMP catalogue through both scene paths, imports the source MLX, retrieves an
+imported triangle, and independently builds a live PF graph triangle.
+
+## Geometry queries
+
 `dh2_nav_query_height` projects the query onto world X/Y, finds triangle
 containment with barycentric coordinates, interpolates world Z, and selects
 the hit nearest the caller's reference Z within a caller-supplied vertical

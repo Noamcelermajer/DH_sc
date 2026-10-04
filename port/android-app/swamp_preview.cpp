@@ -250,7 +250,7 @@ Java_local_dh2_sourceviewer_SwampPreviewActivity_loadSwamp(JNIEnv* env, jclass,
         for (auto* input : inputs) std::free(input->data);
         return result(env, message);
     };
-    dh2::world::Level level{}; dh2::world::Diagnostic world_diag{};
+    dh2::world::SourceLevel level{}; dh2::world::Diagnostic world_diag{};
     if (dh2_world_import_level(&level, "SWAMP", "data/scene/001_swamp.mlx",
             mlx_bytes.data, mlx_bytes.size, &world_diag) != dh2::world::Error::ok) {
         return fail(world_diag.message);
@@ -284,13 +284,13 @@ Java_local_dh2_sourceviewer_SwampPreviewActivity_loadSwamp(JNIEnv* env, jclass,
         return fail("SWAMP module-zero entrypointID 0 SpawnPoint was not found.");
     }
     dh2::resources::BresView bres{};
-    dh2::scene::Scene scene{};
+    dh2::scene_payload::Scene scene{};
     dh2::world::ModuleBinding binding{};
     std::uint32_t records[65536]{}; std::uint32_t record_count = 0;
     dh2::math::Matrix4f correction{};
     auto world_result = dh2_bres_open(&bres, bres_bytes.data, bres_bytes.size);
     if (world_result != dh2::resources::BresError::ok ||
-        dh2_scene_open(&scene, &bres) != dh2::scene::Error::ok ||
+        dh2_scene_open(&scene, &bres) != dh2::scene_payload::Error::ok ||
         dh2_world_bind_module(&binding, &level.modules[0], &scene, &world_diag) != dh2::world::Error::ok ||
         dh2_world_module_records(records, 65536, &record_count, &binding, &scene, &world_diag) != dh2::world::Error::ok ||
         dh2_world_placement_matrix(&correction, &binding, &world_diag) != dh2::world::Error::ok) {

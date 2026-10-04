@@ -154,7 +154,7 @@ def main():
     host_surface = host_triangles = host_nav = None
     if host_query:
         host_surface = (nav_checks.Surface*1)()
-        host_triangles = (nav_checks.Triangle*1)()
+        host_triangles = (nav_checks.SurfaceTriangle*1)()
         host_surface[0].triangle_count = 1
         host_surface[0].floor_type_flags_known = True
         for vertex, values in zip(('a', 'b', 'c'), triangle):

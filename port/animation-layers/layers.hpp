@@ -12,8 +12,8 @@ extern "C" {
 // Nonnegative finite weights, at most eight clips. Zero total selects the first
 // layer through the original normalization rule. Errors leave outputs unchanged.
 dh2::pose::Error dh2_layers_node(const dh2::layers::Layers *,
-    const dh2::scene::Node *, dh2::scene::Node *);
+    const dh2::scene_payload::Node *, dh2::scene_payload::Node *);
 dh2::pose::Error dh2_layers_skin_palette(const dh2::layers::Layers *,
-    const dh2::skin::Skin *, const dh2::scene::Visual *,
+    const dh2::skin::Skin *, const dh2::scene_payload::Visual *,
     dh2::math::Matrix4f *, std::size_t capacity);
 }

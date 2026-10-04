@@ -4,6 +4,10 @@
 The [combined status](COMBINED-RECONSTRUCTION-STATUS.md) contains the project
 brief, Adam comparison, complete subsystem overview and completion gates.
 This document records the next source milestone after commit `27a6801`.
+It retains the `f811f80` artifact identities. The subsequent
+[Crypt script checkpoint](CRYPT-SCRIPT-CHECKPOINT-2026-10-04.md) connects the
+original GhostAmbush01 contact/Wait/Spawn path and corrects earlier hallway
+shorthand; those changes are not retroactively claimed for these APKs.
 
 ## Source advancement
 
@@ -30,7 +34,10 @@ has no serialized animation accessor/timeline; no duration is invented for it.
   Character. Treating it as an allocator would reconstruct the wrong contract.
 - `CSSpawn::OnFocus` (`0x3c35ec`) selects the exact Spawn member at animation
   table offset `0x80`; this path does not add a stance to its sequence.
-- Character vtable slot `+0x40` resolves to `GameObject::IsUpdatable` (`0x38aac0`),
+- **Corrected in the next source checkpoint:** this f811 snapshot mislabeled
+  Character vptr `+0x40` as `GameObject::IsUpdatable` (`0x38aac0`). It is
+  `GameObject::SetVisible` (`0x38b0f0`), because the vptr uses a `+8` address point.
+  The following describes the old adapter behavior:
   a constant-true query. It does not change visibility.
 - `VisualObject::StartFadeIn` (`0x470ce4`) and `UpdateFadeIn` (`0x470cec`) are
   return stubs. The Ghost's raw property argument is 3000; a timed alpha fade

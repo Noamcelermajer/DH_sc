@@ -93,8 +93,8 @@ Error load(Preview* output, const SourceFiles* files, Diagnostic* diagnostic) {
         dh2::resources::BresError::ok)
         return fail(diagnostic, &candidate, Error::bres_open,
                     "Infected Village catalogue BRES rejected");
-    dh2::scene::Scene scene{};
-    if (dh2_scene_open(&scene, &bres) != dh2::scene::Error::ok)
+    dh2::scene_payload::Scene scene{};
+    if (dh2_scene_open(&scene, &bres) != dh2::scene_payload::Error::ok)
         return fail(diagnostic, &candidate, Error::scene_open,
                     "Infected Village catalogue scene rejected");
 
