@@ -11,9 +11,9 @@ mapping, measured source inventory, test limits and remaining milestones.
 The strongest current gameplay baseline is Adam's imported native Crypt app at
 `port/android-native`, built from source for API 37, ARM64 and x86_64 with 16 KiB
 alignment. The continuation build adds [validated asset overrides](port/android-native/MODDING.md).
-The latest [tested native checkpoint](docs/NATIVE-CHARACTER-QUERY-INIT-CHECKPOINT-2026-10-04.md)
-adds 14 owned Character-list nodes and a source query fix while retaining original
-Ghost OnInit, damaged health and the same VM across recreation. The checkpoint
+The latest [tested native checkpoint](docs/NATIVE-GHOST-SKILL-INIT-CHECKPOINT-2026-10-04.md)
+adds source-ordered Ghost health/mana, skill/faery, Post and Final initialization,
+with owned vectors, catalogue and the same VM retained across recreation. The checkpoint
 records the downloadable build, tests and remaining integration work.
 Our `port/android-app` and Irrlicht SWAMP route remain separate development
 runtimes. Full game reconstruction is still active. The checkpoints below are

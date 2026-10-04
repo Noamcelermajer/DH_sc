@@ -74,6 +74,11 @@ AI_MANIFESTS = {
     'port/level-world/reference/character-init-hp-mp/original-functions.json': 'character_init_hp_mp',
     'port/level-world/reference/character-apply-result/original-functions.json': 'character_apply_result',
     'port/level-world/reference/character-skill-state-queries/original-functions.json': 'character_skill_state_queries',
+    'port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json': 'character_ai_set_skills_and_spells',
+    'port/level-world/reference/character-ai-skill-script-update/original-functions.json': 'character_ai_skill_script_update',
+    'port/level-world/reference/character-ai-skill-script-check/original-functions.json': 'character_ai_skill_script_check',
+    'port/level-world/reference/lua-script-load-once/original-functions.json': 'lua_script_load_once',
+    'port/level-world/reference/script-value-boolean/original-functions.json': 'script_value_boolean',
 }
 MANIFESTS.extend(AI_MANIFESTS)
 ENGINE_MANIFESTS = {

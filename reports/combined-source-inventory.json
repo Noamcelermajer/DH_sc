@@ -79,10 +79,10 @@
       "module": "android-native",
       "origin": "Adam import with local adaptations",
       "source_category": "reconstruction_and_port",
-      "source_files": 13,
-      "source_lines": 3940,
-      "source_bytes": 288709,
-      "test_files": 84
+      "source_files": 15,
+      "source_lines": 4552,
+      "source_bytes": 320664,
+      "test_files": 87
     },
     {
       "module": "android-smoke",
@@ -385,10 +385,10 @@
       "module": "level-world",
       "origin": "Adam import with local adaptations",
       "source_category": "reconstruction_and_port",
-      "source_files": 240,
-      "source_lines": 19754,
-      "source_bytes": 1047486,
-      "test_files": 322
+      "source_files": 252,
+      "source_lines": 21305,
+      "source_bytes": 1119593,
+      "test_files": 333
     },
     {
       "module": "loot-tables",
@@ -671,16 +671,16 @@
     }
   ],
   "totals": {
-    "source_files": 831,
-    "source_lines": 98364,
-    "source_bytes": 4646720,
-    "test_files": 723
+    "source_files": 845,
+    "source_lines": 100527,
+    "source_bytes": 4750782,
+    "test_files": 737
   },
   "reconstruction_and_port_totals": {
-    "source_files": 543,
-    "source_lines": 63833,
-    "source_bytes": 3327558,
-    "test_files": 723
+    "source_files": 557,
+    "source_lines": 65996,
+    "source_bytes": 3431620,
+    "test_files": 737
   },
   "files": [
     {
@@ -3401,10 +3401,10 @@
     },
     {
       "path": "port/android-native/app/src/main/cpp/model_renderer.cpp",
-      "bytes": 202866,
-      "lines": 2385,
+      "bytes": 212005,
+      "lines": 2496,
       "kind": "source",
-      "sha256": "337774ce87463edb4bbac3375f7754b9406b6e42f01aa50ebdb9c626724aa10d"
+      "sha256": "193c7dac732544175d9193e83da8ce06af3d6eb713bbf994de3281b59ed3c8fc"
     },
     {
       "path": "port/android-native/app/src/main/cpp/model_renderer.hpp",
@@ -3447,6 +3447,34 @@
       "lines": 85,
       "kind": "source",
       "sha256": "292a1404037de551d3a5d5731ddc197b98cf12403c3473208c998a22f6c5d696"
+    },
+    {
+      "path": "port/android-native/app/src/main/cpp/native_ghost_skills.cpp",
+      "bytes": 18206,
+      "lines": 393,
+      "kind": "source",
+      "sha256": "2e2819bae0c076c040b2f12372361cce7ab44b94ea538f88e21c8c79a3d2dd2d"
+    },
+    {
+      "path": "port/android-native/app/src/main/cpp/native_ghost_skills.hpp",
+      "bytes": 4610,
+      "lines": 108,
+      "kind": "source",
+      "sha256": "bb3859be852ffc283b7281f4c712e414cbd2a276c32146cf5945f69f3c087f11"
+    },
+    {
+      "path": "port/android-native/app/src/main/cpp/tests/native_ghost_skills_host.cpp",
+      "bytes": 9391,
+      "lines": 181,
+      "kind": "test_or_tool",
+      "sha256": "c7b5e1e3621d7094d81428760d62c7554a71f89c8c43773ee6f14a5bbab4ee90"
+    },
+    {
+      "path": "port/android-native/app/src/main/cpp/tests/run_native_ghost_skills_host.py",
+      "bytes": 7144,
+      "lines": 147,
+      "kind": "test_or_tool",
+      "sha256": "c41b8ec338070d16c480c812c251d5434a295d22bd619ca7cef66bfaa22b575c"
     },
     {
       "path": "port/android-native/app/src/main/java/com/example/dh2/MainActivity.java",
@@ -3569,10 +3597,10 @@
     },
     {
       "path": "port/android-native/tools/crypt_script_runtime_smoke.py",
-      "bytes": 24813,
-      "lines": 369,
+      "bytes": 27750,
+      "lines": 396,
       "kind": "test_or_tool",
-      "sha256": "2213a1a12ce79f3529fdac0c3387d054d09c42a1562e5b691769780cb5e54080"
+      "sha256": "a12f33116e258909e18bc16c44654589086d9af98831de97fbc967b65dfedeac"
     },
     {
       "path": "port/android-native/tools/emulator_smoke.py",
@@ -3671,6 +3699,13 @@
       "lines": 42,
       "kind": "test_or_tool",
       "sha256": "ddf43f6c678a2b7434e5a44df536f1eef07245ba6b03b88a695e80d748156146"
+    },
+    {
+      "path": "port/android-native/tools/prepare_skill_tables.py",
+      "bytes": 1986,
+      "lines": 41,
+      "kind": "test_or_tool",
+      "sha256": "05161febaceca0743ebe8c1179641a332ea157108c2db0a8e40bed7e480a336c"
     },
     {
       "path": "port/android-native/tools/prince_bank_smoke.py",
@@ -4010,10 +4045,10 @@
     },
     {
       "path": "port/android-native/tools/validate_source_ai_exports.py",
-      "bytes": 14550,
-      "lines": 226,
+      "bytes": 15631,
+      "lines": 239,
       "kind": "test_or_tool",
-      "sha256": "10df6f72049034186b3f8103553bac570e5aa8424a96c32bde7d8afbe0163593"
+      "sha256": "d558c219904922d9a5572f2c297d00aa01068fc2735e488ac4bf7d6325b89d34"
     },
     {
       "path": "port/android-native/tools/validate_states_checkpoint.py",
@@ -4038,10 +4073,10 @@
     },
     {
       "path": "port/android-native/tools/verify_monster_initialization_checkpoint.py",
-      "bytes": 5090,
-      "lines": 74,
+      "bytes": 6529,
+      "lines": 91,
       "kind": "test_or_tool",
-      "sha256": "a5d11e7bfc295a7389f244a0f0aa078a8f9a15b68bee10114153d739f13f3240"
+      "sha256": "1313b6f31ac8f47b9e3fcb1587e6c11091f569db0bdb320a58299f1a7f3582f2"
     },
     {
       "path": "port/android-native/tools/world_smoke.py",
@@ -6662,6 +6697,20 @@
       "sha256": "d2555cde0441bdcccc2a9a2df69099b899c5121171b67a18ef7506cf4be62ebf"
     },
     {
+      "path": "port/level-world/character_ai_set_skills_and_spells.cpp",
+      "bytes": 28182,
+      "lines": 591,
+      "kind": "source",
+      "sha256": "7e69c2ac7589b8e0c964548c886206b2b7c1e33d1a096d560f31b56dadfa66b5"
+    },
+    {
+      "path": "port/level-world/character_ai_set_skills_and_spells.hpp",
+      "bytes": 5557,
+      "lines": 159,
+      "kind": "source",
+      "sha256": "5690c7ba63ec9294fa0f02e31c4e359faf4b4f38f45c19f6f7fc6285c7313e53"
+    },
+    {
       "path": "port/level-world/character_ai_set_target.cpp",
       "bytes": 6161,
       "lines": 158,
@@ -6690,6 +6739,20 @@
       "sha256": "ae36f54ffd97cfb079905e3e03854fc354853304609135aba76591bfb07e9a81"
     },
     {
+      "path": "port/level-world/character_ai_skill_script_check.cpp",
+      "bytes": 6883,
+      "lines": 114,
+      "kind": "source",
+      "sha256": "06b46bbadbddf6c2160f5d2faeba26869ccc3032cf07f5f6038a5fbafcf5c430"
+    },
+    {
+      "path": "port/level-world/character_ai_skill_script_check.hpp",
+      "bytes": 3353,
+      "lines": 58,
+      "kind": "source",
+      "sha256": "6af79712254ce980d47beca5c13c438e2baa3558c9bab243762c2a0b10a4f34d"
+    },
+    {
       "path": "port/level-world/character_ai_skill_script_constructor.cpp",
       "bytes": 5134,
       "lines": 116,
@@ -6702,6 +6765,20 @@
       "lines": 67,
       "kind": "source",
       "sha256": "1a1f10d29b5bba0fabb05a9069982a38de384e2100efef6fe40fd2e6bb956a5c"
+    },
+    {
+      "path": "port/level-world/character_ai_skill_script_update.cpp",
+      "bytes": 4872,
+      "lines": 86,
+      "kind": "source",
+      "sha256": "e745312a3dc2f902ad4a6e0198feb6a22fc0da45c3bd297721f6884b8c9ad658"
+    },
+    {
+      "path": "port/level-world/character_ai_skill_script_update.hpp",
+      "bytes": 3263,
+      "lines": 57,
+      "kind": "source",
+      "sha256": "5051df1d82739a5bb69fc575f7b7fef3c33f3907eabb6d9a950ea9f393986408"
     },
     {
       "path": "port/level-world/character_ai_state.cpp",
@@ -7516,6 +7593,20 @@
       "sha256": "8b05ca372a84272a5a71e36d0aad40c4312461cea25308257ce952a6daef1b9e"
     },
     {
+      "path": "port/level-world/lua_script_load_once.cpp",
+      "bytes": 7098,
+      "lines": 203,
+      "kind": "source",
+      "sha256": "f65057388a4ac782ba95561cbc8d992138e2c19094aeeb4e60b20b21c673db4a"
+    },
+    {
+      "path": "port/level-world/lua_script_load_once.hpp",
+      "bytes": 2672,
+      "lines": 81,
+      "kind": "source",
+      "sha256": "e14aff85bdbe215d2766a5a72f0198416ae27753a4728fd6988fc4d623a4d5f4"
+    },
+    {
       "path": "port/level-world/module_room_zone_bounds.cpp",
       "bytes": 2382,
       "lines": 60,
@@ -7808,6 +7899,34 @@
       "lines": 98,
       "kind": "source",
       "sha256": "d4bd8777964b673191fa4ab74c81f55438007d8bb842aada802d107e18331e73"
+    },
+    {
+      "path": "port/level-world/script_value_boolean.cpp",
+      "bytes": 2854,
+      "lines": 55,
+      "kind": "source",
+      "sha256": "089125b00bfb4962e7c647f92b07d2cbf60fbaaf4ba1c700e820366933970949"
+    },
+    {
+      "path": "port/level-world/script_value_boolean.hpp",
+      "bytes": 2651,
+      "lines": 50,
+      "kind": "source",
+      "sha256": "74a568c0701504488809fffffc7d02171f3e5fd6dd68761fed75ff8457943ceb"
+    },
+    {
+      "path": "port/level-world/script_value_boolean_lua.cpp",
+      "bytes": 3247,
+      "lines": 64,
+      "kind": "source",
+      "sha256": "55eb777d38c9b409cbec3d70818d8692562a01337e9b7c5f66b13a8bc14f1f94"
+    },
+    {
+      "path": "port/level-world/script_value_boolean_lua.hpp",
+      "bytes": 1475,
+      "lines": 33,
+      "kind": "source",
+      "sha256": "eafbde24d80838328c07137f79be23511c332150814e9afcd9f9cf0dec02699a"
     },
     {
       "path": "port/level-world/selector.cpp",
@@ -8251,6 +8370,13 @@
       "sha256": "ec72e259e90b7c986c57d926e15159fce616afbd56e6addd7ed9eb4cd9f6475e"
     },
     {
+      "path": "port/level-world/tests/character_ai_set_skills_and_spells.cpp",
+      "bytes": 19647,
+      "lines": 438,
+      "kind": "test_or_tool",
+      "sha256": "d54bcd24346cf77dc427304197183ce63227345148fbb663a6e8668065ccd74d"
+    },
+    {
       "path": "port/level-world/tests/character_ai_set_target.cpp",
       "bytes": 14047,
       "lines": 331,
@@ -8272,11 +8398,25 @@
       "sha256": "59d2ec79e679743bb9c00ca04fef96ea31bac8c46284ccc9de0a1e05dd6bef4b"
     },
     {
+      "path": "port/level-world/tests/character_ai_skill_script_check.cpp",
+      "bytes": 11116,
+      "lines": 136,
+      "kind": "test_or_tool",
+      "sha256": "4d506fbef49539c217ef4aa69e26ebd14768e2519663101bbce687a8cfc7e5cc"
+    },
+    {
       "path": "port/level-world/tests/character_ai_skill_script_constructor.cpp",
       "bytes": 6969,
       "lines": 162,
       "kind": "test_or_tool",
       "sha256": "d64a31c03192bf2c557e45acefd561692bba0f5663d97b0ca77b847fe39e5a34"
+    },
+    {
+      "path": "port/level-world/tests/character_ai_skill_script_update.cpp",
+      "bytes": 8966,
+      "lines": 111,
+      "kind": "test_or_tool",
+      "sha256": "4da25559ae3b15a1d064d954856068a3e98ddb1a946a75f825da7b95938fd3e0"
     },
     {
       "path": "port/level-world/tests/character_ai_state.cpp",
@@ -8986,6 +9126,13 @@
       "sha256": "f4e6ab059c6d172f72f4457795e28535b2364b1017e3bf8133a52df4b1105ed3"
     },
     {
+      "path": "port/level-world/tests/lua_script_load_once.cpp",
+      "bytes": 17584,
+      "lines": 371,
+      "kind": "test_or_tool",
+      "sha256": "ed72e21aa53451ccab86b222b52e3e9aaf99284a06df3dbdc0b105e31cbfd393"
+    },
+    {
       "path": "port/level-world/tests/module_room_zone_bounds.cpp",
       "bytes": 2934,
       "lines": 96,
@@ -9511,6 +9658,13 @@
       "sha256": "58e6fc8881ed79168456aa02bad570c2b59d1e6a5dabf847b9dd2d54cd87f29e"
     },
     {
+      "path": "port/level-world/tests/run_character_ai_set_skills_and_spells_host.py",
+      "bytes": 25308,
+      "lines": 494,
+      "kind": "test_or_tool",
+      "sha256": "983db4d61a2cc2588da49f9435bbda4af1d9033207bcbaec0cb3b57eba8251b3"
+    },
+    {
       "path": "port/level-world/tests/run_character_ai_set_target_host.py",
       "bytes": 4812,
       "lines": 118,
@@ -9525,11 +9679,25 @@
       "sha256": "5552a89b20b9db2c6957c603f952bf75d9c12b436662cbeefdfe0b8cfd7decca"
     },
     {
+      "path": "port/level-world/tests/run_character_ai_skill_script_check_host.py",
+      "bytes": 12754,
+      "lines": 136,
+      "kind": "test_or_tool",
+      "sha256": "53ecf8bf63261274f638a8cb788603248b4b8bdd0d2afd384d066d8ad4e6db96"
+    },
+    {
       "path": "port/level-world/tests/run_character_ai_skill_script_constructor_host.py",
       "bytes": 8748,
       "lines": 183,
       "kind": "test_or_tool",
       "sha256": "022095dcbc32d88988b7b28b4e8569fe9b1dd7f0413fc75c7ca68cae024b85c0"
+    },
+    {
+      "path": "port/level-world/tests/run_character_ai_skill_script_update_host.py",
+      "bytes": 8944,
+      "lines": 92,
+      "kind": "test_or_tool",
+      "sha256": "2aadc43f3e06845b3d749d43d13f5668ab3a0cdc7fa506e59e1e5a5421ef1fff"
     },
     {
       "path": "port/level-world/tests/run_character_ai_turn_host.py",
@@ -9756,6 +9924,13 @@
       "sha256": "0a43487561b99454a50abf25a64e9d2ba920c03831ad5f0fde8e67d3c0f4a4fc"
     },
     {
+      "path": "port/level-world/tests/run_lua_script_load_once_host.py",
+      "bytes": 9080,
+      "lines": 188,
+      "kind": "test_or_tool",
+      "sha256": "e5a8046623d8b229cb0a2cfc91767dca6b997d4d0724f9052e789e3e730a1347"
+    },
+    {
       "path": "port/level-world/tests/run_module_room_zone_bounds.py",
       "bytes": 20665,
       "lines": 388,
@@ -9796,6 +9971,27 @@
       "lines": 223,
       "kind": "test_or_tool",
       "sha256": "4bacae83a485fd9588c7a9b7a1f0a0df57824a5f438ec0297cc63c4685fe6584"
+    },
+    {
+      "path": "port/level-world/tests/run_script_value_boolean_host.py",
+      "bytes": 10111,
+      "lines": 112,
+      "kind": "test_or_tool",
+      "sha256": "a240fbdb84b5f197cb409a788d9cb035f6c618a68b97e84901febc9d02b85292"
+    },
+    {
+      "path": "port/level-world/tests/script_value_boolean.cpp",
+      "bytes": 6266,
+      "lines": 67,
+      "kind": "test_or_tool",
+      "sha256": "0d9aed663a3054a891cb8f3282f251be1d5ab9ccc2b9b9f02185aeea7b48f2a2"
+    },
+    {
+      "path": "port/level-world/tests/script_value_boolean_lua.cpp",
+      "bytes": 4229,
+      "lines": 55,
+      "kind": "test_or_tool",
+      "sha256": "ddc8d858281299285d955bb79341def7135b4c42a8719820875d2fcadc390565"
     },
     {
       "path": "port/level-world/tests/selector.cpp",

@@ -10,6 +10,7 @@
 #include "animation_scheduler.hpp"
 #include "animation_bank.hpp"
 #include "class_tables.hpp"
+#include "skill_tables.hpp"
 #include "level_tables.hpp"
 #include "level_construction_fields.hpp"
 #include "lua_script_level_queries.hpp"
@@ -48,6 +49,9 @@
 #include "ais_external_init_vcb.hpp"
 #include "native_debug_files.hpp"
 #include "native_character_list.hpp"
+#include "native_ghost_skills.hpp"
+#include "character_ai_update_all_skills.hpp"
+#include "character_skill_state_queries.hpp"
 #include "../../../../../player-info-level/player_manager_host_level.hpp"
 #include "navigation_producers.hpp"
 #include <GLES2/gl2.h>
@@ -145,6 +149,13 @@ dh2::data::AnimationBank prince_animation_bank;
 dh2::data::PropertyRules actor_property_rules;
 dh2::data::LevelTables actor_level_tables;
 dh2::data::ClassTables actor_class_tables;
+struct NativeSkillCatalogue {
+ dh2::data::SkillTables skills;
+ dh2::data::FaeryTables faeries;
+ std::vector<std::uint8_t> faery_constants_bytes;
+ dh2_pycst_view faery_constants{};
+};
+std::shared_ptr<const NativeSkillCatalogue> actor_skill_catalogue;
 std::vector<dh2::data::ClassRow> actor_class_rows;
 std::vector<std::string> actor_character_fields;
 std::vector<std::uint8_t> actor_design_bytes;
@@ -478,18 +489,24 @@ void initialize_char_ai_registry() {
 }
 
 // Native initialization owner. The same VM survives all source load stages.
-// Full InitScriptProcess skills/post/final and autonomous frames remain gated.
+// Bounded Ghost InitScriptProcess uses the original empty-script rows. Nonempty
+// skill Lua providers and autonomous frames remain separate unfinished work.
 struct NativeMonsterInitialization {
  NativeCharAIProjection* ai=nullptr;
  std::shared_ptr<SpawnOwner> owner;
  dh2::monster_external_script::Session vm;
  dh2::character_level_runtime::Runtime stats;
  dh2::character_level_runtime::Result last_stats{};
+ std::shared_ptr<const NativeSkillCatalogue> catalogue;
+ dh2::native::ghost_skills::Runtime skills;
+ dh2::native::ghost_skills::Result last_skills{};
+ dh2::character_ai_update_all_skills::Result last_skill_update{};
  dh2::character::ScriptLifecycleState64 lifecycle{};
  dh2::ais_external_initialization::State ais{};
  std::string script_path;
  dh2::monster_external_script::Source common{},external{};
- unsigned init_calls=0,timers_started=0;
+ unsigned init_calls=0,timers_started=0,post_calls=0,final_calls=0;
+ std::vector<unsigned> init_phases;
  bool initialized=false;
  unsigned timer_gates=0;
  ObjectActor& actor() {if(!owner||!owner->actor)throw std::runtime_error("Native monster owner is stale");return *owner->actor;}
@@ -592,6 +609,30 @@ struct NativeMonsterInitialization {
   std::string error;
   return s.vm.dispatch(event,0,error)==dh2::monster_external_script::Status::complete?0:1;
  }
+ static std::int32_t skills_init_vcb(void* raw,std::uintptr_t active) {
+  auto& s=self(raw);if(active!=s.lifecycle.active||active!=s.ais.identity)return 1;
+  dh2::ais_external_init_vcb::State flags{active,s.ais.flags_b8};
+  const dh2::ais_external_init_vcb::Services services{&s,membership};
+  dh2::ais_external_init_vcb::Result result{};
+  const auto status=dh2::ais_external_init_vcb::initialize_external(&flags,&services,&result);
+  s.ais.flags_b8=flags.flags_b8;
+  return status==dh2::ais_external_init_vcb::Status::complete?0:1;
+ }
+ static std::int32_t skill_update_service(void* raw,dh2::character_ai_update_all_skills::State* state,
+      const dh2::character_ai_update_all_skills::Request* request,
+      dh2::character_ai_update_all_skills::Response* reply) {
+  auto& s=self(raw);
+  if(!state||!request||!reply||state->ai!=s.ai->ai_identity||!s.subject(state->owner))return 1;
+  using Operation=dh2::character_ai_update_all_skills::Operation;
+  if(request->operation==Operation::on_skill_update)return 1; // Nonempty Lua skill providers remain unbound.
+  if(request->subject!=state->owner)return 1;
+  const dh2::character_skill_state_queries::Machine machine{&s.owner->character.state.current};
+  dh2::character_skill_state_queries::Result result{};
+  const auto query=request->operation==Operation::is_using_skill?
+      dh2::character_skill_state_queries::Query::using_skill:dh2::character_skill_state_queries::Query::casting;
+  if(dh2::character_skill_state_queries::query(query,&machine,&result)!=dh2::character_skill_state_queries::Status::complete)return 1;
+  reply->word=result.value;return 0;
+ }
  static void lifecycle_service(void* raw,dh2::character::ScriptLifecycleState64* state,const dh2::character::ScriptLifecycleRequest32* request,dh2::character::ScriptLifecycleResponse16* reply) {
   using namespace dh2::character;auto& s=self(raw);if(state!=&s.lifecycle)throw std::runtime_error("Native AIS lifecycle owner differs");
   std::string error;
@@ -619,8 +660,9 @@ struct NativeMonsterInitialization {
     if(dh2_character_script_lifecycle(state,script_on_init,0,&nested)!=1)throw std::runtime_error("Native CharAI OnInit failed");break;
    case script_refresh_vitals: {
     // This service is reached by the source InitScriptProcess, after pending
-    // AIS publication and before skills/post/final. LoadScriptProcess alone
-    // does not call it, and graphics restoration must not replay it.
+    // AIS publication and before skills/post/final. Graphics restoration must
+    // not replay this phase or heal damaged retained actors.
+    s.init_phases.push_back(1);
     auto& properties=s.actor().properties;
     auto view=dh2::data::property_view(actor_property_rules,properties);
     dh2::character_level_runtime::Storage storage{s.ai->character_identity,
@@ -631,6 +673,39 @@ struct NativeMonsterInitialization {
      throw std::runtime_error("Native monster initial HP/MP failed");
     break;
    }
+   case script_configure_skills: {
+    s.init_phases.push_back(2);
+    if(!s.catalogue||!native_debug)throw std::runtime_error("Native skill catalogue/Debug owner missing");
+    // Synchronize the published lifecycle fields before this source caller
+    // reads the active AIS. The pending and active identities are unchanged.
+    s.ai->state.active_ais_1c=state->active;s.ai->state.alternate_ais_20=state->pending;
+    auto view=dh2::data::property_view(actor_property_rules,s.actor().properties);
+    const dh2::native::ghost_skills::Bindings bindings{&s.ai->state,&view,
+     &s.catalogue->skills,&s.catalogue->faeries,&s.script_path,0,&s.catalogue->faery_constants,
+     &native_debug->globals(),&native_debug->services(),&s,skills_init_vcb};
+    if(s.skills.prepare(bindings,s.last_skills)!=dh2::native::ghost_skills::Status::complete)
+     throw std::runtime_error("Native Ghost SetSkillsAndSpells failed");
+    break;
+   }
+   case script_update_skills: {
+    s.init_phases.push_back(3);
+    const auto& skill_vector=s.skills.skill_scripts();const auto& faery_vector=s.skills.faery_scripts();
+    const auto range=[](const std::vector<std::uintptr_t>& vector) {
+     const auto* begin=vector.empty()?nullptr:vector.data();
+     return dh2::character_ai_update_all_skills::ScriptVector{begin,begin?begin+vector.size():nullptr};
+    };
+    dh2::character_ai_update_all_skills::State projection{s.ai->ai_identity,state->owner,range(skill_vector),range(faery_vector)};
+    const dh2::character_ai_update_all_skills::Services services{&s,skill_update_service};
+    if(dh2::character_ai_update_all_skills::update(&projection,&services,&s.last_skill_update)!=dh2::character_ai_update_all_skills::Status::complete)
+     throw std::runtime_error("Native Ghost UpdateAllSkills failed");
+    break;
+   }
+   case script_ai_init_post:
+    s.init_phases.push_back(4);
+    if(dh2_character_script_lifecycle(state,script_on_init_post,0,&nested)!=1)throw std::runtime_error("Native CharAI OnInitPost failed");break;
+   case script_ai_init_final:
+    s.init_phases.push_back(5);
+    if(dh2_character_script_lifecycle(state,script_on_init_final,0,&nested)!=1)throw std::runtime_error("Native CharAI OnInitFinal failed");break;
    case script_owner_is_character:reply->word=1;break; // This fixed owner is an actual Character.
    case script_owner_is_dead:reply->word=s.actor().combat_state.dead;break;
    case script_timer_stop:
@@ -647,9 +722,7 @@ struct NativeMonsterInitialization {
    case script_ais_init:
    case script_ais_init_post:
    case script_ais_init_final: {
-    // Production currently reaches OnInit during LoadScriptProcess. Post and
-    // Final providers preserve source caller/VM semantics for the later full
-    // skills-first InitScriptProcess; they are not invoked early here.
+    // Dispatch all phases through the same live alias map and retained VM.
     namespace init=dh2::ais_external_init_callbacks;
     const auto callback=request->service==script_ais_init?init::Callback::init:
      request->service==script_ais_init_post?init::Callback::post:init::Callback::final;
@@ -658,6 +731,8 @@ struct NativeMonsterInitialization {
     if(init::invoke(&projection,callback,&provider,&result)!=init::Status::complete)
      throw std::runtime_error("Native AIS initialization callback failed");
     if(callback==init::Callback::init)++s.init_calls;
+    else if(callback==init::Callback::post)++s.post_calls;
+    else ++s.final_calls;
     break;
    }
    case script_pending_init_vcb: {
@@ -674,8 +749,11 @@ struct NativeMonsterInitialization {
   const auto* props=dh2::data::ai_props(actor_ai_tables,actor().properties.resolved[1]);if(!props)throw std::runtime_error("Native Ghost AI row missing");
   lifecycle.delayed=props->delayed_load;
   const dh2::character::ScriptLifecycleServices16 services{this,lifecycle_service};
-  if(dh2_character_script_lifecycle(&lifecycle,dh2::character::script_load_process,0,&services)!=1||!lifecycle.active||lifecycle.active!=lifecycle.pending||init_calls!=1||!vm.ready())
-   throw std::runtime_error("Native Ghost load/OnInit publication failed");
+  if(dh2_character_script_lifecycle(&lifecycle,dh2::character::script_load_and_init,1,&services)!=1||
+     !lifecycle.active||lifecycle.active!=lifecycle.pending||init_calls!=1||post_calls!=1||final_calls!=1||!vm.ready()||
+     init_phases!=std::vector<unsigned>({1,2,3,4,5})||skills.skill_scripts().size()!=0||skills.faery_scripts().size()!=5||
+     last_skill_update.skill_slots!=0||last_skill_update.faery_slots!=5||last_skill_update.script_updates!=0)
+   throw std::runtime_error("Native Ghost ordered load/init publication failed");
   ai->state.active_ais_1c=lifecycle.active;ai->state.alternate_ais_20=lifecycle.pending;
   // The source timers were allocated in their original OnInit order. The
   // native port pauses them until their actual AI/DoT expiry providers bind;
@@ -1066,7 +1144,22 @@ void mod_directory(std::string directory){mod_root=std::move(directory);}
 void runtime_directory(std::string directory){runtime_root=std::move(directory);}
 std::vector<std::uint8_t> read_asset(AAssetManager* assets,const std::string& name){return read(assets,name,"");}
 void reset_context(){native_actor_ready=false;clear_actor_world(world_mode||resume_world);search_world.clear();prince_search_projection={};prince_body={};resume_world=resume_world||world_mode;if(world_mode){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}world_mode=false;move_x=move_y=0;draws.clear();images.clear();object_groups.clear();world_objects.clear();prince_locomotion=dh2::actor::BlendedPlayback{};prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;inspected_object=-1;current_scene={};player=dh2::animation::Player{};walk_player=dh2::animation::Player{};level={};program=0;enabled=false;}
-void deactivate(){native_actor_ready=false;clear_actor_world();prince_body={};crypt_spawn_script.clear();crypt_trigger_state={};enabled=false;world_mode=false;resume_world=false;move_x=move_y=0;}
+void deactivate(){
+ // Terminal discard differs from GL recreation: clear every actor copy after
+ // retiring timers and tearing down bodies, then release the owning groups.
+ std::vector<std::weak_ptr<NativeMonsterInitialization>> retired;
+ for(const auto& group:object_groups)for(const auto& actor:group.instances)
+  if(actor.native_ai&&actor.native_ai->initialization)retired.push_back(actor.native_ai->initialization);
+ for(const auto& actor:saved_actors)
+  if(actor.native_ai&&actor.native_ai->initialization)retired.push_back(actor.native_ai->initialization);
+ native_actor_ready=false;clear_actor_world();prince_body={};
+ crypt_spawn_script.clear();crypt_trigger_state={};saved_actors.clear();
+ release_objects(object_groups);release(draws,images);world_objects.clear();
+ actor_skill_catalogue.reset();level={};current_scene={};
+ enabled=false;world_mode=false;resume_world=false;move_x=move_y=0;
+ const auto remaining=std::count_if(retired.begin(),retired.end(),[](const auto& owner){return !owner.expired();});
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native terminal world discard | Ghost references %zu | remaining %zu | groups %zu | saved actors %zu | catalogue %u",retired.size(),std::size_t(remaining),object_groups.size(),saved_actors.size(),unsigned(bool(actor_skill_catalogue)));
+}
 bool active(){return enabled;}
 void set_enemy_ai(bool value){enemy_ai_enabled=value;__android_log_print(ANDROID_LOG_INFO,"DH2Native","Enemy AI configured | automatic melee %d",value);}
 void orbit(float dx,float dy,float factor){yaw+=dx;pitch=std::clamp(pitch+dy,-1.4f,1.4f);zoom=std::clamp(zoom*factor,.35f,4.f);}
@@ -1880,6 +1973,8 @@ void initialize_native_monster_scripts(AAssetManager* assets) {
   const auto found=source_char_ai.by_character.find(actor.identity);
   if(found==source_char_ai.by_character.end())throw std::runtime_error("Native monster CharAI association missing");
   auto pending=found->second->initialization;
+  if(pending&&!pending->initialized)
+   throw std::runtime_error("Failed native Ghost initialization requires world teardown");
   const bool retained=pending&&pending->initialized;
   if(retained) {
    if(pending->ai!=found->second||pending->owner!=actor.spawn_owner||
@@ -1887,13 +1982,19 @@ void initialize_native_monster_scripts(AAssetManager* assets) {
       found->second->state.active_ais_1c!=pending->lifecycle.active)
     throw std::runtime_error("Retained native monster VM ownership differs");
   } else {
-   pending=std::make_shared<NativeMonsterInitialization>();pending->ai=found->second;pending->owner=actor.spawn_owner;
-   // Retain before callbacks so failed source effects and pending storage remain.
+   pending=std::make_shared<NativeMonsterInitialization>();pending->ai=found->second;pending->owner=actor.spawn_owner;pending->catalogue=actor_skill_catalogue;
+   // Attach during callbacks so pending storage and source effects remain owned.
+   // A terminal failed world load discards this port candidate during teardown;
+   // retrying a partially initialized owner in the same world is unsupported.
    found->second->initialization=pending;
    pending->load({common.data(),common.size()},{monster.data(),monster.size()});
   }
   ++initialized;
-  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native monster initialization | %s | Level %d | HP %d / %d | MP %d / %d | callbacks %u | timers %u | flags %x | same VM published %u | retained %u | paused providers %u | skills/post/final/frame pending",actor.name.c_str(),actor.properties.base[19],actor.properties.resolved[36],actor.properties.resolved[38],actor.properties.resolved[41],actor.properties.resolved[43],pending->init_calls,pending->timers_started,pending->ais.flags_b8,unsigned(pending->lifecycle.active==pending->lifecycle.pending),unsigned(retained),pending->timer_gates);
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native monster initialization | %s | Level %d | HP %d / %d | MP %d / %d | callbacks %u | timers %u | flags %x | same VM published %u | retained %u | paused providers %u | nonempty skills/autonomous frame pending",actor.name.c_str(),actor.properties.base[19],actor.properties.resolved[36],actor.properties.resolved[38],actor.properties.resolved[41],actor.properties.resolved[43],pending->init_calls,pending->timers_started,pending->ais.flags_b8,unsigned(pending->lifecycle.active==pending->lifecycle.pending),unsigned(retained),pending->timer_gates);
+  const auto& native_faeries=pending->skills.faery_scripts();
+  const auto null_faeries=unsigned(std::count(native_faeries.begin(),native_faeries.end(),std::uintptr_t(0)));
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Ghost skill initialization | %s | phases 12345 | skills %zu | faeries %zu | null faeries %u | post %u | final %u | update slots %u %u | updates %u | arguments %u %u | Debug %u %u | VCB %u | path %s | retained %u | bounded Ghost InitScriptProcess",actor.name.c_str(),pending->skills.skill_scripts().size(),native_faeries.size(),null_faeries,pending->post_calls,pending->final_calls,pending->last_skill_update.skill_slots,pending->last_skill_update.faery_slots,pending->last_skill_update.script_updates,pending->last_skills.arguments_created,pending->last_skills.arguments_destroyed,pending->last_skills.debug_loads,pending->last_skills.debug_queries,pending->last_skills.init_vcb_calls,pending->script_path.c_str(),unsigned(retained));
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Ghost skill vector owner | %s | faery storage %llx | catalogue %llx",actor.name.c_str(),static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(native_faeries.data())),static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(pending->catalogue.get())));
   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native monster VM owner | %s | native handle %llx | source active %llx | source pending %llx",actor.name.c_str(),static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(&pending->vm)),static_cast<unsigned long long>(pending->lifecycle.active),static_cast<unsigned long long>(pending->lifecycle.pending));
   const auto& timers=pending->owner->character.timers();
   for(const auto id:{pending->lifecycle.timer33,pending->lifecycle.timer34}) {
@@ -1944,6 +2045,15 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     if(!dh2::data::load_characters({records_data.data(),records_data.size()},{names_data.data(),names_data.size()},{fields_data.data(),fields_data.size()},character_table,error)||!dh2::data::load_dictionary({model_names.data(),model_names.size()},{model_values.data(),model_values.size()},model_table,error))throw std::runtime_error(error);
     const auto class_data=read(assets,"character_classes_pyarray.bin","data"),class_names=read(assets,"character_classes_pyarraynames.bin","data"),class_schema=read(assets,"character_classes_pystructnames.bin","data");dh2::data::ClassTables class_table;
     if(!dh2::data::load_classes({class_data.data(),class_data.size()},{class_names.data(),class_names.size()},{class_schema.data(),class_schema.size()},class_table,error))throw std::runtime_error(error);
+    auto skill_catalogue=std::make_shared<NativeSkillCatalogue>();
+    const auto skill_data=read(assets,"skills_pyarray.bin","data"),skill_names=read(assets,"skills_pyarraynames.bin","data"),skill_schema=read(assets,"skills_pystructnames.bin","data");
+    const auto faery_data=read(assets,"faeries_pyarray.bin","data"),faery_names=read(assets,"faeries_pyarraynames.bin","data"),faery_schema=read(assets,"faeries_pystructnames.bin","data");
+    if(!dh2::data::load_skill_tables({skill_data.data(),skill_data.size()},{skill_names.data(),skill_names.size()},{skill_schema.data(),skill_schema.size()},skill_catalogue->skills,error)||
+       !dh2::data::load_faery_tables({faery_data.data(),faery_data.size()},{faery_names.data(),faery_names.size()},{faery_schema.data(),faery_schema.size()},skill_catalogue->faeries,error))throw std::runtime_error(error);
+    skill_catalogue->faery_constants_bytes=read(assets,"faeries_pycst.bin","data");
+    if(skill_catalogue->faery_constants_bytes.size()>UINT32_MAX||
+       dh2_pycst_open(&skill_catalogue->faery_constants,skill_catalogue->faery_constants_bytes.data(),std::uint32_t(skill_catalogue->faery_constants_bytes.size())))throw std::runtime_error("Original Faery constants rejected");
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native skill catalogue | skill lists %zu | skills %zu | faery lists %zu | faeries %zu | owned script strings; full skill callbacks pending",skill_catalogue->skills.skill_lists.size(),skill_catalogue->skills.skills.size(),skill_catalogue->faeries.faery_lists.size(),skill_catalogue->faeries.faeries.size());
     auto design_bytes=read(assets,"design_pycst.bin","data");dh2_pycst_view design_view{};
     if(design_bytes.size()>UINT32_MAX||dh2_pycst_open(&design_view,design_bytes.data(),std::uint32_t(design_bytes.size())))throw std::runtime_error("Original design constants rejected");
     if(!native_debug) {
@@ -1951,7 +2061,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
      if(!backend->initialize(runtime_root,debug_seed.data(),debug_seed.size(),error))throw std::runtime_error("Native Debug filesystem: "+error);
      native_debug=std::move(backend);
     }
-    if(character_table.fields[19]!="Level"||character_table.fields[38]!="Max_HP"||character_table.fields[43]!="Max_MP")throw std::runtime_error("Original class property identifiers differ");
+    if(character_table.fields[19]!="Level"||character_table.fields[28]!="SkillTree"||character_table.fields[29]!="FaeryList"||character_table.fields[38]!="Max_HP"||character_table.fields[43]!="Max_MP")throw std::runtime_error("Original class/skill property identifiers differ");
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Class tables ready | classes %zu | bytes %zu | cached base snapshots",class_table.rows.size(),class_table.data_consumed);
     const auto level_records=read(assets,"levels_pyarray.bin","data"),level_names=read(assets,"levels_pyarraynames.bin","data"),level_schema=read(assets,"levels_pystructnames.bin","data");
     dh2::data::LevelTables level_tables;
@@ -2104,6 +2214,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     actor_animation_tables=std::move(animation_tables);actor_clip_table=std::move(clip_table);actor_random=restore?previous_random:animation_random;actor_property_rules=property_rules;actor_ai_tables=std::move(ai_tables);
     actor_level_tables=std::move(level_tables);
     actor_class_tables=std::move(class_table);actor_class_rows.clear();actor_class_rows.reserve(actor_class_tables.rows.size());
+    actor_skill_catalogue=std::move(skill_catalogue);
     for(const auto& row:actor_class_tables.rows)actor_class_rows.push_back({row.data(),std::uint32_t(row.size())});
     actor_character_fields=character_table.fields;actor_design_bytes=std::move(design_bytes);
     if(dh2_pycst_open(&actor_design,actor_design_bytes.data(),std::uint32_t(actor_design_bytes.size())))throw std::runtime_error("Retained native design owner rejected");
@@ -2243,7 +2354,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native heading control | player movement and melee facing use recovered source | UpdatePath rotation subobjects and genuine physics active");
     }
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","World ready | rooms %u | visual draws %zu | navigation triangles %zu | idle tracks %u | walk tracks %u | position %.4f %.4f %.4f",level.rooms,draws.size(),level.floor.size(),player.track_count(),walk_player.track_count(),actor_position[0],actor_position[1],actor_position[2]);return std::string(report)+(combat_resumed?"\nNative combat resumed":"");
-  }catch(const std::exception& e){native_actor_ready=false;clear_actor_world();prince_body={};crypt_spawn_script.clear();crypt_trigger_state={};saved_actors.clear();enabled=false;world_mode=false;resume_world=false;release_objects(candidate_groups);release(environment,textures);__android_log_print(ANDROID_LOG_ERROR,"DH2Native","World load failed: %s",e.what());return std::string("World load failed: ")+e.what();}
+  }catch(const std::exception& e){deactivate();release_objects(candidate_groups);release(environment,textures);__android_log_print(ANDROID_LOG_ERROR,"DH2Native","World load failed: %s",e.what());return std::string("World load failed: ")+e.what();}
 }
 void draw(int width,int height){
   if(!enabled||!program)return;

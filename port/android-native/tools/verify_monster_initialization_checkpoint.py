@@ -22,6 +22,7 @@ def main():
     p.add_argument('--java',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--require-native-character-list',action='store_true')
+    p.add_argument('--require-native-ghost-skill-initialization',action='store_true')
     a=p.parse_args();digest=sha(a.apk)
     production=json.loads(a.production_snapshot.read_text())
     runtime=json.loads(a.runtime_report.read_text())
@@ -36,6 +37,11 @@ def main():
         assert runtime['native_character_list_load_reload_recreation']
         counts=runtime['native_character_list_counts']
         assert len(counts)>=3 and all(row==[14,14,0,0,0] for row in counts)
+    if a.require_native_ghost_skill_initialization:
+        for key in ('native_skill_catalogue_load_reload_recreation','native_ghost_ordered_init_script_process',
+                    'native_ghost_vector_catalogue_backing_retained'):
+            assert runtime[key],key
+        assert runtime['native_ghost_nonempty_skill_scripts_supported'] is False
     sources=production['source_sha256']
     for name,value in sources.items():
         assert sha(ROOT/name)==value,('actual compiled input changed',name)
@@ -48,6 +54,10 @@ def main():
     assert assets['data/DebugSwitches.savegame']=={'bytes':665,'sha256':'51a3827f0109e16d1520e76d5b19736df3afe38375b91b955ac519f954234d6b'}
     assert assets['scripts/ai/_commons.luac']['sha256']=='20d34968e9983e14c24223085ab40d55d47f9387dfdbbf3ff7e6b39aea91252c'
     assert assets['scripts/ai/monster.luac']['sha256']=='84f07caaeb2c04f2024cc3e27d41f33806b2c53d6e8861bb3d8b371118fd0e1d'
+    if a.require_native_ghost_skill_initialization:
+        from prepare_skill_tables import INPUTS
+        for name, expected in INPUTS.items():
+            assert assets['data/'+name]['sha256']==expected,name
     tools=a.sdk/'build-tools/37.0.0'
     alignment=subprocess.run([str(tools/'zipalign.exe'),'-c','-P','16','4',str(a.apk.resolve())],check=True,capture_output=True,text=True)
     env=os.environ.copy();env['JAVA_HOME']=str(a.java)
@@ -68,6 +78,13 @@ def main():
         report['native_character_list_owned_nodes']=14
         report['native_full_object_manager_factory']=False
         report['scope']+=' Native ownership/enrollment of the Prince and 13 live monster projections uses the source flat Character-list shape. Full name-map/factory/manager cleanup and autonomous Ghost acquisition are unproved.'
+    if a.require_native_ghost_skill_initialization:
+        report['native_ghost_ordered_init_script_process']=True
+        report['native_ghost_vector_catalogue_backing_retained']=True
+        report['native_ghost_nonempty_skill_scripts_supported']=False
+        report['scope']=report['scope'].replace('Source skills/post/final/full bindings and autonomous AI remain pending.',
+                                               'Full nonempty skill scripting/Character bindings and autonomous AI remain pending.')
+        report['scope']+=' Authored Ghost HP/MP/SetSkillsAndSpells/UpdateAllSkills/Post/Final run in source order once. Five zero-script faery slots use actual owned vectors and real table/Debug/path/Arguments/InitVCB providers. Full nonempty skill scripting remains pending.'
     a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps({'validation':'PASS','apk_sha256':digest,'assets':len(assets),'native_libraries':len(libraries),'actual_compiler_inputs':len(sources)}))
 

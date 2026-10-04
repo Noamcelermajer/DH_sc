@@ -120,6 +120,14 @@ HP_MP_INIT_DEPENDENCIES = {
     'character_hp_mp_init_caller': cpp_prefix('character_init_hp_mp','execute'),
     'native_hp_mp_init_adapter': cpp_prefix('character_level_runtime','Runtime') + '16initialize_hp_mp',
 }
+GHOST_SKILL_INIT_DEPENDENCIES = {
+    'source_set_skills_and_spells': cpp_prefix('character_ai_set_skills_and_spells','prepare'),
+    'source_faery_selection': cpp_prefix('character_faery_selection','select'),
+    'source_skill_script_constructor': cpp_prefix('character_ai_skill_script_constructor','construct'),
+    'source_skill_state_predicates': cpp_prefix('character_skill_state_queries','query'),
+    'owned_skill_tables': cpp_prefix('data','load_skill_tables'),
+    'owned_faery_tables': cpp_prefix('data','load_faery_tables'),
+}
 
 
 def main():
@@ -139,6 +147,7 @@ def main():
     parser.add_argument('--require-character-list-dependencies', action='store_true')
     parser.add_argument('--require-init-callback-dependencies', action='store_true')
     parser.add_argument('--require-hp-mp-init-dependencies', action='store_true')
+    parser.add_argument('--require-ghost-skill-init-dependencies', action='store_true')
     args = parser.parse_args()
     initialization = args.require_initialization_units or args.require_debug_persistence_units or args.require_level_construction_unit or args.require_native_monster_dependencies
     lifecycle = args.require_lifecycle_units or initialization
@@ -156,11 +165,13 @@ def main():
              **(NATIVE_MONSTER_DEPENDENCIES if args.require_native_monster_dependencies else {}),
              **(CHARACTER_LIST_DEPENDENCIES if args.require_character_list_dependencies else {}),
              **(INIT_CALLBACK_DEPENDENCIES if args.require_init_callback_dependencies else {}),
-             **(HP_MP_INIT_DEPENDENCIES if args.require_hp_mp_init_dependencies else {})}
+             **(HP_MP_INIT_DEPENDENCIES if args.require_hp_mp_init_dependencies else {}),
+             **(GHOST_SKILL_INIT_DEPENDENCIES if args.require_ghost_skill_init_dependencies else {})}
     # Sight has two overload groups; melee caller and radius share one unit.
     source_units = len(units) - int(acquisition) - int(frame) - 5 * int(runtime_dependencies) - 7 * int(lifecycle) - 3 * int(initialization) - 3 * int(args.require_debug_persistence_units) - 2 * int(args.require_native_monster_dependencies)
     source_units -= 4 * int(args.require_character_list_dependencies) + 3 * int(args.require_init_callback_dependencies)
     source_units -= int(args.require_hp_mp_init_dependencies) # adapter already counted in level unit.
+    source_units -= int(args.require_ghost_skill_init_dependencies) # skill/faery readers share one source unit.
     raw = args.apk.read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
     artifact = json.loads(args.artifact.read_text())
@@ -169,6 +180,7 @@ def main():
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         for abi in ('arm64-v8a', 'x86_64'):
             exports = {}
+            export_libraries = {}
             lua_definitions = []
             debug_backend = []
             native_character_owner = []
@@ -187,11 +199,11 @@ def main():
                     debug_backend = sorted(n for n in defined if n.startswith('_ZN3dh26native11debug_files7Backend10initialize'))
                 if path.endswith('/libdh2_native.so') and args.require_character_list_dependencies:
                     native_character_owner = sorted(n for n in defined if n.startswith('_ZN3dh26native14character_list5Owner16enroll_after_add'))
-                if path.endswith('/libdh2_level_world.so'):
-                    exports = {
-                        unit: sorted(n for n in defined if n.startswith(prefix))
-                        for unit, prefix in units.items()
-                    }
+                for unit, prefix in units.items():
+                    library = 'libdh2_game_data.so' if unit in ('owned_skill_tables', 'owned_faery_tables') else 'libdh2_level_world.so'
+                    if path.endswith('/'+library):
+                        exports[unit] = sorted(n for n in defined if n.startswith(prefix))
+                        export_libraries[unit] = path
             assert all(exports.get(unit) for unit in units), (abi, exports)
             expected_target_exports = {
                 'dh2_aggro_target_list_init', 'dh2_aggro_target_search', 'dh2_aggro_target_pop',
@@ -205,6 +217,7 @@ def main():
             if args.require_character_list_dependencies:
                 assert native_character_owner, (abi, 'native owned Character list missing')
             abis[abi] = {'source_unit_exports': exports, 'lua_core_definitions': lua_definitions,
+                         'source_unit_export_libraries': export_libraries,
                          'native_debug_file_backend': debug_backend,
                          'native_character_list_owner': native_character_owner}
     report = {

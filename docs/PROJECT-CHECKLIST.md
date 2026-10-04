@@ -5,9 +5,10 @@ Updated: 2026-10-04. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest tested build:** [download the Crypt development APK](https://github.com/Noamcelermajer/DH_sc/releases/download/native-character-query-init-2026-10-04/crypt-native-character-query-init-candidate.apk).
-Source commit: `914759d9b1d87354c825e43fd9636545d8ff4a0a`.
-APK SHA-256: `88fd31818f6edeee68a7685ac90786015b483d4ae67aa0beeb0b25f116c4e59f`.
+**Latest tested build:** [download the Crypt native Ghost skill/init APK](https://github.com/Noamcelermajer/DH_sc/releases/download/native-ghost-skill-init-2026-10-04/crypt-native-ghost-skill-init-candidate.apk).
+Source ref: release tag `native-ghost-skill-init-2026-10-04`.
+APK: 26,040,516 bytes; SHA-256 `0dbb44c703d1768a36f2186b05c2f8ca9d9c787f5ddf3426e3c842edcd4d04ff`.
+Compiled-source archive: [download ZIP](https://github.com/Noamcelermajer/DH_sc/releases/download/native-ghost-skill-init-2026-10-04/crypt-native-ghost-skill-init-compiled-source.zip), 873,414 bytes; SHA-256 `f1933915ab15535ea8904b1103c1580d73659dcfdde17bd2cbf3b465b7b24d68`.
 
 ## How to read this checklist
 
@@ -21,7 +22,7 @@ APK SHA-256: `88fd31818f6edeee68a7685ac90786015b483d4ae67aa0beeb0b25f116c4e59f`.
 - Checkbox totals and source size are not a game-completion percentage.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
-Exact current build/test scope: [checkpoint](NATIVE-CHARACTER-QUERY-INIT-CHECKPOINT-2026-10-04.md).
+Exact current build/test scope: [checkpoint](NATIVE-GHOST-SKILL-INIT-CHECKPOINT-2026-10-04.md).
 
 ## 1. Inputs, Adam's work and research tracking
 
@@ -34,7 +35,8 @@ Exact current build/test scope: [checkpoint](NATIVE-CHARACTER-QUERY-INIT-CHECKPO
   so the imported modules can link with the existing reconstruction.
 - [x] Publish the comparison of our work with Adam's work in the combined status.
 - [x] Publish original-address ledgers: Adam's 1,455 addresses and the current
-  493-range extension; 1,800 combined unique addresses. These are evidence reach.
+  524-range extension (362 additional unique addresses); 1,817 combined unique
+  addresses. These are evidence reach.
 - [x] Separate recovered evidence, maintained source, tests, dependencies and assets
   in the reproducible source inventory.
 - [ ] Map every remaining required game/engine behavior to an implementation and
@@ -51,7 +53,9 @@ Exact current build/test scope: [checkpoint](NATIVE-CHARACTER-QUERY-INIT-CHECKPO
 - [x] Verify ELF64 libraries, 16 KiB ELF/ZIP alignment and APK signatures.
 - [x] Run the source-built development app without the original ARM32 game library.
 - [x] Publish a downloadable APK and its exact raw compiler-input source archive.
-- [x] Freeze the latest APK against 440 actual compiler/build inputs and device evidence.
+- [x] Freeze the latest APK against 452 actual compiler/build inputs, 255 assets,
+  16 ELF64 libraries, 53 bounded AI units, 84 required export groups and Android
+  API 37/16 KiB emulator evidence.
 - [x] Keep milestones on the separate reconstruction branch and private documents outside Git.
 - [ ] Make the final complete-game build reproducible from a clean checkout with
   documented asset installation and dependency setup.
@@ -126,11 +130,27 @@ Exact current build/test scope: [checkpoint](NATIVE-CHARACTER-QUERY-INIT-CHECKPO
 - [x] Reconstruct acquisition, candidate events, target/master/range/pause/state callback kernels.
 - [x] Test owned Character-list → source query → Lua callback → target/path composition on host.
 - [x] Reconstruct UpdateAllSkills, faery selection and CharAISkillScript construction kernels.
+- [x] Reconstruct bounded `OnSkillUpdate`, `OnSkillCheck_Usable` and
+  `OnSkillCheck_Active` callers; compare host behavior with original ARM execution.
+  These callers are not yet connected to native nonempty skill scripts.
+- [x] Host-test the per-VM resolved-path execution cache with 60 real Lua checks.
+  Full `LuaManager::AddFile`, shared byte caching and Android wiring remain open.
+- [x] Reconstruct source `Value::getBool` and its isolated real Lua adapter:
+  276 original ARM comparisons, 269 host cases and 42 real Lua cases pass.
+  Actual native Value/ReturnValues and skill-call integration remain open.
 - [x] Decode all 183 original Skill/Faery list/row records; compare with original ARM readers.
-- [ ] **Finish and test native Ghost InitScriptProcess:** initial HP/MP, actual skill/faery
-  vectors, UpdateAllSkills, Post and Final in source order. Integration is currently underway.
-- [ ] Prove this completed phase is retained through reload/recreation without reinitialization or healing.
-- [ ] Complete native nonempty skill loading/declaration/allocation and per-VM loaded-path caching.
+- [x] Run bounded authored Ghost `LoadNInitScriptProcess(true)` through HP/MP,
+  SetSkillsAndSpells, UpdateAllSkills, Post and Final in source order: 0 ordinary
+  skill entries and 5 null-script faeries on the same retained VM.
+- [x] Verify Ghost VM, health, vectors/catalogue backing and timer slots survive
+  reload/recreation without replaying initialization or healing.
+- [x] Fix terminal world discard retaining Ghost owners; verify zero surviving
+  references and fresh initialization when re-entering Crypt in the same process.
+- [ ] Reproduce the surrounding `Character::Update` scheduler/eligibility gates
+  and concurrent-AI bookkeeping; native world setup directly invokes the
+  bounded Ghost lifecycle. See the [checkpoint](NATIVE-GHOST-SKILL-INIT-CHECKPOINT-2026-10-04.md).
+- [ ] Complete native nonempty skill loading/declaration/allocation. Integrate the
+  full `LuaManager::AddFile` path and per-VM cache into Android.
 - [ ] Connect real Arguments/ReturnValues ownership, skill update/check/use callbacks and Lua errors.
 - [ ] Complete all 265 original Character bindings and every actually used game/engine service.
 - [ ] Connect native Ghost acquisition and pursuit through real frame/path/body services.
@@ -195,8 +215,8 @@ Exact current build/test scope: [checkpoint](NATIVE-CHARACTER-QUERY-INIT-CHECKPO
 
 ## Immediate work order
 
-1. Finish the bounded native Ghost skill/init phase and test its lifecycle retention.
-2. Connect autonomous enemy acquisition, pursuit and attacks in the same owned runtime.
+1. Connect autonomous enemy acquisition, pursuit and attacks in the same owned runtime.
+2. Complete nonempty skill callbacks, Value/ReturnValues ownership and Lua loading/cache integration.
 3. Finish the combat/death/loot/quest loop and complete one original level.
 4. Expand factories/content/transitions, full skills, UI/audio and persistent campaign saves.
 5. Complete campaign coverage, mod examples, clean builds and physical ARM64 release tests.

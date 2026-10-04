@@ -36,6 +36,8 @@ def main():
                         help='require unchanged monster OnInit on native owners, real Debug file and retained damaged health/VM/timers')
     parser.add_argument('--require-native-character-list', action='store_true',
                         help='require actual native Character enrollment and owned source-list nodes on load/reload/recreation')
+    parser.add_argument('--require-native-ghost-skill-initialization', action='store_true',
+                        help='require real Ghost null-script vectors and ordered InitScriptProcess without replay')
     args = parser.parse_args()
     assert args.serial.startswith('emulator-')
     out = args.output.resolve()
@@ -319,7 +321,10 @@ def main():
             assert persisted == report['native_debug_file_after_initialization'], 'native Debug file changed during graphics restore'
             report['native_debug_file_after_recreation'] = persisted
             counters = re.findall(r'Native Debug persistence \| loaded (\d+) \| switches (\d+) \| read opens (\d+) \| read closes (\d+) \| saves (\d+) \| write closes (\d+) \| IO errors (\d+)', text)
-            assert len(counters) >= 3 and all(tuple(map(int, row)) == (1, 24, 1, 1, 5, 5, 0) for row in counters)
+            # Original GetSwitch inserts a missing false Lua_LoadMemUsage entry
+            # when SetSkillsAndSpells runs. It does not add a save in this path.
+            expected_switches = 25 if args.require_native_ghost_skill_initialization else 24
+            assert len(counters) >= 3 and all(tuple(map(int, row)) == (1, expected_switches, 1, 1, 5, 5, 0) for row in counters)
             report['native_debug_source_io_counters'] = list(map(int, counters[0]))
             report['native_monster_unchanged_oninit_live_properties'] = True
             report['native_monster_vm_health_and_timers_retained'] = True
@@ -335,6 +340,28 @@ def main():
             report['native_character_list_load_reload_recreation'] = True
             report['native_character_list_counts'] = [list(map(int, row)) for row in character_lists]
             report['native_character_list_scope'] = 'Prince and 13 live monster projections; native owned source-list nodes; full ObjectManager factory/name-map and autonomous Ghost AI remain pending'
+        if args.require_native_ghost_skill_initialization:
+            assert args.require_native_monster_initialization, 'skill gate also requires VM/health initialization gate'
+            catalogue = 'Native skill catalogue | skill lists 36 | skills 127 | faery lists 4 | faeries 16 | owned script strings; full skill callbacks pending'
+            assert text.count(catalogue) >= 3 and catalogue in text[offset:], 'skill catalogue missing after recreation'
+            skill_rows = re.findall(
+                r'Native Ghost skill initialization \| (\S+) \| phases (\d+) \| skills (\d+) \| faeries (\d+) \| null faeries (\d+) \| post (\d+) \| final (\d+) \| update slots (\d+) (\d+) \| updates (\d+) \| arguments (\d+) (\d+) \| Debug (\d+) (\d+) \| VCB (\d+) \| path (\S+) \| retained (\d+)', text)
+            vector_rows = re.findall(r'Native Ghost skill vector owner \| (\S+) \| faery storage ([0-9a-f]+) \| catalogue ([0-9a-f]+)', text)
+            for name in NAMES:
+                selected = [row for row in skill_rows if row[0] == name]
+                assert len(selected) >= 3 and int(selected[0][-1]) == 0, 'fresh ordered Ghost init absent'
+                assert all(tuple(map(int, row[1:15])) == (12345, 0, 5, 5, 1, 1, 0, 5, 0, 2, 2, 2, 2, 1)
+                           and row[15] == 'data/scripts/ai/' for row in selected), 'Ghost init phases/vectors/providers differ'
+                assert all(int(row[-1]) == 1 for row in selected[1:]), 'Ghost init replayed during graphics restoration'
+                owned = [row[1:] for row in vector_rows if row[0] == name]
+                assert len(owned) >= 3 and all(row == owned[0] for row in owned), 'Ghost vector/catalogue backing replaced'
+                assert all(int(handle, 16) for handle in owned[0]), 'missing Ghost vector/catalogue backing'
+            report['native_skill_catalogue_load_reload_recreation'] = True
+            report['native_ghost_ordered_init_script_process'] = True
+            report['native_ghost_skill_initialization_rows'] = skill_rows
+            report['native_ghost_vector_catalogue_backing_retained'] = True
+            report['native_ghost_nonempty_skill_scripts_supported'] = False
+            report['native_ghost_skill_scope'] = 'Exact authored Ghost empty SkillList/five zero-script faeries; HP/MP, SetSkillsAndSpells, UpdateAllSkills, Post and Final once on the same VM. Nonempty skill Lua, other AIS factories and autonomous frames remain pending.'
         capture('authored-ambush-restored')
         report['validation'] = 'PASS'
         report['scope'] = 'Original GhostAmbush01 contact/timed spawning on authored placement, approached with actual root-motion touch input from an explicit fan spawn override; source completion/body creation and reload/recreation; no complete-level or full AI claim.'

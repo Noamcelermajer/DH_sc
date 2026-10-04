@@ -66,6 +66,11 @@
     "port/level-world/reference/character-init-hp-mp/original-functions.json",
     "port/level-world/reference/character-apply-result/original-functions.json",
     "port/level-world/reference/character-skill-state-queries/original-functions.json",
+    "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+    "port/level-world/reference/character-ai-skill-script-update/original-functions.json",
+    "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+    "port/level-world/reference/lua-script-load-once/original-functions.json",
+    "port/level-world/reference/script-value-boolean/original-functions.json",
     "port/game-data/reference/skill-faery-tables/original-functions.json",
     "port/game-data/reference/level-tables/original-functions.json",
     "port/level-world/reference/module-scene-root-bounds/original-functions.json",
@@ -78,12 +83,12 @@
   ],
   "counts": {
     "pinned_addresses": 1455,
-    "extension_records": 493,
-    "evidence_records_before_deduplication": 749,
-    "additional_addresses": 345,
-    "combined_unique_addresses": 1800
+    "extension_records": 524,
+    "evidence_records_before_deduplication": 804,
+    "additional_addresses": 362,
+    "combined_unique_addresses": 1817
   },
-  "verification": "All ranges, aliases and 493 complete original byte hashes verified against the original symbol index and assembly exports.",
+  "verification": "All ranges, aliases and 524 complete original byte hashes verified against the original symbol index and assembly exports.",
   "functions": [
     {
       "original_symbol": "_ZN21Script_SpawnCharacter7ExecuteEbi",
@@ -4299,7 +4304,8 @@
         "port/level-world/reference/debug-switches-runtime/original-functions.json",
         "port/level-world/reference/debug-switches-persistence/original-functions.json",
         "port/level-world/reference/character-dot-attack/original-functions.json",
-        "port/level-world/reference/character-apply-result/original-functions.json"
+        "port/level-world/reference/character-apply-result/original-functions.json",
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -4364,6 +4370,15 @@
             "port/level-world/character_apply_result.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; external named provider boundary; body not credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_skills_and_spells.hpp",
+            "port/level-world/character_ai_set_skills_and_spells.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named provider boundary observed twice on the normal path; persistence body is outside this caller claim.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -4392,7 +4407,8 @@
         "port/level-world/reference/debug-switches-runtime/original-functions.json",
         "port/level-world/reference/debug-switches-persistence/original-functions.json",
         "port/level-world/reference/character-dot-attack/original-functions.json",
-        "port/level-world/reference/character-apply-result/original-functions.json"
+        "port/level-world/reference/character-apply-result/original-functions.json",
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -4457,6 +4473,15 @@
             "port/level-world/character_apply_result.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; external named provider boundary; body not credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_skills_and_spells.hpp",
+            "port/level-world/character_ai_set_skills_and_spells.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named query boundary observed twice with exact Lua_LoadMemUsage key; result discarded by source caller.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -6017,7 +6042,8 @@
       "evidence_manifests": [
         "port/level-world/reference/ais-external-update/original-functions.json",
         "port/level-world/reference/ais-state-callbacks/original-functions.json",
-        "port/level-world/reference/ais-external-init-vcb/original-functions.json"
+        "port/level-world/reference/ais-external-init-vcb/original-functions.json",
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -6037,6 +6063,15 @@
             "port/level-world/ais_external_init_vcb.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; Supporting boundary/evidence; no new full-body implementation claim; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_skills_and_spells.hpp",
+            "port/level-world/character_ai_set_skills_and_spells.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Zero-argument DeclareSkill provider boundary after each named row's append.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -7180,9 +7215,20 @@
       ],
       "implementation_limit": "Bounded source adapter.; Named owned resource dependency; no full body claim; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/ais-external-initialization/original-functions.json"
+        "port/level-world/reference/ais-external-initialization/original-functions.json",
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_skills_and_spells.hpp",
+            "port/level-world/character_ai_set_skills_and_spells.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Captured source script-path set/restore boundary. Exact begin/end byte ranges are observed and copied by the fixture adapter.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN3sfc6script3lua6Binder12bindFunctionEPKcPFvRKNS1_9ArgumentsERNS1_12ReturnValuesEPvESA_",
@@ -7245,9 +7291,20 @@
       ],
       "implementation_limit": "Bounded source adapter.; Named defined allocation wrapper for factory evidence; no full body claim; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/ais-external-initialization/original-functions.json"
+        "port/level-world/reference/ais-external-initialization/original-functions.json",
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_skills_and_spells.hpp",
+            "port/level-world/character_ai_set_skills_and_spells.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Allocation boundary; caller passes exactly 0x1c bytes and hint zero.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN9LuaScript12BindFunctionEv",
@@ -10641,7 +10698,8 @@
         "port/level-world/reference/debug-switches-runtime/original-functions.json",
         "port/level-world/reference/debug-switches-persistence/original-functions.json",
         "port/level-world/reference/character-dot-attack/original-functions.json",
-        "port/level-world/reference/character-apply-result/original-functions.json"
+        "port/level-world/reference/character-apply-result/original-functions.json",
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -10679,6 +10737,15 @@
             "port/level-world/character_apply_result.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; external named provider boundary; body not credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_skills_and_spells.hpp",
+            "port/level-world/character_ai_set_skills_and_spells.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Temporary debug-key construction boundary; key contents are captured and checked by the observer.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -10702,7 +10769,8 @@
       "evidence_manifests": [
         "port/level-world/reference/character-regeneration/original-functions.json",
         "port/level-world/reference/debug-switches-runtime/original-functions.json",
-        "port/level-world/reference/debug-switches-persistence/original-functions.json"
+        "port/level-world/reference/debug-switches-persistence/original-functions.json",
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -10722,6 +10790,15 @@
             "port/level-world/debug_switches_persistence.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; external dependency evidence; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_skills_and_spells.hpp",
+            "port/level-world/character_ai_set_skills_and_spells.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Manifested helper evidence; local temporary cleanup in the caller takes the small-allocation deallocation path observed separately.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -11473,9 +11550,20 @@
       ],
       "implementation_limit": "Bounded source adapter.; Supporting callback evidence; original callback body is not executed by this caller comparison; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-update-all-skills/original-functions.json"
+        "port/level-world/reference/character-ai-update-all-skills/original-functions.json",
+        "port/level-world/reference/character-ai-skill-script-update/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-skill-script-update/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_skill_script_update.hpp",
+            "port/level-world/character_ai_skill_script_update.cpp"
+          ],
+          "implementation_limit": "Complete normal OnSkillUpdate212B caller; named ReturnValues/value-vector/LuaCall providers external; compiler stack-corruption trap excluded.; complete rebuilt caller; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNK9Character12GetCharFaeryEi",
@@ -11495,9 +11583,20 @@
       ],
       "implementation_limit": "Bounded source adapter.; Complete bounded source table selector. Normal valid selection, two fresh FaeryTypes/COUNT calls, consistency checks, source fallback and selected row identity are implemented. OOB source storage becomes an explicit port guard; assertion-level-2 source faults are represented as a status.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-faery-selection/original-functions.json"
+        "port/level-world/reference/character-faery-selection/original-functions.json",
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_skills_and_spells.hpp",
+            "port/level-world/character_ai_set_skills_and_spells.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Caller runner hooks this exact getter to a source-shaped row fixture. Its independent selector body is tested in character-faery-selection; this report does not credit its 540-byte body as executed.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNK9Character18GetCharFaeryListIdEv",
@@ -11539,9 +11638,20 @@
       ],
       "implementation_limit": "Bounded source adapter.; Complete bounded constructor field/order body: owned dispatch type, owner, name, embedded Arguments construction, index/sentinel writes, ordered diagnostics, pushString and pushInteger calls. Called argument-storage leaf bodies remain typed services.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-skill-script-constructor/original-functions.json"
+        "port/level-world/reference/character-ai-skill-script-constructor/original-functions.json",
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_skills_and_spells.hpp",
+            "port/level-world/character_ai_set_skills_and_spells.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Child constructor boundary. The skill caller passes the slot; the faery caller passes UINT32_MAX. The constructor body has a separate source comparison.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN3sfc6script3lua9ArgumentsC1Ev",
@@ -11561,9 +11671,20 @@
       ],
       "implementation_limit": "Bounded source adapter.; Called leaf is intercepted at the constructor boundary. Its embedded Value-vector allocation is not reproduced by this constructor kernel.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-skill-script-constructor/original-functions.json"
+        "port/level-world/reference/character-ai-skill-script-constructor/original-functions.json",
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_skills_and_spells.hpp",
+            "port/level-world/character_ai_set_skills_and_spells.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Arguments value-vector creation is represented by a provider boundary. The source caller's setup and destruction order are executed.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN3sfc6script3lua9Arguments10pushStringEPKc",
@@ -11583,9 +11704,20 @@
       ],
       "implementation_limit": "Bounded source adapter.; Called leaf is intercepted and its exact source arguments are recorded; string/value allocation is not part of this constructor claim.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-skill-script-constructor/original-functions.json"
+        "port/level-world/reference/character-ai-skill-script-constructor/original-functions.json",
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_skills_and_spells.hpp",
+            "port/level-world/character_ai_set_skills_and_spells.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Typed Arguments setup provider boundary; source passes the empty string.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN3sfc6script3lua9Arguments11pushIntegerEi",
@@ -11605,9 +11737,20 @@
       ],
       "implementation_limit": "Bounded source adapter.; Called leaf is intercepted and its exact source arguments are recorded; conversion and Value allocation are not part of this constructor claim.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-skill-script-constructor/original-functions.json"
+        "port/level-world/reference/character-ai-skill-script-constructor/original-functions.json",
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_skills_and_spells.hpp",
+            "port/level-world/character_ai_set_skills_and_spells.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Typed Arguments setup provider boundary; source passes signed -1.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN14ObjectSearcher13CharacterList5ResetEv",
@@ -12755,6 +12898,809 @@
       "implementation_limit": "Bounded source adapter.; PlayerManager player-count field producer/consumer mapping evidence only; body not implemented or credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/character-apply-result/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN6CharAI18SetSkillsAndSpellsEv",
+      "demangled": "CharAI::SetSkillsAndSpells()",
+      "elf_address": "0x3ce044",
+      "size": 1916,
+      "sha256": "ca650d7059d273436362d2d10ba973fbbc0fe1dfd632b86857e982470593ded2",
+      "scope": "Complete bounded caller body. The runner executes its loops, empty/nonempty vector branches, source path save/set/restore, debug query order, skill/faery record gates, declaration/load/constructor branches, cleanup, and final active-AIS +0xcc dispatch. Named leaves are hooked at their original callee boundaries.",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_skills_and_spells.hpp",
+        "port/level-world/character_ai_set_skills_and_spells.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Complete bounded caller body. The runner executes its loops, empty/nonempty vector branches, source path save/set/restore, debug query order, skill/faery record gates, declaration/load/constructor branches, cleanup, and final active-AIS +0xcc dispatch. Named leaves are hooked at their original callee boundaries.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character16GetCharSkillListEv",
+      "demangled": "Character::GetCharSkillList() const",
+      "elf_address": "0x3bc5fc",
+      "size": 48,
+      "sha256": "7711762aa425c1b5e34dd0b9ce1f2e0d9316ef3d7c0c7ad43a51b30e0dcd9210",
+      "scope": "Typed list-view provider boundary. Caller consumes returned count and reserves its destination.",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_skills_and_spells.hpp",
+        "port/level-world/character_ai_set_skills_and_spells.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Typed list-view provider boundary. Caller consumes returned count and reserves its destination.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character12GetCharSkillEi",
+      "demangled": "Character::GetCharSkill(int) const",
+      "elf_address": "0x3bc784",
+      "size": 220,
+      "sha256": "dc2d085f0cc0fd467f8bcf96357f3c2e4fe3bd99aaf38585eab36589e77020ad",
+      "scope": "Typed per-slot row provider boundary. Caller reads gate +0x24 and name +0x28.",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_skills_and_spells.hpp",
+        "port/level-world/character_ai_set_skills_and_spells.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Typed per-slot row provider boundary. Caller reads gate +0x24 and name +0x28.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character16GetCharFaeryListEv",
+      "demangled": "Character::GetCharFaeryList() const",
+      "elf_address": "0x3ae5dc",
+      "size": 48,
+      "sha256": "05234890042d96d3204fdd2ad4e37847b3c5a92150438c3dc1c40f13ac502b07",
+      "scope": "Typed faery-list-view provider boundary. Caller consumes count and reserves its destination.",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_skills_and_spells.hpp",
+        "port/level-world/character_ai_set_skills_and_spells.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Typed faery-list-view provider boundary. Caller consumes count and reserves its destination.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNSt6vectorIP17CharAISkillScriptSaIS1_EE7reserveEj",
+      "demangled": "std::vector<CharAISkillScript*>::reserve(unsigned int)",
+      "elf_address": "0x3cd584",
+      "size": 204,
+      "sha256": "b0162a77a29a3ca47815be12b1abe88ca0e4cb23d8c5e3afa071aafaad65d633",
+      "scope": "Vector allocation boundary. The test adapter supplies stable backing storage and preserves the source begin/end/capacity projection.",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/std_vector_CharAISkillScript_std_allocator_CharAISkillScript-7a01a2714eb9-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_skills_and_spells.hpp",
+        "port/level-world/character_ai_set_skills_and_spells.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Vector allocation boundary. The test adapter supplies stable backing storage and preserves the source begin/end/capacity projection.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN3sfc6script3lua9ArgumentsD1Ev",
+      "demangled": "sfc::script::lua::Arguments::~Arguments()",
+      "elf_address": "0x319228",
+      "size": 56,
+      "sha256": "b2161d9478508698d32ed1a10ec04f7f3fac21c378911d12f99e3756b6151744",
+      "scope": "Arguments teardown boundary reached once for each constructed list argument object.",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/sfc_script_lua_Arguments-4ede682ab708-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_skills_and_spells.hpp",
+        "port/level-world/character_ai_set_skills_and_spells.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Arguments teardown boundary reached once for each constructed list argument object.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN3sfc6script3lua5Value9setStringEPKc",
+      "demangled": "sfc::script::lua::Value::setString(char const*)",
+      "elf_address": "0x31c46c",
+      "size": 48,
+      "sha256": "9de10720c2d691b9d514139a2afc73cc9aff0ccf99419213629de294bf559a96",
+      "scope": "Source Value mutation boundary for each declared script's name argument.",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/sfc_script_lua_Value-2b457211bc5b-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_skills_and_spells.hpp",
+        "port/level-world/character_ai_set_skills_and_spells.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Source Value mutation boundary for each declared script's name argument.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN3sfc6script3lua5Value9setNumberEf",
+      "demangled": "sfc::script::lua::Value::setNumber(float)",
+      "elf_address": "0x31b5e8",
+      "size": 16,
+      "sha256": "e6051f936693b6c02e69a0a20ccc8bb7374424886d0b02369985736207be7554",
+      "scope": "Source Value mutation boundary. Skill loop passes slot converted by __aeabi_i2f; faery loop passes the source -1.0 literal.",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/sfc_script_lua_Value-2b457211bc5b-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_skills_and_spells.hpp",
+        "port/level-world/character_ai_set_skills_and_spells.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Source Value mutation boundary. Skill loop passes slot converted by __aeabi_i2f; faery loop passes the source -1.0 literal.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9LuaScript4LoadEPKc",
+      "demangled": "LuaScript::Load(char const*)",
+      "elf_address": "0x37b574",
+      "size": 44,
+      "sha256": "cd9ec4280f7e48da11034c6005df78f232e0ef350df4e78f0e434a60c805828e",
+      "scope": "Named script-provider boundary; runner covers true and false named-script results and ignored _commons result.",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/LuaScript-adfc93bb5be0-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_skills_and_spells.hpp",
+        "port/level-world/character_ai_set_skills_and_spells.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Named script-provider boundary; runner covers true and false named-script results and ignored _commons result.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/lua-script-load-once/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/lua-script-load-once/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/lua_script_load_once.hpp",
+            "port/level-world/lua_script_load_once.cpp"
+          ],
+          "implementation_limit": "ELF identity and call-path facts for the per-LuaScript resolved-path shortcut. This is not a whole LuaManager::AddFile execution comparison.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN9LuaScript4CallEPKcRKN3sfc6script3lua9ArgumentsE",
+      "demangled": "LuaScript::Call(char const*, Arguments const&)",
+      "elf_address": "0x37c41c",
+      "size": 120,
+      "sha256": "e9a24628fc5e1790fd128bed17d3e6d82744c40691fc3e2e17ef67262e1ac031",
+      "scope": "Declaration call provider boundary with exact DeclareSkill name and stack Arguments identity.",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/LuaScript-adfc93bb5be0-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_skills_and_spells.hpp",
+        "port/level-world/character_ai_set_skills_and_spells.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Declaration call provider boundary with exact DeclareSkill name and stack Arguments identity.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNSs19_M_range_initializeEPKcS0_",
+      "demangled": "std::string::_M_range_initialize(char const*, char const*)",
+      "elf_address": "0x3116e8",
+      "size": 72,
+      "sha256": "45075e105c133d266caf029231a17938018bb62a8a095f967f74e12f09d34d07",
+      "scope": "Initial AIS script-path capture boundary; source pointers and bytes are recorded.",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/std_basic_string_char_std_char_traits_char_std_allocator_char-b2da984242ec-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_skills_and_spells.hpp",
+        "port/level-world/character_ai_set_skills_and_spells.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Initial AIS script-path capture boundary; source pointers and bytes are recorded.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9LuaScript4CallEPKcRN3sfc6script3lua12ReturnValuesE",
+      "elf_address": "0x37c494",
+      "size": 128,
+      "sha256": "f26b03d05e3f9886a18f7d3de525a2cc05d067335ab5d74aad39800fda057538",
+      "scope": "external dependency; body not newly credited",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-update/original-functions.json",
+      "manifest_implementation_scope": "Complete normal OnSkillUpdate212B caller; named ReturnValues/value-vector/LuaCall providers external; compiler stack-corruption trap excluded.",
+      "demangled": "LuaScript::Call(char const*, sfc::script::lua::ReturnValues&)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/LuaScript-adfc93bb5be0-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_update.hpp",
+        "port/level-world/character_ai_skill_script_update.cpp"
+      ],
+      "implementation_limit": "Complete normal OnSkillUpdate212B caller; named ReturnValues/value-vector/LuaCall providers external; compiler stack-corruption trap excluded.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-update/original-functions.json",
+        "port/level-world/reference/character-ai-skill-script-check/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_skill_script_check.hpp",
+            "port/level-world/character_ai_skill_script_check.cpp"
+          ],
+          "implementation_limit": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN9LuaScript4CallEPKcRKN3sfc6script3lua9ArgumentsERNS4_12ReturnValuesE",
+      "elf_address": "0x37c390",
+      "size": 140,
+      "sha256": "ab961745cf32b5f2b83a51978a8feb7580351248a57f24f262ed49da6959df8c",
+      "scope": "external dependency; body not newly credited",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-update/original-functions.json",
+      "manifest_implementation_scope": "Complete normal OnSkillUpdate212B caller; named ReturnValues/value-vector/LuaCall providers external; compiler stack-corruption trap excluded.",
+      "demangled": "LuaScript::Call(char const*, sfc::script::lua::Arguments const&, sfc::script::lua::ReturnValues&)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/LuaScript-adfc93bb5be0-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_update.hpp",
+        "port/level-world/character_ai_skill_script_update.cpp"
+      ],
+      "implementation_limit": "Complete normal OnSkillUpdate212B caller; named ReturnValues/value-vector/LuaCall providers external; compiler stack-corruption trap excluded.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-update/original-functions.json",
+        "port/level-world/reference/character-ai-skill-script-check/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_skill_script_check.hpp",
+            "port/level-world/character_ai_skill_script_check.cpp"
+          ],
+          "implementation_limit": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN3sfc6script3lua12ReturnValuesC1Ev",
+      "elf_address": "0x31b434",
+      "size": 60,
+      "sha256": "91d8e18b350f18166bf4a88d144be55a04dbaa02981e7ca30dd221d3dbdb9651",
+      "scope": "external dependency; body not newly credited",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-update/original-functions.json",
+      "manifest_implementation_scope": "Complete normal OnSkillUpdate212B caller; named ReturnValues/value-vector/LuaCall providers external; compiler stack-corruption trap excluded.",
+      "demangled": "sfc::script::lua::ReturnValues::ReturnValues()",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/sfc_script_lua_ReturnValues-829c04086e12-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_update.hpp",
+        "port/level-world/character_ai_skill_script_update.cpp"
+      ],
+      "implementation_limit": "Complete normal OnSkillUpdate212B caller; named ReturnValues/value-vector/LuaCall providers external; compiler stack-corruption trap excluded.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-update/original-functions.json",
+        "port/level-world/reference/character-ai-skill-script-check/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_skill_script_check.hpp",
+            "port/level-world/character_ai_skill_script_check.cpp"
+          ],
+          "implementation_limit": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN3sfc6script3lua12ReturnValuesD1Ev",
+      "elf_address": "0x31b398",
+      "size": 64,
+      "sha256": "e0448d33d2bc7d0bc12b783df3642de3db32bd76d95386172f4938883208168d",
+      "scope": "external dependency; body not newly credited",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-update/original-functions.json",
+      "manifest_implementation_scope": "Complete normal OnSkillUpdate212B caller; named ReturnValues/value-vector/LuaCall providers external; compiler stack-corruption trap excluded.",
+      "demangled": "sfc::script::lua::ReturnValues::~ReturnValues()",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/sfc_script_lua_ReturnValues-829c04086e12-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_update.hpp",
+        "port/level-world/character_ai_skill_script_update.cpp"
+      ],
+      "implementation_limit": "Complete normal OnSkillUpdate212B caller; named ReturnValues/value-vector/LuaCall providers external; compiler stack-corruption trap excluded.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-update/original-functions.json",
+        "port/level-world/reference/character-ai-skill-script-check/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_skill_script_check.hpp",
+            "port/level-world/character_ai_skill_script_check.cpp"
+          ],
+          "implementation_limit": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN3sfc6script3lua5ErrorC1Ev",
+      "elf_address": "0x31a804",
+      "size": 84,
+      "sha256": "925f2df594891b98a37d84698c02b27d7b935fe84674775af6cedb2f2eb2763d",
+      "scope": "external dependency; body not newly credited",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-update/original-functions.json",
+      "manifest_implementation_scope": "Complete normal OnSkillUpdate212B caller; named ReturnValues/value-vector/LuaCall providers external; compiler stack-corruption trap excluded.",
+      "demangled": "sfc::script::lua::Error::Error()",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/sfc_script_lua_Error-d31092a25a28-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_update.hpp",
+        "port/level-world/character_ai_skill_script_update.cpp"
+      ],
+      "implementation_limit": "Complete normal OnSkillUpdate212B caller; named ReturnValues/value-vector/LuaCall providers external; compiler stack-corruption trap excluded.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-update/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNSt6vectorIN3sfc6script3lua5ValueESaIS3_EE8_M_eraseEPS3_S6_RKSt12__false_type",
+      "elf_address": "0x31c3cc",
+      "size": 160,
+      "sha256": "8cbfc980ff6b0cc8c584d2f5723cb1ace0a2d8bfa1e69818eabdfa3fd84c6e19",
+      "scope": "external dependency; body not newly credited",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-update/original-functions.json",
+      "manifest_implementation_scope": "Complete normal OnSkillUpdate212B caller; named ReturnValues/value-vector/LuaCall providers external; compiler stack-corruption trap excluded.",
+      "demangled": "std::vector<sfc::script::lua::Value, std::allocator<sfc::script::lua::Value> >::_M_erase(sfc::script::lua::Value*, sfc::script::lua::Value*, std::__false_type const&)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/std_vector_sfc_script_lua_Value_std_allocator_sfc_script_lua_Value-500941795d15-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_update.hpp",
+        "port/level-world/character_ai_skill_script_update.cpp"
+      ],
+      "implementation_limit": "Complete normal OnSkillUpdate212B caller; named ReturnValues/value-vector/LuaCall providers external; compiler stack-corruption trap excluded.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-update/original-functions.json",
+        "port/level-world/reference/character-ai-skill-script-check/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_skill_script_check.hpp",
+            "port/level-world/character_ai_skill_script_check.cpp"
+          ],
+          "implementation_limit": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZNK3sfc6script3lua5Value7getBoolEv",
+      "elf_address": "0x31bc80",
+      "size": 172,
+      "sha256": "d156e3ff80823923f19f40cf626e4923b00ba2889f114cc8f383dfc8b60158b0",
+      "scope": "real original supporting getter executes; provider remains external",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+      "manifest_implementation_scope": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.",
+      "demangled": "sfc::script::lua::Value::getBool() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/sfc_script_lua_Value-2b457211bc5b-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_check.hpp",
+        "port/level-world/character_ai_skill_script_check.cpp"
+      ],
+      "implementation_limit": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.; real original supporting getter executes; provider remains external; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+        "port/level-world/reference/script-value-boolean/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/script-value-boolean/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/script_value_boolean.hpp",
+            "port/level-world/script_value_boolean.cpp"
+          ],
+          "implementation_limit": "Complete getBool caller with mandatory typed Lua services; isolated real float32 Lua dependency reuse. No original Lua dependency body or whole-VM claim.; complete reconstructed source caller; all43 original instructions execute; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "lua_toboolean",
+      "elf_address": "0x84b320",
+      "size": 60,
+      "sha256": "a672ec9df4652df62d8a9fc54db0d68ef5086ed6fe21ac2316b93302e938df70",
+      "scope": "external dependency; body not newly credited",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+      "manifest_implementation_scope": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.",
+      "demangled": "lua_toboolean",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/global-functions-3d6ca95892b3-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_check.hpp",
+        "port/level-world/character_ai_skill_script_check.cpp"
+      ],
+      "implementation_limit": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+        "port/level-world/reference/script-value-boolean/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/script-value-boolean/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/script_value_boolean.hpp",
+            "port/level-world/script_value_boolean.cpp"
+          ],
+          "implementation_limit": "Complete getBool caller with mandatory typed Lua services; isolated real float32 Lua dependency reuse. No original Lua dependency body or whole-VM claim.; named dependency fixture in original oracle; real reused C API in isolated adapter; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "lua_close",
+      "elf_address": "0x85797c",
+      "size": 124,
+      "sha256": "a634a1090edb7138bc216b8ad05d135b600a5cd0ad20d775f374ddb05fac16cb",
+      "scope": "external dependency; body not newly credited",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+      "manifest_implementation_scope": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.",
+      "demangled": "lua_close",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/global-functions-3d6ca95892b3-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_check.hpp",
+        "port/level-world/character_ai_skill_script_check.cpp"
+      ],
+      "implementation_limit": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+        "port/level-world/reference/script-value-boolean/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/script-value-boolean/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/script_value_boolean.hpp",
+            "port/level-world/script_value_boolean.cpp"
+          ],
+          "implementation_limit": "Complete getBool caller with mandatory typed Lua services; isolated real float32 Lua dependency reuse. No original Lua dependency body or whole-VM claim.; named dependency fixture in original oracle; real reused C API in isolated adapter; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "lua_pushstring",
+      "elf_address": "0x84c04c",
+      "size": 52,
+      "sha256": "c6d11ac033cde7031e4804d863fb1cc89587f46a4184ecdbfe13ae5031ab9b0b",
+      "scope": "external dependency; body not newly credited",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+      "manifest_implementation_scope": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.",
+      "demangled": "lua_pushstring",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/global-functions-3d6ca95892b3-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_check.hpp",
+        "port/level-world/character_ai_skill_script_check.cpp"
+      ],
+      "implementation_limit": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+        "port/level-world/reference/script-value-boolean/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/script-value-boolean/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/script_value_boolean.hpp",
+            "port/level-world/script_value_boolean.cpp"
+          ],
+          "implementation_limit": "Complete getBool caller with mandatory typed Lua services; isolated real float32 Lua dependency reuse. No original Lua dependency body or whole-VM claim.; named dependency fixture in original oracle; real reused C API in isolated adapter; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZNK3sfc6script3lua12ReturnValuesixEj",
+      "elf_address": "0x3da43c",
+      "size": 88,
+      "sha256": "667063192d42c0a7249704adcd4dd2a9d2de9623fc92cabe89a8dd6bd7da3c40",
+      "scope": "real original supporting getter executes; provider remains external",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+      "manifest_implementation_scope": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.",
+      "demangled": "sfc::script::lua::ReturnValues::operator[](unsigned int) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/sfc_script_lua_ReturnValues-829c04086e12-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_check.hpp",
+        "port/level-world/character_ai_skill_script_check.cpp"
+      ],
+      "implementation_limit": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.; real original supporting getter executes; provider remains external; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-check/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN17CharAISkillScript19OnSkillCheck_ActiveEv",
+      "elf_address": "0x3db16c",
+      "size": 284,
+      "sha256": "4c031fb529fe75640f145f3d93c80a0bc46faf5b41bbd71ca30660f5fdb84e6e",
+      "scope": "complete rebuilt caller",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+      "manifest_implementation_scope": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.",
+      "demangled": "CharAISkillScript::OnSkillCheck_Active()",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAISkillScript-590f892f8b92-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_check.hpp",
+        "port/level-world/character_ai_skill_script_check.cpp"
+      ],
+      "implementation_limit": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.; complete rebuilt caller; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-check/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN17CharAISkillScript19OnSkillCheck_UsableEv",
+      "elf_address": "0x3da9dc",
+      "size": 288,
+      "sha256": "134ce235298bc205644729576fece573f1d76114959849c35a12c7d839805f78",
+      "scope": "complete rebuilt caller",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+      "manifest_implementation_scope": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.",
+      "demangled": "CharAISkillScript::OnSkillCheck_Usable()",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAISkillScript-590f892f8b92-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_check.hpp",
+        "port/level-world/character_ai_skill_script_check.cpp"
+      ],
+      "implementation_limit": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.; complete rebuilt caller; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-check/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "luaL_newstate",
+      "elf_address": "0x84c7e0",
+      "size": 56,
+      "sha256": "048843109694163f53a86add7822ce15c0227bd8a47cc73448428cf8a35a3764",
+      "scope": "external dependency; body not newly credited",
+      "evidence_manifest": "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+      "manifest_implementation_scope": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.",
+      "demangled": "luaL_newstate",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/global-functions-3d6ca95892b3-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_skill_script_check.hpp",
+        "port/level-world/character_ai_skill_script_check.cpp"
+      ],
+      "implementation_limit": "Complete normal Usable288B and Active284B caller control; compiler stack-corruption traps excluded; resource/Lua/Value providers explicit.; external dependency; body not newly credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-skill-script-check/original-functions.json",
+        "port/level-world/reference/script-value-boolean/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/script-value-boolean/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/script_value_boolean.hpp",
+            "port/level-world/script_value_boolean.cpp"
+          ],
+          "implementation_limit": "Complete getBool caller with mandatory typed Lua services; isolated real float32 Lua dependency reuse. No original Lua dependency body or whole-VM claim.; named dependency fixture in original oracle; real reused C API in isolated adapter; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN10LuaManager7AddFileEP9LuaScriptPKc",
+      "demangled": "LuaManager::AddFile(LuaScript*, char const*)",
+      "elf_address": "0x37b23c",
+      "size": 808,
+      "sha256": "eed28284fab97acb165e01e0aa721a8cbd18265ca17252e903f14be10ba5fb7f",
+      "role": "resolved-path check, separate shared byte-cache lookup, target-VM execution, and success-only path insertion",
+      "evidence_manifest": "port/level-world/reference/lua-script-load-once/original-functions.json",
+      "manifest_implementation_scope": "ELF identity and call-path facts for the per-LuaScript resolved-path shortcut. This is not a whole LuaManager::AddFile execution comparison.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/LuaManager-e9b78056b3cb-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/lua_script_load_once.hpp",
+        "port/level-world/lua_script_load_once.cpp"
+      ],
+      "implementation_limit": "ELF identity and call-path facts for the per-LuaScript resolved-path shortcut. This is not a whole LuaManager::AddFile execution comparison.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/lua-script-load-once/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN3sfc6script3lua8Instance8loadFileER12StreamBuffer",
+      "demangled": "sfc::script::lua::Instance::loadFile(StreamBuffer&)",
+      "elf_address": "0x31acf4",
+      "size": 244,
+      "sha256": "1cc5464357d685df3e8c502334f3dcbef7a595cf118f19de6b32e826b04e4f02",
+      "role": "source VM execution boundary called on a per-script cache miss",
+      "evidence_manifest": "port/level-world/reference/lua-script-load-once/original-functions.json",
+      "manifest_implementation_scope": "ELF identity and call-path facts for the per-LuaScript resolved-path shortcut. This is not a whole LuaManager::AddFile execution comparison.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/sfc_script_lua_Instance-62df7dc2a781-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/lua_script_load_once.hpp",
+        "port/level-world/lua_script_load_once.cpp"
+      ],
+      "implementation_limit": "ELF identity and call-path facts for the per-LuaScript resolved-path shortcut. This is not a whole LuaManager::AddFile execution comparison.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/lua-script-load-once/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNKSt4priv8_Rb_treeISsSt4lessISsESsNS_9_IdentityISsEENS_11_SetTraitsTISsEESaISsEE7_M_findIPKcEEPNS_18_Rb_tree_node_baseERKT_",
+      "demangled": "source std::set<std::string>::find(char const*) helper",
+      "elf_address": "0x37a190",
+      "size": 368,
+      "sha256": "52dc1d1b20cda19706d674abcfdc169bb9845823a2860a49cd16f2b5a7742b50",
+      "role": "exact resolved-path lookup in LuaScript's executed-path set",
+      "evidence_manifest": "port/level-world/reference/lua-script-load-once/original-functions.json",
+      "manifest_implementation_scope": "ELF identity and call-path facts for the per-LuaScript resolved-path shortcut. This is not a whole LuaManager::AddFile execution comparison.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/std_priv__Rb_tree_node_base_std_priv__Rb_tree_std_basic_string_char_std_char_traits_char_s-71112d445b1b-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/lua_script_load_once.hpp",
+        "port/level-world/lua_script_load_once.cpp"
+      ],
+      "implementation_limit": "ELF identity and call-path facts for the per-LuaScript resolved-path shortcut. This is not a whole LuaManager::AddFile execution comparison.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/lua-script-load-once/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNKSt4priv8_Rb_treeISsSt4lessISsESt4pairIKSsP12StreamBufferENS_10_Select1stIS7_EENS_11_MapTraitsTIS7_EESaIS7_EE7_M_findIPKcEEPNS_18_Rb_tree_node_baseERKT_",
+      "demangled": "source std::map<std::string, StreamBuffer*>::find(char const*) helper",
+      "elf_address": "0x37a300",
+      "size": 368,
+      "sha256": "d3b534d832ba9fe057ee357d50bdd94914eda8e85d3ad09ee81709520e11d432",
+      "role": "separate LuaManager-wide byte-cache lookup",
+      "evidence_manifest": "port/level-world/reference/lua-script-load-once/original-functions.json",
+      "manifest_implementation_scope": "ELF identity and call-path facts for the per-LuaScript resolved-path shortcut. This is not a whole LuaManager::AddFile execution comparison.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/std_priv__Rb_tree_node_base_std_priv__Rb_tree_std_basic_string_char_std_char_traits_char_s-55124f5667c7-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/lua_script_load_once.hpp",
+        "port/level-world/lua_script_load_once.cpp"
+      ],
+      "implementation_limit": "ELF identity and call-path facts for the per-LuaScript resolved-path shortcut. This is not a whole LuaManager::AddFile execution comparison.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/lua-script-load-once/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNSt4priv8_Rb_treeISsSt4lessISsESsNS_9_IdentityISsEENS_11_SetTraitsTISsEESaISsEE13insert_uniqueERKSs",
+      "demangled": "source std::set<std::string>::insert_unique(std::string const&)",
+      "elf_address": "0x37a9e8",
+      "size": 528,
+      "sha256": "3cdda168cedd4e33f1b67b4743a0a0816d122960a4922a4d3b09f5ca3cda5d33",
+      "role": "success-only insertion into the executed-path set",
+      "evidence_manifest": "port/level-world/reference/lua-script-load-once/original-functions.json",
+      "manifest_implementation_scope": "ELF identity and call-path facts for the per-LuaScript resolved-path shortcut. This is not a whole LuaManager::AddFile execution comparison.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/std_priv__Rb_tree_std_basic_string_char_std_char_traits_char_std_allocator_char_std_less_s-2c2aac48f90f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/lua_script_load_once.hpp",
+        "port/level-world/lua_script_load_once.cpp"
+      ],
+      "implementation_limit": "ELF identity and call-path facts for the per-LuaScript resolved-path shortcut. This is not a whole LuaManager::AddFile execution comparison.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/lua-script-load-once/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNSt3mapISsP12StreamBufferSt4lessISsESaISt4pairIKSsS1_EEEixIPKcEERS1_RKT_",
+      "demangled": "source std::map<std::string, StreamBuffer*>::operator[](char const*)",
+      "elf_address": "0x37b0fc",
+      "size": 320,
+      "sha256": "c4f249bebb02591cc482f5775ce0ee944b3fb33b932a6e3116e0c82bfe83e8b2",
+      "role": "separate manager-owned cache entry access on a per-script path miss",
+      "evidence_manifest": "port/level-world/reference/lua-script-load-once/original-functions.json",
+      "manifest_implementation_scope": "ELF identity and call-path facts for the per-LuaScript resolved-path shortcut. This is not a whole LuaManager::AddFile execution comparison.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/StreamBuffer_std_map_std_basic_string_char_std_char_traits_char_std_allocator_char_StreamB-6258b13128df-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/lua_script_load_once.hpp",
+        "port/level-world/lua_script_load_once.cpp"
+      ],
+      "implementation_limit": "ELF identity and call-path facts for the per-LuaScript resolved-path shortcut. This is not a whole LuaManager::AddFile execution comparison.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/lua-script-load-once/original-functions.json"
       ],
       "additional_mappings": []
     },
