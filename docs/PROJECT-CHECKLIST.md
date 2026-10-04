@@ -28,17 +28,19 @@ still require live gameplay integration. All final completion gates remain open.
 
 | System | Verified tasks | Remaining tasks |
 |---|---:|---:|
-| Inputs, Adam's work and research | 9 | 3 |
+| Inputs, Adam's work and research | 10 | 3 |
 | Native Android build and setup | 8 | 4 |
-| Rendering, resources and animation | 10 | 6 |
-| World, physics, navigation and factories | 12 | 8 |
+| Rendering, resources and animation | 13 | 6 |
+| World, physics, navigation and factories | 15 | 8 |
 | Character properties, equipment and state | 10 | 5 |
-| Lua, skills and enemy AI | 20 | 13 |
+| Lua, skills and enemy AI | 21 | 13 |
 | Combat, death, loot and progression | 5 | 7 |
 | Quests, campaign, UI, audio and saves | 3 | 9 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **80** | **70** |
+| **Total scoped tasks** | **88** | **70** |
+
+Latest source-only gates: [validation index](../reports/reconstruction-2026-10-05/source-culling-visibility/index.json). These changes await Android integration.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Latest source/build/test scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -50,16 +52,19 @@ published download above retains its original release identity.
 - [x] Locate the local APK and complete cache; verify the complete cache inventory.
 - [x] Recover original symbols, assembly, decompiler exports and Android glue.
 - [x] Recover 219 original plaintext Lua scripts and preserve baseline bytes.
-- [x] Pin Adam's repository at `45c5348e807607a2825211bb8f26248067ba9106`.
+- [x] Pin Adam's baseline `45c5348e` and updated main `c3ae7973`; preserve import attribution.
 - [x] Import Adam's seven core modules and script runtime, preserving attribution.
 - [x] Reconcile incompatible scene, world, triangle and exported-symbol interfaces
   so the imported modules can link with the existing reconstruction.
 - [x] Publish the comparison of our work with Adam's work in the combined status.
 - [x] Publish original-address ledgers: Adam's 1,455 addresses and the current
-  538-range extension (367 additional unique addresses); 1,822 combined unique
+  547-range extension (373 additional unique addresses); 1,828 combined unique
   addresses. These are evidence reach.
 - [x] Separate recovered evidence, maintained source, tests, dependencies and assets
   in the reproducible source inventory.
+- [x] Audit the other public branches; selectively import 23 useful engine
+  evidence/tool files. Verify 1,733 original range hashes and replay the BRES
+  corpus. Untested source candidates remain separate; see the [branch audit](BRANCH-AUDIT-2026-10-05.md).
 - [ ] Map every remaining required game/engine behavior to an implementation and
   record unresolved layouts, indirect calls and ownership.
 - [ ] Resolve remaining unavailable evidence/reference links and conflicting interpretations.
@@ -97,6 +102,9 @@ published download above retains its original release identity.
 - [x] Feed four Prince warrior skins and shared Idle/Move playback through the Irrlicht preview.
 - [x] Fix observed actor placement/camera clipping and the broad black bridge overlay regression.
 - [x] Implement bounded source material/technique/blend/depth mappings and record remaining gaps.
+- [x] Reconstruct six camera planes (141 ARM cases/144 prefix instructions) and bounds tail (38 ARM cases/187 instructions). Plane-intersection provider remains open.
+- [x] Correct VoxN framing/tag parsing; verify 17 audio files. Decoding/playback remain open.
+- [x] Reuse Adam's GFNT/viewport code; 8,532/5,200 fixture comparisons pass with sanitizers. Native UI binding remains open.
 - [ ] Complete the original custom Irrlicht/`glitch::` rendering behavior and ownership.
 - [ ] Complete all material techniques, lighting, effects, transparency and shader-state selection.
 - [ ] Complete all animation states, mixing/layers/transitions/events and visual-state synchronization.
@@ -122,7 +130,10 @@ published download above retains its original release identity.
   cases, virtual physics-policy selection and ordered partial effects. Native
   path/body service binding remains open.
 - [ ] Finish the full ObjectManager factory, exact-name map, group membership and teardown.
+- [x] Reconstruct ObjectManager's per-object dispatch slice: 30 ARM cases/101 guards. Full traversal, deletion and providers remain open.
 - [ ] Resolve Crypt's remaining 69 conditional/script/template/factory records.
+- [x] Compose source Stop with real Box2D; 14 cases include callback reentry and retained partial effects. Native frame binding remains open.
+- [x] Reconstruct zoning/visibility setters and synchronization; 1,399 ARM cases pass. Native room/scene services remain open.
 - [ ] Resolve weighted-template actors and the separate GhostAmbushHallway spawn path.
 - [ ] Finish environment bodies, collision ownership, all module seams and other object types.
 - [ ] Finish all trigger/script commands with real native services.
@@ -195,6 +206,7 @@ published download above retains its original release identity.
 - [ ] Complete the surrounding `Character::Update` scheduler/eligibility gates,
   native shared concurrent-AI map and frame ownership; native world setup
   directly invokes the bounded Ghost lifecycle. See the [checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
+- [x] Reconstruct ObjectBase culling/remote predicates (2,256 ARM cases) and compose CanUpdate (126 nested ARM cases, 63 guards).
 - [ ] Bind CanUpdate to actual scene/culling, visibility, player/online and
   respawn owners, and invoke it in the native Character frame.
 - [ ] Connect source zonability, room enrollment, InZone and object ownership.

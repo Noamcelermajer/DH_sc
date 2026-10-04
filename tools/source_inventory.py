@@ -8,7 +8,7 @@ import argparse, collections, hashlib, json, pathlib, subprocess
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 EXT={'.cpp','.c','.hpp','.h','.java','.py','.lua','.luac'}
 THIRD={'upstream','vendor','external','3rdparty','dependencies'}
-ADAM={'engine-textures','scene-materials','engine-animation','engine-skinning','game-data','physics-backend','level-world','adam-script-runtime','android-native'}
+ADAM={'engine-textures','scene-materials','engine-animation','engine-skinning','game-data','physics-backend','level-world','adam-script-runtime','android-native','engine-ui'}
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=pathlib.Path,default=ROOT/'reports/combined-source-inventory.json');a=p.parse_args()

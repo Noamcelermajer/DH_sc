@@ -5,6 +5,8 @@ Adam reference: [`AdamCelermajer/DH_sc`](https://github.com/AdamCelermajer/DH_sc
 
 This report supersedes older documents' descriptions of the current default development build. Historical reports retain their original artifact identities and test scopes.
 
+**New source-only work:** culling/CanUpdate composition, zoning/visibility callers, real-Box2D Stop, camera planes and audio framing. Adam main `c3ae7973` adds useful UI/skill/loot work; GFNT/viewport source now passes local sanitizer replay. Native wiring remains open. [Host gates](../reports/reconstruction-2026-10-05/source-culling-visibility/index.json).
+
 **Latest tested source milestone:** [Source frame ownership](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md), local APK `99dc04b8...` (27,652,316 bytes). Both native ABIs compile 60 bounded source units and pass 96 export groups, ELF64/16 KiB and signing checks. The APK passes API37/16 KiB original Crypt ambush/spawn/ordered Ghost initialization/reload/rotation with 466 frozen compiler/build inputs and 255 assets. A reviewed created-only callback bridge preserves the actual VM and rejects teardown reentry. Source Stop, live physics-position policy and the bounded lazy-script/concurrent-AI scheduler are now compiled and original-ARM-tested. Native shared-map, frame/path/body/culling and zoning owners remain pending. Damaged HP, VM, vectors/catalogue backing and source timers survive recreation. The native Character list owns 14 nodes; authored Ghosts have zero ordinary skills/five null-script faeries. Autonomous AI, nonempty skills, complete combat/campaign and physical ARM64 execution remain unfinished. The [previous published release](NATIVE-FRAME-FOUNDATIONS-CHECKPOINT-2026-10-04.md) retains its downloadable artifact identity. The [project checklist](PROJECT-CHECKLIST.md) separates verified components from remaining gameplay integration.
 
 
@@ -46,13 +48,13 @@ Use the following concrete measures instead:
 |---|---:|---|
 | Original engine function ranges | 31,018 | Original symbol/assembly inventory; includes engine, libraries and support code. Not a count of reconstructed functions. |
 | Adam original-address mapping reach | 1,455 unique addresses / 137 manifests | 2,210 repeated checkpoint records deduplicated by address. Mapping/evidence reach, not a completed implementation count. |
-| Current Character/engine mapping extension | 538 verified unique ranges / 847 evidence records across 82 manifests; 367 additional addresses; 1,822 combined unique addresses | Bounded game/engine callers and dependencies, including Stop, physics-position policy and the scheduler slice. Duplicate addresses are deduplicated; implementation boundaries are explicit. The created-VM port bridge earns no new original-body credit. Not a count of fully rebuilt functions. |
+| Current Character/engine mapping extension | 547 verified unique ranges / 864 evidence records across 88 manifests; 373 additional addresses; 1,828 combined unique addresses | Bounded game/engine callers and dependencies, including Stop, physics-position policy and the scheduler slice. Duplicate addresses are deduplicated; implementation boundaries are explicit. The created-VM port bridge earns no new original-body credit. Not a count of fully rebuilt functions. |
 | Earlier selective-import mapping reach | 133 unique addresses / 9 manifests | Much of Adam's deeper mapping was initially omitted; evidence restoration is part of this continuation. |
 | Original engine pseudocode exports | 31,794 successful exports | Generated decompiler text; not correct compilable C++ and not the same denominator as unique symbol ranges. |
 | Engine `.text` bytes accounted for | 99.989968% | Assembly/disassembly accounting only. No source/game-completion percentage follows from it. |
 | Original plaintext scripts recovered | 219 files / 900,493 bytes | Actual cache Lua source, preserved exactly. Native service ownership and complete live execution remain incomplete. |
 | Repaired/decompiled Android Java | 288 source files | Source recovery/reconstruction of Android glue; distinguish it from independently reconstructed native gameplay. |
-| Maintained reconstruction/port code | 569 source files / 67,627 lines / 3,503,463 bytes; 754 test/tool files | Git-index inventory excludes dependencies, recovered evidence, packaged scripts/assets and unfinished drafts. Includes imported code with local changes. Source size is not game completion. |
+| Maintained reconstruction/port code | 591 source files / 70,266 lines / 3,625,964 bytes; 776 test/tool files | Git-index inventory excludes dependencies, recovered evidence, packaged scripts/assets and unfinished drafts. Includes imported code with local changes. Source size is not game completion. |
 | Adam core modules imported | 577 files / 2,929,226 bytes | Seven modules imported at a pinned commit before dependency-path adaptations; includes headers/tools/tests, not 577 gameplay implementations. |
 | Adam script runtime imported | 158 files / 1,064,065 bytes | Isolated import includes Lua dependency source; do not count all of it as reconstructed game code. |
 | Current native app bundled assets | 255 | A selected Crypt/Prince development bundle, unchanged monster scripts and seven real Skill/Faery table/constants inputs; not the complete game cache. |
@@ -63,6 +65,12 @@ Use the following concrete measures instead:
 The reproducible [`combined-source-inventory.json`](../reports/combined-source-inventory.json) and [`tools/source_inventory.py`](../tools/source_inventory.py) count the maintained source tree separately from vendor code, archived pseudocode and tests. The inventory also separates repaired/decompiled Java. File/line quantities measure repository size; they are not a claim of game fidelity or completion. The [function audit](generated/combined-function-audit.md) and [1,455-address ledger](generated/combined-function-audit.json) preserve per-address symbols, ranges, map files and provenance. The [277-file evidence import ledger](generated/adam-evidence-import.json) records restored hashes and remaining unavailable references.
 
 ## What Adam contributed and what our work adds
+
+The [other-branch audit](BRANCH-AUDIT-2026-10-05.md) found a separate engine
+research overlay at `e6da25b`. We selectively imported 23 evidence/tool files,
+verified 1,733 original ELF hash records and replayed the BRES corpus. This adds
+reference reach; it does not increase completed source-body or gameplay counts.
+Adam's current branch tips remain at the pinned revision already used here.
 
 | System | Our existing work | Adam's contribution now imported | Combined result / gap |
 |---|---|---|---|

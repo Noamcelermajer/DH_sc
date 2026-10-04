@@ -84,18 +84,24 @@
     "port/player-info-level/reference/character-level-member/original-functions.json",
     "port/player-info-level/reference/player-manager-host-level/original-functions.json",
     "port/level-world/reference/room-zone-enrollment/original-functions.json",
+    "port/level-world/reference/game-object-zoning-visibility/original-functions.json",
+    "port/level-world/reference/object-update-culling/original-functions.json",
+    "port/level-world/reference/game-object-set-visible/original-functions.json",
+    "port/level-world/reference/object-update-dispatch/original-functions.json",
+    "port/engine-camera/reference/frustum-producer/original-functions.json",
+    "port/engine-camera/reference/frustum-bounds/original-functions.json",
     "port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json",
     "port/scene-materials/reference/swamp-render-state-audit/original-functions.json",
     "port/scene-materials/reference/swamp-effect-pass-conversion/manifest.json"
   ],
   "counts": {
     "pinned_addresses": 1455,
-    "extension_records": 538,
-    "evidence_records_before_deduplication": 847,
-    "additional_addresses": 367,
-    "combined_unique_addresses": 1822
+    "extension_records": 547,
+    "evidence_records_before_deduplication": 864,
+    "additional_addresses": 373,
+    "combined_unique_addresses": 1828
   },
-  "verification": "All ranges, aliases and 538 complete original byte hashes verified against the original symbol index and assembly exports.",
+  "verification": "All ranges, aliases and 547 complete original byte hashes verified against the original symbol index and assembly exports.",
   "functions": [
     {
       "original_symbol": "_ZN21Script_SpawnCharacter7ExecuteEbi",
@@ -1091,7 +1097,8 @@
       "evidence_manifests": [
         "port/level-world/reference/character-spawn/original-functions.json",
         "port/level-world/reference/character-limbus-respawn/original-functions.json",
-        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+        "port/level-world/reference/character-spawn-visibility/original-functions.json",
+        "port/level-world/reference/game-object-set-visible/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -1111,6 +1118,15 @@
             "port/level-world/reference/character-spawn-visibility/original-functions.json"
           ],
           "implementation_limit": "inspected exact enabled/current-byte update and optional visual synchronization; not newly reconstructed here; read-only audit adds no implementation body."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/game-object-set-visible/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/game_object_set_visible.hpp",
+            "port/level-world/game_object_set_visible.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting range evidence.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -2449,9 +2465,20 @@
       ],
       "implementation_limit": "separate inspected visibility consumer; full predicates and scene binding remain outside this audit; read-only audit adds no implementation body.",
       "evidence_manifests": [
-        "port/level-world/reference/character-spawn-visibility/original-functions.json"
+        "port/level-world/reference/character-spawn-visibility/original-functions.json",
+        "port/level-world/reference/game-object-zoning-visibility/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/game-object-zoning-visibility/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/game_object_zoning_visibility.hpp",
+            "port/level-world/game_object_zoning_visibility.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Full body: owner current-visibility, virtual IsZonable, fresh +2ee/+2f0 checks and direct VisualObject::SetVisible argument.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN9CharacterC2EN10ObjectBase6GO_IDSE",
@@ -5161,7 +5188,9 @@
       "implementation_limit": "Bounded source adapter.; dependency evidence; external provider or existing reused timing body, not newly counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/character-aggro-acquisition-prefix/original-functions.json",
-        "port/level-world/reference/character-apply-result/original-functions.json"
+        "port/level-world/reference/character-apply-result/original-functions.json",
+        "port/level-world/reference/object-update-culling/original-functions.json",
+        "port/level-world/reference/object-update-dispatch/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -5172,6 +5201,24 @@
             "port/level-world/character_apply_result.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; mapping evidence only; body not implemented or credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/object-update-culling/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/object_update_culling.hpp",
+            "port/level-world/object_update_culling.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; complete20B leaf, raw +118 result only for +110==-1; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/object-update-dispatch/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/object_update_dispatch.hpp",
+            "port/level-world/object_update_dispatch.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; slot +0x54 dependency; independently reconstructed leaf, intercepted here to preserve provider boundary; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -6438,7 +6485,8 @@
       "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/ais-default-collision-persist/original-functions.json",
-        "port/level-world/reference/character-aggro-object-manager-list/original-functions.json"
+        "port/level-world/reference/character-aggro-object-manager-list/original-functions.json",
+        "port/level-world/reference/object-update-dispatch/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -6449,6 +6497,15 @@
             "port/level-world/character_aggro_object_manager_list.cpp"
           ],
           "implementation_limit": "ObjectManager::Add and ObjectManager::Remove ownership of the flat Character list at ObjectManager+0x60. Original ARM bodies execute with explicit name lookup, object-handle resolution, handle construction, and node-allocation services. The Add/GetNewObject/Spawn/XML caller chain is pinned separately from service behavior.; actual base vtable +0x24 method proves non-Character objects do not append; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/object-update-dispatch/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/object_update_dispatch.hpp",
+            "port/level-world/object_update_dispatch.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; slot +0x24 base virtual dependency; per-object oracle intercepts this virtual boundary; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -6493,7 +6550,8 @@
       "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/ais-default-collision-persist/original-functions.json",
-        "port/level-world/reference/character-aggro-object-manager-list/original-functions.json"
+        "port/level-world/reference/character-aggro-object-manager-list/original-functions.json",
+        "port/level-world/reference/object-update-dispatch/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -6504,6 +6562,15 @@
             "port/level-world/character_aggro_object_manager_list.cpp"
           ],
           "implementation_limit": "ObjectManager::Add and ObjectManager::Remove ownership of the flat Character list at ObjectManager+0x60. Original ARM bodies execute with explicit name lookup, object-handle resolution, handle construction, and node-allocation services. The Add/GetNewObject/Spawn/XML caller chain is pinned separately from service behavior.; actual Character vtable +0x24 method used by Add and Remove; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/object-update-dispatch/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/object_update_dispatch.hpp",
+            "port/level-world/object_update_dispatch.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Character slot +0x24 virtual dependency; per-object oracle intercepts this virtual boundary; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -12753,9 +12820,20 @@
       ],
       "implementation_limit": "Bounded source adapter.; external named provider boundary; body not credited; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-apply-result/original-functions.json"
+        "port/level-world/reference/character-apply-result/original-functions.json",
+        "port/level-world/reference/object-update-dispatch/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/object-update-dispatch/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/object_update_dispatch.hpp",
+            "port/level-world/object_update_dispatch.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; online pointer provider; original caller's byte +5 load executes; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN11Application15IsSavedOptionOnEPKc",
@@ -14317,9 +14395,20 @@
       ],
       "implementation_limit": "Bounded source adapter.; Bounded lazy-script/concurrent-AI portion only; see source_ranges for included decision and insertion paths; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-update-script-scheduler/original-functions.json"
+        "port/level-world/reference/character-update-script-scheduler/original-functions.json",
+        "port/level-world/reference/object-update-dispatch/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/object-update-dispatch/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/object_update_dispatch.hpp",
+            "port/level-world/object_update_dispatch.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Character vtable +0x2c target; not reproduced by this caller slice; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN7Structs9SkillList4readEP11IStreamBase",
@@ -14914,6 +15003,208 @@
       "implementation_limit": "Bounded source adapter.; Bounded source adapter.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/room-zone-enrollment/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN10GameObject13DisableZoningEv",
+      "demangled": "GameObject::DisableZoning()",
+      "elf_address": "0x38c600",
+      "size": 156,
+      "active_code_size": 148,
+      "sha256": "47fa96d4d91a54767abd925e2f27914bb3772231df5ece440ce109f2806bcdd9",
+      "scope": "Full body: optional old-room removal and ObjectManager no-room insertion, +2ee clear, virtual IsZonable, raw-byte setUpdating callback selection.",
+      "evidence_manifest": "port/level-world/reference/game-object-zoning-visibility/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/game_object_zoning_visibility.hpp",
+        "port/level-world/game_object_zoning_visibility.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Full body: optional old-room removal and ObjectManager no-room insertion, +2ee clear, virtual IsZonable, raw-byte setUpdating callback selection.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/game-object-zoning-visibility/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN10GameObject12EnableZoningEv",
+      "demangled": "GameObject::EnableZoning()",
+      "elf_address": "0x38c790",
+      "size": 236,
+      "active_code_size": 224,
+      "sha256": "24c9d94288ca5582a38d4521805c19251a3c53b121c801d071b6831081e1604e",
+      "scope": "Full body: zero-to-one manager/room enrollment, room+389 enter/exit selection, optional SyncVisibility, repeated fresh IsZonable and setUpdating selection.",
+      "evidence_manifest": "port/level-world/reference/game-object-zoning-visibility/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/game_object_zoning_visibility.hpp",
+        "port/level-world/game_object_zoning_visibility.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Full body: zero-to-one manager/room enrollment, room+389 enter/exit selection, optional SyncVisibility, repeated fresh IsZonable and setUpdating selection.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/game-object-zoning-visibility/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN10ObjectBase23TestCullingBeforeUpdateERK4aabbIfE",
+      "elf_address": "0x33de90",
+      "size": 432,
+      "sha256": "b9aee9f9480608db35d0e617cdd58d28f20e829d076b683afa3aef1edfecc7ec",
+      "scope": "complete caller;424 instruction bytes and8 literal bytes; external provider boundaries named",
+      "evidence_manifest": "port/level-world/reference/object-update-culling/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "ObjectBase::TestCullingBeforeUpdate(aabb<float> const&)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectBase-442c048e89fd-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/object_update_culling.hpp",
+        "port/level-world/object_update_culling.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; complete caller;424 instruction bytes and8 literal bytes; external provider boundaries named; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/object-update-culling/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN12VisualObject10SetVisibleEb",
+      "demangled": "VisualObject::SetVisible(bool)",
+      "elf_address": "0x471368",
+      "size": 104,
+      "sha256": "1b974cb7301cb5bf65de1c31c4ecc964c13ffa455f84bcd28658b1539c60180a",
+      "active_code_size": 96,
+      "evidence_manifest": "port/level-world/reference/game-object-set-visible/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/VisualObject-79dd69531261-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/game_object_set_visible.hpp",
+        "port/level-world/game_object_set_visible.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting range evidence.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/game-object-set-visible/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN13ObjectManager6UpdateEf",
+      "elf_address": "0x34a620",
+      "size": 1528,
+      "sha256": "893c7c9a3b63661be61276828a757602fc7e37af3bf189a036385525c67ffa89",
+      "scope": "enclosing manager body pinned for provenance; only source_ranges below are reproduced",
+      "evidence_manifest": "port/level-world/reference/object-update-dispatch/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "ObjectManager::Update(float)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectManager-57d330b159de-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/object_update_dispatch.hpp",
+        "port/level-world/object_update_dispatch.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; enclosing manager body pinned for provenance; only source_ranges below are reproduced; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/object-update-dispatch/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9Character16UpdateAIPointersEv",
+      "elf_address": "0x3a4344",
+      "size": 84,
+      "sha256": "d0eea1708233f2d207f18ca0df8f15e7dde1dfb9a4717af85bfe10fe3f46ef72",
+      "scope": "direct Character helper called only after first IsCharacter result; intercepted provider",
+      "evidence_manifest": "port/level-world/reference/object-update-dispatch/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "Character::UpdateAIPointers()",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/object_update_dispatch.hpp",
+        "port/level-world/object_update_dispatch.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; direct Character helper called only after first IsCharacter result; intercepted provider; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/object-update-dispatch/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9Character19UnLoadScriptProcessENSt4priv17_Rb_tree_iteratorISt4pairIKiPS_ENS0_11_MapTraitsTIS5_EEEEb",
+      "elf_address": "0x3a7b24",
+      "size": 280,
+      "sha256": "016d378fc1722c5c90fa2e4a9fa9abac4ad2a45914a65a033b795da7eff47b43",
+      "scope": "direct offline cleanup call with source r1, zero r2 and manager-derived r3 passed through; intercepted provider",
+      "evidence_manifest": "port/level-world/reference/object-update-dispatch/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "Character::UnLoadScriptProcess(std::priv::_Rb_tree_iterator<std::pair<int const, Character*>, std::priv::_MapTraitsT<std::pair<int const, Character*> > >, bool)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/object_update_dispatch.hpp",
+        "port/level-world/object_update_dispatch.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; direct offline cleanup call with source r1, zero r2 and manager-derived r3 passed through; intercepted provider; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/object-update-dispatch/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN6glitch5scene12SViewFrustum7setFromERKNS_4core8CMatrix4IfEE",
+      "demangled": "glitch::scene::SViewFrustum::setFrom(glitch::core::CMatrix4<float> const&)",
+      "elf_address": "0x005826c0",
+      "size": 580,
+      "sha256": "5270c5a55f1d81173b2f3acc0bfb3633ab7bf4001fbb99878cd740582362e66a",
+      "implemented_prefix_size": 576,
+      "implemented_prefix_sha256": "764ee7e845e89f01f57c763c2f2c74b190e49e3bf18e5368f178ca5aed437447",
+      "scope": "Bounded complete plane extraction/normalization prefix; the final 4-byte tail branch is excluded.",
+      "evidence_manifest": "port/engine-camera/reference/frustum-producer/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/glitch_scene_SViewFrustum-60298c5f0871-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/engine-camera/frustum.hpp",
+        "port/engine-camera/frustum.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Bounded complete plane extraction/normalization prefix; the final 4-byte tail branch is excluded.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/engine-camera/reference/frustum-producer/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN6glitch5scene12SViewFrustum22recalculateBoundingBoxEv",
+      "demangled": "glitch::scene::SViewFrustum::recalculateBoundingBox()",
+      "elf_address": "0x5823d4",
+      "size": 748,
+      "sha256": "2b0029a114b889bfb7c06b6f663d128c9b3315a35e3f4c735667a3dee9a32360",
+      "scope": "Complete four-corner bounds writer; each source plane-intersection return is ignored, and each output vector starts at zero.",
+      "evidence_manifest": "port/engine-camera/reference/frustum-bounds/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/glitch_scene_SViewFrustum-60298c5f0871-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/engine-camera/frustum_bounds.hpp",
+        "port/engine-camera/frustum_bounds.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Complete four-corner bounds writer; each source plane-intersection return is ignored, and each output vector starts at zero.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/engine-camera/reference/frustum-bounds/original-functions.json"
       ],
       "additional_mappings": []
     },

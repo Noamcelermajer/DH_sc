@@ -101,6 +101,18 @@ ENGINE_MANIFESTS = {
         ['port/player-info-level/player_manager_host_level.hpp', 'port/player-info-level/player_manager_host_level.cpp'],
     'port/level-world/reference/room-zone-enrollment/original-functions.json':
         ['port/level-world/room_zone_enrollment.hpp', 'port/level-world/room_zone_enrollment.cpp'],
+    'port/level-world/reference/game-object-zoning-visibility/original-functions.json':
+        ['port/level-world/game_object_zoning_visibility.hpp', 'port/level-world/game_object_zoning_visibility.cpp'],
+    'port/level-world/reference/object-update-culling/original-functions.json':
+        ['port/level-world/object_update_culling.hpp', 'port/level-world/object_update_culling.cpp'],
+    'port/level-world/reference/game-object-set-visible/original-functions.json':
+        ['port/level-world/game_object_set_visible.hpp', 'port/level-world/game_object_set_visible.cpp'],
+    'port/level-world/reference/object-update-dispatch/original-functions.json':
+        ['port/level-world/object_update_dispatch.hpp', 'port/level-world/object_update_dispatch.cpp'],
+    'port/engine-camera/reference/frustum-producer/original-functions.json':
+        ['port/engine-camera/frustum.hpp', 'port/engine-camera/frustum.cpp'],
+    'port/engine-camera/reference/frustum-bounds/original-functions.json':
+        ['port/engine-camera/frustum_bounds.hpp', 'port/engine-camera/frustum_bounds.cpp'],
     'port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json':
         ['port/scene-materials/technique_selector.hpp', 'port/scene-materials/technique_selector.cpp'],
     'port/scene-materials/reference/swamp-render-state-audit/original-functions.json':
