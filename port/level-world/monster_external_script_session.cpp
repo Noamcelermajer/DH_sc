@@ -22,6 +22,7 @@ const char* callback_name(Event event) {
     switch (event) {
         case Event::enemy_spotted: return "OnEnemySpotted";
         case Event::target_out_of_range: return "OnTargetOutOfRange";
+        case Event::init: return "OnInit";
     }
     return nullptr;
 }
@@ -52,9 +53,10 @@ struct Session::Impl {
     enum Operation { py_struct, property, from_fixed, py_constant, target_exists,
                      target_get, state_get, path_exists, target_set, face, move,
                      to_fixed, mul_fixed, div_fixed, alias_add, alias_push, alias_pop,
-                     bit_not, bit_xor, bit_and, bit_or, unsupported };
+                     bit_not, bit_xor, bit_and, bit_or, py_oid, position,
+                     host_level, host_difficulty, level_range, level_set, unsupported };
     struct Binding { Impl* session; Operation operation; const char* name; };
-    static constexpr std::size_t max_bindings = 43;
+    static constexpr std::size_t max_bindings = 45;
     Services services;
     dh2_script_vm* vm = nullptr;
     dh2_script_aliases* aliases = nullptr;
@@ -138,14 +140,49 @@ struct Session::Impl {
                     return reject(error, error_capacity, "monster actor action failed or unsupported");
                 return 0;
             }
+            if (binding.operation == level_set) {
+                // Source _SetLevel ignores an absent/non-number front value.
+                if (count == 0 || arguments[0].type != DH2_SCRIPT_NUMBER) return 0;
+                if (!services.set_level || services.set_level(services.context, services.owner,
+                                                              arguments[0].number) != 0)
+                    return reject(error, error_capacity, "monster SetLevel failed or unsupported");
+                return 0;
+            }
+            if (binding.operation == position) {
+                if (!output || capacity < 3)
+                    return reject(error, error_capacity, "monster position output missing");
+                float xyz[3]{};
+                if (!services.get_position || services.get_position(services.context, services.owner, xyz) != 0)
+                    return reject(error, error_capacity, "monster GetPosition failed or unsupported");
+                for (unsigned i = 0; i < 3; ++i) number(output[i], xyz[i]);
+                *returned = 3;
+                return 0;
+            }
             if (!output || capacity < 2)
                 return reject(error, error_capacity, "monster query output missing");
-            if (binding.operation == py_struct || binding.operation == py_constant) {
+            if (binding.operation == host_level || binding.operation == host_difficulty) {
+                const auto callback = binding.operation == host_level ? services.get_host_player_level :
+                                                                       services.get_host_player_difficulty;
+                std::int32_t value = 0;
+                if (!callback || callback(services.context, &value) != 0)
+                    return reject(error, error_capacity, "monster host level/difficulty failed or unsupported");
+                number(output[0], static_cast<float>(value));
+                *returned = 1;
+            } else if (binding.operation == level_range) {
+                const float* argument = count && arguments[0].type == DH2_SCRIPT_NUMBER ? &arguments[0].number : nullptr;
+                std::int32_t values[2]{}; std::uint32_t result_count = 0;
+                if (!services.get_current_level_range || services.get_current_level_range(
+                        services.context, argument, values, &result_count) != 0 ||
+                        (result_count != 0 && result_count != 2))
+                    return reject(error, error_capacity, "monster level range failed or unsupported");
+                for (unsigned i = 0; i < result_count; ++i) number(output[i], static_cast<float>(values[i]));
+                *returned = result_count;
+            } else if (binding.operation == py_struct || binding.operation == py_constant || binding.operation == py_oid) {
                 if (count < 2 || arguments[0].type != DH2_SCRIPT_STRING ||
                     arguments[1].type != DH2_SCRIPT_STRING)
                     return reject(error, error_capacity, "monster named query arguments unsupported");
                 const auto callback = binding.operation == py_struct ? services.get_py_struct :
-                                                                       services.get_py_constant;
+                    binding.operation == py_oid ? services.get_py_oid : services.get_py_constant;
                 std::int32_t value = 0;
                 if (!callback || callback(services.context, arguments[0].text,
                                           arguments[1].text, &value) != 0)
@@ -253,6 +290,10 @@ struct Session::Impl {
             case Function::bit_or: return bit_or;
             case Function::get_py_cst: return py_constant;
             case Function::get_py_struct: return py_struct;
+            case Function::get_py_oid: return py_oid;
+            case Function::get_host_player_level: return host_level;
+            case Function::get_host_player_difficulty: return host_difficulty;
+            case Function::get_current_level_range: return level_range;
             default: return unsupported;
         }
     }
@@ -298,7 +339,8 @@ struct Session::Impl {
         return bind_extra("GetProp", property) && bind_extra("HasTarget", target_exists) &&
             bind_extra("GetTarget", target_get) && bind_extra("GetState", state_get) &&
             bind_extra("HasPath", path_exists) && bind_extra("SetTarget", target_set) &&
-            bind_extra("HeadTo", face) && bind_extra("MoveTo", move);
+            bind_extra("HeadTo", face) && bind_extra("MoveTo", move) &&
+            bind_extra("GetPosition", position) && bind_extra("SetLevel", level_set);
     }
 
     bool load_common(Source source) {
@@ -489,7 +531,11 @@ bool Session::uses_services(const Services& services) const noexcept {
         own.get_py_constant == services.get_py_constant && own.has_target == services.has_target &&
         own.get_target == services.get_target && own.get_state == services.get_state &&
         own.has_path == services.has_path && own.set_target == services.set_target &&
-        own.head_to == services.head_to && own.move_to == services.move_to;
+        own.head_to == services.head_to && own.move_to == services.move_to &&
+        own.get_py_oid == services.get_py_oid && own.get_position == services.get_position &&
+        own.get_host_player_level == services.get_host_player_level &&
+        own.get_host_player_difficulty == services.get_host_player_difficulty &&
+        own.get_current_level_range == services.get_current_level_range && own.set_level == services.set_level;
 }
 const char* Session::source_alias(Event event) const noexcept {
     const char* requested = callback_name(event);

@@ -56,9 +56,22 @@ AI_MANIFESTS = {
     'port/level-world/reference/ais-native-bindings/original-functions.json': 'ais_native_bindings',
     'port/level-world/reference/character-ai-association/original-functions.json': 'character_ai_association',
     'port/level-world/reference/character-native-bindings/original-functions.json': 'character_native_bindings',
+    'port/level-world/reference/lua-script-level-queries/original-functions.json': 'lua_script_level_queries',
+    'port/level-world/reference/character-script-set-level/original-functions.json': 'character_script_set_level',
+    'port/level-world/reference/character-regeneration/original-functions.json': 'character_regeneration',
+    'port/level-world/reference/debug-switches-runtime/original-functions.json': 'debug_switches_runtime',
+    'port/level-world/reference/debug-switches-persistence/original-functions.json': 'debug_switches_persistence',
+    'port/level-world/reference/module-room-zone-bounds/original-functions.json': 'module_room_zone_bounds',
+    'port/level-world/reference/level-construction-fields/original-functions.json': 'level_construction_fields',
 }
 MANIFESTS.extend(AI_MANIFESTS)
 ENGINE_MANIFESTS = {
+    'port/game-data/reference/level-tables/original-functions.json':
+        ['port/game-data/level_tables.hpp', 'port/game-data/level_tables.cpp'],
+    'port/level-world/reference/module-scene-root-bounds/original-functions.json':
+        ['port/level-world/module_scene_root_bounds.hpp', 'port/level-world/module_scene_root_bounds.cpp'],
+    'port/player-info-level/reference/character-level-member/original-functions.json':
+        ['port/player-info-level/character_level_member.hpp', 'port/player-info-level/character_level_member.cpp'],
     'port/level-world/reference/room-zone-enrollment/original-functions.json':
         ['port/level-world/room_zone_enrollment.hpp', 'port/level-world/room_zone_enrollment.cpp'],
     'port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json':
@@ -174,7 +187,7 @@ def build():
     manifests = [(path, json.loads((ROOT / path).read_text(encoding='utf-8-sig')))
                  for path in MANIFESTS]
     manifest = manifests[0][1]
-    assert all(source.get('original_sha256', source.get('original_elf', {}).get('sha256')) == manifest['original_sha256']
+    assert all(source.get('original_sha256', source.get('original_elf_sha256', source.get('original_elf', {}).get('sha256'))) == manifest['original_sha256']
                for _, source in manifests)
     pinned = json.loads((ROOT / 'docs/generated/combined-function-audit.json').read_text())
     old_addresses = {int(row['address'], 0) for row in pinned['mapped_function_starts']}
@@ -186,14 +199,14 @@ def build():
                 **({'manifest_implementation_scope': source.get('source_reconstruction_scope', source.get('scope', 'Bounded source adapter.'))}
                    if path in AI_MANIFESTS or path in ENGINE_MANIFESTS else {})}
                for path, source in manifests
-               for record in source['functions']]
+               for record in (source['functions'].values() if isinstance(source['functions'], dict) else source['functions'])]
     for original in records:
         # Effect-state manifests retain their serialized payload provenance.
         # Normalize their function pins without inventing missing byte evidence.
         if 'elf_address' not in original:
             byte_hash = original.get('raw_function_bytes_sha256', original.get('sha256'))
             assert byte_hash, original
-            original.update(elf_address=original['address'], original_symbol=original['symbol'],
+            original.update(elf_address=original['address'], original_symbol=original.get('original_symbol', original.get('symbol')),
                             sha256=byte_hash,
                             scope=original.get('scope', original['manifest_implementation_scope']))
         address = int(original['elf_address'], 0)

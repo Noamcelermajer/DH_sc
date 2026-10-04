@@ -25,9 +25,59 @@ struct BusyScope {
     explicit BusyScope(bool& value) noexcept : flag(value) { flag = true; }
     ~BusyScope() { flag = false; }
 };
+
+bool same_script_projection(const ghost_ai_session::Bindings& a,
+                            const ghost_ai_session::Bindings& b) noexcept {
+    const auto& x=a.script_queries; const auto& y=b.script_queries;
+    return a.ai_identity==b.ai_identity && a.owner_identity==b.owner_identity &&
+        a.active_ais_identity==b.active_ais_identity && a.active_ais_callee==b.active_ais_callee &&
+        a.enemy_state==b.enemy_state && a.enemy_services==b.enemy_services &&
+        a.event_state==b.event_state && a.event_services==b.event_services &&
+        a.relation_state==b.relation_state && a.relation_services==b.relation_services &&
+        a.set_target_state==b.set_target_state && a.set_target_services==b.set_target_services &&
+        a.search_services==b.search_services && a.controller_state==b.controller_state &&
+        a.control_services==b.control_services && a.path_state==b.path_state && a.path_services==b.path_services &&
+        x.context==y.context && x.get_py_struct==y.get_py_struct && x.get_prop==y.get_prop &&
+        x.get_py_constant==y.get_py_constant && x.has_target==y.has_target && x.get_target==y.get_target &&
+        x.get_state==y.get_state && x.has_path==y.has_path && x.get_py_oid==y.get_py_oid &&
+        x.get_position==y.get_position && x.get_host_player_level==y.get_host_player_level &&
+        x.get_host_player_difficulty==y.get_host_player_difficulty &&
+        x.get_current_level_range==y.get_current_level_range && x.set_level==y.set_level;
+}
 }  // namespace
 
 Status Owner::bind(const Bindings& bindings, std::string& error) {
+    return bind_impl(bindings,nullptr,error);
+}
+
+Status Owner::prepare_pending(const ghost_ai_session::Bindings& bindings,
+    const character::ScriptLifecycleState64* lifecycle, monster_external_script::Services& services,
+    std::shared_ptr<void>& callback_lifetime, std::string& error) {
+    if (busy_ || bound_) { error="Ghost owner already in use"; return Status::busy; }
+    const auto result=script_.prepare_pending(bindings,lifecycle,error);
+    if (result!=ghost_ai_session::Status::complete)
+        return result==ghost_ai_session::Status::allocation_failed ? Status::allocation_failed : Status::invalid_argument;
+    if (!script_.staged_services(services,callback_lifetime)) {
+        error="pending Ghost callback context became stale";
+        return Status::source_failed;
+    }
+    pending_bindings_=bindings;
+    pending_prepared_=true;
+    error.clear();
+    return Status::complete;
+}
+
+Status Owner::bind_staged(const Bindings& bindings, monster_external_script::Session& vm,
+                         std::string& error) {
+    if (busy_ || bound_) { error="Ghost owner already in use"; return Status::busy; }
+    if (!pending_prepared_ || !same_script_projection(bindings.script,pending_bindings_)) {
+        error="Ghost frame owner does not match its prepared pending script";
+        return Status::invalid_argument;
+    }
+    return bind_impl(bindings,&vm,error);
+}
+
+Status Owner::bind_impl(const Bindings& bindings, monster_external_script::Session* vm, std::string& error) {
     if (busy_) return Status::busy;
     const auto& id = bindings.identity;
     if (!id.actor || !id.character || !id.ai || !id.active_ais ||
@@ -101,8 +151,8 @@ Status Owner::bind(const Bindings& bindings, std::string& error) {
         return Status::allocation_failed;
     }
 
-    const auto script_status = script_.bind(bindings.script, bindings.commons,
-                                              bindings.monster, error);
+    const auto script_status = vm ? script_.adopt_staged(*vm,error) :
+        script_.bind(bindings.script, bindings.commons, bindings.monster, error);
     if (script_status != ghost_ai_session::Status::complete)
         return script_status == ghost_ai_session::Status::allocation_failed ?
                Status::allocation_failed : Status::script_not_ready;
@@ -125,6 +175,8 @@ Status Owner::bind(const Bindings& bindings, std::string& error) {
             (1u << character::ai_frame_update_aggro) |
             (1u << character::ai_frame_on_update), 0};
     bound_ = true;
+    pending_prepared_=false;
+    pending_bindings_={};
     error.clear();
     return Status::complete;
 }
@@ -150,6 +202,8 @@ Status Owner::reset(std::string& error) {
     candidate_list_ = {};
     candidate_heap_.clear();
     bound_ = false;
+    pending_prepared_=false;
+    pending_bindings_={};
     error.clear();
     return Status::complete;
 }

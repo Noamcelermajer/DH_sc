@@ -59,6 +59,18 @@ shared lease keeps the callback context alive through VM teardown even if the
 ActorSession wrapper is reset first. This stage-sharing API is host-tested; the
 native AIS lifecycle has not yet wired it.
 
+`prepare_pending` adds the actual pending-before-active contract. Its selected
+AIS identity names the borrowed lifecycle's pending field while script getters
+execute; the enemy active projection continues to name the existing active
+field, including null. Acquisition is unavailable during this phase. Adoption
+requires the source lifecycle to publish that same pending identity to active
+and the caller to refresh the enemy active identity/callee. It then retains the
+same VM and checks the lifecycle active field on every callback. Pending
+replacement, owner replacement, or later active replacement rejects stale
+callbacks. The lifecycle and all its backing storage must outlive both the
+borrowed VM and the callback lease, including after wrapper reset. Scan output
+may not overlap the borrowed lifecycle projection.
+
 Each actor owns a separate Lua VM and alias table in the standalone `bind`
 convenience path. A rebind creates a candidate
 VM before replacing the old binding; failed setup preserves the previous
@@ -91,12 +103,14 @@ python port/level-world/tests/run_ghost_ai_session_host.py
 ```
 
 The runner compiles the source modules with warning-as-error flags and executes
-the unchanged `_commons` and `monster` script bytes. Nine host case groups
+the unchanged `_commons` and `monster` script bytes. Thirteen host case groups
 pass: source search through FindPath, two independent actor VMs/target IDs,
 stale-owner rejection/rebind, reentrant rebind rejection, partial effects on
 late PathTo failure, fresh post-search and post-relation target state for
 event 0x0c, and output
-alias rejection. It pins both script inputs and emits a generated validation
+alias rejection, staged VM sharing, actual lifecycle publication, pending and
+active replacement checks, and lifecycle output alias rejection. It pins both
+script inputs and emits a generated validation
 JSON under `port/level-world/build/`.
 
 This is host validation with explicit fixture providers. `native_wired` is

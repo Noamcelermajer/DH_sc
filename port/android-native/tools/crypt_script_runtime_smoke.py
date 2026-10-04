@@ -28,6 +28,10 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--require-source-pursuit', action='store_true',
                         help='enable enemy AI and require two independent source Ghost body pursuits')
+    parser.add_argument('--require-native-level-catalogue', action='store_true',
+                        help='require the actual native catalogue reader on load, reload and recreation')
+    parser.add_argument('--require-native-level-fields', action='store_true',
+                        help='require original constructor field selection and source range callbacks on load/reload/recreation')
     args = parser.parse_args()
     assert args.serial.startswith('emulator-')
     out = args.output.resolve()
@@ -222,6 +226,18 @@ def main():
         assert 'Crypt script SpawnCharacter |' not in text[offset:] and 'Crypt trigger activated |' not in text[offset:]
         assert all('Gated character ready | ' + name + ' | source state 3 | presentation visible 1' in text[offset:] for name in NAMES)
         report['recreation_preserves_script_and_ghost_states_without_replay'] = True
+        if args.require_native_level_catalogue:
+            catalogue = 'Native level catalogue | fast travel 33 | levels 51 | Crypt row 23 | ranges 8 10 / 45 47 / 74 76 | GSLevel ownership pending'
+            assert catalogue in text[offset:], 'native catalogue missing after recreation'
+            assert text.count(catalogue) >= 3, 'native catalogue did not survive load/reload/recreation'
+            report['native_catalogue_load_reload_recreation'] = True
+            report['native_catalogue_current_level_owner_bound'] = False
+        if args.require_native_level_fields:
+            fields = 'Native Level fields | ordinal 23 | hub 2 | random 1 | difficulty 0 | file 007_crypt_01.rule.xml | source ranges 8 10 / 45 47 / 74 76 | viewport owner; GSLevel stack pending'
+            assert fields in text[offset:] and text.count(fields)>=3, 'native source Level fields/ranges missing on load/reload/recreation'
+            report['native_level_constructor_fields_and_range_callbacks'] = True
+            report['native_level_fields_owner'] = 'viewport-owned bounded projection; development normal difficulty argument'
+            report['original_gslevel_save_stack_bound'] = False
         capture('authored-ambush-restored')
         report['validation'] = 'PASS'
         report['scope'] = 'Original GhostAmbush01 contact/timed spawning on authored placement, approached with actual root-motion touch input from an explicit fan spawn override; source completion/body creation and reload/recreation; no complete-level or full AI claim.'

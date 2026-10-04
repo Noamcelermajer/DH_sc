@@ -8,6 +8,7 @@
 #include "character_controller_commands.hpp"
 #include "character_enemy_spotted.hpp"
 #include "character_path_commands.hpp"
+#include "character_script_lifecycle.hpp"
 #include "monster_external_script_session.hpp"
 
 #include <cstdint>
@@ -31,6 +32,12 @@ struct ScriptQueries {
     std::int32_t (*get_target)(void*, std::uintptr_t owner, std::uintptr_t* target);
     std::int32_t (*get_state)(void*, std::uintptr_t owner, std::int32_t* state);
     std::int32_t (*has_path)(void*, std::uintptr_t owner, std::uint32_t* value);
+    std::int32_t (*get_py_oid)(void*, const char*, const char*, std::int32_t*) = nullptr;
+    std::int32_t (*get_position)(void*, std::uintptr_t, float[3]) = nullptr;
+    std::int32_t (*get_host_player_level)(void*, std::int32_t*) = nullptr;
+    std::int32_t (*get_host_player_difficulty)(void*, std::int32_t*) = nullptr;
+    std::int32_t (*get_current_level_range)(void*, const float*, std::int32_t[2], std::uint32_t*) = nullptr;
+    std::int32_t (*set_level)(void*, std::uintptr_t, float) = nullptr;
 };
 
 // Stable actor-owned composition inputs. Every pointed-to state projection and
@@ -123,6 +130,13 @@ public:
     // pending AIS VM. adopt_staged accepts only that ready VM with the exact
     // prepared table; its owner must outlive this ActorSession binding.
     Status prepare_staged(const Bindings&, std::string& error);
+    // For the original pending-before-active path, active_ais_identity/callee
+    // identify the selected pending AIS. The borrowed lifecycle owns the real
+    // pending/active fields. No active projection is fabricated: getters may
+    // run while pending is initialized; adoption requires source publication
+    // and a refreshed enemy active projection. Retain lifecycle through the VM.
+    Status prepare_pending(const Bindings&, const character::ScriptLifecycleState64*,
+                           std::string& error);
     bool staged_services(dh2::monster_external_script::Services& output,
                          std::shared_ptr<void>& lifetime) const noexcept;
     Status adopt_staged(dh2::monster_external_script::Session&, std::string& error);
@@ -140,9 +154,11 @@ public:
 
 private:
     struct Impl;
+    Status prepare_callbacks(const Bindings&, const character::ScriptLifecycleState64*,
+                             std::string& error);
     std::shared_ptr<Impl> impl_;
 };
 
-static_assert(sizeof(ScriptQueries) == 64);
+static_assert(sizeof(ScriptQueries) == 112);
 
 }  // namespace dh2::ghost_ai_session

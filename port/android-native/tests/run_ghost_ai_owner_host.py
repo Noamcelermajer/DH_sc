@@ -31,6 +31,7 @@ CPP = [
     LEVEL / "character_ai_update_target.cpp", LEVEL / "character_ai_master_update.cpp",
     LEVEL / "character_ai_frame.cpp", LEVEL / "ais_external_update.cpp",
     LEVEL / "character_ai_update.cpp",
+    LEVEL / "character_script_lifecycle.cpp",
     LEVEL / "ais_state_callbacks.cpp",
     LEVEL / "character_monster_retarget.cpp", LEVEL / "character_enemy_retention.cpp",
     LEVEL / "character_target_search.cpp",
@@ -105,11 +106,15 @@ def main() -> int:
     if run.returncode:
         return run.returncode
     host = json.loads(run.stdout)
-    assert host["ghost_ai_owner_host_cases"] == 7 and host["existing_target_cases"] == 6 and host["mismatches"] == 0, host
+    assert host["ghost_ai_owner_host_cases"] == 8 and host["existing_target_cases"] == 6 and host["mismatches"] == 0, host
+    assert host["pending_vm_shared"] is True, host
     assert host["status"] == "PASS" and host["candidates"] == 1 and host["events"] == 1, host
     assert host["script_callbacks"] == host["set_target_calls"] == host["head_to_calls"] == host["path_count"] == 1, host
     assert host["ais_update_calls"] == 2, host
-    inputs = c_sources + CPP + [common, monster]
+    inputs = c_sources + CPP + [common, monster, Path(__file__).resolve(),
+        LEVEL / "tests/ghost_ai_session.cpp", LEVEL / "ghost_ai_session.hpp",
+        LEVEL / "character_script_lifecycle.hpp", LEVEL / "monster_external_script_session.hpp",
+        ROOT / "port/android-native/app/src/main/cpp/ghost_ai_owner.hpp"]
     report = {
         "validation": "PASS", "host": host, "commands": commands + [link],
         "source_sha256": {p.relative_to(ROOT).as_posix(): sha(p) for p in inputs},

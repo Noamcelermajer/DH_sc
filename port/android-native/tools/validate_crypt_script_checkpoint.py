@@ -26,6 +26,10 @@ def main():
     parser.add_argument('--include-native-owner-sources', action='store_true')
     parser.add_argument('--include-runtime-dependency-sources', action='store_true')
     parser.add_argument('--include-lifecycle-sources', action='store_true')
+    parser.add_argument('--include-initialization-sources', action='store_true')
+    parser.add_argument('--include-debug-persistence-sources', action='store_true')
+    parser.add_argument('--include-level-construction-source', action='store_true')
+    parser.add_argument('--include-level-catalogue-assets', action='store_true')
     args = parser.parse_args()
     runtime = json.loads(args.runtime.read_text(encoding='utf-8'))
     digest = sha(args.apk)
@@ -67,7 +71,9 @@ def main():
         'character_enemy_spotted', 'monster_external_script_session',
         'character_ai_set_target', 'character_ai_relations', 'character_ai_in_combat',
     )
-    runtime_dependencies = args.include_runtime_dependency_sources or args.include_lifecycle_sources
+    initialization = args.include_initialization_sources or args.include_debug_persistence_sources or args.include_level_construction_source
+    lifecycle = args.include_lifecycle_sources or initialization
+    runtime_dependencies = args.include_runtime_dependency_sources or lifecycle
     frame = args.include_frame_sources or args.include_native_owner_sources or runtime_dependencies
     acquisition = args.include_acquisition_sources or frame
     if acquisition:
@@ -86,14 +92,24 @@ def main():
                       'port/scene-materials/render_state_snapshot.cpp',
                       'port/scene-materials/source_state_conversion.hpp',
                       'port/scene-materials/source_state_conversion.cpp'))
-    if args.include_lifecycle_sources:
+    if lifecycle:
         ai_units += ('ais_external_initialization','ais_native_bindings',
                      'character_ai_association','character_native_bindings','room_zone_enrollment')
         paths.extend(('port/adam-script-runtime/script_runtime.c',
                       'port/adam-script-runtime/script_runtime.h'))
+    if initialization:
+        ai_units += ('lua_script_level_queries', 'character_script_set_level',
+                     'character_regeneration', 'module_room_zone_bounds')
+    if args.include_debug_persistence_sources:
+        ai_units += ('debug_switches_runtime', 'debug_switches_persistence')
+    if args.include_level_construction_source:
+        ai_units += ('level_construction_fields',)
     if args.include_native_owner_sources:
         paths.extend(('port/android-native/app/src/main/cpp/ghost_ai_owner.hpp',
                       'port/android-native/app/src/main/cpp/ghost_ai_owner.cpp'))
+    if args.include_level_catalogue_assets:
+        paths.extend(('port/game-data/level_tables.cpp', 'port/game-data/level_tables.hpp',
+                      'port/game-data/CMakeLists.txt', 'port/android-native/tools/prepare_level_tables.py'))
     for unit in ai_units:
         paths.extend(f'port/level-world/{unit}{suffix}' for suffix in ('.hpp', '.cpp'))
     paths.extend((
@@ -108,7 +124,13 @@ def main():
                 local = REPO / 'port/android-native/app/src/main' / name
                 assert local.read_bytes() == raw, name
                 assets[name.removeprefix('assets/')] = {'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()}
-    assert len(assets) == (243 if acquisition else 240)
+    assert len(assets) == (243 if acquisition else 240) + 3 * int(args.include_level_catalogue_assets)
+    if args.include_level_catalogue_assets:
+        provenance_path = REPO / 'port/android-native/app/build/level-table-provenance.json'
+        provenance = json.loads(provenance_path.read_text(encoding='utf-8'))
+        assert provenance['unchanged_original_data']
+        for name, record in provenance['inputs'].items():
+            assert assets['data/'+name] == {'bytes': record['bytes'], 'sha256': record['sha256']}
     if acquisition:
         from prepare_monster_ai import CACHE_SHA256, SCRIPTS
         for name, digest_expected in SCRIPTS.items():

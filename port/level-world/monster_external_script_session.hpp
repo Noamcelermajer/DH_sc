@@ -34,11 +34,26 @@ struct Services {
     std::int32_t (*set_target)(void*, std::uintptr_t owner, std::uintptr_t target);
     std::int32_t (*head_to)(void*, std::uintptr_t owner, std::uintptr_t target);
     std::int32_t (*move_to)(void*, std::uintptr_t owner, std::uintptr_t target);
+    // Optional providers for the unchanged monster_OnInit body. Missing used
+    // providers raise a Lua error after prior effects. These callbacks must
+    // execute the maintained source query/SetLevel kernels over live owners;
+    // returning invented values does not satisfy native initialization.
+    std::int32_t (*get_py_oid)(void*, const char* category, const char* member,
+                              std::int32_t* value) = nullptr;
+    std::int32_t (*get_position)(void*, std::uintptr_t owner, float xyz[3]) = nullptr;
+    std::int32_t (*get_host_player_level)(void*, std::int32_t* value) = nullptr;
+    std::int32_t (*get_host_player_difficulty)(void*, std::int32_t* value) = nullptr;
+    // null numeric_argument is the source default/non-number path. count is
+    // exact result arity (0 or 2), including sentinel -1/-1 and invalid modes.
+    std::int32_t (*get_current_level_range)(void*, const float* numeric_argument,
+                                          std::int32_t values[2], std::uint32_t* count) = nullptr;
+    std::int32_t (*set_level)(void*, std::uintptr_t owner, float raw_fixed_level) = nullptr;
 };
 
 enum class Event : std::uint32_t {
     enemy_spotted = 0,
     target_out_of_range = 1,
+    init = 2,
 };
 
 enum class Status : std::int32_t {
@@ -71,9 +86,10 @@ struct Statistics {
 };
 
 // Owns one source-built float32 Lua5.1.4 VM and its source VFTable alias map.
-// Load order is unchanged ai/_commons.luac, then ai/monster.luac. Only the two
-// events above are dispatchable; OnInit/combat/timers/candidate search and the
-// full AISExternal lifecycle remain outside this bounded session.
+// Load order is unchanged ai/_commons.luac, then ai/monster.luac. Only the three
+// events above are dispatchable through explicit source providers. Combat,
+// timers/candidate search and full AISExternal lifecycle remain outside this
+// bounded session. Dispatching OnInit does not by itself promote an active AIS.
 //
 // Source bytes are borrowed only for the initialize/stage-load call that reads
 // them. Actor identities use Lua

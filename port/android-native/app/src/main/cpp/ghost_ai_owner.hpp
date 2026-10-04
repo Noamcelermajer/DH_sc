@@ -131,6 +131,15 @@ public:
     Owner& operator=(Owner&&) = delete;
 
     Status bind(const Bindings&, std::string& error);
+    // The AIS resource owner constructs/loads/initializes its own pending VM
+    // using these retained actor callbacks. This does not publish active.
+    Status prepare_pending(const ghost_ai_session::Bindings&,
+                           const character::ScriptLifecycleState64*,
+                           monster_external_script::Services&,
+                           std::shared_ptr<void>& callback_lifetime, std::string& error);
+    // After source publication and projection refresh, use that exact VM for
+    // frame dispatch. The VM, lifecycle and borrowed backing outlive this Owner.
+    Status bind_staged(const Bindings&, monster_external_script::Session&, std::string& error);
     Status reset(std::string& error);
     bool ready() const noexcept;
     monster_external_script::Statistics script_statistics() const noexcept;
@@ -138,6 +147,7 @@ public:
     Status tick(const FrameInput&, FrameResult*);
 
 private:
+    Status bind_impl(const Bindings&, monster_external_script::Session*, std::string& error);
     static std::int32_t dispatch_frame(void*, character::AIFrameState32*,
                                       const character::AIFrameRequest16*,
                                       std::uint32_t*);
@@ -157,6 +167,8 @@ private:
     Identity identity_{};
     bool bound_ = false;
     bool busy_ = false;
+    bool pending_prepared_ = false;
+    ghost_ai_session::Bindings pending_bindings_{};
     Bindings bindings_{};
     character::AIFrameOwner48 frame_owner_{};
     character::AIFrameState32 frame_state_{};

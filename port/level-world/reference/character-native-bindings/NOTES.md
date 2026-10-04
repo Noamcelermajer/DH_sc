@@ -117,7 +117,7 @@ actual design manager for `CharacterDesign/MaxLevelDVeryHard`, shifts that integ
 left eight as a 32-bit word and compares it signed against the original
 `__aeabi_f2iz` conversion. If above the limit it queries the design value **again**
 and stores that second shifted result. Otherwise it freshly obtains/converts the
-numeric argument again. Then it stores the saved Level word at Character
+numeric argument again. Then it stores the base Level word at Character
 `+0x5b8`, calls CharProperties::RecalcProperties(true) (`0x3e0810`), calls
 Character::RegenHP(-1) (`0x3bdca4`) and tail-calls RegenMP(-1) (`0x3bdbb8`).
 It is not a single resolved-property overwrite or an HP/MP no-op. There is no

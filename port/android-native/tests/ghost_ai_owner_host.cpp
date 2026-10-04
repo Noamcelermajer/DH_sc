@@ -289,7 +289,7 @@ struct OwnerFixture final : Fixture {
         return 0;
     }
 
-    bool bind(const std::string& commons, const std::string& monster) {
+    native::ghost_ai::Bindings make_owner_bindings(const std::string& commons, const std::string& monster) {
         native::ghost_ai::Bindings bindings{};
         bindings.identity = identity;
         bindings.script = make_bindings();
@@ -310,6 +310,11 @@ struct OwnerFixture final : Fixture {
         bindings.character_registry_context = this;
         bindings.resolve_character = resolve_character;
         bindings.candidate_capacity = 4;
+        return bindings;
+    }
+
+    bool bind(const std::string& commons, const std::string& monster) {
+        const auto bindings=make_owner_bindings(commons,monster);
         std::string error;
         return owner.bind(bindings, error) == native::ghost_ai::Status::complete && error.empty();
     }
@@ -359,7 +364,7 @@ void run_owner_pipeline(const std::string& commons, const std::string& monster) 
     require(zonable != f.trace.end() && target_update != f.trace.end() &&
             master_update != f.trace.end() && zonable < target_update && target_update < master_update,
             "CharAI source dispatcher service order changed");
-    std::printf("{\"ghost_ai_owner_host_cases\":7,\"existing_target_cases\":6,\"status\":\"PASS\","
+    std::printf("{\"ghost_ai_owner_host_cases\":8,\"existing_target_cases\":6,\"pending_vm_shared\":true,\"status\":\"PASS\","
         "\"frame_status\":%d,\"last_service\":%u,\"candidates\":%u,"
         "\"events\":%u,\"script_callbacks\":%u,\"set_target_calls\":%u,"
         "\"head_to_calls\":%u,\"path_count\":%u,\"target_id\":%llu,"
@@ -414,6 +419,52 @@ void run_existing_targets(const std::string& commons, const std::string& monster
         r.target_identity == f.target_object_id + 0x100,
         "target-read owner capture or fresh retarget owner loads changed"); }
 }
+
+void run_pending_owner(const std::string& commons, const std::string& monster) {
+    monster_external_script::Session vm;
+    OwnerFixture f(0x770000000ull);
+    character::ScriptLifecycleState64 lifecycle{f.owner_id,0,f.active_id,1,6,-1,-1,0,1,0,0,0};
+    f.enemy_state.active={0,0};
+    f.event_state.active=0;
+    monster_external_script::Services services{};
+    std::shared_ptr<void> lifetime;
+    std::string error;
+    require(f.owner.prepare_pending(f.make_bindings(),&lifecycle,services,lifetime,error)==
+                native::ghost_ai::Status::complete && lifetime && !f.owner.ready(),
+            "native frame owner could not prepare genuinely pending script callbacks");
+    require(vm.create(services,error,2*1024*1024,lifetime)==monster_external_script::Status::complete &&
+            vm.bind_functions(error)==monster_external_script::Status::complete &&
+            vm.load_common({commons.data(),commons.size()},error)==monster_external_script::Status::complete &&
+            vm.load_external({monster.data(),monster.size()},error)==monster_external_script::Status::complete,
+            "native owner pending script load failed");
+    auto bindings=f.make_owner_bindings(commons,monster);
+    require(f.owner.bind_staged(bindings,vm,error)==native::ghost_ai::Status::script_not_ready &&
+                !f.owner.ready() && lifecycle.active==0,
+            "native frame owner adopted before source pending publication");
+    publish_pending(f,lifecycle);
+    auto mismatched=bindings;
+    character::PathToState40 other_path=f.path_state;
+    mismatched.script.path_state=&other_path;
+    require(f.owner.bind_staged(mismatched,vm,error)==native::ghost_ai::Status::invalid_argument && !f.owner.ready(),
+            "native frame owner accepted different pending callback backing");
+    require(f.owner.bind_staged(bindings,vm,error)==native::ghost_ai::Status::complete &&
+                f.owner.ready() && vm.uses_services(services),
+            "native frame owner duplicated or rejected the published pending VM");
+    const FrameInput input{f.identity,
+        {f.owner_id,f.owner_id+0x80,0x100,0,0,0,0,0,0,0},0,0};
+    FrameResult result{};
+    require(f.owner.tick(input,&result)==native::ghost_ai::Status::complete &&
+                result.scan.script_dispatches==1 && result.scan.path_requests==1 &&
+                vm.statistics().completed_callbacks==1 && f.owner.script_statistics().completed_callbacks==1,
+            "native frame callbacks did not use the one published AIS VM");
+    require(f.owner.reset(error)==native::ghost_ai::Status::complete && vm.ready(),
+            "frame owner reset destroyed the AIS-owned VM");
+    float property=123.f;
+    require(services.get_prop(services.context,f.owner_id,28,&property)==0 && property==-1.f,
+            "retained AIS VM lost its callback context after owner detach");
+    require(vm.reset(error)==monster_external_script::Status::complete,
+            "native frame pending VM teardown failed");
+}
 } // namespace
 
 int main(int argc, char** argv) {
@@ -421,6 +472,7 @@ int main(int argc, char** argv) {
         require(argc == 3, "expected original _commons and monster script paths");
         const auto commons = read_file(argv[1]);
         const auto monster = read_file(argv[2]);
+        run_pending_owner(commons, monster);
         run_existing_targets(commons, monster);
         run_owner_pipeline(commons, monster);
         return 0;

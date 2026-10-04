@@ -63,6 +63,14 @@ target_sources(dh2_level_world PRIVATE ais_external_init_vcb.cpp)
 target_sources(dh2_level_world PRIVATE ais_external_initialization.cpp ais_native_bindings.cpp room_zone_enrollment.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_association.cpp character_native_bindings.cpp)
 
+# Initialization callers verified against the original ARM functions. Their
+# live player, level, debug and scene providers are separate owner boundaries.
+target_sources(dh2_level_world PRIVATE lua_script_level_queries.cpp
+ character_script_set_level.cpp character_regeneration.cpp module_room_zone_bounds.cpp)
+
+target_sources(dh2_level_world PRIVATE debug_switches_runtime.cpp debug_switches_persistence.cpp)
+target_sources(dh2_level_world PRIVATE level_construction_fields.cpp)
+
 target_sources(dh2_level_world PRIVATE ais_state_callbacks.cpp)
 
 target_sources(dh2_level_world PRIVATE character_ai_pause_update.cpp)

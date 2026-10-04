@@ -55,6 +55,7 @@ def main() -> int:
         MODULE / "character_ai_set_target.cpp",
         MODULE / "character_controller_commands.cpp",
         MODULE / "character_path_commands.cpp",
+        MODULE / "character_script_lifecycle.cpp",
         MODULE / "navigation_heading.cpp",
         MODULE / "monster_external_script_session.cpp",
         MODULE / "ghost_ai_session.cpp",
@@ -108,18 +109,21 @@ def main() -> int:
     if tested.returncode:
         return tested.returncode
     host = json.loads(tested.stdout)
-    assert host["ghost_ai_session_cases"] == 9 and host["mismatches"] == 0, host
+    assert host["ghost_ai_session_cases"] == 13 and host["mismatches"] == 0, host
     for key in ("source_search_to_path", "per_actor_vm_and_target_identity",
                 "stale_owner_rebind", "reentrant_rebind_guard", "partial_failure_effects",
                 "fresh_empty_search_event_12", "fresh_all_false_relation_event_12",
                 "output_alias_guard",
                 "staged_vm_adopted_without_duplicate",
+                "source_pending_publication", "pending_replacement_guard", "pending_owner_guard",
+                "lifecycle_output_alias_guard",
                 "unbuilt_updateaggro_prefix"):
         assert host[key] is True, (key, host)
     assert host["native_wired"] is False
 
     dependencies = cpp_sources + c_sources + [
         MODULE / "ghost_ai_session.hpp",
+        MODULE / "character_script_lifecycle.hpp",
         MODULE / "character_ai_set_target.hpp",
         MODULE / "character_ai_relations.hpp",
         MODULE / "character_enemy_spotted.hpp",

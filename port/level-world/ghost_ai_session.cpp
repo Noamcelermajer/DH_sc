@@ -50,6 +50,8 @@ struct ActorSession::Impl : std::enable_shared_from_this<ActorSession::Impl> {
     monster_external_script::Session* script_vm = nullptr;
 
     std::uintptr_t ai = 0, owner = 0, active = 0, active_callee = 0;
+    const character::ScriptLifecycleState64* lifecycle = nullptr;
+    bool pending_phase = false;
     bool busy = false;
     std::uint32_t active_holds = 0;
     ScanResult* current_result = nullptr;
@@ -86,6 +88,12 @@ struct ActorSession::Impl : std::enable_shared_from_this<ActorSession::Impl> {
         script_bound = {this, owner, script_struct, script_prop, script_constant,
             script_has_target, script_get_target, script_get_state, script_has_path,
             script_set_target, script_head_to, script_move_to};
+        script_bound.get_py_oid = script_oid;
+        script_bound.get_position = script_position;
+        script_bound.get_host_player_level = script_host_level;
+        script_bound.get_host_player_difficulty = script_host_difficulty;
+        script_bound.get_current_level_range = script_level_range;
+        script_bound.set_level = script_level_set;
     }
 
     monster_external_script::Session* active_script() noexcept { return script_vm; }
@@ -95,10 +103,14 @@ struct ActorSession::Impl : std::enable_shared_from_this<ActorSession::Impl> {
         if (!b.enemy_state || !b.event_state || !b.relation_state ||
             !b.set_target_state || !b.controller_state || !b.path_state ||
             !b.event_state->owner || !b.set_target_state->owner) return false;
+        if (lifecycle && (lifecycle->owner != owner ||
+            (pending_phase ? lifecycle->pending != active : lifecycle->active != active))) return false;
+        const bool selected_live = pending_phase ?
+            b.enemy_state->active.identity == lifecycle->active :
+            b.enemy_state->active.identity == active && b.enemy_state->active.callee == active_callee;
         return b.enemy_state->ai_identity == ai &&
             b.enemy_state->owner_identity == owner &&
-            b.enemy_state->active.identity == active &&
-            b.enemy_state->active.callee == active_callee &&
+            selected_live &&
             b.event_state->ai == ai && b.event_state->owner->owner == owner &&
             b.relation_state->ai == ai && b.relation_state->owner == owner &&
             b.set_target_state->identity == ai &&
@@ -383,6 +395,36 @@ struct ActorSession::Impl : std::enable_shared_from_this<ActorSession::Impl> {
         auto& s=*static_cast<Impl*>(raw); if(!s.live()||owner_id!=s.owner||!s.script_source.has_target)return 1;
         try {const auto rc=s.script_source.has_target(s.script_source.context,owner_id,output);return rc||!s.live()?1:0;}catch(...){return 1;}
     }
+    static std::int32_t script_oid(void* raw,const char* category,const char* member,std::int32_t* output) {
+        auto& s=*static_cast<Impl*>(raw); if(!s.live()||!s.script_source.get_py_oid)return 1;
+        try {return s.script_source.get_py_oid(s.script_source.context,category,member,output)||!s.live()?1:0;}
+        catch(...){return 1;}
+    }
+    static std::int32_t script_position(void* raw,std::uintptr_t owner_id,float output[3]) {
+        auto& s=*static_cast<Impl*>(raw); if(!s.live()||owner_id!=s.owner||!s.script_source.get_position)return 1;
+        try {return s.script_source.get_position(s.script_source.context,owner_id,output)||!s.live()?1:0;}
+        catch(...){return 1;}
+    }
+    static std::int32_t script_host_level(void* raw,std::int32_t* output) {
+        auto& s=*static_cast<Impl*>(raw); if(!s.live()||!s.script_source.get_host_player_level)return 1;
+        try {return s.script_source.get_host_player_level(s.script_source.context,output)||!s.live()?1:0;}
+        catch(...){return 1;}
+    }
+    static std::int32_t script_host_difficulty(void* raw,std::int32_t* output) {
+        auto& s=*static_cast<Impl*>(raw); if(!s.live()||!s.script_source.get_host_player_difficulty)return 1;
+        try {return s.script_source.get_host_player_difficulty(s.script_source.context,output)||!s.live()?1:0;}
+        catch(...){return 1;}
+    }
+    static std::int32_t script_level_range(void* raw,const float* argument,std::int32_t output[2],std::uint32_t* count) {
+        auto& s=*static_cast<Impl*>(raw); if(!s.live()||!s.script_source.get_current_level_range)return 1;
+        try {return s.script_source.get_current_level_range(s.script_source.context,argument,output,count)||!s.live()?1:0;}
+        catch(...){return 1;}
+    }
+    static std::int32_t script_level_set(void* raw,std::uintptr_t owner_id,float value) {
+        auto& s=*static_cast<Impl*>(raw); if(!s.live()||owner_id!=s.owner||!s.script_source.set_level)return 1;
+        try {return s.script_source.set_level(s.script_source.context,owner_id,value)||!s.live()?1:0;}
+        catch(...){return 1;}
+    }
     static std::int32_t script_get_target(void* raw,std::uintptr_t owner_id,std::uintptr_t* output) {
         auto& s=*static_cast<Impl*>(raw); if(!s.live()||owner_id!=s.owner||!s.script_source.get_target)return 1;
         try {const auto rc=s.script_source.get_target(s.script_source.context,owner_id,output);return rc||!s.live()?1:0;}catch(...){return 1;}
@@ -468,6 +510,21 @@ Status ActorSession::bind(const Bindings& bindings,
 }
 
 Status ActorSession::prepare_staged(const Bindings& bindings, std::string& error) {
+    return prepare_callbacks(bindings, nullptr, error);
+}
+
+Status ActorSession::prepare_pending(const Bindings& bindings,
+        const character::ScriptLifecycleState64* lifecycle, std::string& error) {
+    if (impl_ && (impl_->busy || impl_->active_holds)) { error = "actor session busy"; return Status::busy; }
+    if (!lifecycle || reinterpret_cast<std::uintptr_t>(lifecycle) % alignof(character::ScriptLifecycleState64)) {
+        error = "pending AIS lifecycle projection is invalid";
+        return Status::invalid_argument;
+    }
+    return prepare_callbacks(bindings, lifecycle, error);
+}
+
+Status ActorSession::prepare_callbacks(const Bindings& bindings,
+        const character::ScriptLifecycleState64* lifecycle, std::string& error) {
     if (impl_ && (impl_->busy || impl_->active_holds)) { error = "actor session busy"; return Status::busy; }
     if (!bindings.ai_identity || !bindings.owner_identity || !bindings.active_ais_identity ||
         !bindings.active_ais_callee || !bindings.enemy_state || !bindings.enemy_services ||
@@ -485,6 +542,8 @@ Status ActorSession::prepare_staged(const Bindings& bindings, std::string& error
     catch (...) { error = "actor session allocation failed"; return Status::allocation_failed; }
     if (!candidate) { error = "actor session allocation failed"; return Status::allocation_failed; }
     candidate->self = candidate;
+    candidate->lifecycle = lifecycle;
+    candidate->pending_phase = lifecycle != nullptr;
     if (!candidate->live() || !candidate->all_callbacks_present()) {
         error = "actor owner identity or callback projection is invalid";
         return Status::invalid_argument;
@@ -507,11 +566,18 @@ Status ActorSession::adopt_staged(monster_external_script::Session& session, std
     if (impl_->busy || impl_->active_holds) { error = "actor session busy"; return Status::busy; }
     if (impl_->script_vm) { error = "actor session already owns a script binding"; return Status::busy; }
     if (!impl_->live()) { error = "actor owner changed while preparing AIS VM"; return Status::stale_binding; }
+    if (impl_->pending_phase && (impl_->lifecycle->active != impl_->active ||
+        impl_->b.enemy_state->active.identity != impl_->active ||
+        impl_->b.enemy_state->active.callee != impl_->active_callee)) {
+        error = "source pending AIS has not been published to active";
+        return Status::not_ready;
+    }
     if (!session.ready() || !session.uses_services(impl_->script_bound)) {
         error = "pending AIS VM does not use the prepared actor callbacks";
         return Status::script_failed;
     }
     impl_->script_vm = &session;
+    impl_->pending_phase = false;
     error.clear();
     return Status::complete;
 }
@@ -551,7 +617,8 @@ Status ActorSession::search_and_dispatch(character::aggro_search::TargetList* li
         return overlaps(result, sizeof(*result), input, size);
     };
     constexpr std::size_t vtable_bytes = 51U * sizeof(std::uintptr_t);
-    if (aliases(current->b.enemy_state, sizeof(*current->b.enemy_state)) ||
+    if ((current->lifecycle && aliases(current->lifecycle, sizeof(*current->lifecycle))) ||
+        aliases(current->b.enemy_state, sizeof(*current->b.enemy_state)) ||
         aliases(current->b.event_state, sizeof(*current->b.event_state)) ||
         aliases(current->b.event_state->owner, sizeof(*current->b.event_state->owner)) ||
         aliases(current->b.event_state->ai_virtuals, vtable_bytes) ||

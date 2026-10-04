@@ -77,6 +77,23 @@ LIFECYCLE_UNITS = {
     'object_zone_exited': cpp_prefix('room_zone_enrollment','zone_exited'),
 }
 LUA_SYMBOL = 'lua_newstate'
+INITIALIZATION_UNITS = {
+    'host_player_level': cpp_prefix('lua_script_level_queries', 'get_host_player_level'),
+    'host_player_difficulty': cpp_prefix('lua_script_level_queries', 'get_host_player_difficulty'),
+    'current_level_range': cpp_prefix('lua_script_level_queries', 'get_current_level_range'),
+    'character_script_set_level': cpp_prefix('character_script_set_level', 'set_level'),
+    'character_regen_hp': cpp_prefix('character_regeneration', 'regen_hp'),
+    'character_regen_mp': cpp_prefix('character_regeneration', 'regen_mp'),
+    'module_room_zone_bounds': cpp_prefix('module_room_zone_bounds', 'initialize'),
+}
+DEBUG_PERSISTENCE_UNITS = {
+    'debug_switches_load': '_ZN3dh214debug_switches7Runtime4load',
+    'debug_switches_get': '_ZN3dh214debug_switches7Runtime10get_switch',
+    'debug_switches_set': '_ZN3dh214debug_switches7Runtime10set_switch',
+    'debug_switches_write': cpp_prefix('debug_switches_persistence', 'write'),
+    'debug_switches_save': cpp_prefix('debug_switches_persistence', 'save'),
+}
+LEVEL_CONSTRUCTION_UNITS = {'level_construction_fields': cpp_prefix('level_construction_fields', 'initialize')}
 
 
 def main():
@@ -89,17 +106,25 @@ def main():
     parser.add_argument('--require-frame-units', action='store_true')
     parser.add_argument('--require-runtime-dependency-units', action='store_true')
     parser.add_argument('--require-lifecycle-units', action='store_true')
+    parser.add_argument('--require-initialization-units', action='store_true')
+    parser.add_argument('--require-debug-persistence-units', action='store_true')
+    parser.add_argument('--require-level-construction-unit', action='store_true')
     args = parser.parse_args()
-    runtime_dependencies = args.require_runtime_dependency_units or args.require_lifecycle_units
+    initialization = args.require_initialization_units or args.require_debug_persistence_units or args.require_level_construction_unit
+    lifecycle = args.require_lifecycle_units or initialization
+    runtime_dependencies = args.require_runtime_dependency_units or lifecycle
     frame = args.require_frame_units or runtime_dependencies
     acquisition = args.require_acquisition_units or frame
     units = {**UNITS, **(TARGETING_UNITS if args.require_targeting_units or acquisition else {}),
              **(ACQUISITION_UNITS if acquisition else {}),
              **(FRAME_UNITS if frame else {}),
              **(RUNTIME_DEPENDENCY_UNITS if runtime_dependencies else {}),
-             **(LIFECYCLE_UNITS if args.require_lifecycle_units else {})}
+             **(LIFECYCLE_UNITS if lifecycle else {}),
+             **(INITIALIZATION_UNITS if initialization else {}),
+             **(DEBUG_PERSISTENCE_UNITS if args.require_debug_persistence_units else {}),
+             **(LEVEL_CONSTRUCTION_UNITS if args.require_level_construction_unit else {})}
     # Sight has two overload groups; melee caller and radius share one unit.
-    source_units = len(units) - int(acquisition) - int(frame) - 5 * int(runtime_dependencies) - 7 * int(args.require_lifecycle_units)
+    source_units = len(units) - int(acquisition) - int(frame) - 5 * int(runtime_dependencies) - 7 * int(lifecycle) - 3 * int(initialization) - 3 * int(args.require_debug_persistence_units)
     raw = args.apk.read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
     artifact = json.loads(args.artifact.read_text())

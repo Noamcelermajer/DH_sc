@@ -333,6 +333,43 @@ void run_one(ActorSession& session, Fixture& fixture) {
             "per-actor Lua callback accounting missing");
 }
 void run_one(Fixture& fixture) { run_one(fixture.session, fixture); }
+
+void unexpected_publication_service(void*, character::ScriptLifecycleState64*,
+    const character::ScriptLifecycleRequest32*, character::ScriptLifecycleResponse16*) {
+    throw std::runtime_error("source stage 6 unexpectedly dispatched a provider");
+}
+
+void prepare_pending(Fixture& fixture, character::ScriptLifecycleState64& lifecycle,
+                     monster_external_script::Session& vm,
+                     const std::string& common, const std::string& monster,
+                     monster_external_script::Services& services) {
+    lifecycle = {fixture.owner_id, 0, fixture.active_id, 1, 6, -1, -1, 0, 1, 0, 0, 0};
+    fixture.enemy_state.active = {0, 0};
+    fixture.event_state.active = 0;
+    std::string error;
+    require(fixture.session.prepare_pending(fixture.bindings, &lifecycle, error)==Status::complete,
+            "pending actor callback preparation fabricated an active AIS");
+    std::shared_ptr<void> lifetime;
+    require(fixture.session.staged_services(services, lifetime) && lifetime,
+            "pending source callbacks were unavailable before publication");
+    require(vm.create(services, error, 2*1024*1024, lifetime)==monster_external_script::Status::complete &&
+            vm.bind_functions(error)==monster_external_script::Status::complete &&
+            vm.load_common({common.data(),common.size()},error)==monster_external_script::Status::complete &&
+            vm.load_external({monster.data(),monster.size()},error)==monster_external_script::Status::complete,
+            "source pending VM could not load unchanged scripts");
+}
+
+void publish_pending(Fixture& fixture, character::ScriptLifecycleState64& lifecycle) {
+    const character::ScriptLifecycleServices16 services{nullptr, unexpected_publication_service};
+    require(dh2_character_script_lifecycle(&lifecycle, character::script_load_process, 0, &services)==1 &&
+            lifecycle.active==fixture.active_id && lifecycle.pending==fixture.active_id && lifecycle.load_step==13,
+            "actual source lifecycle stage 6 did not publish its pending AIS");
+    // Non-delayed LoadScriptProcess performs seven iterations even at stage 6;
+    // later stages have only excluded diagnostic effects. Refresh the consumer
+    // projection only after the source producer wrote active.
+    fixture.enemy_state.active={lifecycle.active,fixture.active_callee};
+    fixture.event_state.active=lifecycle.active;
+}
 }  // namespace
 
 int main(int argc,char** argv) {
@@ -485,7 +522,100 @@ int main(int argc,char** argv) {
                 "staged source VM teardown failed");
     }
 
-    std::puts("{\"ghost_ai_session_cases\":9,\"mismatches\":0,\"native_wired\":false,\"source_search_to_path\":true,\"per_actor_vm_and_target_identity\":true,\"stale_owner_rebind\":true,\"reentrant_rebind_guard\":true,\"partial_failure_effects\":true,\"fresh_empty_search_event_12\":true,\"fresh_all_false_relation_event_12\":true,\"output_alias_guard\":true,\"staged_vm_adopted_without_duplicate\":true,\"unbuilt_updateaggro_prefix\":true}");
+    // Initialize callbacks against the source pending field, then execute the
+    // actual publication stage. The actor cannot acquire or adopt prematurely.
+    {
+        monster_external_script::Session pending_vm;
+        Fixture pending(0xb00000000ull);
+        character::ScriptLifecycleState64 lifecycle{};
+        monster_external_script::Services services{};
+        prepare_pending(pending,lifecycle,pending_vm,common,monster,services);
+        float property=123.f;
+        require(services.get_prop(services.context,pending.owner_id,28,&property)==0 && property==-1.f &&
+                    lifecycle.active==0 && pending.enemy_state.active.identity==0,
+                "pending script getter depended on fabricated active ownership");
+        ScanResult result{}; result.search_status=0x1234;
+        require(!pending.session.ready() && pending.session.search_and_dispatch(&pending.list,&pending.rooms,
+                    1500.f,6.2831855f,&result)==Status::not_ready && pending.search_calls==0 &&
+                    result.search_status==0x1234,
+                "pending VM entered acquisition before source publication");
+        std::string error;
+        require(pending.session.adopt_staged(pending_vm,error)==Status::not_ready,
+                "ready pending VM was adopted before source publication");
+        publish_pending(pending,lifecycle);
+        pending.enemy_state.active.callee+=1;
+        require(pending.session.adopt_staged(pending_vm,error)==Status::not_ready,
+                "wrong published AIS callee was accepted");
+        pending.enemy_state.active.callee=pending.active_callee;
+        require(pending.session.adopt_staged(pending_vm,error)==Status::complete &&
+                    pending.session.ready() && pending_vm.uses_services(services),
+                "source-published pending VM could not become the active actor VM");
+        run_one(pending);
+        require(pending_vm.statistics().completed_callbacks==1,
+                "pending-to-active transition duplicated its VM");
+        lifecycle.active+=1;
+        const auto before=pending.search_calls;
+        require(!pending.session.ready() && pending.session.search_and_dispatch(&pending.list,&pending.rooms,
+                    1500.f,6.2831855f,&result)==Status::stale_binding && pending.search_calls==before,
+                "replaced source active AIS continued to acquire targets");
+        require(pending_vm.reset(error)==monster_external_script::Status::complete,
+                "pending-to-active VM teardown failed");
+    }
+    {
+        monster_external_script::Session pending_vm;
+        Fixture replaced(0xc00000000ull);
+        character::ScriptLifecycleState64 lifecycle{};
+        monster_external_script::Services services{};
+        prepare_pending(replaced,lifecycle,pending_vm,common,monster,services);
+        lifecycle.pending+=1;
+        float property=123.f;
+        const auto trace_before=replaced.trace.size();
+        std::string error;
+        require(services.get_prop(services.context,replaced.owner_id,28,&property)!=0 && property==123.f &&
+                    replaced.trace.size()==trace_before &&
+                    replaced.session.adopt_staged(pending_vm,error)==Status::stale_binding,
+                "replaced pending AIS reached the old callback provider");
+        require(pending_vm.reset(error)==monster_external_script::Status::complete,
+                "replaced pending VM teardown failed");
+    }
+    {
+        monster_external_script::Session pending_vm;
+        Fixture stale(0xd00000000ull);
+        character::ScriptLifecycleState64 lifecycle{};
+        monster_external_script::Services services{};
+        prepare_pending(stale,lifecycle,pending_vm,common,monster,services);
+        lifecycle.owner+=1;
+        float property=123.f;
+        std::string error;
+        require(services.get_prop(services.context,stale.owner_id,28,&property)!=0 && property==123.f &&
+                    stale.session.adopt_staged(pending_vm,error)==Status::stale_binding,
+                "changed lifecycle owner retained the pending callback context");
+        require(pending_vm.reset(error)==monster_external_script::Status::complete,
+                "stale pending VM teardown failed");
+    }
+    {
+        monster_external_script::Session pending_vm;
+        Fixture guarded(0xe00000000ull);
+        character::ScriptLifecycleState64 lifecycle{};
+        monster_external_script::Services services{};
+        prepare_pending(guarded,lifecycle,pending_vm,common,monster,services);
+        publish_pending(guarded,lifecycle);
+        std::string error;
+        require(guarded.session.adopt_staged(pending_vm,error)==Status::complete,
+                "lifecycle alias fixture adoption failed");
+        const auto before=lifecycle;
+        require(guarded.session.search_and_dispatch(&guarded.list,&guarded.rooms,1500.f,6.2831855f,
+                    reinterpret_cast<ScanResult*>(&lifecycle))==Status::invalid_argument &&
+                    guarded.search_calls==0 && std::memcmp(&before,&lifecycle,sizeof(before))==0,
+                "scan output overwrote borrowed lifecycle ownership");
+        require(guarded.session.prepare_pending(guarded.bindings,nullptr,error)==Status::invalid_argument &&
+                    guarded.session.ready(),
+                "invalid pending rebind discarded an existing active VM");
+        require(pending_vm.reset(error)==monster_external_script::Status::complete,
+                "lifecycle alias VM teardown failed");
+    }
+
+    std::puts("{\"ghost_ai_session_cases\":13,\"mismatches\":0,\"native_wired\":false,\"source_search_to_path\":true,\"per_actor_vm_and_target_identity\":true,\"stale_owner_rebind\":true,\"reentrant_rebind_guard\":true,\"partial_failure_effects\":true,\"fresh_empty_search_event_12\":true,\"fresh_all_false_relation_event_12\":true,\"output_alias_guard\":true,\"staged_vm_adopted_without_duplicate\":true,\"source_pending_publication\":true,\"pending_replacement_guard\":true,\"pending_owner_guard\":true,\"lifecycle_output_alias_guard\":true,\"unbuilt_updateaggro_prefix\":true}");
     return 0;
  } catch(const std::exception& error) { std::fprintf(stderr,"ghost_ai_session: %s\n",error.what());return 1; }
 }

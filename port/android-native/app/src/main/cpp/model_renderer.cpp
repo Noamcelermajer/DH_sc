@@ -10,6 +10,9 @@
 #include "animation_scheduler.hpp"
 #include "animation_bank.hpp"
 #include "class_tables.hpp"
+#include "level_tables.hpp"
+#include "level_construction_fields.hpp"
+#include "lua_script_level_queries.hpp"
 #include "properties.hpp"
 #include "vitals.hpp"
 #include "combat_events.hpp"
@@ -125,6 +128,63 @@ dh2::data::AiTables actor_ai_tables;bool enemy_ai_enabled=true;
 std::map<int,dh2::animation::Player> prince_attack_clips;
 dh2::data::AnimationBank prince_animation_bank;
 dh2::data::PropertyRules actor_property_rules;
+dh2::data::LevelTables actor_level_tables;
+// The viewport owns the bounded Level constructor fields. Its normal-difficulty
+// development argument is explicit; the original GSLevel/save stack is pending.
+dh2::level_construction_fields::State actor_level_fields{-1,-1,0,{0,0,0},0};
+std::string actor_level_file;
+bool actor_level_fields_ready=false;
+
+struct NativeLevelQuery {
+ const float* number=nullptr;
+ std::int32_t pushed[2]{};
+ unsigned count=0;
+ static std::int32_t current(void*,std::uintptr_t* output) {
+  *output=actor_level_fields_ready?reinterpret_cast<std::uintptr_t>(&actor_level_fields):0;return 0;
+ }
+ static std::int32_t field(void*,std::uintptr_t level_identity,std::uint32_t offset,std::int32_t* output) {
+  if(!actor_level_fields_ready||level_identity!=reinterpret_cast<std::uintptr_t>(&actor_level_fields))return 1;
+  if(offset==0x3c)*output=actor_level_fields.level_list_index_3c;
+  else if(offset==0x118)*output=actor_level_fields.difficulty_118;
+  else return 1;
+  return 0;
+ }
+ static std::int32_t value(void* raw,std::uintptr_t identity,float* output) {
+  auto& query=*static_cast<NativeLevelQuery*>(raw);
+  if(!query.number||identity!=reinterpret_cast<std::uintptr_t>(query.number))return 1;
+  *output=*query.number;return 0;
+ }
+ static std::int32_t convert(void*,float number,std::int32_t* output) {
+  if(!std::isfinite(number)||number < -2147483648.f || number >= 2147483648.f)return 1;
+  *output=static_cast<std::int32_t>(number);return 0;
+ }
+ static std::int32_t table(void*,std::uintptr_t* output) {
+  *output=reinterpret_cast<std::uintptr_t>(&actor_level_tables);return 0;
+ }
+ static std::int32_t word(void*,std::uintptr_t table_identity,std::uint32_t row,std::uint32_t offset,std::int32_t* output) {
+  if(table_identity!=reinterpret_cast<std::uintptr_t>(&actor_level_tables))return 1;
+  return dh2::data::read_level_range_word(actor_level_tables,row,offset,*output)?0:1;
+ }
+ static std::int32_t push(void* raw,std::int32_t value) {
+  auto& query=*static_cast<NativeLevelQuery*>(raw);
+  if(query.count>=2)return 1;
+  query.pushed[query.count++]=value;return 0;
+ }
+ dh2::lua_script_level_queries::Services services() {
+  return {this,nullptr,nullptr,nullptr,nullptr,current,field,value,convert,table,word,push};
+ }
+};
+
+std::int32_t native_current_level_range(const float* difficulty,std::int32_t output[2],std::uint32_t* count) {
+ if(!output||!count)return 1;
+ NativeLevelQuery query;query.number=difficulty;
+ dh2::lua_script_level_queries::Argument front{reinterpret_cast<std::uintptr_t>(difficulty),3,0};
+ dh2::lua_script_level_queries::Arguments arguments{difficulty?&front:nullptr,difficulty?1u:0u,0};
+ auto services=query.services();dh2::lua_script_level_queries::Result result{};
+ if(dh2::lua_script_level_queries::get_current_level_range(&arguments,&services,&result)!=dh2::lua_script_level_queries::Status::complete)return 1;
+ for(unsigned i=0;i<query.count;++i)output[i]=query.pushed[i];
+ *count=query.count;return 0;
+}
 dh2::data::CombatRandom combat_random{0xD22026u,0};unsigned combat_hits=0;
 dh2::data::AnimationTables actor_animation_tables;dh2::data::Dictionary actor_clip_table;dh2::data::AnimationRandom actor_random;
 std::vector<dh2::objects::Record> world_objects;
@@ -259,6 +319,7 @@ void clear_actor_world() {
  actor_world.clear();
  search_world.clear();
  source_char_ai.clear();
+ actor_level_fields_ready=false;
  for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.spawn_owner){
   actor.spawn_owner->body={};actor.spawn_owner->actor=nullptr;
   actor.spawn_owner->runtime_ready=false;actor.spawn_owner->sampled_clip=-1;
@@ -1467,6 +1528,18 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     if(!dh2::data::load_classes({class_data.data(),class_data.size()},{class_names.data(),class_names.size()},{class_schema.data(),class_schema.size()},class_table,error))throw std::runtime_error(error);
     if(character_table.fields[19]!="Level"||character_table.fields[38]!="Max_HP"||character_table.fields[43]!="Max_MP")throw std::runtime_error("Original class property identifiers differ");
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Class tables ready | classes %zu | bytes %zu | cached base snapshots",class_table.rows.size(),class_table.data_consumed);
+    const auto level_records=read(assets,"levels_pyarray.bin","data"),level_names=read(assets,"levels_pyarraynames.bin","data"),level_schema=read(assets,"levels_pystructnames.bin","data");
+    dh2::data::LevelTables level_tables;
+    if(!dh2::data::load_levels({level_records.data(),level_records.size()},{level_names.data(),level_names.size()},{level_schema.data(),level_schema.size()},level_tables,error))throw std::runtime_error(error);
+    const auto crypt_oid=dh2::data::find_level(level_tables,"GOTHICUS_CRYPT_01");
+    if(crypt_oid<0)throw std::runtime_error("Crypt level catalogue row missing");
+    const auto& crypt_declaration=level_tables.levels.at(crypt_oid);
+    dh2::level_construction_fields::State candidate_level_fields{};
+    dh2::level_construction_fields::Result candidate_level_scan{};
+    const auto candidate_level_file=crypt_declaration.level_file;
+    if(dh2::level_construction_fields::initialize(&level_tables,candidate_level_file,0,&candidate_level_fields,&candidate_level_scan)!=dh2::level_construction_fields::Status::selected || candidate_level_fields.level_list_index_3c!=crypt_oid)
+      throw std::runtime_error("Source Level constructor field selection failed");
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native level catalogue | fast travel %zu | levels %zu | Crypt row %d | ranges %d %d / %d %d / %d %d | GSLevel ownership pending",level_tables.fast_travel.size(),level_tables.levels.size(),crypt_oid,crypt_declaration.monster_lvl_min,crypt_declaration.monster_lvl_max,crypt_declaration.monster_lvl_min_hard,crypt_declaration.monster_lvl_max_hard,crypt_declaration.monster_lvl_min_nightmare,crypt_declaration.monster_lvl_max_nightmare);
     dh2::data::PropertyRules property_rules;if(!dh2::data::load_property_rules(character_table,property_rules,error))throw std::runtime_error(error);
     dh2::data::AiTables ai_tables;std::array<std::vector<std::uint8_t>,6> ai_data;const char* ai_names[]={"ai_pyarray.bin","ai_pyarraynames.bin","ai_pystructnames.bin","ai_factions_pyarray.bin","ai_factions_pyarraynames.bin","ai_factions_pystructnames.bin"};for(unsigned i=0;i<6;++i)ai_data[i]=read(assets,ai_names[i],"data");
     if(!dh2::data::load_ai({ai_data[0].data(),ai_data[0].size()},{ai_data[1].data(),ai_data[1].size()},{ai_data[2].data(),ai_data[2].size()},{ai_data[3].data(),ai_data[3].size()},{ai_data[4].data(),ai_data[4].size()},{ai_data[5].data(),ai_data[5].size()},ai_tables,error))throw std::runtime_error(error);
@@ -1604,6 +1677,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     images.insert(images.end(),textures.begin(),textures.end());textures.clear();
     object_groups=std::move(candidate_groups);world_objects=std::move(object_records);unsigned monsters=0,decors=0,object_triangles=0,object_draws=0;
     actor_animation_tables=std::move(animation_tables);actor_clip_table=std::move(clip_table);actor_random=restore?previous_random:animation_random;actor_property_rules=property_rules;actor_ai_tables=std::move(ai_tables);
+    actor_level_tables=std::move(level_tables);
     bool combat_resumed=false;
     if(restore){for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.kind==1){
       auto saved=std::find_if(saved_actors.begin(),saved_actors.end(),[&](const ObjectActor& old){return old.room==actor.room&&old.name==actor.name&&old.model==actor.model;});
@@ -1625,6 +1699,11 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     world_mode=true;resume_world=false;walking=false;move_x=move_y=0;heading=restore?previous_heading:0;movement_steps=blocked_steps=0;
     radius=350;yaw=-1.57f;pitch=.75f;zoom=1;object_epoch=epoch=last_frame=std::chrono::steady_clock::now();sampled_ms=0;frozen=false;
     initialize_native_actor(assets,restore);
+    actor_level_fields=candidate_level_fields;actor_level_file=candidate_level_file;actor_level_fields_ready=true;
+    std::int32_t source_ranges[6]{};
+    for(unsigned mode=0;mode<3;++mode){const float difficulty=static_cast<float>(mode);std::uint32_t count=0;
+      if(native_current_level_range(&difficulty,source_ranges+2*mode,&count)||count!=2)throw std::runtime_error("Owned native Level range source callback failed");}
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Level fields | ordinal %d | hub %d | random %u | difficulty %d | file %s | source ranges %d %d / %d %d / %d %d | viewport owner; GSLevel stack pending",actor_level_fields.level_list_index_3c,actor_level_fields.hub_40,unsigned(actor_level_fields.is_random_e8),actor_level_fields.difficulty_118,actor_level_file.c_str(),source_ranges[0],source_ranges[1],source_ranges[2],source_ranges[3],source_ranges[4],source_ranges[5]);
     initialize_char_ai_registry();
     initialize_crypt_script(assets,restore);
     build_search_world();
