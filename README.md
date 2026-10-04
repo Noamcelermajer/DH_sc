@@ -4,6 +4,8 @@
 
 **Task overview:** [Project checklist — completed work and everything remaining](docs/PROJECT-CHECKLIST.md).
 
+**Other branches:** [Audit and selective engine-research imports](docs/BRANCH-AUDIT-2026-10-05.md).
+
 Start with the [combined reconstruction report](docs/COMBINED-RECONSTRUCTION-STATUS.md):
 the improved project brief, Adam/our contribution table, original-to-source
 mapping, measured source inventory, test limits and remaining milestones.

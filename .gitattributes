@@ -53,3 +53,9 @@ port/**/original-functions.json -text
 port/**/reference/** -text -whitespace
 port/**/reports/** -text -whitespace
 port/android-app/questcompile-*validation.json -text whitespace=cr-at-eol
+
+# Preserve raw tested bytes in the October 5 host-source checkpoint.
+reports/branch-audit-2026-10-05/** -text whitespace=cr-at-eol
+reports/reconstruction-2026-10-05/source-culling-visibility/** -text whitespace=cr-at-eol
+port/level-world/tests/run_native_character_stop_host.py -text whitespace=cr-at-eol
+port/engine-camera/ANALYSIS.md -text -whitespace
