@@ -6,6 +6,10 @@
 extern "C" {
 #endif
 typedef struct dh2_script_vm dh2_script_vm;
+typedef enum dh2_script_library {
+  DH2_SCRIPT_LIBRARY_BASE=0, DH2_SCRIPT_LIBRARY_MATH=1,
+  DH2_SCRIPT_LIBRARY_TABLE=2, DH2_SCRIPT_LIBRARY_STRING=3
+} dh2_script_library;
 /* Lua 5.1 type numbers. Text results are borrowed until the next VM operation.
  * identity is a native opaque light-userdata value; serialized chunks contain no pointers. */
 typedef struct dh2_script_value {
@@ -29,6 +33,11 @@ typedef int (*dh2_script_function)(void* context,
 /* Base/coroutine, table, string, math libraries only. Game globals are absent.
  * Each VM owns its allocator and state. No ARM32 runtime. */
 dh2_script_vm* dh2_script_vm_create(size_t memory_limit);
+/* Source AIS path: create the same bounded Lua state without implicitly
+ * opening libraries. The owning LuaScript BindFunction path opens them in its
+ * recovered base/math/table/string order via dh2_script_vm_open_library. */
+dh2_script_vm* dh2_script_vm_create_deferred(size_t memory_limit);
+int dh2_script_vm_open_library(dh2_script_vm* vm, dh2_script_library library);
 void dh2_script_vm_destroy(dh2_script_vm* vm);
 int dh2_script_vm_load(dh2_script_vm* vm,const void* bytes,size_t size,const char* name);
 int dh2_script_vm_compile(dh2_script_vm* vm,const void* bytes,size_t size,const char* name,

@@ -34,6 +34,9 @@
 #include "character_stance.hpp"
 #include "character_controller_commands.hpp"
 #include "character_path_commands.hpp"
+#include "ghost_ai_owner.hpp"
+#include "character_ai_initialization.hpp"
+#include "character_ai_association.hpp"
 #include "navigation_producers.hpp"
 #include <GLES2/gl2.h>
 #include <android/log.h>
@@ -42,7 +45,9 @@
 #include <cmath>
 #include <cstdio>
 #include <map>
+#include <memory>
 #include <set>
+#include <unordered_map>
 #include <functional>
 #include <stdexcept>
 #include <vector>
@@ -63,6 +68,11 @@ struct AggroStorage {
  std::vector<dh2::data::AggroEntry> outgoing,incoming;unsigned out_count=0,in_count=0;
  void initialize(unsigned capacity){outgoing.resize(capacity);incoming.resize(capacity);out_count=in_count=0;}
 };
+struct SearchObjectProjection {
+ dh2::character::aggro_search::GameObject object{};
+ dh2::character::aggro_search::Character character{};
+ std::uint8_t is_character=0;
+};
 struct SpawnOwner;
 struct ObjectActor:dh2::objects::Record {
  dh2::data::AnimationScheduler scheduler;double cursor=0;unsigned completions=0;std::string state="Idle";
@@ -71,6 +81,7 @@ struct ObjectActor:dh2::objects::Record {
  dh2::animation::EventCursor event_cursor;unsigned animation_events=0;
  dh2::data::CombatActorState combat_state;int combat_target=-1;bool pending_death=false;
  AggroStorage aggro;std::uint64_t identity=0;unsigned target_alive=0,target_sight=0;bool target_seeking=false,ai_attack=false;
+ SearchObjectProjection search_projection{};
  std::shared_ptr<SpawnOwner> spawn_owner;
  ObjectActor(const dh2::objects::Record& r):Record(r){}
 };
@@ -87,6 +98,29 @@ struct PlayerCombat {
  AggroStorage aggro;
 };
 PlayerCombat prince_combat;
+SearchObjectProjection prince_search_projection{};
+struct NativeCharAIProjection {
+ std::uintptr_t character_identity=0,ai_identity=0;
+ dh2::character_ai_initialization::State state{};
+ dh2::character_ai_initialization::Result constructor_result{};
+};
+struct NativeCharAIRegistry {
+ std::vector<std::unique_ptr<NativeCharAIProjection>> projections;
+ std::vector<std::uintptr_t> queue_order;
+ std::unordered_map<std::uintptr_t,NativeCharAIProjection*> by_character;
+ bool ready=false;
+ void clear(){projections.clear();queue_order.clear();by_character.clear();ready=false;}
+} source_char_ai;
+struct SearchWorld {
+ dh2::character::aggro_search::RoomRegistry registry{};
+ dh2::character::aggro_search::Room room_sentinel{};
+ std::vector<dh2::character::aggro_search::Room> rooms;
+ std::vector<dh2::character::aggro_search::ObjectEntry> object_heads,object_entries;
+ std::unordered_map<std::uintptr_t,dh2::character::aggro_search::Character*> characters;
+ std::unordered_map<std::uintptr_t,dh2::character::aggro_search::GameObject*> objects;
+ bool ready=false;
+ void clear(){registry={};room_sentinel={};rooms.clear();object_heads.clear();object_entries.clear();characters.clear();objects.clear();ready=false;}
+} search_world;
 dh2::data::AiTables actor_ai_tables;bool enemy_ai_enabled=true;
 std::map<int,dh2::animation::Player> prince_attack_clips;
 dh2::data::AnimationBank prince_animation_bank;
@@ -130,6 +164,7 @@ std::uint32_t prince_flags=0x2380,prince_move_type=0;
 // script/HUD producers will write these owned native gates as they are bound.
 std::uint32_t controller_global_blocked=0,prince_controller_forced=0;
 float scene_clock=0;bool native_actor_ready=false;
+bool frozen=false,animation_failed=false,frozen_cursor_logged=false;int sampled_ms=0;
 unsigned native_actor_frames=0,native_physics_steps=0;
 std::vector<dh2::navigation::ObstacleEntry> live_obstacle_entries;
 std::vector<unsigned> live_obstacle_floors,live_workspace_floors;
@@ -161,6 +196,7 @@ struct BodyOwner {
  }
 };
 BodyOwner prince_body_owner;
+unsigned actor_virtual_service(void*,unsigned event,float* payload);
 std::vector<std::unique_ptr<BodyOwner>> decor_body_owners;
 std::vector<dh2::physical::NativeBody> decor_bodies;
 // Bounded first-spawn runtime for authored direct-property Limbus actors.
@@ -176,11 +212,31 @@ struct SpawnOwner {
  dh2::physical::CharacterBodyConfig config{};
  dh2::physical::NativeBody body{};
  BodyOwner body_owner;
+ // Stable per-actor route, native body view, and scene/root-motion owner.
+ // These remain owned by the shared SpawnOwner across vector/world callbacks.
+ dh2::actor::RuntimeState runtime{};
+ std::vector<dh2::navigation::PathSegment> route_storage;
+ dh2::scene::Scene scene;
+ dh2::visual::SceneBinding visual;
+ std::vector<std::vector<dh2::objects::Vertex>> render_vertices;
+ dh2::character::PathToState40 path_to{};
+ dh2::character::PathToServices16 path_services{};
+ dh2::physical::CharacterOwnerBounds owner_bounds{};
+ float visual_scale[3]{1,1,1};
+ int sampled_clip=-1;
+ bool runtime_ready=false;
  unsigned body_creations=0;
  unsigned idle_updates=0;
  bool source_enabled=true,source_visible=true;
  explicit SpawnOwner(std::uint64_t id):character(id){body_owner.native=&body;}
  static void service(void*,dh2::character::State*,const dh2::character::Request*);
+ void initialize_runtime(const ObjectGroup&,const dh2::physical::CharacterOwnerBounds&,
+                         const float* scale);
+ void register_runtime_object();
+ void update_runtime(const dh2::objects::Resource&,const dh2::animation::Player&,
+                     int animation_ms,unsigned dt_ms,unsigned frame);
+ int request_path(const float* target);
+ static int find_path(void*,const dh2::character::PathToRequest32*,std::uint32_t*);
  void bind(ObjectActor& owner,int table) {
   actor=&owner;animation_table=table;
   character.bind({this,[](void* raw){return static_cast<SpawnOwner*>(raw)->facts;},
@@ -195,15 +251,76 @@ struct SpawnOwner {
   body={actor_world.create_character(config,&body_owner.services),config.radius,config.pinned};
   if(!body.body)throw std::runtime_error("Spawn physical body creation failed");
   ++body_creations;
+  register_runtime_object();
   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Spawn body ready | %s | creations %u | radius %.9g | category %x | mask %x",actor->name.c_str(),body_creations,body.radius*100.f,config.shape.category_bits,config.shape.mask_bits);
  }
 };
 void clear_actor_world() {
  actor_world.clear();
+ search_world.clear();
+ source_char_ai.clear();
  for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.spawn_owner){
   actor.spawn_owner->body={};actor.spawn_owner->actor=nullptr;
+  actor.spawn_owner->runtime_ready=false;actor.spawn_owner->sampled_clip=-1;
+  actor.spawn_owner->route_storage.clear();actor.spawn_owner->render_vertices.clear();
  }
 }
+
+namespace {
+constexpr std::uintptr_t kNativeCharAIDispatchToken=0xD2CA1001u;
+struct CharAIAppendContext { NativeCharAIRegistry* registry; };
+std::int32_t append_char_ai(void* raw,dh2::character_ai_initialization::State* state,
+                            std::uintptr_t ai) {
+ if(!raw||!state||!ai||state->identity!=ai)return 1;
+ auto& registry=*static_cast<CharAIAppendContext*>(raw)->registry;
+ if(registry.queue_order.size()>=registry.projections.capacity()||
+    std::find(registry.queue_order.begin(),registry.queue_order.end(),ai)!=registry.queue_order.end())return 1;
+ registry.queue_order.push_back(ai);
+ return 0;
+}
+
+void initialize_char_ai_registry() {
+ source_char_ai.clear();
+ std::size_t character_count=1; // The native Player is constructed before level Characters.
+ for(const auto& object:world_objects)character_count+=object.kind==1;
+ source_char_ai.projections.reserve(character_count);
+ source_char_ai.queue_order.reserve(character_count);
+ source_char_ai.by_character.reserve(character_count);
+ CharAIAppendContext context{&source_char_ai};
+ const dh2::character_ai_initialization::Services services{&context,append_char_ai};
+ const auto construct=[&](std::uintptr_t character_identity,std::uintptr_t ai_identity) {
+  auto projection=std::make_unique<NativeCharAIProjection>();
+  projection->character_identity=character_identity;
+  projection->ai_identity=ai_identity;
+  projection->state.identity=ai_identity;
+  const auto status=dh2::character_ai_initialization::construct(
+   &projection->state,kNativeCharAIDispatchToken,&services,&projection->constructor_result);
+  if(status!=dh2::character_ai_initialization::Status::complete||
+     projection->constructor_result.queue_calls!=1||!projection->constructor_result.queued)
+   throw std::runtime_error("Source CharAI constructor projection/registration failed");
+  if(dh2::character_ai_association::associate(&projection->state,character_identity)!=
+     dh2::character_ai_association::Status::complete ||
+     projection->state.owner_04!=character_identity || projection->state.active_ais_1c ||
+     projection->state.alternate_ais_20)
+   throw std::runtime_error("Source CharAI Character association failed");
+  auto* stable=projection.get();
+  source_char_ai.projections.push_back(std::move(projection));
+  if(!source_char_ai.by_character.emplace(character_identity,stable).second)
+   throw std::runtime_error("Duplicate native Character-to-CharAI projection");
+ };
+ construct(0x100000001ull,0x300000001ull);
+ for(std::size_t i=0;i<world_objects.size();++i)if(world_objects[i].kind==1)
+  construct(0x100000002ull+i,0x300000002ull+i);
+ if(source_char_ai.projections.size()!=character_count||
+    source_char_ai.queue_order.size()!=character_count)
+  throw std::runtime_error("Source CharAI constructor count/order differs");
+ source_char_ai.ready=true;
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+  "CharAI constructor projections | characters %zu | native source-order registration records %zu | source Character associations %zu | active AIS initialization pending",
+  source_char_ai.projections.size(),source_char_ai.queue_order.size(),source_char_ai.projections.size());
+}
+}
+
 void SpawnOwner::service(void* context,dh2::character::State* state,const dh2::character::Request* request) {
  using namespace dh2::character;
  auto& owner=*static_cast<SpawnOwner*>(context);
@@ -248,7 +365,229 @@ void SpawnOwner::service(void* context,dh2::character::State* state,const dh2::c
  default:throw std::runtime_error("Spawn source service is not bound");
  }
 }
-bool frozen=false,animation_failed=false,frozen_cursor_logged=false;int sampled_ms=0;
+void SpawnOwner::initialize_runtime(const ObjectGroup& group,
+        const dh2::physical::CharacterOwnerBounds& bounds,const float* scale) {
+ if(!actor||!level.native_floor||!scale)
+  throw std::runtime_error("Ghost actor runtime lacks its live Character/world");
+ std::string error;
+ scene=group.resource.rest_scene;
+ if(!visual.bind(scene,error))throw std::runtime_error("Ghost root-motion binding failed: "+error);
+ std::copy(actor->position.begin(),actor->position.end(),visual.root.position);
+ for(unsigned i=0;i<3;++i){visual_scale[i]=scale[i]*actor->scale[i];visual.root.scale[i]=visual_scale[i];}
+ constexpr float radians=3.14159265358979323846f/180.f;
+ const float euler[]{actor->rotation_degrees[0]*radians,
+                     actor->rotation_degrees[1]*radians,
+                     actor->rotation_degrees[2]*radians};
+ if(!visual.set_rotation(euler)||!visual.update_world(scene,error))
+  throw std::runtime_error("Ghost scene transform binding failed: "+error);
+
+ runtime={};owner_bounds=bounds;
+ std::copy(bounds.relative_box,bounds.relative_box+6,runtime.subobjects.local_bounds);
+ std::copy(bounds.absolute_box,bounds.absolute_box+6,runtime.subobjects.absolute_bounds);
+ std::copy(actor->position.begin(),actor->position.end(),runtime.subobjects.position);
+ std::copy(actor->position.begin(),actor->position.end(),runtime.subobjects.destination);
+ runtime.subobjects.rotation=euler[2];
+ runtime.rotation.rotation[2]=euler[2];runtime.rotation.heading_angle=euler[2];
+ std::copy(actor->position.begin(),actor->position.end(),runtime.controller.position);
+ std::copy(actor->position.begin(),actor->position.end(),runtime.controller.destination);
+ runtime.path.segments=nullptr;
+ route_storage.assign(level.native_floor->graph.node_count+1,{});
+ runtime.path.segments=route_storage.data();runtime.path.capacity=std::uint32_t(route_storage.size());
+ std::copy(actor->position.begin(),actor->position.end(),runtime.path.position);
+ std::copy(actor->position.begin(),actor->position.end(),runtime.path.target);
+ if(dh2_nav_object_defaults(&runtime.object))throw std::runtime_error("Ghost PFObject defaults rejected");
+ const dh2::navigation::ObjectInitRequest init{
+  &level.native_floor->collision_world,&runtime.object,actor->identity,
+  {actor->position[0],actor->position[1],actor->position[2]},config.radius*100.f,0,0};
+ if(dh2_nav_init_object(&init))throw std::runtime_error("Ghost PFObject initialization rejected");
+ if(body.body&&dh2_native_body_refresh_view(&runtime.body,&body))
+  throw std::runtime_error("Ghost native-body projection rejected");
+ path_to={actor->identity,0,0,0,0,{actor->position[0],actor->position[1],actor->position[2]},0};
+ path_services={this,find_path};
+ render_vertices.clear();render_vertices.reserve(group.resource.primitives.size());
+ for(const auto& primitive:group.resource.primitives)render_vertices.push_back(primitive.vertices);
+ sampled_clip=-1;runtime_ready=true;
+ register_runtime_object();
+}
+
+void SpawnOwner::register_runtime_object() {
+ if(!runtime_ready||!body.body||!actor||!level.native_floor)return;
+ const auto* box=owner_bounds.absolute_box;
+ const dh2::navigation::ProducerFields fields{
+  dh2::navigation::ProducerClass::character,1,config.radius,0,
+  {box[0],box[1]},{box[3],box[4]}};
+ const dh2::navigation::ProducerRequest producer{
+  &level.native_floor->collision_world,&live_registry,&runtime.object,actor->identity,&fields};
+ if(dh2_nav_update_game_object(&producer))throw std::runtime_error("Ghost PF obstacle registration rejected");
+}
+
+int SpawnOwner::find_path(void* context,const dh2::character::PathToRequest32* request,
+                          std::uint32_t* found) {
+ if(!context||!request||!found)return 1;
+ auto& owner=*static_cast<SpawnOwner*>(context);
+ if(!owner.actor||!owner.runtime_ready||request->owner!=owner.actor->identity||
+    request->reserved||request->reserved1||request->limit>100000||!level.native_floor)return 1;
+ dh2::navigation::RouteResult route{};
+ const int status=dh2::floors::find_path(*level.native_floor,owner.runtime.path,
+                                         request->target,request->limit,route);
+ if(status)return 1;
+ *found=route.found;
+ owner.path_to.path_nonempty=owner.runtime.path.count!=0;
+ std::memcpy(owner.path_to.path_target,request->target,sizeof(owner.path_to.path_target));
+ owner.runtime.subobjects.path_count=owner.runtime.path.count;
+ std::memcpy(owner.runtime.subobjects.path_target,owner.runtime.path.target,
+             sizeof(owner.runtime.subobjects.path_target));
+ return 0;
+}
+
+int SpawnOwner::request_path(const float* target) {
+ if(!target||!runtime_ready)return -1;
+ dh2::character::PathToResult16 result{};
+ const int status=dh2_character_path_to(&result,&path_to,target,&path_services);
+ if(status)return -1;
+ return result.requested?int(result.find_result):0;
+}
+
+void SpawnOwner::update_runtime(const dh2::objects::Resource& resource,
+        const dh2::animation::Player& clip,int animation_ms,unsigned dt_ms,unsigned frame) {
+ if(!actor||!runtime_ready||!body.body||frozen)return;
+ if(resource.primitives.size()!=render_vertices.size())
+  throw std::runtime_error("Ghost actor mesh/runtime binding differs");
+ std::string error;
+ const int clip_id=actor->scheduler.clip().anim;
+ dh2::move::Policy decoded{};
+ if(dh2_move_policy(&decoded,&character.state.flags))throw std::runtime_error("Ghost movement policy decode failed");
+ const bool reset=sampled_clip!=clip_id;
+ if(!visual.sample(scene,clip,animation_ms,frame,reset,
+                   decoded.position_from_visual!=0,error))
+  throw std::runtime_error("Ghost animation/root-motion sample failed: "+error);
+ sampled_clip=clip_id;
+ if(dh2_native_body_refresh_view(&runtime.body,&body))
+  throw std::runtime_error("Ghost physical view refresh failed");
+ runtime.subobjects.path_count=runtime.path.count;
+ std::memcpy(runtime.subobjects.path_target,runtime.path.target,sizeof(runtime.subobjects.path_target));
+ const dh2::actor::RuntimePolicy policy{{1,0,0,decoded.position_from_physics},0,0,0,0,
+                                        dh2::actor::base_virtual_speed};
+ const dh2::subobjects::Services services{nullptr,actor_virtual_service};
+ const dh2::actor::RuntimeRequest request{
+  &runtime,&body,&visual,&scene,&level.native_floor->collision_world,
+  &level.native_floor->graph,&live_registry,&live_motion_policy,&live_workspace,
+  nullptr,actor->properties.resolved.data(),&policy,&services,nullptr,
+  actor->identity,character.state.flags,dt_ms};
+ dh2::actor::RuntimeResult result{};
+ if(dh2::actor::update_actor(result,request,error))
+  throw std::runtime_error("Ghost source actor runtime failed: "+error);
+ std::copy(runtime.subobjects.position,runtime.subobjects.position+3,actor->position.begin());
+ constexpr float radians=0.01745329251994329577f;
+ actor->rotation_degrees[2]=runtime.subobjects.rotation/radians;
+ dh2_node_matrix(actor->placement.data(),visual.root.position,visual.root.quaternion,visual.root.scale);
+}
+
+namespace {
+void sync_search_projection(ObjectActor& actor) {
+ auto& projection=actor.search_projection;
+ auto& object=projection.object;
+ object.identity=actor.identity;
+ std::copy(actor.position.begin(),actor.position.end(),object.position);
+ std::copy(actor.position.begin(),actor.position.end(),object.target_position);
+ if(actor.spawn_owner&&actor.spawn_owner->runtime_ready) {
+  const auto* position=actor.spawn_owner->runtime.subobjects.position;
+  std::copy(position,position+3,object.target_position);
+ }
+ constexpr float radians=0.01745329251994329577f;
+ const float angle=actor.rotation_degrees[2]*radians;
+ object.forward[0]=std::cos(angle);object.forward[1]=std::sin(angle);object.forward[2]=0.f;
+ object.visible=actor.spawn_owner?std::uint8_t(actor.spawn_owner->source_visible):1;
+ object.has_target_position=1;
+ // GameObject constructors write +0x2ee=1 and +0x2f0=0. RoomZone enrollment
+ // or InitSpawned later owns +0x2f0; this projection remains at the proven
+ // constructor value until that producer is bound. These are distinct from
+ // Character visibility.
+ object.character_2ee=1;object.character_2f0=0;
+ projection.is_character=actor.kind==1;
+ if(actor.kind==1) {
+  projection.character.identity=actor.identity;
+  projection.character.object=&object;
+  projection.character.source_word_1310=actor.properties.resolved[198];
+  projection.character.source_word_1314=actor.properties.resolved[199];
+ }
+}
+
+void sync_prince_search_projection() {
+ auto& projection=prince_search_projection;
+ auto& object=projection.object;
+ object.identity=0x100000001ull;
+ std::copy(actor_position.begin(),actor_position.end(),object.position);
+ std::copy(actor_position.begin(),actor_position.end(),object.target_position);
+ std::copy(prince_runtime.subobjects.position,prince_runtime.subobjects.position+3,
+           object.target_position);
+ object.forward[0]=std::cos(heading);object.forward[1]=std::sin(heading);object.forward[2]=0.f;
+ object.visible=1;object.has_target_position=1;object.character_2ee=1;object.character_2f0=0;
+ projection.is_character=1;
+ projection.character.identity=object.identity;
+ projection.character.object=&object;
+ projection.character.source_word_1310=prince_combat.properties.resolved[198];
+ projection.character.source_word_1314=prince_combat.properties.resolved[199];
+}
+
+void build_search_world() {
+ search_world.clear();
+ if(!level.rooms||level.rooms>512||world_objects.empty())
+  throw std::runtime_error("Character search room projection unavailable");
+ search_world.rooms.resize(level.rooms);
+ search_world.object_heads.resize(level.rooms);
+ search_world.object_entries.resize(world_objects.size()+1);
+ std::vector<dh2::character::aggro_search::ObjectEntry*> tails(level.rooms);
+ for(unsigned room=0;room<level.rooms;++room) {
+  auto& head=search_world.object_heads[room];head={&head,nullptr};tails[room]=&head;
+  search_world.rooms[room]={room+1<level.rooms?&search_world.rooms[room+1]:&search_world.room_sentinel,&head};
+ }
+ search_world.room_sentinel={search_world.rooms.empty()?&search_world.room_sentinel:
+                             &search_world.rooms.front(),nullptr};
+ search_world.registry={&search_world.room_sentinel};
+ std::vector<ObjectActor*> actors(world_objects.size(),nullptr);
+ for(auto& group:object_groups)for(auto& actor:group.instances) {
+  if(actor.identity<0x100000002ull)continue;
+  const auto index=std::size_t(actor.identity-0x100000002ull);
+  if(index>=actors.size()||actors[index])throw std::runtime_error("Character search actor identity differs");
+  actors[index]=&actor;
+ }
+ for(std::size_t i=0;i<world_objects.size();++i) {
+  const auto& record=world_objects[i];
+  if(record.room>=level.rooms||!actors[i])throw std::runtime_error("Character search room membership differs");
+  auto& actor=*actors[i];sync_search_projection(actor);
+  const auto identity=actor.identity;
+  if(!search_world.objects.emplace(identity,&actor.search_projection.object).second)
+   throw std::runtime_error("Duplicate Character search object identity");
+  if(actor.kind==1) {
+   if(!search_world.characters.emplace(identity,&actor.search_projection.character).second)
+    throw std::runtime_error("Duplicate Character search identity");
+  }
+  auto& entry=search_world.object_entries[i];entry={&search_world.object_heads[record.room],
+                                                   &actor.search_projection.object};
+  tails[record.room]->next=&entry;tails[record.room]=&entry;
+ }
+ search_world.ready=true;
+}
+
+void sync_search_world() {
+ if(!search_world.ready)return;
+ for(auto& group:object_groups)for(auto& actor:group.instances)
+  if(actor.kind==1)sync_search_projection(actor);
+ sync_prince_search_projection();
+ // Trigger contact is not the source RoomZone membership producer. Keep the
+ // player projection resolvable but out of room lists until zone enrollment
+ // is reconstructed from RoomZone::AddInitialObject/ZoneEntered.
+}
+
+[[maybe_unused]] int resolve_search_character(void*,std::uintptr_t identity,
+        dh2::character::aggro_search::Character** output) {
+ if(!output||!search_world.ready)return 1;
+ const auto found=search_world.characters.find(identity);
+ *output=found==search_world.characters.end()?nullptr:found->second;
+ return 0;
+}
+}
 GLint position,texcoord,color,mvp,texture_matrix,material_color,has_alpha,alpha_ref;
 void check(const char* operation){
   auto code=glGetError();if(code!=GL_NO_ERROR){char b[128];std::snprintf(b,sizeof(b),"%s GL error 0x%04x",operation,code);throw std::runtime_error(b);}
@@ -329,7 +668,7 @@ Matrix camera(int width,int height){
 }
 void mod_directory(std::string directory){mod_root=std::move(directory);}
 std::vector<std::uint8_t> read_asset(AAssetManager* assets,const std::string& name){return read(assets,name,"");}
-void reset_context(){native_actor_ready=false;clear_actor_world();prince_body={};resume_world=resume_world||world_mode;if(world_mode){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}world_mode=false;move_x=move_y=0;draws.clear();images.clear();object_groups.clear();world_objects.clear();prince_locomotion=dh2::actor::BlendedPlayback{};prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;inspected_object=-1;current_scene={};player=dh2::animation::Player{};walk_player=dh2::animation::Player{};level={};program=0;enabled=false;}
+void reset_context(){native_actor_ready=false;clear_actor_world();search_world.clear();prince_search_projection={};prince_body={};resume_world=resume_world||world_mode;if(world_mode){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}world_mode=false;move_x=move_y=0;draws.clear();images.clear();object_groups.clear();world_objects.clear();prince_locomotion=dh2::actor::BlendedPlayback{};prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;inspected_object=-1;current_scene={};player=dh2::animation::Player{};walk_player=dh2::animation::Player{};level={};program=0;enabled=false;}
 void deactivate(){native_actor_ready=false;clear_actor_world();prince_body={};crypt_spawn_script.clear();crypt_trigger_state={};enabled=false;world_mode=false;resume_world=false;move_x=move_y=0;}
 bool active(){return enabled;}
 void set_enemy_ai(bool value){enemy_ai_enabled=value;__android_log_print(ANDROID_LOG_INFO,"DH2Native","Enemy AI configured | automatic melee %d",value);}
@@ -903,6 +1242,7 @@ void initialize_gated_characters(AAssetManager* assets) {
    owner.character.state={};actor.state="Limbus";
    if(owner.character.spawn_transition(0)!=1)throw std::runtime_error("Limbus source initialization rejected");
   } else if(owner.character.state.body_present)owner.create_body();
+  if(!owner.runtime_ready)owner.initialize_runtime(group,bounds,mesh.effective_scale);
   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Gated character ready | %s | source state %d | presentation visible %u | body %u | Spawn sequence %d | AI type %d | restored %u",actor.name.c_str(),owner.character.state.current,unsigned(owner.source_visible),unsigned(owner.body.body!=nullptr),owner.spawn.spawn_animation,ai->type,unsigned(!fresh));
  }
 }
@@ -1057,11 +1397,15 @@ void advance_native_actor(unsigned dt_ms){
   if(!prince_locomotion.scene_phase(std::uint32_t(scene_clock),prince_attack_clips,prince_visual,current_scene,error))throw std::runtime_error(error);
   prince_scene_phase=false;
  actor_world.update(dt_ms);++native_physics_steps;
- // Original Character.Update executes CharTimers before AI, state machine,
- // animator and GameObject. GhostAmbush01 binds Wait/Spawn only and never
- // marks the Prince scripted; full ScriptManager blocking producers remain
- // outside this bounded level adapter.
+ // This renderer advances the authored timer and FSM subset after the world
+ // step. The CharAI frame belongs between these calls; native Ghost AI is not
+ // wired yet, so do not report this interim sequence as a complete update.
  if(prince_character.update_timers(dt_ms,0)!=1)throw std::runtime_error("Character timer update failed");
+ for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.spawn_owner){
+  auto& character=actor.spawn_owner->character;
+  if(character.update_timers(dt_ms,0)<0||character.update_state(dt_ms)<0)
+   throw std::runtime_error("Gated Character timer/state update failed");
+ }
  // Development touch input supplies the original controller facts. State
  // predicates/focus/blur decide eligibility, policy and authored animation.
  const bool input_active=std::hypot(move_x,move_y)>.08f;
@@ -1099,6 +1443,7 @@ void advance_native_actor(unsigned dt_ms){
  std::copy(prince_runtime.subobjects.position,prince_runtime.subobjects.position+3,actor_position.begin());heading=prince_runtime.subobjects.rotation;
  // TriggerZone contact consumes the updated absolute GameObject bounds.
  update_crypt_contact();
+ sync_search_world();
  ++native_actor_frames;
  const auto physical_position=prince_body.body?prince_body.body->GetPosition():b2Vec2(actor_position[0]*.01f,actor_position[1]*.01f);
  if(native_actor_frames==1||native_actor_frames%120==0)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Native actor frame | scene %u | Step %u | actor %u | source phase %u | clip %d | ms %d | replays %u | body %.6g %.6g | contacts %u %u | state %d | body present %d | timeline scale %.9g",prince_locomotion.root_timestamp,native_physics_steps,native_actor_frames,result.phase,prince_locomotion.current_clip(),prince_locomotion.current_timeline().current_ms,prince_locomotion.restarts,physical_position.x,physical_position.y,prince_body_owner.additions,prince_body_owner.results,prince_state.current,int(bool(prince_body.body)),prince_locomotion.current_timeline().scale);
@@ -1171,8 +1516,9 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       auto found=std::find_if(candidate_groups.begin(),candidate_groups.end(),[&](const ObjectGroup& group){return group.instances.front().model==object.model&&group.animation_table==animation_table;});
       auto start_actor=[&](ObjectGroup& group){
         group.instances.emplace_back(object);auto& actor=group.instances.back();
+        actor.identity=0x100000002ull+(&object-object_records.data());
         if(object.kind!=1)return;
-        actor.identity=0x100000002ull+(&object-object_records.data());actor.aggro.initialize(object_records.size()+1);
+        actor.aggro.initialize(object_records.size()+1);
         const auto character=std::find(character_table.names.begin(),character_table.names.end(),object.character);const auto* class_id=dh2::data::property(character_table,object.character,"ClassID");
         if(character==character_table.names.end()||!class_id)throw std::runtime_error("Original monster class link absent");
         actor.class_id=*class_id;actor.base_class=character_table.rows.at(character-character_table.names.begin());
@@ -1279,7 +1625,9 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     world_mode=true;resume_world=false;walking=false;move_x=move_y=0;heading=restore?previous_heading:0;movement_steps=blocked_steps=0;
     radius=350;yaw=-1.57f;pitch=.75f;zoom=1;object_epoch=epoch=last_frame=std::chrono::steady_clock::now();sampled_ms=0;frozen=false;
     initialize_native_actor(assets,restore);
+    initialize_char_ai_registry();
     initialize_crypt_script(assets,restore);
+    build_search_world();
     char report[256];std::snprintf(report,sizeof(report),"Crypt | %u rooms | %u monsters | %u scenery objects\n%u triangles. Drag the movement control to walk.",level.rooms,monsters,decors,triangles+586+object_triangles);
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Objects ready | monsters %u | decors %u | resources %zu | instance draws %u | triangles %u | character records %zu | model entries %zu | idle preview only",monsters,decors,object_groups.size(),object_draws,object_triangles,character_table.rows.size(),model_table.values.size());
     if(level.native_floor)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Native floors ready | records %zu | graph nodes %u | graph edges %u | selector collision controls height",level.native_floor->records.size(),level.native_floor->graph.node_count,level.native_floor->graph.edge_count);
@@ -1435,20 +1783,27 @@ void draw(int width,int height){
   }
   if(world_mode)for(auto& group:object_groups){
     std::string error;
-    auto render_actor=[&](const ObjectActor& instance){for(unsigned i=0;i<group.draws.size();++i){const auto& primitive=group.resource.primitives[i];const auto& batch=group.draws[i];
-      if(!primitive.skin.nodes.empty()){glBindBuffer(GL_ARRAY_BUFFER,batch.vertices);glBufferSubData(GL_ARRAY_BUFFER,0,primitive.vertices.size()*sizeof(Vertex),primitive.vertices.data());}
-      auto transform=dh2::scene::multiply(projection,instance.placement);if(primitive.skin.nodes.empty())transform=dh2::scene::multiply(transform,group.resource.scene.graph[primitive.node].world);submit(batch,transform);
+    auto render_actor=[&](const ObjectActor& instance,SpawnOwner* owner){for(unsigned i=0;i<group.draws.size();++i){const auto& primitive=group.resource.primitives[i];const auto& batch=group.draws[i];
+      const auto& scene=owner?owner->scene:group.resource.scene;
+      const auto& vertices=owner?owner->render_vertices.at(i):primitive.vertices;
+      if(!primitive.skin.nodes.empty()){
+        if(owner){std::vector<dh2::skinning::Matrix> matrices;std::vector<std::array<float,3>> deformed;
+          if(!dh2::skinning::palette(primitive.skin,scene,matrices,error)||
+             !dh2::skinning::positions(primitive.skin,matrices,primitive.rest_positions,deformed,error))
+            throw std::runtime_error("Gated actor skinning failed: "+error);
+          for(unsigned k=0;k<vertices.size();++k)std::copy(deformed[k].begin(),deformed[k].end(),owner->render_vertices[i][k].p);
+        }
+        glBindBuffer(GL_ARRAY_BUFFER,batch.vertices);glBufferSubData(GL_ARRAY_BUFFER,0,vertices.size()*sizeof(Vertex),vertices.data());
+      }
+      auto transform=owner?projection:dh2::scene::multiply(projection,instance.placement);
+      if(primitive.skin.nodes.empty())transform=dh2::scene::multiply(transform,scene.graph[primitive.node].world);submit(batch,transform);
     }};
     if(group.animation_table<0){
       const auto& clip=group.resource.animation;int ms=clip.start;
       if(clip.track_count()){const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-object_epoch).count();ms=frozen?std::clamp(sampled_ms,clip.start,clip.end):clip.start+elapsed%(clip.end-clip.start);}
       if(!dh2::objects::sample(group.resource,ms,error)){__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Object sample failed: %s",error.c_str());enabled=false;return;}
-      for(const auto& instance:group.instances)render_actor(instance);
+      for(const auto& instance:group.instances)render_actor(instance,nullptr);
     }else for(auto& actor:group.instances){
-      if(actor.spawn_owner&&!frozen) {
-        auto& character=actor.spawn_owner->character;
-        if(character.update_timers(unsigned(frame_dt*1000),0)<0||character.update_state(unsigned(frame_dt*1000))<0)throw std::runtime_error("Gated Character update failed");
-      }
       if(actor.spawn_owner&&!actor.spawn_owner->source_visible)continue;
       update_enemy(actor,group.animation_table);
       if(actor.pending_death){
@@ -1497,10 +1852,18 @@ void draw(int width,int height){
         if(remaining<=0)break;
       }
       const auto& clip=group.clips.at(actor.scheduler.clip().anim);const int ms=frozen?std::clamp(sampled_ms,clip.start,clip.end):clip.start+int(std::clamp(actor.cursor,0.,double(clip.end-clip.start)));
-      if(!dh2::objects::sample(group.resource,clip,ms,error)){__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Actor sample failed: %s",error.c_str());enabled=false;return;}
-      render_actor(actor);
+      if(actor.spawn_owner){
+        auto& owner=*actor.spawn_owner;
+        owner.update_runtime(group.resource,clip,ms,unsigned(std::max(0.f,frame_dt*1000.f)),native_actor_frames);
+        sync_search_projection(actor);
+        render_actor(actor,&owner);
+      }else{
+        if(!dh2::objects::sample(group.resource,clip,ms,error)){__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Actor sample failed: %s",error.c_str());enabled=false;return;}
+        render_actor(actor,nullptr);
+      }
     }
   }
+  sync_search_world();
   glDisableVertexAttribArray(position);glDisableVertexAttribArray(texcoord);glDisableVertexAttribArray(color);
   glDepthMask(GL_TRUE);glDisable(GL_BLEND);glDisable(GL_CULL_FACE);glDisable(GL_DEPTH_TEST);glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);glBindBuffer(GL_ARRAY_BUFFER,0);
   const auto e=glGetError();if(e!=GL_NO_ERROR)__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Model draw GL error 0x%04x",e);

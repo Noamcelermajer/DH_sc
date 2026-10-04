@@ -46,7 +46,8 @@ struct ActorSession::Impl : std::enable_shared_from_this<ActorSession::Impl> {
     character::CharacterControlServices16 control_bound{};
     character::PathToServices16 path_bound{};
     monster_external_script::Services script_bound{};
-    monster_external_script::Session script;
+    monster_external_script::Session owned_script;
+    monster_external_script::Session* script_vm = nullptr;
 
     std::uintptr_t ai = 0, owner = 0, active = 0, active_callee = 0;
     bool busy = false;
@@ -86,6 +87,9 @@ struct ActorSession::Impl : std::enable_shared_from_this<ActorSession::Impl> {
             script_has_target, script_get_target, script_get_state, script_has_path,
             script_set_target, script_head_to, script_move_to};
     }
+
+    monster_external_script::Session* active_script() noexcept { return script_vm; }
+    const monster_external_script::Session* active_script() const noexcept { return script_vm; }
 
     bool live() const noexcept {
         if (!b.enemy_state || !b.event_state || !b.relation_state ||
@@ -175,7 +179,7 @@ struct ActorSession::Impl : std::enable_shared_from_this<ActorSession::Impl> {
         auto& s = *static_cast<Impl*>(raw);
         if (!hold || !s.live() || state != s.b.enemy_state || !active_pair ||
             active_pair->identity != s.active || active_pair->callee != s.active_callee ||
-            !s.script.ready()) return 1;
+            !s.active_script() || !s.active_script()->ready()) return 1;
         auto keep = s.self.lock();
         if (!keep) return 1;
         auto* token = new (std::nothrow) HoldToken{std::move(keep)};
@@ -195,7 +199,7 @@ struct ActorSession::Impl : std::enable_shared_from_this<ActorSession::Impl> {
         if (s.current_result) ++s.current_result->script_dispatches;
         try {
             s.callback_error.clear();
-            s.last_script_status = static_cast<std::int32_t>(s.script.dispatch(
+            s.last_script_status = static_cast<std::int32_t>(s.active_script()->dispatch(
                 monster_external_script::Event::enemy_spotted, enemy_id, s.callback_error));
             return s.last_script_status == static_cast<int>(monster_external_script::Status::complete) && s.live() ? 0 : 1;
         } catch (...) { return 1; }
@@ -393,16 +397,19 @@ struct ActorSession::Impl : std::enable_shared_from_this<ActorSession::Impl> {
     }
     static std::int32_t script_set_target(void* raw,std::uintptr_t owner_id,std::uintptr_t target) {
         auto& s=*static_cast<Impl*>(raw); if(!s.live()||owner_id!=s.owner)return 1;
+        if(s.current_result) ++s.current_result->set_target_calls;
         return dh2_character_ai_set_target(s.b.set_target_state,target,0,&s.set_target_bound)==character::set_target::complete&&s.live()?0:1;
     }
     static std::int32_t script_head_to(void* raw,std::uintptr_t owner_id,std::uintptr_t target) {
         auto& s=*static_cast<Impl*>(raw); if(!s.live()||owner_id!=s.owner)return 1;
+        if(s.current_result) ++s.current_result->head_to_calls;
         const auto status=dh2_character_controller_character(s.b.controller_state,
             character::controller_move_object,target,&s.control_bound);
         return status==1&&s.live()?0:1;
     }
     static std::int32_t script_move_to(void* raw,std::uintptr_t owner_id,std::uintptr_t target) {
         auto& s=*static_cast<Impl*>(raw); if(!s.live()||owner_id!=s.owner)return 1;
+        if(s.current_result) ++s.current_result->move_to_calls;
         const auto status=dh2_character_controller_character(s.b.controller_state,
             character::controller_move_object,target,&s.control_bound);
         return status==1&&s.live()?0:1;
@@ -450,11 +457,61 @@ Status ActorSession::bind(const Bindings& bindings,
         error = "actor session identity or service projection is invalid";
         return Status::invalid_argument;
     }
-    const auto script_status = candidate->script.initialize(commons, monster,
+    const auto script_status = candidate->owned_script.initialize(commons, monster,
         candidate->script_bound, error);
     if (script_status != monster_external_script::Status::complete) return Status::script_failed;
+    candidate->script_vm = &candidate->owned_script;
     if (!candidate->live()) { error = "actor owner changed while binding script"; return Status::stale_binding; }
     impl_ = std::move(candidate);
+    error.clear();
+    return Status::complete;
+}
+
+Status ActorSession::prepare_staged(const Bindings& bindings, std::string& error) {
+    if (impl_ && (impl_->busy || impl_->active_holds)) { error = "actor session busy"; return Status::busy; }
+    if (!bindings.ai_identity || !bindings.owner_identity || !bindings.active_ais_identity ||
+        !bindings.active_ais_callee || !bindings.enemy_state || !bindings.enemy_services ||
+        !bindings.event_state || !bindings.event_services || !bindings.relation_state ||
+        !bindings.relation_services || !bindings.set_target_state || !bindings.set_target_services ||
+        !bindings.search_services || !bindings.controller_state || !bindings.control_services ||
+        !bindings.path_state || !bindings.path_services ||
+        !bindings.event_services->invoke || !bindings.control_services->invoke ||
+        !bindings.path_services->find_path) {
+        error = "actor session binding is incomplete";
+        return Status::invalid_argument;
+    }
+    std::shared_ptr<Impl> candidate;
+    try { candidate.reset(new (std::nothrow) Impl(bindings)); }
+    catch (...) { error = "actor session allocation failed"; return Status::allocation_failed; }
+    if (!candidate) { error = "actor session allocation failed"; return Status::allocation_failed; }
+    candidate->self = candidate;
+    if (!candidate->live() || !candidate->all_callbacks_present()) {
+        error = "actor owner identity or callback projection is invalid";
+        return Status::invalid_argument;
+    }
+    impl_ = std::move(candidate);
+    error.clear();
+    return Status::complete;
+}
+
+bool ActorSession::staged_services(monster_external_script::Services& output,
+                                   std::shared_ptr<void>& lifetime) const noexcept {
+    if (!impl_ || impl_->script_vm || impl_->busy || !impl_->live()) return false;
+    output = impl_->script_bound;
+    lifetime = impl_;
+    return true;
+}
+
+Status ActorSession::adopt_staged(monster_external_script::Session& session, std::string& error) {
+    if (!impl_) { error = "actor session has no staged callback context"; return Status::not_ready; }
+    if (impl_->busy || impl_->active_holds) { error = "actor session busy"; return Status::busy; }
+    if (impl_->script_vm) { error = "actor session already owns a script binding"; return Status::busy; }
+    if (!impl_->live()) { error = "actor owner changed while preparing AIS VM"; return Status::stale_binding; }
+    if (!session.ready() || !session.uses_services(impl_->script_bound)) {
+        error = "pending AIS VM does not use the prepared actor callbacks";
+        return Status::script_failed;
+    }
+    impl_->script_vm = &session;
     error.clear();
     return Status::complete;
 }
@@ -462,21 +519,23 @@ Status ActorSession::bind(const Bindings& bindings,
 Status ActorSession::reset(std::string& error) {
     if (!impl_) { error.clear(); return Status::complete; }
     if (impl_->busy || impl_->active_holds) { error = "actor session busy"; return Status::busy; }
-    const auto status = impl_->script.reset(error);
+    const auto status = impl_->script_vm == &impl_->owned_script ?
+        impl_->owned_script.reset(error) : monster_external_script::Status::complete;
     impl_.reset();
     return status == monster_external_script::Status::complete ? Status::complete : Status::busy;
 }
 
-bool ActorSession::ready() const noexcept { return impl_ && impl_->script.ready() && impl_->live(); }
+bool ActorSession::ready() const noexcept { return impl_ && impl_->active_script() &&
+    impl_->active_script()->ready() && impl_->live(); }
 monster_external_script::Statistics ActorSession::script_statistics() const noexcept {
-    return impl_ ? impl_->script.statistics() : monster_external_script::Statistics{};
+    return impl_ && impl_->active_script() ? impl_->active_script()->statistics() : monster_external_script::Statistics{};
 }
 
 Status ActorSession::search_and_dispatch(character::aggro_search::TargetList* list,
     const character::aggro_search::RoomRegistry* rooms, float view_radius, float cone,
     ScanResult* result) {
     auto current = impl_;
-    if (!current || !current->script.ready()) return Status::not_ready;
+    if (!current || !current->active_script() || !current->active_script()->ready()) return Status::not_ready;
     if (!list || !rooms || !result) return Status::invalid_argument;
     if (current->busy) return Status::busy;
     if (!current->live()) return Status::stale_binding;

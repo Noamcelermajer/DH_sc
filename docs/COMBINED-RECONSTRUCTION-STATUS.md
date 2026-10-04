@@ -5,6 +5,9 @@ Adam reference: [`AdamCelermajer/DH_sc`](https://github.com/AdamCelermajer/DH_sc
 
 This report supersedes older documents' descriptions of the current default development build. Historical reports retain their original artifact identities and test scopes.
 
+**Latest source milestone:** [AI lifecycle checkpoint](SOURCE-AI-LIFECYCLE-CHECKPOINT-2026-10-04.md), APK `8ed56e8f...` (24,219,159 bytes). Both native ABIs compile 33 AI/script/zone units and pass 47 export groups, ELF64/16 KiB and signing checks. The exact APK passes API37/16 KiB ambush/spawn/reload/recreation tests with 401 frozen build inputs. Fourteen source constructors and separate Character associations run per level-registration epoch. Active Ghost initialization/pursuit/attacks remain pending. New isolated source covers staged same-VM ownership, binding callers, callback flags, queue/range/interactivity and room enrollment.
+
+
 ## Improved project brief
 
 Reconstruct Dungeon Hunter 2's game logic and engine behavior as maintainable, buildable source by combining Adam Celermajer's research with the existing recovery and implementation work. Produce a native 64-bit Android app for the current Android release, with 16 KiB memory-page compatibility, that preserves the original gameplay and content and supports documented fan changes to data, assets and scripts.
@@ -43,13 +46,13 @@ Use the following concrete measures instead:
 |---|---:|---|
 | Original engine function ranges | 31,018 | Original symbol/assembly inventory; includes engine, libraries and support code. Not a count of reconstructed functions. |
 | Adam original-address mapping reach | 1,455 unique addresses / 137 manifests | 2,210 repeated checkpoint records deduplicated by address. Mapping/evidence reach, not a completed implementation count. |
-| Current Character/engine mapping extension | 190 verified unique ranges / 315 evidence records across 34 manifests; 102 additional addresses; 1,557 combined unique addresses | Limbus/Spawn/factory, template/RNG, Crypt trigger/script, respawn/group/aggro, acquisition/event/target/master/range/pause/external-Lua/state-callback kernels, visibility and material-selector evidence. Duplicate evidence is deduplicated; implementation boundaries are explicit. Not a count of fully rebuilt functions. |
+| Current Character/engine mapping extension | 380 verified unique ranges / 560 evidence records across 47 manifests; 258 additional addresses; 1,713 combined unique addresses | Limbus/Spawn/factory, template/RNG, Crypt trigger/script, respawn/group/aggro, acquisition/event/target/master/range/pause/external-Lua/state-callback kernels, visibility and material-selector evidence. Duplicate evidence is deduplicated; implementation boundaries are explicit. Not a count of fully rebuilt functions. |
 | Earlier selective-import mapping reach | 133 unique addresses / 9 manifests | Much of Adam's deeper mapping was initially omitted; evidence restoration is part of this continuation. |
 | Original engine pseudocode exports | 31,794 successful exports | Generated decompiler text; not correct compilable C++ and not the same denominator as unique symbol ranges. |
 | Engine `.text` bytes accounted for | 99.989968% | Assembly/disassembly accounting only. No source/game-completion percentage follows from it. |
 | Original plaintext scripts recovered | 219 files / 900,493 bytes | Actual cache Lua source, preserved exactly. Native service ownership and complete live execution remain incomplete. |
 | Repaired/decompiled Android Java | 288 source files | Source recovery/reconstruction of Android glue; distinguish it from independently reconstructed native gameplay. |
-| Maintained reconstruction/port code | 463 source files / 54,168 lines / 2,843,474 bytes | Frozen Git-index source blobs and adapters; excludes vendor/upstream code, recovered reference corpora, packaged original scripts, fixtures, tests/tools and the 288 repaired/decompiled Java files. Quantity is not a fidelity or completion percentage. |
+| Maintained reconstruction/port code | 491 source files / 57,703 lines / 3,022,228 bytes | Frozen Git-index source blobs and adapters; excludes vendor/upstream code, recovered reference corpora, packaged original scripts, fixtures, tests/tools and the 288 repaired/decompiled Java files. Quantity is not a fidelity or completion percentage. |
 | Adam core modules imported | 577 files / 2,929,226 bytes | Seven modules imported at a pinned commit before dependency-path adaptations; includes headers/tools/tests, not 577 gameplay implementations. |
 | Adam script runtime imported | 158 files / 1,064,065 bytes | Isolated import includes Lua dependency source; do not count all of it as reconstructed game code. |
 | Current native app bundled assets | 243 | A selected Crypt/Prince development bundle including paired trigger scripts, two unchanged monster AI scripts and bounded provenance; not the complete game cache. |

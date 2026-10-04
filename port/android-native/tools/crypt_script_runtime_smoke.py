@@ -26,6 +26,8 @@ def main():
     parser.add_argument('--serial', required=True)
     parser.add_argument('--apk', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--require-source-pursuit', action='store_true',
+                        help='enable enemy AI and require two independent source Ghost body pursuits')
     args = parser.parse_args()
     assert args.serial.startswith('emulator-')
     out = args.output.resolve()
@@ -73,7 +75,8 @@ def main():
     def launch():
         nonlocal pid, log_since
         log_since = adb('shell', 'date', '+%s.%N')
-        launch_fresh(adb, '--es', 'world', 'crypt01.dwld', '--ez', 'enemy_ai', 'false')
+        launch_fresh(adb, '--es', 'world', 'crypt01.dwld', '--ez', 'enemy_ai',
+                     'true' if args.require_source_pursuit else 'false')
         pid = adb('shell', 'pidof', PACKAGE)
         report.setdefault('launch_log_boundaries', []).append({'pid': pid, 'epoch_since': log_since})
         return wait(lambda text: 'Crypt script ready | common 15 | level 25 | script 17' in text and
@@ -177,6 +180,17 @@ def main():
                                            'time_ms': int(row[3])} for row in spawns]
         report['source_wait_start_frames'] = [{'duration': row[0], 'time_ms': row[1], 'frame_dt': row[2]} for row in waits]
         report['actual_touch_contact_triggered_original_script'] = True
+        if args.require_source_pursuit:
+            from ghost_ai_runtime_evidence import validate_pursuit
+            def pursued(value):
+                try:
+                    validate_pursuit(value)
+                    return True
+                except AssertionError:
+                    return False
+            text = wait(pursued, 'two source Ghost acquisition/Lua/path/body pursuits', timeout=30)
+            report['source_ghost_pursuit'] = validate_pursuit(text)
+            report['native_source_pursuit_verified'] = True
         capture('source-ghost-pair-idle')
         rejected_pairs = [(legacy, gates[NAMES[0]]), (gates[NAMES[0]], legacy),
                           (gates[NAMES[1]], -2)]

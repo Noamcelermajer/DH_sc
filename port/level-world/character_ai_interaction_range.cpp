@@ -84,7 +84,7 @@ Status evaluate_object(State* state,std::uintptr_t candidate,const Services* ser
     status=call(bound,state,result,Operation::interaction_type,candidate,state->owner,response);
     if(status!=Status::complete)return status;
     result->interaction_type=response.word;
-    result->value=remaining<(response.word==8?0.f:threshold);
+    result->value=remaining<=(response.word==8?0.f:threshold);
     return Status::complete;
 }
 } // namespace dh2::character_ai_interaction_range

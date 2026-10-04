@@ -24,6 +24,8 @@ def main():
     parser.add_argument('--include-acquisition-sources', action='store_true')
     parser.add_argument('--include-frame-sources', action='store_true')
     parser.add_argument('--include-native-owner-sources', action='store_true')
+    parser.add_argument('--include-runtime-dependency-sources', action='store_true')
+    parser.add_argument('--include-lifecycle-sources', action='store_true')
     args = parser.parse_args()
     runtime = json.loads(args.runtime.read_text(encoding='utf-8'))
     digest = sha(args.apk)
@@ -65,16 +67,30 @@ def main():
         'character_enemy_spotted', 'monster_external_script_session',
         'character_ai_set_target', 'character_ai_relations', 'character_ai_in_combat',
     )
-    acquisition = args.include_acquisition_sources or args.include_frame_sources or args.include_native_owner_sources
+    runtime_dependencies = args.include_runtime_dependency_sources or args.include_lifecycle_sources
+    frame = args.include_frame_sources or args.include_native_owner_sources or runtime_dependencies
+    acquisition = args.include_acquisition_sources or frame
     if acquisition:
         ai_units += ('character_aggro_acquisition_prefix', 'character_ai_sight', 'ghost_ai_session', 'character_monster_retarget')
-    if args.include_frame_sources or args.include_native_owner_sources:
+    if frame:
         ai_units += ('character_enemy_retention', 'character_ai_update_target', 'character_ai_master_update',
                      'character_ai_melee_range', 'character_ai_interaction_range', 'ais_external_update',
                      'ais_state_callbacks', 'character_ai_pause_update', 'ais_default_collision_persist')
         paths.extend(('port/scene-materials/CMakeLists.txt', 'port/scene-materials/technique_selector.hpp',
                       'port/scene-materials/technique_selector.cpp', 'port/material-bindings/bindings.hpp',
                       'port/material-bindings/bindings.cpp'))
+    if runtime_dependencies:
+        ai_units += ('character_ai_ranged_range', 'character_range_capability', 'character_ai_queue',
+                     'character_interactive', 'character_ai_initialization', 'ais_external_init_vcb')
+        paths.extend(('port/scene-materials/render_state_snapshot.hpp',
+                      'port/scene-materials/render_state_snapshot.cpp',
+                      'port/scene-materials/source_state_conversion.hpp',
+                      'port/scene-materials/source_state_conversion.cpp'))
+    if args.include_lifecycle_sources:
+        ai_units += ('ais_external_initialization','ais_native_bindings',
+                     'character_ai_association','character_native_bindings','room_zone_enrollment')
+        paths.extend(('port/adam-script-runtime/script_runtime.c',
+                      'port/adam-script-runtime/script_runtime.h'))
     if args.include_native_owner_sources:
         paths.extend(('port/android-native/app/src/main/cpp/ghost_ai_owner.hpp',
                       'port/android-native/app/src/main/cpp/ghost_ai_owner.cpp'))

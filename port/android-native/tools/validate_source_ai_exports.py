@@ -49,6 +49,33 @@ FRAME_UNITS = {
     'pause_update': cpp_prefix('character_ai_pause_update', 'pause'),
     'collision_persist': cpp_prefix('ais_default_collision_persist', 'persist'),
 }
+RUNTIME_DEPENDENCY_UNITS = {
+    'close_range': cpp_prefix('character_ai_ranged_range', 'evaluate_close'),
+    'ranged_range': cpp_prefix('character_ai_ranged_range', 'evaluate_ranged'),
+    'character_range_parameters': cpp_prefix('character_range_capability', 'character_parameters'),
+    'inventory_range_parameters': cpp_prefix('character_range_capability', 'inventory_parameters'),
+    'character_range_capability': cpp_prefix('character_range_capability', 'character_can_range'),
+    'inventory_range_capability': cpp_prefix('character_range_capability', 'has_ranged_weapon'),
+    'shared_ai_queue': cpp_prefix('character_ai_queue', 'advance'),
+    'character_interactive': cpp_prefix('character_interactive', 'evaluate'),
+    'character_ai_initialization': cpp_prefix('character_ai_initialization', 'construct'),
+    'ais_default_callback_flags': cpp_prefix('ais_external_init_vcb', 'initialize_default'),
+    'ais_external_callback_flags': cpp_prefix('ais_external_init_vcb', 'initialize_external'),
+}
+LIFECYCLE_UNITS = {
+    'ais_script_construction': cpp_prefix('ais_external_initialization','construct_char_ai_script'),
+    'ais_external_construction': cpp_prefix('ais_external_initialization','construct_external'),
+    'ais_character_association': cpp_prefix('ais_external_initialization','set_character'),
+    'lua_base_bindings': cpp_prefix('ais_native_bindings','bind_base'),
+    'lua_ai_bindings': cpp_prefix('ais_native_bindings','bind_character'),
+    'lua_all_bindings': cpp_prefix('ais_native_bindings','bind_all'),
+    'character_ai_association': cpp_prefix('character_ai_association','associate'),
+    'game_object_native_bindings': cpp_prefix('character_native_bindings','bind_game_object'),
+    'character_native_bindings': cpp_prefix('character_native_bindings','bind_character'),
+    'room_zone_initial_enrollment': cpp_prefix('room_zone_enrollment','add_initial_object'),
+    'object_zone_entered': cpp_prefix('room_zone_enrollment','zone_entered'),
+    'object_zone_exited': cpp_prefix('room_zone_enrollment','zone_exited'),
+}
 LUA_SYMBOL = 'lua_newstate'
 
 
@@ -60,13 +87,19 @@ def main():
     parser.add_argument('--require-targeting-units', action='store_true')
     parser.add_argument('--require-acquisition-units', action='store_true')
     parser.add_argument('--require-frame-units', action='store_true')
+    parser.add_argument('--require-runtime-dependency-units', action='store_true')
+    parser.add_argument('--require-lifecycle-units', action='store_true')
     args = parser.parse_args()
-    acquisition = args.require_acquisition_units or args.require_frame_units
+    runtime_dependencies = args.require_runtime_dependency_units or args.require_lifecycle_units
+    frame = args.require_frame_units or runtime_dependencies
+    acquisition = args.require_acquisition_units or frame
     units = {**UNITS, **(TARGETING_UNITS if args.require_targeting_units or acquisition else {}),
              **(ACQUISITION_UNITS if acquisition else {}),
-             **(FRAME_UNITS if args.require_frame_units else {})}
+             **(FRAME_UNITS if frame else {}),
+             **(RUNTIME_DEPENDENCY_UNITS if runtime_dependencies else {}),
+             **(LIFECYCLE_UNITS if args.require_lifecycle_units else {})}
     # Sight has two overload groups; melee caller and radius share one unit.
-    source_units = len(units) - int(acquisition) - int(args.require_frame_units)
+    source_units = len(units) - int(acquisition) - int(frame) - 5 * int(runtime_dependencies) - 7 * int(args.require_lifecycle_units)
     raw = args.apk.read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
     artifact = json.loads(args.artifact.read_text())

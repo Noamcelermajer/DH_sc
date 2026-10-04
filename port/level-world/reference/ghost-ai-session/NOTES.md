@@ -6,7 +6,7 @@ It does not claim a complete native AI or a full source `Character::Update`.
 
 ## What the bridge runs
 
-`ActorSession` owns one `monster_external_script::Session` per actor and binds
+`ActorSession::bind` owns one `monster_external_script::Session` per actor and binds
 typed borrowed projections for the current CharAI, Character, selected AIS,
 event dispatcher, controller, and path services. `search_and_dispatch` runs
 the already initialized filter-2/closest aggro search, classifies candidates
@@ -48,7 +48,19 @@ fresh value read after the search provider. It does not implement
 
 ## Ownership and failure boundary
 
-Each actor owns a separate Lua VM and alias table. A rebind creates a candidate
+The source lifecycle also has a staged path. `prepare_staged` creates the
+stable callback adapter before an AIS VM exists; `staged_services` returns the
+exact copied service table plus a shared lifetime lease for that adapter.
+After the AIS-owned `Session` reaches `external_loaded`, `adopt_staged` checks
+that its complete service table matches and points the actor bridge at that
+same VM. This avoids creating a second VM for the pending-to-active AIS
+transition. The external Session must outlive this ActorSession binding. The
+shared lease keeps the callback context alive through VM teardown even if the
+ActorSession wrapper is reset first. This stage-sharing API is host-tested; the
+native AIS lifecycle has not yet wired it.
+
+Each actor owns a separate Lua VM and alias table in the standalone `bind`
+convenience path. A rebind creates a candidate
 VM before replacing the old binding; failed setup preserves the previous
 session. Synchronous rebind/reset while a source callback is active is
 rejected. Before committing `ScanResult`, the bridge rejects overlap with
@@ -79,7 +91,7 @@ python port/level-world/tests/run_ghost_ai_session_host.py
 ```
 
 The runner compiles the source modules with warning-as-error flags and executes
-the unchanged `_commons` and `monster` script bytes. Eight host case groups
+the unchanged `_commons` and `monster` script bytes. Nine host case groups
 pass: source search through FindPath, two independent actor VMs/target IDs,
 stale-owner rejection/rebind, reentrant rebind rejection, partial effects on
 late PathTo failure, fresh post-search and post-relation target state for

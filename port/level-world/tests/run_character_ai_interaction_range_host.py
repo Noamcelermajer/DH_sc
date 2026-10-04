@@ -18,12 +18,12 @@ def fixtures():
         x=base.copy()
         for i,v in (changes or {}).items():x[i]=v
         rows.append((name,x))
-    add('generic_inside');add('generic_strict_boundary',{10:word(5)})
-    add('generic_strict_outside',{10:word(6)});add('generic_just_inside',{10:word(4.9999995)})
+    add('generic_inside');add('generic_inclusive_boundary',{10:word(5)})
+    add('generic_outside',{10:word(6)});add('generic_just_inside',{10:word(4.9999995)})
     add('type8_inside',{6:8});add('type8_boundary',{6:8,10:word(4)})
     add('type8_outside',{6:8,10:word(5)});add('type8_ignores_property',{6:8,15:0x7fc00001})
     add('node_cached_inside',{2:1,10:word(79)});add('node_cached_boundary',{2:1,10:word(80)})
-    add('node_cached_outside',{2:1,10:word(81)});add('node_type8_coincident_false',{2:1,6:8,10:0})
+    add('node_cached_outside',{2:1,10:word(81)});add('node_type8_coincident_true',{2:1,6:8,10:0})
     add('node_type8_no_radius_property_queries',{2:1,6:8,13:0x7fc00001,14:0x7fc00001,15:0x7fc00001})
     add('lazy_visual_lookup_hit',{3:0,4:1,5:1});add('lazy_visual_lookup_miss',{3:0,4:1,5:0})
     add('lazy_no_visual_clears_old_node',{2:1,3:0});add('cached_absence_skips_visual_lookup',{4:1,5:1})
@@ -67,6 +67,9 @@ def oracle(original,exe):
         count_offset=struct.unpack('<I',data(0x3a3020,4))[0]
         node_name=0x38b260+8+struct.unpack('<I',data(0x38b2c8,4))[0]
         assert data(node_name,21).split(b'\0')[0]==b'interaction_position'
+    from elf_import_identity import verify_imports
+    imported=verify_imports(original,{0x30e3ac:'__aeabi_fsub',0x30ed6c:'__aeabi_fmul',
+        0x30eba4:'__aeabi_fadd',0x30e124:'sqrtf',0x30e9ac:'__aeabi_fcmple'})
     old=Cpu(original,False,manifest);old.uc.mem_map(0x10000000,0x60000)
     def get(at):return struct.unpack('<I',old.uc.mem_read(at,4))[0]
     def returned(x=0):old.put(0,x);old.uc.reg_write(old.pc,old.uc.reg_read(old.lr))
@@ -90,7 +93,7 @@ def oracle(original,exe):
             elif at==0x30ed6c:op='mul';value=word(number(a)*number(b))
             elif at==0x30eba4:op='add';value=word(number(a)+number(b))
             elif at==0x30e124:op='sqrtf';value=word(math.sqrt(number(a)))
-            else:op='lt';value=int(number(a)<number(b))
+            else:op='le';value=int(number(a)<=number(b))
             fp.append([op,a,b,value]);returned(value)
         def observe(_,at,__,___):
             if at==0x3935dc:
@@ -144,7 +147,8 @@ def oracle(original,exe):
         records.append({'case':name,'matched':True,'source_result':expected,'compiled_result':actual,'modeled_soft_float_trace':fp,'original_spot_dependency_trace':dependencies})
     return {'validation':'PASS','comparisons':len(records),'mismatches':0,'results':records,
         'executed_scope':'Complete original388B interaction-range caller, real164B GetInteractionSpot (including lazy2ec/node2e8 stores),36B GetTargetPosition,28B node absolute-position,48B GetCharAI and56B GetCharAIId. Visual node lookup and original-AI melee/virtual interaction radius/type are explicit fixture providers.',
-        'external_soft_float':'External fsub/fmul/fadd/sqrtf/fcmplt imports modeled IEEE binary32; finite outputs compare exact words, NaN compares unordered class without payload/sign claim.',
+        'external_soft_float':'External fsub/fmul/fadd/sqrtf/fcmple imports modeled IEEE binary32, after independent actual relocated PLT identity execution; finite outputs compare exact words, NaN compares unordered class without payload/sign claim.',
+        'verified_import_identities':imported,
         'native_wired':False}
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--compiler');p.add_argument('--original-elf',type=Path,required=True)
@@ -158,7 +162,7 @@ def main():
     if build.returncode:raise RuntimeError(build.stdout+build.stderr)
     host=json.loads(subprocess.check_output([str(exe)],text=True));assert host['validation']=='PASS' and host['host_cases']==41
     comparison=oracle(a.original_elf.resolve(),exe)
-    paths=sources+[MODULE/'character_ai_interaction_range.hpp',MODULE/'character_ai_melee_range.hpp',MODULE/'character_ai_sight.hpp',MODULE/'character_enemy_retention.hpp',Path(__file__).resolve(),MANIFEST,MANIFEST.with_name('NOTES.md')]
+    paths=sources+[MODULE/'character_ai_interaction_range.hpp',MODULE/'character_ai_melee_range.hpp',MODULE/'character_ai_sight.hpp',MODULE/'character_enemy_retention.hpp',MODULE/'tests/elf_import_identity.py',Path(__file__).resolve(),MANIFEST,MANIFEST.with_name('NOTES.md')]
     report={'validation':'PASS','host_report':host,'original_arm_comparison':comparison,'original_sha256':SHA,'compiler_command':command,'native_wired':False,
       'source_sha256':{x.relative_to(ROOT).as_posix():hashlib.sha256(x.read_bytes()).hexdigest() for x in paths}}
     a.report.parent.mkdir(parents=True,exist_ok=True);a.report.write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')

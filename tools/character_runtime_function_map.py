@@ -46,11 +46,27 @@ AI_MANIFESTS = {
     'port/level-world/reference/ais-state-callbacks/original-functions.json': 'ais_state_callbacks',
     'port/level-world/reference/character-ai-pause-update/original-functions.json': 'character_ai_pause_update',
     'port/level-world/reference/ais-default-collision-persist/original-functions.json': 'ais_default_collision_persist',
+    'port/level-world/reference/character-ai-ranged-range/original-functions.json': 'character_ai_ranged_range',
+    'port/level-world/reference/character-range-capability/original-functions.json': 'character_range_capability',
+    'port/level-world/reference/character-ai-queue/original-functions.json': 'character_ai_queue',
+    'port/level-world/reference/character-interactive/original-functions.json': 'character_interactive',
+    'port/level-world/reference/character-ai-initialization/original-functions.json': 'character_ai_initialization',
+    'port/level-world/reference/ais-external-init-vcb/original-functions.json': 'ais_external_init_vcb',
+    'port/level-world/reference/ais-external-initialization/original-functions.json': 'ais_external_initialization',
+    'port/level-world/reference/ais-native-bindings/original-functions.json': 'ais_native_bindings',
+    'port/level-world/reference/character-ai-association/original-functions.json': 'character_ai_association',
+    'port/level-world/reference/character-native-bindings/original-functions.json': 'character_native_bindings',
 }
 MANIFESTS.extend(AI_MANIFESTS)
 ENGINE_MANIFESTS = {
+    'port/level-world/reference/room-zone-enrollment/original-functions.json':
+        ['port/level-world/room_zone_enrollment.hpp', 'port/level-world/room_zone_enrollment.cpp'],
     'port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json':
         ['port/scene-materials/technique_selector.hpp', 'port/scene-materials/technique_selector.cpp'],
+    'port/scene-materials/reference/swamp-render-state-audit/original-functions.json':
+        ['port/scene-materials/render_state_snapshot.hpp', 'port/scene-materials/render_state_snapshot.cpp'],
+    'port/scene-materials/reference/swamp-effect-pass-conversion/manifest.json':
+        ['port/scene-materials/source_state_conversion.hpp', 'port/scene-materials/source_state_conversion.cpp'],
 }
 MANIFESTS.extend(ENGINE_MANIFESTS)
 OUTPUT = 'docs/generated/character-runtime-function-map.json'
@@ -62,10 +78,10 @@ NATIVE = 'port/android-native/app/src/main/cpp/model_renderer.cpp'
 def classify(row):
     symbol = row['demangled']
     if row.get('evidence_manifest') in ENGINE_MANIFESTS:
-        return ('bounded_engine_selector_or_dependency_evidence',
+        return ('bounded_engine_kernel_or_dependency_evidence',
                 ENGINE_MANIFESTS[row['evidence_manifest']],
                 row['manifest_implementation_scope'] + '; ' + row['scope'] +
-                '; serialized-view host tests and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.')
+                '; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.')
     if row.get('evidence_manifest') in AI_MANIFESTS:
         unit = AI_MANIFESTS[row['evidence_manifest']]
         return ('bounded_ai_kernel_or_dependency_evidence',
@@ -158,7 +174,8 @@ def build():
     manifests = [(path, json.loads((ROOT / path).read_text(encoding='utf-8-sig')))
                  for path in MANIFESTS]
     manifest = manifests[0][1]
-    assert all(source['original_sha256'] == manifest['original_sha256'] for _, source in manifests)
+    assert all(source.get('original_sha256', source.get('original_elf', {}).get('sha256')) == manifest['original_sha256']
+               for _, source in manifests)
     pinned = json.loads((ROOT / 'docs/generated/combined-function-audit.json').read_text())
     old_addresses = {int(row['address'], 0) for row in pinned['mapped_function_starts']}
     index_path = ROOT / 'recovered/native/symbols/libDungeonHunter2.so/function-index.csv'
@@ -171,6 +188,14 @@ def build():
                for path, source in manifests
                for record in source['functions']]
     for original in records:
+        # Effect-state manifests retain their serialized payload provenance.
+        # Normalize their function pins without inventing missing byte evidence.
+        if 'elf_address' not in original:
+            byte_hash = original.get('raw_function_bytes_sha256', original.get('sha256'))
+            assert byte_hash, original
+            original.update(elf_address=original['address'], original_symbol=original['symbol'],
+                            sha256=byte_hash,
+                            scope=original.get('scope', original['manifest_implementation_scope']))
         address = int(original['elf_address'], 0)
         entry = index[address]
         aliases = json.loads(entry['aliases'])

@@ -449,7 +449,43 @@ int main(int argc,char** argv) {
         std::memcmp(controller_before.data(),&alias.controller_state,sizeof(alias.controller_state))==0,
         "overlapping output changed borrowed controller state");
 
-    std::puts("{\"ghost_ai_session_cases\":8,\"mismatches\":0,\"native_wired\":false,\"source_search_to_path\":true,\"per_actor_vm_and_target_identity\":true,\"stale_owner_rebind\":true,\"reentrant_rebind_guard\":true,\"partial_failure_effects\":true,\"fresh_empty_search_event_12\":true,\"fresh_all_false_relation_event_12\":true,\"output_alias_guard\":true,\"unbuilt_updateaggro_prefix\":true}");
+    // AISExternal owns the staged VM. ActorSession prepares its stable service
+    // callbacks, the pending VM copies those callbacks and retains the context,
+    // then the wrapper adopts that exact VM instead of creating a second one.
+    {
+        monster_external_script::Session pending_vm;
+        Fixture staged(0xa00000000ull);
+        std::string staged_error;
+        require(staged.session.prepare_staged(staged.bindings,staged_error)==Status::complete,
+                "actor callback context preparation failed");
+        monster_external_script::Services staged_services{};
+        std::shared_ptr<void> callback_lifetime;
+        require(staged.session.staged_services(staged_services,callback_lifetime) && callback_lifetime,
+                "staged actor callbacks did not retain their implementation");
+        require(pending_vm.create(staged_services,staged_error,2*1024*1024,callback_lifetime)==
+                    monster_external_script::Status::complete &&
+                pending_vm.bind_functions(staged_error)==monster_external_script::Status::complete &&
+                pending_vm.load_common({common.data(),common.size()},staged_error)==
+                    monster_external_script::Status::complete &&
+                pending_vm.load_external({monster.data(),monster.size()},staged_error)==
+                    monster_external_script::Status::complete,
+                "pending AIS VM source lifecycle failed");
+        require(staged.session.adopt_staged(pending_vm,staged_error)==Status::complete &&
+                    staged.session.ready() && pending_vm.uses_services(staged_services),
+                "actor wrapper failed to adopt the exact staged VM");
+        run_one(staged.session,staged);
+        require(staged.session.script_statistics().completed_callbacks==1 &&
+                    pending_vm.statistics().completed_callbacks==1,
+                "Owner callback VM was duplicated instead of shared");
+        require(staged.session.reset(staged_error)==Status::complete && pending_vm.ready() &&
+                    pending_vm.dispatch(monster_external_script::Event::enemy_spotted,
+                        staged.target_object_id,staged_error)==monster_external_script::Status::complete,
+                "borrowed VM lost its callback context when the wrapper detached");
+        require(pending_vm.reset(staged_error)==monster_external_script::Status::complete,
+                "staged source VM teardown failed");
+    }
+
+    std::puts("{\"ghost_ai_session_cases\":9,\"mismatches\":0,\"native_wired\":false,\"source_search_to_path\":true,\"per_actor_vm_and_target_identity\":true,\"stale_owner_rebind\":true,\"reentrant_rebind_guard\":true,\"partial_failure_effects\":true,\"fresh_empty_search_event_12\":true,\"fresh_all_false_relation_event_12\":true,\"output_alias_guard\":true,\"staged_vm_adopted_without_duplicate\":true,\"unbuilt_updateaggro_prefix\":true}");
     return 0;
  } catch(const std::exception& error) { std::fprintf(stderr,"ghost_ai_session: %s\n",error.what());return 1; }
 }

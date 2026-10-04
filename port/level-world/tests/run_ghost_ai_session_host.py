@@ -46,6 +46,7 @@ def main() -> int:
     cpp_sources = [
         RUNTIME / "script_function_alias.cpp",
         ROOT / "port/game-data/ai.cpp",
+        MODULE / "ais_native_bindings.cpp",
         MODULE / "character_aggro_target_search.cpp",
         MODULE / "character_aggro_candidate_events.cpp",
         MODULE / "character_ai_relations.cpp",
@@ -107,11 +108,12 @@ def main() -> int:
     if tested.returncode:
         return tested.returncode
     host = json.loads(tested.stdout)
-    assert host["ghost_ai_session_cases"] == 8 and host["mismatches"] == 0, host
+    assert host["ghost_ai_session_cases"] == 9 and host["mismatches"] == 0, host
     for key in ("source_search_to_path", "per_actor_vm_and_target_identity",
                 "stale_owner_rebind", "reentrant_rebind_guard", "partial_failure_effects",
                 "fresh_empty_search_event_12", "fresh_all_false_relation_event_12",
                 "output_alias_guard",
+                "staged_vm_adopted_without_duplicate",
                 "unbuilt_updateaggro_prefix"):
         assert host[key] is True, (key, host)
     assert host["native_wired"] is False
@@ -125,6 +127,7 @@ def main() -> int:
         MODULE / "character_controller_commands.hpp",
         MODULE / "character_path_commands.hpp",
         MODULE / "monster_external_script_session.hpp",
+        MODULE / "ais_native_bindings.hpp",
         Path(__file__).resolve(), common, monster,
     ] + list((RUNTIME / "lua").glob("*.h"))
     report = {

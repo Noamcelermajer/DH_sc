@@ -79,12 +79,12 @@ int main(int argc,char** argv) {
     }
     unsigned cases=0;
     {Fixture f;assert(f.run()==k::Status::complete && f.result.value && f.result.remaining_word==word(-1));++cases;}
-    {Fixture f;f.spot.words[0]=word(5);assert(f.run()==k::Status::complete && !f.result.value);++cases;}
+    {Fixture f;f.spot.words[0]=word(5);assert(f.run()==k::Status::complete && f.result.value);++cases;}
     {Fixture f;f.type=8;assert(f.run()==k::Status::complete && f.result.value);++cases;}
-    {Fixture f;f.type=8;f.spot.words[0]=word(4);assert(f.run()==k::Status::complete && !f.result.value);++cases;}
+    {Fixture f;f.type=8;f.spot.words[0]=word(4);assert(f.run()==k::Status::complete && f.result.value);++cases;}
     {Fixture f;f.target.interaction_node_2e8=NODE;f.spot.words[0]=word(79);assert(f.run()==k::Status::complete && f.result.value && f.calls.size()==3);++cases;}
-    {Fixture f;f.target.interaction_node_2e8=NODE;f.spot.words[0]=word(80);assert(f.run()==k::Status::complete && !f.result.value);++cases;}
-    {Fixture f;f.target.interaction_node_2e8=NODE;f.type=8;f.spot.words[0]=0;assert(f.run()==k::Status::complete && !f.result.value);++cases;}
+    {Fixture f;f.target.interaction_node_2e8=NODE;f.spot.words[0]=word(80);assert(f.run()==k::Status::complete && f.result.value);++cases;}
+    {Fixture f;f.target.interaction_node_2e8=NODE;f.type=8;f.spot.words[0]=0;assert(f.run()==k::Status::complete && f.result.value);++cases;}
     {Fixture f;f.state.target_40=0;assert(f.run(0)==k::Status::complete && f.calls.empty());++cases;}
     {Fixture f;assert(f.run(0)==k::Status::complete && f.result.candidate==P);++cases;}
     for(unsigned node=0;node<2;++node){Fixture f;f.cache=0;f.visual=1;f.lookup=node;

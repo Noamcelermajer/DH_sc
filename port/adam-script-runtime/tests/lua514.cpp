@@ -24,6 +24,21 @@ int main(int argc,char** argv){
   std::string commons((std::istreambuf_iterator<char>(f)),{});check(commons.size()==13535);
   dh2_script_vm* vm=dh2_script_vm_create(8*1024*1024);check(vm!=nullptr);
   check(dh2_script_vm_create(1)==nullptr);
+  dh2_script_vm* deferred=dh2_script_vm_create_deferred(8*1024*1024);check(deferred!=nullptr);
+  check(get(deferred,"type").type==DH2_SCRIPT_NIL&&get(deferred,"math").type==DH2_SCRIPT_NIL);
+  check(dh2_script_vm_open_library(deferred,DH2_SCRIPT_LIBRARY_BASE)==0);
+  check(get(deferred,"type").type==DH2_SCRIPT_FUNCTION&&get(deferred,"math").type==DH2_SCRIPT_NIL);
+  check(dh2_script_vm_open_library(deferred,DH2_SCRIPT_LIBRARY_MATH)==0);
+  check(get(deferred,"math").type==DH2_SCRIPT_TABLE&&get(deferred,"table").type==DH2_SCRIPT_NIL);
+  check(dh2_script_vm_open_library(deferred,DH2_SCRIPT_LIBRARY_TABLE)==0);
+  check(get(deferred,"table").type==DH2_SCRIPT_TABLE&&get(deferred,"string").type==DH2_SCRIPT_NIL);
+  check(dh2_script_vm_open_library(deferred,DH2_SCRIPT_LIBRARY_STRING)==0);
+  check(get(deferred,"string").type==DH2_SCRIPT_TABLE);
+  check(dh2_script_vm_open_library(deferred,(dh2_script_library)99)==-1);
+  check(load(deferred,"ordered=math.floor(3.75); text=string.upper('ok'); size=table.getn({1,2})")==0);
+  check(get(deferred,"ordered").number==3.f&&get(deferred,"size").number==2.f);
+  auto deferred_text=get(deferred,"text");check(deferred_text.type==DH2_SCRIPT_STRING&&deferred_text.text_bytes==2);
+  dh2_script_vm_destroy(deferred);
   check(load(vm,"rounding=16777216+1; decimal=16777217; modulo=-3%2; power=2^3; signed_zero=-0.0")==0);
   check(get(vm,"rounding").number==16777216.f);check(get(vm,"decimal").number==16777216.f);
   check(get(vm,"modulo").number==1.f);check(get(vm,"power").number==8.f);
@@ -93,5 +108,5 @@ int main(int argc,char** argv){
   std::cout<<"{\"validation\":\"PASS\",\"checks\":"<<checks
     <<",\"header_rejections\":"<<headers<<",\"truncation_rejections\":"<<truncations
     <<",\"actual_empty_callbacks\":"<<empty_callbacks
-    <<",\"actual_commons_loaded\":true,\"pure_anim_event_callbacks\":2,\"required_game_bindings_installed\":0,\"full_game_bindings\":false,\"mismatches\":0}\n";
+    <<",\"actual_commons_loaded\":true,\"deferred_library_open_order\":true,\"pure_anim_event_callbacks\":2,\"required_game_bindings_installed\":0,\"full_game_bindings\":false,\"mismatches\":0}\n";
 }

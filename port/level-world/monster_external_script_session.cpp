@@ -1,4 +1,5 @@
 #include "monster_external_script_session.hpp"
+#include "ais_native_bindings.hpp"
 
 #include "../adam-script-runtime/script_function_alias.h"
 #include "../lua-numeric/numeric.h"
@@ -49,22 +50,39 @@ end
 
 struct Session::Impl {
     enum Operation { py_struct, property, from_fixed, py_constant, target_exists,
-                     target_get, state_get, path_exists, target_set, face, move };
-    struct Binding { Impl* session; Operation operation; };
+                     target_get, state_get, path_exists, target_set, face, move,
+                     to_fixed, mul_fixed, div_fixed, alias_add, alias_push, alias_pop,
+                     bit_not, bit_xor, bit_and, bit_or, unsupported };
+    struct Binding { Impl* session; Operation operation; const char* name; };
+    static constexpr std::size_t max_bindings = 43;
     Services services;
     dh2_script_vm* vm = nullptr;
     dh2_script_aliases* aliases = nullptr;
-    Binding bindings[11]{};
+    Binding bindings[max_bindings]{};
+    std::size_t binding_count = 0;
+    ais_native_bindings::Result registration{};
+    std::uintptr_t vm_wrapper_token = 0;
+    std::uintptr_t binder_token = 0;
     std::uint32_t completed = 0;
     std::uint32_t failed = 0;
     std::uint32_t object_table_arguments = 0;
     bool faulted = false;
+    Stage stage = Stage::empty;
+    std::shared_ptr<void> service_lifetime;
 
     explicit Impl(const Services& value) : services(value) {}
     ~Impl() {
         // VM closures borrow Binding and aliases; close them before the map.
         dh2_script_vm_destroy(vm);
         dh2_script_alias_destroy(aliases);
+    }
+
+    bool create_vm(std::size_t memory_limit) {
+        vm = dh2_script_vm_create_deferred(memory_limit);
+        aliases = dh2_script_alias_create();
+        if (!vm || !aliases) return false;
+        stage = Stage::created;
+        return true;
     }
 
     static int reject(char* error, std::size_t capacity, const char* reason) noexcept {
@@ -90,6 +108,23 @@ struct Session::Impl {
         auto& binding = *static_cast<Binding*>(opaque);
         const auto& services = binding.session->services;
         try {
+            if (binding.operation == unsupported) {
+                char message[192];
+                std::snprintf(message, sizeof(message), "unsupported source script function: %s",
+                              binding.name ? binding.name : "unknown");
+                return reject(error, error_capacity, message);
+            }
+            if (binding.operation == alias_add || binding.operation == alias_push ||
+                binding.operation == alias_pop) {
+                int status = 0;
+                if (binding.operation == alias_add)
+                    status = dh2_script_alias_add_values(binding.session->aliases, arguments, count);
+                else if (binding.operation == alias_push)
+                    status = dh2_script_alias_push(binding.session->aliases);
+                else
+                    status = dh2_script_alias_pop(binding.session->aliases);
+                return status ? reject(error, error_capacity, "source VFTable update failed") : 0;
+            }
             if (binding.operation == target_set || binding.operation == face ||
                 binding.operation == move) {
                 // Original object overloads ignore non-object values. This
@@ -138,6 +173,36 @@ struct Session::Impl {
                 number(output[0], static_cast<float>(result.integer));
                 number(output[1], result.number);
                 *returned = result.count;
+            } else if (binding.operation == to_fixed || binding.operation == mul_fixed ||
+                       binding.operation == div_fixed || binding.operation == bit_not ||
+                       binding.operation == bit_xor || binding.operation == bit_and ||
+                       binding.operation == bit_or) {
+                const auto needed = (binding.operation == to_fixed || binding.operation == bit_not) ?
+                    1U : (binding.operation == bit_and || binding.operation == bit_or) ? count : 2U;
+                if (count < needed) return reject(error, error_capacity, "numeric helper arguments missing");
+                if (needed > 256) return reject(error, error_capacity, "numeric helper argument limit");
+                float operands[256]{};
+                for (std::uint32_t index = 0; index < needed; ++index) {
+                    if (arguments[index].type != DH2_SCRIPT_NUMBER)
+                        return reject(error, error_capacity, "numeric helper argument unsupported");
+                    operands[index] = arguments[index].number;
+                }
+                dh2_lua_numeric_result result{};
+                const auto operation = binding.operation == to_fixed ? DH2_TO_FIXED :
+                    binding.operation == mul_fixed ? DH2_MUL_FIXED :
+                    binding.operation == div_fixed ? DH2_DIV_FIXED :
+                    binding.operation == bit_not ? DH2_BIT_NOT :
+                    binding.operation == bit_xor ? DH2_BIT_XOR :
+                    binding.operation == bit_and ? DH2_BIT_AND : DH2_BIT_OR;
+                if (dh2_lua_numeric(operation, operands, needed, &result) != 0)
+                    return reject(error, error_capacity, "numeric helper failed");
+                // The shared source leaf reports zero results for unsupported
+                // bitwise arities (for example BitAnd() or BitAnd(x)). Keep
+                // that Lua result arity instead of fabricating integer zero.
+                if (result.count != 0) {
+                    number(output[0], static_cast<float>(result.integer));
+                    *returned = result.count;
+                }
             } else if (binding.operation == target_get) {
                 std::uintptr_t target = 0;
                 if (!services.get_target || services.get_target(services.context, services.owner, &target) != 0)
@@ -172,15 +237,87 @@ struct Session::Impl {
         }
     }
 
-    bool install() {
-        constexpr const char* names[] = {"GetPyStruct", "GetProp", "FromFixed", "GetPyCst",
-            "HasTarget", "GetTarget", "GetState", "HasPath", "SetTarget", "HeadTo", "MoveTo"};
-        for (std::uint32_t index = 0; index < 11; ++index) {
-            bindings[index] = {this, static_cast<Operation>(index)};
-            if (dh2_script_vm_bind_source_values(vm, names[index], invoke, &bindings[index]) != 0)
-                return false;
+    static Operation operation_for(ais_native_bindings::Function function) {
+        using Function = ais_native_bindings::Function;
+        switch (function) {
+            case Function::add_to_vf_table: return alias_add;
+            case Function::push_vf_table: return alias_push;
+            case Function::pop_vf_table: return alias_pop;
+            case Function::to_fixed: return to_fixed;
+            case Function::from_fixed: return from_fixed;
+            case Function::mul_fixed: return mul_fixed;
+            case Function::div_fixed: return div_fixed;
+            case Function::bit_not: return bit_not;
+            case Function::bit_xor: return bit_xor;
+            case Function::bit_and: return bit_and;
+            case Function::bit_or: return bit_or;
+            case Function::get_py_cst: return py_constant;
+            case Function::get_py_struct: return py_struct;
+            default: return unsupported;
         }
-        return dh2_script_alias_bind(vm, aliases) == 0;
+    }
+
+    static std::int32_t open_source_library(void* raw, std::uintptr_t wrapper,
+                                            ais_native_bindings::Library library) {
+        auto& session = *static_cast<Impl*>(raw);
+        if (!session.vm || wrapper != reinterpret_cast<std::uintptr_t>(&session.vm_wrapper_token)) return 1;
+        return dh2_script_vm_open_library(session.vm,
+            static_cast<dh2_script_library>(library)) == 0 ? 0 : 1;
+    }
+
+    static std::int32_t bind_source_function(void* raw, std::uintptr_t binder,
+        const ais_native_bindings::Binding* source, std::uintptr_t userdata) {
+        auto& session = *static_cast<Impl*>(raw);
+        if (!session.vm || binder != reinterpret_cast<std::uintptr_t>(&session.binder_token) ||
+            userdata != reinterpret_cast<std::uintptr_t>(&session) || !source || !source->name ||
+            session.binding_count >= max_bindings) return 1;
+        auto& binding = session.bindings[session.binding_count];
+        binding = {&session, operation_for(source->function), source->name};
+        if (dh2_script_vm_bind_source_values(session.vm, source->name, invoke, &binding) != 0) return 1;
+        ++session.binding_count;
+        return 0;
+    }
+
+    bool bind_extra(const char* name, Operation operation) {
+        if (binding_count >= max_bindings) return false;
+        auto& binding = bindings[binding_count];
+        binding = {this, operation, name};
+        if (dh2_script_vm_bind_source_values(vm, name, invoke, &binding) != 0) return false;
+        ++binding_count;
+        return true;
+    }
+
+    bool bind_functions() {
+        const ais_native_bindings::State state{reinterpret_cast<std::uintptr_t>(this),
+            reinterpret_cast<std::uintptr_t>(&vm_wrapper_token),
+            reinterpret_cast<std::uintptr_t>(&binder_token)};
+        const ais_native_bindings::Services services{this, open_source_library, bind_source_function};
+        if (ais_native_bindings::bind_all(&state, &services, &registration) !=
+                ais_native_bindings::Status::complete || registration.libraries_opened != 4 ||
+            registration.functions_bound != 35) return false;
+        return bind_extra("GetProp", property) && bind_extra("HasTarget", target_exists) &&
+            bind_extra("GetTarget", target_get) && bind_extra("GetState", state_get) &&
+            bind_extra("HasPath", path_exists) && bind_extra("SetTarget", target_set) &&
+            bind_extra("HeadTo", face) && bind_extra("MoveTo", move);
+    }
+
+    bool load_common(Source source) {
+        if (dh2_script_vm_load(vm, source.bytes, source.size,
+                               "data/scripts/ai/_commons.luac") != 0) return false;
+        stage = Stage::common_loaded;
+        return true;
+    }
+
+    bool load_external(Source source) {
+        if (dh2_script_vm_load(vm, source.bytes, source.size,
+                               "data/scripts/ai/monster.luac") != 0 ||
+            dh2_script_vm_load(vm, identity_transport, sizeof(identity_transport) - 1,
+                               "monster-neutral-identity-transport") != 0) return false;
+        if (std::strcmp(dh2_script_alias_resolve(aliases, "OnEnemySpotted"), "monster_OnEnemySpotted") ||
+            std::strcmp(dh2_script_alias_resolve(aliases, "OnTargetOutOfRange"), "monster_OnTargetOutOfRange"))
+            return false;
+        stage = Stage::external_loaded;
+        return true;
     }
 };
 
@@ -197,26 +334,106 @@ Status Session::initialize(Source commons, Source monster, const Services& servi
     BusyScope scope(busy_);
     auto candidate = std::unique_ptr<Impl>(new (std::nothrow) Impl(services));
     if (!candidate) { error = "monster session allocation failed"; return Status::allocation_failed; }
-    candidate->vm = dh2_script_vm_create(memory_limit);
-    candidate->aliases = dh2_script_alias_create();
-    if (!candidate->vm || !candidate->aliases) {
+    if (!candidate->create_vm(memory_limit)) {
         error = "monster Lua state or alias allocation failed";
         return Status::allocation_failed;
     }
-    if (!candidate->install() ||
-        dh2_script_vm_load(candidate->vm, commons.bytes, commons.size, "data/scripts/ai/_commons.luac") != 0 ||
-        dh2_script_vm_load(candidate->vm, monster.bytes, monster.size, "data/scripts/ai/monster.luac") != 0 ||
-        dh2_script_vm_load(candidate->vm, identity_transport, sizeof(identity_transport) - 1,
-                           "monster-neutral-identity-transport") != 0) {
+    if (!candidate->bind_functions()) {
+        candidate->faulted = true;
+        candidate->stage = Stage::faulted;
         error = dh2_script_vm_error(candidate->vm);
         return Status::script_error;
     }
-    if (std::strcmp(dh2_script_alias_resolve(candidate->aliases, "OnEnemySpotted"), "monster_OnEnemySpotted") ||
-        std::strcmp(dh2_script_alias_resolve(candidate->aliases, "OnTargetOutOfRange"), "monster_OnTargetOutOfRange")) {
-        error = "original monster callback registration absent";
+    candidate->stage = Stage::functions_bound;
+    if (!candidate->load_common(commons)) {
+        candidate->faulted = true;
+        candidate->stage = Stage::faulted;
+        error = dh2_script_vm_error(candidate->vm);
+        return Status::script_error;
+    }
+    if (!candidate->load_external(monster)) {
+        candidate->faulted = true;
+        candidate->stage = Stage::faulted;
+        error = dh2_script_vm_error(candidate->vm);
+        if (error.empty()) error = "original monster callback registration absent";
         return Status::script_error;
     }
     impl_ = std::move(candidate);
+    error.clear();
+    return Status::complete;
+}
+
+Status Session::create(const Services& services, std::string& error,
+                       std::size_t memory_limit, std::shared_ptr<void> service_lifetime) {
+    if (busy_) { error = "monster session busy"; return Status::busy; }
+    if (impl_) { error = "staged session already exists; reset before create"; return Status::busy; }
+    if (!services.owner) { error = "invalid monster session service owner"; return Status::invalid_argument; }
+    BusyScope scope(busy_);
+    auto candidate = std::unique_ptr<Impl>(new (std::nothrow) Impl(services));
+    if (!candidate) { error = "monster session allocation failed"; return Status::allocation_failed; }
+    if (!candidate->create_vm(memory_limit)) {
+        error = "monster Lua state or alias allocation failed";
+        return Status::allocation_failed;
+    }
+    candidate->service_lifetime = std::move(service_lifetime);
+    impl_ = std::move(candidate);
+    error.clear();
+    return Status::complete;
+}
+
+Status Session::bind_functions(std::string& error) {
+    if (busy_) { error = "monster session busy"; return Status::busy; }
+    if (!impl_) { error = "monster session not created"; return Status::not_ready; }
+    if (impl_->stage != Stage::created || impl_->faulted) {
+        error = "monster function-binding stage is out of order";
+        return Status::not_ready;
+    }
+    BusyScope scope(busy_);
+    if (!impl_->bind_functions()) {
+        impl_->faulted = true;
+        impl_->stage = Stage::faulted;
+        error = dh2_script_vm_error(impl_->vm);
+        if (error.empty()) error = "monster function binding failed";
+        return Status::script_error;
+    }
+    impl_->stage = Stage::functions_bound;
+    error.clear();
+    return Status::complete;
+}
+
+Status Session::load_common(Source commons, std::string& error) {
+    if (busy_) { error = "monster session busy"; return Status::busy; }
+    if (!impl_) { error = "monster session not created"; return Status::not_ready; }
+    if (impl_->stage != Stage::functions_bound || impl_->faulted || !valid_source(commons)) {
+        error = "monster common-script stage is out of order or invalid";
+        return Status::not_ready;
+    }
+    BusyScope scope(busy_);
+    if (!impl_->load_common(commons)) {
+        impl_->faulted = true;
+        impl_->stage = Stage::faulted;
+        error = dh2_script_vm_error(impl_->vm);
+        return Status::script_error;
+    }
+    error.clear();
+    return Status::complete;
+}
+
+Status Session::load_external(Source external, std::string& error) {
+    if (busy_) { error = "monster session busy"; return Status::busy; }
+    if (!impl_) { error = "monster session not created"; return Status::not_ready; }
+    if (impl_->stage != Stage::common_loaded || impl_->faulted || !valid_source(external)) {
+        error = "monster external-script stage is out of order or invalid";
+        return Status::not_ready;
+    }
+    BusyScope scope(busy_);
+    if (!impl_->load_external(external)) {
+        impl_->faulted = true;
+        impl_->stage = Stage::faulted;
+        error = dh2_script_vm_error(impl_->vm);
+        if (error.empty()) error = "original monster callback registration absent";
+        return Status::script_error;
+    }
     error.clear();
     return Status::complete;
 }
@@ -262,13 +479,26 @@ Status Session::reset(std::string& error) {
     return Status::complete;
 }
 
-bool Session::ready() const noexcept { return impl_ && !impl_->faulted; }
+bool Session::ready() const noexcept { return impl_ && !impl_->faulted && impl_->stage == Stage::external_loaded; }
+Stage Session::stage() const noexcept { return impl_ ? impl_->stage : Stage::empty; }
+bool Session::uses_services(const Services& services) const noexcept {
+    if (!impl_) return false;
+    const auto& own = impl_->services;
+    return own.context == services.context && own.owner == services.owner &&
+        own.get_py_struct == services.get_py_struct && own.get_prop == services.get_prop &&
+        own.get_py_constant == services.get_py_constant && own.has_target == services.has_target &&
+        own.get_target == services.get_target && own.get_state == services.get_state &&
+        own.has_path == services.has_path && own.set_target == services.set_target &&
+        own.head_to == services.head_to && own.move_to == services.move_to;
+}
 const char* Session::source_alias(Event event) const noexcept {
     const char* requested = callback_name(event);
-    return impl_ && requested ? dh2_script_alias_resolve(impl_->aliases, requested) : nullptr;
+    return ready() && requested ? dh2_script_alias_resolve(impl_->aliases, requested) : nullptr;
 }
 Statistics Session::statistics() const noexcept {
     return impl_ ? Statistics{impl_->completed, impl_->failed, impl_->object_table_arguments,
+                             impl_->registration.libraries_opened,
+                             impl_->registration.functions_bound,
                              dh2_script_vm_memory(impl_->vm), impl_->faulted}
                  : Statistics{};
 }

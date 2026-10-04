@@ -24,8 +24,8 @@ claimed. Existing snapshot `dh2_ai_range` remains unchanged.
    row+18 (InteractRadius, words6 of the existing 68-byte row).
 5. Subtract the first radius then the second radius separately, including both
    positive-zero subtractions on the node branch. Candidate virtual+90
-   GetInteractionType receives another fresh owner. Type8 uses strict remaining
-   distance<positive-zero; every other raw type uses strict distance<threshold.
+   GetInteractionType receives another fresh owner. Type8 uses remaining
+   distance<=positive-zero; every other raw type uses distance<=threshold.
    Threshold/distance are cached before this virtual callback.
 
 The caller adds no handle resolution, Character conversion, state, alive,
@@ -83,7 +83,13 @@ throwing services preserve already completed source actions with no rollback.
 Comparison executes the complete 388-byte original caller plus the listed spot,
 position and property leaves. Original-AI melee radius and target virtual
 radius/type are observed explicit fixture providers. External fsub/fmul/fadd,
-sqrtf and fcmplt library imports are modeled IEEE binary32; finite words compare
+sqrtf and fcmple library imports are modeled IEEE binary32; finite words compare
 exactly and NaN outputs compare unordered class, not payload/sign propagation.
 This is component proof. Native owner binding, renderer-backed node lookup and
 Android gameplay are outside this report.
+
+The first checkpoint misidentified PLT `0x30e9ac` as `fcmplt`. Independent
+execution of the relocated stub resolves it to `__aeabi_fcmple`. The corrected
+source accepts equality at zero and at the property/node threshold. Its runner
+now verifies actual import identities before modeling arithmetic. Historical
+interaction reports from the first checkpoint are superseded by this correction.

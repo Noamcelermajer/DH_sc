@@ -43,7 +43,8 @@ def main() -> int:
     assert digest(monster) == "84f07caaeb2c04f2024cc3e27d41f33806b2c53d6e8861bb3d8b371118fd0e1d"
     c_sources = [RUNTIME / "lua" / (name + ".c") for name in CORE] + [
         RUNTIME / "script_runtime.c", ROOT / "port/lua-numeric/numeric.c"]
-    cpp_sources = [RUNTIME / "script_function_alias.cpp", MODULE / "monster_external_script_session.cpp",
+    cpp_sources = [RUNTIME / "script_function_alias.cpp", MODULE / "ais_native_bindings.cpp",
+                   MODULE / "monster_external_script_session.cpp",
                    MODULE / "tests/monster_external_script_session.cpp"]
     compiled = []
     commands = []
@@ -76,13 +77,19 @@ def main() -> int:
     if result.returncode:
         return result.returncode
     host = json.loads(result.stdout)
-    assert host["monster_external_session_cases"] == 24 and host["mismatches"] == 0, host
+    assert host["monster_external_session_cases"] == 29 and host["mismatches"] == 0, host
     for key in ("unchanged_original_scripts_executed", "spotted_callback_order", "idle_path_short_circuit",
                 "fresh_target_after_path_query", "opaque_64bit_identity_tables", "service_lifetime_and_reentry",
                 "failure_preserves_prior_effects", "unknown_callbacks_rejected"):
         assert host[key] is True, (key, host)
+    for key in ("staged_same_vm_lifecycle", "staged_errors_stop_without_fallback"):
+        assert host[key] is True, (key, host)
+    for key in ("source_libraries_and_35_bindings", "unsupported_globals_fail_closed"):
+        assert host[key] is True, (key, host)
+    assert host["numeric_result_arity"] is True, host
     assert host["native_wired"] is False
     dependencies = c_sources + cpp_sources + [MODULE / "monster_external_script_session.hpp",
+        MODULE / "ais_native_bindings.hpp", ROOT / "port/adam-script-runtime/script_runtime.h",
         RUNTIME / "script_runtime.h", RUNTIME / "script_function_alias.h", ROOT / "port/lua-numeric/numeric.h",
         Path(__file__).resolve()] + list((RUNTIME / "lua").glob("*.h"))
     evidence = {"validation": "PASS", "host_report": host, "compiler_commands": commands,

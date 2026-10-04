@@ -54,6 +54,14 @@ target_sources(dh2_level_world PRIVATE character_ai_update_target.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_melee_range.cpp)
 
 target_sources(dh2_level_world PRIVATE character_ai_interaction_range.cpp ais_external_update.cpp)
+target_sources(dh2_level_world PRIVATE character_ai_ranged_range.cpp)
+target_sources(dh2_level_world PRIVATE character_range_capability.cpp character_ai_queue.cpp)
+target_sources(dh2_level_world PRIVATE character_interactive.cpp)
+target_sources(dh2_level_world PRIVATE character_ai_initialization.cpp)
+target_sources(dh2_level_world PRIVATE ais_external_init_vcb.cpp)
+
+target_sources(dh2_level_world PRIVATE ais_external_initialization.cpp ais_native_bindings.cpp room_zone_enrollment.cpp)
+target_sources(dh2_level_world PRIVATE character_ai_association.cpp character_native_bindings.cpp)
 
 target_sources(dh2_level_world PRIVATE ais_state_callbacks.cpp)
 

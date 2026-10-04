@@ -77,6 +77,9 @@ struct ScanResult {
     std::uint32_t enemy_callbacks;
     std::uint32_t script_dispatches;
     std::uint32_t path_requests;
+    std::uint32_t set_target_calls;
+    std::uint32_t head_to_calls;
+    std::uint32_t move_to_calls;
     std::uint32_t reserved;
     dh2::character_aggro_candidate_events::Result candidate_events;
     dh2::character_enemy_spotted::Result last_enemy_gate;
@@ -115,6 +118,14 @@ public:
     // old actor binding. A failed bind preserves the previous session.
     Status bind(const Bindings&, dh2::monster_external_script::Source commons,
                 dh2::monster_external_script::Source monster, std::string& error);
+    // Prepare the stable actor callback context without constructing/loading a
+    // second VM. The returned copied service table can create and advance the
+    // pending AIS VM. adopt_staged accepts only that ready VM with the exact
+    // prepared table; its owner must outlive this ActorSession binding.
+    Status prepare_staged(const Bindings&, std::string& error);
+    bool staged_services(dh2::monster_external_script::Services& output,
+                         std::shared_ptr<void>& lifetime) const noexcept;
+    Status adopt_staged(dh2::monster_external_script::Session&, std::string& error);
     Status reset(std::string& error);
     bool ready() const noexcept;
     dh2::monster_external_script::Statistics script_statistics() const noexcept;

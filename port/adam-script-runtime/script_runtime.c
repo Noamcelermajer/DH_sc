@@ -15,8 +15,9 @@ typedef struct {
   const dh2_script_value* args; uint32_t count;
   dh2_script_value* out; uint32_t capacity,returned;
   dh2_script_function callback; void* context;
-  unsigned char* binary; size_t binary_capacity,written; int status,source_values;
+  unsigned char* binary; size_t binary_capacity,written; int status,source_values,library;
 } Operation;
+static int protected_operation(dh2_script_vm* vm,lua_CFunction fn,Operation* op);
 static void* allocator(void* opaque,void* ptr,size_t old_size,size_t size) {
   dh2_script_vm* vm=(dh2_script_vm*)opaque; void* next;
   if (!ptr) old_size=0;
@@ -86,14 +87,35 @@ static int initialize(lua_State* L) {
   lua_pushcfunction(L,luaopen_math); lua_pushstring(L,LUA_MATHLIBNAME); lua_call(L,1,0);
   return 0;
 }
-dh2_script_vm* dh2_script_vm_create(size_t limit) {
+static int open_library_entry(lua_State* L) {
+  Operation* op=(Operation*)lua_touserdata(L,1);
+  if(!op)return luaL_error(L,"invalid library request");
+  switch(op->library) {
+    case DH2_SCRIPT_LIBRARY_BASE:
+      lua_pushcfunction(L,luaopen_base);lua_pushstring(L,"");lua_call(L,1,0);return 0;
+    case DH2_SCRIPT_LIBRARY_MATH:
+      lua_pushcfunction(L,luaopen_math);lua_pushstring(L,LUA_MATHLIBNAME);lua_call(L,1,0);return 0;
+    case DH2_SCRIPT_LIBRARY_TABLE:
+      lua_pushcfunction(L,luaopen_table);lua_pushstring(L,LUA_TABLIBNAME);lua_call(L,1,0);return 0;
+    case DH2_SCRIPT_LIBRARY_STRING:
+      lua_pushcfunction(L,luaopen_string);lua_pushstring(L,LUA_STRLIBNAME);lua_call(L,1,0);return 0;
+    default:return luaL_error(L,"unsupported Lua library");
+  }
+}
+static dh2_script_vm* create_vm(size_t limit,int open_default_libraries) {
   dh2_script_vm* vm; int little=1;
   if(*(char*)&little!=1||limit<65536||limit>1073741824) return NULL;
   vm=(dh2_script_vm*)calloc(1,sizeof(*vm)); if(!vm) return NULL;
   vm->limit=limit; vm->state=lua_newstate(allocator,vm);
   if(!vm->state) {free(vm);return NULL;}
-  if(lua_cpcall(vm->state,initialize,NULL)) {lua_close(vm->state);free(vm);return NULL;}
+  if(open_default_libraries&&lua_cpcall(vm->state,initialize,NULL)) {lua_close(vm->state);free(vm);return NULL;}
   return vm;
+}
+dh2_script_vm* dh2_script_vm_create(size_t limit) {return create_vm(limit,1);}
+dh2_script_vm* dh2_script_vm_create_deferred(size_t limit) {return create_vm(limit,0);}
+int dh2_script_vm_open_library(dh2_script_vm* vm,dh2_script_library library) {
+  Operation op={0};if(!vm||library<DH2_SCRIPT_LIBRARY_BASE||library>DH2_SCRIPT_LIBRARY_STRING)return -1;
+  op.library=(int)library;return protected_operation(vm,open_library_entry,&op);
 }
 void dh2_script_vm_destroy(dh2_script_vm* vm) {if(vm){lua_close(vm->state);free(vm);}}
 static int protected_operation(dh2_script_vm* vm,lua_CFunction fn,Operation* op) {

@@ -98,12 +98,48 @@ each and bytecode is rejected by this session. There is no instruction cap or
 claim of a sandbox for untrusted mods. No original ARM VM execution or whole
 historical interpreter equivalence is established here.
 
-The 24 host cases execute the exact original scripts for gameplay checks and
+The 29 host cases execute the exact original scripts for gameplay checks and
 use clearly authored malformed/memory-stress inputs for error cases. They
 verify ordered actions, both short-circuit gates, fresh target mutation,
 original table projection, null target handling, service-table copy, independent
 VM/map teardown, reentry rejection, native exception/failure boundaries,
-actual Lua allocation failure, failed candidate preservation and recovery.
+actual Lua allocation failure, failed candidate preservation and recovery, and
+the zero-result arity of unsupported `BitAnd` forms alongside valid bitwise
+calls.
+
+## Staged pending-AIS VM
+
+The external AIS path can stage one VM in the source lifecycle order:
+`Session::create`, `bind_functions`, `load_common`, `load_external`. The VM is
+created with deferred libraries. `ais_native_bindings::bind_all` then opens
+base, math, table and string in the recovered order and registers the complete
+35-name table (33 base names followed by `RegisterAIState` and
+`ChangeAIState`). The `OnTargetDied` name retains its observed binding to
+`_IsPlayerCharacter`. This preserves registration behavior without claiming
+all registered native function bodies are reconstructed.
+
+The session has real closures for the recovered numeric helpers, VFTable
+operations, `GetPyCst` and `GetPyStruct`; its eight additional property/target/
+controller globals are borrowed port adapters used by the bounded monster
+callbacks. Registered base APIs without a recovered implementation are bound
+to closures that raise a Lua error when called. They do not return fabricated
+success values. A stage failure faults that pending VM and prevents retry or
+fallback; the older `initialize()` helper remains an atomic convenience path.
+
+`ghost_ai_session::ActorSession::prepare_staged` prepares the stable service
+adapter, returns its copied callback table and a shared lifetime lease, and
+`adopt_staged` checks `Session::uses_services` before accepting the already
+loaded pending VM. This lets the GhostOwner callbacks and the promoted AIS use
+the same Lua state. The lease retains the adapter context; actor/world
+projections remain borrowed and must outlive VM use. The host composition test
+verifies search, event, original Lua, SetTarget and PathTo through the adopted
+VM, then detaches the wrapper and dispatches again through that same VM.
+
+The Session host gate now reports 28 cases; the actor composition gate reports
+9. The separate deferred-runtime check reports 464 assertions and verifies
+that each standard library is absent until its matching ordered open call.
+These are host validations, not Android AI-pursuit or complete AIS parity
+claims.
 
 ```powershell
 python port/level-world/tests/run_monster_external_script_session_host.py --compiler C:/Users/noamc/.local/mingw/mingw64/bin/g++.exe

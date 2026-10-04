@@ -138,6 +138,9 @@ void initialized(Session& session, Fixture& fixture, Source commons, Source mons
     std::string error;
     require(session.initialize(commons, monster, bind(fixture), error) == Status::complete && error.empty(),
             "original monster session initialization failed");
+    require(session.statistics().source_libraries_opened == 4 &&
+                session.statistics().source_functions_bound == 35,
+            "AIS BindFunction must open the four source libraries and register 35 ordered globals");
     require(fixture.trace == std::vector<std::string>{"Struct", "Prop"} && fixture.property_reads == 1,
             "original top-level query order or unintended OnInit changed");
     fixture.trace.clear();
@@ -274,6 +277,36 @@ int main(int argc, char** argv) {
                 "missing used service faults session and prevents accidental replay");
         ++cases;
 
+        Session unsupported_global; Fixture unsupported_fixture;
+        const auto unsupported_services=bind(unsupported_fixture);
+        const std::string unsupported_common_text="Trace('no source Trace provider')";
+        const auto unsupported_common=source(unsupported_common_text);
+        const auto unsupported_create=unsupported_global.create(unsupported_services,error);
+        const auto unsupported_bind=unsupported_global.bind_functions(error);
+        const auto unsupported_count=unsupported_global.statistics().source_functions_bound;
+        const auto unsupported_load=unsupported_global.load_common(unsupported_common,error);
+        require(unsupported_create==Status::complete&&unsupported_bind==Status::complete&&
+                    unsupported_count==35&&unsupported_load==Status::script_error&&
+                    unsupported_global.stage()==Stage::faulted&&!unsupported_global.ready()&&
+                    error.find("unsupported source script function: Trace")!=std::string::npos,
+                "registered but unavailable Trace must stop the pending source VM with an explicit error");
+        ++cases;
+
+        Session numeric_arity; Fixture numeric_fixture;
+        const std::string numeric_arity_script =
+            "AddToVFTable('OnEnemySpotted','monster_OnEnemySpotted')\n"
+            "AddToVFTable('OnTargetOutOfRange','monster_OnTargetOutOfRange')\n"
+            "function monster_OnEnemySpotted(enemy)\n"
+            " if BitAnd()==nil and BitAnd(1)==nil and BitAnd(7,3)==3 and BitOr(4,1)==5 then SetTarget(enemy) end\n"
+            "end\n"
+            "function monster_OnTargetOutOfRange() end\n";
+        require(numeric_arity.initialize(commons, source(numeric_arity_script), bind(numeric_fixture), error) ==
+                    Status::complete &&
+                    numeric_arity.dispatch(Event::enemy_spotted, enemy, error) == Status::complete &&
+                    numeric_fixture.target == enemy,
+                "registered numeric helpers must preserve zero-result invalid arity and valid results");
+        ++cases;
+
         Session short_circuit; Fixture short_fixture; short_fixture.state = 4;
         auto short_services = bind(short_fixture); short_services.has_path = nullptr;
         require(short_circuit.initialize(commons, monster, short_services, error) == Status::complete,
@@ -309,11 +342,57 @@ int main(int argc, char** argv) {
                 "explicit source reinitialization recovers faulted session");
         ++cases;
 
+        Session staged; Fixture staged_fixture; staged_fixture.session = &staged;
+        staged_fixture.commons = commons; staged_fixture.monster = monster;
+        const auto staged_services = bind(staged_fixture);
+        require(staged.create(staged_services, error) == Status::complete &&
+                    staged.stage() == Stage::created && !staged.ready() &&
+                    staged.uses_services(staged_services),
+                "staged AIS must create one owned VM with its stable actor services");
+        ++cases;
+        require(staged.load_common(commons, error) == Status::not_ready && staged_fixture.trace.empty(),
+                "common load before BindFunction must have no effects");
+        require(staged.bind_functions(error) == Status::complete &&
+                    staged.stage() == Stage::functions_bound && !staged.ready(),
+                "staged BindFunction transition failed");
+        const auto staged_common_status = staged.load_common(commons, error);
+        require(staged_common_status == Status::complete &&
+                    staged.stage() == Stage::common_loaded && !staged.ready() &&
+                    staged.source_alias(Event::enemy_spotted) == nullptr &&
+                    staged_fixture.trace.empty(),
+                "pending VM must preserve commons order and remain unpromoted");
+        require(staged.load_external(monster, error) == Status::complete && staged.ready() &&
+                    staged.stage() == Stage::external_loaded &&
+                    std::string(staged.source_alias(Event::enemy_spotted)) == "monster_OnEnemySpotted" &&
+                    staged_fixture.trace == std::vector<std::string>{"Struct", "Prop"},
+                "source monster load must finish pending AIS aliases");
+        require(staged.dispatch(Event::enemy_spotted, enemy, error) == Status::complete &&
+                    staged_fixture.target == enemy && staged_fixture.last_face == enemy,
+                "same staged pending VM must become the dispatched actor VM");
+        trace(staged_fixture, {"Struct", "Prop", "HasTarget", "SetTarget", "HeadTo"});
+        ++cases;
+
+        Session staged_failure; Fixture staged_failure_fixture;
+        const auto staged_failure_services = bind(staged_failure_fixture);
+        const auto malformed_external = source(malformed);
+        require(staged_failure.create(staged_failure_services, error) == Status::complete &&
+                    staged_failure.bind_functions(error) == Status::complete &&
+                    staged_failure.load_common(commons, error) == Status::complete &&
+                    staged_failure.load_external(malformed_external, error) == Status::script_error &&
+                    staged_failure.stage() == Stage::faulted && !staged_failure.ready() &&
+                    staged_failure.load_external(monster, error) == Status::not_ready &&
+                    staged_failure.dispatch(Event::enemy_spotted, enemy, error) == Status::not_ready,
+                "a failed staged source load must stop without replay/fallback");
+        ++cases;
+
         std::printf("{\"monster_external_session_cases\":%u,\"unchanged_original_scripts_executed\":true,"
                     "\"spotted_callback_order\":true,\"idle_path_short_circuit\":true,"
                     "\"fresh_target_after_path_query\":true,\"opaque_64bit_identity_tables\":true,"
                     "\"service_lifetime_and_reentry\":true,\"failure_preserves_prior_effects\":true,"
-                    "\"unknown_callbacks_rejected\":true,\"native_wired\":false,\"mismatches\":0}\n", cases);
+                    "\"staged_same_vm_lifecycle\":true,\"staged_errors_stop_without_fallback\":true,"
+                    "\"source_libraries_and_35_bindings\":true,\"unsupported_globals_fail_closed\":true,"
+                    "\"numeric_result_arity\":true,\"unknown_callbacks_rejected\":true,"
+                    "\"native_wired\":false,\"mismatches\":0}\n", cases);
         return 0;
     } catch (const std::exception& error) {
         std::fprintf(stderr, "monster external session: %s\n", error.what());

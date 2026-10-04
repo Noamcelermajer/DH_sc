@@ -51,10 +51,21 @@ enum class Status : std::int32_t {
     allocation_failed = 6,
 };
 
+enum class Stage : std::uint32_t {
+    empty = 0,
+    created = 1,
+    functions_bound = 2,
+    common_loaded = 3,
+    external_loaded = 4,
+    faulted = 5,
+};
+
 struct Statistics {
     std::uint32_t completed_callbacks;
     std::uint32_t failed_callbacks;
     std::uint32_t projected_object_table_arguments;
+    std::uint32_t source_libraries_opened;
+    std::uint32_t source_functions_bound;
     std::size_t lua_memory_used;
     bool faulted;
 };
@@ -64,7 +75,8 @@ struct Statistics {
 // events above are dispatchable; OnInit/combat/timers/candidate search and the
 // full AISExternal lifecycle remain outside this bounded session.
 //
-// Source bytes are borrowed during initialize only. Actor identities use Lua
+// Source bytes are borrowed only for the initialize/stage-load call that reads
+// them. Actor identities use Lua
 // tables with a light-userdata _this field, never float pointer conversions.
 // These neutral tables support only identity transport, not entity methods.
 // One owning thread; initialize/dispatch/reset reject synchronous reentry.
@@ -84,11 +96,26 @@ public:
     // an earlier session. Native effects from load-time providers are retained.
     Status initialize(Source commons, Source monster, const Services& services,
                       std::string& error, std::size_t memory_limit = 2 * 1024 * 1024);
+    // Staged source lifecycle for AISExternal. Each call advances the same VM;
+    // a failed stage faults it and keeps prior script/provider effects. The
+    // caller must discard a faulted staged session rather than replay a stage.
+    // `initialize` remains the atomic convenience wrapper used by older callers.
+    Status create(const Services& services, std::string& error,
+                  std::size_t memory_limit = 2 * 1024 * 1024,
+                  std::shared_ptr<void> service_lifetime = {});
+    Status bind_functions(std::string& error);
+    Status load_common(Source commons, std::string& error);
+    Status load_external(Source external, std::string& error);
     Status dispatch(Event event, std::uintptr_t enemy, std::string& error);
     Status reset(std::string& error);
     bool ready() const noexcept;
+    Stage stage() const noexcept;
+    // Exact service-table match lets an actor wrapper prove that this is the
+    // pending AIS VM prepared with its stable per-actor callback context.
+    bool uses_services(const Services& services) const noexcept;
     Statistics statistics() const noexcept;
-    // Borrowed owned-map text, valid until successful initialize or reset.
+    // Borrowed owned-map text, valid until a later alias mutation, successful
+    // initialize, or reset.
     // Unknown event/no session returns nullptr; no recursive alias lookup.
     const char* source_alias(Event event) const noexcept;
 
