@@ -1,6 +1,6 @@
 # Dungeon Hunter 2 — source reconstruction
 
-## Current combined source status — 2026-10-04
+## Current combined source status — 2026-10-05
 
 **Task overview:** [Project checklist — completed work and everything remaining](docs/PROJECT-CHECKLIST.md).
 
@@ -17,6 +17,10 @@ and compiled/host-tested CanUpdate, retained-VM state callbacks and resolved-pat
 caching. Crypt ambush, ordered initialization, damaged-health/VM retention and
 reload/rotation pass on API37/16 KiB. The checkpoint links the APK, exact compiler
 sources and remaining native frame services. Autonomous Ghost pursuit remains open.
+The newer [source frame ownership checkpoint](docs/SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md)
+adds the same-VM callback bridge, Stop/physics-policy kernels and bounded
+Character scheduler. Both ABIs compile and the new local APK passes the Crypt
+regression; these prerequisites still need native autonomous-frame integration.
 Our `port/android-app` and Irrlicht SWAMP route remain separate development
 runtimes. Full game reconstruction is still active. The checkpoints below are
 historical evidence for their named APKs; their byte-disassembly and isolated
