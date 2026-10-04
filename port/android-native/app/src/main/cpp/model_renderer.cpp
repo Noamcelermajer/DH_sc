@@ -40,6 +40,13 @@
 #include "ghost_ai_owner.hpp"
 #include "character_ai_initialization.hpp"
 #include "character_ai_association.hpp"
+#include "character_level_runtime.hpp"
+#include "character_script_lifecycle.hpp"
+#include "character_script_selection.hpp"
+#include "ais_external_initialization.hpp"
+#include "ais_external_init_vcb.hpp"
+#include "native_debug_files.hpp"
+#include "../../../../../player-info-level/player_manager_host_level.hpp"
 #include "navigation_producers.hpp"
 #include <GLES2/gl2.h>
 #include <android/log.h>
@@ -63,6 +70,7 @@ namespace {
 using Matrix=std::array<float,16>;
 using Vertex=dh2::objects::Vertex;
 std::string mod_root;
+std::string runtime_root;
 struct Draw{GLuint vertices=0,indices=0,diffuse=0,alpha=0;GLsizei count=0;unsigned node=0;dh2::scene::Material material;
  dh2::skinning::Skin skin;std::vector<Vertex> cpu_vertices;std::vector<std::array<float,3>> rest_positions;
  bool environment=false;Matrix placement{};};
@@ -77,6 +85,7 @@ struct SearchObjectProjection {
  std::uint8_t is_character=0;
 };
 struct SpawnOwner;
+struct NativeCharAIProjection;
 struct ObjectActor:dh2::objects::Record {
  dh2::data::AnimationScheduler scheduler;double cursor=0;unsigned completions=0;std::string state="Idle";
  dh2::data::PropertySheet base_class{};int class_id=-1;
@@ -86,6 +95,7 @@ struct ObjectActor:dh2::objects::Record {
  AggroStorage aggro;std::uint64_t identity=0;unsigned target_alive=0,target_sight=0;bool target_seeking=false,ai_attack=false;
  SearchObjectProjection search_projection{};
  std::shared_ptr<SpawnOwner> spawn_owner;
+ std::shared_ptr<NativeCharAIProjection> native_ai;
  ObjectActor(const dh2::objects::Record& r):Record(r){}
 };
 struct ObjectGroup{dh2::objects::Resource resource;std::vector<Draw> draws;std::vector<ObjectActor> instances;std::map<int,dh2::animation::Player> clips;int animation_table=-1;};
@@ -102,13 +112,15 @@ struct PlayerCombat {
 };
 PlayerCombat prince_combat;
 SearchObjectProjection prince_search_projection{};
+struct NativeMonsterInitialization;
 struct NativeCharAIProjection {
  std::uintptr_t character_identity=0,ai_identity=0;
  dh2::character_ai_initialization::State state{};
  dh2::character_ai_initialization::Result constructor_result{};
+ std::shared_ptr<NativeMonsterInitialization> initialization;
 };
 struct NativeCharAIRegistry {
- std::vector<std::unique_ptr<NativeCharAIProjection>> projections;
+ std::vector<std::shared_ptr<NativeCharAIProjection>> projections;
  std::vector<std::uintptr_t> queue_order;
  std::unordered_map<std::uintptr_t,NativeCharAIProjection*> by_character;
  bool ready=false;
@@ -129,6 +141,33 @@ std::map<int,dh2::animation::Player> prince_attack_clips;
 dh2::data::AnimationBank prince_animation_bank;
 dh2::data::PropertyRules actor_property_rules;
 dh2::data::LevelTables actor_level_tables;
+dh2::data::ClassTables actor_class_tables;
+std::vector<dh2::data::ClassRow> actor_class_rows;
+std::vector<std::string> actor_character_fields;
+std::vector<std::uint8_t> actor_design_bytes;
+dh2_pycst_view actor_design{};
+dh2::character_script_set_level::Application native_application{};
+dh2::character_level_runtime::DesignBinding native_design_binding{};
+std::unique_ptr<dh2::native::debug_files::Backend> native_debug;
+
+struct NativeHostPlayer {
+ // The source embedded fallback PlayerInfo constructor initializes +330 to 0.
+ dh2::character_level_member::IntMember level_member{};
+ std::uint64_t change_serial=0;
+ dh2::player_manager_host_level::PlayerInfoProjection player{};
+ dh2::player_manager_host_level::PlayerRegistry registry{};
+ std::uint8_t online=0; // Explicit offline development session; no network owner.
+ NativeHostPlayer() {
+  player={reinterpret_cast<std::uintptr_t>(&player),-1,&level_member};
+  registry={reinterpret_cast<std::uintptr_t>(&registry),nullptr,0,&player};
+ }
+ static std::int32_t read_online(void* raw,std::uint8_t* value) {
+  *value=static_cast<NativeHostPlayer*>(raw)->online;return 0;
+ }
+ dh2::player_manager_host_level::Services services() {
+  return {this,read_online,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr};
+ }
+} native_host;
 // The viewport owns the bounded Level constructor fields. Its normal-difficulty
 // development argument is explicit; the original GSLevel/save stack is pending.
 dh2::level_construction_fields::State actor_level_fields{-1,-1,0,{0,0,0},0};
@@ -139,6 +178,24 @@ struct NativeLevelQuery {
  const float* number=nullptr;
  std::int32_t pushed[2]{};
  unsigned count=0;
+ static std::int32_t application(void*,std::uintptr_t* output) {
+  if(!native_application.identity)return 1;
+  *output=native_application.identity;return 0;
+ }
+ static std::int32_t manager(void*,std::uintptr_t app,std::uintptr_t* output) {
+  if(app!=native_application.identity)return 1;
+  *output=native_host.registry.manager_identity;return 0;
+ }
+ static std::int32_t hosting(void*,std::uintptr_t manager_identity,std::uintptr_t* output) {
+  if(manager_identity!=native_host.registry.manager_identity)return 1;
+  auto services=native_host.services();dh2::player_manager_host_level::Result result{};
+  if(dh2::player_manager_host_level::get_hosting_level(&native_host.registry,&services,&result)!=dh2::player_manager_host_level::Status::complete)return 1;
+  *output=result.player_identity;return 0;
+ }
+ static std::int32_t player_word(void*,std::uintptr_t player_identity,std::uint32_t offset,std::int32_t* output) {
+  if(player_identity!=native_host.player.identity||offset!=0x330)return 1;
+  *output=native_host.level_member.value;return 0;
+ }
  static std::int32_t current(void*,std::uintptr_t* output) {
   *output=actor_level_fields_ready?reinterpret_cast<std::uintptr_t>(&actor_level_fields):0;return 0;
  }
@@ -171,7 +228,7 @@ struct NativeLevelQuery {
   query.pushed[query.count++]=value;return 0;
  }
  dh2::lua_script_level_queries::Services services() {
-  return {this,nullptr,nullptr,nullptr,nullptr,current,field,value,convert,table,word,push};
+  return {this,application,manager,hosting,player_word,current,field,value,convert,table,word,push};
  }
 };
 
@@ -184,6 +241,19 @@ std::int32_t native_current_level_range(const float* difficulty,std::int32_t out
  if(dh2::lua_script_level_queries::get_current_level_range(&arguments,&services,&result)!=dh2::lua_script_level_queries::Status::complete)return 1;
  for(unsigned i=0;i<query.count;++i)output[i]=query.pushed[i];
  *count=query.count;return 0;
+}
+
+std::int32_t native_host_level(std::int32_t* output) {
+ if(!output)return 1;
+ NativeLevelQuery query;auto services=query.services();dh2::lua_script_level_queries::Result result{};
+ if(dh2::lua_script_level_queries::get_host_player_level(&services,&result)!=dh2::lua_script_level_queries::Status::complete||query.count!=1)return 1;
+ *output=query.pushed[0];return 0;
+}
+std::int32_t native_host_difficulty(std::int32_t* output) {
+ if(!output)return 1;
+ NativeLevelQuery query;auto services=query.services();dh2::lua_script_level_queries::Result result{};
+ if(dh2::lua_script_level_queries::get_host_player_difficulty(&services,&result)!=dh2::lua_script_level_queries::Status::complete||query.count!=1)return 1;
+ *output=query.pushed[0];return 0;
 }
 dh2::data::CombatRandom combat_random{0xD22026u,0};unsigned combat_hits=0;
 dh2::data::AnimationTables actor_animation_tables;dh2::data::Dictionary actor_clip_table;dh2::data::AnimationRandom actor_random;
@@ -315,7 +385,9 @@ struct SpawnOwner {
   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Spawn body ready | %s | creations %u | radius %.9g | category %x | mask %x",actor->name.c_str(),body_creations,body.radius*100.f,config.shape.category_bits,config.shape.mask_bits);
  }
 };
-void clear_actor_world() {
+void retire_native_monster_scripts(bool preserve);
+void clear_actor_world(bool preserve_scripts=false) {
+ retire_native_monster_scripts(preserve_scripts);
  actor_world.clear();
  search_world.clear();
  source_char_ai.clear();
@@ -349,8 +421,20 @@ void initialize_char_ai_registry() {
  source_char_ai.by_character.reserve(character_count);
  CharAIAppendContext context{&source_char_ai};
  const dh2::character_ai_initialization::Services services{&context,append_char_ai};
- const auto construct=[&](std::uintptr_t character_identity,std::uintptr_t ai_identity) {
-  auto projection=std::make_unique<NativeCharAIProjection>();
+ unsigned fresh=0,retained=0;
+ const auto construct=[&](std::uintptr_t character_identity,std::uintptr_t ai_identity,
+                          std::shared_ptr<NativeCharAIProjection>* retained_owner) {
+  if(retained_owner&&*retained_owner) {
+   const auto& projection=*retained_owner;
+   if(projection->character_identity!=character_identity||projection->ai_identity!=ai_identity||
+      projection->state.owner_04!=character_identity)
+    throw std::runtime_error("Retained native CharAI identity differs");
+   source_char_ai.projections.push_back(projection);source_char_ai.queue_order.push_back(ai_identity);
+   if(!source_char_ai.by_character.emplace(character_identity,projection.get()).second)
+    throw std::runtime_error("Duplicate retained Character-to-CharAI projection");
+   ++retained;return;
+  }
+  auto projection=std::make_shared<NativeCharAIProjection>();
   projection->character_identity=character_identity;
   projection->ai_identity=ai_identity;
   projection->state.identity=ai_identity;
@@ -365,13 +449,19 @@ void initialize_char_ai_registry() {
      projection->state.alternate_ais_20)
    throw std::runtime_error("Source CharAI Character association failed");
   auto* stable=projection.get();
+  if(retained_owner)*retained_owner=projection;
   source_char_ai.projections.push_back(std::move(projection));
   if(!source_char_ai.by_character.emplace(character_identity,stable).second)
    throw std::runtime_error("Duplicate native Character-to-CharAI projection");
+  ++fresh;
  };
- construct(0x100000001ull,0x300000001ull);
- for(std::size_t i=0;i<world_objects.size();++i)if(world_objects[i].kind==1)
-  construct(0x100000002ull+i,0x300000002ull+i);
+ construct(0x100000001ull,0x300000001ull,nullptr);
+ for(std::size_t i=0;i<world_objects.size();++i)if(world_objects[i].kind==1) {
+  const auto identity=0x100000002ull+i;ObjectActor* actor=nullptr;
+  for(auto& group:object_groups)for(auto& entry:group.instances)if(entry.identity==identity)actor=&entry;
+  if(!actor)throw std::runtime_error("Native Character record has no actor owner");
+  construct(identity,0x300000002ull+i,&actor->native_ai);
+ }
  if(source_char_ai.projections.size()!=character_count||
     source_char_ai.queue_order.size()!=character_count)
   throw std::runtime_error("Source CharAI constructor count/order differs");
@@ -379,7 +469,194 @@ void initialize_char_ai_registry() {
  __android_log_print(ANDROID_LOG_INFO,"DH2Native",
   "CharAI constructor projections | characters %zu | native source-order registration records %zu | source Character associations %zu | active AIS initialization pending",
   source_char_ai.projections.size(),source_char_ai.queue_order.size(),source_char_ai.projections.size());
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native CharAI lifetime | fresh constructors %u | retained owners %u | graphics registry rebuilt",fresh,retained);
 }
+}
+
+// Native initialization owner. The same VM survives all source load stages.
+// Full InitScriptProcess skills/post/final and autonomous frames remain gated.
+struct NativeMonsterInitialization {
+ NativeCharAIProjection* ai=nullptr;
+ std::shared_ptr<SpawnOwner> owner;
+ dh2::monster_external_script::Session vm;
+ dh2::character_level_runtime::Runtime stats;
+ dh2::character_level_runtime::Result last_stats{};
+ dh2::character::ScriptLifecycleState64 lifecycle{};
+ dh2::ais_external_initialization::State ais{};
+ std::string script_path;
+ dh2::monster_external_script::Source common{},external{};
+ unsigned init_calls=0,timers_started=0;
+ bool initialized=false;
+ unsigned timer_gates=0;
+ ObjectActor& actor() {if(!owner||!owner->actor)throw std::runtime_error("Native monster owner is stale");return *owner->actor;}
+ bool subject(std::uintptr_t id) {return ai&&id==ai->character_identity&&owner&&owner->actor&&owner->actor->identity==id;}
+ static auto& self(void* raw) {return *static_cast<NativeMonsterInitialization*>(raw);}
+ static std::int32_t structure(void*,const char* category,const char* field,std::int32_t* output) {
+  if(!category||!field||!output||std::strcmp(category,"CharacterProperties"))return 1;
+  const auto it=std::find(actor_character_fields.begin(),actor_character_fields.end(),field);
+  *output=it==actor_character_fields.end()?-1:std::int32_t(it-actor_character_fields.begin());return 0;
+ }
+ static std::int32_t property(void* raw,std::uintptr_t id,std::int32_t prop,float* output) {
+  auto& s=self(raw);if(!s.subject(id)||!output)return 1;
+  auto view=dh2::data::property_view(actor_property_rules,s.actor().properties);std::int32_t value;
+  if(dh2_property_resolve(&view,prop,&value))return 1;
+  *output=static_cast<float>(value);return 0;
+ }
+ static std::int32_t constant(void*,const char* category,const char* key,std::int32_t* output) {
+  if(!category||!key||!output)return 1;
+  dh2_pycst_result value{};
+  if(dh2_pycst_get(&actor_design,category,std::strlen(category),key,std::strlen(key),&value))return 1;
+  *output=value.found?value.value:-1;return 0;
+ }
+ static std::int32_t oid(void*,const char* category,const char* name,std::int32_t* output) {
+  if(!category||!name||!output||std::strcmp(category,"ClassTable"))return 1;
+  const auto it=std::find(actor_class_tables.names.begin(),actor_class_tables.names.end(),name);
+  *output=it==actor_class_tables.names.end()?-1:std::int32_t(it-actor_class_tables.names.begin());return 0;
+ }
+ static std::int32_t position(void* raw,std::uintptr_t id,float output[3]) {
+  auto& s=self(raw);if(!s.subject(id)||!output)return 1;
+  std::copy(s.actor().position.begin(),s.actor().position.end(),output);return 0;
+ }
+ static std::int32_t host_level(void*,std::int32_t* output) {return native_host_level(output);}
+ static std::int32_t difficulty(void*,std::int32_t* output) {return native_host_difficulty(output);}
+ static std::int32_t range(void*,const float* arg,std::int32_t output[2],std::uint32_t* count) {return native_current_level_range(arg,output,count);}
+ static std::int32_t set_level(void* raw,std::uintptr_t id,float fixed) {
+  auto& s=self(raw);if(!s.subject(id)||!native_debug)return 1;
+  auto& properties=s.actor().properties;
+  auto view=dh2::data::property_view(actor_property_rules,properties);
+  dh2::character_level_runtime::Storage storage{id,reinterpret_cast<std::uintptr_t>(&properties),properties.base.data(),&view,
+   actor_class_rows.data(),std::uint32_t(actor_class_rows.size()),&native_design_binding,1,&native_debug->globals(),&native_debug->services()};
+  const dh2::character_script_set_level::Globals globals{&native_application};
+  const auto status=s.stats.set_level_fixed(&storage,&globals,fixed,&s.last_stats);
+  if(status!=dh2::character_level_runtime::Status::complete){
+   __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Native monster SetLevel failed | %s | status %d | Level %d | HP attempted %u | MP attempted %u",s.actor().name.c_str(),int(status),properties.base[19],s.last_stats.hp_attempted,s.last_stats.mp_attempted);return 1;
+  }
+  return 0;
+ }
+ static std::int32_t has_target(void* raw,std::uintptr_t id,std::uint32_t* output) {
+  auto& s=self(raw);if(!s.subject(id)||!output)return 1;*output=s.ai->state.target_40!=0;return 0;
+ }
+ static std::int32_t get_target(void* raw,std::uintptr_t id,std::uintptr_t* output) {
+  auto& s=self(raw);if(!s.subject(id)||!output)return 1;*output=s.ai->state.target_40;return 0;
+ }
+ // These unused OnInit dependencies reject until genuine actor AI services bind.
+ static std::int32_t unbound_state(void*,std::uintptr_t,std::int32_t*) {return 1;}
+ static std::int32_t unbound_path(void*,std::uintptr_t,std::uint32_t*) {return 1;}
+ static std::int32_t unbound_command(void*,std::uintptr_t,std::uintptr_t) {return 1;}
+ dh2::monster_external_script::Services script_services() {
+  return {this,ai->character_identity,structure,property,constant,has_target,get_target,unbound_state,unbound_path,
+   unbound_command,unbound_command,unbound_command,oid,position,host_level,difficulty,range,set_level};
+ }
+ static std::int32_t construct_service(void* raw,dh2::ais_external_initialization::State* state,const dh2::ais_external_initialization::Request* request) {
+  auto& s=self(raw);if(state!=&s.ais)return 1;
+  std::string error;
+  switch(request->operation) {
+   case dh2::ais_external_initialization::Operation::lua_construct:
+    if(request->argument!=1)return 1;
+    return s.vm.create(s.script_services(),error)==dh2::monster_external_script::Status::complete?0:1;
+   case dh2::ais_external_initialization::Operation::character_create_bindings:
+    if(request->subject!=s.ai->character_identity)return 1;
+    return s.vm.bind_character_functions(error)==dh2::monster_external_script::Status::complete?0:1;
+   case dh2::ais_external_initialization::Operation::path_assign:
+    if(!request->text)return 1;
+    s.script_path.assign(request->text,request->text_bytes);return 0;
+   default:return 1;
+  }
+ }
+ static void create_selected(void* raw,dh2::character::ScriptSelectionState16*,std::uint32_t kind) {
+  auto& s=self(raw);if(kind!=dh2::character::script_external)throw std::runtime_error("Unsupported native AIS kind");
+  s.ais.identity=reinterpret_cast<std::uintptr_t>(&s.ais);
+  s.ais.binder_identity=reinterpret_cast<std::uintptr_t>(&s.vm);
+  s.ais.path_storage_identity=reinterpret_cast<std::uintptr_t>(&s.script_path);
+  const dh2::ais_external_initialization::Tables tables{0xd2a51001u,0xd2a51002u};
+  const dh2::ais_external_initialization::Services services{&s,construct_service};dh2::ais_external_initialization::Result result{};
+  if(dh2::ais_external_initialization::construct_external(&s.ais,true,&tables,&services,&result)!=dh2::ais_external_initialization::Status::complete)
+   throw std::runtime_error("Native pending AIS constructor failed");
+  s.lifecycle.pending=s.ais.identity;
+  s.ai->state.alternate_ais_20=s.ais.identity;
+ }
+ static std::int32_t membership(void* raw,dh2::ais_external_init_vcb::State* state,const char* key,bool* output) {
+  auto& s=self(raw);return state->ais==s.ais.identity&&output&&s.vm.contains_source_alias(key,*output)?0:1;
+ }
+ static void lifecycle_service(void* raw,dh2::character::ScriptLifecycleState64* state,const dh2::character::ScriptLifecycleRequest32* request,dh2::character::ScriptLifecycleResponse16* reply) {
+  using namespace dh2::character;auto& s=self(raw);if(state!=&s.lifecycle)throw std::runtime_error("Native AIS lifecycle owner differs");
+  std::string error;
+  const auto completed=[&](dh2::monster_external_script::Status status){if(status!=dh2::monster_external_script::Status::complete)throw std::runtime_error("Native monster script: "+error);};
+  const ScriptLifecycleServices16 nested{&s,lifecycle_service};
+  switch(request->service) {
+   case script_create_step: {
+    const auto* props=dh2::data::ai_props(actor_ai_tables,s.actor().properties.resolved[1]);
+    if(!props||props->type!=4||props->script!="monster")throw std::runtime_error("Native Ghost script selection differs");
+    ScriptSelectionState16 selection{};const ScriptCreationFacts24 facts{std::uint32_t(props->script.size()),0,props->script.c_str(),s.actor().name.c_str()};
+    const ScriptSelectionServices16 services{&s,create_selected};
+    if(dh2_character_script_create_step(&selection,&facts,&services)!=1)throw std::runtime_error("Native AIS selection failed");
+    state->external_name=selection.external_name;state->scripted=selection.scripted;break;
+   }
+   case script_bind_functions:completed(s.vm.bind_ais_functions(error));break;
+   case script_set_character: {
+    const dh2::ais_external_initialization::Services services{&s,construct_service};dh2::ais_external_initialization::Result result{};
+    if(dh2::ais_external_initialization::set_character(&s.ais,request->payload,&services,&result)!=dh2::ais_external_initialization::Status::complete)
+     throw std::runtime_error("Native AIS Character binding failed");
+    break;
+   }
+   case script_load_common:completed(s.vm.load_common(s.common,error));break;
+   case script_load_external:completed(s.vm.load_external(s.external,error));break;
+   case script_ai_init:
+    if(dh2_character_script_lifecycle(state,script_on_init,0,&nested)!=1)throw std::runtime_error("Native CharAI OnInit failed");break;
+   case script_owner_is_character:reply->word=1;break; // This fixed owner is an actual Character.
+   case script_owner_is_dead:reply->word=s.actor().combat_state.dead;break;
+   case script_timer_stop:
+    if(s.owner->character.stop_timer(request->argument0)<0)throw std::runtime_error("Native AI timer stop failed");break;
+   case script_design_tick: {
+    dh2_pycst_result value{};const char* key=request->argument0==0x33?"AI_Tick":request->argument0==0x34?"DoT_Tick":nullptr;
+    if(!key||dh2_pycst_get(&actor_design,"CharacterDesign",15,key,std::strlen(key),&value)||!value.found)throw std::runtime_error("Native AI timer design key missing");
+    reply->word=std::uint32_t(value.value);break;
+   }
+   case script_timer_start: {
+    const auto timer=s.owner->character.start_timer(request->argument0,-1,request->argument1,0);
+    if(timer<0)throw std::runtime_error("Native AI timer allocation failed");reply->word=std::uint32_t(timer);++s.timers_started;break;
+   }
+   case script_ais_init:completed(s.vm.dispatch(dh2::monster_external_script::Event::init,0,error));++s.init_calls;break;
+   case script_pending_init_vcb: {
+    dh2::ais_external_init_vcb::State flags{s.ais.identity,s.ais.flags_b8};
+    const dh2::ais_external_init_vcb::Services services{&s,membership};dh2::ais_external_init_vcb::Result result{};
+    const auto status=dh2::ais_external_init_vcb::initialize_external(&flags,&services,&result);s.ais.flags_b8=flags.flags_b8;
+    if(status!=dh2::ais_external_init_vcb::Status::complete)throw std::runtime_error("Native AIS VFTable flags failed");break;
+   }
+   default:throw std::runtime_error("Native full AIS initialization service remains unbound");
+  }
+ }
+ void load(dh2::monster_external_script::Source commons,dh2::monster_external_script::Source monster) {
+  common=commons;external=monster;lifecycle={};lifecycle.owner=ai->character_identity;lifecycle.timer33=lifecycle.timer34=-1;
+  const auto* props=dh2::data::ai_props(actor_ai_tables,actor().properties.resolved[1]);if(!props)throw std::runtime_error("Native Ghost AI row missing");
+  lifecycle.delayed=props->delayed_load;
+  const dh2::character::ScriptLifecycleServices16 services{this,lifecycle_service};
+  if(dh2_character_script_lifecycle(&lifecycle,dh2::character::script_load_process,0,&services)!=1||!lifecycle.active||lifecycle.active!=lifecycle.pending||init_calls!=1||!vm.ready())
+   throw std::runtime_error("Native Ghost load/OnInit publication failed");
+  ai->state.active_ais_1c=lifecycle.active;ai->state.alternate_ais_20=lifecycle.pending;
+  // The source timers were allocated in their original OnInit order. The
+  // native port pauses them until their actual AI/DoT expiry providers bind;
+  // it must not silently consume those events through the FSM alone.
+  if(owner->character.pause_timer(std::uint32_t(lifecycle.timer33),1)!=1||
+     owner->character.pause_timer(std::uint32_t(lifecycle.timer34),1)!=1)
+   throw std::runtime_error("Native unfinished AI/DoT timer gate failed");
+  timer_gates=2;common={};external={}; // The VM owns its loaded chunks now.
+  initialized=true;
+ }
+};
+
+void retire_native_monster_scripts(bool preserve) {
+ // Native lifetime cleanup cancels only this retired VM's source timer IDs.
+ // Retained Spawn/Idle timers and full source skill cleanup have separate owners.
+ for(auto& projection:source_char_ai.projections)if(projection->initialization) {
+  auto& script=*projection->initialization;
+  if(preserve&&script.initialized)continue;
+  if(script.owner) {
+   if(script.lifecycle.timer33!=-1)script.owner->character.stop_timer(std::uint32_t(script.lifecycle.timer33));
+   if(script.lifecycle.timer34!=-1)script.owner->character.stop_timer(std::uint32_t(script.lifecycle.timer34));
+  }
+  script.initialized=false;
+ }
 }
 
 void SpawnOwner::service(void* context,dh2::character::State* state,const dh2::character::Request* request) {
@@ -728,8 +1005,9 @@ Matrix camera(int width,int height){
 }
 }
 void mod_directory(std::string directory){mod_root=std::move(directory);}
+void runtime_directory(std::string directory){runtime_root=std::move(directory);}
 std::vector<std::uint8_t> read_asset(AAssetManager* assets,const std::string& name){return read(assets,name,"");}
-void reset_context(){native_actor_ready=false;clear_actor_world();search_world.clear();prince_search_projection={};prince_body={};resume_world=resume_world||world_mode;if(world_mode){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}world_mode=false;move_x=move_y=0;draws.clear();images.clear();object_groups.clear();world_objects.clear();prince_locomotion=dh2::actor::BlendedPlayback{};prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;inspected_object=-1;current_scene={};player=dh2::animation::Player{};walk_player=dh2::animation::Player{};level={};program=0;enabled=false;}
+void reset_context(){native_actor_ready=false;clear_actor_world(world_mode||resume_world);search_world.clear();prince_search_projection={};prince_body={};resume_world=resume_world||world_mode;if(world_mode){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}world_mode=false;move_x=move_y=0;draws.clear();images.clear();object_groups.clear();world_objects.clear();prince_locomotion=dh2::actor::BlendedPlayback{};prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;inspected_object=-1;current_scene={};player=dh2::animation::Player{};walk_player=dh2::animation::Player{};level={};program=0;enabled=false;}
 void deactivate(){native_actor_ready=false;clear_actor_world();prince_body={};crypt_spawn_script.clear();crypt_trigger_state={};enabled=false;world_mode=false;resume_world=false;move_x=move_y=0;}
 bool active(){return enabled;}
 void set_enemy_ai(bool value){enemy_ai_enabled=value;__android_log_print(ANDROID_LOG_INFO,"DH2Native","Enemy AI configured | automatic melee %d",value);}
@@ -819,7 +1097,7 @@ static std::string load_scene(const std::uint8_t* bytes,std::size_t size,AAssetM
     const float extent[3]{high[0]-low[0],high[1]-low[1],high[2]-low[2]};
     float next_radius=std::sqrt(extent[0]*extent[0]+extent[1]*extent[1]+extent[2]*extent[2])*.5f;
     if(!std::isfinite(next_radius)||next_radius<.001f)throw std::runtime_error("Degenerate scene bounds");
-    clear_actor_world();release_objects(object_groups);world_objects.clear();inspected_object=-1;release(draws,images);draws=std::move(candidate);images=std::move(textures);radius=next_radius;
+    clear_actor_world(preserve_level_session);release_objects(object_groups);world_objects.clear();inspected_object=-1;release(draws,images);draws=std::move(candidate);images=std::move(textures);radius=next_radius;
     native_actor_ready=false;prince_body={};
     if(!preserve_level_session){crypt_spawn_script.clear();crypt_trigger_state={};}
     world_mode=false;resume_world=false;move_x=move_y=0;
@@ -1313,7 +1591,7 @@ void initialize_native_actor(AAssetManager* assets,bool restore){
  if(!level.native_floor||dh2_decor_level_world_bounds(bounds))throw std::runtime_error("Native actor world bounds missing");
  // Teardown belongs to the world replacement boundary as well as Activity
  // reset. Retained Character state never retains a prior world's b2Body*.
- clear_actor_world();actor_world.load(bounds);decor_body_owners.clear();decor_bodies.clear();decor_bodies.reserve(84);
+ clear_actor_world(restore);actor_world.load(bounds);decor_body_owners.clear();decor_bodies.clear();decor_bodies.reserve(84);
  prince_body={};prince_body_owner.native=&prince_body;
  // Load the original immutable factory pose and the same explicit default
  // warrior modules used by this prototype's equipment renderer.
@@ -1510,6 +1788,88 @@ void advance_native_actor(unsigned dt_ms){
  if(native_actor_frames==1||native_actor_frames%120==0)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Native actor frame | scene %u | Step %u | actor %u | source phase %u | clip %d | ms %d | replays %u | body %.6g %.6g | contacts %u %u | state %d | body present %d | timeline scale %.9g",prince_locomotion.root_timestamp,native_physics_steps,native_actor_frames,result.phase,prince_locomotion.current_clip(),prince_locomotion.current_timeline().current_ms,prince_locomotion.restarts,physical_position.x,physical_position.y,prince_body_owner.additions,prince_body_owner.results,prince_state.current,int(bool(prince_body.body)),prince_locomotion.current_timeline().scale);
 }
 }
+void initialize_native_monster_scripts(AAssetManager* assets) {
+ if(!actor_level_fields_ready||!source_char_ai.ready||!native_actor_ready||!native_debug)
+  throw std::runtime_error("Native monster initialization owners unavailable");
+ // Bounded already-associated Player/PlayerInfo source reconciliation. The
+ // native leaf setter intentionally excludes undefined ARM temporary residue
+ // metadata in PlayerInfo::SetCharacterLevel; full replication is pending.
+ const dh2::player_manager_host_level::ReconcileState state{&native_host.player,
+  prince_character.owner(),reinterpret_cast<std::uintptr_t>(&prince_combat.properties)};
+ const dh2::player_manager_host_level::ReconcileServices reconcile{nullptr,
+  [](void*,std::uintptr_t identity,std::uint32_t property,std::uint32_t include_bonus,std::int32_t* output)->std::int32_t {
+   if(identity!=reinterpret_cast<std::uintptr_t>(&prince_combat.properties)||property!=19||include_bonus)return 1;
+   const auto raw=prince_combat.properties.resolved[19];
+   const std::uint32_t shifted=(std::uint32_t(raw)>>8)|(raw<0?0xff000000u:0u);
+   std::memcpy(output,&shifted,4);return 0;
+  },
+  [](void*,dh2::player_manager_host_level::PlayerInfoProjection* player,std::int32_t level)->std::int32_t {
+   if(player!=&native_host.player)return 1;
+   dh2::character_level_member::Result result{};
+   return dh2::character_level_member::set_value(player->character_level_member,&native_host.change_serial,level,&result)==dh2::character_level_member::Status::complete?0:1;
+  }};
+ dh2::player_manager_host_level::ReconcileResult reconciled{};
+ if(dh2::player_manager_host_level::reconcile_character_level(&state,&reconcile,&reconciled)!=dh2::player_manager_host_level::ReconcileStatus::complete)
+  throw std::runtime_error("Native managed host Level reconciliation failed");
+ std::int32_t host_level=0,host_difficulty=0;
+ if(native_host_level(&host_level)||native_host_difficulty(&host_difficulty))throw std::runtime_error("Native host source query failed");
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native managed host | Level %d | difficulty %d | property reads %u | member writes %u | offline embedded PlayerInfo; full profile/network pending",host_level,host_difficulty,reconciled.property_reads,reconciled.setter_calls);
+ const auto common=read(assets,"ai/_commons.luac","scripts"),monster=read(assets,"ai/monster.luac","scripts");
+ unsigned initialized=0;
+ for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.gated_spawn&&actor.spawn_owner) {
+  const auto* props=dh2::data::ai_props(actor_ai_tables,actor.properties.resolved[1]);
+  if(!props||props->type!=4||props->script!="monster")continue;
+  const auto found=source_char_ai.by_character.find(actor.identity);
+  if(found==source_char_ai.by_character.end())throw std::runtime_error("Native monster CharAI association missing");
+  auto pending=found->second->initialization;
+  const bool retained=pending&&pending->initialized;
+  if(retained) {
+   if(pending->ai!=found->second||pending->owner!=actor.spawn_owner||
+      pending->lifecycle.owner!=actor.identity||!pending->vm.ready()||
+      found->second->state.active_ais_1c!=pending->lifecycle.active)
+    throw std::runtime_error("Retained native monster VM ownership differs");
+  } else {
+   pending=std::make_shared<NativeMonsterInitialization>();pending->ai=found->second;pending->owner=actor.spawn_owner;
+   // Retain before callbacks so failed source effects and pending storage remain.
+   found->second->initialization=pending;
+   pending->load({common.data(),common.size()},{monster.data(),monster.size()});
+  }
+  ++initialized;
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native monster initialization | %s | Level %d | HP %d / %d | MP %d / %d | callbacks %u | timers %u | flags %x | same VM published %u | retained %u | paused providers %u | skills/post/final/frame pending",actor.name.c_str(),actor.properties.base[19],actor.properties.resolved[36],actor.properties.resolved[38],actor.properties.resolved[41],actor.properties.resolved[43],pending->init_calls,pending->timers_started,pending->ais.flags_b8,unsigned(pending->lifecycle.active==pending->lifecycle.pending),unsigned(retained),pending->timer_gates);
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native monster VM owner | %s | native handle %llx | source active %llx | source pending %llx",actor.name.c_str(),static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(&pending->vm)),static_cast<unsigned long long>(pending->lifecycle.active),static_cast<unsigned long long>(pending->lifecycle.pending));
+  const auto& timers=pending->owner->character.timers();
+  for(const auto id:{pending->lifecycle.timer33,pending->lifecycle.timer34}) {
+   if(id<0||std::uint32_t(id)>=timers.count)throw std::runtime_error("Native source timer ID is stale");
+   const auto& timer=timers.slots[id];
+   if(!timer.active||!timer.paused)throw std::runtime_error("Native unfinished timer provider consumed an event");
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native monster timer retained | %s | slot %u | event %x | duration %u | elapsed %u | active %u | paused %u",actor.name.c_str(),timer.id,unsigned(timer.event),timer.duration_ms,timer.elapsed_ms,unsigned(timer.active),unsigned(timer.paused));
+  }
+ }
+ if(initialized!=2)throw std::runtime_error("Native Ghost initialization count differs");
+ const auto& counters=native_debug->counters();
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Debug persistence | loaded %u | switches %zu | read opens %llu | read closes %llu | saves %llu | write closes %llu | IO errors %llu | app-private real file",unsigned(native_debug->globals().loaded),native_debug->runtime().switches().size(),static_cast<unsigned long long>(counters.read_opens),static_cast<unsigned long long>(counters.read_closes),static_cast<unsigned long long>(counters.save_completions),static_cast<unsigned long long>(counters.write_closes),static_cast<unsigned long long>(counters.io_errors));
+}
+
+std::string debug_character_hit(const std::string& name,std::uint32_t damage) {
+ // Debug-only shell receiver supplies this nonlethal integration fixture.
+ // The actual reconstructed HitFor health kernel mutates the live sheets;
+ // full combat targeting, damage calculation and killed lifecycle are absent.
+ if(!world_mode||!native_actor_ready||!damage)return "Debug Character hit rejected";
+ for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.name==name) {
+  if(!actor.native_ai||!actor.native_ai->initialization||!actor.native_ai->initialization->initialized||
+     actor.combat_state.dead||actor.properties.resolved[36]<=0||damage>=std::uint32_t(actor.properties.resolved[36]))
+   return "Debug Character hit requires a live initialized monster and nonlethal raw damage";
+  auto view=dh2::data::property_view(actor_property_rules,actor.properties);
+  const auto facts=dh2::data::health_monster|dh2::data::health_main_player_present|
+   (prince_combat.life.dead?dh2::data::health_main_player_dead:0);
+  const dh2::data::HealthRequest request{&view,damage,std::uint32_t(facts),0,0};dh2::data::HealthChange change{};
+  if(dh2_health_hit(&change,&request)||change.kill_requested||change.lifecycle_write!=-1)return "Debug Character hit kernel failed";
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Debug native monster damage | %s | raw damage %u | HP before %d | after %d | actual HitFor health kernel; shell fixture",name.c_str(),damage,change.before,change.after);
+  return "Nonlethal source health change applied";
+ }
+ return "Debug Character hit name not found";
+}
+
 std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetManager* assets){
   std::vector<Draw> environment;std::vector<GLuint> textures;
   std::vector<ObjectGroup> candidate_groups;
@@ -1526,6 +1886,13 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     if(!dh2::data::load_characters({records_data.data(),records_data.size()},{names_data.data(),names_data.size()},{fields_data.data(),fields_data.size()},character_table,error)||!dh2::data::load_dictionary({model_names.data(),model_names.size()},{model_values.data(),model_values.size()},model_table,error))throw std::runtime_error(error);
     const auto class_data=read(assets,"character_classes_pyarray.bin","data"),class_names=read(assets,"character_classes_pyarraynames.bin","data"),class_schema=read(assets,"character_classes_pystructnames.bin","data");dh2::data::ClassTables class_table;
     if(!dh2::data::load_classes({class_data.data(),class_data.size()},{class_names.data(),class_names.size()},{class_schema.data(),class_schema.size()},class_table,error))throw std::runtime_error(error);
+    auto design_bytes=read(assets,"design_pycst.bin","data");dh2_pycst_view design_view{};
+    if(design_bytes.size()>UINT32_MAX||dh2_pycst_open(&design_view,design_bytes.data(),std::uint32_t(design_bytes.size())))throw std::runtime_error("Original design constants rejected");
+    if(!native_debug) {
+     const auto debug_seed=read(assets,"DebugSwitches.savegame","data");auto backend=std::make_unique<dh2::native::debug_files::Backend>();
+     if(!backend->initialize(runtime_root,debug_seed.data(),debug_seed.size(),error))throw std::runtime_error("Native Debug filesystem: "+error);
+     native_debug=std::move(backend);
+    }
     if(character_table.fields[19]!="Level"||character_table.fields[38]!="Max_HP"||character_table.fields[43]!="Max_MP")throw std::runtime_error("Original class property identifiers differ");
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Class tables ready | classes %zu | bytes %zu | cached base snapshots",class_table.rows.size(),class_table.data_consumed);
     const auto level_records=read(assets,"levels_pyarray.bin","data"),level_names=read(assets,"levels_pyarraynames.bin","data"),level_schema=read(assets,"levels_pystructnames.bin","data");
@@ -1678,6 +2045,12 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     object_groups=std::move(candidate_groups);world_objects=std::move(object_records);unsigned monsters=0,decors=0,object_triangles=0,object_draws=0;
     actor_animation_tables=std::move(animation_tables);actor_clip_table=std::move(clip_table);actor_random=restore?previous_random:animation_random;actor_property_rules=property_rules;actor_ai_tables=std::move(ai_tables);
     actor_level_tables=std::move(level_tables);
+    actor_class_tables=std::move(class_table);actor_class_rows.clear();actor_class_rows.reserve(actor_class_tables.rows.size());
+    for(const auto& row:actor_class_tables.rows)actor_class_rows.push_back({row.data(),std::uint32_t(row.size())});
+    actor_character_fields=character_table.fields;actor_design_bytes=std::move(design_bytes);
+    if(dh2_pycst_open(&actor_design,actor_design_bytes.data(),std::uint32_t(actor_design_bytes.size())))throw std::runtime_error("Retained native design owner rejected");
+    native_application={reinterpret_cast<std::uintptr_t>(&native_application),reinterpret_cast<std::uintptr_t>(&actor_design)};
+    native_design_binding={native_application.design_manager,&actor_design};
     bool combat_resumed=false;
     if(restore){for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.kind==1){
       auto saved=std::find_if(saved_actors.begin(),saved_actors.end(),[&](const ObjectActor& old){return old.room==actor.room&&old.name==actor.name&&old.model==actor.model;});
@@ -1705,6 +2078,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       if(native_current_level_range(&difficulty,source_ranges+2*mode,&count)||count!=2)throw std::runtime_error("Owned native Level range source callback failed");}
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Level fields | ordinal %d | hub %d | random %u | difficulty %d | file %s | source ranges %d %d / %d %d / %d %d | viewport owner; GSLevel stack pending",actor_level_fields.level_list_index_3c,actor_level_fields.hub_40,unsigned(actor_level_fields.is_random_e8),actor_level_fields.difficulty_118,actor_level_file.c_str(),source_ranges[0],source_ranges[1],source_ranges[2],source_ranges[3],source_ranges[4],source_ranges[5]);
     initialize_char_ai_registry();
+    initialize_native_monster_scripts(assets);
     initialize_crypt_script(assets,restore);
     build_search_world();
     char report[256];std::snprintf(report,sizeof(report),"Crypt | %u rooms | %u monsters | %u scenery objects\n%u triangles. Drag the movement control to walk.",level.rooms,monsters,decors,triangles+586+object_triangles);

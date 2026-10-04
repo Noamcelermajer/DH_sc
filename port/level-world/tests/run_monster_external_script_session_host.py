@@ -77,7 +77,7 @@ def main() -> int:
     if result.returncode:
         return result.returncode
     host = json.loads(result.stdout)
-    assert host["monster_external_session_cases"] == 29 and host["mismatches"] == 0, host
+    assert host["monster_external_session_cases"] == 30 and host["mismatches"] == 0, host
     for key in ("unchanged_original_scripts_executed", "spotted_callback_order", "idle_path_short_circuit",
                 "fresh_target_after_path_query", "opaque_64bit_identity_tables", "service_lifetime_and_reentry",
                 "failure_preserves_prior_effects", "unknown_callbacks_rejected"):

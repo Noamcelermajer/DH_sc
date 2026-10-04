@@ -7,6 +7,7 @@
 #include <vector>
 namespace model_renderer {
 void mod_directory(std::string);
+void runtime_directory(std::string);
 std::vector<std::uint8_t> read_asset(AAssetManager*,const std::string&);
 void reset_context();
 void deactivate();
@@ -17,6 +18,7 @@ void move_axis(float x,float y);
 void focus_object(int index);
 std::string set_object_state(int index,const std::string& state);
 std::string spawn_character(const std::string& exact_name);
+std::string debug_character_hit(const std::string& exact_name,std::uint32_t raw_damage);
 std::string set_combat_target(int index,int target);
 std::string player_attack(int target=-1);
 std::array<int,7> player_vitals();

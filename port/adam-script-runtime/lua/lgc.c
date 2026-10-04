@@ -164,8 +164,16 @@ static int traversetable (global_State *g, Table *h) {
     markobject(g, h->metatable);
   mode = gfasttm(g, h->metatable, TM_MODE);
   if (mode && ttisstring(mode)) {  /* is there a weak mode? */
-    weakkey = (strchr(svalue(mode), 'k') != NULL);
-    weakvalue = (strchr(svalue(mode), 'v') != NULL);
+    /* Android's fortified strchr sees only the TString union subobject,
+     * whose trailing payload is allocated after its header by luaS_newlstr.
+     * Scan within its actual stored length, preserving strchr's first-NUL
+     * termination (Lua mode strings may contain embedded NUL bytes). */
+    const char *text = svalue(mode);
+    size_t offset;
+    for (offset = 0; offset < tsvalue(mode)->len && text[offset] != '\0'; offset++) {
+      weakkey |= (text[offset] == 'k');
+      weakvalue |= (text[offset] == 'v');
+    }
     if (weakkey || weakvalue) {  /* is really weak? */
       h->marked &= ~(KEYWEAK | VALUEWEAK);  /* clear bits */
       h->marked |= cast_byte((weakkey << KEYWEAKBIT) |

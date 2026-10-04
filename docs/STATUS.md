@@ -1,6 +1,6 @@
 # Recovery status — current source milestone 2026-10-04
 
-**Current development build:** See the [combined status](COMBINED-RECONSTRUCTION-STATUS.md) and [level initialization checkpoint](SOURCE-LEVEL-INITIALIZATION-CHECKPOINT-2026-10-04.md) for source rebuilt, Android17/API37/16KiB tests, the tested APK and remaining work. Entries below retain historical test scopes and build identities. The full native game is unfinished.
+**Current development build:** See the [combined status](COMBINED-RECONSTRUCTION-STATUS.md) and [native monster initialization checkpoint](NATIVE-MONSTER-INITIALIZATION-CHECKPOINT-2026-10-04.md) for source rebuilt, Android17/API37/16KiB tests, the tested APK and remaining work. Both original Ghost OnInit callbacks now run natively, and their damaged health/VM/timers survive reload and rotation. Entries below retain historical test scopes and build identities. The full native game is unfinished.
 
 **Quest activation in the source APK:** Actual native population helpers and
 four kill/clear Compile methods match 27,516 population and 21,372 compilation

@@ -94,6 +94,14 @@ DEBUG_PERSISTENCE_UNITS = {
     'debug_switches_save': cpp_prefix('debug_switches_persistence', 'save'),
 }
 LEVEL_CONSTRUCTION_UNITS = {'level_construction_fields': cpp_prefix('level_construction_fields', 'initialize')}
+NATIVE_MONSTER_DEPENDENCIES = {
+    'live_character_level_adapter': cpp_prefix('character_level_runtime', 'Runtime') + '15set_level_fixed',
+    'player_level_member_set': cpp_prefix('character_level_member', 'set_value'),
+    'player_character_level_setter': cpp_prefix('character_level_member', 'set_character_level'),
+    'player_manager_host_level': cpp_prefix('player_manager_host_level', 'get_hosting_level'),
+    'player_level_reconciliation': cpp_prefix('player_manager_host_level', 'reconcile_character_level'),
+    'ai_update_all_skills': cpp_prefix('character_ai_update_all_skills', 'update'),
+}
 
 
 def main():
@@ -109,8 +117,9 @@ def main():
     parser.add_argument('--require-initialization-units', action='store_true')
     parser.add_argument('--require-debug-persistence-units', action='store_true')
     parser.add_argument('--require-level-construction-unit', action='store_true')
+    parser.add_argument('--require-native-monster-dependencies', action='store_true')
     args = parser.parse_args()
-    initialization = args.require_initialization_units or args.require_debug_persistence_units or args.require_level_construction_unit
+    initialization = args.require_initialization_units or args.require_debug_persistence_units or args.require_level_construction_unit or args.require_native_monster_dependencies
     lifecycle = args.require_lifecycle_units or initialization
     runtime_dependencies = args.require_runtime_dependency_units or lifecycle
     frame = args.require_frame_units or runtime_dependencies
@@ -122,9 +131,10 @@ def main():
              **(LIFECYCLE_UNITS if lifecycle else {}),
              **(INITIALIZATION_UNITS if initialization else {}),
              **(DEBUG_PERSISTENCE_UNITS if args.require_debug_persistence_units else {}),
-             **(LEVEL_CONSTRUCTION_UNITS if args.require_level_construction_unit else {})}
+             **(LEVEL_CONSTRUCTION_UNITS if args.require_level_construction_unit else {}),
+             **(NATIVE_MONSTER_DEPENDENCIES if args.require_native_monster_dependencies else {})}
     # Sight has two overload groups; melee caller and radius share one unit.
-    source_units = len(units) - int(acquisition) - int(frame) - 5 * int(runtime_dependencies) - 7 * int(lifecycle) - 3 * int(initialization) - 3 * int(args.require_debug_persistence_units)
+    source_units = len(units) - int(acquisition) - int(frame) - 5 * int(runtime_dependencies) - 7 * int(lifecycle) - 3 * int(initialization) - 3 * int(args.require_debug_persistence_units) - 2 * int(args.require_native_monster_dependencies)
     raw = args.apk.read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
     artifact = json.loads(args.artifact.read_text())
@@ -134,6 +144,7 @@ def main():
         for abi in ('arm64-v8a', 'x86_64'):
             exports = {}
             lua_definitions = []
+            debug_backend = []
             for path in archive.namelist():
                 if not path.startswith(f'lib/{abi}/') or not path.endswith('.so'):
                     continue
@@ -145,6 +156,8 @@ def main():
                 defined = {s.name for s in symbols.iter_symbols() if s['st_shndx'] != 'SHN_UNDEF'}
                 if LUA_SYMBOL in defined:
                     lua_definitions.append(path)
+                if path.endswith('/libdh2_native.so') and args.require_native_monster_dependencies:
+                    debug_backend = sorted(n for n in defined if n.startswith('_ZN3dh26native11debug_files7Backend10initialize'))
                 if path.endswith('/libdh2_level_world.so'):
                     exports = {
                         unit: sorted(n for n in defined if n.startswith(prefix))
@@ -155,7 +168,10 @@ def main():
                 'dh2_aggro_target_list_init', 'dh2_aggro_target_search', 'dh2_aggro_target_pop',
             }, (abi, exports['target_search'])
             assert lua_definitions == [f'lib/{abi}/libdh2_script_runtime.so'], (abi, lua_definitions)
-            abis[abi] = {'source_unit_exports': exports, 'lua_core_definitions': lua_definitions}
+            if args.require_native_monster_dependencies:
+                assert debug_backend, (abi, 'real native Debug file backend missing')
+            abis[abi] = {'source_unit_exports': exports, 'lua_core_definitions': lua_definitions,
+                         'native_debug_file_backend': debug_backend}
     report = {
         'validation': 'PASS', 'apk_sha256': digest, 'apk_bytes': len(raw),
         'artifact_report_sha256': hashlib.sha256(args.artifact.read_bytes()).hexdigest(),

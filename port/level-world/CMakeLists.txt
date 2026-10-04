@@ -71,6 +71,11 @@ target_sources(dh2_level_world PRIVATE lua_script_level_queries.cpp
 target_sources(dh2_level_world PRIVATE debug_switches_runtime.cpp debug_switches_persistence.cpp)
 target_sources(dh2_level_world PRIVATE level_construction_fields.cpp)
 
+target_sources(dh2_level_world PRIVATE character_level_runtime.cpp
+ ../pydata-constants/constants.c ../player-info-level/character_level_member.cpp
+ ../player-info-level/player_manager_host_level.cpp)
+target_sources(dh2_level_world PRIVATE character_ai_update_all_skills.cpp)
+
 target_sources(dh2_level_world PRIVATE ais_state_callbacks.cpp)
 
 target_sources(dh2_level_world PRIVATE character_ai_pause_update.cpp)

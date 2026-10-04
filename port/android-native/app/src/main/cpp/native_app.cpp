@@ -42,6 +42,11 @@ extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_modDirectory
   const char* raw=env->GetStringUTFChars(directory,nullptr);if(!raw)return;
   const std::string copy(raw);env->ReleaseStringUTFChars(directory,raw);model_renderer::mod_directory(copy);
 }
+extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_runtimeDirectory(JNIEnv* env,jclass,jstring directory){
+  if(!directory){model_renderer::runtime_directory("");return;}
+  const char* raw=env->GetStringUTFChars(directory,nullptr);if(!raw)return;
+  const std::string copy(raw);env->ReleaseStringUTFChars(directory,raw);model_renderer::runtime_directory(copy);
+}
 extern "C" JNIEXPORT jbyteArray JNICALL Java_com_example_dh2_NativeBridge_readAsset(JNIEnv* env,jclass,jstring name,jobject assets){
   if(!name||!assets)return nullptr;
   const char* raw=env->GetStringUTFChars(name,nullptr);if(!raw)return nullptr;
@@ -154,6 +159,12 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_spawnChar
  return env->NewStringUTF(model_renderer::spawn_character(name).c_str());
 }
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_combatTarget(JNIEnv* env,jclass,jint index,jint target){return env->NewStringUTF(model_renderer::set_combat_target(index,target).c_str());}
+extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_debugCharacterHit(JNIEnv* env,jclass,jstring character,jint raw_damage){
+ if(!character||raw_damage<=0)return env->NewStringUTF("Debug Character hit arguments rejected");
+ const char* raw=env->GetStringUTFChars(character,nullptr);if(!raw)return nullptr;
+ const std::string name(raw);env->ReleaseStringUTFChars(character,raw);
+ return result(env,model_renderer::debug_character_hit(name,std::uint32_t(raw_damage)));
+}
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_playerAttack(JNIEnv* env,jclass,jint target){return env->NewStringUTF(model_renderer::player_attack(target).c_str());}
 
 extern "C" JNIEXPORT jintArray JNICALL Java_com_example_dh2_NativeBridge_playerVitals(JNIEnv* env,jclass){auto values=model_renderer::player_vitals();auto out=env->NewIntArray(values.size());if(out)env->SetIntArrayRegion(out,0,values.size(),values.data());return out;}

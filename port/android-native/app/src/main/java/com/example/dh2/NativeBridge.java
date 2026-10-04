@@ -3,6 +3,7 @@ final class NativeBridge {
     static { System.loadLibrary("dh2_native"); }
     static native String buildInfo();
     static native void modDirectory(String directory);
+    static native void runtimeDirectory(String directory);
     static native byte[] readAsset(String name,android.content.res.AssetManager assets) throws java.io.IOException;
     static native String initialize();
     static native String loadTexture(byte[] encoded);
@@ -12,6 +13,7 @@ final class NativeBridge {
     static native void focusObject(int index);
     static native String objectState(int index,String state);
     static native String spawnCharacter(String exactName);
+    static native String debugCharacterHit(String exactName,int rawDamage);
     static native String combatTarget(int index,int target);
     static native String playerAttack(int target);
     static native int[] playerVitals();

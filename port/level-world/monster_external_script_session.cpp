@@ -328,7 +328,7 @@ struct Session::Impl {
         return true;
     }
 
-    bool bind_functions() {
+    bool bind_ais_functions() {
         const ais_native_bindings::State state{reinterpret_cast<std::uintptr_t>(this),
             reinterpret_cast<std::uintptr_t>(&vm_wrapper_token),
             reinterpret_cast<std::uintptr_t>(&binder_token)};
@@ -336,11 +336,19 @@ struct Session::Impl {
         if (ais_native_bindings::bind_all(&state, &services, &registration) !=
                 ais_native_bindings::Status::complete || registration.libraries_opened != 4 ||
             registration.functions_bound != 35) return false;
+        return true;
+    }
+
+    bool bind_character_functions() {
         return bind_extra("GetProp", property) && bind_extra("HasTarget", target_exists) &&
             bind_extra("GetTarget", target_get) && bind_extra("GetState", state_get) &&
             bind_extra("HasPath", path_exists) && bind_extra("SetTarget", target_set) &&
             bind_extra("HeadTo", face) && bind_extra("MoveTo", move) &&
             bind_extra("GetPosition", position) && bind_extra("SetLevel", level_set);
+    }
+
+    bool bind_functions() {
+        return bind_ais_functions() && bind_character_functions();
     }
 
     bool load_common(Source source) {
@@ -443,6 +451,32 @@ Status Session::bind_functions(std::string& error) {
     return Status::complete;
 }
 
+Status Session::bind_ais_functions(std::string& error) {
+    if (busy_) { error = "monster session busy"; return Status::busy; }
+    if (!impl_ || impl_->stage != Stage::created || impl_->faulted) {
+        error = "AIS registration stage is out of order"; return Status::not_ready;
+    }
+    BusyScope scope(busy_);
+    if (!impl_->bind_ais_functions()) {
+        impl_->faulted = true; impl_->stage = Stage::faulted;
+        error = "AIS registration failed"; return Status::script_error;
+    }
+    impl_->stage = Stage::ais_functions_bound; error.clear(); return Status::complete;
+}
+
+Status Session::bind_character_functions(std::string& error) {
+    if (busy_) { error = "monster session busy"; return Status::busy; }
+    if (!impl_ || impl_->stage != Stage::ais_functions_bound || impl_->faulted) {
+        error = "Character registration stage is out of order"; return Status::not_ready;
+    }
+    BusyScope scope(busy_);
+    if (!impl_->bind_character_functions()) {
+        impl_->faulted = true; impl_->stage = Stage::faulted;
+        error = "Character registration failed"; return Status::script_error;
+    }
+    impl_->stage = Stage::functions_bound; error.clear(); return Status::complete;
+}
+
 Status Session::load_common(Source commons, std::string& error) {
     if (busy_) { error = "monster session busy"; return Status::busy; }
     if (!impl_) { error = "monster session not created"; return Status::not_ready; }
@@ -540,6 +574,11 @@ bool Session::uses_services(const Services& services) const noexcept {
 const char* Session::source_alias(Event event) const noexcept {
     const char* requested = callback_name(event);
     return ready() && requested ? dh2_script_alias_resolve(impl_->aliases, requested) : nullptr;
+}
+bool Session::contains_source_alias(const char* name, bool& present) const noexcept {
+    if (!ready() || !name) return false;
+    present = dh2_script_alias_contains(impl_->aliases, name) != 0;
+    return true;
 }
 Statistics Session::statistics() const noexcept {
     return impl_ ? Statistics{impl_->completed, impl_->failed, impl_->object_table_arguments,

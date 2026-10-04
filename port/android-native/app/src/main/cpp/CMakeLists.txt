@@ -8,7 +8,7 @@ add_subdirectory("${DH2_SOURCE_DIR}/port/scene-materials" "${CMAKE_CURRENT_BINAR
 add_subdirectory("${DH2_SOURCE_DIR}/port/engine-animation" "${CMAKE_CURRENT_BINARY_DIR}/engine-animation")
 add_subdirectory("${DH2_SOURCE_DIR}/port/engine-skinning" "${CMAKE_CURRENT_BINARY_DIR}/engine-skinning")
 add_subdirectory("${DH2_SOURCE_DIR}/port/level-world" "${CMAKE_CURRENT_BINARY_DIR}/level-world")
-add_library(dh2_native SHARED native_app.cpp model_renderer.cpp mod_assets.cpp ghost_ai_owner.cpp)
+add_library(dh2_native SHARED native_app.cpp model_renderer.cpp mod_assets.cpp ghost_ai_owner.cpp native_debug_files.cpp)
 target_compile_features(dh2_native PRIVATE cxx_std_17)
 target_compile_options(dh2_native PRIVATE -Wall -Wextra -Werror)
 target_link_options(dh2_native PRIVATE -Wl,-z,max-page-size=16384 -Wl,--no-undefined)

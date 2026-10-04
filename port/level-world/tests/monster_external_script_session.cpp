@@ -385,6 +385,28 @@ int main(int argc, char** argv) {
                 "a failed staged source load must stop without replay/fallback");
         ++cases;
 
+        Session split; Fixture split_fixture;
+        const auto split_services = bind(split_fixture);
+        require(split.create(split_services, error) == Status::complete &&
+                    split.bind_character_functions(error) == Status::not_ready &&
+                    split.bind_ais_functions(error) == Status::complete &&
+                    split.stage() == Stage::ais_functions_bound &&
+                    split.load_common(commons, error) == Status::not_ready &&
+                    split.bind_ais_functions(error) == Status::not_ready &&
+                    split.bind_character_functions(error) == Status::complete &&
+                    split.bind_character_functions(error) == Status::not_ready &&
+                    split.load_common(commons, error) == Status::complete &&
+                    split.load_external(monster, error) == Status::complete,
+                "native AIS/Character registration split violated stage order");
+        bool present = false;
+        require(split.contains_source_alias("OnInit", present) && present &&
+                    split.contains_source_alias("OnUpdate", present) && !present &&
+                    split.contains_source_alias("OnEnemySpotted", present) && present &&
+                    split.dispatch(Event::enemy_spotted, enemy, error) == Status::complete &&
+                    split_fixture.target == enemy,
+                "native membership must read actual VFTable on the same staged VM");
+        ++cases;
+
         std::printf("{\"monster_external_session_cases\":%u,\"unchanged_original_scripts_executed\":true,"
                     "\"spotted_callback_order\":true,\"idle_path_short_circuit\":true,"
                     "\"fresh_target_after_path_query\":true,\"opaque_64bit_identity_tables\":true,"

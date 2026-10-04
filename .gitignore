@@ -10,6 +10,8 @@ port/character-state/build/
 port/character-health/build/
 port/lua-character/build/
 port/character-classes/build/
+port/adam-script-runtime/build/
+port/material-bindings/build/
 *.py[cod]
 port/android-app/build/
 port/ambush-spawn-runtime/build/

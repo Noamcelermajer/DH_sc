@@ -32,6 +32,8 @@ def main():
                         help='require the actual native catalogue reader on load, reload and recreation')
     parser.add_argument('--require-native-level-fields', action='store_true',
                         help='require original constructor field selection and source range callbacks on load/reload/recreation')
+    parser.add_argument('--require-native-monster-initialization', action='store_true',
+                        help='require unchanged monster OnInit on native owners, real Debug file and retained damaged health/VM/timers')
     args = parser.parse_args()
     assert args.serial.startswith('emulator-')
     out = args.output.resolve()
@@ -101,6 +103,18 @@ def main():
                 return tuple(map(int, re.findall(r'-?\d+', node.get('bounds'))))
         raise AssertionError('movement control absent')
 
+    def debug_file(name):
+        run = subprocess.run([args.adb, '-s', args.serial, 'exec-out', 'run-as', PACKAGE,
+                              'cat', 'files/DebugSwitches.savegame'], capture_output=True, timeout=30)
+        assert run.returncode == 0, 'app-private source Debug file absent'
+        data = run.stdout
+        assert len(data) >= 4 and struct.unpack_from('<I', data)[0] > 0, 'source Debug file malformed'
+        (out / (name + '.savegame')).write_bytes(data)
+        return {'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
+
+    def monster_rows(value):
+        return re.findall(r'Native monster initialization \| (\S+) \| Level (-?\d+) \| HP (-?\d+) / (-?\d+) \| MP (-?\d+) / (-?\d+) \| callbacks (\d+) \| timers (\d+) \| flags ([0-9a-f]+) \| same VM published (\d+) \| retained (\d+) \| paused providers (\d+)', value)
+
     try:
         report['libraries'] = inspect(args.apk)
         assert adb('shell', 'getconf', 'PAGE_SIZE') == '16384'
@@ -156,6 +170,15 @@ def main():
         assert 'Crypt trigger activated |' not in text, 'test start must be outside source AABB'
         assert all('Gated character ready | ' + name + ' | source state 0' in text for name in NAMES)
         assert all('Spawn visibility | ' + name + ' | visible 0 | enabled 1' in text for name in NAMES)
+        if args.require_native_monster_initialization:
+            fresh = monster_rows(text)
+            assert len(fresh) == 2 and {row[0] for row in fresh} == set(NAMES), 'two native monster owners missing'
+            for row in fresh:
+                assert int(row[1]) == 2048 and int(row[2]) == int(row[3]) > 256 and int(row[4]) == int(row[5])
+                assert tuple(map(int, (row[6], row[7], row[9], row[10], row[11]))) == (1, 2, 1, 0, 2)
+                assert int(row[8], 16) == 0x183c
+            report['native_monster_initial_properties'] = fresh
+            report['native_debug_file_after_initialization'] = debug_file('native-debug-after-initialization')
         capture('outside-authored-trigger')
         left, top, right, bottom = movement_bounds()
         x = round((left + right) / 2)
@@ -209,6 +232,20 @@ def main():
             assert not any(token in text[offset:] for token in
                            ('Combat target selected |', 'Native combat hit |', 'Spawn source state |'))
         report['unbound_gated_combat_target_pairs_rejected'] = rejected_pairs
+        damage_after = None
+        if args.require_native_monster_initialization:
+            offset = len(text)
+            adb('shell', 'am', 'broadcast', '-a', PACKAGE + '.DEBUG_CHARACTER_HIT', '-p', PACKAGE,
+                '--es', 'character_name', NAMES[0], '--ei', 'raw_damage', '256')
+            text = wait(lambda value: 'Debug native monster damage | ' + NAMES[0] in value[offset:],
+                        'nonlethal live source health fixture')
+            damage = re.findall(r'Debug native monster damage \| (\S+) \| raw damage (\d+) \| HP before (-?\d+) \| after (-?\d+)', text[offset:])
+            assert len(damage) == 1 and damage[0][0] == NAMES[0] and int(damage[0][1]) == 256
+            assert int(damage[0][2]) - int(damage[0][3]) == 256
+            damage_after = int(damage[0][3])
+            report['nonlethal_source_health_fixture'] = {'name': NAMES[0], 'damage': 256,
+                                                       'before': int(damage[0][2]), 'after': damage_after,
+                                                       'full_combat_damage_calculation_tested': False}
         offset = len(text)
         adb('shell', 'am', 'broadcast', '-a', PACKAGE + '.DEBUG_RELOAD_WORLD', '-p', PACKAGE)
         text = wait(lambda value: 'Crypt script restored | activations 1 | requests 2 | ready 1 | running 0' in value[offset:] and
@@ -238,6 +275,44 @@ def main():
             report['native_level_constructor_fields_and_range_callbacks'] = True
             report['native_level_fields_owner'] = 'viewport-owned bounded projection; development normal difficulty argument'
             report['original_gslevel_save_stack_bound'] = False
+        if args.require_native_monster_initialization:
+            rows = monster_rows(text)
+            # am start target-boundary probes may recreate the GL context
+            # before damage is applied. Health preservation is checked only
+            # at the two explicit restores after the live health fixture.
+            after_damage = monster_rows(text[text.index('Debug native monster damage | ' + NAMES[0]):])
+            owners = re.findall(r'Native monster VM owner \| (\S+) \| native handle ([0-9a-f]+) \| source active ([0-9a-f]+) \| source pending ([0-9a-f]+)', text)
+            timers = re.findall(r'Native monster timer retained \| (\S+) \| slot (\d+) \| event ([0-9a-f]+) \| duration (\d+) \| elapsed (\d+) \| active (\d+) \| paused (\d+)', text)
+            for name in NAMES:
+                actor_rows = [row for row in rows if row[0] == name]
+                assert len(actor_rows) >= 3 and int(actor_rows[0][10]) == 0
+                assert all(int(row[10]) == 1 for row in actor_rows[1:]), 'OnInit reran during reload/recreation'
+                assert all((int(row[1]), int(row[6]), int(row[7]), int(row[8], 16), int(row[9]), int(row[11])) ==
+                           (2048, 1, 2, 0x183c, 1, 2) for row in actor_rows)
+                if name == NAMES[0]:
+                    damaged_restores = [row for row in after_damage if row[0] == name]
+                    assert len(damaged_restores) >= 2
+                    assert all(int(row[2]) == damage_after for row in damaged_restores), 'recreation healed damaged live monster'
+                else:
+                    assert all(int(row[2]) == int(row[3]) for row in actor_rows)
+                handles = [row[1:] for row in owners if row[0] == name]
+                assert len(handles) >= 3 and all(row == handles[0] and row[1] == row[2] for row in handles)
+                actor_timers = [row[1:] for row in timers if row[0] == name]
+                assert len(actor_timers) >= 6
+                baseline = {row[1]: row for row in actor_timers[:2]}
+                assert set(baseline) == {'33', '34'}
+                assert all(row == baseline[row[1]] and tuple(map(int, row[-3:])) == (0, 1, 1) for row in actor_timers)
+            persisted = debug_file('native-debug-after-recreation')
+            assert persisted == report['native_debug_file_after_initialization'], 'native Debug file changed during graphics restore'
+            report['native_debug_file_after_recreation'] = persisted
+            counters = re.findall(r'Native Debug persistence \| loaded (\d+) \| switches (\d+) \| read opens (\d+) \| read closes (\d+) \| saves (\d+) \| write closes (\d+) \| IO errors (\d+)', text)
+            assert len(counters) >= 3 and all(tuple(map(int, row)) == (1, 24, 1, 1, 5, 5, 0) for row in counters)
+            report['native_debug_source_io_counters'] = list(map(int, counters[0]))
+            report['native_monster_unchanged_oninit_live_properties'] = True
+            report['native_monster_vm_health_and_timers_retained'] = True
+            report['unfinished_ai_dot_timer_providers_paused'] = True
+            report['native_character_function_registration_scope'] = '10 supported OnInit closures; complete 265 ordered bindings pending'
+            report['autonomous_ghost_ai_and_full_init_script_process_complete'] = False
         capture('authored-ambush-restored')
         report['validation'] = 'PASS'
         report['scope'] = 'Original GhostAmbush01 contact/timed spawning on authored placement, approached with actual root-motion touch input from an explicit fan spawn override; source completion/body creation and reload/recreation; no complete-level or full AI claim.'

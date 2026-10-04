@@ -73,6 +73,7 @@ enum class Stage : std::uint32_t {
     common_loaded = 3,
     external_loaded = 4,
     faulted = 5,
+    ais_functions_bound = 6,
 };
 
 struct Statistics {
@@ -120,6 +121,12 @@ public:
                   std::size_t memory_limit = 2 * 1024 * 1024,
                   std::shared_ptr<void> service_lifetime = {});
     Status bind_functions(std::string& error);
+    // Separate real registration stages for native pending AIS initialization.
+    // The first installs the 35 AIS entries/libraries; the second installs the
+    // supported live Character adapters. bind_functions retains both stages
+    // as one convenience call for existing users.
+    Status bind_ais_functions(std::string& error);
+    Status bind_character_functions(std::string& error);
     Status load_common(Source commons, std::string& error);
     Status load_external(Source external, std::string& error);
     Status dispatch(Event event, std::uintptr_t enemy, std::string& error);
@@ -134,6 +141,7 @@ public:
     // initialize, or reset.
     // Unknown event/no session returns nullptr; no recursive alias lookup.
     const char* source_alias(Event event) const noexcept;
+    bool contains_source_alias(const char* name, bool& present) const noexcept;
 
 private:
     struct Impl;
