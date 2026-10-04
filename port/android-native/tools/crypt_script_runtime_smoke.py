@@ -62,7 +62,9 @@ def main():
             raise RuntimeError('Crypt script smoke deadline exceeded')
         run = subprocess.run([args.adb, '-s', args.serial, *command], capture_output=True, text=True, timeout=30)
         transcript.append({'args': list(command), 'returncode': run.returncode, 'stderr': run.stderr,
-                           'stdout': run.stdout if command[0] != 'logcat' else '[stored separately]'})
+                           'stdout': run.stdout if command[0] != 'logcat' else '[stored separately]',
+                           **({'stdout_utf8_sha256': hashlib.sha256(run.stdout.strip().encode('utf-8')).hexdigest()}
+                              if command[0] == 'logcat' else {})})
         if run.returncode and not missing:
             raise RuntimeError(str(command) + '\n' + run.stdout + run.stderr)
         return run.stdout.strip() if not run.returncode else ''
@@ -406,6 +408,9 @@ def main():
                 report['validation'] = 'FAIL'
         (out / 'crypt-script.log').write_text(last_logs, encoding='utf-8')
         (out / 'adb-transcript.json').write_text(json.dumps(transcript, indent=2) + '\n', encoding='utf-8')
+        report['logcat_sha256'] = hashlib.sha256((out / 'crypt-script.log').read_bytes()).hexdigest()
+        report['adb_transcript_sha256'] = hashlib.sha256((out / 'adb-transcript.json').read_bytes()).hexdigest()
+        report['source_camera_snapshot_count'] = len(re.findall(r'Source camera frame \|', last_logs))
         (out / 'crypt-script-smoke.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
     assert report['validation'] == 'PASS'
     print(json.dumps({key: value for key, value in report.items() if key != 'libraries'}, indent=2))

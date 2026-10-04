@@ -80,9 +80,9 @@
       "origin": "Adam import with local adaptations",
       "source_category": "reconstruction_and_port",
       "source_files": 17,
-      "source_lines": 4963,
-      "source_bytes": 339558,
-      "test_files": 87
+      "source_lines": 4996,
+      "source_bytes": 341518,
+      "test_files": 88
     },
     {
       "module": "android-smoke",
@@ -259,10 +259,10 @@
       "module": "engine-camera",
       "origin": "Existing reconstruction",
       "source_category": "reconstruction_and_port",
-      "source_files": 4,
-      "source_lines": 287,
-      "source_bytes": 10743,
-      "test_files": 4
+      "source_files": 8,
+      "source_lines": 706,
+      "source_bytes": 30010,
+      "test_files": 8
     },
     {
       "module": "engine-math",
@@ -412,10 +412,10 @@
       "module": "level-world",
       "origin": "Adam import with local adaptations",
       "source_category": "reconstruction_and_port",
-      "source_files": 274,
-      "source_lines": 24178,
-      "source_bytes": 1244481,
-      "test_files": 362
+      "source_files": 278,
+      "source_lines": 24619,
+      "source_bytes": 1270108,
+      "test_files": 364
     },
     {
       "module": "loot-tables",
@@ -698,16 +698,16 @@
     }
   ],
   "totals": {
-    "source_files": 879,
-    "source_lines": 104797,
-    "source_bytes": 4945126,
-    "test_files": 776
+    "source_files": 887,
+    "source_lines": 105690,
+    "source_bytes": 4991980,
+    "test_files": 783
   },
   "reconstruction_and_port_totals": {
-    "source_files": 591,
-    "source_lines": 70266,
-    "source_bytes": 3625964,
-    "test_files": 776
+    "source_files": 599,
+    "source_lines": 71159,
+    "source_bytes": 3672818,
+    "test_files": 783
   },
   "files": [
     {
@@ -3428,10 +3428,10 @@
     },
     {
       "path": "port/android-native/app/src/main/cpp/model_renderer.cpp",
-      "bytes": 216974,
-      "lines": 2564,
+      "bytes": 218934,
+      "lines": 2597,
       "kind": "source",
-      "sha256": "14707d934a95e0e7a709b4eb6b7c248a608cdecc7670c93cba8726a930cf397b"
+      "sha256": "a63145c347a51b91a13b5783b36062dd4936395287de5a14601779a268826bd7"
     },
     {
       "path": "port/android-native/app/src/main/cpp/model_renderer.hpp",
@@ -3602,11 +3602,18 @@
       "sha256": "8611b7032d476181868777dbf5f1951dac4ec0e3985ecb2102cd6b1ebdcb88fc"
     },
     {
-      "path": "port/android-native/tools/capture_native_build.py",
-      "bytes": 6104,
-      "lines": 108,
+      "path": "port/android-native/tools/camera_runtime_evidence.py",
+      "bytes": 7486,
+      "lines": 110,
       "kind": "test_or_tool",
-      "sha256": "0eed06fc5d2fa6e6a9db0037b0bed6b67f3d48dc7d6bb2b92beeec74bd16006a"
+      "sha256": "517593500b90520162714344079fdf4d95a85c32560f72c8a9073dee08c127ac"
+    },
+    {
+      "path": "port/android-native/tools/capture_native_build.py",
+      "bytes": 6726,
+      "lines": 119,
+      "kind": "test_or_tool",
+      "sha256": "b174fc9ff0f0da88c3d00133f4240ee7f69c9b56b6f0175162b097d2765d4460"
     },
     {
       "path": "port/android-native/tools/character_combat_smoke.py",
@@ -3638,17 +3645,17 @@
     },
     {
       "path": "port/android-native/tools/crypt_script_runtime_smoke.py",
-      "bytes": 29674,
-      "lines": 415,
+      "bytes": 30175,
+      "lines": 420,
       "kind": "test_or_tool",
-      "sha256": "bc5944f321a7fac6d974bc536564b6d2370efec2a0743ce7f070d2bd005fd0a7"
+      "sha256": "a25cb0819364161447418b6fc548d8c568b868cc1d9cda1df8ad1532161c9713"
     },
     {
       "path": "port/android-native/tools/emulator_smoke.py",
-      "bytes": 6734,
+      "bytes": 6760,
       "lines": 107,
       "kind": "test_or_tool",
-      "sha256": "70a294a53da5188eccb7548534aac8170114e9864f391a6e3e4e255d1de3dc5b"
+      "sha256": "164b6e5835f25fa3d537cb80de33f336c8c5b7f766b60a04022772818db176c5"
     },
     {
       "path": "port/android-native/tools/enemy_ai_smoke.py",
@@ -4086,10 +4093,10 @@
     },
     {
       "path": "port/android-native/tools/validate_source_ai_exports.py",
-      "bytes": 17298,
-      "lines": 261,
+      "bytes": 23335,
+      "lines": 353,
       "kind": "test_or_tool",
-      "sha256": "48f7989b471c329bc0f45000fec1624430175fe6643c52c45c202970d4e63e8e"
+      "sha256": "88791e35fd67d9064f5b2f0bfd5f6caa835714ae31b9be929a3d78ae9a6b87b9"
     },
     {
       "path": "port/android-native/tools/validate_states_checkpoint.py",
@@ -5135,6 +5142,34 @@
       "sha256": "d08998e06b137f8f8259277bd13606765bed134964e5548695c4a1b7be94eada"
     },
     {
+      "path": "port/engine-camera/frustum_runtime.cpp",
+      "bytes": 4438,
+      "lines": 95,
+      "kind": "source",
+      "sha256": "548c171fed55b73a5edb0af630d87fc449fb4a27cc1e236722e21937ae689c04"
+    },
+    {
+      "path": "port/engine-camera/frustum_runtime.hpp",
+      "bytes": 904,
+      "lines": 21,
+      "kind": "source",
+      "sha256": "8a2c682adc3c7bedc28d06fd39530a4cec9cd2164f5ed250d25fbd61a1da432e"
+    },
+    {
+      "path": "port/engine-camera/plane_intersection.cpp",
+      "bytes": 11474,
+      "lines": 239,
+      "kind": "source",
+      "sha256": "717854b485ee4e78af49fbbfc1d5a056bfbcbad6974dbc939b1c7a5021e8da57"
+    },
+    {
+      "path": "port/engine-camera/plane_intersection.hpp",
+      "bytes": 2451,
+      "lines": 64,
+      "kind": "source",
+      "sha256": "62c65530c1a4eaa9724e0aed6c28202fa3b028dc43b9435bd85917b450e0cddf"
+    },
+    {
       "path": "port/engine-camera/tests/frustum_bounds_host.cpp",
       "bytes": 8961,
       "lines": 214,
@@ -5149,6 +5184,20 @@
       "sha256": "8c8dc3bc987517ab3a88239f87c443d3c9de3ee8a68c1aa65b21554aa49f62cd"
     },
     {
+      "path": "port/engine-camera/tests/frustum_runtime_host.cpp",
+      "bytes": 3338,
+      "lines": 72,
+      "kind": "test_or_tool",
+      "sha256": "1cc21ec6319a6f4ce236766b466c64bff1717c5f52fc290c914be3c1954f3405"
+    },
+    {
+      "path": "port/engine-camera/tests/plane_intersection_host.cpp",
+      "bytes": 10342,
+      "lines": 229,
+      "kind": "test_or_tool",
+      "sha256": "ddfdc6190ffa8c20f66cda3c8d2d3d677bf014e4a04cf83de26375b8c4d636da"
+    },
+    {
       "path": "port/engine-camera/tests/run_frustum_bounds.py",
       "bytes": 16959,
       "lines": 352,
@@ -5161,6 +5210,20 @@
       "lines": 328,
       "kind": "test_or_tool",
       "sha256": "6d0cccf6c05ed84b9b46a18e7cf69044a6ca6ba733c260194eaba5a87e4d7304"
+    },
+    {
+      "path": "port/engine-camera/tests/run_frustum_runtime.py",
+      "bytes": 7561,
+      "lines": 110,
+      "kind": "test_or_tool",
+      "sha256": "9f9605316140227145e6866e114a625c3f9d7b9f6569304de47eae043e6b43a2"
+    },
+    {
+      "path": "port/engine-camera/tests/run_plane_intersection.py",
+      "bytes": 20620,
+      "lines": 424,
+      "kind": "test_or_tool",
+      "sha256": "b248f0c840c5a03ce06013f0694b79dc204a1df1e0a550fa2c0c6f1d7dbde39f"
     },
     {
       "path": "port/engine-math/build.py",
@@ -7396,6 +7459,20 @@
       "sha256": "51f100f7a69f513a512b16769275637b883104d56a407feca64abb78bd4f8297"
     },
     {
+      "path": "port/level-world/character_player_skills_preparation_v3.cpp",
+      "bytes": 16900,
+      "lines": 286,
+      "kind": "source",
+      "sha256": "dd49d1590c50de245d9af9589cecb69eea9f06874a0d0678a52a2851179c58f7"
+    },
+    {
+      "path": "port/level-world/character_player_skills_preparation_v3.hpp",
+      "bytes": 3317,
+      "lines": 66,
+      "kind": "source",
+      "sha256": "8736475af4c3fec7e3b4eafc1cae8565f578cd97b11989d02d32848f7873a97f"
+    },
+    {
       "path": "port/level-world/character_range_capability.cpp",
       "bytes": 10243,
       "lines": 169,
@@ -8220,6 +8297,20 @@
       "lines": 51,
       "kind": "source",
       "sha256": "6041e04d6ffe0f95319eb2b66c614c013bc0f35f0205a89428f4ad9ceb7ce3c6"
+    },
+    {
+      "path": "port/level-world/player_skill_tables_adapter.cpp",
+      "bytes": 3541,
+      "lines": 55,
+      "kind": "source",
+      "sha256": "57dfec1ed0d8b9c90d9011ec6f9b57e9f7facf83878f5bb2be05ffda2fa53838"
+    },
+    {
+      "path": "port/level-world/player_skill_tables_adapter.hpp",
+      "bytes": 1869,
+      "lines": 34,
+      "kind": "source",
+      "sha256": "aa486d3b4938a5fe4316b32733e3f3f979e21e67cfcba18e72a52f22abe3cbb9"
     },
     {
       "path": "port/level-world/room_zone_enrollment.cpp",
@@ -9095,6 +9186,13 @@
       "lines": 106,
       "kind": "test_or_tool",
       "sha256": "4575a29ff21bb184eb675631937be48daba761831db09469a5ab458e2e28d250"
+    },
+    {
+      "path": "port/level-world/tests/character_player_skills_preparation_v3.cpp",
+      "bytes": 19029,
+      "lines": 238,
+      "kind": "test_or_tool",
+      "sha256": "d13869ef6cc254293dbde8e6158bf438bef742d670ac129cd9f993b0b770c553"
     },
     {
       "path": "port/level-world/tests/character_range_capability.cpp",
@@ -10278,6 +10376,13 @@
       "lines": 217,
       "kind": "test_or_tool",
       "sha256": "3698bc37a1712434113dd5b6b1d109f4127ad2daf6bcf9f8bc9aab54250e27dd"
+    },
+    {
+      "path": "port/level-world/tests/run_character_player_skills_preparation_v3_host.py",
+      "bytes": 16100,
+      "lines": 233,
+      "kind": "test_or_tool",
+      "sha256": "f188dfc1ef2ab6667cb39adc87e3f5cf0dea495702cbf28191cd6a1840951957"
     },
     {
       "path": "port/level-world/tests/run_character_range_capability_host.py",

@@ -90,18 +90,21 @@
     "port/level-world/reference/object-update-dispatch/original-functions.json",
     "port/engine-camera/reference/frustum-producer/original-functions.json",
     "port/engine-camera/reference/frustum-bounds/original-functions.json",
+    "port/engine-camera/reference/plane-intersection/original-functions.json",
+    "port/engine-camera/reference/frustum-runtime/original-functions.json",
+    "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
     "port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json",
     "port/scene-materials/reference/swamp-render-state-audit/original-functions.json",
     "port/scene-materials/reference/swamp-effect-pass-conversion/manifest.json"
   ],
   "counts": {
     "pinned_addresses": 1455,
-    "extension_records": 547,
-    "evidence_records_before_deduplication": 864,
-    "additional_addresses": 373,
-    "combined_unique_addresses": 1828
+    "extension_records": 551,
+    "evidence_records_before_deduplication": 894,
+    "additional_addresses": 376,
+    "combined_unique_addresses": 1831
   },
-  "verification": "All ranges, aliases and 547 complete original byte hashes verified against the original symbol index and assembly exports.",
+  "verification": "All ranges, aliases and 551 complete original byte hashes verified against the original symbol index and assembly exports.",
   "functions": [
     {
       "original_symbol": "_ZN21Script_SpawnCharacter7ExecuteEbi",
@@ -4450,7 +4453,8 @@
         "port/level-world/reference/debug-switches-persistence/original-functions.json",
         "port/level-world/reference/character-dot-attack/original-functions.json",
         "port/level-world/reference/character-apply-result/original-functions.json",
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -4524,6 +4528,17 @@
             "port/level-world/character_ai_set_skills_and_spells.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; Named provider boundary observed twice on the normal path; persistence body is outside this caller claim.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -4553,7 +4568,8 @@
         "port/level-world/reference/debug-switches-persistence/original-functions.json",
         "port/level-world/reference/character-dot-attack/original-functions.json",
         "port/level-world/reference/character-apply-result/original-functions.json",
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -4627,6 +4643,17 @@
             "port/level-world/character_ai_set_skills_and_spells.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; Named query boundary observed twice with exact Lua_LoadMemUsage key; result discarded by source caller.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -6271,7 +6298,8 @@
         "port/level-world/reference/ais-state-callbacks/original-functions.json",
         "port/level-world/reference/ais-external-init-vcb/original-functions.json",
         "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
-        "port/level-world/reference/monster-external-script-updates/original-functions.json"
+        "port/level-world/reference/monster-external-script-updates/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -6309,6 +6337,17 @@
             "port/level-world/monster_external_script_session.cpp"
           ],
           "implementation_limit": "Same retained Session update and independent complete20B state callback providers; exact resolved-path cache composition after path resolution. Original whole AI/VM and state registry producers remain external.; named no-argument discarded-return dependency; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -7535,7 +7574,8 @@
       "implementation_limit": "Bounded source adapter.; Named owned resource dependency; no full body claim; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/ais-external-initialization/original-functions.json",
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -7546,6 +7586,17 @@
             "port/level-world/character_ai_set_skills_and_spells.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; Captured source script-path set/restore boundary. Exact begin/end byte ranges are observed and copied by the fixture adapter.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -7611,7 +7662,8 @@
       "implementation_limit": "Bounded source adapter.; Named defined allocation wrapper for factory evidence; no full body claim; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/ais-external-initialization/original-functions.json",
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -7622,6 +7674,17 @@
             "port/level-world/character_ai_set_skills_and_spells.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; Allocation boundary; caller passes exactly 0x1c bytes and hint zero.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -10959,7 +11022,8 @@
       "implementation_limit": "Bounded source adapter.; Named real design query provider; no new body; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/character-script-set-level/original-functions.json",
-        "port/level-world/reference/character-faery-selection/original-functions.json"
+        "port/level-world/reference/character-faery-selection/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -10970,6 +11034,17 @@
             "port/level-world/character_faery_selection.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; The complete helper range is hash-pinned; the ARM comparison intercepts each helper call and supplies a controlled COUNT integer. The constant-map body is not claimed by this selector.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -11018,7 +11093,8 @@
         "port/level-world/reference/debug-switches-persistence/original-functions.json",
         "port/level-world/reference/character-dot-attack/original-functions.json",
         "port/level-world/reference/character-apply-result/original-functions.json",
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -11065,6 +11141,17 @@
             "port/level-world/character_ai_set_skills_and_spells.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; Temporary debug-key construction boundary; key contents are captured and checked by the observer.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -11089,7 +11176,8 @@
         "port/level-world/reference/character-regeneration/original-functions.json",
         "port/level-world/reference/debug-switches-runtime/original-functions.json",
         "port/level-world/reference/debug-switches-persistence/original-functions.json",
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -11118,6 +11206,17 @@
             "port/level-world/character_ai_set_skills_and_spells.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; Manifested helper evidence; local temporary cleanup in the caller takes the small-allocation deallocation path observed separately.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -11903,7 +12002,8 @@
       "implementation_limit": "Bounded source adapter.; Complete bounded source table selector. Normal valid selection, two fresh FaeryTypes/COUNT calls, consistency checks, source fallback and selected row identity are implemented. OOB source storage becomes an explicit port guard; assertion-level-2 source faults are represented as a status.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/character-faery-selection/original-functions.json",
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -11914,6 +12014,17 @@
             "port/level-world/character_ai_set_skills_and_spells.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; Caller runner hooks this exact getter to a source-shaped row fixture. Its independent selector body is tested in character-faery-selection; this report does not credit its 540-byte body as executed.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Existing original body executes over actual decoded cache data; reused body, no new credit.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -11935,9 +12046,22 @@
       ],
       "implementation_limit": "Bounded source adapter.; This original leaf executes inside the ARM differential; it reads Character+0x106c and applies the FaeryListTable-size fallback to row 0.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-faery-selection/original-functions.json"
+        "port/level-world/reference/character-faery-selection/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Existing original body executes over actual decoded cache data; reused body, no new credit.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN17CharAISkillScriptC1EP9CharacterPKcj",
@@ -11958,7 +12082,8 @@
       "implementation_limit": "Bounded source adapter.; Complete bounded constructor field/order body: owned dispatch type, owner, name, embedded Arguments construction, index/sentinel writes, ordered diagnostics, pushString and pushInteger calls. Called argument-storage leaf bodies remain typed services.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/character-ai-skill-script-constructor/original-functions.json",
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -11969,6 +12094,17 @@
             "port/level-world/character_ai_set_skills_and_spells.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; Child constructor boundary. The skill caller passes the slot; the faery caller passes UINT32_MAX. The constructor body has a separate source comparison.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Existing original body executes over actual decoded cache data; reused body, no new credit.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -11991,7 +12127,8 @@
       "implementation_limit": "Bounded source adapter.; Called leaf is intercepted at the constructor boundary. Its embedded Value-vector allocation is not reproduced by this constructor kernel.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/character-ai-skill-script-constructor/original-functions.json",
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -12002,6 +12139,17 @@
             "port/level-world/character_ai_set_skills_and_spells.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; Arguments value-vector creation is represented by a provider boundary. The source caller's setup and destruction order are executed.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -12024,7 +12172,8 @@
       "implementation_limit": "Bounded source adapter.; Called leaf is intercepted and its exact source arguments are recorded; string/value allocation is not part of this constructor claim.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/character-ai-skill-script-constructor/original-functions.json",
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -12035,6 +12184,17 @@
             "port/level-world/character_ai_set_skills_and_spells.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; Typed Arguments setup provider boundary; source passes the empty string.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -12057,7 +12217,8 @@
       "implementation_limit": "Bounded source adapter.; Called leaf is intercepted and its exact source arguments are recorded; conversion and Value allocation are not part of this constructor claim.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/character-ai-skill-script-constructor/original-functions.json",
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -12068,6 +12229,17 @@
             "port/level-world/character_ai_set_skills_and_spells.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; Typed Arguments setup provider boundary; source passes signed -1.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -13249,9 +13421,22 @@
       ],
       "implementation_limit": "Bounded source adapter.; Complete bounded caller body. The runner executes its loops, empty/nonempty vector branches, source path save/set/restore, debug query order, skill/faery record gates, declaration/load/constructor branches, cleanup, and final active-AIS +0xcc dispatch. Named leaves are hooked at their original callee boundaries.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Existing original body executes over actual decoded cache data; reused body, no new credit.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNK9Character16GetCharSkillListEv",
@@ -13271,9 +13456,22 @@
       ],
       "implementation_limit": "Bounded source adapter.; Typed list-view provider boundary. Caller consumes returned count and reserves its destination.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Existing original body executes over actual decoded cache data; reused body, no new credit.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNK9Character12GetCharSkillEi",
@@ -13293,9 +13491,22 @@
       ],
       "implementation_limit": "Bounded source adapter.; Typed per-slot row provider boundary. Caller reads gate +0x24 and name +0x28.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Existing original body executes over actual decoded cache data; reused body, no new credit.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNK9Character16GetCharFaeryListEv",
@@ -13315,9 +13526,22 @@
       ],
       "implementation_limit": "Bounded source adapter.; Typed faery-list-view provider boundary. Caller consumes count and reserves its destination.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Existing original body executes over actual decoded cache data; reused body, no new credit.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNSt6vectorIP17CharAISkillScriptSaIS1_EE7reserveEj",
@@ -13337,9 +13561,22 @@
       ],
       "implementation_limit": "Bounded source adapter.; Vector allocation boundary. The test adapter supplies stable backing storage and preserves the source begin/end/capacity projection.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN3sfc6script3lua9ArgumentsD1Ev",
@@ -13359,9 +13596,22 @@
       ],
       "implementation_limit": "Bounded source adapter.; Arguments teardown boundary reached once for each constructed list argument object.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN3sfc6script3lua5Value9setStringEPKc",
@@ -13381,9 +13631,22 @@
       ],
       "implementation_limit": "Bounded source adapter.; Source Value mutation boundary for each declared script's name argument.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN3sfc6script3lua5Value9setNumberEf",
@@ -13403,9 +13666,22 @@
       ],
       "implementation_limit": "Bounded source adapter.; Source Value mutation boundary. Skill loop passes slot converted by __aeabi_i2f; faery loop passes the source -1.0 literal.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN9LuaScript4LoadEPKc",
@@ -13427,7 +13703,8 @@
       "evidence_manifests": [
         "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
         "port/level-world/reference/lua-script-load-once/original-functions.json",
-        "port/level-world/reference/monster-external-script-updates/original-functions.json"
+        "port/level-world/reference/monster-external-script-updates/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -13447,6 +13724,17 @@
             "port/level-world/monster_external_script_session.cpp"
           ],
           "implementation_limit": "Same retained Session update and independent complete20B state callback providers; exact resolved-path cache composition after path resolution. Original whole AI/VM and state registry producers remain external.; external wrapper before exact path-cache boundary; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -13468,9 +13756,22 @@
       ],
       "implementation_limit": "Bounded source adapter.; Declaration call provider boundary with exact DeclareSkill name and stack Arguments identity.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNSs19_M_range_initializeEPKcS0_",
@@ -13490,9 +13791,22 @@
       ],
       "implementation_limit": "Bounded source adapter.; Initial AIS script-path capture boundary; source pointers and bytes are recorded.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json"
+        "port/level-world/reference/character-ai-set-skills-and-spells/original-functions.json",
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/player_skill_tables_adapter.hpp",
+            "port/level-world/player_skill_tables_adapter.cpp",
+            "port/level-world/character_player_skills_preparation_v3.hpp",
+            "port/level-world/character_player_skills_preparation_v3.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Named modeled provider boundary only.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN9LuaScript4CallEPKcRN3sfc6script3lua12ReturnValuesE",
@@ -15182,9 +15496,20 @@
       ],
       "implementation_limit": "Bounded source adapter.; Bounded complete plane extraction/normalization prefix; the final 4-byte tail branch is excluded.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/engine-camera/reference/frustum-producer/original-functions.json"
+        "port/engine-camera/reference/frustum-producer/original-functions.json",
+        "port/engine-camera/reference/frustum-runtime/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/engine-camera/reference/frustum-runtime/original-functions.json",
+          "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/engine-camera/frustum_runtime.hpp",
+            "port/engine-camera/frustum_runtime.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Full 580-byte caller semantics: source plane extraction/normalization followed by the unmodified bounds and plane-intersection source call chain. The earlier component owns the 576-byte prefix; this composition closes its 4-byte tail boundary.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN6glitch5scene12SViewFrustum22recalculateBoundingBoxEv",
@@ -15205,6 +15530,100 @@
       "implementation_limit": "Bounded source adapter.; Complete four-corner bounds writer; each source plane-intersection return is ignored, and each output vector starts at zero.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/engine-camera/reference/frustum-bounds/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "name": "plane3d<float>::getIntersectionWithLine",
+      "original_symbol": "_ZNK6glitch4core7plane3dIfE23getIntersectionWithLineERKNS0_8vector3dIfEES6_RS4_",
+      "elf_address": "0x34033c",
+      "size": 360,
+      "sha256": "c7c038769ce68abc3c393a5ebc5a1efdeb90373bfb918bb9143960c7d0e3e1cf",
+      "scope": "Complete caller: dot products, exact-zero denominator branch, signed numerator negation, division, and ordered XYZ output stores.",
+      "evidence_manifest": "port/engine-camera/reference/plane-intersection/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "glitch::core::plane3d<float>::getIntersectionWithLine(glitch::core::vector3d<float> const&, glitch::core::vector3d<float> const&, glitch::core::vector3d<float>&) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/glitch_core_plane3d_float-bc9c90e08ebf-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/engine-camera/plane_intersection.hpp",
+        "port/engine-camera/plane_intersection.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Complete caller: dot products, exact-zero denominator branch, signed numerator negation, division, and ordered XYZ output stores.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/engine-camera/reference/plane-intersection/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "name": "plane3d<float>::getIntersectionWithPlane",
+      "original_symbol": "_ZNK6glitch4core7plane3dIfE24getIntersectionWithPlaneERKS2_RNS0_8vector3dIfEES7_",
+      "elf_address": "0x341260",
+      "size": 888,
+      "sha256": "02a96375b30f9eb2dd155cfb9c3b3acdbf86f1ccb5b25133c37c920ae08da3fb",
+      "scope": "Complete caller: float normal lengths/dot/determinant, strict double 1e-8 rejection against determinant magnitude, signed determinant division, cross vector, coefficient solve, and source-ordered endpoint stores.",
+      "evidence_manifest": "port/engine-camera/reference/plane-intersection/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "glitch::core::plane3d<float>::getIntersectionWithPlane(glitch::core::plane3d<float> const&, glitch::core::vector3d<float>&, glitch::core::vector3d<float>&) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/glitch_core_plane3d_float-bc9c90e08ebf-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/engine-camera/plane_intersection.hpp",
+        "port/engine-camera/plane_intersection.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Complete caller: float normal lengths/dot/determinant, strict double 1e-8 rejection against determinant magnitude, signed determinant division, cross vector, coefficient solve, and source-ordered endpoint stores.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/engine-camera/reference/plane-intersection/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "name": "plane3d<float>::getIntersectionWithPlanes",
+      "original_symbol": "_ZNK6glitch4core7plane3dIfE25getIntersectionWithPlanesERKS2_S4_RNS0_8vector3dIfEE",
+      "elf_address": "0x3415d8",
+      "size": 100,
+      "sha256": "6f5874dc88d9a313a67e56afb44f9cca702a01a69db192da29de8774e3f33f63",
+      "scope": "Complete caller: zeroed local line endpoints; plane intersection first; line intersection only on success; output untouched on either false path.",
+      "evidence_manifest": "port/engine-camera/reference/plane-intersection/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "glitch::core::plane3d<float>::getIntersectionWithPlanes(glitch::core::plane3d<float> const&, glitch::core::plane3d<float> const&, glitch::core::vector3d<float>&) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/glitch_core_plane3d_float-bc9c90e08ebf-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/engine-camera/plane_intersection.hpp",
+        "port/engine-camera/plane_intersection.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Complete caller: zeroed local line endpoints; plane intersection first; line intersection only on success; output untouched on either false path.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/engine-camera/reference/plane-intersection/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character18GetCharSkillListIdEv",
+      "elf_address": "0x3bc5c0",
+      "size": 60,
+      "sha256": "ae0ccd8e8da06e96819b3c7d77bba945702d41a97bf35ff5530b54a83a72bc20",
+      "executed": true,
+      "scope": "Existing original body executes over actual decoded cache data; reused body, no new credit.",
+      "evidence_manifest": "port/level-world/reference/player-skills-preparation-v3/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "Character::GetCharSkillListId() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_engine_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/player_skill_tables_adapter.hpp",
+        "port/level-world/player_skill_tables_adapter.cpp",
+        "port/level-world/character_player_skills_preparation_v3.hpp",
+        "port/level-world/character_player_skills_preparation_v3.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Existing original body executes over actual decoded cache data; reused body, no new credit.; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/player-skills-preparation-v3/original-functions.json"
       ],
       "additional_mappings": []
     },

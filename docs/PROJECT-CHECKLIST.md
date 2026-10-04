@@ -33,14 +33,14 @@ still require live gameplay integration. All final completion gates remain open.
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
 | Character properties, equipment and state | 10 | 5 |
-| Lua, skills and enemy AI | 21 | 13 |
+| Lua, skills and enemy AI | 22 | 13 |
 | Combat, death, loot and progression | 5 | 7 |
 | Quests, campaign, UI, audio and saves | 3 | 9 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **88** | **70** |
+| **Total scoped tasks** | **89** | **70** |
 
-Latest source-only gates: [validation index](../reports/reconstruction-2026-10-05/source-culling-visibility/index.json). These changes await Android integration.
+Latest local gate: [native camera checkpoint](../reports/reconstruction-2026-10-05/native-camera/index.json). Crypt movement/ambush/recreation pass on Android 17/16 KiB; nine live frustum snapshots match original ARM. Culling is compiled; native invocation remains open.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Latest source/build/test scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -58,7 +58,7 @@ published download above retains its original release identity.
   so the imported modules can link with the existing reconstruction.
 - [x] Publish the comparison of our work with Adam's work in the combined status.
 - [x] Publish original-address ledgers: Adam's 1,455 addresses and the current
-  547-range extension (373 additional unique addresses); 1,828 combined unique
+  551-range extension (376 additional unique addresses); 1,831 combined unique
   addresses. These are evidence reach.
 - [x] Separate recovered evidence, maintained source, tests, dependencies and assets
   in the reproducible source inventory.
@@ -79,9 +79,9 @@ published download above retains its original release identity.
 - [x] Verify ELF64 libraries, 16 KiB ELF/ZIP alignment and APK signatures.
 - [x] Run the source-built development app without the original ARM32 game library.
 - [x] Publish a downloadable APK and its exact raw compiler-input source archive.
-- [x] Freeze the current tested local APK against 466 actual compiler/build inputs, 255 assets,
-  16 ELF64 libraries, 60 bounded source units, 96 required export groups and Android
-  API 37/16 KiB emulator evidence.
+- [x] Freeze the camera APK with 468 compiler inputs per ABI, 508 source/build archive entries,
+  18 ELF64 libraries and Android API37/16 KiB evidence. Capture is post-build;
+  Git publication matches tested bytes except documented line-ending conversion.
 - [x] Keep milestones on the separate reconstruction branch and private documents outside Git.
 - [ ] Make the final complete-game build reproducible from a clean checkout with
   documented asset installation and dependency setup.
@@ -102,7 +102,7 @@ published download above retains its original release identity.
 - [x] Feed four Prince warrior skins and shared Idle/Move playback through the Irrlicht preview.
 - [x] Fix observed actor placement/camera clipping and the broad black bridge overlay regression.
 - [x] Implement bounded source material/technique/blend/depth mappings and record remaining gaps.
-- [x] Reconstruct six camera planes (141 ARM cases/144 prefix instructions) and bounds tail (38 ARM cases/187 instructions). Plane-intersection provider remains open.
+- [x] Close the full frustum graph: 80 intersection/77 composition ARM cases; nine actual Android snapshots match. Original camera transform/scene producers remain open.
 - [x] Correct VoxN framing/tag parsing; verify 17 audio files. Decoding/playback remain open.
 - [x] Reuse Adam's GFNT/viewport code; 8,532/5,200 fixture comparisons pass with sanitizers. Native UI binding remains open.
 - [ ] Complete the original custom Irrlicht/`glitch::` rendering behavior and ownership.
@@ -128,7 +128,7 @@ published download above retains its original release identity.
   real Ghost classification for native diagnostics; room enrollment remains open.
 - [x] Reconstruct the bounded GameObject::Stop caller; verify 246 original ARM
   cases, virtual physics-policy selection and ordered partial effects. Native
-  path/body service binding remains open.
+  native frame invocation remains open.
 - [ ] Finish the full ObjectManager factory, exact-name map, group membership and teardown.
 - [x] Reconstruct ObjectManager's per-object dispatch slice: 30 ARM cases/101 guards. Full traversal, deletion and providers remain open.
 - [ ] Resolve Crypt's remaining 69 conditional/script/template/factory records.
@@ -182,6 +182,7 @@ published download above retains its original release identity.
   276 original ARM comparisons, 269 host cases and 42 real Lua cases pass.
   Actual native Value/ReturnValues and skill-call integration remain open.
 - [x] Decode all 183 original Skill/Faery list/row records; compare with original ARM readers.
+- [x] Adapt Adam's player skill ownership to our source callers: each class has 16 skill/5 faery slots and 13 instances; 29 script names overall. Host/ARM gates pass; real player VM/FSM integration remains open.
 - [x] Run bounded authored Ghost `LoadNInitScriptProcess(true)` through HP/MP,
   SetSkillsAndSpells, UpdateAllSkills, Post and Final in source order: 0 ordinary
   skill entries and 5 null-script faeries on the same retained VM.

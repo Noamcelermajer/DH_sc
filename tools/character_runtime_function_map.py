@@ -113,6 +113,13 @@ ENGINE_MANIFESTS = {
         ['port/engine-camera/frustum.hpp', 'port/engine-camera/frustum.cpp'],
     'port/engine-camera/reference/frustum-bounds/original-functions.json':
         ['port/engine-camera/frustum_bounds.hpp', 'port/engine-camera/frustum_bounds.cpp'],
+    'port/engine-camera/reference/plane-intersection/original-functions.json':
+        ['port/engine-camera/plane_intersection.hpp', 'port/engine-camera/plane_intersection.cpp'],
+    'port/engine-camera/reference/frustum-runtime/original-functions.json':
+        ['port/engine-camera/frustum_runtime.hpp', 'port/engine-camera/frustum_runtime.cpp'],
+    'port/level-world/reference/player-skills-preparation-v3/original-functions.json':
+        ['port/level-world/player_skill_tables_adapter.hpp', 'port/level-world/player_skill_tables_adapter.cpp',
+         'port/level-world/character_player_skills_preparation_v3.hpp', 'port/level-world/character_player_skills_preparation_v3.cpp'],
     'port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json':
         ['port/scene-materials/technique_selector.hpp', 'port/scene-materials/technique_selector.cpp'],
     'port/scene-materials/reference/swamp-render-state-audit/original-functions.json':

@@ -19,12 +19,19 @@ def sha(raw):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--studio', type=Path, required=True)
+    p.add_argument('--studio', type=Path,
+                   help='Optional Android Studio project; omit only with --no-studio')
+    p.add_argument('--no-studio', action='store_true',
+                   help='Capture the packaged repository project only; make no Studio parity claim')
     p.add_argument('--ninja', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
     a = p.parse_args()
+    if a.no_studio == bool(a.studio):
+        p.error('pass exactly one of --studio PATH or --no-studio')
     assert not a.output.exists(), 'Refusing to replace an existing build capture'
-    projects = {'packaged': REPO/'port/android-native', 'studio': a.studio}
+    projects = {'packaged': REPO/'port/android-native'}
+    if a.studio:
+        projects['studio'] = a.studio
     sources, commands, entries, artifacts = {}, {}, {}, {}
     for tag, project in projects.items():
         apk = project/'app/build/outputs/apk/debug/app-debug.apk'
@@ -68,6 +75,8 @@ def main():
         for path in (project/'app/src/main').rglob('*'):
             if path.is_file() and 'assets' not in path.relative_to(project/'app/src/main').parts:
                 key = path.relative_to(project/'app/src/main').as_posix()
+                if any(part in {'build', '.cxx', '__pycache__'} for part in path.relative_to(project/'app/src/main').parts):
+                    continue
                 if key == 'keepRules/rules.keep':
                     assert all(not line.strip() or line.strip().startswith('#') for line in path.read_text().splitlines())
                     continue
@@ -78,9 +87,10 @@ def main():
                 sources[key] = sha(payload)
                 entries['source/'+key] = payload
     assert set(commands['packaged']['arm64-v8a']['repository_inputs']) == set(commands['packaged']['x86_64']['repository_inputs'])
-    for abi in ('arm64-v8a', 'x86_64'):
-        assert commands['packaged'][abi]['repository_inputs'] == commands['studio'][abi]['repository_inputs'], 'Repo/Studio compiler inputs differ'
-    for folder in ('engine-resources', 'asset-payloads', 'engine-math', 'engine-animation', 'engine-skinning', 'engine-textures', 'game-data', 'level-world', 'physics-backend', 'scene-materials'):
+    if a.studio:
+        for abi in ('arm64-v8a', 'x86_64'):
+            assert commands['packaged'][abi]['repository_inputs'] == commands['studio'][abi]['repository_inputs'], 'Repo/Studio compiler inputs differ'
+    for folder in ('engine-resources', 'asset-payloads', 'engine-math', 'engine-animation', 'engine-skinning', 'engine-textures', 'engine-camera', 'game-data', 'level-world', 'physics-backend', 'scene-materials'):
         path = REPO/'port'/folder/'CMakeLists.txt'
         if path.is_file():
             key = path.relative_to(REPO).as_posix()
@@ -90,7 +100,8 @@ def main():
     for name in ('build.gradle.kts', 'settings.gradle.kts', 'gradle.properties', 'gradlew', 'gradlew.bat', 'app/build.gradle.kts'):
         path = project/name
         entries['source/'+path.relative_to(REPO).as_posix()] = path.read_bytes()
-    manifest = {'scope': __doc__, 'validation': 'BUILD_INPUTS_CAPTURED', 'apks': artifacts,
+    manifest = {'scope': __doc__, 'validation': 'BUILD_INPUTS_CAPTURED',
+                'studio_parity_checked': bool(a.studio), 'apks': artifacts,
                 'source_sha256': sources, 'compiler_inputs': commands,
                 'entries': {name: {'sha256': sha(raw), 'bytes': len(raw)} for name, raw in entries.items()}}
     entries['build-capture.json'] = (json.dumps(manifest, indent=2)+'\n').encode()

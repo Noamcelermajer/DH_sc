@@ -37,6 +37,10 @@ def cpp_prefix(namespace, function):
     return f'_ZN3dh2{len(namespace)}{namespace}{len(function)}{function}'
 
 
+def nested_cpp_prefix(namespaces, function):
+    return '_ZN3dh2' + ''.join(f'{len(name)}{name}' for name in namespaces) + f'{len(function)}{function}'
+
+
 FRAME_UNITS = {
     'enemy_retention': cpp_prefix('character_enemy_retention', 'update'),
     'target_update': cpp_prefix('character_ai_update_target', 'update'),
@@ -144,12 +148,48 @@ FRAME_BRIDGE_UNITS = {
     'session_created_services': cpp_prefix('monster_external_script','Session')+'24install_created_services',
     'session_vm_identity': '_ZNK3dh223monster_external_script7Session11vm_identity',
 }
+CAMERA_CULLING_UNITS = {
+    'camera_plane_extraction': nested_cpp_prefix(('engine_camera', 'frustum'), 'set_from'),
+    'camera_bounds': nested_cpp_prefix(('engine_camera', 'frustum_bounds'), 'recalculate'),
+    'camera_runtime': nested_cpp_prefix(('engine_camera', 'frustum_runtime'), 'set_from'),
+    'camera_plane_intersection': nested_cpp_prefix(('engine_camera', 'plane_intersection'), 'intersect_three_planes'),
+    'game_object_set_visible': cpp_prefix('game_object_set_visible', 'set_game_object'),
+    'visual_object_set_visible': cpp_prefix('game_object_set_visible', 'set_visual_object'),
+    'game_object_disable_zoning': cpp_prefix('game_object_zoning_visibility', 'disable_zoning'),
+    'game_object_enable_zoning': cpp_prefix('game_object_zoning_visibility', 'enable_zoning'),
+    'visual_object_sync_visibility': cpp_prefix('game_object_zoning_visibility', 'sync_visibility'),
+    'object_update_culling': cpp_prefix('object_update_culling', 'evaluate'),
+    'object_remote_update_query': cpp_prefix('object_update_culling', 'is_remotely_updated'),
+    'object_update_dispatch': cpp_prefix('object_update_dispatch', 'dispatch'),
+    'character_culling_composition': cpp_prefix('character_culling_runtime', 'evaluate'),
+    'native_character_stop': 'dh2_native_character_stop',
+}
+CAMERA_CULLING_LIBRARIES = {
+    'camera_plane_extraction': 'libdh2_engine_camera.so',
+    'camera_bounds': 'libdh2_engine_camera.so',
+    'camera_runtime': 'libdh2_engine_camera.so',
+    'camera_plane_intersection': 'libdh2_engine_camera.so',
+    'game_object_set_visible': 'libdh2_level_world.so',
+    'visual_object_set_visible': 'libdh2_level_world.so',
+    'game_object_disable_zoning': 'libdh2_level_world.so',
+    'game_object_enable_zoning': 'libdh2_level_world.so',
+    'visual_object_sync_visibility': 'libdh2_level_world.so',
+    'object_update_culling': 'libdh2_level_world.so',
+    'object_remote_update_query': 'libdh2_level_world.so',
+    'object_update_dispatch': 'libdh2_level_world.so',
+    'character_culling_composition': 'libdh2_level_world.so',
+    'native_character_stop': 'libdh2_native.so',
+}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--apk', type=Path, required=True)
-    parser.add_argument('--artifact', type=Path, required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument('--artifact', type=Path,
+                        help='Previously verified checkpoint report tied to this APK')
+    source.add_argument('--build-capture', type=Path,
+                        help='Actual compiler-input capture from capture_native_build.py')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--require-targeting-units', action='store_true')
     parser.add_argument('--require-acquisition-units', action='store_true')
@@ -166,6 +206,7 @@ def main():
     parser.add_argument('--require-ghost-skill-init-dependencies', action='store_true')
     parser.add_argument('--require-frame-foundation-units', action='store_true')
     parser.add_argument('--require-frame-bridge-units', action='store_true')
+    parser.add_argument('--require-camera-culling-units', action='store_true')
     args = parser.parse_args()
     initialization = args.require_initialization_units or args.require_debug_persistence_units or args.require_level_construction_unit or args.require_native_monster_dependencies
     lifecycle = args.require_lifecycle_units or initialization
@@ -186,7 +227,8 @@ def main():
              **(HP_MP_INIT_DEPENDENCIES if args.require_hp_mp_init_dependencies else {}),
              **(GHOST_SKILL_INIT_DEPENDENCIES if args.require_ghost_skill_init_dependencies else {}),
              **(FRAME_FOUNDATION_UNITS if args.require_frame_foundation_units else {}),
-             **(FRAME_BRIDGE_UNITS if args.require_frame_bridge_units else {})}
+             **(FRAME_BRIDGE_UNITS if args.require_frame_bridge_units else {}),
+             **(CAMERA_CULLING_UNITS if args.require_camera_culling_units else {})}
     # Sight has two overload groups; melee caller and radius share one unit.
     source_units = len(units) - int(acquisition) - int(frame) - 5 * int(runtime_dependencies) - 7 * int(lifecycle) - 3 * int(initialization) - 3 * int(args.require_debug_persistence_units) - 2 * int(args.require_native_monster_dependencies)
     source_units -= 4 * int(args.require_character_list_dependencies) + 3 * int(args.require_init_callback_dependencies)
@@ -194,10 +236,35 @@ def main():
     source_units -= int(args.require_ghost_skill_init_dependencies) # skill/faery readers share one source unit.
     source_units -= 3 * int(args.require_frame_foundation_units) # three Session methods extend its existing unit.
     source_units -= 2 * int(args.require_frame_bridge_units) # installer/identity extend the existing Session unit.
+    source_units -= len(CAMERA_CULLING_UNITS) * int(args.require_camera_culling_units)
     raw = args.apk.read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
-    artifact = json.loads(args.artifact.read_text())
-    assert artifact['validation'] == 'PASS' and artifact['apk_sha256'] == digest
+    if args.artifact:
+        artifact_raw = args.artifact.read_bytes()
+        artifact = json.loads(artifact_raw)
+        assert artifact['validation'] == 'PASS' and artifact['apk_sha256'] == digest
+        source_sha256 = artifact['source_sha256']
+        artifact_report_sha256 = hashlib.sha256(artifact_raw).hexdigest()
+        build_capture_sha256 = None
+    else:
+        capture_raw = args.build_capture.read_bytes()
+        with zipfile.ZipFile(io.BytesIO(capture_raw)) as capture:
+            assert capture.testzip() is None, 'Corrupt build capture'
+            manifest = json.loads(capture.read('build-capture.json'))
+            assert manifest['validation'] == 'BUILD_INPUTS_CAPTURED'
+            assert set(capture.namelist()) == set(manifest['entries']) | {'build-capture.json'}, 'Capture entry inventory differs'
+            assert len(capture.namelist()) == len(set(capture.namelist())), 'Duplicate capture entries'
+            for name, expected in manifest['entries'].items():
+                payload = capture.read(name)
+                assert len(payload) == expected['bytes'] and hashlib.sha256(payload).hexdigest() == expected['sha256'], ('Capture entry differs', name)
+            for path, expected in manifest['source_sha256'].items():
+                assert hashlib.sha256(capture.read('source/' + path)).hexdigest() == expected, ('Captured source differs', path)
+            packaged = manifest['apks']['packaged']
+            assert packaged['sha256'] == digest and packaged['bytes'] == len(raw)
+            assert capture.read('packaged-app-debug.apk') == raw
+            source_sha256 = manifest['source_sha256']
+        artifact_report_sha256 = None
+        build_capture_sha256 = hashlib.sha256(capture_raw).hexdigest()
     abis = {}
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         for abi in ('arm64-v8a', 'x86_64'):
@@ -206,6 +273,7 @@ def main():
             lua_definitions = []
             debug_backend = []
             native_character_owner = []
+            native_libraries = {}
             for path in archive.namelist():
                 if not path.startswith(f'lib/{abi}/') or not path.endswith('.so'):
                     continue
@@ -213,6 +281,17 @@ def main():
                 elf = ELFFile(io.BytesIO(image))
                 assert elf.elfclass == 64
                 assert elf['e_machine'] == {'arm64-v8a': 'EM_AARCH64', 'x86_64': 'EM_X86_64'}[abi]
+                if args.require_camera_culling_units and Path(path).name in {
+                    'libdh2_engine_camera.so', 'libdh2_level_world.so', 'libdh2_native.so'
+                }:
+                    loads = [segment['p_align'] for segment in elf.iter_segments()
+                             if segment['p_type'] == 'PT_LOAD']
+                    assert loads and min(loads) >= 16384, (abi, path, loads)
+                    native_libraries[Path(path).name] = {
+                        'path': path, 'bytes': len(image),
+                        'sha256': hashlib.sha256(image).hexdigest(),
+                        'load_alignments': loads,
+                    }
                 symbols = elf.get_section_by_name('.dynsym')
                 defined = {s.name for s in symbols.iter_symbols() if s['st_shndx'] != 'SHN_UNDEF'}
                 if LUA_SYMBOL in defined:
@@ -222,7 +301,9 @@ def main():
                 if path.endswith('/libdh2_native.so') and args.require_character_list_dependencies:
                     native_character_owner = sorted(n for n in defined if n.startswith('_ZN3dh26native14character_list5Owner16enroll_after_add'))
                 for unit, prefix in units.items():
-                    library = 'libdh2_game_data.so' if unit in ('owned_skill_tables', 'owned_faery_tables') else 'libdh2_level_world.so'
+                    library = CAMERA_CULLING_LIBRARIES.get(unit)
+                    if library is None:
+                        library = 'libdh2_game_data.so' if unit in ('owned_skill_tables', 'owned_faery_tables') else 'libdh2_level_world.so'
                     if path.endswith('/'+library):
                         exports[unit] = sorted(n for n in defined if n.startswith(prefix))
                         export_libraries[unit] = path
@@ -238,18 +319,29 @@ def main():
                 assert debug_backend, (abi, 'real native Debug file backend missing')
             if args.require_character_list_dependencies:
                 assert native_character_owner, (abi, 'native owned Character list missing')
+            if args.require_camera_culling_units:
+                assert set(native_libraries) == {
+                    'libdh2_engine_camera.so', 'libdh2_level_world.so', 'libdh2_native.so'
+                }, (abi, native_libraries)
             abis[abi] = {'source_unit_exports': exports, 'lua_core_definitions': lua_definitions,
                          'source_unit_export_libraries': export_libraries,
                          'native_debug_file_backend': debug_backend,
-                         'native_character_list_owner': native_character_owner}
+                         'native_character_list_owner': native_character_owner,
+                         'native_libraries_16k_aligned': native_libraries}
+    scope = f'{source_units} bounded source AI/script units compiled and exported for ELF64 ARM64/x86_64; one reused Adam Lua core per ABI. Export verification establishes compilation only; live AI/controller/body behavior requires separate device evidence.'
+    if args.require_camera_culling_units:
+        scope += f' Also verifies {len(CAMERA_CULLING_UNITS)} camera/culling/visibility/Stop export groups and 16 KiB PT_LOAD alignment for camera, level-world and native libraries.'
     report = {
         'validation': 'PASS', 'apk_sha256': digest, 'apk_bytes': len(raw),
-        'artifact_report_sha256': hashlib.sha256(args.artifact.read_bytes()).hexdigest(),
-        'abis': abis, 'source_sha256': artifact['source_sha256'],
+        'artifact_report_sha256': artifact_report_sha256,
+        'build_capture_sha256': build_capture_sha256,
+        'validation_basis': 'prior verified artifact' if args.artifact else 'captured Gradle/Ninja build inputs and packaged APK',
+        'abis': abis, 'source_sha256': source_sha256,
         'compiled_source_units': source_units,
+        'camera_culling_export_groups': len(CAMERA_CULLING_UNITS) if args.require_camera_culling_units else 0,
         'required_export_groups': len(units),
         'native_ai_wired': False, 'full_game_playable': False,
-        'scope': f'{source_units} bounded source AI/script units compiled and exported for ELF64 ARM64/x86_64; one reused Adam Lua core per ABI. Export verification establishes compilation only; live AI/controller/body behavior requires separate device evidence.',
+        'scope': scope,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')

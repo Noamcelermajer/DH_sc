@@ -1,4 +1,5 @@
 #include "model_renderer.hpp"
+#include "frustum_runtime.hpp"
 #include "mod_assets.hpp"
 #include "scene.hpp"
 #include "textures.hpp"
@@ -76,6 +77,13 @@
 namespace model_renderer {
 namespace {
 using Matrix=std::array<float,16>;
+struct NativeSourceCamera {
+ dh2::engine_camera::frustum_runtime::Matrix matrix{};
+ dh2::engine_camera::frustum_runtime::Frustum frustum{};
+ std::uint64_t frames=0;
+ int width=0,height=0;
+};
+NativeSourceCamera source_camera;
 using Vertex=dh2::objects::Vertex;
 std::string mod_root;
 std::string runtime_root;
@@ -1194,7 +1202,31 @@ Matrix camera(int width,int height){
   Matrix view{s[0],u[0],-f[0],0,s[1],u[1],-f[1],0,s[2],u[2],-f[2],0,-dot(s,eye),-dot(u,eye),dot(f,eye),1};
   const float near=world_mode?50.f:std::max(.01f,distance-radius*1.5f),far=world_mode?12000.f:distance+radius*3;
   Matrix projection{1/(tan*aspect),0,0,0,0,1/tan,0,0,0,0,-(far+near)/(far-near),-1,0,0,-2*far*near/(far-near),0};
-  return dh2::scene::multiply(projection,view);
+  const auto result=dh2::scene::multiply(projection,view);
+  if(world_mode){
+    // The follow-camera transform remains the development producer. Its real
+    // matrix/eye now exercise the recovered full frustum arithmetic; scene
+    // registration and Character culling ownership remain separate work.
+    std::memcpy(source_camera.matrix.elements,result.data(),sizeof(source_camera.matrix.elements));
+    std::memcpy(source_camera.frustum.position,eye.data(),sizeof(source_camera.frustum.position));
+    if(dh2::engine_camera::frustum_runtime::set_from(&source_camera.matrix,&source_camera.frustum)!=
+       dh2::engine_camera::frustum_runtime::Status::complete)
+      throw std::runtime_error("Source camera frustum rejected live matrix");
+    const bool resized=source_camera.width!=width||source_camera.height!=height;
+    source_camera.width=width;source_camera.height=height;
+    if((source_camera.frames++%128)==0||resized){
+      std::string input,output;
+      const auto append=[](std::string& text,std::uint32_t word){char hex[10];std::snprintf(hex,sizeof(hex)," %08x",word);text+=hex;};
+      for(auto word:source_camera.matrix.elements)append(input,word);
+      for(auto word:source_camera.frustum.position)append(output,word);
+      for(const auto& plane:source_camera.frustum.planes)for(auto word:plane)append(output,word);
+      for(auto word:source_camera.frustum.box_min)append(output,word);
+      for(auto word:source_camera.frustum.box_max)append(output,word);
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native","Source camera frame | %llu | %dx%d | matrix%s | frustum%s",
+        static_cast<unsigned long long>(source_camera.frames),width,height,input.c_str(),output.c_str());
+    }
+  }
+  return result;
 }
 }
 void mod_directory(std::string directory){mod_root=std::move(directory);}
@@ -1202,6 +1234,7 @@ void runtime_directory(std::string directory){runtime_root=std::move(directory);
 std::vector<std::uint8_t> read_asset(AAssetManager* assets,const std::string& name){return read(assets,name,"");}
 void reset_context(){native_actor_ready=false;clear_actor_world(world_mode||resume_world);search_world.clear();prince_search_projection={};prince_body={};resume_world=resume_world||world_mode;if(world_mode){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}world_mode=false;move_x=move_y=0;draws.clear();images.clear();object_groups.clear();world_objects.clear();prince_locomotion=dh2::actor::BlendedPlayback{};prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;inspected_object=-1;current_scene={};player=dh2::animation::Player{};walk_player=dh2::animation::Player{};level={};program=0;enabled=false;}
 void deactivate(){
+ source_camera={};
  // Terminal discard differs from GL recreation: clear every actor copy after
  // retiring timers and tearing down bodies, then release the owning groups.
  std::vector<std::weak_ptr<NativeMonsterInitialization>> retired;
