@@ -147,12 +147,18 @@ irr::scene::SMeshBuffer* make_buffer(
 
 } // namespace
 
-irr::scene::IMesh* build_mesh(
+namespace {
+
+irr::scene::IMesh* build_scene_mesh(
     const SceneMesh& source, MeshBuildStatus* status,
     TextureResolver texture_resolver, void* texture_user_data,
-    std::uint32_t* output_buffer_count) {
+    std::uint32_t* output_buffer_count,
+    bool apply_source_room_filter,
+    std::uint32_t room_root_node_record,
+    SourceRoomRenderCounts* output_filtered_counts) {
     set_status(status, MeshBuildStatus::argument);
     if (output_buffer_count) *output_buffer_count = 0;
+    if (output_filtered_counts) *output_filtered_counts = {};
     if (!source.vertices || !source.indices || !source.draws ||
         !source.vertex_count || !source.index_count || !source.draw_commands ||
         source.vertex_count > source.vertex_capacity ||
@@ -163,11 +169,22 @@ irr::scene::IMesh* build_mesh(
         return nullptr;
 
     std::uint32_t visible_count = 0;
+    SourceRoomRenderCounts filtered{};
     for (std::uint32_t i = 0; i < source.draw_commands; ++i) {
         const auto& draw = source.draws[i];
         if (!validate_draw(source, draw, status)) return nullptr;
-        if (draw.visible) ++visible_count;
+        if (!draw.visible) continue;
+        const auto role = apply_source_room_filter
+            ? classify_source_room_draw(draw, room_root_node_record)
+            : SourceRoomDrawRole::scenery;
+        switch (role) {
+        case SourceRoomDrawRole::room_root_bounds: ++filtered.room_root_bounds; break;
+        case SourceRoomDrawRole::navigation_floor: ++filtered.navigation_floors; break;
+        case SourceRoomDrawRole::exit_marker: ++filtered.exit_markers; break;
+        case SourceRoomDrawRole::scenery: ++visible_count; break;
+        }
     }
+    if (output_filtered_counts) *output_filtered_counts = filtered;
     if (!visible_count) {
         set_status(status, MeshBuildStatus::no_visible_draws);
         return nullptr;
@@ -181,7 +198,9 @@ irr::scene::IMesh* build_mesh(
 
     for (std::uint32_t i = 0; i < source.draw_commands; ++i) {
         const auto& draw = source.draws[i];
-        if (!draw.visible) continue;
+        if (!draw.visible || (apply_source_room_filter &&
+                classify_source_room_draw(draw, room_root_node_record) !=
+                    SourceRoomDrawRole::scenery)) continue;
         irr::scene::SMeshBuffer* buffer = make_buffer(
             source, draw, texture_resolver, texture_user_data);
         if (!buffer) {
@@ -197,6 +216,26 @@ irr::scene::IMesh* build_mesh(
     if (output_buffer_count) *output_buffer_count = visible_count;
     set_status(status, MeshBuildStatus::ok);
     return mesh;
+}
+
+} // namespace
+
+irr::scene::IMesh* build_mesh(
+    const SceneMesh& source, MeshBuildStatus* status,
+    TextureResolver texture_resolver, void* texture_user_data,
+    std::uint32_t* output_buffer_count) {
+    return build_scene_mesh(source, status, texture_resolver, texture_user_data,
+                            output_buffer_count, false, 0, nullptr);
+}
+
+irr::scene::IMesh* build_source_room_scenery_mesh(
+    const SceneMesh& source, std::uint32_t room_root_node_record,
+    MeshBuildStatus* status, TextureResolver texture_resolver,
+    void* texture_user_data, std::uint32_t* output_buffer_count,
+    SourceRoomRenderCounts* output_filtered_counts) {
+    return build_scene_mesh(source, status, texture_resolver, texture_user_data,
+                            output_buffer_count, true, room_root_node_record,
+                            output_filtered_counts);
 }
 
 } // namespace dh2::irrlicht_adapter

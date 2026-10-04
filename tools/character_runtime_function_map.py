@@ -23,6 +23,18 @@ LIMBUS_MANIFEST = 'port/level-world/reference/character-limbus-respawn/original-
 GROUP_BLUR_MANIFEST = 'port/level-world/reference/character-group-limbus-blur/original-functions.json'
 VISIBILITY_MANIFEST = 'port/level-world/reference/character-spawn-visibility/original-functions.json'
 MANIFESTS = [MANIFEST, TEMPLATE_MANIFEST, RANDOM_MANIFEST, TRIGGER_MANIFEST, SCRIPT_MANIFEST, GROUP_MANIFEST, AGGRO_MANIFEST, RESPAWN_MANIFEST, LIMBUS_MANIFEST, GROUP_BLUR_MANIFEST, VISIBILITY_MANIFEST]
+AI_MANIFESTS = {
+    'port/level-world/reference/character-aggro-delay/original-functions.json': 'character_aggro_delay',
+    'port/level-world/reference/character-ai-turn/original-functions.json': 'character_ai_turn',
+    'port/level-world/reference/character-aggro-target-search/original-functions.json': 'character_aggro_target_search',
+    'port/level-world/reference/character-aggro-candidate-events/original-functions.json': 'character_aggro_candidate_events',
+    'port/level-world/reference/character-enemy-spotted/original-functions.json': 'character_enemy_spotted',
+    'port/level-world/reference/monster-external-script-session/original-functions.json': 'monster_external_script_session',
+    'port/level-world/reference/character-ai-set-target/original-functions.json': 'character_ai_set_target',
+    'port/level-world/reference/character-ai-relations/original-functions.json': 'character_ai_relations',
+    'port/level-world/reference/character-ai-in-combat/original-functions.json': 'character_ai_in_combat',
+}
+MANIFESTS.extend(AI_MANIFESTS)
 OUTPUT = 'docs/generated/character-runtime-function-map.json'
 STATE = ['port/level-world/character_state.cpp',
          'port/level-world/character_coordinator.cpp']
@@ -31,6 +43,12 @@ NATIVE = 'port/android-native/app/src/main/cpp/model_renderer.cpp'
 
 def classify(row):
     symbol = row['demangled']
+    if row.get('evidence_manifest') in AI_MANIFESTS:
+        unit = AI_MANIFESTS[row['evidence_manifest']]
+        return ('bounded_ai_kernel_or_dependency_evidence',
+                [f'port/level-world/{unit}.hpp', f'port/level-world/{unit}.cpp'],
+                row['manifest_implementation_scope'] + '; ' + row.get('scope', row.get('port_coverage', 'Supporting range evidence.')) +
+                '; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.')
     if row.get('evidence_manifest') == VISIBILITY_MANIFEST:
         return ('visibility_callsite_and_vtable_evidence', [VISIBILITY_MANIFEST],
                 row['scope'] + '; read-only audit adds no implementation body.')
@@ -124,15 +142,21 @@ def build():
     with index_path.open(encoding='utf-8-sig', newline='') as stream:
         index = {int(row['address'], 0): row for row in csv.DictReader(stream)}
     by_address = {}
-    records = [{**record, 'evidence_manifest': path}
+    records = [{**record, 'evidence_manifest': path,
+                **({'manifest_implementation_scope': source.get('source_reconstruction_scope', source.get('scope', 'Bounded source adapter.'))}
+                   if path in AI_MANIFESTS else {})}
                for path, source in manifests
                for record in source['functions']]
     for original in records:
         address = int(original['elf_address'], 0)
         entry = index[address]
-        assert int(entry['range_size']) == original['size'], original['demangled']
         aliases = json.loads(entry['aliases'])
-        assert any(a['name'] == original['original_symbol'] for a in aliases)
+        alias = next(a for a in aliases if a['name'] == original['original_symbol'])
+        # Normalize missing display names only from the verified original
+        # symbol index; never infer a class/function name from a guessed label.
+        if 'demangled' not in original:
+            original['demangled'] = alias['demangled']
+        assert int(entry['range_size']) == original['size'], original['demangled']
         relative = 'recovered/native/assembly/libDungeonHunter2.so/' + entry['assembly_file']
         listing = (ROOT / relative).read_text(encoding='utf-8-sig')
         memory = {}
@@ -166,7 +190,7 @@ def build():
     addresses = {int(row['elf_address'], 0) for row in rows}
     assert len(addresses) == len(rows)
     return {
-        'schema': 'dh2-character-runtime-function-map/v2',
+        'schema': 'dh2-character-runtime-function-map/v3',
         'scope': 'Original evidence and bounded implementation extension; '
                  'counts do not measure game completion or fully reconstructed functions.',
         'original_library_sha256': manifest['original_sha256'],

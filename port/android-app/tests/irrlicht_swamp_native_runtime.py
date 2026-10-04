@@ -33,6 +33,16 @@ ASSEMBLY = re.compile(
     r"AlphaMap_refs=(\d+) AlphaMap_unresolved_refs=(\d+) "
     r"AlphaMap_cutout_draws=(\d+)"
 )
+ROOM_ASSEMBLY = re.compile(
+    r"SWAMP module 0 assembled in Irrlicht r6038: .*?source_draws=(\d+) "
+    r"visible_scenery_draws=(\d+) room_root_bounds_filtered=(\d+) "
+    r"navigation_floor_draws_filtered=(\d+) exit_marker_draws_filtered=(\d+).*?"
+    r"vertices=(\d+) indices=(\d+) path_mask=0x([0-9A-Fa-f]+) "
+    r"start=\((-?[0-9.]+),(-?[0-9.]+),(-?[0-9.]+)\) "
+    r"diffuse_refs=(\d+) diffuse_draws=(\d+) "
+    r"AlphaMap_refs=(\d+) AlphaMap_unresolved_refs=(\d+) "
+    r"AlphaMap_cutout_draws=(\d+)"
+)
 MOVE = re.compile(
     r"MOVE state=(IDLE|MOVE|BLOCKED|REJECTED) "
     r"(?:animation=(IDLE|WALK) )?"
@@ -162,7 +172,7 @@ def wait_for_assembly(adb_path: Path, serial: str,
             raise RuntimeError("SWAMP NativeActivity exited before assembling module zero")
         pid = pid_output.split()[0]
         log = app_log(adb_path, serial, pid)
-        if ASSEMBLY.search(log) and (not require_character or
+        if (ASSEMBLY.search(log) or ROOM_ASSEMBLY.search(log)) and (not require_character or
                 ("PRINCE:" in log and "FIRST_SOURCE_CHARACTER_FRAME:" in log)):
             return pid, log
         time.sleep(0.25)
@@ -242,6 +252,8 @@ def main() -> int:
                         help="Also require the authored 116-resource bank and shared Character state path")
     parser.add_argument("--require-source-actor", action="store_true",
                         help="Require scene/root-motion -> one native Step -> actor_runtime ownership and body pinning")
+    parser.add_argument("--require-source-room-filter", action="store_true",
+                        help="Require exact source root/floor/exit render roles with all navigation input retained")
     args = parser.parse_args()
     if args.require_source_actor: args.require_prince_character=True
     if args.require_prince_character: args.require_prince=True
@@ -294,15 +306,23 @@ def main() -> int:
             f"green={initial['swamp_green_pixels']} timber={initial['timber_brown_pixels']}"
         )
     log = capture_log(adb_path, args.serial, output)
-    assembly = ASSEMBLY.search(log)
+    room_assembly = ROOM_ASSEMBLY.search(log)
+    assembly = room_assembly or ASSEMBLY.search(log)
     if not assembly:
         raise RuntimeError("source SWAMP module assembly diagnostics are missing")
-    (source_draws, visible, omitted, vertices, indices, mask,
-     start_x, start_y, start_z, diffuse_refs, diffuse_draws,
-     alpha_refs, alpha_unresolved_refs, alpha_cutout_draws) = assembly.groups()
+    if args.require_source_room_filter and not room_assembly:
+        raise RuntimeError("source room render-role filtering is absent")
+    if room_assembly:
+        (source_draws, visible, root_bounds, navigation_floors, exit_markers,
+         vertices, indices, mask, start_x, start_y, start_z, diffuse_refs,
+         diffuse_draws, alpha_refs, alpha_unresolved_refs,
+         alpha_cutout_draws) = room_assembly.groups()
+    else:
+        (source_draws, visible, omitted, vertices, indices, mask,
+         start_x, start_y, start_z, diffuse_refs, diffuse_draws,
+         alpha_refs, alpha_unresolved_refs, alpha_cutout_draws) = assembly.groups()
     geometry = {
-        "source_draws": int(source_draws), "visible_diagnostic_draws": int(visible),
-        "omitted_unresolved_draws": int(omitted), "vertices": int(vertices),
+        "source_draws": int(source_draws), "vertices": int(vertices),
         "indices": int(indices), "path_mask": int(mask, 16),
         "start": {"x": float(start_x), "y": float(start_y), "z": float(start_z)},
         "diffuse_sampler_refs": int(diffuse_refs),
@@ -311,11 +331,23 @@ def main() -> int:
         "alpha_map_unresolved_refs": int(alpha_unresolved_refs),
         "alpha_cutout_draws": int(alpha_cutout_draws),
     }
-    expected = {"source_draws": 54, "visible_diagnostic_draws": 53,
-                "omitted_unresolved_draws": 1, "vertices": 10816,
+    expected = {"source_draws": 54, "vertices": 10816,
                 "indices": 13284, "path_mask": 2,
                 "diffuse_sampler_refs": 49, "diffuse_draws_mapped": 49,
                 "alpha_map_sampler_refs": 22, "alpha_cutout_draws": 22}
+    if room_assembly:
+        geometry.update(visible_scenery_draws=int(visible),
+                        room_root_bounds_filtered=int(root_bounds),
+                        navigation_floor_draws_filtered=int(navigation_floors),
+                        exit_marker_draws_filtered=int(exit_markers),
+                        source_navigation_geometry_retained=True)
+        expected.update(visible_scenery_draws=49, room_root_bounds_filtered=1,
+                        navigation_floor_draws_filtered=2,
+                        exit_marker_draws_filtered=2)
+    else:
+        geometry.update(visible_diagnostic_draws=int(visible),
+                        omitted_unresolved_draws=int(omitted))
+        expected.update(visible_diagnostic_draws=53, omitted_unresolved_draws=1)
     if {key: geometry[key] for key in expected} != expected:
         raise RuntimeError(f"unexpected SWAMP geometry/assembly summary: {geometry}")
     if (not any(marker in log for marker in ("Irrlicht is confirmed as the game engine family", "Irrlicht is confirmed as the engine family")) or
@@ -547,6 +579,7 @@ def main() -> int:
         "installed_base_apk": {"path": str(installed), "bytes": installed.stat().st_size,
                                 "sha256": installed_hash},
         "source_geometry": geometry,
+        "source_room_filter_assertions_required": args.require_source_room_filter,
         "source_prince": prince_record,
         "source_prince_character": character_record,
         "prince_motion_assertions_required": args.require_prince,
@@ -557,7 +590,8 @@ def main() -> int:
             "criteria": "at least 10,000 swamp-green and 1,000 timber-brown pixels, plus 49 diffuse source references mapped to 49 draws",
             "passed": True,
         },
-        "startup_log_contains_assembly_before_screenshot": ASSEMBLY.search(startup_log) is not None,
+        "startup_log_contains_assembly_before_screenshot": bool(
+            ASSEMBLY.search(startup_log) or ROOM_ASSEMBLY.search(startup_log)),
         "movement_assertions": captures,
         "boundary_navigation": boundary_capture,
         "background_resume": resume,

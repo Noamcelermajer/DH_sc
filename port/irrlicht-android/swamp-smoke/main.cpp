@@ -473,7 +473,7 @@ bool assemble_source_module_zero(
     irr::core::vector3df* spawn_out,
     std::uint32_t* source_draws_out,
     std::uint32_t* visible_draws_out,
-    std::uint32_t* omitted_draws_out,
+    dh2::irrlicht_adapter::SourceRoomRenderCounts* room_render_counts_out,
     std::uint32_t* additive_draws_out,
     std::uint32_t* additive_one_one_mapped_out,
     std::uint32_t* diffuse_refs_out,
@@ -569,7 +569,8 @@ bool assemble_source_module_zero(
     TextureContext texture_context{diffuse, alpha_cutout_diffuse};
     std::vector<dh2::viewer::SceneDrawDescriptor> renderer_draws(
         output_mesh->draws, output_mesh->draws + output_mesh->draw_commands);
-    std::uint32_t visible = 0, omitted = 0, additive_draws = 0;
+    std::uint32_t visible = 0, additive_draws = 0;
+    dh2::irrlicht_adapter::SourceRoomRenderCounts expected_room_filter{};
     std::uint32_t additive_one_one_mapped = 0;
     std::uint32_t diffuse_refs = 0, alpha_refs = 0, unresolved_alpha_refs = 0;
     std::uint32_t lightmap_refs = 0;
@@ -590,26 +591,45 @@ bool assemble_source_module_zero(
         no_texture += draw.texture_count == 0 ? 1U : 0U;
         additive_draws += dh2::viewer::swamp_material_uses_additive_one_one(
             draw.material_id) ? 1U : 0U;
-        const bool omitted_unresolved = dh2::viewer::omit_unresolved_swamp_draw(
-            draw.node_id, draw.material_id);
-        if (draw.visible && omitted_unresolved) {
-            draw.visible = 0;
-            ++omitted;
+        const auto room_role = dh2::irrlicht_adapter::classify_source_room_draw(
+            draw, binding.node_record);
+        if (draw.visible) {
+            switch (room_role) {
+            case dh2::irrlicht_adapter::SourceRoomDrawRole::room_root_bounds:
+                ++expected_room_filter.room_root_bounds;
+                break;
+            case dh2::irrlicht_adapter::SourceRoomDrawRole::navigation_floor:
+                ++expected_room_filter.navigation_floors;
+                break;
+            case dh2::irrlicht_adapter::SourceRoomDrawRole::exit_marker:
+                ++expected_room_filter.exit_markers;
+                break;
+            case dh2::irrlicht_adapter::SourceRoomDrawRole::scenery:
+                ++visible;
+                visible_no_texture += draw.texture_count == 0 ? 1U : 0U;
+                break;
+            }
         }
-        visible += draw.visible ? 1U : 0U;
-        visible_no_texture += draw.visible && draw.texture_count == 0 ? 1U : 0U;
     }
     auto renderer_mesh = *output_mesh;
     renderer_mesh.draws = renderer_draws.data();
     dh2::irrlicht_adapter::MeshBuildStatus adapter_status{};
     std::uint32_t buffer_count = 0;
-    auto* mesh = dh2::irrlicht_adapter::build_mesh(
-        renderer_mesh, &adapter_status, resolve_texture, &texture_context, &buffer_count);
+    dh2::irrlicht_adapter::SourceRoomRenderCounts room_filter_counts{};
+    auto* mesh = dh2::irrlicht_adapter::build_source_room_scenery_mesh(
+        renderer_mesh, binding.node_record, &adapter_status, resolve_texture,
+        &texture_context, &buffer_count, &room_filter_counts);
     if (!mesh || adapter_status != dh2::irrlicht_adapter::MeshBuildStatus::ok ||
-        buffer_count != visible || !visible) {
+        buffer_count != visible || !visible ||
+        room_filter_counts.room_root_bounds != expected_room_filter.room_root_bounds ||
+        room_filter_counts.navigation_floors != expected_room_filter.navigation_floors ||
+        room_filter_counts.exit_markers != expected_room_filter.exit_markers) {
         __android_log_print(ANDROID_LOG_ERROR, kTag,
-            "Irrlicht SceneMesh adapter failed status=%u buffers=%u visible=%u",
-            static_cast<unsigned>(adapter_status), buffer_count, visible);
+            "Irrlicht source-room scenery adapter mismatch status=%u buffers=%u visible=%u expected_root=%u actual_root=%u expected_floor=%u actual_floor=%u expected_exit=%u actual_exit=%u",
+            static_cast<unsigned>(adapter_status), buffer_count, visible,
+            expected_room_filter.room_root_bounds, room_filter_counts.room_root_bounds,
+            expected_room_filter.navigation_floors, room_filter_counts.navigation_floors,
+            expected_room_filter.exit_markers, room_filter_counts.exit_markers);
         if (mesh) mesh->drop();
         if (diffuse) diffuse->drop();
         return false;
@@ -635,7 +655,10 @@ bool assemble_source_module_zero(
     // separate factors and the source ADD equation for these two buffers only.
     irr::u32 material_index = 0;
     for (const auto& draw : renderer_draws) {
-        if (!draw.visible) continue;
+        if (!draw.visible ||
+            dh2::irrlicht_adapter::classify_source_room_draw(
+                draw, binding.node_record) !=
+                dh2::irrlicht_adapter::SourceRoomDrawRole::scenery) continue;
         auto* buffer = mesh->getMeshBuffer(material_index++);
         if (!buffer) continue;
         const bool alpha_cutout = draw.texture_count &&
@@ -707,7 +730,7 @@ bool assemble_source_module_zero(
 
     *source_draws_out = output_mesh->draw_commands;
     *visible_draws_out = visible;
-    *omitted_draws_out = omitted;
+    *room_render_counts_out = room_filter_counts;
     *additive_draws_out = additive_draws;
     *additive_one_one_mapped_out = additive_one_one_mapped;
     *diffuse_refs_out = diffuse_refs;
@@ -721,8 +744,10 @@ bool assemble_source_module_zero(
     *assigned_draws_out = texture_context.assigned_draws;
     *alpha_cutout_draws_out = texture_context.alpha_cutout_draws;
     __android_log_print(ANDROID_LOG_INFO, kTag,
-        "SWAMP module 0 assembled in Irrlicht r6038: subtree_records=%u source_draws=%u visible_diagnostic_draws=%u omitted_unresolved=%u additive_Material__11598=%u additive_one_one_mapped=%u vertices=%u indices=%u path_mask=0x%X start=(%.3f,%.3f,%.3f) diffuse_refs=%u diffuse_draws=%u AlphaMap_refs=%u AlphaMap_unresolved_refs=%u AlphaMap_cutout_draws=%u LightMap_refs=%u Specular_refs=%u other_refs=%u no_texture_source_draws=%u visible_no_texture_draws=%u",
-        record_count, *source_draws_out, *visible_draws_out, *omitted_draws_out,
+        "SWAMP module 0 assembled in Irrlicht r6038: subtree_records=%u source_draws=%u visible_scenery_draws=%u room_root_bounds_filtered=%u navigation_floor_draws_filtered=%u exit_marker_draws_filtered=%u additive_Material__11598=%u additive_one_one_mapped=%u vertices=%u indices=%u path_mask=0x%X start=(%.3f,%.3f,%.3f) diffuse_refs=%u diffuse_draws=%u AlphaMap_refs=%u AlphaMap_unresolved_refs=%u AlphaMap_cutout_draws=%u LightMap_refs=%u Specular_refs=%u other_refs=%u no_texture_source_draws=%u visible_no_texture_draws=%u",
+        record_count, *source_draws_out, *visible_draws_out,
+        room_filter_counts.room_root_bounds, room_filter_counts.navigation_floors,
+        room_filter_counts.exit_markers,
         *additive_draws_out, *additive_one_one_mapped_out,
         output_mesh->vertex_count, output_mesh->index_count,
         kPlayerPathMask, spawn_out->X, spawn_out->Y, spawn_out->Z,
@@ -854,7 +879,8 @@ void android_main(android_app* app) {
     dh2::navigation::Navigation navigation{};
     dh2::viewer::SceneMesh source_mesh{};
     irr::core::vector3df player_position{};
-    std::uint32_t source_draws = 0, visible_draws = 0, omitted_draws = 0;
+    std::uint32_t source_draws = 0, visible_draws = 0;
+    dh2::irrlicht_adapter::SourceRoomRenderCounts room_render_counts{};
     std::uint32_t additive_draws = 0, diffuse_refs = 0, alpha_refs = 0;
     std::uint32_t additive_one_one_mapped = 0;
     std::uint32_t unresolved_alpha_refs = 0;
@@ -865,7 +891,7 @@ void android_main(android_app* app) {
         bres_bytes, mlx_bytes, spawn_bytes, &level, &bres, &source_scene,
         &navigation, &source_mesh, device, diffuse_bytes, alpha_map_bytes,
         &player_position,
-        &source_draws, &visible_draws, &omitted_draws, &additive_draws,
+        &source_draws, &visible_draws, &room_render_counts, &additive_draws,
         &additive_one_one_mapped,
         &diffuse_refs, &alpha_refs, &unresolved_alpha_refs,
         &lightmap_refs, &specular_refs, &other_refs,
@@ -1020,12 +1046,14 @@ void android_main(android_app* app) {
     char initial_status[1536]{};
     std::snprintf(initial_status, sizeof(initial_status),
         "SOURCE XYZ  X %.2f  Y %.2f  Z %.2f  | player path mask 0x%X\n"
-        "Shown draws %u/%u; omitted unresolved bridge-root draws %u; Material__11598 additive passes %u; exact GL_ONE/GL_ONE + GL_FUNC_ADD mapped %u.\n"
+        "Shown scenery draws %u/%u; filtered source room-root=%u navigation-floors=%u exit-markers=%u; Material__11598 additive passes %u; exact GL_ONE/GL_ONE + GL_FUNC_ADD mapped %u.\n"
         "Samplers: Diffuse refs %u (%u draws mapped); AlphaMap %u refs (%u Material__11611 cutouts), %u unresolved; LightMap %u, Specular %u, other %u ignored. No-texture draws %u (%u visible default-material fallbacks).\n"
         "Prince: %u warrior skins, %u joints, %u vertices; authored bank %u resources/%u registrations; state %d flags 0x%X, sequence %d, clip %d.\n"
         "Actor step %u / NativeWorld steps %u; body pinned %u; floor %u. Limits: AI/scripts, other modules, environment contacts, walls and swept collision.",
         player_position.X, player_position.Y, player_position.Z, kPlayerPathMask,
-        visible_draws, source_draws, omitted_draws, additive_draws,
+        visible_draws, source_draws,
+        room_render_counts.room_root_bounds, room_render_counts.navigation_floors,
+        room_render_counts.exit_markers, additive_draws,
         additive_one_one_mapped,
         diffuse_refs, textured_draws, alpha_refs, alpha_cutout_draws,
         unresolved_alpha_refs,
@@ -1041,8 +1069,10 @@ void android_main(android_app* app) {
     __android_log_print(ANDROID_LOG_INFO, kTag,
         "ENGINE: Irrlicht is confirmed as the engine family; this diagnostic embeds official upstream OGL-ES r6038. The exact customized DH2 Irrlicht fork/revision and game-specific layer remain under investigation. SWAMP Prince input runs through the shared source Character coordinator, actor_runtime and NativeWorld on developer-selected 20 ms logical ticks; owner movement follows source SceneBinding root motion. Script manager, multi-module level, environment physics, AI and combat remain unsupported.");
     __android_log_print(ANDROID_LOG_INFO, kTag,
-        "RENDER-LIMITS: omitted unresolved bridge-root draws=%u; Material__11598 additive passes=%u exact GL_ONE/GL_ONE + GL_FUNC_ADD mapped=%u with source LEQUAL/depth-write-off; SWAMP diffuse draws=%u; AlphaMap cutout refs=%u/draws=%u with %u unresolved AlphaMap refs; ignored LightMap=%u Specular=%u other=%u; visible no-texture defaults=%u. Prince: four source warrior skins, atlas mapped parts=%u, unmapped diffuse=%u, ignored source AlphaMap parts=%u; exact remaining source shader/effects not reconstructed.",
-        omitted_draws, additive_draws, additive_one_one_mapped,
+        "RENDER-LIMITS: source room role filter omitted root-bounds=%u navigation-floors=%u exit-markers=%u; these floor meshes remain in navigation/physics inputs; Material__11598 additive passes=%u exact GL_ONE/GL_ONE + GL_FUNC_ADD mapped=%u with source LEQUAL/depth-write-off; SWAMP diffuse draws=%u; AlphaMap cutout refs=%u/draws=%u with %u unresolved AlphaMap refs; ignored LightMap=%u Specular=%u other=%u; visible no-texture defaults=%u. Prince: four source warrior skins, atlas mapped parts=%u, unmapped diffuse=%u, ignored source AlphaMap parts=%u; exact remaining source shader/effects not reconstructed.",
+        room_render_counts.room_root_bounds,
+        room_render_counts.navigation_floors,
+        room_render_counts.exit_markers, additive_draws, additive_one_one_mapped,
         textured_draws, alpha_refs, alpha_cutout_draws,
         unresolved_alpha_refs,
         lightmap_refs, specular_refs, other_refs, visible_no_texture_draws,
@@ -1151,7 +1181,7 @@ void android_main(android_app* app) {
                 "%s  |  SOURCE XYZ  X %.2f  Y %.2f  Z %.2f  | player mask 0x%X floor %u\n"
                 "Prince source state %d flags 0x%X; sequence %d (%s), clip %d; four warrior skins (%u joints, %u vertices); atlas parts %u; ignored Prince AlphaMaps %u.\n"
                 "Source actor step %u / NativeWorld steps %u; phase %u; body present %u pinned %u; source body service calls %u; path boundary %u direction %u path_segments %u requested %u; physics XY %.4f, %.4f.\n"
-                "SWAMP draws %u/%u; unresolved bridge-root omitted %u; additive %u GL_ONE/GL_ONE + ADD mapped %u; diffuse %u/%u; AlphaMap %u/%u (%u unresolved); ignored LightMap %u, Specular %u, other %u; no-texture %u (%u visible).",
+                "SWAMP draws %u/%u; source-room-filter root=%u navigation-floor=%u exit=%u; additive %u GL_ONE/GL_ONE + ADD mapped %u; diffuse %u/%u; AlphaMap %u/%u (%u unresolved); ignored LightMap %u, Specular %u, other %u; no-texture %u (%u visible).",
                 mode, player_position.X, player_position.Y, player_position.Z,
                 kPlayerPathMask, actor_frame.source_floor,
                 prince_character.state_id(), prince_character.state_flags(),
@@ -1168,7 +1198,10 @@ void android_main(android_app* app) {
                 actor_frame.path_boundary_checked, actor_frame.path_direction_valid,
                 actor_frame.source_path_segments, actor_frame.source_path_requested,
                 actor_frame.physics_position[0], actor_frame.physics_position[1],
-                visible_draws, source_draws, omitted_draws, additive_draws,
+                visible_draws, source_draws,
+                room_render_counts.room_root_bounds,
+                room_render_counts.navigation_floors,
+                room_render_counts.exit_markers, additive_draws,
                 additive_one_one_mapped,
                 diffuse_refs, textured_draws, alpha_refs, alpha_cutout_draws,
                 unresolved_alpha_refs, lightmap_refs, specular_refs, other_refs, no_texture_draws,

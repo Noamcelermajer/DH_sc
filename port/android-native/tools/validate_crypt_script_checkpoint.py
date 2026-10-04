@@ -56,6 +56,18 @@ def main():
         'port/pydata-scripts/native/pydata_scripts.cpp',
         'port/pydata-scripts/native/pydata_scripts.h',
     ]
+    ai_units = (
+        'character_aggro_delay', 'character_ai_turn',
+        'character_aggro_target_search', 'character_aggro_candidate_events',
+        'character_enemy_spotted', 'monster_external_script_session',
+        'character_ai_set_target', 'character_ai_relations', 'character_ai_in_combat',
+    )
+    for unit in ai_units:
+        paths.extend(f'port/level-world/{unit}{suffix}' for suffix in ('.hpp', '.cpp'))
+    paths.extend((
+        'port/random/random.h', 'port/random/random.c',
+        'port/lua-numeric/numeric.h', 'port/lua-numeric/numeric.c',
+    ))
     assets = {}
     with zipfile.ZipFile(args.apk) as archive:
         for name in archive.namelist():

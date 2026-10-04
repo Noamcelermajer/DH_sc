@@ -1,5 +1,5 @@
 {
-  "schema": "dh2-character-runtime-function-map/v2",
+  "schema": "dh2-character-runtime-function-map/v3",
   "scope": "Original evidence and bounded implementation extension; counts do not measure game completion or fully reconstructed functions.",
   "original_library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
   "adam_commit": "45c5348e807607a2825211bb8f26248067ba9106",
@@ -15,16 +15,25 @@
     "port/level-world/reference/character-respawn-outer/original-functions.json",
     "port/level-world/reference/character-limbus-respawn/original-functions.json",
     "port/level-world/reference/character-group-limbus-blur/original-functions.json",
-    "port/level-world/reference/character-spawn-visibility/original-functions.json"
+    "port/level-world/reference/character-spawn-visibility/original-functions.json",
+    "port/level-world/reference/character-aggro-delay/original-functions.json",
+    "port/level-world/reference/character-ai-turn/original-functions.json",
+    "port/level-world/reference/character-aggro-target-search/original-functions.json",
+    "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
+    "port/level-world/reference/character-enemy-spotted/original-functions.json",
+    "port/level-world/reference/monster-external-script-session/original-functions.json",
+    "port/level-world/reference/character-ai-set-target/original-functions.json",
+    "port/level-world/reference/character-ai-relations/original-functions.json",
+    "port/level-world/reference/character-ai-in-combat/original-functions.json"
   ],
   "counts": {
     "pinned_addresses": 1455,
-    "extension_records": 82,
-    "evidence_records_before_deduplication": 101,
-    "additional_addresses": 58,
-    "combined_unique_addresses": 1513
+    "extension_records": 139,
+    "evidence_records_before_deduplication": 173,
+    "additional_addresses": 84,
+    "combined_unique_addresses": 1539
   },
-  "verification": "All ranges, aliases and 82 complete original byte hashes verified against the original symbol index and assembly exports.",
+  "verification": "All ranges, aliases and 139 complete original byte hashes verified against the original symbol index and assembly exports.",
   "functions": [
     {
       "original_symbol": "_ZN21Script_SpawnCharacter7ExecuteEbi",
@@ -537,9 +546,20 @@
       ],
       "implementation_limit": "Current cached property/table projections provide selected animation and AI type inputs. Full property ownership is incomplete.",
       "evidence_manifests": [
-        "port/level-world/reference/character-spawn/original-functions.json"
+        "port/level-world/reference/character-spawn/original-functions.json",
+        "port/level-world/reference/character-ai-set-target/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-target/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_target.hpp",
+            "port/level-world/character_ai_set_target.cpp"
+          ],
+          "implementation_limit": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.; pure row-index fallback is represented; getter result is discarded by AI_SetTarget; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNK9Character9GetCharAIEv",
@@ -660,9 +680,20 @@
       ],
       "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md.",
       "evidence_manifests": [
-        "port/level-world/reference/character-spawn/original-functions.json"
+        "port/level-world/reference/character-spawn/original-functions.json",
+        "port/level-world/reference/character-ai-set-target/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-set-target/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_set_target.hpp",
+            "port/level-world/character_ai_set_target.cpp"
+          ],
+          "implementation_limit": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.; bounded full function body; debug manager, target IsDead and AI_IsInSight are explicit services; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN6CharAI17AI_SyncLastTargetEv",
@@ -901,7 +932,8 @@
       "implementation_limit": "not reproduced: evidence boundary for native weighted-slot selection; no RNG state/draw is fabricated; host-only, not live actor factory integration.",
       "evidence_manifests": [
         "port/level-world/reference/character-template-factory/original-functions.json",
-        "port/level-world/reference/character-template-random/original-functions.json"
+        "port/level-world/reference/character-template-random/original-functions.json",
+        "port/level-world/reference/character-aggro-delay/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -912,6 +944,15 @@
             "port/random/random.c"
           ],
           "implementation_limit": "the ordinary/synchronized two-stream LCG is implemented in existing port/random; this adapter selects ordinary stream via sync=0; caller owns ordinary seed/draw order; no live template factory claim."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-aggro-delay/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_aggro_delay.hpp",
+            "port/level-world/character_aggro_delay.cpp"
+          ],
+          "implementation_limit": "One bounded non-player/non-Faerie _UpdateAggro timing branch; supplied IsMyTurn/debug services and reused ordinary RNG; later NPC acquisition gate and native actor wiring excluded; Existing random.c ordinary-stream arithmetic reused; not counted as a newly reconstructed full function; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -1687,7 +1728,8 @@
       "implementation_limit": "complete source predicate, bound as a member query service; outer respawnability/delay, group membership ownership and live SpawnFacts wiring remain external.",
       "evidence_manifests": [
         "port/level-world/reference/character-group-respawn/original-functions.json",
-        "port/level-world/reference/character-group-limbus-blur/original-functions.json"
+        "port/level-world/reference/character-group-limbus-blur/original-functions.json",
+        "port/level-world/reference/character-enemy-spotted/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -1697,6 +1739,15 @@
             "port/level-world/character_group_limbus_blur.cpp"
           ],
           "implementation_limit": "verified actor-owned query dependency; remains injected rather than reconstructed here; post-Revive role3/any-other-Limbus traversal only; native group/member ownership remains external."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-spotted/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_spotted.hpp",
+            "port/level-world/character_enemy_spotted.cpp"
+          ],
+          "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; real leaf executes in oracle; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -1717,7 +1768,8 @@
       "implementation_limit": "complete source getter called by SM_IsInLimbus; outer respawnability/delay, group membership ownership and live SpawnFacts wiring remain external.",
       "evidence_manifests": [
         "port/level-world/reference/character-group-respawn/original-functions.json",
-        "port/level-world/reference/character-group-limbus-blur/original-functions.json"
+        "port/level-world/reference/character-group-limbus-blur/original-functions.json",
+        "port/level-world/reference/character-enemy-spotted/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -1727,6 +1779,15 @@
             "port/level-world/character_group_limbus_blur.cpp"
           ],
           "implementation_limit": "supporting original-code oracle query leaf only; no new implementation claimed; post-Revive role3/any-other-Limbus traversal only; native group/member ownership remains external."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-spotted/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_spotted.hpp",
+            "port/level-world/character_enemy_spotted.cpp"
+          ],
+          "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; real current state getter executes in oracle; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -1991,6 +2052,1378 @@
         "port/level-world/reference/character-spawn-visibility/original-functions.json"
       ],
       "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN6CharAI12_UpdateAggroEv",
+      "demangled": "CharAI::_UpdateAggro()",
+      "elf_address": "0x3cf3f0",
+      "size": 2052,
+      "sha256": "710f27619e4ec3f74e8b858e269dae79fde9f2fa0e5b21cebc2b6b4270415692",
+      "scope": "Partial reconstruction only: timed branch 0x3cf75c..0x3cf8c0, wait continuation 0x3cf430, acquisition continuation 0x3cf468",
+      "evidence_manifest": "port/level-world/reference/character-aggro-delay/original-functions.json",
+      "manifest_implementation_scope": "One bounded non-player/non-Faerie _UpdateAggro timing branch; supplied IsMyTurn/debug services and reused ordinary RNG; later NPC acquisition gate and native actor wiring excluded",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_delay.hpp",
+        "port/level-world/character_aggro_delay.cpp"
+      ],
+      "implementation_limit": "One bounded non-player/non-Faerie _UpdateAggro timing branch; supplied IsMyTurn/debug services and reused ordinary RNG; later NPC acquisition gate and native actor wiring excluded; Partial reconstruction only: timed branch 0x3cf75c..0x3cf8c0, wait continuation 0x3cf430, acquisition continuation 0x3cf468; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-delay/original-functions.json",
+        "port/level-world/reference/character-aggro-target-search/original-functions.json",
+        "port/level-world/reference/character-aggro-candidate-events/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-aggro-target-search/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_aggro_target_search.hpp",
+            "port/level-world/character_aggro_target_search.cpp"
+          ],
+          "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; caller and query constants; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_aggro_candidate_events.hpp",
+            "port/level-world/character_aggro_candidate_events.cpp"
+          ],
+          "implementation_limit": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external; bounded normal candidate loop only, not full method; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN6CharAI8IsMyTurnEPKS_",
+      "demangled": "CharAI::IsMyTurn(CharAI const*)",
+      "elf_address": "0x3cc484",
+      "size": 288,
+      "sha256": "c64b83f2cfc69629118563c5b21dfb93be8a27a3e50282f022e4efca22804f0e",
+      "scope": "Dependency evidence only; its return value is supplied, its queue/global body is not reconstructed here",
+      "evidence_manifest": "port/level-world/reference/character-aggro-delay/original-functions.json",
+      "manifest_implementation_scope": "One bounded non-player/non-Faerie _UpdateAggro timing branch; supplied IsMyTurn/debug services and reused ordinary RNG; later NPC acquisition gate and native actor wiring excluded",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_delay.hpp",
+        "port/level-world/character_aggro_delay.cpp"
+      ],
+      "implementation_limit": "One bounded non-player/non-Faerie _UpdateAggro timing branch; supplied IsMyTurn/debug services and reused ordinary RNG; later NPC acquisition gate and native actor wiring excluded; Dependency evidence only; its return value is supplied, its queue/global body is not reconstructed here; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-delay/original-functions.json",
+        "port/level-world/reference/character-ai-turn/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-turn/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_turn.hpp",
+            "port/level-world/character_ai_turn.cpp"
+          ],
+          "implementation_limit": "Bounded nonempty-queue CharAI::IsMyTurn decision. Original ARM decision and real CharAI* deque subtract execute; concrete Character query outcomes are supplied callback services. Queue/timer producers, Character query bodies, empty-queue assertion behavior, and full AI/frame integration are excluded.; Supporting range evidence.; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN11Application5GetDtEv",
+      "demangled": "Application::GetDt()",
+      "elf_address": "0x31f66c",
+      "size": 8,
+      "sha256": "7a62d669c2eb2d53321c0b59f796d82a014b82f621897d727dfd9c45be567387",
+      "scope": "Real leaf executed by the original oracle; source projection uses a fresh borrowed provider at each read",
+      "evidence_manifest": "port/level-world/reference/character-aggro-delay/original-functions.json",
+      "manifest_implementation_scope": "One bounded non-player/non-Faerie _UpdateAggro timing branch; supplied IsMyTurn/debug services and reused ordinary RNG; later NPC acquisition gate and native actor wiring excluded",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Application-e7ad522ea327-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_delay.hpp",
+        "port/level-world/character_aggro_delay.cpp"
+      ],
+      "implementation_limit": "One bounded non-player/non-Faerie _UpdateAggro timing branch; supplied IsMyTurn/debug services and reused ordinary RNG; later NPC acquisition gate and native actor wiring excluded; Real leaf executed by the original oracle; source projection uses a fresh borrowed provider at each read; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-delay/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNKSt4priv20_Deque_iterator_baseIP6CharAIE11_M_subtractERKS3_",
+      "demangled": "std::priv::_Deque_iterator_base<CharAI*>::_M_subtract(std::priv::_Deque_iterator_base<CharAI*> const&) const",
+      "elf_address": "0x3cb49c",
+      "size": 68,
+      "sha256": "b576532d6b53caa8f2bad02c29ba3ab863085da18345cfa566a53ed64c9154b0",
+      "purpose": "Actual begin/end deque length subtraction called by IsMyTurn; uses 32 CharAI* entries per map block.",
+      "evidence_manifest": "port/level-world/reference/character-ai-turn/original-functions.json",
+      "manifest_implementation_scope": "Bounded nonempty-queue CharAI::IsMyTurn decision. Original ARM decision and real CharAI* deque subtract execute; concrete Character query outcomes are supplied callback services. Queue/timer producers, Character query bodies, empty-queue assertion behavior, and full AI/frame integration are excluded.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/std_priv__Deque_iterator_base_CharAI-d4462608c005-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_turn.hpp",
+        "port/level-world/character_ai_turn.cpp"
+      ],
+      "implementation_limit": "Bounded nonempty-queue CharAI::IsMyTurn decision. Original ARM decision and real CharAI* deque subtract execute; concrete Character query outcomes are supplied callback services. Queue/timer producers, Character query bodies, empty-queue assertion behavior, and full AI/frame integration are excluded.; Supporting range evidence.; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-turn/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character10IsFollowerEv",
+      "demangled": "Character::IsFollower() const",
+      "elf_address": "0x3a307c",
+      "size": 24,
+      "sha256": "58a4e95c6ea102b9992c0c39ce6539574f727e45fe525c8a1041e67f4816456d",
+      "oracle_boundary": "Intercepted at exact function entry; fixture supplies the return value.",
+      "evidence_manifest": "port/level-world/reference/character-ai-turn/original-functions.json",
+      "manifest_implementation_scope": "Bounded nonempty-queue CharAI::IsMyTurn decision. Original ARM decision and real CharAI* deque subtract execute; concrete Character query outcomes are supplied callback services. Queue/timer producers, Character query bodies, empty-queue assertion behavior, and full AI/frame integration are excluded.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_turn.hpp",
+        "port/level-world/character_ai_turn.cpp"
+      ],
+      "implementation_limit": "Bounded nonempty-queue CharAI::IsMyTurn decision. Original ARM decision and real CharAI* deque subtract execute; concrete Character query outcomes are supplied callback services. Queue/timer producers, Character query bodies, empty-queue assertion behavior, and full AI/frame integration are excluded.; Supporting range evidence.; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-turn/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character8IsFaerieEv",
+      "demangled": "Character::IsFaerie() const",
+      "elf_address": "0x3a3094",
+      "size": 24,
+      "sha256": "7e136a3b446fab71029f62918585b9ea849d3df0bbf68477a2c5f776862a29a4",
+      "oracle_boundary": "Intercepted at exact function entry; fixture supplies the return value.",
+      "evidence_manifest": "port/level-world/reference/character-ai-turn/original-functions.json",
+      "manifest_implementation_scope": "Bounded nonempty-queue CharAI::IsMyTurn decision. Original ARM decision and real CharAI* deque subtract execute; concrete Character query outcomes are supplied callback services. Queue/timer producers, Character query bodies, empty-queue assertion behavior, and full AI/frame integration are excluded.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_turn.hpp",
+        "port/level-world/character_ai_turn.cpp"
+      ],
+      "implementation_limit": "Bounded nonempty-queue CharAI::IsMyTurn decision. Original ARM decision and real CharAI* deque subtract execute; concrete Character query outcomes are supplied callback services. Queue/timer producers, Character query bodies, empty-queue assertion behavior, and full AI/frame integration are excluded.; Supporting range evidence.; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-turn/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character8IsPlayerEv",
+      "demangled": "Character::IsPlayer() const",
+      "elf_address": "0x3a49f0",
+      "size": 76,
+      "sha256": "efb4b11a24129fac129ee1ee6460e1a8f9eef7b8648d7f9f70d3d2338eee342a",
+      "oracle_boundary": "Reached through the verified Character vptr+0x28 slot; fixture supplies raw r0.",
+      "evidence_manifest": "port/level-world/reference/character-ai-turn/original-functions.json",
+      "manifest_implementation_scope": "Bounded nonempty-queue CharAI::IsMyTurn decision. Original ARM decision and real CharAI* deque subtract execute; concrete Character query outcomes are supplied callback services. Queue/timer producers, Character query bodies, empty-queue assertion behavior, and full AI/frame integration are excluded.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_turn.hpp",
+        "port/level-world/character_ai_turn.cpp"
+      ],
+      "implementation_limit": "Bounded nonempty-queue CharAI::IsMyTurn decision. Original ARM decision and real CharAI* deque subtract execute; concrete Character query outcomes are supplied callback services. Queue/timer producers, Character query bodies, empty-queue assertion behavior, and full AI/frame integration are excluded.; Supporting range evidence.; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-turn/original-functions.json",
+        "port/level-world/reference/character-enemy-spotted/original-functions.json",
+        "port/level-world/reference/character-ai-relations/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-spotted/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_spotted.hpp",
+            "port/level-world/character_enemy_spotted.cpp"
+          ],
+          "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; enemy virtual+0x28 producer evidence; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-relations/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_relations.hpp",
+            "port/level-world/character_ai_relations.cpp"
+          ],
+          "implementation_limit": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring; dependency evidence only; not an additional new source body; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN14ObjectSearcher10TargetListC1EP10GameObjectiii",
+      "demangled": "ObjectSearcher::TargetList::TargetList(GameObject*, int, int, int)",
+      "elf_address": "0x4a2730",
+      "size": 296,
+      "sha256": "d91cd6624877041b7b8bae61aae1b85691210bfa839a68916ccf9b138d36d88a",
+      "scope": "constructor flags/filter/sort and reference Character selection",
+      "port_coverage": "fixed source call tuple and Character owner are explicit at the adapter entry",
+      "evidence_manifest": "port/level-world/reference/character-aggro-target-search/original-functions.json",
+      "manifest_implementation_scope": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectSearcher_TargetList-932dc8f46d4f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_target_search.hpp",
+        "port/level-world/character_aggro_target_search.cpp"
+      ],
+      "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; constructor flags/filter/sort and reference Character selection; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN14ObjectSearcher10TargetList6SearchEff",
+      "demangled": "ObjectSearcher::TargetList::Search(float, float)",
+      "elf_address": "0x3d0020",
+      "size": 96,
+      "sha256": "a2c856d63b496b56ddbf0fb85c9e0215c4bff1700dba2a3335811b242192b3f2",
+      "scope": "SearchEff input expansion and RoomObjectList query entry",
+      "port_coverage": "caller supplies bounded radius, cone, owner position/facing snapshots and borrowed room registry",
+      "evidence_manifest": "port/level-world/reference/character-aggro-target-search/original-functions.json",
+      "manifest_implementation_scope": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectSearcher_TargetList-932dc8f46d4f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_target_search.hpp",
+        "port/level-world/character_aggro_target_search.cpp"
+      ],
+      "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; SearchEff input expansion and RoomObjectList query entry; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN14ObjectSearcher10TargetList6SearchERK7Point3DIfEfS4_fRNS_11IObjectListE",
+      "demangled": "ObjectSearcher::TargetList::Search(Point3D<float> const&, float, Point3D<float> const&, float, ObjectSearcher::IObjectList&)",
+      "elf_address": "0x4a2f34",
+      "size": 1172,
+      "sha256": "09e52604dce572790bf238dae055d88b063b8a685d692de73e0421085ba1a0b6",
+      "scope": "borrowed room-object traversal, source candidate gates, geometric range/angle, TargetInfo insertion",
+      "port_coverage": "normalized intrusive room registry, Character-only filter, source service calls and bounded closest heap",
+      "evidence_manifest": "port/level-world/reference/character-aggro-target-search/original-functions.json",
+      "manifest_implementation_scope": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectSearcher_TargetList-932dc8f46d4f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_target_search.hpp",
+        "port/level-world/character_aggro_target_search.cpp"
+      ],
+      "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; borrowed room-object traversal, source candidate gates, geometric range/angle, TargetInfo insertion; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN14ObjectSearcher10TargetList17_IsCharacterValidEP9Character",
+      "demangled": "ObjectSearcher::TargetList::_IsCharacterValid(Character*)",
+      "elf_address": "0x4a1ab8",
+      "size": 528,
+      "sha256": "c3f7b4fd5555b4d8c2d5a6a9c0eab6d450959f43c553561f6f3ff60eddfe965d",
+      "scope": "all-flags sentinel and owner/candidate source-word comparison",
+      "port_coverage": "implements only the observed owner+0x1314 >= candidate+0x1310 branch and all-flags acceptance",
+      "evidence_manifest": "port/level-world/reference/character-aggro-target-search/original-functions.json",
+      "manifest_implementation_scope": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectSearcher_TargetList-932dc8f46d4f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_target_search.hpp",
+        "port/level-world/character_aggro_target_search.cpp"
+      ],
+      "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; all-flags sentinel and owner/candidate source-word comparison; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN14ObjectSearcher10TargetList18_IsGameObjectValidEP10GameObject",
+      "demangled": "ObjectSearcher::TargetList::_IsGameObjectValid(GameObject*)",
+      "elf_address": "0x4a1950",
+      "size": 116,
+      "sha256": "e4993162123bc1a08943c119ee83f30618ac82f757fa3d04d2f71330db6bd1f5",
+      "scope": "non-Character object filter cases",
+      "port_coverage": "filter 2 is modeled as rejection of non-Character objects",
+      "evidence_manifest": "port/level-world/reference/character-aggro-target-search/original-functions.json",
+      "manifest_implementation_scope": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectSearcher_TargetList-932dc8f46d4f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_target_search.hpp",
+        "port/level-world/character_aggro_target_search.cpp"
+      ],
+      "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; non-Character object filter cases; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character13IsInteractiveEP10GameObject",
+      "demangled": "Character::IsInteractive(GameObject*) const",
+      "elf_address": "0x3a4870",
+      "size": 192,
+      "sha256": "98594cbfb1cf08a894782c03ba19831bd0bd1852373a9b2cfbfb342dd9fad03f",
+      "scope": "Character vtable +0x88 source predicate",
+      "port_coverage": "actor-owned service callback; source body and its state are not duplicated",
+      "evidence_manifest": "port/level-world/reference/character-aggro-target-search/original-functions.json",
+      "manifest_implementation_scope": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_target_search.hpp",
+        "port/level-world/character_aggro_target_search.cpp"
+      ],
+      "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; Character vtable +0x88 source predicate; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character9IsZonableEv",
+      "demangled": "Character::IsZonable() const",
+      "elf_address": "0x3a36e4",
+      "size": 64,
+      "sha256": "bfb46b114bdb841084033e50956c8ae23f7707973594c74902ba7f05c29883ab",
+      "scope": "Character vtable +0xc4 source predicate",
+      "port_coverage": "actor-owned service callback followed by source byte +0x2ee/+0x2f0 gate",
+      "evidence_manifest": "port/level-world/reference/character-aggro-target-search/original-functions.json",
+      "manifest_implementation_scope": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_target_search.hpp",
+        "port/level-world/character_aggro_target_search.cpp"
+      ],
+      "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; Character vtable +0xc4 source predicate; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character20GetInteractionRadiusEv",
+      "demangled": "Character::GetInteractionRadius() const",
+      "elf_address": "0x3a374c",
+      "size": 8,
+      "sha256": "875c25765f7f1353df42ff614ebc5f00bea22c86fc754c06bd9a422bbeac89a4",
+      "scope": "Character vtable +0x94 candidate radius",
+      "port_coverage": "actor-owned service callback",
+      "evidence_manifest": "port/level-world/reference/character-aggro-target-search/original-functions.json",
+      "manifest_implementation_scope": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_target_search.hpp",
+        "port/level-world/character_aggro_target_search.cpp"
+      ],
+      "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; Character vtable +0x94 candidate radius; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK6CharAI17AI_GetMeleeRadiusEv",
+      "demangled": "CharAI::AI_GetMeleeRadius() const",
+      "elf_address": "0x3d4c34",
+      "size": 104,
+      "sha256": "932a35ac97f40a439164ae885fffc1f09baefedd284c488905a231159d753373",
+      "scope": "reference-character radius subtracted from candidate distance",
+      "port_coverage": "actor-owned service callback",
+      "evidence_manifest": "port/level-world/reference/character-aggro-target-search/original-functions.json",
+      "manifest_implementation_scope": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_target_search.hpp",
+        "port/level-world/character_aggro_target_search.cpp"
+      ],
+      "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; reference-character radius subtracted from candidate distance; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN14ObjectSearcher12TargetSorter12_sortClosestERKNS_10TargetInfoES3_",
+      "demangled": "ObjectSearcher::TargetSorter::_sortClosest(TargetInfo const&, TargetInfo const&)",
+      "elf_address": "0x38d570",
+      "size": 68,
+      "sha256": "01061f19ab8fe537095924fdfa80819876c93870b643e48c3c3e132389704061",
+      "scope": "closest heap comparator, character flag bit then strict distance comparison",
+      "port_coverage": "copied comparator and bounded source-style heap; equal-distance order is not promised stable",
+      "evidence_manifest": "port/level-world/reference/character-aggro-target-search/original-functions.json",
+      "manifest_implementation_scope": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectSearcher_TargetSorter-7d61fd3cd25f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_target_search.hpp",
+        "port/level-world/character_aggro_target_search.cpp"
+      ],
+      "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; closest heap comparator, character flag bit then strict distance comparison; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK6CharAI10AI_IsEnemyEPK10GameObject",
+      "elf_address": "0x3d574c",
+      "size": 844,
+      "sha256": "e99c62ec437b85a44ef4162fb17029fd851e01f66a92d226dc2d92b785713f4d",
+      "scope": "external relation producer evidence",
+      "evidence_manifest": "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
+      "manifest_implementation_scope": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external",
+      "demangled": "CharAI::AI_IsEnemy(GameObject const*) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_candidate_events.hpp",
+        "port/level-world/character_aggro_candidate_events.cpp"
+      ],
+      "implementation_limit": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external; external relation producer evidence; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
+        "port/level-world/reference/character-ai-relations/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-relations/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_relations.hpp",
+            "port/level-world/character_ai_relations.cpp"
+          ],
+          "implementation_limit": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring; bounded query orchestration; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZNK6CharAI11AI_IsFriendEPK10GameObject",
+      "elf_address": "0x3d511c",
+      "size": 720,
+      "sha256": "5b7cc3cd157969e3301a40fbec86806e68de7ed8cc453fff3fab3f3f7500f81c",
+      "scope": "external relation producer evidence",
+      "evidence_manifest": "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
+      "manifest_implementation_scope": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external",
+      "demangled": "CharAI::AI_IsFriend(GameObject const*) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_candidate_events.hpp",
+        "port/level-world/character_aggro_candidate_events.cpp"
+      ],
+      "implementation_limit": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external; external relation producer evidence; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
+        "port/level-world/reference/character-ai-relations/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-relations/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_relations.hpp",
+            "port/level-world/character_ai_relations.cpp"
+          ],
+          "implementation_limit": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring; bounded query orchestration; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZNK6CharAI12AI_IsNeutralEPK10GameObject",
+      "elf_address": "0x3d5a98",
+      "size": 716,
+      "sha256": "74786171724a9d77960d71dc9c700a58aa03287ef6f9d8ea07992b0b2ed85a40",
+      "scope": "external relation producer evidence",
+      "evidence_manifest": "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
+      "manifest_implementation_scope": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external",
+      "demangled": "CharAI::AI_IsNeutral(GameObject const*) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_candidate_events.hpp",
+        "port/level-world/character_aggro_candidate_events.cpp"
+      ],
+      "implementation_limit": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external; external relation producer evidence; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
+        "port/level-world/reference/character-ai-relations/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-relations/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_relations.hpp",
+            "port/level-world/character_ai_relations.cpp"
+          ],
+          "implementation_limit": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring; bounded query orchestration; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN9Character10RaiseEventEiPv",
+      "elf_address": "0x3a4d5c",
+      "size": 28,
+      "sha256": "2422a21cba16aea71f10939f0f32fe6326e27beb11fe6160b058426b0e2156e3",
+      "scope": "original wrapper executes in branch oracle; native service remains external",
+      "evidence_manifest": "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
+      "manifest_implementation_scope": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external",
+      "demangled": "Character::RaiseEvent(int, void*)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_candidate_events.hpp",
+        "port/level-world/character_aggro_candidate_events.cpp"
+      ],
+      "implementation_limit": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external; original wrapper executes in branch oracle; native service remains external; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-candidate-events/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN6CharAI12RaiseAIEventEiPv",
+      "elf_address": "0x3cbb34",
+      "size": 1764,
+      "sha256": "f8acba22b51432beded75bba8e834aac58382fd66b137c1f310a16496789b966",
+      "scope": "external event relay evidence; existing separate dispatcher kernel",
+      "evidence_manifest": "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
+      "manifest_implementation_scope": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external",
+      "demangled": "CharAI::RaiseAIEvent(int, void*)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_candidate_events.hpp",
+        "port/level-world/character_aggro_candidate_events.cpp"
+      ],
+      "implementation_limit": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external; external event relay evidence; existing separate dispatcher kernel; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-candidate-events/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNSt14priority_queueIN14ObjectSearcher10TargetInfoESt5dequeIS1_SaIS1_EENS0_12TargetSorterEE3popEv",
+      "elf_address": "0x38fb18",
+      "size": 160,
+      "sha256": "edd7c1f63d0651ed403629b5afffb028408d06321570fd3033591d3b1154d42d",
+      "scope": "observed pop callsite; original heap/deque body not executed by branch oracle",
+      "evidence_manifest": "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
+      "manifest_implementation_scope": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external",
+      "demangled": "std::priority_queue<ObjectSearcher::TargetInfo, std::deque<ObjectSearcher::TargetInfo, std::allocator<ObjectSearcher::TargetInfo> >, ObjectSearcher::TargetSorter>::pop()",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/std_priority_queue_ObjectSearcher_TargetInfo_std_deque_ObjectSearcher_TargetInfo_std_alloc-1962910d31df-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_aggro_candidate_events.hpp",
+        "port/level-world/character_aggro_candidate_events.cpp"
+      ],
+      "implementation_limit": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external; observed pop callsite; original heap/deque body not executed by branch oracle; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-aggro-candidate-events/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN6CharAI14OnEnemySpottedEP9Character",
+      "elf_address": "0x3d14b4",
+      "size": 480,
+      "sha256": "62c6f8a1f642e082b96bdb6d4667d3bf6ad25e524ddd41aa3da2f4864a5172d3",
+      "scope": "bounded gate and late dispatch; diagnostic/canary bodies excluded",
+      "evidence_manifest": "port/level-world/reference/character-enemy-spotted/original-functions.json",
+      "manifest_implementation_scope": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring",
+      "demangled": "CharAI::OnEnemySpotted(Character*)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_spotted.hpp",
+        "port/level-world/character_enemy_spotted.cpp"
+      ],
+      "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; bounded gate and late dispatch; diagnostic/canary bodies excluded; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-spotted/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN6CharAI9GroupInfo14OnEnemySpottedEP9CharacterS2_",
+      "elf_address": "0x3d27cc",
+      "size": 616,
+      "sha256": "a3bd805a32fe4a2c183443a24791d785de286b5838ce2fae9cf12153d430c6e7",
+      "scope": "external group callback evidence",
+      "evidence_manifest": "port/level-world/reference/character-enemy-spotted/original-functions.json",
+      "manifest_implementation_scope": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring",
+      "demangled": "CharAI::GroupInfo::OnEnemySpotted(Character*, Character*)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI_GroupInfo-926815723c46-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_spotted.hpp",
+        "port/level-world/character_enemy_spotted.cpp"
+      ],
+      "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; external group callback evidence; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-spotted/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK16CharStateMachine20SM_IsAwaitingToSpawnEv",
+      "elf_address": "0x3c0230",
+      "size": 24,
+      "sha256": "9c84b7e9a22ca895a54266c1e32ba749e1e3afb08f001790d6a112896ace8494",
+      "scope": "actual source predicate; real leaf executes in oracle",
+      "evidence_manifest": "port/level-world/reference/character-enemy-spotted/original-functions.json",
+      "manifest_implementation_scope": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring",
+      "demangled": "CharStateMachine::SM_IsAwaitingToSpawn() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharStateMachine-9e67f9b0cab6-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_spotted.hpp",
+        "port/level-world/character_enemy_spotted.cpp"
+      ],
+      "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; actual source predicate; real leaf executes in oracle; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-spotted/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK16CharStateMachine9SM_IsDeadEv",
+      "elf_address": "0x3c03f0",
+      "size": 24,
+      "sha256": "96482b1fe8b57ecde79e56d4679cc20e8cac9665ad2ecc654423352ba36d1a55",
+      "scope": "distinction evidence only; not called by this handler",
+      "evidence_manifest": "port/level-world/reference/character-enemy-spotted/original-functions.json",
+      "manifest_implementation_scope": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring",
+      "demangled": "CharStateMachine::SM_IsDead() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharStateMachine-9e67f9b0cab6-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_spotted.hpp",
+        "port/level-world/character_enemy_spotted.cpp"
+      ],
+      "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; distinction evidence only; not called by this handler; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-spotted/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK6CharAI13AI_IsInCombatEv",
+      "elf_address": "0x3d4bc4",
+      "size": 112,
+      "sha256": "7e917c97faa26805e240a111a5719d87b9d14946aa3acd7b08657116d00c3ce3",
+      "scope": "external combat producer evidence",
+      "evidence_manifest": "port/level-world/reference/character-enemy-spotted/original-functions.json",
+      "manifest_implementation_scope": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring",
+      "demangled": "CharAI::AI_IsInCombat() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_spotted.hpp",
+        "port/level-world/character_enemy_spotted.cpp"
+      ],
+      "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; external combat producer evidence; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-spotted/original-functions.json",
+        "port/level-world/reference/character-ai-in-combat/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-in-combat/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_in_combat.hpp",
+            "port/level-world/character_ai_in_combat.cpp"
+          ],
+          "implementation_limit": "One original AI_IsInCombat caller, preserving all taken calls and return words; concrete outgoing/incoming aggro and FSM services and Android actor wiring excluded; complete source caller orchestration; concrete aggro and FSM dependency bodies external; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZNK6CharAI11AI_GetAggroEP9Character",
+      "elf_address": "0x3d4ac8",
+      "size": 252,
+      "sha256": "98c26116c098862a859a801d8a16bae8ff814a525b4a2972068f2283b4511fa9",
+      "scope": "read-only outgoing threat map lookup evidence; external service",
+      "evidence_manifest": "port/level-world/reference/character-enemy-spotted/original-functions.json",
+      "manifest_implementation_scope": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring",
+      "demangled": "CharAI::AI_GetAggro(Character*) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_spotted.hpp",
+        "port/level-world/character_enemy_spotted.cpp"
+      ],
+      "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; read-only outgoing threat map lookup evidence; external service; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-spotted/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN6CharAI11AI_AddAggroEP9Characterf",
+      "elf_address": "0x3d7c68",
+      "size": 308,
+      "sha256": "710b6a40b61b134ddc8b165a38ac5bd0784dd1b2915ec4fce53d2e1bb4825193",
+      "scope": "actual threat mutation service evidence; not newly duplicated here",
+      "evidence_manifest": "port/level-world/reference/character-enemy-spotted/original-functions.json",
+      "manifest_implementation_scope": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring",
+      "demangled": "CharAI::AI_AddAggro(Character*, float)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_spotted.hpp",
+        "port/level-world/character_enemy_spotted.cpp"
+      ],
+      "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; actual threat mutation service evidence; not newly duplicated here; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-spotted/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN11AISExternal14OnEnemySpottedEP9Character",
+      "elf_address": "0x3dd2f4",
+      "size": 80,
+      "sha256": "e6b68fac312e60dab7dddc4197346a003290bee760caff9dab9bde32ea2e2115",
+      "scope": "external callback routing evidence; monster Lua session integration pending",
+      "evidence_manifest": "port/level-world/reference/character-enemy-spotted/original-functions.json",
+      "manifest_implementation_scope": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring",
+      "demangled": "AISExternal::OnEnemySpotted(Character*)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/AISExternal-dba5f1c08afe-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_spotted.hpp",
+        "port/level-world/character_enemy_spotted.cpp"
+      ],
+      "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; external callback routing evidence; monster Lua session integration pending; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-spotted/original-functions.json",
+        "port/level-world/reference/monster-external-script-session/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/monster-external-script-session/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/monster_external_script_session.hpp",
+            "port/level-world/monster_external_script_session.cpp"
+          ],
+          "implementation_limit": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.; verified object callback producer; full native Value/Call wrapper is not newly implemented here; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN11AISExternal18OnTargetOutOfRangeEv",
+      "elf_address": "0x3dcde8",
+      "size": 28,
+      "sha256": "5751234e5efec051adc24d4613a982cfa444f7dc5ff526e71c7ace1e130d961a",
+      "scope": "verified zero-argument external callback producer; source VM/VFTable services reused",
+      "evidence_manifest": "port/level-world/reference/monster-external-script-session/original-functions.json",
+      "manifest_implementation_scope": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.",
+      "demangled": "AISExternal::OnTargetOutOfRange()",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/AISExternal-dba5f1c08afe-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/monster_external_script_session.hpp",
+        "port/level-world/monster_external_script_session.cpp"
+      ],
+      "implementation_limit": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.; verified zero-argument external callback producer; source VM/VFTable services reused; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/monster-external-script-session/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9Character10_HasTargetERKN3sfc6script3lua9ArgumentsERNS2_12ReturnValuesEPv",
+      "elf_address": "0x3b6f50",
+      "size": 20,
+      "sha256": "dab7ff59ba3f743f6833d52b1bbaf7d7f486577a692b0f2c7c5426cf2aaabfee",
+      "scope": "fresh borrowed source bool query at target+0x408; actor producer delegated",
+      "evidence_manifest": "port/level-world/reference/monster-external-script-session/original-functions.json",
+      "manifest_implementation_scope": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.",
+      "demangled": "Character::_HasTarget(sfc::script::lua::Arguments const&, sfc::script::lua::ReturnValues&, void*)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/monster_external_script_session.hpp",
+        "port/level-world/monster_external_script_session.cpp"
+      ],
+      "implementation_limit": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.; fresh borrowed source bool query at target+0x408; actor producer delegated; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/monster-external-script-session/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9Character10_GetTargetERKN3sfc6script3lua9ArgumentsERNS2_12ReturnValuesEPv",
+      "elf_address": "0x3b6c7c",
+      "size": 12,
+      "sha256": "2a2f0cc9fb9542312b9dc8cd5e5f7e73d500876818412873305a197cce19f86a",
+      "scope": "fresh borrowed target+0x408 query; bounded object-table/nil transport",
+      "evidence_manifest": "port/level-world/reference/monster-external-script-session/original-functions.json",
+      "manifest_implementation_scope": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.",
+      "demangled": "Character::_GetTarget(sfc::script::lua::Arguments const&, sfc::script::lua::ReturnValues&, void*)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/monster_external_script_session.hpp",
+        "port/level-world/monster_external_script_session.cpp"
+      ],
+      "implementation_limit": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.; fresh borrowed target+0x408 query; bounded object-table/nil transport; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/monster-external-script-session/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9Character10_SetTargetERKN3sfc6script3lua9ArgumentsERNS2_12ReturnValuesEPv",
+      "elf_address": "0x3b8f38",
+      "size": 100,
+      "sha256": "3b8fd182bdbeb5d3ec803101273dab77250859eddfae07c3fa4666df3a931863",
+      "scope": "inspected type2/type7 object argument; AI_SetTarget body remains a service",
+      "evidence_manifest": "port/level-world/reference/monster-external-script-session/original-functions.json",
+      "manifest_implementation_scope": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.",
+      "demangled": "Character::_SetTarget(sfc::script::lua::Arguments const&, sfc::script::lua::ReturnValues&, void*)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/monster_external_script_session.hpp",
+        "port/level-world/monster_external_script_session.cpp"
+      ],
+      "implementation_limit": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.; inspected type2/type7 object argument; AI_SetTarget body remains a service; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/monster-external-script-session/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9Character7_HeadToERKN3sfc6script3lua9ArgumentsERNS2_12ReturnValuesEPv",
+      "elf_address": "0x3ba71c",
+      "size": 1216,
+      "sha256": "82675f461edc3c1d902ad3c591924e079c6a4659b2590fbddc0c65c0567b0f4f",
+      "scope": "only bounded object argument transport; full controller and coordinate overloads not claimed",
+      "evidence_manifest": "port/level-world/reference/monster-external-script-session/original-functions.json",
+      "manifest_implementation_scope": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.",
+      "demangled": "Character::_HeadTo(sfc::script::lua::Arguments const&, sfc::script::lua::ReturnValues&, void*)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/monster_external_script_session.hpp",
+        "port/level-world/monster_external_script_session.cpp"
+      ],
+      "implementation_limit": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.; only bounded object argument transport; full controller and coordinate overloads not claimed; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/monster-external-script-session/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9Character7_MoveToERKN3sfc6script3lua9ArgumentsERNS2_12ReturnValuesEPv",
+      "elf_address": "0x3bada8",
+      "size": 1216,
+      "sha256": "f389d8a9451ddfb72ed0c540c1fe025843207b1c827a68373f895fda2c6c8fd4",
+      "scope": "only bounded object/nil argument transport; full controller/path and coordinate overloads not claimed",
+      "evidence_manifest": "port/level-world/reference/monster-external-script-session/original-functions.json",
+      "manifest_implementation_scope": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.",
+      "demangled": "Character::_MoveTo(sfc::script::lua::Arguments const&, sfc::script::lua::ReturnValues&, void*)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/monster_external_script_session.hpp",
+        "port/level-world/monster_external_script_session.cpp"
+      ],
+      "implementation_limit": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.; only bounded object/nil argument transport; full controller/path and coordinate overloads not claimed; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/monster-external-script-session/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9Character9_GetStateERKN3sfc6script3lua9ArgumentsERNS2_12ReturnValuesEPv",
+      "elf_address": "0x3b6d78",
+      "size": 40,
+      "sha256": "135a6c6970122375b66964dbceaf84e5ed2c0282c409fe1046254a51c3d18b5f",
+      "scope": "fresh borrowed state-machine query with source numeric result",
+      "evidence_manifest": "port/level-world/reference/monster-external-script-session/original-functions.json",
+      "manifest_implementation_scope": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.",
+      "demangled": "Character::_GetState(sfc::script::lua::Arguments const&, sfc::script::lua::ReturnValues&, void*)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/monster_external_script_session.hpp",
+        "port/level-world/monster_external_script_session.cpp"
+      ],
+      "implementation_limit": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.; fresh borrowed state-machine query with source numeric result; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/monster-external-script-session/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN10GameObject8_HasPathERKN3sfc6script3lua9ArgumentsERNS2_12ReturnValuesEPv",
+      "elf_address": "0x38e98c",
+      "size": 52,
+      "sha256": "49f6f439cf1e51cc1ac0aa9cf2d5cd4b1f34b4f18b53e19316083f8525457f2e",
+      "scope": "borrowed source bool service; full GameObject path producer not newly implemented",
+      "evidence_manifest": "port/level-world/reference/monster-external-script-session/original-functions.json",
+      "manifest_implementation_scope": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.",
+      "demangled": "GameObject::_HasPath(sfc::script::lua::Arguments const&, sfc::script::lua::ReturnValues&, void*)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/monster_external_script_session.hpp",
+        "port/level-world/monster_external_script_session.cpp"
+      ],
+      "implementation_limit": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.; borrowed source bool service; full GameObject path producer not newly implemented; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/monster-external-script-session/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK3sfc6script3lua5Value12_pushOnStackEP9lua_State",
+      "elf_address": "0x31cac4",
+      "size": 572,
+      "sha256": "16be1625ff8bfcf58b5377529abd924bce58d1f06bf47ee48fa384ffa785cb3a",
+      "scope": "supporting object-table and null\u2192nil proof only; full original Value object implementation not claimed",
+      "evidence_manifest": "port/level-world/reference/monster-external-script-session/original-functions.json",
+      "manifest_implementation_scope": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.",
+      "demangled": "sfc::script::lua::Value::_pushOnStack(lua_State*) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/sfc_script_lua_Value-2b457211bc5b-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/monster_external_script_session.hpp",
+        "port/level-world/monster_external_script_session.cpp"
+      ],
+      "implementation_limit": "One bounded session adapter executing two unchanged original external monster Lua callbacks via the reused source VM/VFTable and typed borrowed services. Supporting native wrapper ranges are not full-body reconstruction claims.; supporting object-table and null\u2192nil proof only; full original Value object implementation not claimed; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/monster-external-script-session/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character6IsDeadEv",
+      "demangled": "Character::IsDead() const",
+      "elf_address": "0x3a2ed4",
+      "size": 12,
+      "sha256": "80fe42313943b64d9253b823b0bab905b2f9c21ee829378ccb6634a2065d546b",
+      "port_coverage": "dynamic virtual service boundary",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-target/original-functions.json",
+      "manifest_implementation_scope": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_target.hpp",
+        "port/level-world/character_ai_set_target.cpp"
+      ],
+      "implementation_limit": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.; dynamic virtual service boundary; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-target/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10GameObject6IsDeadEv",
+      "demangled": "GameObject::IsDead() const",
+      "elf_address": "0x3400ac",
+      "size": 8,
+      "sha256": "6dcd5e75586fe6683156c0d559d4827b73bd48d501fa5781a1c6099aacd7c877",
+      "port_coverage": "dynamic virtual service boundary; base implementation returns false",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-target/original-functions.json",
+      "manifest_implementation_scope": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_target.hpp",
+        "port/level-world/character_ai_set_target.cpp"
+      ],
+      "implementation_limit": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.; dynamic virtual service boundary; base implementation returns false; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-target/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK6CharAI12AI_IsInSightEPK10GameObject",
+      "demangled": "CharAI::AI_IsInSight(GameObject const*) const",
+      "elf_address": "0x3d4ed8",
+      "size": 192,
+      "sha256": "0c2044d083ae7973c74d3b18a8c13279cffa62ef96c03289cce95b8d2571d667",
+      "port_coverage": "explicit service; own owner, GameObject position and selected AI view-radius details are not copied here",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-target/original-functions.json",
+      "manifest_implementation_scope": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_target.hpp",
+        "port/level-world/character_ai_set_target.cpp"
+      ],
+      "implementation_limit": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.; explicit service; own owner, GameObject position and selected AI view-radius details are not copied here; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-target/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN13DebugSwitches4loadEv",
+      "demangled": "DebugSwitches::load()",
+      "elf_address": "0x337888",
+      "size": 512,
+      "sha256": "3b864531f3f0c328b5c3b630bf90afa16b9ac232416fa49617dc09f8fb97f803",
+      "port_coverage": "explicit service, called before each exact-key lookup",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-target/original-functions.json",
+      "manifest_implementation_scope": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/DebugSwitches-a7260511853e-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_target.hpp",
+        "port/level-world/character_ai_set_target.cpp"
+      ],
+      "implementation_limit": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.; explicit service, called before each exact-key lookup; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-target/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN13DebugSwitches9GetSwitchERKSs",
+      "demangled": "DebugSwitches::GetSwitch(std::string const&)",
+      "elf_address": "0x337a88",
+      "size": 196,
+      "sha256": "34890bace08c03e9acab8957aea2ba00831d3359f3ef29dad001b010794e0487",
+      "port_coverage": "explicit key lookup service; uppercase result gates tracing branch; lowercase result is ignored",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-target/original-functions.json",
+      "manifest_implementation_scope": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/DebugSwitches-a7260511853e-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_target.hpp",
+        "port/level-world/character_ai_set_target.cpp"
+      ],
+      "implementation_limit": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.; explicit key lookup service; uppercase result gates tracing branch; lowercase result is ignored; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-target/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10GameObject17GetTargetPositionEv",
+      "demangled": "GameObject::GetTargetPosition() const",
+      "elf_address": "0x3935dc",
+      "size": 36,
+      "sha256": "23b9afb6e9da429cee1083622c12e650a4ffd51918974d9636817a74943dee7f",
+      "port_coverage": "transitive dependency of external AI_IsInSight service",
+      "evidence_manifest": "port/level-world/reference/character-ai-set-target/original-functions.json",
+      "manifest_implementation_scope": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_set_target.hpp",
+        "port/level-world/character_ai_set_target.cpp"
+      ],
+      "implementation_limit": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.; transitive dependency of external AI_IsInSight service; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-set-target/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10GameObject13IsInteractiveEPS_",
+      "elf_address": "0x3883b0",
+      "size": 8,
+      "sha256": "6dcd5e75586fe6683156c0d559d4827b73bd48d501fa5781a1c6099aacd7c877",
+      "scope": "dependency evidence only; not an additional new source body",
+      "evidence_manifest": "port/level-world/reference/character-ai-relations/original-functions.json",
+      "manifest_implementation_scope": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring",
+      "demangled": "GameObject::IsInteractive(GameObject*) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_relations.hpp",
+        "port/level-world/character_ai_relations.cpp"
+      ],
+      "implementation_limit": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring; dependency evidence only; not an additional new source body; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-relations/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character18GetCharAIFactionIdEv",
+      "elf_address": "0x3a3180",
+      "size": 56,
+      "sha256": "2a53a61c549259bea3a75c1fdfcf3a86b4777279f92ea7bdb9df76cf334ac3c6",
+      "scope": "dependency evidence only; not an additional new source body",
+      "evidence_manifest": "port/level-world/reference/character-ai-relations/original-functions.json",
+      "manifest_implementation_scope": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring",
+      "demangled": "Character::GetCharAIFactionId() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_relations.hpp",
+        "port/level-world/character_ai_relations.cpp"
+      ],
+      "implementation_limit": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring; dependency evidence only; not an additional new source body; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-relations/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK12ObjectHandle9GetObjectEb",
+      "elf_address": "0x33ff8c",
+      "size": 4,
+      "sha256": "bbe541507356f02d76d32afb005cbfd21cac1ec8ea70548cacca670dd2c8cdbb",
+      "scope": "dependency evidence only; not an additional new source body",
+      "evidence_manifest": "port/level-world/reference/character-ai-relations/original-functions.json",
+      "manifest_implementation_scope": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring",
+      "demangled": "ObjectHandle::GetObject(bool) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectHandle-d2c3ca7e20ae-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_relations.hpp",
+        "port/level-world/character_ai_relations.cpp"
+      ],
+      "implementation_limit": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring; dependency evidence only; not an additional new source body; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-relations/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10ObjectBase9GetHandleEv",
+      "elf_address": "0x33dd70",
+      "size": 68,
+      "sha256": "7de6502f60d2e644ee0d7efb50026ebfd509ff7f16a7a187fffe7bcb04d8236d",
+      "scope": "dependency evidence only; not an additional new source body",
+      "evidence_manifest": "port/level-world/reference/character-ai-relations/original-functions.json",
+      "manifest_implementation_scope": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring",
+      "demangled": "ObjectBase::GetHandle() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectBase-442c048e89fd-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_relations.hpp",
+        "port/level-world/character_ai_relations.cpp"
+      ],
+      "implementation_limit": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring; dependency evidence only; not an additional new source body; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-relations/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10GameObject18GetInteractionTypeEPS_",
+      "elf_address": "0x38ad74",
+      "size": 8,
+      "sha256": "6143299c415a779d14d46483b05772d81c6b595bc189b4499503e30275041932",
+      "scope": "dependency evidence only; not an additional new source body",
+      "evidence_manifest": "port/level-world/reference/character-ai-relations/original-functions.json",
+      "manifest_implementation_scope": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring",
+      "demangled": "GameObject::GetInteractionType(GameObject*) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_relations.hpp",
+        "port/level-world/character_ai_relations.cpp"
+      ],
+      "implementation_limit": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring; dependency evidence only; not an additional new source body; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-relations/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN12ObjectHandle9GetObjectEb",
+      "elf_address": "0x33fdc0",
+      "size": 236,
+      "sha256": "f22dda22778448e6107a4b76c786d49995db280bbb148206c3e4e95a58f2a7ec",
+      "scope": "dependency evidence only; not an additional new source body",
+      "evidence_manifest": "port/level-world/reference/character-ai-relations/original-functions.json",
+      "manifest_implementation_scope": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring",
+      "demangled": "ObjectHandle::GetObject(bool)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectHandle-d2c3ca7e20ae-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_relations.hpp",
+        "port/level-world/character_ai_relations.cpp"
+      ],
+      "implementation_limit": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring; dependency evidence only; not an additional new source body; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-relations/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK16CharStateMachine14SM_IsAttackingEv",
+      "demangled": "CharStateMachine::SM_IsAttacking() const",
+      "elf_address": "0x3c02d0",
+      "size": 24,
+      "sha256": "4873bc9e588299d4fd02aafec23e59f15966b80eb5db2bc7dc5960d64d7514e3",
+      "scope": "supporting dependency byte evidence; callback service body is not newly reconstructed here",
+      "evidence_manifest": "port/level-world/reference/character-ai-in-combat/original-functions.json",
+      "manifest_implementation_scope": "One original AI_IsInCombat caller, preserving all taken calls and return words; concrete outgoing/incoming aggro and FSM services and Android actor wiring excluded",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharStateMachine-9e67f9b0cab6-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_in_combat.hpp",
+        "port/level-world/character_ai_in_combat.cpp"
+      ],
+      "implementation_limit": "One original AI_IsInCombat caller, preserving all taken calls and return words; concrete outgoing/incoming aggro and FSM services and Android actor wiring excluded; supporting dependency byte evidence; callback service body is not newly reconstructed here; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-in-combat/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK16CharStateMachine15SM_IsUsingSkillEv",
+      "demangled": "CharStateMachine::SM_IsUsingSkill() const",
+      "elf_address": "0x3c02e8",
+      "size": 24,
+      "sha256": "774242e45789a641452a8aaeefe052685fb066dd31ffcdbfcc718b5562e97619",
+      "scope": "supporting dependency byte evidence; callback service body is not newly reconstructed here",
+      "evidence_manifest": "port/level-world/reference/character-ai-in-combat/original-functions.json",
+      "manifest_implementation_scope": "One original AI_IsInCombat caller, preserving all taken calls and return words; concrete outgoing/incoming aggro and FSM services and Android actor wiring excluded",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharStateMachine-9e67f9b0cab6-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_in_combat.hpp",
+        "port/level-world/character_ai_in_combat.cpp"
+      ],
+      "implementation_limit": "One original AI_IsInCombat caller, preserving all taken calls and return words; concrete outgoing/incoming aggro and FSM services and Android actor wiring excluded; supporting dependency byte evidence; callback service body is not newly reconstructed here; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-in-combat/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK16CharStateMachine12SM_IsCastingEv",
+      "demangled": "CharStateMachine::SM_IsCasting() const",
+      "elf_address": "0x3c0334",
+      "size": 24,
+      "sha256": "4e1a1e64084c9860162ee9fefbd88e638681c392d047e812c1b397e15a0ea558",
+      "scope": "supporting dependency byte evidence; callback service body is not newly reconstructed here",
+      "evidence_manifest": "port/level-world/reference/character-ai-in-combat/original-functions.json",
+      "manifest_implementation_scope": "One original AI_IsInCombat caller, preserving all taken calls and return words; concrete outgoing/incoming aggro and FSM services and Android actor wiring excluded",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharStateMachine-9e67f9b0cab6-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_in_combat.hpp",
+        "port/level-world/character_ai_in_combat.cpp"
+      ],
+      "implementation_limit": "One original AI_IsInCombat caller, preserving all taken calls and return words; concrete outgoing/incoming aggro and FSM services and Android actor wiring excluded; supporting dependency byte evidence; callback service body is not newly reconstructed here; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-in-combat/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK6CharAI11AI_HasAggroEv",
+      "demangled": "CharAI::AI_HasAggro() const",
+      "elf_address": "0x3d49f0",
+      "size": 16,
+      "sha256": "b246911c152844ecbe7ebd31fbb303d55ce8c7f782650b61098737f50d3e9252",
+      "scope": "supporting dependency byte evidence; callback service body is not newly reconstructed here",
+      "evidence_manifest": "port/level-world/reference/character-ai-in-combat/original-functions.json",
+      "manifest_implementation_scope": "One original AI_IsInCombat caller, preserving all taken calls and return words; concrete outgoing/incoming aggro and FSM services and Android actor wiring excluded",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_in_combat.hpp",
+        "port/level-world/character_ai_in_combat.cpp"
+      ],
+      "implementation_limit": "One original AI_IsInCombat caller, preserving all taken calls and return words; concrete outgoing/incoming aggro and FSM services and Android actor wiring excluded; supporting dependency byte evidence; callback service body is not newly reconstructed here; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-in-combat/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK6CharAI12AI_IsAggroedEv",
+      "demangled": "CharAI::AI_IsAggroed() const",
+      "elf_address": "0x3d4a00",
+      "size": 16,
+      "sha256": "854336dabcc98143cafa0997ba54fede004764db15c7a37e4f68f187b66327ad",
+      "scope": "supporting dependency byte evidence; callback service body is not newly reconstructed here",
+      "evidence_manifest": "port/level-world/reference/character-ai-in-combat/original-functions.json",
+      "manifest_implementation_scope": "One original AI_IsInCombat caller, preserving all taken calls and return words; concrete outgoing/incoming aggro and FSM services and Android actor wiring excluded",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_in_combat.hpp",
+        "port/level-world/character_ai_in_combat.cpp"
+      ],
+      "implementation_limit": "One original AI_IsInCombat caller, preserving all taken calls and return words; concrete outgoing/incoming aggro and FSM services and Android actor wiring excluded; supporting dependency byte evidence; callback service body is not newly reconstructed here; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-in-combat/original-functions.json"
+      ],
+      "additional_mappings": []
     }
   ],
   "unsupported": [
@@ -2040,6 +3473,16 @@
     "Original callbacks do not return adapter failure codes. Port-only callback failures preserve completed prior effects, do not roll back, and do not invoke the normal-path AI cleanup artificially.",
     "Earlier OnBlur controller/visibility/pose/Revive operations remain separate and are not repeated by this producer.",
     "Member registration, GroupInfo creation and ownership, network/checkpoint actors, and Native renderer binding remain outside this module.",
-    "Service errors are port protocol; completed callback effects are not rolled back."
+    "Service errors are port protocol; completed callback effects are not rolled back.",
+    "No owner/player enemy gate is added to this TargetList query.",
+    "The existing character_target_search kernel is for the separate melee flags-1/filter-0 caller and is not invoked or modified.",
+    "Search service failures, pointer validation, bounded heap capacity, and opaque Character/room lifetimes are adapter boundaries. A source service error can occur after earlier candidates have been processed; no rollback is claimed.",
+    "The `_UpdateAggro` shared turn/delay/random prefix, highest-aggro branch, friend/neutral/enemy classifier, aggro storage mutation, Character event gates, script callback, and controller pursuit are separate and not implemented here.",
+    "Original tie behavior is only covered by the strict source comparator and copied priority-queue heap mechanics; the source does not guarantee a stable identity order for equal distances.",
+    "Full AISExternal lifecycle, InitVCB/OnInit dynamic level, entity methods/metatables, other callbacks, combat, buffs and timers remain outside this session.",
+    "CharAI owner/group enemy gate, source event9 candidate production, actor/controller/path source implementations and Native ownership are not wired here.",
+    "Single owning thread and externally retained services/actors are required; destroying the session from its own callback is unsupported.",
+    "Allocation cap is reused from source VM; no instruction cap or untrusted-script sandbox is added.",
+    "Production must not link both Adam and separate lua-runtime raw Lua cores with duplicate lua_* symbols and differing integer configurations; one compatible shared core or explicit engine isolation is required."
   ]
 }

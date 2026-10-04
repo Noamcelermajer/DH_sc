@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(dh2_level_world LANGUAGES CXX)
+project(dh2_level_world LANGUAGES C CXX)
 if(NOT TARGET dh2_script_runtime)
  add_subdirectory(../adam-script-runtime "${CMAKE_CURRENT_BINARY_DIR}/adam-script-runtime")
 endif()
@@ -32,6 +32,17 @@ target_sources(dh2_level_world PRIVATE character_controller_commands.cpp charact
 target_sources(dh2_level_world PRIVATE character_ai_state.cpp)
 target_sources(dh2_level_world PRIVATE character_path_commands.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_frame.cpp)
+
+# Source-tested external monster/acquisition kernels. Compiling these into the
+# native library establishes the 64-bit build boundary; live actor services,
+# candidate ownership and full AIS lifecycle must still be connected by the
+# owning game runtime. Reuse this target's existing Adam Lua core exactly once.
+target_sources(dh2_level_world PRIVATE
+ character_aggro_delay.cpp character_ai_turn.cpp
+ character_aggro_target_search.cpp character_aggro_candidate_events.cpp
+ character_enemy_spotted.cpp monster_external_script_session.cpp
+ character_ai_set_target.cpp character_ai_relations.cpp character_ai_in_combat.cpp
+ ../random/random.c ../lua-numeric/numeric.c)
 
 target_sources(dh2_level_world PRIVATE character_ai_attack.cpp)
 
