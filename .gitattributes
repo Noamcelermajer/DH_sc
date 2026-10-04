@@ -13,6 +13,8 @@ recovered/assets/source-data/** -text -whitespace linguist-generated=true
 recovered/assets/cache-manifest.json -text -whitespace linguist-generated=true
 recovered/native/debug/** -text -whitespace linguist-generated=true
 recovered/scripts/original/** -text -whitespace linguist-language=Lua
+# Unchanged cache scripts bundled for native AI retain exact original bytes.
+port/android-native/app/src/main/assets/scripts/ai/*.luac -text -whitespace linguist-language=Lua
 port/lua-scripts/overrides/** -text -whitespace linguist-language=Lua
 port/lua-runtime/vendor/** -text -whitespace
 reports/pydata-array-name-trace.json -text
