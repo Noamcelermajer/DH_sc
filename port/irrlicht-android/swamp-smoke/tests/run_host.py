@@ -62,7 +62,7 @@ def main() -> None:
          '-fno-exceptions', '-fno-rtti', SMOKE / 'tests/alpha_map_policy.cpp',
          '-o', alpha_exe])
     alpha_output = run([alpha_exe])
-    if 'source AlphaMap binding scope and diffuse-alpha composition pass' not in alpha_output:
+    if 'source AlphaMap binding scope and AL-preview blue-to-diffuse-alpha composition pass' not in alpha_output:
         raise RuntimeError('Irrlicht source AlphaMap policy assertions did not report pass')
 
     scene_output = run([sys.executable,
@@ -73,69 +73,36 @@ def main() -> None:
         '53 drawn diagnostics; 1 unresolved diagnostic draw omitted)')
     if expected_scene not in scene_output:
         raise RuntimeError('SWAMP source module scene assertions changed:\n' + scene_output)
-    expected_alpha = '22 resolved AlphaMap refs/22 Material__11611 cutouts'
+    expected_alpha = '22 resolved AlphaMap refs/22 Material__11611 AL previews'
     if expected_alpha not in scene_output or '10816 vertices, 13284 indices' not in scene_output:
         raise RuntimeError('SWAMP AlphaMap/cache-source assertions changed:\n' + scene_output)
     if 'correction=(-52000,-3000,0); BRES unchanged' not in scene_output:
         raise RuntimeError('SWAMP module-zero source placement/immutability assertion missing')
 
-    # Compile the checked engine-skinning and animation path with exceptions
-    # enabled (those parsers report malformed source assets by exception).
-    # Stage exact local cache inputs in the ignored host output directory so
-    # the test exercises the same source paths as the Android package builder.
-    prince_sources = {
-        'models/prince_modular.bdae':
-            cache / 'data/3d/characters/prince/prince_modular.bdae',
-        'animations/prince_idle_shield.bdae':
-            cache / 'data/3d/characters/prince/animations/prince_idle_shield.bdae',
-        'animations/prince_walk_1hand.bdae':
-            cache / 'data/3d/characters/prince/animations/prince_walk_1hand.bdae',
-    }
-    prince_assets = output / 'prince-input'
-    for destination, source in prince_sources.items():
-        if not source.is_file():
-            raise FileNotFoundError(f'Prince source animation/model missing from --cache: {source}')
-        target = prince_assets / destination
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
-        if sha256(source) != sha256(target):
-            raise RuntimeError(f'Prince source changed while staging: {source}')
-
-    prince_exe = output / ('prince-actor-host.exe' if sys.platform == 'win32'
-                           else 'prince-actor-host')
-    prince_compiler = shutil.which(args.cxx)
-    prince_compile_sources = [
-        SMOKE.parents[0] / 'game/tests/prince_actor_host.cpp',
-        SMOKE.parents[0] / 'game/prince_actor.cpp',
-        REPO / 'port/level-world/visual_motion.cpp',
-        REPO / 'port/level-world/physical_controls.cpp',
-        REPO / 'port/engine-skinning/skinning.cpp',
-        REPO / 'port/scene-materials/scene.cpp',
-        REPO / 'port/engine-resources/resources.cpp',
-        REPO / 'port/asset-payloads/payloads.cpp',
-        REPO / 'port/engine-math/math.cpp',
-        REPO / 'port/engine-animation/animation.cpp',
-        REPO / 'port/engine-animation/angle_interpreter.cpp',
-        REPO / 'port/engine-animation/events.cpp',
-        REPO / 'port/engine-animation/event_track.cpp',
-        REPO / 'port/animation-values/values.cpp',
-    ]
-    run([prince_compiler, '-std=c++17', '-O1', '-Wall', '-Wextra', '-Werror',
-         '-Wno-misleading-indentation',
-         '-Wno-unused-parameter', '-fexceptions', '-fno-rtti',
-         '-I', SMOKE.parents[0] / 'game',
-         '-I', REPO / 'port/irrlicht-android/upstream/include',
-         '-I', REPO / 'port', '-I', REPO / 'port/android-app',
-         *prince_compile_sources, '-o', prince_exe])
-    prince_output = run([prince_exe, prince_assets])
-    expected_prince = 'controllers=4 '
-    if expected_prince not in prince_output or 'idle_release=pass' not in prince_output or \
-            'semantic_streams=source_equivalent' not in prince_output or \
-            'source_visual_binding=owner_helper_graph' not in prince_output or \
-            'owner_translation=single' not in prince_output or \
-            'full_character_playback=not_implemented' not in prince_output:
-        raise RuntimeError('Prince skinning/animation/owner host assertions changed:\n' +
-                           prince_output)
+    # Reuse the dedicated checked complete-bank runner rather than restaging a
+    # partial idle/walk-only input set here. It records every asset and source
+    # hash and keeps the umbrella gate aligned with the current Character path.
+    prince_host_dir = output / 'prince-character-host'
+    prince_output = run([
+        sys.executable,
+        REPO / 'port/irrlicht-android/game/tests/run_prince_host.py',
+        '--assets', REPO / 'port/android-native/app/src/main/assets',
+        '--compiler', args.cxx,
+        '--output', prince_host_dir,
+    ])
+    prince_report_path = prince_host_dir / 'validation.json'
+    prince_report = json.loads(prince_report_path.read_text(encoding='utf-8'))
+    prince_test_output = prince_report.get('test_output', '')
+    required_prince = (
+        'controllers=4', 'bank_resources=116', 'registration_occurrences=158',
+        'idle_release=pass', 'source_fsm=pass',
+        'full_game_ai_physics_combat=not_implemented',
+    )
+    if prince_report.get('validation') != 'PASS' or not all(
+            token in prince_test_output for token in required_prince):
+        raise RuntimeError('Prince source Character host assertions changed:\n' +
+                           prince_test_output)
+    prince_exe = Path(prince_report['executable']['path'])
 
     movement_build = output / 'movement'
     movement_report = movement_build / 'build-validation.json'
@@ -151,33 +118,34 @@ def main() -> None:
     if movement_data.get('pass') is not True or movement_data.get('complete_movement') is not False:
         raise RuntimeError('Existing bounded source SWAMP movement assertions failed or changed scope')
 
-    source_files = [SMOKE / 'main.cpp', SMOKE / 'alpha_map_policy.hpp',
+    source_files = [SMOKE / 'main.cpp', SMOKE / 'README.md', SMOKE / 'alpha_map_policy.hpp',
+                    SMOKE / 'tests/run_host.py',
                     SMOKE / 'tests/alpha_map_policy.cpp', SMOKE / 'control_policy.hpp',
                     SMOKE / 'tests/control_policy.cpp',
                     REPO / 'port/android-app/tests/swamp_scene.cpp',
                     REPO / 'port/swamp-movement/movement.cpp',
-                    SMOKE.parents[0] / 'game/prince_actor.hpp',
-                    SMOKE.parents[0] / 'game/prince_actor.cpp',
-                    SMOKE.parents[0] / 'game/scene_mesh_adapter.hpp',
-                    SMOKE.parents[0] / 'game/scene_mesh_adapter.cpp',
-                    SMOKE.parents[0] / 'game/prince_mesh_adapter.cpp',
-                    SMOKE.parents[0] / 'game/tests/prince_actor_host.cpp']
+                    REPO / 'port/irrlicht-android/game/tests/run_prince_host.py']
+    source_files = list(dict.fromkeys(source_files))
+    source_hashes = {
+        path.relative_to(REPO).as_posix(): sha256(path) for path in source_files
+    }
+    source_hashes.update(prince_report.get('source_sha256', {}))
     report = {
         'pass': True,
-        'scope': 'Host assertions validate SWAMP module-zero import/placement, the exact 22 source AlphaMap cutout material mappings, path-mask movement and touch/fixed-step policy, plus four source Prince warrior skins, idle/walk deformation, idle release, and one-time owner translation; Android render/install remains separate.',
+        'scope': 'Host assertions validate SWAMP module-zero import/placement, the exact 22 resolved AlphaMap-to-AL-preview mappings and blue-channel composition, path-mask movement and touch/fixed-step policy, plus four source Prince warrior skins, idle/walk deformation, idle release, and one-time owner translation; Android render/install remains separate.',
         'source_scene': expected_scene,
         'source_alpha_map': expected_alpha,
         'control_policy': control_output.strip(),
         'alpha_map_policy': alpha_output.strip(),
-        'prince_actor': prince_output.strip(),
+        'prince_character': prince_test_output,
         'prince_input_sha256': {
-            relative: sha256(source) for relative, source in prince_sources.items()},
+            relative: asset['sha256'] for relative, asset in
+            prince_report.get('asset_inputs', {}).items()},
         'movement_checks': movement_data.get('checks', {}),
-        'source_sha256': {path.relative_to(REPO).as_posix(): sha256(path)
-                          for path in source_files},
+        'source_sha256': source_hashes,
         'host_artifacts': {
             'control_test_sha256': sha256(control_exe),
-            'prince_actor_test_sha256': sha256(prince_exe),
+            'prince_character_test_sha256': sha256(prince_exe),
             'movement_library_sha256': sha256(movement_library),
         },
     }

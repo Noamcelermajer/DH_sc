@@ -1086,6 +1086,7 @@ def build_irrlicht_swamp_package(sdk: Path, ndk: Path, cache: Path,
     }
     source_headers = [
         REPO / 'port/irrlicht-android/swamp-smoke/main.cpp',
+        REPO / 'port/irrlicht-android/swamp-smoke/alpha_map_policy.hpp',
         REPO / 'port/irrlicht-android/game/scene_mesh_adapter.hpp',
         REPO / 'port/irrlicht-android/game/prince_actor.hpp',
         REPO / 'port/irrlicht-android/game/prince_character_runtime.hpp',

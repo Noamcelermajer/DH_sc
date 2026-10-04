@@ -34,12 +34,18 @@ its original effect state is unresolved. It maps the source `env_swamp.tga`
 diffuse sampler on matching draws. The 22 visible `Material__11611` draws each
 pair that diffuse with source `AlphaMap` path
 `textures/pvr2_env_swamp_alpha.tga`. The diagnostic decodes that cache PVRTC
-texture, copies its decoded alpha channel over the diffuse texture's alpha,
-and selects Irrlicht's `EMT_TRANSPARENT_ALPHA_CHANNEL_REF` material for those
-draws only. It leaves diffuse RGB intact; the upstream alpha-reference shader
-discards values at or below its reference threshold. A host regression checks
-the exact material/path pairing and the RGBA composition rule. This narrow
-mapping does not reconstruct the rest of the referenced Collada effect.
+texture and copies its decoded **blue** channel into the diffuse texture's
+alpha for those draws only. It selects Irrlicht's
+`EMT_TRANSPARENT_ALPHA_CHANNEL` to preview the recovered shader's `AL`
+fractional-alpha output. The source material's type-20 `CurrentTechnique`
+selection remains opaque to the checked reader, so the exact `AL` versus `AT`
+variant is unknown; the separate source `AT` branch discards values strictly
+below `0.8`. Original blend and depth-write state are not established by the
+shader source. Irrlicht's standard SRC_ALPHA blending and automatic transparent
+pass depth behavior are preview choices, not recovered source state. A host
+regression checks the exact material/path pairing and blue-to-alpha
+composition. This narrow mapping does not reconstruct the rest of the
+referenced Collada effect.
 
 The two visible `Material__11598` overlay draws now use Irrlicht's explicit
 `EMT_ONETEXTURE_BLEND` mapping for source `GL_ONE, GL_ONE` factors and
@@ -104,8 +110,11 @@ reconstruct that customized engine or the complete game. It is a source-driven
 renderer and movement diagnostic.
 
 The two source `Material__11598` passes are mapped to `GL_ONE, GL_ONE`,
-`GL_FUNC_ADD`, `LEQUAL`, and depth-write-off. AlphaMap cutout is applied on the
-22 verified `Material__11611` draws. Other LightMap or Specular samplers,
+`GL_FUNC_ADD`, `LEQUAL`, and depth-write-off. The blue-channel AlphaMap and
+fractional `AL` output preview are applied on the 22 verified
+`Material__11611` draws. The actual `AL` versus `AT` technique selection is
+still unresolved; if source `AT` is selected, its recovered shader threshold
+is `0.8`. Other LightMap or Specular samplers,
 external Collada effects, source lighting, and native material sorting remain
 unmapped. Four visible draws have no source texture references and use
 Irrlicht's default material, which accounts for the broad white floor bands in

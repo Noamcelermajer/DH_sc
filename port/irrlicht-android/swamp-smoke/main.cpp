@@ -220,9 +220,9 @@ bool make_source_actor_session_config(
 
 struct TextureContext {
     irr::video::ITexture* diffuse = nullptr;
-    irr::video::ITexture* alpha_cutout_diffuse = nullptr;
+    irr::video::ITexture* alpha_map_al_diffuse = nullptr;
     std::uint32_t assigned_draws = 0;
-    std::uint32_t alpha_cutout_draws = 0;
+    std::uint32_t alpha_map_al_preview_draws = 0;
 };
 
 irr::video::ITexture* resolve_texture(
@@ -231,12 +231,12 @@ irr::video::ITexture* resolve_texture(
     std::uint32_t count, void* opaque) {
     auto* context = static_cast<TextureContext*>(opaque);
     if (!context || !references) return nullptr;
-    if (dh2::irrlicht_swamp::swamp_draw_uses_alpha_cutout(
+    if (dh2::irrlicht_swamp::swamp_draw_uses_alpha_al_preview(
             draw, references, count)) {
-        if (!context->alpha_cutout_diffuse) return nullptr;
+        if (!context->alpha_map_al_diffuse) return nullptr;
         ++context->assigned_draws;
-        ++context->alpha_cutout_draws;
-        return context->alpha_cutout_diffuse;
+        ++context->alpha_map_al_preview_draws;
+        return context->alpha_map_al_diffuse;
     }
     for (std::uint32_t i = 0; i < count; ++i) {
         const auto& reference = references[i];
@@ -327,10 +327,10 @@ bool decode_swamp_textures(
     const std::vector<std::uint8_t>& diffuse_bytes,
     const std::vector<std::uint8_t>& alpha_map_bytes,
     irr::video::ITexture** diffuse_out,
-    irr::video::ITexture** alpha_cutout_out) {
+    irr::video::ITexture** alpha_map_al_out) {
     if (diffuse_out) *diffuse_out = nullptr;
-    if (alpha_cutout_out) *alpha_cutout_out = nullptr;
-    if (!device || !diffuse_out || !alpha_cutout_out) return false;
+    if (alpha_map_al_out) *alpha_map_al_out = nullptr;
+    if (!device || !diffuse_out || !alpha_map_al_out) return false;
 
     std::vector<std::uint8_t> diffuse_rgba, alpha_map_rgba;
     irr::u32 diffuse_width = 0, diffuse_height = 0;
@@ -366,11 +366,11 @@ bool decode_swamp_textures(
         log(ANDROID_LOG_ERROR, "SWAMP AlphaMap composition failed");
         return false;
     }
-    *alpha_cutout_out = upload_rgba8_texture(
-        device, "dh2-env-swamp-alpha-cutout", diffuse_width, diffuse_height,
+    *alpha_map_al_out = upload_rgba8_texture(
+        device, "dh2-env-swamp-alpha-al-preview", diffuse_width, diffuse_height,
         diffuse_rgba);
-    if (!*alpha_cutout_out) {
-        log(ANDROID_LOG_ERROR, "SWAMP alpha-cutout diffuse texture upload failed");
+    if (!*alpha_map_al_out) {
+        log(ANDROID_LOG_ERROR, "SWAMP AlphaMap AL-preview diffuse texture upload failed");
         return false;
     }
     return true;
@@ -485,7 +485,7 @@ bool assemble_source_module_zero(
     std::uint32_t* no_texture_out,
     std::uint32_t* visible_no_texture_out,
     std::uint32_t* assigned_draws_out,
-    std::uint32_t* alpha_cutout_draws_out) {
+    std::uint32_t* alpha_map_al_preview_draws_out) {
     dh2::world::Diagnostic world_diag{};
     if (dh2_world_import_level(level, "SWAMP", "data/scene/001_swamp.mlx",
             mlx_bytes.data(), mlx_bytes.size(), &world_diag) != dh2::world::Error::ok) {
@@ -560,13 +560,13 @@ bool assemble_source_module_zero(
     }
 
     irr::video::ITexture* diffuse = nullptr;
-    irr::video::ITexture* alpha_cutout_diffuse = nullptr;
+    irr::video::ITexture* alpha_map_al_diffuse = nullptr;
     if (!decode_swamp_textures(device, diffuse_bytes, alpha_map_bytes,
-                               &diffuse, &alpha_cutout_diffuse)) {
+                               &diffuse, &alpha_map_al_diffuse)) {
         log(ANDROID_LOG_ERROR, "Could not decode/compose SWAMP diffuse and AlphaMap textures");
         return false;
     }
-    TextureContext texture_context{diffuse, alpha_cutout_diffuse};
+    TextureContext texture_context{diffuse, alpha_map_al_diffuse};
     std::vector<dh2::viewer::SceneDrawDescriptor> renderer_draws(
         output_mesh->draws, output_mesh->draws + output_mesh->draw_commands);
     std::uint32_t visible = 0, additive_draws = 0;
@@ -661,8 +661,8 @@ bool assemble_source_module_zero(
                 dh2::irrlicht_adapter::SourceRoomDrawRole::scenery) continue;
         auto* buffer = mesh->getMeshBuffer(material_index++);
         if (!buffer) continue;
-        const bool alpha_cutout = draw.texture_count &&
-            dh2::irrlicht_swamp::swamp_draw_uses_alpha_cutout(
+        const bool alpha_map_al_preview = draw.texture_count &&
+            dh2::irrlicht_swamp::swamp_draw_uses_alpha_al_preview(
                 draw, output_mesh->texture_references + draw.first_texture,
                 draw.texture_count);
         auto& material = buffer->getMaterial();
@@ -677,20 +677,27 @@ bool assemble_source_module_zero(
             material.ZWriteEnable = irr::video::EZW_OFF;
             ++additive_one_one_mapped;
         } else {
-            material.setFlag(irr::video::EMF_ZWRITE_ENABLE,
-                dh2::viewer::swamp_draw_writes_depth(draw.material_id, alpha_cutout));
-            if (alpha_cutout) {
+            if (alpha_map_al_preview) {
                 material.MaterialType =
-                    irr::video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
+                    irr::video::EMT_TRANSPARENT_ALPHA_CHANNEL;
+                // AL supplies fractional alpha. Leave Irrlicht in EZW_AUTO so
+                // its transparent pass disables depth writes by default.
+                // Original DH2 blend/depth state and AL-vs-AT selection are
+                // not decoded from this source material's type-20 value.
+                material.ZWriteEnable = irr::video::EZW_AUTO;
+            } else {
+                material.setFlag(irr::video::EMF_ZWRITE_ENABLE,
+                    dh2::viewer::swamp_draw_writes_depth(draw.material_id, false));
             }
         }
     }
     if (material_index != mesh->getMeshBufferCount() || additive_draws != 2 ||
-        additive_one_one_mapped != additive_draws) {
+        additive_one_one_mapped != additive_draws ||
+        texture_context.alpha_map_al_preview_draws != alpha_refs) {
         __android_log_print(ANDROID_LOG_ERROR, kTag,
-            "SWAMP additive material mapping mismatch: source=%u mapped=%u buffers=%u configured=%u",
+            "SWAMP material mapping mismatch: additive_source=%u additive_mapped=%u buffers=%u configured=%u AlphaMap_refs=%u AL_preview_draws=%u",
             additive_draws, additive_one_one_mapped, mesh->getMeshBufferCount(),
-            material_index);
+            material_index, alpha_refs, texture_context.alpha_map_al_preview_draws);
         mesh->drop();
         if (diffuse) diffuse->drop();
         return false;
@@ -742,9 +749,9 @@ bool assemble_source_module_zero(
     *no_texture_out = no_texture;
     *visible_no_texture_out = visible_no_texture;
     *assigned_draws_out = texture_context.assigned_draws;
-    *alpha_cutout_draws_out = texture_context.alpha_cutout_draws;
+    *alpha_map_al_preview_draws_out = texture_context.alpha_map_al_preview_draws;
     __android_log_print(ANDROID_LOG_INFO, kTag,
-        "SWAMP module 0 assembled in Irrlicht r6038: subtree_records=%u source_draws=%u visible_scenery_draws=%u room_root_bounds_filtered=%u navigation_floor_draws_filtered=%u exit_marker_draws_filtered=%u additive_Material__11598=%u additive_one_one_mapped=%u vertices=%u indices=%u path_mask=0x%X start=(%.3f,%.3f,%.3f) diffuse_refs=%u diffuse_draws=%u AlphaMap_refs=%u AlphaMap_unresolved_refs=%u AlphaMap_cutout_draws=%u LightMap_refs=%u Specular_refs=%u other_refs=%u no_texture_source_draws=%u visible_no_texture_draws=%u",
+        "SWAMP module 0 assembled in Irrlicht r6038: subtree_records=%u source_draws=%u visible_scenery_draws=%u room_root_bounds_filtered=%u navigation_floor_draws_filtered=%u exit_marker_draws_filtered=%u additive_Material__11598=%u additive_one_one_mapped=%u vertices=%u indices=%u path_mask=0x%X start=(%.3f,%.3f,%.3f) diffuse_refs=%u diffuse_draws=%u AlphaMap_refs=%u AlphaMap_unresolved_refs=%u AlphaMap_AL_preview_draws=%u alpha_map_mode=AL-preview AT_threshold=0.8_unresolved=1 source_blend_depth_state=unresolved LightMap_refs=%u Specular_refs=%u other_refs=%u no_texture_source_draws=%u visible_no_texture_draws=%u",
         record_count, *source_draws_out, *visible_draws_out,
         room_filter_counts.room_root_bounds, room_filter_counts.navigation_floors,
         room_filter_counts.exit_markers,
@@ -752,7 +759,7 @@ bool assemble_source_module_zero(
         output_mesh->vertex_count, output_mesh->index_count,
         kPlayerPathMask, spawn_out->X, spawn_out->Y, spawn_out->Z,
         *diffuse_refs_out, *assigned_draws_out, *alpha_refs_out,
-        *unresolved_alpha_refs_out, *alpha_cutout_draws_out,
+        *unresolved_alpha_refs_out, *alpha_map_al_preview_draws_out,
         *lightmap_refs_out, *specular_refs_out, *other_refs_out,
         *no_texture_out, *visible_no_texture_out);
     return true;
@@ -886,7 +893,7 @@ void android_main(android_app* app) {
     std::uint32_t unresolved_alpha_refs = 0;
     std::uint32_t lightmap_refs = 0, specular_refs = 0, other_refs = 0;
     std::uint32_t no_texture_draws = 0, visible_no_texture_draws = 0;
-    std::uint32_t textured_draws = 0, alpha_cutout_draws = 0;
+    std::uint32_t textured_draws = 0, alpha_map_al_preview_draws = 0;
     const bool assembled = assemble_source_module_zero(
         bres_bytes, mlx_bytes, spawn_bytes, &level, &bres, &source_scene,
         &navigation, &source_mesh, device, diffuse_bytes, alpha_map_bytes,
@@ -896,7 +903,7 @@ void android_main(android_app* app) {
         &diffuse_refs, &alpha_refs, &unresolved_alpha_refs,
         &lightmap_refs, &specular_refs, &other_refs,
         &no_texture_draws, &visible_no_texture_draws, &textured_draws,
-        &alpha_cutout_draws);
+        &alpha_map_al_preview_draws);
     if (!assembled) {
         dh2_viewer_scene_mesh_free(&source_mesh);
         dh2_nav_free(&navigation);
@@ -1047,7 +1054,7 @@ void android_main(android_app* app) {
     std::snprintf(initial_status, sizeof(initial_status),
         "SOURCE XYZ  X %.2f  Y %.2f  Z %.2f  | player path mask 0x%X\n"
         "Shown scenery draws %u/%u; filtered source room-root=%u navigation-floors=%u exit-markers=%u; Material__11598 additive passes %u; exact GL_ONE/GL_ONE + GL_FUNC_ADD mapped %u.\n"
-        "Samplers: Diffuse refs %u (%u draws mapped); AlphaMap %u refs (%u Material__11611 cutouts), %u unresolved; LightMap %u, Specular %u, other %u ignored. No-texture draws %u (%u visible default-material fallbacks).\n"
+        "Samplers: Diffuse refs %u (%u draws mapped); AlphaMap %u refs (%u AL-preview draws), %u unresolved; source AL/AT technique selection and original blend/depth state unresolved. LightMap %u, Specular %u, other %u ignored. No-texture draws %u (%u visible default-material fallbacks).\n"
         "Prince: %u warrior skins, %u joints, %u vertices; authored bank %u resources/%u registrations; state %d flags 0x%X, sequence %d, clip %d.\n"
         "Actor step %u / NativeWorld steps %u; body pinned %u; floor %u. Limits: AI/scripts, other modules, environment contacts, walls and swept collision.",
         player_position.X, player_position.Y, player_position.Z, kPlayerPathMask,
@@ -1055,7 +1062,7 @@ void android_main(android_app* app) {
         room_render_counts.room_root_bounds, room_render_counts.navigation_floors,
         room_render_counts.exit_markers, additive_draws,
         additive_one_one_mapped,
-        diffuse_refs, textured_draws, alpha_refs, alpha_cutout_draws,
+        diffuse_refs, textured_draws, alpha_refs, alpha_map_al_preview_draws,
         unresolved_alpha_refs,
         lightmap_refs, specular_refs, other_refs, no_texture_draws,
         visible_no_texture_draws, prince.controller_count(), prince.joint_count(),
@@ -1069,11 +1076,11 @@ void android_main(android_app* app) {
     __android_log_print(ANDROID_LOG_INFO, kTag,
         "ENGINE: Irrlicht is confirmed as the engine family; this diagnostic embeds official upstream OGL-ES r6038. The exact customized DH2 Irrlicht fork/revision and game-specific layer remain under investigation. SWAMP Prince input runs through the shared source Character coordinator, actor_runtime and NativeWorld on developer-selected 20 ms logical ticks; owner movement follows source SceneBinding root motion. Script manager, multi-module level, environment physics, AI and combat remain unsupported.");
     __android_log_print(ANDROID_LOG_INFO, kTag,
-        "RENDER-LIMITS: source room role filter omitted root-bounds=%u navigation-floors=%u exit-markers=%u; these floor meshes remain in navigation/physics inputs; Material__11598 additive passes=%u exact GL_ONE/GL_ONE + GL_FUNC_ADD mapped=%u with source LEQUAL/depth-write-off; SWAMP diffuse draws=%u; AlphaMap cutout refs=%u/draws=%u with %u unresolved AlphaMap refs; ignored LightMap=%u Specular=%u other=%u; visible no-texture defaults=%u. Prince: four source warrior skins, atlas mapped parts=%u, unmapped diffuse=%u, ignored source AlphaMap parts=%u; exact remaining source shader/effects not reconstructed.",
+        "RENDER-LIMITS: source room role filter omitted root-bounds=%u navigation-floors=%u exit-markers=%u; these floor meshes remain in navigation/physics inputs; Material__11598 additive passes=%u exact GL_ONE/GL_ONE + GL_FUNC_ADD mapped=%u with source LEQUAL/depth-write-off; SWAMP diffuse draws=%u; AlphaMap refs=%u AL-preview draws=%u, with %u unresolved refs; preview uses source shader blue mask and fractional alpha. The `AL` versus `AT` CurrentTechnique selection and original GL blend/depth state are unresolved; source AT threshold is 0.8. Ignored LightMap=%u Specular=%u other=%u; visible no-texture defaults=%u. Prince: four source warrior skins, atlas mapped parts=%u, unmapped diffuse=%u, ignored source AlphaMap parts=%u; exact remaining source shader/effects not reconstructed.",
         room_render_counts.room_root_bounds,
         room_render_counts.navigation_floors,
         room_render_counts.exit_markers, additive_draws, additive_one_one_mapped,
-        textured_draws, alpha_refs, alpha_cutout_draws,
+        textured_draws, alpha_refs, alpha_map_al_preview_draws,
         unresolved_alpha_refs,
         lightmap_refs, specular_refs, other_refs, visible_no_texture_draws,
         prince_mesh.mapped_textures, prince_mesh.unmapped_diffuse_textures,
@@ -1181,7 +1188,7 @@ void android_main(android_app* app) {
                 "%s  |  SOURCE XYZ  X %.2f  Y %.2f  Z %.2f  | player mask 0x%X floor %u\n"
                 "Prince source state %d flags 0x%X; sequence %d (%s), clip %d; four warrior skins (%u joints, %u vertices); atlas parts %u; ignored Prince AlphaMaps %u.\n"
                 "Source actor step %u / NativeWorld steps %u; phase %u; body present %u pinned %u; source body service calls %u; path boundary %u direction %u path_segments %u requested %u; physics XY %.4f, %.4f.\n"
-                "SWAMP draws %u/%u; source-room-filter root=%u navigation-floor=%u exit=%u; additive %u GL_ONE/GL_ONE + ADD mapped %u; diffuse %u/%u; AlphaMap %u/%u (%u unresolved); ignored LightMap %u, Specular %u, other %u; no-texture %u (%u visible).",
+                "SWAMP draws %u/%u; source-room-filter root=%u navigation-floor=%u exit=%u; additive %u GL_ONE/GL_ONE + ADD mapped %u; diffuse %u/%u; AlphaMap %u/%u AL preview (%u unresolved); AT threshold 0.8 selection unresolved; ignored LightMap %u, Specular %u, other %u; no-texture %u (%u visible).",
                 mode, player_position.X, player_position.Y, player_position.Z,
                 kPlayerPathMask, actor_frame.source_floor,
                 prince_character.state_id(), prince_character.state_flags(),
@@ -1203,7 +1210,7 @@ void android_main(android_app* app) {
                 room_render_counts.navigation_floors,
                 room_render_counts.exit_markers, additive_draws,
                 additive_one_one_mapped,
-                diffuse_refs, textured_draws, alpha_refs, alpha_cutout_draws,
+                diffuse_refs, textured_draws, alpha_refs, alpha_map_al_preview_draws,
                 unresolved_alpha_refs, lightmap_refs, specular_refs, other_refs, no_texture_draws,
                 visible_no_texture_draws);
             diagnostics->setText(utf8_wide(status).c_str());

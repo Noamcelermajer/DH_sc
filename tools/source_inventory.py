@@ -21,7 +21,7 @@ def main():
         group=path.parts[1]
         if any(v in THIRD for v in path.parts[2:]) or any('box2d' in v.lower() or v.startswith('lua-5.') for v in path.parts):continue
         if group=='adam-script-runtime' and path.parts[2]=='lua':continue
-        if any(v in {'reference','fixtures','build','reports'} for v in path.parts[2:]):continue
+        if any(v in {'reference','fixtures','build','reports','assets'} for v in path.parts[2:]):continue
         file=ROOT/name
         if not file.is_file():continue
         raw=file.read_bytes();lines=len(raw.splitlines())
@@ -29,7 +29,7 @@ def main():
         row=groups[group];row['test_files']+=int(tests)
         if not tests:row['source_files']+=1;row['source_lines']+=lines;row['source_bytes']+=len(raw)
         files.append({'path':name,'bytes':len(raw),'lines':lines,'kind':'test_or_tool' if tests else 'source','sha256':hashlib.sha256(raw).hexdigest()})
-    result={'schema':'dh2-maintained-source-inventory/v1','scope':'Git-index paths with working-tree bytes; excludes recovered evidence, vendor/upstream code, reference corpora and fixtures. Includes repaired/decompiled Java in its own category. Files/lines are not function implementation or game-completion counts.','adam_pinned_commit':'45c5348e807607a2825211bb8f26248067ba9106','modules':[{'module':k,'origin':'Adam import with local adaptations' if k in ADAM else 'Existing reconstruction','source_category':'repaired_decompiled_Java' if k=='android-java' else 'reconstruction_and_port',**v} for k,v in sorted(groups.items())],'totals':{key:sum(v[key] for v in groups.values()) for key in ('source_files','source_lines','source_bytes','test_files')},'reconstruction_and_port_totals':{key:sum(v[key] for k,v in groups.items() if k!='android-java') for key in ('source_files','source_lines','source_bytes','test_files')},'files':files}
+    result={'schema':'dh2-maintained-source-inventory/v1','scope':'Git-index paths with working-tree bytes; excludes recovered evidence, vendor/upstream code, reference corpora, fixtures and packaged assets (including unchanged recovered scripts). Includes repaired/decompiled Java in its own category. Files/lines are not function implementation or game-completion counts.','adam_pinned_commit':'45c5348e807607a2825211bb8f26248067ba9106','modules':[{'module':k,'origin':'Adam import with local adaptations' if k in ADAM else 'Existing reconstruction','source_category':'repaired_decompiled_Java' if k=='android-java' else 'reconstruction_and_port',**v} for k,v in sorted(groups.items())],'totals':{key:sum(v[key] for v in groups.values()) for key in ('source_files','source_lines','source_bytes','test_files')},'reconstruction_and_port_totals':{key:sum(v[key] for k,v in groups.items() if k!='android-java') for key in ('source_files','source_lines','source_bytes','test_files')},'files':files}
     a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps({'totals':result['totals'],'modules':len(groups),'report':str(a.output)},indent=2))
 if __name__=='__main__':main()

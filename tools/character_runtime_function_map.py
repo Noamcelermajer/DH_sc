@@ -33,6 +33,10 @@ AI_MANIFESTS = {
     'port/level-world/reference/character-ai-set-target/original-functions.json': 'character_ai_set_target',
     'port/level-world/reference/character-ai-relations/original-functions.json': 'character_ai_relations',
     'port/level-world/reference/character-ai-in-combat/original-functions.json': 'character_ai_in_combat',
+    'port/level-world/reference/character-aggro-acquisition-prefix/original-functions.json': 'character_aggro_acquisition_prefix',
+    'port/level-world/reference/character-ai-sight/original-functions.json': 'character_ai_sight',
+    'port/level-world/reference/character-monster-retarget/original-functions.json': 'character_monster_retarget',
+    'port/level-world/reference/ghost-ai-session/original-functions.json': 'ghost_ai_session',
 }
 MANIFESTS.extend(AI_MANIFESTS)
 OUTPUT = 'docs/generated/character-runtime-function-map.json'
@@ -48,7 +52,7 @@ def classify(row):
         return ('bounded_ai_kernel_or_dependency_evidence',
                 [f'port/level-world/{unit}.hpp', f'port/level-world/{unit}.cpp'],
                 row['manifest_implementation_scope'] + '; ' + row.get('scope', row.get('port_coverage', 'Supporting range evidence.')) +
-                '; compiled/exported in the native Android library; live actor/controller integration pending. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.')
+                '; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.')
     if row.get('evidence_manifest') == VISIBILITY_MANIFEST:
         return ('visibility_callsite_and_vtable_evidence', [VISIBILITY_MANIFEST],
                 row['scope'] + '; read-only audit adds no implementation body.')

@@ -26,6 +26,13 @@ TARGETING_UNITS = {
     'faction_relations': '_ZN3dh222character_ai_relations5query',
     'combat_query': '_ZN3dh222character_ai_in_combat8evaluate',
 }
+ACQUISITION_UNITS = {
+    'acquisition_prefix': '_ZN3dh234character_aggro_acquisition_prefix7prepare',
+    'monster_retarget': '_ZN3dh226character_monster_retarget6update',
+    'sight_distance': '_ZN3dh218character_ai_sight17evaluate_distance',
+    'sight_object': '_ZN3dh218character_ai_sight15evaluate_object',
+    'ghost_actor_composition': '_ZN3dh216ghost_ai_session12ActorSession19search_and_dispatch',
+}
 LUA_SYMBOL = 'lua_newstate'
 
 
@@ -35,8 +42,10 @@ def main():
     parser.add_argument('--artifact', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--require-targeting-units', action='store_true')
+    parser.add_argument('--require-acquisition-units', action='store_true')
     args = parser.parse_args()
-    units = {**UNITS, **(TARGETING_UNITS if args.require_targeting_units else {})}
+    units = {**UNITS, **(TARGETING_UNITS if args.require_targeting_units or args.require_acquisition_units else {}),
+             **(ACQUISITION_UNITS if args.require_acquisition_units else {})}
     raw = args.apk.read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
     artifact = json.loads(args.artifact.read_text())
@@ -72,14 +81,15 @@ def main():
         'validation': 'PASS', 'apk_sha256': digest, 'apk_bytes': len(raw),
         'artifact_report_sha256': hashlib.sha256(args.artifact.read_bytes()).hexdigest(),
         'abis': abis, 'source_sha256': artifact['source_sha256'],
-        'compiled_source_units': len(units),
+        'compiled_source_units': len(units) - int(args.require_acquisition_units),
+        'required_export_groups': len(units),
         'native_ai_wired': False, 'full_game_playable': False,
-        'scope': f'{len(units)} bounded source AI/script units compiled and exported for ELF64 ARM64/x86_64; one reused Adam Lua core per ABI. Existing Crypt spawn runtime passed. Live acquisition/controller integration is pending.',
+        'scope': f'{len(units) - int(args.require_acquisition_units)} bounded source AI/script units compiled and exported for ELF64 ARM64/x86_64; one reused Adam Lua core per ABI. Existing Crypt spawn runtime passed. Live acquisition/controller integration is pending.',
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
     print(json.dumps({'validation': 'PASS', 'apk_sha256': digest, 'abis': list(abis),
-                      'source_units': len(units), 'native_ai_wired': False}))
+                      'source_units': len(units) - int(args.require_acquisition_units), 'native_ai_wired': False}))
 
 
 if __name__ == '__main__':

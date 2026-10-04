@@ -34,9 +34,10 @@ inline bool is_swamp_alpha_map_reference(
 }
 
 // The source metadata pairs this AlphaMap with env_swamp.tga on
-// Material__11611. Keep the projection narrow until additional material
-// effects are recovered and validated.
-inline bool swamp_draw_uses_alpha_cutout(
+// Material__11611. The selected type-20 technique is still opaque, so this
+// diagnostic chooses the recovered AL fractional-alpha output as a preview;
+// it does not claim that AL rather than AT was selected by the game.
+inline bool swamp_draw_uses_alpha_al_preview(
     const viewer::SceneDrawDescriptor& draw,
     const viewer::SceneTextureReference* references,
     std::uint32_t reference_count) {
@@ -52,14 +53,15 @@ inline bool swamp_draw_uses_alpha_cutout(
     return diffuse && alpha_map;
 }
 
-// The recovered source AlphaMap is a PVRTC texture whose decoded alpha
-// channel carries the cutout. Preserve diffuse RGB and replace only its alpha.
+// The recovered source fragment reads the AlphaMap's blue channel and writes
+// it to diffuse alpha. Preserve diffuse RGB and use that exact channel rather
+// than the decoder's unrelated AlphaMap alpha byte.
 inline bool apply_swamp_alpha_map(std::uint8_t* diffuse_rgba,
                                   const std::uint8_t* alpha_rgba,
                                   std::size_t pixel_count) {
     if (pixel_count && (!diffuse_rgba || !alpha_rgba)) return false;
     for (std::size_t pixel = 0; pixel < pixel_count; ++pixel)
-        diffuse_rgba[pixel * 4 + 3] = alpha_rgba[pixel * 4 + 3];
+        diffuse_rgba[pixel * 4 + 3] = alpha_rgba[pixel * 4 + 2];
     return true;
 }
 

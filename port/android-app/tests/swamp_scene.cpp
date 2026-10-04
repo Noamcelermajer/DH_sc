@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
         std::uint32_t next_vertex = 0, next_index = 0, texture_refs = 0;
         std::uint32_t visible_source_draws = 0, omitted_diagnostic_draws = 0;
         std::uint32_t alpha_map_parameter_refs = 0, alpha_map_refs = 0;
-        std::uint32_t alpha_cutout_draws = 0;
+        std::uint32_t alpha_preview_draws = 0;
         std::uint32_t alpha_material_draws = 0;
         std::uint32_t additive_source_draws = 0;
         std::set<std::string> sampler_paths, sampler_parameters, material_ids;
@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
             }
             require(dh2::viewer::swamp_draw_writes_depth("ordinary-material", false) &&
                     dh2::viewer::swamp_draw_writes_depth("ordinary-material", true),
-                    "opaque and alpha-reference cutout draws must write depth");
+                    "ordinary opaque/cutout material depth policy changed");
             if (dh2::viewer::omit_unresolved_swamp_draw(draw.node_id, draw.material_id)) {
                 require(std::strcmp(draw.geometry_id, "_module_obj_4of4_brdwalk_sw_00-mesh") == 0 &&
                         draw.index_count == 36 && draw.visible,
@@ -229,17 +229,17 @@ int main(int argc, char** argv) {
                 }
             }
             const auto* draw_references = placed.texture_references + draw.first_texture;
-            const bool uses_alpha_cutout = dh2::irrlicht_swamp::swamp_draw_uses_alpha_cutout(
+            const bool uses_alpha_preview = dh2::irrlicht_swamp::swamp_draw_uses_alpha_al_preview(
                 draw, draw_references, draw.texture_count);
             if (std::strcmp(draw.material_id, "Material__11611") == 0) {
-                require(uses_alpha_cutout && draw.visible,
-                        "Material__11611 no longer maps to its visible source AlphaMap cutout");
+                require(uses_alpha_preview && draw.visible,
+                        "Material__11611 no longer maps to its visible source AlphaMap AL preview");
                 ++alpha_material_draws;
             } else {
-                require(!uses_alpha_cutout,
-                        "source AlphaMap cutout policy expanded beyond Material__11611");
+                require(!uses_alpha_preview,
+                        "source AlphaMap AL-preview policy expanded beyond Material__11611");
             }
-            alpha_cutout_draws += uses_alpha_cutout ? 1U : 0U;
+            alpha_preview_draws += uses_alpha_preview ? 1U : 0U;
             texture_refs += draw.texture_count;
             next_vertex += draw.vertex_count;
             next_index += draw.index_count;
@@ -248,9 +248,9 @@ int main(int argc, char** argv) {
                 "unresolved translucent diagnostic policy must select exactly one source draw");
         require(additive_source_draws == 2,
                 "source additive state must select exactly the two verified overlay draws");
-        require(alpha_map_refs == 22 && alpha_cutout_draws == 22 &&
+        require(alpha_map_refs == 22 && alpha_preview_draws == 22 &&
                 alpha_material_draws == 22,
-                "source AlphaMap cutout mapping must cover the 22 Material__11611 draws");
+                "source AlphaMap AL-preview mapping must cover the 22 Material__11611 draws");
         require(visible_source_draws == 54,
                 "module zero source-visible draw count changed from the tested baseline");
         require(!dh2::viewer::omit_unresolved_swamp_draw("other-node", "ColorMaterial") &&
@@ -293,11 +293,11 @@ int main(int argc, char** argv) {
         require(bres_bytes == bres_before, "BRES input bytes were modified");
         std::printf("SWAMP module 0: %u subtree records, %u source draw commands (%u source-visible; "
                     "%u drawn diagnostics; "
-                    "%u unresolved diagnostic draw omitted), %u resolved AlphaMap refs/%u Material__11611 cutouts (%u AlphaMap parameter refs total), %u vertices, "
+                    "%u unresolved diagnostic draw omitted), %u resolved AlphaMap refs/%u Material__11611 AL previews (%u AlphaMap parameter refs total), %u vertices, "
                     "%u indices, %u materials, %u sampler refs; correction=(%.0f,%.0f,%.0f); BRES unchanged\n",
                     record_count, placed.draw_commands, visible_source_draws,
                     visible_source_draws - omitted_diagnostic_draws, omitted_diagnostic_draws,
-                    alpha_map_refs, alpha_cutout_draws, alpha_map_parameter_refs,
+                    alpha_map_refs, alpha_preview_draws, alpha_map_parameter_refs,
                     placed.vertex_count,
                     placed.index_count, static_cast<unsigned>(material_ids.size()),
                     placed.texture_reference_count, binding.placement_delta[0],

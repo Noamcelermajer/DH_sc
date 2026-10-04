@@ -21,6 +21,7 @@ def main():
     parser.add_argument('--sdk', type=Path, required=True)
     parser.add_argument('--runtime', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--include-acquisition-sources', action='store_true')
     args = parser.parse_args()
     runtime = json.loads(args.runtime.read_text(encoding='utf-8'))
     digest = sha(args.apk)
@@ -62,6 +63,8 @@ def main():
         'character_enemy_spotted', 'monster_external_script_session',
         'character_ai_set_target', 'character_ai_relations', 'character_ai_in_combat',
     )
+    if args.include_acquisition_sources:
+        ai_units += ('character_aggro_acquisition_prefix', 'character_ai_sight', 'ghost_ai_session', 'character_monster_retarget')
     for unit in ai_units:
         paths.extend(f'port/level-world/{unit}{suffix}' for suffix in ('.hpp', '.cpp'))
     paths.extend((
@@ -76,7 +79,14 @@ def main():
                 local = REPO / 'port/android-native/app/src/main' / name
                 assert local.read_bytes() == raw, name
                 assets[name.removeprefix('assets/')] = {'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()}
-    assert len(assets) == 240
+    assert len(assets) == (243 if args.include_acquisition_sources else 240)
+    if args.include_acquisition_sources:
+        from prepare_monster_ai import CACHE_SHA256, SCRIPTS
+        for name, digest_expected in SCRIPTS.items():
+            assert assets['scripts/ai/' + name]['sha256'] == digest_expected
+        provenance = json.loads((REPO / 'port/android-native/app/src/main/assets/scripts/ai/monster-ai-provenance.json').read_text())
+        assert provenance['cache_sha256'] == CACHE_SHA256 and provenance['unchanged_original_source'] is True
+
     report = {'validation': 'PASS', 'apk_sha256': digest, 'apk_bytes': args.apk.stat().st_size,
               'runtime_report_sha256': sha(args.runtime), 'native_libraries': inspect(args.apk),
               'zip_16k_alignment_verified': alignment.returncode == 0,

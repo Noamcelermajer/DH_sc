@@ -42,6 +42,7 @@ target_sources(dh2_level_world PRIVATE
  character_aggro_target_search.cpp character_aggro_candidate_events.cpp
  character_enemy_spotted.cpp monster_external_script_session.cpp
  character_ai_set_target.cpp character_ai_relations.cpp character_ai_in_combat.cpp
+ character_aggro_acquisition_prefix.cpp character_ai_sight.cpp ghost_ai_session.cpp character_monster_retarget.cpp
  ../random/random.c ../lua-numeric/numeric.c)
 
 target_sources(dh2_level_world PRIVATE character_ai_attack.cpp)
