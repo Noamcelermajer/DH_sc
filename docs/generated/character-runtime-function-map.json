@@ -75,6 +75,9 @@
     "port/level-world/reference/character-zonability/original-functions.json",
     "port/level-world/reference/monster-external-script-updates/original-functions.json",
     "port/level-world/reference/character-update-eligibility/original-functions.json",
+    "port/level-world/reference/game-object-stop/original-functions.json",
+    "port/level-world/reference/character-physics-position/original-functions.json",
+    "port/level-world/reference/character-update-script-scheduler/original-functions.json",
     "port/game-data/reference/skill-faery-tables/original-functions.json",
     "port/game-data/reference/level-tables/original-functions.json",
     "port/level-world/reference/module-scene-root-bounds/original-functions.json",
@@ -87,12 +90,12 @@
   ],
   "counts": {
     "pinned_addresses": 1455,
-    "extension_records": 531,
-    "evidence_records_before_deduplication": 838,
-    "additional_addresses": 366,
-    "combined_unique_addresses": 1821
+    "extension_records": 538,
+    "evidence_records_before_deduplication": 847,
+    "additional_addresses": 367,
+    "combined_unique_addresses": 1822
   },
-  "verification": "All ranges, aliases and 531 complete original byte hashes verified against the original symbol index and assembly exports.",
+  "verification": "All ranges, aliases and 538 complete original byte hashes verified against the original symbol index and assembly exports.",
   "functions": [
     {
       "original_symbol": "_ZN21Script_SpawnCharacter7ExecuteEbi",
@@ -14141,6 +14144,180 @@
       "implementation_limit": "Bounded source adapter.; Complete source decision body; 308 active instruction bytes plus 8 mapped data bytes; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/character-update-eligibility/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10GameObject29IsUpdatingPositionFromPhysicsEv",
+      "elf_address": "0x34006c",
+      "size": 8,
+      "sha256": "007f34a6c3441b0240da53f253e513b959105da2d8803255e1856aa48f48db47",
+      "role": "Base virtual implementation; returns 1.",
+      "evidence_manifest": "port/level-world/reference/game-object-stop/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "GameObject::IsUpdatingPositionFromPhysics() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/game_object_stop.hpp",
+        "port/level-world/game_object_stop.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/game-object-stop/original-functions.json",
+        "port/level-world/reference/character-physics-position/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-physics-position/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_physics_position.hpp",
+            "port/level-world/character_physics_position.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZNK9Character29IsUpdatingPositionFromPhysicsEv",
+      "elf_address": "0x3a2e44",
+      "size": 12,
+      "sha256": "05d43e2407b49c03a330eae70a339d4e7f42f2a1ec3b77155d2900bbde90a3c8",
+      "role": "Character override; reads Character+0x520 bit 1.",
+      "evidence_manifest": "port/level-world/reference/game-object-stop/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "Character::IsUpdatingPositionFromPhysics() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/game_object_stop.hpp",
+        "port/level-world/game_object_stop.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/game-object-stop/original-functions.json",
+        "port/level-world/reference/character-physics-position/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-physics-position/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_physics_position.hpp",
+            "port/level-world/character_physics_position.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN14PhysicalObject17setLinearVelocityEff",
+      "elf_address": "0x46e918",
+      "size": 96,
+      "sha256": "241bee4f0a32030ea4ba7b7533e00f0460e574957ce2c45824bbf685757c92e6",
+      "evidence_manifest": "port/level-world/reference/game-object-stop/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "PhysicalObject::setLinearVelocity(float, float)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/PhysicalObject-06b76fdcde8e-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/game_object_stop.hpp",
+        "port/level-world/game_object_stop.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/game-object-stop/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN14PhysicalObject18setAngularVelocityEf",
+      "elf_address": "0x46e978",
+      "size": 36,
+      "sha256": "9d4b79a5dd3db4f20cf45d26954e9e348145d49ed321abce78d6d40d95ab4aa0",
+      "evidence_manifest": "port/level-world/reference/game-object-stop/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "PhysicalObject::setAngularVelocity(float)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/PhysicalObject-06b76fdcde8e-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/game_object_stop.hpp",
+        "port/level-world/game_object_stop.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/game-object-stop/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN10GameObject4StopEv",
+      "elf_address": "0x3938f8",
+      "size": 248,
+      "sha256": "5fc7693c6c4b5e980f8cd0937aded93f9ce58e9e4b55f846925156b3c4077798",
+      "executable_bytes": 236,
+      "literal_pool_bytes": 12,
+      "evidence_manifest": "port/level-world/reference/game-object-stop/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "GameObject::Stop()",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/game_object_stop.hpp",
+        "port/level-world/game_object_stop.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/game-object-stop/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN14PhysicalObject11setPositionEff",
+      "elf_address": "0x46ea80",
+      "size": 84,
+      "sha256": "81742a16375db62b0ac33486620da10592a3d36dbd0c443ecac51236b3cdb1dd",
+      "evidence_manifest": "port/level-world/reference/game-object-stop/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "PhysicalObject::setPosition(float, float)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/PhysicalObject-06b76fdcde8e-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/game_object_stop.hpp",
+        "port/level-world/game_object_stop.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/game-object-stop/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9Character6UpdateEv",
+      "elf_address": "0x3abe98",
+      "size": 3776,
+      "sha256": "b74b4f3405a8456ce440b642e97f1b0c028c29e9e74abaa1be0aaf1534e1f8c2",
+      "scope": "Bounded lazy-script/concurrent-AI portion only; see source_ranges for included decision and insertion paths",
+      "evidence_manifest": "port/level-world/reference/character-update-script-scheduler/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "Character::Update()",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_update_script_scheduler.hpp",
+        "port/level-world/character_update_script_scheduler.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Bounded lazy-script/concurrent-AI portion only; see source_ranges for included decision and insertion paths; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-update-script-scheduler/original-functions.json"
       ],
       "additional_mappings": []
     },

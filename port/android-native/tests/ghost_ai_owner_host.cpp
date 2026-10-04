@@ -331,6 +331,37 @@ struct OwnerFixture final : Fixture {
     }
 };
 
+std::uintptr_t create_vm_then_pending_callbacks(OwnerFixture& f,
+    character::ScriptLifecycleState64& lifecycle,monster_external_script::Session& vm,
+    monster_external_script::Services& services,std::shared_ptr<void>& lifetime,
+    const std::string& commons,const std::string& monster,std::string& error) {
+    // Source SetScript calls AISExternal/LuaScript construction at 0x3ccb68
+    // BEFORE publishing Character+0x3e4 at 0x3ccb6c. No active or pending
+    // identity is fabricated to make callback preparation succeed earlier.
+    lifecycle={f.owner_id,0,0,1,6,-1,-1,0,1,0,0,0};
+    f.enemy_state.active={0,0};f.event_state.active=0;
+    monster_external_script::Services constructor{};constructor.owner=f.owner_id;
+    require(vm.create(constructor,error)==monster_external_script::Status::complete &&
+        vm.stage()==monster_external_script::Stage::created && vm.vm_identity()!=0 &&
+        !lifecycle.pending && !lifecycle.active && vm.statistics().source_functions_bound==0,
+        "constructor VM did not precede pending publication");
+    const auto identity=vm.vm_identity();
+    require(f.owner.prepare_pending(f.make_bindings(),&lifecycle,services,lifetime,error)==
+        native::ghost_ai::Status::invalid_argument && !lifetime && !f.owner.ready() &&
+        vm.vm_identity()==identity,"callback owner accepted unpublished pending AIS");
+    lifecycle.pending=f.active_id;
+    require(f.owner.prepare_pending(f.make_bindings(),&lifecycle,services,lifetime,error)==
+        native::ghost_ai::Status::complete && lifetime && !f.owner.ready() &&
+        vm.install_created_services(services,error,lifetime)==monster_external_script::Status::complete &&
+        vm.vm_identity()==identity && vm.bind_ais_functions(error)==monster_external_script::Status::complete &&
+        vm.bind_character_functions(error)==monster_external_script::Status::complete &&
+        vm.load_common({commons.data(),commons.size()},error)==monster_external_script::Status::complete &&
+        vm.load_external({monster.data(),monster.size()},error)==monster_external_script::Status::complete &&
+        vm.vm_identity()==identity && !lifecycle.active && lifecycle.pending==f.active_id,
+        "prepared callbacks did not join the original constructor VM in source order");
+    return identity;
+}
+
 void run_owner_pipeline(const std::string& commons, const std::string& monster) {
     OwnerFixture f(0x700000000ull);
     require(f.bind(commons, monster), "native source owner bind failed");
@@ -365,7 +396,7 @@ void run_owner_pipeline(const std::string& commons, const std::string& monster) 
     require(zonable != f.trace.end() && target_update != f.trace.end() &&
             master_update != f.trace.end() && zonable < target_update && target_update < master_update,
             "CharAI source dispatcher service order changed");
-    std::printf("{\"ghost_ai_owner_host_cases\":8,\"existing_target_cases\":6,\"pending_vm_shared\":true,\"flat_character_owner_cases\":4,\"flat_published_vm_shared\":true,\"manager_cursor_owner_cases\":2,\"manager_cursor_live_links\":true,\"status\":\"PASS\","
+    std::printf("{\"ghost_ai_owner_host_cases\":8,\"existing_target_cases\":6,\"pending_vm_shared\":true,\"constructor_before_pending_cases\":3,\"flat_character_owner_cases\":4,\"flat_published_vm_shared\":true,\"manager_cursor_owner_cases\":2,\"manager_cursor_live_links\":true,\"status\":\"PASS\","
         "\"frame_status\":%d,\"last_service\":%u,\"candidates\":%u,"
         "\"events\":%u,\"script_callbacks\":%u,\"set_target_calls\":%u,"
         "\"head_to_calls\":%u,\"path_count\":%u,\"target_id\":%llu,"
@@ -405,23 +436,19 @@ void run_flat_owner(const std::string& commons, const std::string& monster) {
         !r.candidate_count && !r.scan.script_dispatches && f.event12_calls==1 && !f.path_calls,
         "empty native flat producer fell back to historical room membership"); }
     { monster_external_script::Session vm;OwnerFixture f(0x7b0000000ull);
-      character::ScriptLifecycleState64 lifecycle{f.owner_id,0,f.active_id,1,6,-1,-1,0,1,0,0,0};
-      f.enemy_state.active={0,0};f.event_state.active=0;monster_external_script::Services services{};
+      character::ScriptLifecycleState64 lifecycle{};monster_external_script::Services services{};
       std::shared_ptr<void> lifetime;std::string error;
-      require(f.owner.prepare_pending(f.make_bindings(),&lifecycle,services,lifetime,error)==native::ghost_ai::Status::complete &&
-        vm.create(services,error,2*1024*1024,lifetime)==monster_external_script::Status::complete &&
-        vm.bind_functions(error)==monster_external_script::Status::complete &&
-        vm.load_common({commons.data(),commons.size()},error)==monster_external_script::Status::complete &&
-        vm.load_external({monster.data(),monster.size()},error)==monster_external_script::Status::complete,
-        "flat pending source VM preparation failed");
+      const auto identity=create_vm_then_pending_callbacks(f,lifecycle,vm,services,lifetime,commons,monster,error);
       publish_pending(f,lifecycle);Entry end{},enemy{&end,&f.target_character};end.next=&enemy;CharacterList chars{&end,&enemy,&end};
       auto bindings=f.make_owner_bindings(commons,monster);bindings.rooms=nullptr;bindings.characters=&chars;
       require(f.owner.bind_staged(bindings,vm,error)==native::ghost_ai::Status::complete && vm.uses_services(services),
         "flat native owner did not adopt the exact published VM");
       const FrameInput input{f.identity,{f.owner_id,f.owner_id+0x80,0x100,0,0,0,0,0,0,0},0,0};FrameResult r{};
       require(f.owner.tick(input,&r)==native::ghost_ai::Status::complete && r.scan.script_dispatches==1 &&
-        vm.statistics().completed_callbacks==1 && f.owner.script_statistics().completed_callbacks==1,
-        "flat native acquisition created a duplicate VM or missed source callbacks"); }
+        vm.statistics().completed_callbacks==1 && f.owner.script_statistics().completed_callbacks==1 &&
+        vm.vm_identity()==identity,"flat native acquisition created a duplicate VM or missed source callbacks");
+      require(f.owner.reset(error)==native::ghost_ai::Status::complete &&
+        vm.reset(error)==monster_external_script::Status::complete,"flat borrowed callback teardown failed"); }
 }
 
 void run_manager_cursor_owner(const std::string& commons, const std::string& monster) {
@@ -465,21 +492,15 @@ void run_manager_cursor_owner(const std::string& commons, const std::string& mon
       require(f.owner.reset(error)==native::ghost_ai::Status::complete,"manager owner detach failed"); }
     { monster_external_script::Session vm;OwnerFixture f(0x7d0000000ull);Ring ring;ring.append(&f.target_character);
       const auto& list=ring.methods();
-      character::ScriptLifecycleState64 lifecycle{f.owner_id,0,f.active_id,1,6,-1,-1,0,1,0,0,0};
-      f.enemy_state.active={0,0};f.event_state.active=0;monster_external_script::Services services{};
+      character::ScriptLifecycleState64 lifecycle{};monster_external_script::Services services{};
       std::shared_ptr<void> lifetime;std::string error;
-      require(f.owner.prepare_pending(f.make_bindings(),&lifecycle,services,lifetime,error)==native::ghost_ai::Status::complete &&
-        vm.create(services,error,2*1024*1024,lifetime)==monster_external_script::Status::complete &&
-        vm.bind_functions(error)==monster_external_script::Status::complete &&
-        vm.load_common({commons.data(),commons.size()},error)==monster_external_script::Status::complete &&
-        vm.load_external({monster.data(),monster.size()},error)==monster_external_script::Status::complete,
-        "manager pending VM preparation failed");
+      const auto identity=create_vm_then_pending_callbacks(f,lifecycle,vm,services,lifetime,commons,monster,error);
       publish_pending(f,lifecycle);auto bindings=f.make_owner_bindings(commons,monster);bindings.rooms=nullptr;bindings.objects=&list;
       require(f.owner.bind_staged(bindings,vm,error)==native::ghost_ai::Status::complete && vm.uses_services(services),
           "manager cursor native owner duplicated the published VM");
       const FrameInput input{f.identity,{f.owner_id,f.owner_id+0x80,0x100,0,0,0,0,0,0,0},0,0};FrameResult r{};
       require(f.owner.tick(input,&r)==native::ghost_ai::Status::complete && r.scan.script_dispatches==1 &&
-          r.scan.path_requests==1 && vm.statistics().completed_callbacks==1,
+          r.scan.path_requests==1 && vm.statistics().completed_callbacks==1 && vm.vm_identity()==identity,
           "published VM did not receive manager cursor source acquisition callback");
       require(f.owner.reset(error)==native::ghost_ai::Status::complete && vm.reset(error)==monster_external_script::Status::complete,
           "manager borrowed callback teardown failed"); }
@@ -532,20 +553,11 @@ void run_existing_targets(const std::string& commons, const std::string& monster
 void run_pending_owner(const std::string& commons, const std::string& monster) {
     monster_external_script::Session vm;
     OwnerFixture f(0x770000000ull);
-    character::ScriptLifecycleState64 lifecycle{f.owner_id,0,f.active_id,1,6,-1,-1,0,1,0,0,0};
-    f.enemy_state.active={0,0};
-    f.event_state.active=0;
+    character::ScriptLifecycleState64 lifecycle{};
     monster_external_script::Services services{};
     std::shared_ptr<void> lifetime;
     std::string error;
-    require(f.owner.prepare_pending(f.make_bindings(),&lifecycle,services,lifetime,error)==
-                native::ghost_ai::Status::complete && lifetime && !f.owner.ready(),
-            "native frame owner could not prepare genuinely pending script callbacks");
-    require(vm.create(services,error,2*1024*1024,lifetime)==monster_external_script::Status::complete &&
-            vm.bind_functions(error)==monster_external_script::Status::complete &&
-            vm.load_common({commons.data(),commons.size()},error)==monster_external_script::Status::complete &&
-            vm.load_external({monster.data(),monster.size()},error)==monster_external_script::Status::complete,
-            "native owner pending script load failed");
+    const auto identity=create_vm_then_pending_callbacks(f,lifecycle,vm,services,lifetime,commons,monster,error);
     auto bindings=f.make_owner_bindings(commons,monster);
     require(f.owner.bind_staged(bindings,vm,error)==native::ghost_ai::Status::script_not_ready &&
                 !f.owner.ready() && lifecycle.active==0,
@@ -564,9 +576,11 @@ void run_pending_owner(const std::string& commons, const std::string& monster) {
     FrameResult result{};
     require(f.owner.tick(input,&result)==native::ghost_ai::Status::complete &&
                 result.scan.script_dispatches==1 && result.scan.path_requests==1 &&
-                vm.statistics().completed_callbacks==1 && f.owner.script_statistics().completed_callbacks==1,
+                vm.statistics().completed_callbacks==1 && f.owner.script_statistics().completed_callbacks==1 &&
+                vm.vm_identity()==identity,
             "native frame callbacks did not use the one published AIS VM");
-    require(f.owner.reset(error)==native::ghost_ai::Status::complete && vm.ready(),
+    lifetime.reset();
+    require(f.owner.reset(error)==native::ghost_ai::Status::complete && vm.ready() && vm.vm_identity()==identity,
             "frame owner reset destroyed the AIS-owned VM");
     float property=123.f;
     require(services.get_prop(services.context,f.owner_id,28,&property)==0 && property==-1.f,

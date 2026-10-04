@@ -1,7 +1,12 @@
 # DH2 native Android reconstruction
 
-Current continuation: [native frame foundations checkpoint](../../docs/NATIVE-FRAME-FOUNDATIONS-CHECKPOINT-2026-10-04.md)
+Current continuation: [source frame ownership checkpoint](../../docs/SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md)
 and [full project checklist](../../docs/PROJECT-CHECKLIST.md).
+The newer local build adds a reviewed retained-VM callback bridge and compiled
+Stop/physics-policy/scheduler prerequisites. Its Android 17/16 KiB Crypt
+regression passes; autonomous native-frame binding remains open. The
+[published frame foundations release](../../docs/NATIVE-FRAME-FOUNDATIONS-CHECKPOINT-2026-10-04.md)
+retains its previous downloadable APK identity.
 The source classifier now selects Ghost AIS using actual loaded properties and
 tables. Zonability is diagnostic only; CanUpdate, retained-VM state callbacks and
 resolved-path caching are compiled/host-tested while native frame services remain

@@ -137,6 +137,13 @@ FRAME_FOUNDATION_UNITS = {
     'session_resolved_path_load': cpp_prefix('monster_external_script','Session')+'13load_resolved',
     'per_vm_path_cache': cpp_prefix('lua_script_load_once','load_once'),
 }
+FRAME_BRIDGE_UNITS = {
+    'game_object_stop': 'dh2_game_object_stop',
+    'character_physics_position': 'dh2_character_is_updating_position_from_physics',
+    'character_update_script_scheduler': cpp_prefix('character_update_script_scheduler','run'),
+    'session_created_services': cpp_prefix('monster_external_script','Session')+'24install_created_services',
+    'session_vm_identity': '_ZNK3dh223monster_external_script7Session11vm_identity',
+}
 
 
 def main():
@@ -158,6 +165,7 @@ def main():
     parser.add_argument('--require-hp-mp-init-dependencies', action='store_true')
     parser.add_argument('--require-ghost-skill-init-dependencies', action='store_true')
     parser.add_argument('--require-frame-foundation-units', action='store_true')
+    parser.add_argument('--require-frame-bridge-units', action='store_true')
     args = parser.parse_args()
     initialization = args.require_initialization_units or args.require_debug_persistence_units or args.require_level_construction_unit or args.require_native_monster_dependencies
     lifecycle = args.require_lifecycle_units or initialization
@@ -177,13 +185,15 @@ def main():
              **(INIT_CALLBACK_DEPENDENCIES if args.require_init_callback_dependencies else {}),
              **(HP_MP_INIT_DEPENDENCIES if args.require_hp_mp_init_dependencies else {}),
              **(GHOST_SKILL_INIT_DEPENDENCIES if args.require_ghost_skill_init_dependencies else {}),
-             **(FRAME_FOUNDATION_UNITS if args.require_frame_foundation_units else {})}
+             **(FRAME_FOUNDATION_UNITS if args.require_frame_foundation_units else {}),
+             **(FRAME_BRIDGE_UNITS if args.require_frame_bridge_units else {})}
     # Sight has two overload groups; melee caller and radius share one unit.
     source_units = len(units) - int(acquisition) - int(frame) - 5 * int(runtime_dependencies) - 7 * int(lifecycle) - 3 * int(initialization) - 3 * int(args.require_debug_persistence_units) - 2 * int(args.require_native_monster_dependencies)
     source_units -= 4 * int(args.require_character_list_dependencies) + 3 * int(args.require_init_callback_dependencies)
     source_units -= int(args.require_hp_mp_init_dependencies) # adapter already counted in level unit.
     source_units -= int(args.require_ghost_skill_init_dependencies) # skill/faery readers share one source unit.
     source_units -= 3 * int(args.require_frame_foundation_units) # three Session methods extend its existing unit.
+    source_units -= 2 * int(args.require_frame_bridge_units) # installer/identity extend the existing Session unit.
     raw = args.apk.read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
     artifact = json.loads(args.artifact.read_text())

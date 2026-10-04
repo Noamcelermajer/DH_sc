@@ -83,6 +83,9 @@ AI_MANIFESTS = {
     'port/level-world/reference/character-zonability/original-functions.json': 'character_zonability',
     'port/level-world/reference/monster-external-script-updates/original-functions.json': 'monster_external_script_session',
     'port/level-world/reference/character-update-eligibility/original-functions.json': 'character_update_eligibility',
+    'port/level-world/reference/game-object-stop/original-functions.json': 'game_object_stop',
+    'port/level-world/reference/character-physics-position/original-functions.json': 'character_physics_position',
+    'port/level-world/reference/character-update-script-scheduler/original-functions.json': 'character_update_script_scheduler',
 }
 MANIFESTS.extend(AI_MANIFESTS)
 ENGINE_MANIFESTS = {

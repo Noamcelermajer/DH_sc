@@ -117,7 +117,10 @@ struct Statistics {
 // These neutral tables support only identity transport, not entity methods.
 // One owning thread; initialize/dispatch/reset reject synchronous reentry.
 // The caller must not destroy this session or its borrowed native owners from
-// a service callback. The VM has an allocation cap; no instruction cap or
+// a service callback. Output arguments (including error storage) remain alive
+// until the synchronous call returns. A retiring callback context cannot be
+// the sole owner of that storage; retain it separately if it holds an output.
+// The VM has an allocation cap; no instruction cap or
 // untrusted-script sandbox is provided by the reused source VM.
 class Session {
 public:
@@ -139,6 +142,16 @@ public:
     Status create(const Services& services, std::string& error,
                   std::size_t memory_limit = 2 * 1024 * 1024,
                   std::shared_ptr<void> service_lifetime = {});
+    // Port ownership bridge, not a new original game function. After the AIS
+    // constructor creates its VM and SetScript publishes the real pending
+    // pointer, install the prepared same-owner callbacks before any binding or
+    // load. The returned callback lifetime is required; other borrowed native
+    // owners still outlive this Session. No VM/map/cache replacement or source
+    // stage advance occurs. Later stages and synchronous reentry are rejected.
+    // New services/lifetime are committed before the retired lifetime is
+    // released, and that release runs while the Session is busy.
+    Status install_created_services(const Services&, std::string& error,
+                                    std::shared_ptr<void> callback_lifetime);
     Status bind_functions(std::string& error);
     // Separate real registration stages for native pending AIS initialization.
     // The first installs the 35 AIS entries/libraries; the second installs the
@@ -166,6 +179,9 @@ public:
     Status reset(std::string& error);
     bool ready() const noexcept;
     Stage stage() const noexcept;
+    // Opaque identity of the actual owned VM, for ownership/provenance checks.
+    // Never dereference it; it is valid only while this VM remains owned.
+    std::uintptr_t vm_identity() const noexcept;
     // Exact service-table match lets an actor wrapper prove that this is the
     // pending AIS VM prepared with its stable per-actor callback context.
     bool uses_services(const Services& services) const noexcept;

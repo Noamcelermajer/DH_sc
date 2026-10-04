@@ -51,6 +51,11 @@ target_sources(dh2_level_world PRIVATE character_ai_attack.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_classification.cpp character_zonability.cpp
  character_update_eligibility.cpp lua_script_load_once.cpp)
 
+# Verified caller/ownership prerequisites. Live Character frame, path/body and
+# shared concurrent-map services remain explicit native runtime bindings.
+target_sources(dh2_level_world PRIVATE game_object_stop.cpp character_physics_position.cpp
+ character_update_script_scheduler.cpp)
+
 target_sources(dh2_level_world PRIVATE character_script_timers.cpp)
 target_sources(dh2_level_world PRIVATE character_enemy_retention.cpp character_target_search.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_master_update.cpp)

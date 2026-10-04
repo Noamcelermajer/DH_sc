@@ -1,11 +1,11 @@
 # Dungeon Hunter 2 — project completion checklist
 
-Updated: 2026-10-04. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-03`.
+Updated: 2026-10-05. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-03`.
 
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest tested build:** [download the Crypt native frame foundations APK](https://github.com/Noamcelermajer/DH_sc/releases/download/native-frame-foundations-2026-10-04/crypt-native-frame-foundations-candidate.apk).
+**Latest published tested build:** [download the Crypt native frame foundations APK](https://github.com/Noamcelermajer/DH_sc/releases/download/native-frame-foundations-2026-10-04/crypt-native-frame-foundations-candidate.apk).
 Source ref: release tag `native-frame-foundations-2026-10-04`.
 APK: 26,068,604 bytes; SHA-256 `1b3a255122f0248f5d6608d1b2fe15def631645765ce40792481ceb89125a6e8`.
 Compiled-source archive: [download ZIP](https://github.com/Noamcelermajer/DH_sc/releases/download/native-frame-foundations-2026-10-04/crypt-native-frame-foundations-compiled-source.zip), 888,934 bytes; SHA-256 `cc06bdc53e364873e23ab360a38336dc60e05b911204fff8dd3fcd3818189660`.
@@ -21,8 +21,29 @@ Compiled-source archive: [download ZIP](https://github.com/Noamcelermajer/DH_sc/
   should be added here.
 - Checkbox totals and source size are not a game-completion percentage.
 
+## Overview by system
+
+These counts refer to the scoped tasks below. Checked source components can
+still require live gameplay integration. All final completion gates remain open.
+
+| System | Verified tasks | Remaining tasks |
+|---|---:|---:|
+| Inputs, Adam's work and research | 9 | 3 |
+| Native Android build and setup | 8 | 4 |
+| Rendering, resources and animation | 10 | 6 |
+| World, physics, navigation and factories | 12 | 8 |
+| Character properties, equipment and state | 10 | 5 |
+| Lua, skills and enemy AI | 20 | 13 |
+| Combat, death, loot and progression | 5 | 7 |
+| Quests, campaign, UI, audio and saves | 3 | 9 |
+| Fan modding and source delivery | 3 | 6 |
+| Final completion gates | 0 | 9 |
+| **Total scoped tasks** | **80** | **70** |
+
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
-Exact current build/test scope: [checkpoint](NATIVE-FRAME-FOUNDATIONS-CHECKPOINT-2026-10-04.md).
+Latest source/build/test scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
+Its newer local APK passes the Crypt regression on Android 17/16 KiB; the
+published download above retains its original release identity.
 
 ## 1. Inputs, Adam's work and research tracking
 
@@ -35,7 +56,7 @@ Exact current build/test scope: [checkpoint](NATIVE-FRAME-FOUNDATIONS-CHECKPOINT
   so the imported modules can link with the existing reconstruction.
 - [x] Publish the comparison of our work with Adam's work in the combined status.
 - [x] Publish original-address ledgers: Adam's 1,455 addresses and the current
-  531-range extension (366 additional unique addresses); 1,821 combined unique
+  538-range extension (367 additional unique addresses); 1,822 combined unique
   addresses. These are evidence reach.
 - [x] Separate recovered evidence, maintained source, tests, dependencies and assets
   in the reproducible source inventory.
@@ -53,8 +74,8 @@ Exact current build/test scope: [checkpoint](NATIVE-FRAME-FOUNDATIONS-CHECKPOINT
 - [x] Verify ELF64 libraries, 16 KiB ELF/ZIP alignment and APK signatures.
 - [x] Run the source-built development app without the original ARM32 game library.
 - [x] Publish a downloadable APK and its exact raw compiler-input source archive.
-- [x] Freeze the latest APK against 460 actual compiler/build inputs, 255 assets,
-  16 ELF64 libraries, 57 bounded AI units, 91 required export groups and Android
+- [x] Freeze the current tested local APK against 466 actual compiler/build inputs, 255 assets,
+  16 ELF64 libraries, 60 bounded source units, 96 required export groups and Android
   API 37/16 KiB emulator evidence.
 - [x] Keep milestones on the separate reconstruction branch and private documents outside Git.
 - [ ] Make the final complete-game build reproducible from a clean checkout with
@@ -97,6 +118,9 @@ Exact current build/test scope: [checkpoint](NATIVE-FRAME-FOUNDATIONS-CHECKPOINT
 - [x] Compare the complete bounded TargetList query with original ARM execution and fix callback order.
 - [x] Reconstruct Character::IsZonable against original ARM behavior and compose
   real Ghost classification for native diagnostics; room enrollment remains open.
+- [x] Reconstruct the bounded GameObject::Stop caller; verify 246 original ARM
+  cases, virtual physics-policy selection and ordered partial effects. Native
+  path/body service binding remains open.
 - [ ] Finish the full ObjectManager factory, exact-name map, group membership and teardown.
 - [ ] Resolve Crypt's remaining 69 conditional/script/template/factory records.
 - [ ] Resolve weighted-template actors and the separate GhostAmbushHallway spawn path.
@@ -119,6 +143,9 @@ Exact current build/test scope: [checkpoint](NATIVE-FRAME-FOUNDATIONS-CHECKPOINT
 - [x] Reconstruct 17 complete bounded Character AI/faction/type/flag/name/death
   bodies; pass 514 ARM comparisons and use actual native cached IDs/types for
   Ghost AIS selection. Original name/raw-death producers remain open.
+- [x] Reconstruct the Character physics-position override and live flag adapter;
+  verify 67,594 Character flag cases and 1,024 base-object cases against ARM.
+  Native Stop integration remains open.
 - [ ] Complete Character construction, all property sheet/buff/gear ownership and lifecycle phases.
 - [ ] Connect full inventory/equipment mutation, requirements, random powers and visual updates.
 - [ ] Complete player classes, skill progression, buffs/debuffs, auras and status effects in gameplay.
@@ -158,9 +185,16 @@ Exact current build/test scope: [checkpoint](NATIVE-FRAME-FOUNDATIONS-CHECKPOINT
   current-state callbacks; verify source wrappers and Lua mutation/error behavior.
 - [x] Connect the exact resolved-path cache helper to the retained Session VM
   and compile it into Android; verify real load/hit/retry/replacement behavior.
-- [ ] Reproduce the surrounding `Character::Update` scheduler/eligibility gates
-  and concurrent-AI bookkeeping; native world setup directly invokes the
-  bounded Ghost lifecycle. See the [checkpoint](NATIVE-FRAME-FOUNDATIONS-CHECKPOINT-2026-10-04.md).
+- [x] Add the created-only retained-VM callback bridge; test constructor before
+  pending publication, same-VM adoption, reset/destructor reentry guards and
+  callback lifetime with independent review and ASan/UBSan/LSan. This port
+  ownership adapter earns zero new original-body credit; native wiring remains open.
+- [x] Reconstruct the bounded Character::Update lazy-script/concurrent-AI map
+  slice; verify 18 ARM cases, all 127 reached instructions, 15 guards and
+  partial effects. Preserve full-width AIS identity. Native shared-map binding remains open.
+- [ ] Complete the surrounding `Character::Update` scheduler/eligibility gates,
+  native shared concurrent-AI map and frame ownership; native world setup
+  directly invokes the bounded Ghost lifecycle. See the [checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
 - [ ] Bind CanUpdate to actual scene/culling, visibility, player/online and
   respawn owners, and invoke it in the native Character frame.
 - [ ] Connect source zonability, room enrollment, InZone and object ownership.

@@ -112,6 +112,7 @@ def main() -> int:
     host = json.loads(run.stdout)
     assert host["ghost_ai_owner_host_cases"] == 8 and host["existing_target_cases"] == 6 and host["mismatches"] == 0, host
     assert host["pending_vm_shared"] is True, host
+    assert host["constructor_before_pending_cases"] == 3, host
     assert host["manager_cursor_owner_cases"] == 2 and host["manager_cursor_live_links"] is True, host
     assert host["flat_character_owner_cases"] == 4 and host["flat_published_vm_shared"] is True, host
     assert host["status"] == "PASS" and host["candidates"] == 1 and host["events"] == 1, host
@@ -131,7 +132,7 @@ def main() -> int:
         "source_sha256": {p.relative_to(ROOT).as_posix(): sha(p) for p in inputs},
         "original_script_sha256": {p.relative_to(ROOT).as_posix(): sha(p) for p in (common, monster)},
         "executable_sha256": sha(out), "compiler_warnings": warnings,
-        "scope": "Host composition executes CharAI frame dispatch, normal acquisition, event/Lua/SetTarget/HeadTo/PathTo, complete CharAI OnUpdate/AISExternal with null-state wrappers, and existing-target retarget/retention including captured-owner mutation and missing-provider refusal. Retarget/retention component bodies retain their independent original ARM proofs; this host adapter is new composition. Renderer bindings, Android body motion, collision-persist production and full gameplay are not claimed.",
+        "scope": "Host composition executes CharAI frame dispatch, normal acquisition, event/Lua/SetTarget/HeadTo/PathTo, complete CharAI OnUpdate/AISExternal with null-state wrappers, and existing-target retarget/retention including captured-owner mutation and missing-provider refusal. Three staged cases create the actual VM before pending publication, install prepared callbacks before binding/loading and adopt that same VM for source acquisition/path dispatch. Retarget/retention component bodies retain their independent original ARM proofs; this host adapter is new composition. Renderer bindings, Android body motion, collision-persist production and full gameplay are not claimed.",
     }
     report_path = args.report.resolve()
     report_path.parent.mkdir(parents=True, exist_ok=True)

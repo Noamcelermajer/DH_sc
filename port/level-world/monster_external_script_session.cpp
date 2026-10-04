@@ -385,7 +385,12 @@ struct Session::Impl {
 };
 
 Session::Session() = default;
-Session::~Session() = default;
+Session::~Session() {
+    // Close the VM and retained callback owner with the same no-reentry rule
+    // as explicit reset. The member pointer is cleared before release.
+    busy_ = true;
+    impl_.reset();
+}
 
 Status Session::initialize(Source commons, Source monster, const Services& services,
                            std::string& error, std::size_t memory_limit) {
@@ -440,6 +445,30 @@ Status Session::create(const Services& services, std::string& error,
     }
     candidate->service_lifetime = std::move(service_lifetime);
     impl_ = std::move(candidate);
+    error.clear();
+    return Status::complete;
+}
+
+Status Session::install_created_services(const Services& services, std::string& error,
+                                         std::shared_ptr<void> callback_lifetime) {
+    if (busy_) { error = "monster session busy"; return Status::busy; }
+    if (!impl_ || impl_->stage != Stage::created || impl_->faulted) {
+        error = "monster service installation requires a created, unbound VM";
+        return Status::not_ready;
+    }
+    if (!callback_lifetime || !services.owner || services.owner != impl_->services.owner) {
+        error = "monster service installation requires the same owner and retained callbacks";
+        return Status::invalid_argument;
+    }
+    // The input table can itself belong to the retired callback context.
+    // Capture it before releasing that context; the VM and its deferred
+    // libraries/bindings/alias/cache storage remain untouched.
+    const Services bound = services;
+    BusyScope scope(busy_);
+    auto retired = std::move(impl_->service_lifetime);
+    impl_->services = bound;
+    impl_->service_lifetime = std::move(callback_lifetime);
+    retired.reset();
     error.clear();
     return Status::complete;
 }
@@ -624,6 +653,7 @@ Status Session::load_resolved(const char* path, Source bytes, LoadResult* result
 
 Status Session::reset(std::string& error) {
     if (busy_) { error = "monster session busy"; return Status::busy; }
+    BusyScope scope(busy_);
     impl_.reset();
     error.clear();
     return Status::complete;
@@ -631,6 +661,9 @@ Status Session::reset(std::string& error) {
 
 bool Session::ready() const noexcept { return impl_ && !impl_->faulted && impl_->stage == Stage::external_loaded; }
 Stage Session::stage() const noexcept { return impl_ ? impl_->stage : Stage::empty; }
+std::uintptr_t Session::vm_identity() const noexcept {
+    return impl_ ? reinterpret_cast<std::uintptr_t>(impl_->vm) : 0;
+}
 bool Session::uses_services(const Services& services) const noexcept {
     if (!impl_) return false;
     const auto& own = impl_->services;
