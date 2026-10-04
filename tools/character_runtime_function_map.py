@@ -37,8 +37,22 @@ AI_MANIFESTS = {
     'port/level-world/reference/character-ai-sight/original-functions.json': 'character_ai_sight',
     'port/level-world/reference/character-monster-retarget/original-functions.json': 'character_monster_retarget',
     'port/level-world/reference/ghost-ai-session/original-functions.json': 'ghost_ai_session',
+    'port/level-world/reference/character-enemy-retention/original-functions.json': 'character_enemy_retention',
+    'port/level-world/reference/character-ai-master-update/original-functions.json': 'character_ai_master_update',
+    'port/level-world/reference/character-ai-update-target/original-functions.json': 'character_ai_update_target',
+    'port/level-world/reference/character-ai-melee-range/original-functions.json': 'character_ai_melee_range',
+    'port/level-world/reference/character-ai-interaction-range/original-functions.json': 'character_ai_interaction_range',
+    'port/level-world/reference/ais-external-update/original-functions.json': 'ais_external_update',
+    'port/level-world/reference/ais-state-callbacks/original-functions.json': 'ais_state_callbacks',
+    'port/level-world/reference/character-ai-pause-update/original-functions.json': 'character_ai_pause_update',
+    'port/level-world/reference/ais-default-collision-persist/original-functions.json': 'ais_default_collision_persist',
 }
 MANIFESTS.extend(AI_MANIFESTS)
+ENGINE_MANIFESTS = {
+    'port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json':
+        ['port/scene-materials/technique_selector.hpp', 'port/scene-materials/technique_selector.cpp'],
+}
+MANIFESTS.extend(ENGINE_MANIFESTS)
 OUTPUT = 'docs/generated/character-runtime-function-map.json'
 STATE = ['port/level-world/character_state.cpp',
          'port/level-world/character_coordinator.cpp']
@@ -47,6 +61,11 @@ NATIVE = 'port/android-native/app/src/main/cpp/model_renderer.cpp'
 
 def classify(row):
     symbol = row['demangled']
+    if row.get('evidence_manifest') in ENGINE_MANIFESTS:
+        return ('bounded_engine_selector_or_dependency_evidence',
+                ENGINE_MANIFESTS[row['evidence_manifest']],
+                row['manifest_implementation_scope'] + '; ' + row['scope'] +
+                '; serialized-view host tests and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.')
     if row.get('evidence_manifest') in AI_MANIFESTS:
         unit = AI_MANIFESTS[row['evidence_manifest']]
         return ('bounded_ai_kernel_or_dependency_evidence',
@@ -148,7 +167,7 @@ def build():
     by_address = {}
     records = [{**record, 'evidence_manifest': path,
                 **({'manifest_implementation_scope': source.get('source_reconstruction_scope', source.get('scope', 'Bounded source adapter.'))}
-                   if path in AI_MANIFESTS else {})}
+                   if path in AI_MANIFESTS or path in ENGINE_MANIFESTS else {})}
                for path, source in manifests
                for record in source['functions']]
     for original in records:

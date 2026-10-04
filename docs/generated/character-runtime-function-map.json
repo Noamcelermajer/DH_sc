@@ -28,16 +28,26 @@
     "port/level-world/reference/character-aggro-acquisition-prefix/original-functions.json",
     "port/level-world/reference/character-ai-sight/original-functions.json",
     "port/level-world/reference/character-monster-retarget/original-functions.json",
-    "port/level-world/reference/ghost-ai-session/original-functions.json"
+    "port/level-world/reference/ghost-ai-session/original-functions.json",
+    "port/level-world/reference/character-enemy-retention/original-functions.json",
+    "port/level-world/reference/character-ai-master-update/original-functions.json",
+    "port/level-world/reference/character-ai-update-target/original-functions.json",
+    "port/level-world/reference/character-ai-melee-range/original-functions.json",
+    "port/level-world/reference/character-ai-interaction-range/original-functions.json",
+    "port/level-world/reference/ais-external-update/original-functions.json",
+    "port/level-world/reference/ais-state-callbacks/original-functions.json",
+    "port/level-world/reference/character-ai-pause-update/original-functions.json",
+    "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+    "port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json"
   ],
   "counts": {
     "pinned_addresses": 1455,
-    "extension_records": 150,
-    "evidence_records_before_deduplication": 218,
-    "additional_addresses": 86,
-    "combined_unique_addresses": 1541
+    "extension_records": 190,
+    "evidence_records_before_deduplication": 315,
+    "additional_addresses": 102,
+    "combined_unique_addresses": 1557
   },
-  "verification": "All ranges, aliases and 150 complete original byte hashes verified against the original symbol index and assembly exports.",
+  "verification": "All ranges, aliases and 190 complete original byte hashes verified against the original symbol index and assembly exports.",
   "functions": [
     {
       "original_symbol": "_ZN21Script_SpawnCharacter7ExecuteEbi",
@@ -553,7 +563,12 @@
         "port/level-world/reference/character-spawn/original-functions.json",
         "port/level-world/reference/character-ai-set-target/original-functions.json",
         "port/level-world/reference/character-aggro-acquisition-prefix/original-functions.json",
-        "port/level-world/reference/character-ai-sight/original-functions.json"
+        "port/level-world/reference/character-ai-sight/original-functions.json",
+        "port/level-world/reference/character-enemy-retention/original-functions.json",
+        "port/level-world/reference/character-ai-master-update/original-functions.json",
+        "port/level-world/reference/character-ai-update-target/original-functions.json",
+        "port/level-world/reference/character-ai-melee-range/original-functions.json",
+        "port/level-world/reference/character-ai-interaction-range/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -582,6 +597,51 @@
             "port/level-world/character_ai_sight.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; supporting byte evidence/oracle execution; owning provider not newly implemented; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_retention.hpp",
+            "port/level-world/character_enemy_retention.cpp"
+          ],
+          "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-master-update/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_master_update.hpp",
+            "port/level-world/character_ai_master_update.cpp"
+          ],
+          "implementation_limit": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies; Supporting dependency byte evidence; callback body not newly reconstructed here; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-update-target/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_update_target.hpp",
+            "port/level-world/character_ai_update_target.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting external/previously recovered callee, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-melee-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_melee_range.hpp",
+            "port/level-world/character_ai_melee_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting source dependency, not newly implemented/full-body claimed; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-interaction-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_interaction_range.hpp",
+            "port/level-world/character_ai_interaction_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting original callee/vtable evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -603,7 +663,8 @@
       "implementation_limit": "Current cached property/table projections provide selected animation and AI type inputs. Full property ownership is incomplete.",
       "evidence_manifests": [
         "port/level-world/reference/character-spawn/original-functions.json",
-        "port/level-world/reference/character-ai-sight/original-functions.json"
+        "port/level-world/reference/character-ai-sight/original-functions.json",
+        "port/level-world/reference/character-ai-interaction-range/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -614,6 +675,15 @@
             "port/level-world/character_ai_sight.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; supporting byte evidence/oracle execution; owning provider not newly implemented; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-interaction-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_interaction_range.hpp",
+            "port/level-world/character_ai_interaction_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting original callee/vtable evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -695,9 +765,20 @@
       ],
       "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md.",
       "evidence_manifests": [
-        "port/level-world/reference/character-spawn/original-functions.json"
+        "port/level-world/reference/character-spawn/original-functions.json",
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/ais_default_collision_persist.hpp",
+            "port/level-world/ais_default_collision_persist.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN6CharAI12AI_SetTargetEP10GameObjectb",
@@ -718,7 +799,9 @@
         "port/level-world/reference/character-spawn/original-functions.json",
         "port/level-world/reference/character-ai-set-target/original-functions.json",
         "port/level-world/reference/character-monster-retarget/original-functions.json",
-        "port/level-world/reference/ghost-ai-session/original-functions.json"
+        "port/level-world/reference/ghost-ai-session/original-functions.json",
+        "port/level-world/reference/character-enemy-retention/original-functions.json",
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -747,6 +830,24 @@
             "port/level-world/ghost_ai_session.cpp"
           ],
           "implementation_limit": "Renderer-independent actor-owned host composition of existing bounded source kernels and unchanged original AISExternal monster Lua callbacks. This composition is not a full original function body and is not wired to the Android runtime.; Bounded full body is invoked with force=false; debug-switch, target IsDead and AI sight are borrowed source services.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_retention.hpp",
+            "port/level-world/character_enemy_retention.cpp"
+          ],
+          "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/ais_default_collision_persist.hpp",
+            "port/level-world/ais_default_collision_persist.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -767,7 +868,8 @@
       "implementation_limit": "Original caller/service contract recorded. Complete constructor, state registration, PreSpawn, revival, linked aggro and AI ownership are not reconstructed by this checkpoint; see NOTES.md.",
       "evidence_manifests": [
         "port/level-world/reference/character-spawn/original-functions.json",
-        "port/level-world/reference/character-monster-retarget/original-functions.json"
+        "port/level-world/reference/character-monster-retarget/original-functions.json",
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -778,6 +880,15 @@
             "port/level-world/character_monster_retarget.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; supporting dependency evidence; external or existing source body, not newly counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_retention.hpp",
+            "port/level-world/character_enemy_retention.cpp"
+          ],
+          "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -1795,7 +1906,8 @@
       "evidence_manifests": [
         "port/level-world/reference/character-group-respawn/original-functions.json",
         "port/level-world/reference/character-group-limbus-blur/original-functions.json",
-        "port/level-world/reference/character-enemy-spotted/original-functions.json"
+        "port/level-world/reference/character-enemy-spotted/original-functions.json",
+        "port/level-world/reference/character-ai-update-target/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -1814,6 +1926,15 @@
             "port/level-world/character_enemy_spotted.cpp"
           ],
           "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; real leaf executes in oracle; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-update-target/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_update_target.hpp",
+            "port/level-world/character_ai_update_target.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting external/previously recovered callee, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -1835,7 +1956,9 @@
       "evidence_manifests": [
         "port/level-world/reference/character-group-respawn/original-functions.json",
         "port/level-world/reference/character-group-limbus-blur/original-functions.json",
-        "port/level-world/reference/character-enemy-spotted/original-functions.json"
+        "port/level-world/reference/character-enemy-spotted/original-functions.json",
+        "port/level-world/reference/character-ai-update-target/original-functions.json",
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -1854,6 +1977,24 @@
             "port/level-world/character_enemy_spotted.cpp"
           ],
           "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; real current state getter executes in oracle; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-update-target/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_update_target.hpp",
+            "port/level-world/character_ai_update_target.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting external/previously recovered callee, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/ais_default_collision_persist.hpp",
+            "port/level-world/ais_default_collision_persist.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -2035,9 +2176,30 @@
       ],
       "implementation_limit": "existing timer source leaf; adapter reuses the native Character Coordinator's timer store and verifies arguments/event ownership; source prefix/two delay reads/hosting gate/timer request/normal cleanup are host-tested; live Android byte, manager and linked-owner producers remain external.",
       "evidence_manifests": [
-        "port/level-world/reference/character-limbus-respawn/original-functions.json"
+        "port/level-world/reference/character-limbus-respawn/original-functions.json",
+        "port/level-world/reference/ais-external-update/original-functions.json",
+        "port/level-world/reference/character-ai-pause-update/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/ais-external-update/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/ais_external_update.hpp",
+            "port/level-world/ais_external_update.cpp"
+          ],
+          "implementation_limit": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.; Pinned timer dependency reached by AI_PauseUpdate; timer storage/lifecycle is provided by Character coordinator.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-pause-update/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_pause_update.hpp",
+            "port/level-world/character_ai_pause_update.cpp"
+          ],
+          "implementation_limit": "Complete52B AI_PauseUpdate caller over a concrete timer-start boundary; shares frame pause projection.; Pinned concrete timer provider; separate existing source timer audit.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN12VisualObject14SyncVisibilityEv",
@@ -2142,7 +2304,8 @@
         "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
         "port/level-world/reference/character-aggro-acquisition-prefix/original-functions.json",
         "port/level-world/reference/character-monster-retarget/original-functions.json",
-        "port/level-world/reference/ghost-ai-session/original-functions.json"
+        "port/level-world/reference/ghost-ai-session/original-functions.json",
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -2189,6 +2352,15 @@
             "port/level-world/ghost_ai_session.cpp"
           ],
           "implementation_limit": "Renderer-independent actor-owned host composition of existing bounded source kernels and unchanged original AISExternal monster Lua callbacks. This composition is not a full original function body and is not wired to the Android runtime.; Composition consumes the separately reconstructed target-search/candidate-consumption kernels only after the caller selects the normal branch. Turn/delay/type gates, complete function, and local-Monster retarget branch are not included in this bridge.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_retention.hpp",
+            "port/level-world/character_enemy_retention.cpp"
+          ],
+          "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Bounded existing-enemy continuation 0x3cf9a8..0x3cfbac only; other caller branches/dependencies not counted as reconstructed bodies.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -2212,7 +2384,8 @@
       "evidence_manifests": [
         "port/level-world/reference/character-aggro-delay/original-functions.json",
         "port/level-world/reference/character-ai-turn/original-functions.json",
-        "port/level-world/reference/character-aggro-acquisition-prefix/original-functions.json"
+        "port/level-world/reference/character-aggro-acquisition-prefix/original-functions.json",
+        "port/level-world/reference/character-ai-master-update/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -2232,6 +2405,15 @@
             "port/level-world/character_aggro_acquisition_prefix.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; dependency evidence; external provider or existing reused timing body, not newly counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-master-update/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_master_update.hpp",
+            "port/level-world/character_ai_master_update.cpp"
+          ],
+          "implementation_limit": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies; Supporting dependency byte evidence; callback body not newly reconstructed here; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -2254,7 +2436,8 @@
       "implementation_limit": "One bounded non-player/non-Faerie _UpdateAggro timing branch; supplied IsMyTurn/debug services and reused ordinary RNG; later NPC acquisition gate and native actor wiring excluded; Real leaf executed by the original oracle; source projection uses a fresh borrowed provider at each read; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/character-aggro-delay/original-functions.json",
-        "port/level-world/reference/character-aggro-acquisition-prefix/original-functions.json"
+        "port/level-world/reference/character-aggro-acquisition-prefix/original-functions.json",
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -2265,6 +2448,15 @@
             "port/level-world/character_aggro_acquisition_prefix.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; dependency evidence; external provider or existing reused timing body, not newly counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/ais_default_collision_persist.hpp",
+            "port/level-world/ais_default_collision_persist.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -2366,7 +2558,8 @@
         "port/level-world/reference/character-ai-turn/original-functions.json",
         "port/level-world/reference/character-enemy-spotted/original-functions.json",
         "port/level-world/reference/character-ai-relations/original-functions.json",
-        "port/level-world/reference/character-aggro-acquisition-prefix/original-functions.json"
+        "port/level-world/reference/character-aggro-acquisition-prefix/original-functions.json",
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -2395,6 +2588,15 @@
             "port/level-world/character_aggro_acquisition_prefix.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; dependency evidence; external provider or existing reused timing body, not newly counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/ais_default_collision_persist.hpp",
+            "port/level-world/ais_default_collision_persist.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -2417,9 +2619,20 @@
       ],
       "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; constructor flags/filter/sort and reference Character selection; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+        "port/level-world/reference/character-aggro-target-search/original-functions.json",
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_retention.hpp",
+            "port/level-world/character_enemy_retention.cpp"
+          ],
+          "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN14ObjectSearcher10TargetList6SearchEff",
@@ -2463,9 +2676,20 @@
       ],
       "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; borrowed room-object traversal, source candidate gates, geometric range/angle, TargetInfo insertion; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+        "port/level-world/reference/character-aggro-target-search/original-functions.json",
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_retention.hpp",
+            "port/level-world/character_enemy_retention.cpp"
+          ],
+          "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN14ObjectSearcher10TargetList17_IsCharacterValidEP9Character",
@@ -2486,9 +2710,20 @@
       ],
       "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; all-flags sentinel and owner/candidate source-word comparison; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+        "port/level-world/reference/character-aggro-target-search/original-functions.json",
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_retention.hpp",
+            "port/level-world/character_enemy_retention.cpp"
+          ],
+          "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN14ObjectSearcher10TargetList18_IsGameObjectValidEP10GameObject",
@@ -2509,9 +2744,20 @@
       ],
       "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; non-Character object filter cases; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+        "port/level-world/reference/character-aggro-target-search/original-functions.json",
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_retention.hpp",
+            "port/level-world/character_enemy_retention.cpp"
+          ],
+          "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNK9Character13IsInteractiveEP10GameObject",
@@ -2578,9 +2824,20 @@
       ],
       "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; Character vtable +0x94 candidate radius; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+        "port/level-world/reference/character-aggro-target-search/original-functions.json",
+        "port/level-world/reference/character-ai-interaction-range/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-interaction-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_interaction_range.hpp",
+            "port/level-world/character_ai_interaction_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting original callee/vtable evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNK6CharAI17AI_GetMeleeRadiusEv",
@@ -2601,9 +2858,30 @@
       ],
       "implementation_limit": "Bounded TargetList Search path called by CharAI::_UpdateAggro for constructor flags 0x7fffffff, object filter 2, closest sort 1, selected view radius and full-circle cone. The adapter consumes a borrowed room registry and actor-owned virtual services; it does not implement _UpdateAggro's classification, aggro mutation, event routing, or Android actor integration.; reference-character radius subtracted from candidate distance; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-aggro-target-search/original-functions.json"
+        "port/level-world/reference/character-aggro-target-search/original-functions.json",
+        "port/level-world/reference/character-ai-melee-range/original-functions.json",
+        "port/level-world/reference/character-ai-interaction-range/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-melee-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_melee_range.hpp",
+            "port/level-world/character_ai_melee_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; New original caller orchestration; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-interaction-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_interaction_range.hpp",
+            "port/level-world/character_ai_interaction_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting original callee/vtable evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN14ObjectSearcher12TargetSorter12_sortClosestERKNS_10TargetInfoES3_",
@@ -2649,7 +2927,9 @@
         "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
         "port/level-world/reference/character-ai-relations/original-functions.json",
         "port/level-world/reference/character-monster-retarget/original-functions.json",
-        "port/level-world/reference/ghost-ai-session/original-functions.json"
+        "port/level-world/reference/ghost-ai-session/original-functions.json",
+        "port/level-world/reference/character-enemy-retention/original-functions.json",
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -2678,6 +2958,24 @@
             "port/level-world/ghost_ai_session.cpp"
           ],
           "implementation_limit": "Renderer-independent actor-owned host composition of existing bounded source kernels and unchanged original AISExternal monster Lua callbacks. This composition is not a full original function body and is not wired to the Android runtime.; Recovered relationship kernel is composed; Character/object lookup and current faction/table providers remain borrowed.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_retention.hpp",
+            "port/level-world/character_enemy_retention.cpp"
+          ],
+          "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/ais_default_collision_persist.hpp",
+            "port/level-world/ais_default_collision_persist.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -2786,7 +3084,9 @@
       "implementation_limit": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external; original wrapper executes in branch oracle; native service remains external; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
-        "port/level-world/reference/ghost-ai-session/original-functions.json"
+        "port/level-world/reference/ghost-ai-session/original-functions.json",
+        "port/level-world/reference/character-ai-master-update/original-functions.json",
+        "port/level-world/reference/character-ai-update-target/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -2797,6 +3097,24 @@
             "port/level-world/ghost_ai_session.cpp"
           ],
           "implementation_limit": "Renderer-independent actor-owned host composition of existing bounded source kernels and unchanged original AISExternal monster Lua callbacks. This composition is not a full original function body and is not wired to the Android runtime.; Verified relay boundary. Composition invokes the recovered CharAI dispatcher directly; this does not claim a newly implemented standalone RaiseEvent body.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-master-update/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_master_update.hpp",
+            "port/level-world/character_ai_master_update.cpp"
+          ],
+          "implementation_limit": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies; Supporting dependency byte evidence; callback body not newly reconstructed here; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-update-target/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_update_target.hpp",
+            "port/level-world/character_ai_update_target.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting external/previously recovered callee, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -2851,9 +3169,20 @@
       ],
       "implementation_limit": "one bounded normal _UpdateAggro candidate-consumption branch; classification, event acceptance, original heap mechanics, search/timing/type branches external; observed pop callsite; original heap/deque body not executed by branch oracle; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-aggro-candidate-events/original-functions.json"
+        "port/level-world/reference/character-aggro-candidate-events/original-functions.json",
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_retention.hpp",
+            "port/level-world/character_enemy_retention.cpp"
+          ],
+          "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN6CharAI14OnEnemySpottedEP9Character",
@@ -2929,7 +3258,8 @@
       "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; actual source predicate; real leaf executes in oracle; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/character-enemy-spotted/original-functions.json",
-        "port/level-world/reference/character-aggro-acquisition-prefix/original-functions.json"
+        "port/level-world/reference/character-aggro-acquisition-prefix/original-functions.json",
+        "port/level-world/reference/character-ai-update-target/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -2940,6 +3270,15 @@
             "port/level-world/character_aggro_acquisition_prefix.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; dependency evidence; external provider or existing reused timing body, not newly counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-update-target/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_update_target.hpp",
+            "port/level-world/character_ai_update_target.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting external/previously recovered callee, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -3049,9 +3388,20 @@
       ],
       "implementation_limit": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring; actual threat mutation service evidence; not newly duplicated here; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-enemy-spotted/original-functions.json"
+        "port/level-world/reference/character-enemy-spotted/original-functions.json",
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_retention.hpp",
+            "port/level-world/character_enemy_retention.cpp"
+          ],
+          "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN11AISExternal14OnEnemySpottedEP9Character",
@@ -3389,9 +3739,30 @@
       ],
       "implementation_limit": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.; dynamic virtual service boundary; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-set-target/original-functions.json"
+        "port/level-world/reference/character-ai-set-target/original-functions.json",
+        "port/level-world/reference/character-ai-master-update/original-functions.json",
+        "port/level-world/reference/character-ai-update-target/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-master-update/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_master_update.hpp",
+            "port/level-world/character_ai_master_update.cpp"
+          ],
+          "implementation_limit": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies; Supporting dependency byte evidence; callback body not newly reconstructed here; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-update-target/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_update_target.hpp",
+            "port/level-world/character_ai_update_target.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting external/previously recovered callee, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNK10GameObject6IsDeadEv",
@@ -3434,7 +3805,9 @@
       "implementation_limit": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.; explicit service; own owner, GameObject position and selected AI view-radius details are not copied here; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/character-ai-set-target/original-functions.json",
-        "port/level-world/reference/character-ai-sight/original-functions.json"
+        "port/level-world/reference/character-ai-sight/original-functions.json",
+        "port/level-world/reference/character-ai-master-update/original-functions.json",
+        "port/level-world/reference/character-ai-update-target/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -3445,6 +3818,24 @@
             "port/level-world/character_ai_sight.cpp"
           ],
           "implementation_limit": "Bounded source adapter.; new bounded caller orchestration; owning dependencies external; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-master-update/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_master_update.hpp",
+            "port/level-world/character_ai_master_update.cpp"
+          ],
+          "implementation_limit": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies; Supporting dependency byte evidence; callback body not newly reconstructed here; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-update-target/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_update_target.hpp",
+            "port/level-world/character_ai_update_target.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting external/previously recovered callee, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -3466,9 +3857,20 @@
       ],
       "implementation_limit": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.; explicit service, called before each exact-key lookup; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-set-target/original-functions.json"
+        "port/level-world/reference/character-ai-set-target/original-functions.json",
+        "port/level-world/reference/character-ai-melee-range/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-melee-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_melee_range.hpp",
+            "port/level-world/character_ai_melee_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting source dependency, not newly implemented/full-body claimed; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN13DebugSwitches9GetSwitchERKSs",
@@ -3488,9 +3890,20 @@
       ],
       "implementation_limit": "One renderer-independent CharAI::AI_SetTarget(GameObject*,bool) body and its synchronous source call boundaries. It is not integrated into Android or the live Character runtime.; explicit key lookup service; uppercase result gates tracing branch; lowercase result is ignored; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-set-target/original-functions.json"
+        "port/level-world/reference/character-ai-set-target/original-functions.json",
+        "port/level-world/reference/character-ai-melee-range/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-melee-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_melee_range.hpp",
+            "port/level-world/character_ai_melee_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting source dependency, not newly implemented/full-body claimed; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNK10GameObject17GetTargetPositionEv",
@@ -3512,7 +3925,10 @@
       "evidence_manifests": [
         "port/level-world/reference/character-ai-set-target/original-functions.json",
         "port/level-world/reference/character-ai-sight/original-functions.json",
-        "port/level-world/reference/ghost-ai-session/original-functions.json"
+        "port/level-world/reference/ghost-ai-session/original-functions.json",
+        "port/level-world/reference/character-enemy-retention/original-functions.json",
+        "port/level-world/reference/character-ai-melee-range/original-functions.json",
+        "port/level-world/reference/character-ai-interaction-range/original-functions.json"
       ],
       "additional_mappings": [
         {
@@ -3532,6 +3948,33 @@
             "port/level-world/ghost_ai_session.cpp"
           ],
           "implementation_limit": "Renderer-independent actor-owned host composition of existing bounded source kernels and unchanged original AISExternal monster Lua callbacks. This composition is not a full original function body and is not wired to the Android runtime.; Provider boundary used by Character control; no native Ghost GameObject position producer is wired by this composition.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_retention.hpp",
+            "port/level-world/character_enemy_retention.cpp"
+          ],
+          "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-melee-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_melee_range.hpp",
+            "port/level-world/character_ai_melee_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting source dependency, not newly implemented/full-body claimed; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-interaction-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_interaction_range.hpp",
+            "port/level-world/character_ai_interaction_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting original callee/vtable evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
         }
       ]
     },
@@ -3597,9 +4040,20 @@
       ],
       "implementation_limit": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring; dependency evidence only; not an additional new source body; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-relations/original-functions.json"
+        "port/level-world/reference/character-ai-relations/original-functions.json",
+        "port/level-world/reference/character-ai-melee-range/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-melee-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_melee_range.hpp",
+            "port/level-world/character_ai_melee_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting source dependency, not newly implemented/full-body claimed; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNK10ObjectBase9GetHandleEv",
@@ -3619,9 +4073,20 @@
       ],
       "implementation_limit": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring; dependency evidence only; not an additional new source body; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-relations/original-functions.json"
+        "port/level-world/reference/character-ai-relations/original-functions.json",
+        "port/level-world/reference/character-ai-melee-range/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-melee-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_melee_range.hpp",
+            "port/level-world/character_ai_melee_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting source dependency, not newly implemented/full-body claimed; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZNK10GameObject18GetInteractionTypeEPS_",
@@ -3641,9 +4106,20 @@
       ],
       "implementation_limit": "three bounded normal source relationship query orchestrations; handle/player/interaction providers external; invalid-faction diagnostics excluded; existing enemy faction leaf reused; no native wiring; dependency evidence only; not an additional new source body; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-ai-relations/original-functions.json"
+        "port/level-world/reference/character-ai-relations/original-functions.json",
+        "port/level-world/reference/character-ai-interaction-range/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-interaction-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_interaction_range.hpp",
+            "port/level-world/character_ai_interaction_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting original callee/vtable evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN12ObjectHandle9GetObjectEb",
@@ -3960,9 +4436,20 @@
       ],
       "implementation_limit": "Bounded source adapter.; supporting dependency evidence; external or existing source body, not newly counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
-        "port/level-world/reference/character-monster-retarget/original-functions.json"
+        "port/level-world/reference/character-monster-retarget/original-functions.json",
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
       ],
-      "additional_mappings": []
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_enemy_retention.hpp",
+            "port/level-world/character_enemy_retention.cpp"
+          ],
+          "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
     },
     {
       "original_symbol": "_ZN9Character11Ctrl_MoveToEP10GameObject",
@@ -4027,6 +4514,998 @@
       "implementation_limit": "Renderer-independent actor-owned host composition of existing bounded source kernels and unchanged original AISExternal monster Lua callbacks. This composition is not a full original function body and is not wired to the Android runtime.; Recovered route-reuse/disabled/default-limit body is composed; FindPath and native route storage are explicit services.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
       "evidence_manifests": [
         "port/level-world/reference/ghost-ai-session/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN13PlayerManager23GetLocalPlayerCharacterEv",
+      "elf_address": "0x330794",
+      "size": 24,
+      "sha256": "0fb7e07874b9bcf1664de9c038ac83657e9f939b069c6615a58a32729b19924d",
+      "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+      "manifest_implementation_scope": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.",
+      "demangled": "PlayerManager::GetLocalPlayerCharacter()",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/PlayerManager-e1d60abd8e49-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_retention.hpp",
+        "port/level-world/character_enemy_retention.cpp"
+      ],
+      "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN13PlayerManager21GetPlayerByInternalIDEib",
+      "elf_address": "0x36dfb0",
+      "size": 236,
+      "sha256": "126c852bbc5ee60745e5fce746d522206b1c1fa638db996674e3991b56bfa090",
+      "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+      "manifest_implementation_scope": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.",
+      "demangled": "PlayerManager::GetPlayerByInternalID(int, bool)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/PlayerManager-e1d60abd8e49-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_retention.hpp",
+        "port/level-world/character_enemy_retention.cpp"
+      ],
+      "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN13PlayerManager23_GetInternalIDByLocalIDEib",
+      "elf_address": "0x36e2cc",
+      "size": 428,
+      "sha256": "0465671728895de95f65bbc290d5cb54762dde24242a8fb066a7cbab65e22d4f",
+      "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+      "manifest_implementation_scope": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.",
+      "demangled": "PlayerManager::_GetInternalIDByLocalID(int, bool)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/PlayerManager-e1d60abd8e49-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_retention.hpp",
+        "port/level-world/character_enemy_retention.cpp"
+      ],
+      "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN13PlayerManager14GetLocalPlayerEib",
+      "elf_address": "0x36e478",
+      "size": 32,
+      "sha256": "ece0c2718ccffb60b13f3a3f5a798eebbbb3e2c601bfb70738efac1cae4f9495",
+      "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+      "manifest_implementation_scope": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.",
+      "demangled": "PlayerManager::GetLocalPlayer(int, bool)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/PlayerManager-e1d60abd8e49-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_retention.hpp",
+        "port/level-world/character_enemy_retention.cpp"
+      ],
+      "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10GameObject12GetLookAtVecER7Point3DIfE",
+      "elf_address": "0x393ae4",
+      "size": 56,
+      "sha256": "1e5b3d921d7d5f82cfa2557bfbbfdcdb3248b93a8530e9f9e92ea03c82817066",
+      "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+      "manifest_implementation_scope": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.",
+      "demangled": "GameObject::GetLookAtVec(Point3D<float>&) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_retention.hpp",
+        "port/level-world/character_enemy_retention.cpp"
+      ],
+      "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN14ObjectSearcher10TargetList12SetRefObjectEP10GameObject",
+      "elf_address": "0x4a191c",
+      "size": 52,
+      "sha256": "352e90a1c50195ce1c9d5527196cfe14bf209e6dc80bf1c422b30d56820b569c",
+      "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+      "manifest_implementation_scope": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.",
+      "demangled": "ObjectSearcher::TargetList::SetRefObject(GameObject*)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectSearcher_TargetList-932dc8f46d4f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_retention.hpp",
+        "port/level-world/character_enemy_retention.cpp"
+      ],
+      "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNSt14priority_queueIN14ObjectSearcher10TargetInfoESt5dequeIS1_SaIS1_EENS0_12TargetSorterEE4pushERKS1_",
+      "elf_address": "0x4a2440",
+      "size": 164,
+      "sha256": "32bb191ceb2c71c9e795ed76f839558298c47b1eb33b5e31a5c2248af0d955d4",
+      "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+      "manifest_implementation_scope": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.",
+      "demangled": "std::priority_queue<ObjectSearcher::TargetInfo, std::deque<ObjectSearcher::TargetInfo, std::allocator<ObjectSearcher::TargetInfo> >, ObjectSearcher::TargetSorter>::push(ObjectSearcher::TargetInfo const&)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/std_priority_queue_ObjectSearcher_TargetInfo_std_deque_ObjectSearcher_TargetInfo_std_alloc-1962910d31df-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_retention.hpp",
+        "port/level-world/character_enemy_retention.cpp"
+      ],
+      "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN14ObjectSearcher10TargetList6SearchEffRNS_11IObjectListE",
+      "elf_address": "0x4a3428",
+      "size": 100,
+      "sha256": "940cc0a5eac7a2b4d371fed4a90b4441a86c0b53e462a792b82e94e321e181e1",
+      "evidence_manifest": "port/level-world/reference/character-enemy-retention/original-functions.json",
+      "manifest_implementation_scope": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.",
+      "demangled": "ObjectSearcher::TargetList::Search(float, float, ObjectSearcher::IObjectList&)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectSearcher_TargetList-932dc8f46d4f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_enemy_retention.hpp",
+        "port/level-world/character_enemy_retention.cpp"
+      ],
+      "implementation_limit": "Bounded flags1/filter2 enemy retention search and caller continuation; retained PlayerInfo Character identity and outgoing aggro map, not a property registry. Dependencies are explicitly borrowed or reused; no full native AI claim.; Supporting range evidence.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-enemy-retention/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN6CharAI13_UpdateMasterEv",
+      "demangled": "CharAI::_UpdateMaster()",
+      "elf_address": "0x3cc5a4",
+      "size": 444,
+      "sha256": "c9ce018b17bc2a9f1580a52e932fb40124914af1053028b16aeb40b1d0610fa9",
+      "scope": "Complete source caller orchestration; concrete dependency bodies and native wiring excluded",
+      "evidence_manifest": "port/level-world/reference/character-ai-master-update/original-functions.json",
+      "manifest_implementation_scope": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_master_update.hpp",
+        "port/level-world/character_ai_master_update.cpp"
+      ],
+      "implementation_limit": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies; Complete source caller orchestration; concrete dependency bodies and native wiring excluded; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-master-update/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character14CanRangeAttackEv",
+      "demangled": "Character::CanRangeAttack() const",
+      "elf_address": "0x3a4d3c",
+      "size": 32,
+      "sha256": "822ce8055c08b622826f6350032ff8ab3f340e6b990e0ca04c3c2f6b471b72ae",
+      "scope": "Supporting dependency byte evidence; callback body not newly reconstructed here",
+      "evidence_manifest": "port/level-world/reference/character-ai-master-update/original-functions.json",
+      "manifest_implementation_scope": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_master_update.hpp",
+        "port/level-world/character_ai_master_update.cpp"
+      ],
+      "implementation_limit": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies; Supporting dependency byte evidence; callback body not newly reconstructed here; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-master-update/original-functions.json",
+        "port/level-world/reference/character-ai-update-target/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-update-target/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_update_target.hpp",
+            "port/level-world/character_ai_update_target.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting external/previously recovered callee, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZNK6CharAI17AI_IsInCloseRangeEPK10GameObject",
+      "demangled": "CharAI::AI_IsInCloseRange(GameObject const*) const",
+      "elf_address": "0x3d63d8",
+      "size": 556,
+      "sha256": "d0b1a5d5f0ec99b6007ca622a8e03a7110c4afbe83da5afbc3d858cfdce542ce",
+      "scope": "Supporting dependency byte evidence; callback body not newly reconstructed here",
+      "evidence_manifest": "port/level-world/reference/character-ai-master-update/original-functions.json",
+      "manifest_implementation_scope": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_master_update.hpp",
+        "port/level-world/character_ai_master_update.cpp"
+      ],
+      "implementation_limit": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies; Supporting dependency byte evidence; callback body not newly reconstructed here; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-master-update/original-functions.json",
+        "port/level-world/reference/character-ai-update-target/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-update-target/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_update_target.hpp",
+            "port/level-world/character_ai_update_target.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting external/previously recovered callee, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZNK6CharAI12AI_IsInRangeEPK10GameObject",
+      "demangled": "CharAI::AI_IsInRange(GameObject const*) const",
+      "elf_address": "0x3d6604",
+      "size": 496,
+      "sha256": "4a6ba18738818814cbc83a009688bbeda2a59c02e440fd8a6b65d47ff4e32372",
+      "scope": "Supporting dependency byte evidence; callback body not newly reconstructed here",
+      "evidence_manifest": "port/level-world/reference/character-ai-master-update/original-functions.json",
+      "manifest_implementation_scope": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_master_update.hpp",
+        "port/level-world/character_ai_master_update.cpp"
+      ],
+      "implementation_limit": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies; Supporting dependency byte evidence; callback body not newly reconstructed here; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-master-update/original-functions.json",
+        "port/level-world/reference/character-ai-update-target/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-update-target/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_update_target.hpp",
+            "port/level-world/character_ai_update_target.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting external/previously recovered callee, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZNK6CharAI17AI_IsInMeleeRangeEPK10GameObject",
+      "demangled": "CharAI::AI_IsInMeleeRange(GameObject const*) const",
+      "elf_address": "0x3d6188",
+      "size": 592,
+      "sha256": "6c13d41b93867847c30a7ab0d56dea1bc82b864d278bc000e2f024628ae4a624",
+      "scope": "Supporting dependency byte evidence; callback body not newly reconstructed here",
+      "evidence_manifest": "port/level-world/reference/character-ai-master-update/original-functions.json",
+      "manifest_implementation_scope": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_master_update.hpp",
+        "port/level-world/character_ai_master_update.cpp"
+      ],
+      "implementation_limit": "One complete _UpdateMaster caller over synchronous borrowed query/event services, not complete CharAI/companion AI or newly rebuilt callee bodies; Supporting dependency byte evidence; callback body not newly reconstructed here; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-master-update/original-functions.json",
+        "port/level-world/reference/character-ai-update-target/original-functions.json",
+        "port/level-world/reference/character-ai-melee-range/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-update-target/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_update_target.hpp",
+            "port/level-world/character_ai_update_target.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting external/previously recovered callee, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        },
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-melee-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_melee_range.hpp",
+            "port/level-world/character_ai_melee_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; New original caller orchestration; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN6CharAI13_UpdateTargetEv",
+      "elf_address": "0x3cb908",
+      "size": 556,
+      "sha256": "d8f8d308b4778d2c4bd43b1e72df8476cb18f1137a7a774cced65cc3c7054ce0",
+      "scope": "New complete caller orchestration",
+      "evidence_manifest": "port/level-world/reference/character-ai-update-target/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "CharAI::_UpdateTarget()",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_update_target.hpp",
+        "port/level-world/character_ai_update_target.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; New complete caller orchestration; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-update-target/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK6CharAI23AI_IsInInteractionRangeEPK10GameObject",
+      "elf_address": "0x3d4f98",
+      "size": 388,
+      "sha256": "01abb46509a0339bdf919adc5fc263f6cfecc2c602354717a631190dfba59884",
+      "scope": "Supporting source dependency, not newly implemented/full-body claimed",
+      "evidence_manifest": "port/level-world/reference/character-ai-melee-range/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "CharAI::AI_IsInInteractionRange(GameObject const*) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_melee_range.hpp",
+        "port/level-world/character_ai_melee_range.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting source dependency, not newly implemented/full-body claimed; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-melee-range/original-functions.json",
+        "port/level-world/reference/character-ai-interaction-range/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-interaction-range/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_interaction_range.hpp",
+            "port/level-world/character_ai_interaction_range.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; New complete caller orchestration; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZNK13ItemInventory14CanMeleeAttackERi",
+      "elf_address": "0x3fff30",
+      "size": 116,
+      "sha256": "6f747fb5f3a9d4a66b749ac13a7fa50f6477f34ec030820770d963c3f01ed015",
+      "scope": "Supporting source dependency, not newly implemented/full-body claimed",
+      "evidence_manifest": "port/level-world/reference/character-ai-melee-range/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "ItemInventory::CanMeleeAttack(int&) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ItemInventory-901d4eb7d9a8-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_melee_range.hpp",
+        "port/level-world/character_ai_melee_range.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting source dependency, not newly implemented/full-body claimed; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-melee-range/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10GameObject18GetInteractionSpotEv",
+      "elf_address": "0x38b228",
+      "size": 164,
+      "sha256": "453e0942c96081f19113229dbf5b8e05a58675ac3ad62e99dfd13056b4ea143e",
+      "scope": "Supporting original callee/vtable evidence, not newly implemented or counted",
+      "evidence_manifest": "port/level-world/reference/character-ai-interaction-range/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "GameObject::GetInteractionSpot() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_interaction_range.hpp",
+        "port/level-world/character_ai_interaction_range.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting original callee/vtable evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-interaction-range/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK12VisualObject15GetSpecificNodeEPKc",
+      "elf_address": "0x470a18",
+      "size": 60,
+      "sha256": "f285fae45025e9983f82495c25977117a2bd747fd3408c3d2ed348bd8d359ed0",
+      "scope": "Supporting original callee/vtable evidence, not newly implemented or counted",
+      "evidence_manifest": "port/level-world/reference/character-ai-interaction-range/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "VisualObject::GetSpecificNode(char const*) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/VisualObject-79dd69531261-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_interaction_range.hpp",
+        "port/level-world/character_ai_interaction_range.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting original callee/vtable evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-interaction-range/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK6glitch5scene10ISceneNode19getAbsolutePositionEv",
+      "elf_address": "0x597180",
+      "size": 28,
+      "sha256": "838bfc1189afc8ba78d01b2649377fcff42faa12c4169d1b57cfcf2e2b641faf",
+      "scope": "Supporting original callee/vtable evidence, not newly implemented or counted",
+      "evidence_manifest": "port/level-world/reference/character-ai-interaction-range/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "glitch::scene::ISceneNode::getAbsolutePosition() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/glitch_scene_ISceneNode-7824e152fc5a-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_interaction_range.hpp",
+        "port/level-world/character_ai_interaction_range.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting original callee/vtable evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-interaction-range/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10GameObject20GetInteractionRadiusEv",
+      "elf_address": "0x38ad7c",
+      "size": 76,
+      "sha256": "95128bf5f12dcc52eac2c91c9c0622d102b4fc03c2d71169c8f3fdd6e888b5b0",
+      "scope": "Supporting original callee/vtable evidence, not newly implemented or counted",
+      "evidence_manifest": "port/level-world/reference/character-ai-interaction-range/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "GameObject::GetInteractionRadius() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/GameObject-f8242da72c27-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_interaction_range.hpp",
+        "port/level-world/character_ai_interaction_range.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting original callee/vtable evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-interaction-range/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character18GetInteractionTypeEP10GameObject",
+      "elf_address": "0x3a47e8",
+      "size": 136,
+      "sha256": "397bd786683142e311100653a24c7446227199eaaad56c4532caf32f0f4ddcd5",
+      "scope": "Supporting original callee/vtable evidence, not newly implemented or counted",
+      "evidence_manifest": "port/level-world/reference/character-ai-interaction-range/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "Character::GetInteractionType(GameObject*) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/character_ai_interaction_range.hpp",
+        "port/level-world/character_ai_interaction_range.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting original callee/vtable evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/character-ai-interaction-range/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN11AISExternal8OnUpdateEv",
+      "demangled": "AISExternal::OnUpdate()",
+      "elf_address": "0x3dce64",
+      "size": 64,
+      "sha256": "47fc8c7829030778675408d02e0b1e3773f59a620bad5d373201c65fb0e61dc6",
+      "scope": "Caller orchestration; original OnUpdate override flag then CharAIScript state-update and state-conditions calls.",
+      "evidence_manifest": "port/level-world/reference/ais-external-update/original-functions.json",
+      "manifest_implementation_scope": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/AISExternal-dba5f1c08afe-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_external_update.hpp",
+        "port/level-world/ais_external_update.cpp"
+      ],
+      "implementation_limit": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.; Caller orchestration; original OnUpdate override flag then CharAIScript state-update and state-conditions calls.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-external-update/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN10AISDefault8OnUpdateEv",
+      "demangled": "AISDefault::OnUpdate()",
+      "elf_address": "0x3dc798",
+      "size": 64,
+      "sha256": "b4b2accbca71efc2e95e37357589e0c2e722873cac3f1395065000d8561a8913",
+      "scope": "Default prefix: unsigned counter >199 gate, counter reset, AI_PauseUpdate(1000), then Cmd_Stop.",
+      "evidence_manifest": "port/level-world/reference/ais-external-update/original-functions.json",
+      "manifest_implementation_scope": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/AISDefault-39855b3ab1a8-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_external_update.hpp",
+        "port/level-world/ais_external_update.cpp"
+      ],
+      "implementation_limit": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.; Default prefix: unsigned counter >199 gate, counter reset, AI_PauseUpdate(1000), then Cmd_Stop.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-external-update/original-functions.json",
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/ais_default_collision_persist.hpp",
+            "port/level-world/ais_default_collision_persist.cpp"
+          ],
+          "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN12CharAIScript15CallStateUpdateEv",
+      "demangled": "CharAIScript::CallStateUpdate()",
+      "elf_address": "0x3d8eb4",
+      "size": 20,
+      "sha256": "a220137eb4be41b001f29b24a8f1bf809e4b8f3aeacd89dad90cd92497fb2369",
+      "scope": "Supporting exact +0xb4 null-guard and current-state +0x14 callback dispatch; adapter service reads live table.",
+      "evidence_manifest": "port/level-world/reference/ais-external-update/original-functions.json",
+      "manifest_implementation_scope": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAIScript-5191e66cc461-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_external_update.hpp",
+        "port/level-world/ais_external_update.cpp"
+      ],
+      "implementation_limit": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.; Supporting exact +0xb4 null-guard and current-state +0x14 callback dispatch; adapter service reads live table.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-external-update/original-functions.json",
+        "port/level-world/reference/ais-state-callbacks/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/ais-state-callbacks/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/ais_state_callbacks.hpp",
+            "port/level-world/ais_state_callbacks.cpp"
+          ],
+          "implementation_limit": "Complete four CharAIScript state callback leaf wrappers; table/name storage borrowed, LuaScript::Call remains explicit synchronous provider.; Complete state leaf caller; null-table guard and source name-pointer tail dispatch.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN12CharAIScript19CallStateConditionsEv",
+      "demangled": "CharAIScript::CallStateConditions()",
+      "elf_address": "0x3d8ea0",
+      "size": 20,
+      "sha256": "dc6f8887142c6d1db5d90d035740a2342645d48af746b5c8c4511e7f0bbcbb4f",
+      "scope": "Supporting exact +0xb4 null-guard and current-state +0x2c callback dispatch; adapter service reads live table.",
+      "evidence_manifest": "port/level-world/reference/ais-external-update/original-functions.json",
+      "manifest_implementation_scope": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAIScript-5191e66cc461-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_external_update.hpp",
+        "port/level-world/ais_external_update.cpp"
+      ],
+      "implementation_limit": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.; Supporting exact +0xb4 null-guard and current-state +0x2c callback dispatch; adapter service reads live table.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-external-update/original-functions.json",
+        "port/level-world/reference/ais-state-callbacks/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/ais-state-callbacks/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/ais_state_callbacks.hpp",
+            "port/level-world/ais_state_callbacks.cpp"
+          ],
+          "implementation_limit": "Complete four CharAIScript state callback leaf wrappers; table/name storage borrowed, LuaScript::Call remains explicit synchronous provider.; Complete state leaf caller; null-table guard and source name-pointer tail dispatch.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN6CharAI14AI_PauseUpdateEj",
+      "demangled": "CharAI::AI_PauseUpdate(unsigned int)",
+      "elf_address": "0x3cb748",
+      "size": 52,
+      "sha256": "de9ac712fac2b8969681f06b50d8efe78a6a5a7d972824050467d369a92d67c0",
+      "scope": "Pinned dependency: writes CharAI pause byte and starts Character timer event 0x31 for the requested duration.",
+      "evidence_manifest": "port/level-world/reference/ais-external-update/original-functions.json",
+      "manifest_implementation_scope": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_external_update.hpp",
+        "port/level-world/ais_external_update.cpp"
+      ],
+      "implementation_limit": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.; Pinned dependency: writes CharAI pause byte and starts Character timer event 0x31 for the requested duration.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-external-update/original-functions.json",
+        "port/level-world/reference/character-ai-pause-update/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/character-ai-pause-update/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/character_ai_pause_update.hpp",
+            "port/level-world/character_ai_pause_update.cpp"
+          ],
+          "implementation_limit": "Complete52B AI_PauseUpdate caller over a concrete timer-start boundary; shares frame pause projection.; Complete pause caller; captured owner, pause store and five timer arguments.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN12v2Controller8Cmd_StopEv",
+      "demangled": "v2Controller::Cmd_Stop()",
+      "elf_address": "0x40559c",
+      "size": 92,
+      "sha256": "bbbd141037f03f7c7d46fb1b056d7a490dd4a368b9818c36a7976f5cda8da656",
+      "scope": "Pinned dependency: source controller Stop body.",
+      "evidence_manifest": "port/level-world/reference/ais-external-update/original-functions.json",
+      "manifest_implementation_scope": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/v2Controller-70d7a4943329-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_external_update.hpp",
+        "port/level-world/ais_external_update.cpp"
+      ],
+      "implementation_limit": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.; Pinned dependency: source controller Stop body.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-external-update/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN9LuaScript4CallEPKc",
+      "demangled": "LuaScript::Call(char const*)",
+      "elf_address": "0x37c514",
+      "size": 112,
+      "sha256": "bd5f9d01fa32fcf2e4e458d913958481ded2d873a49c0165c4069484374f29fc",
+      "scope": "Pinned dependency used by script/state callback fixture hooks; VM callback bodies are separate.",
+      "evidence_manifest": "port/level-world/reference/ais-external-update/original-functions.json",
+      "manifest_implementation_scope": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/LuaScript-adfc93bb5be0-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_external_update.hpp",
+        "port/level-world/ais_external_update.cpp"
+      ],
+      "implementation_limit": "AISExternal OnUpdate orchestration and its AISDefault default-update prefix. Pause/Stop/Lua callees are pinned dependencies and fixture boundaries.; Pinned dependency used by script/state callback fixture hooks; VM callback bodies are separate.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-external-update/original-functions.json",
+        "port/level-world/reference/ais-state-callbacks/original-functions.json"
+      ],
+      "additional_mappings": [
+        {
+          "evidence_manifest": "port/level-world/reference/ais-state-callbacks/original-functions.json",
+          "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+          "source_paths": [
+            "port/level-world/ais_state_callbacks.hpp",
+            "port/level-world/ais_state_callbacks.cpp"
+          ],
+          "implementation_limit": "Complete four CharAIScript state callback leaf wrappers; table/name storage borrowed, LuaScript::Call remains explicit synchronous provider.; Pinned explicit Call provider; original VM body not reconstructed by this unit.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function."
+        }
+      ]
+    },
+    {
+      "original_symbol": "_ZN12CharAIScript13CallStateInitEv",
+      "demangled": "CharAIScript::CallStateInit()",
+      "elf_address": "0x3d8e8c",
+      "size": 20,
+      "sha256": "d2c787f5492a5709113ab1630a47515a6782077333aa4c69e5246490937959d7",
+      "scope": "Complete state leaf caller; null-table guard and source name-pointer tail dispatch.",
+      "evidence_manifest": "port/level-world/reference/ais-state-callbacks/original-functions.json",
+      "manifest_implementation_scope": "Complete four CharAIScript state callback leaf wrappers; table/name storage borrowed, LuaScript::Call remains explicit synchronous provider.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAIScript-5191e66cc461-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_state_callbacks.hpp",
+        "port/level-world/ais_state_callbacks.cpp"
+      ],
+      "implementation_limit": "Complete four CharAIScript state callback leaf wrappers; table/name storage borrowed, LuaScript::Call remains explicit synchronous provider.; Complete state leaf caller; null-table guard and source name-pointer tail dispatch.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-state-callbacks/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN12CharAIScript13CallStatePostEv",
+      "demangled": "CharAIScript::CallStatePost()",
+      "elf_address": "0x3d8e78",
+      "size": 20,
+      "sha256": "9ba93ce5ab74bc325bd855bd6fbeb9f2cbd5a54ddff43e95886e07d5cb93ab5a",
+      "scope": "Complete state leaf caller; null-table guard and source name-pointer tail dispatch.",
+      "evidence_manifest": "port/level-world/reference/ais-state-callbacks/original-functions.json",
+      "manifest_implementation_scope": "Complete four CharAIScript state callback leaf wrappers; table/name storage borrowed, LuaScript::Call remains explicit synchronous provider.",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAIScript-5191e66cc461-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_state_callbacks.hpp",
+        "port/level-world/ais_state_callbacks.cpp"
+      ],
+      "implementation_limit": "Complete four CharAIScript state callback leaf wrappers; table/name storage borrowed, LuaScript::Call remains explicit synchronous provider.; Complete state leaf caller; null-table guard and source name-pointer tail dispatch.; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-state-callbacks/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN10AISDefault18OnCollisionPersistEP10GameObjectb",
+      "elf_address": "0x3dbfa0",
+      "size": 396,
+      "sha256": "8856dcbbd7f710014b7f4339e341b836c0b17f04756c23e2feb2ca2b3e06df4f",
+      "scope": "New complete caller orchestration",
+      "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "AISDefault::OnCollisionPersist(GameObject*, bool)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/AISDefault-39855b3ab1a8-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_default_collision_persist.hpp",
+        "port/level-world/ais_default_collision_persist.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; New complete caller orchestration; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK16CharStateMachine11SM_IsMovingEb",
+      "elf_address": "0x3c029c",
+      "size": 52,
+      "sha256": "f56604e37033474979649426096f78e9945140bee00e6d7ccc058c653b646547",
+      "scope": "Supporting original callee/provenance evidence, not newly implemented or counted",
+      "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "CharStateMachine::SM_IsMoving(bool) const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharStateMachine-9e67f9b0cab6-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_default_collision_persist.hpp",
+        "port/level-world/ais_default_collision_persist.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN11Application7_UpdateEi",
+      "elf_address": "0x32c438",
+      "size": 2188,
+      "sha256": "6bdf2110adfc4642bbfb230cc6856fbacd4d5223728ce84d2c374311bc1c5e6a",
+      "scope": "Supporting original callee/provenance evidence, not newly implemented or counted",
+      "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "Application::_Update(int)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Application-e7ad522ea327-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_default_collision_persist.hpp",
+        "port/level-world/ais_default_collision_persist.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN6CharAI18OnCollisionPersistEP10GameObjectb",
+      "elf_address": "0x3d0e10",
+      "size": 36,
+      "sha256": "f5bf9731d305a003b5c4c619a0ed9b11af7b090dd0ee6b3b5a53da33297ef14d",
+      "scope": "Supporting original callee/provenance evidence, not newly implemented or counted",
+      "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "CharAI::OnCollisionPersist(GameObject*, bool)",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/CharAI-8297e23f8a8f-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_default_collision_persist.hpp",
+        "port/level-world/ais_default_collision_persist.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10ObjectBase11IsCharacterEv",
+      "elf_address": "0x33dcd0",
+      "size": 8,
+      "sha256": "6dcd5e75586fe6683156c0d559d4827b73bd48d501fa5781a1c6099aacd7c877",
+      "scope": "Supporting original callee/provenance evidence, not newly implemented or counted",
+      "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "ObjectBase::IsCharacter() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectBase-442c048e89fd-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_default_collision_persist.hpp",
+        "port/level-world/ais_default_collision_persist.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK10ObjectBase8IsPlayerEv",
+      "elf_address": "0x33dcd8",
+      "size": 8,
+      "sha256": "6dcd5e75586fe6683156c0d559d4827b73bd48d501fa5781a1c6099aacd7c877",
+      "scope": "Supporting original callee/provenance evidence, not newly implemented or counted",
+      "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "ObjectBase::IsPlayer() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/ObjectBase-442c048e89fd-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_default_collision_persist.hpp",
+        "port/level-world/ais_default_collision_persist.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK9Character11IsCharacterEv",
+      "elf_address": "0x3a2e1c",
+      "size": 8,
+      "sha256": "007f34a6c3441b0240da53f253e513b959105da2d8803255e1856aa48f48db47",
+      "scope": "Supporting original callee/provenance evidence, not newly implemented or counted",
+      "evidence_manifest": "port/level-world/reference/ais-default-collision-persist/original-functions.json",
+      "manifest_implementation_scope": "Bounded source adapter.",
+      "demangled": "Character::IsCharacter() const",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/Character-1405a63e8a78-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_ai_kernel_or_dependency_evidence",
+      "source_paths": [
+        "port/level-world/ais_default_collision_persist.hpp",
+        "port/level-world/ais_default_collision_persist.cpp"
+      ],
+      "implementation_limit": "Bounded source adapter.; Supporting original callee/provenance evidence, not newly implemented or counted; build and live wiring state are established separately by checkpoint reports. Each manifest covers a bounded kernel or adapter, not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/level-world/reference/ais-default-collision-persist/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada14createMaterialERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverERKN5boost13intrusive_ptrINS4_17CMaterialRendererEEERNS0_9SMaterialEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::createMaterial(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, boost::intrusive_ptr<glitch::video::CMaterialRenderer> const&, glitch::collada::SMaterial&, glitch::collada::CRootSceneNode*)",
+      "elf_address": "0x631ce8",
+      "size": 1768,
+      "sha256": "85623a86cab3a537b4b865cd201292198524a9033ce9a266fed7713c3c138e4b",
+      "scope": "Type20 selection callsite and material active-byte evidence; full createMaterial body not reconstructed",
+      "evidence_manifest": "port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json",
+      "manifest_implementation_scope": "Checked serialized material technique selector and ordered name lookup; original material constructor, compiled renderer/profile ownership and GL blend/depth states excluded",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/glitch_collada-f9638587a0e2-001.asm",
+      "in_pinned_adam_ledger": true,
+      "mapping_category": "bounded_engine_selector_or_dependency_evidence",
+      "source_paths": [
+        "port/scene-materials/technique_selector.hpp",
+        "port/scene-materials/technique_selector.cpp"
+      ],
+      "implementation_limit": "Checked serialized material technique selector and ordered name lookup; original material constructor, compiled renderer/profile ownership and GL blend/depth states excluded; Type20 selection callsite and material active-byte evidence; full createMaterial body not reconstructed; serialized-view host tests and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK6glitch5video17CMaterialRenderer14getTechniqueIDEPKc",
+      "demangled": "glitch::video::CMaterialRenderer::getTechniqueID(char const*) const",
+      "elf_address": "0x5d4714",
+      "size": 160,
+      "sha256": "984f068cc2459e9915caef91dfaa2c13c36c0ff38d4b5ac576e65dfa75193142",
+      "scope": "Bounded ordered-name lookup over checked names; serialized table ordinal distinguished from runtime compiled ordinal; original interner/renderer storage not reconstructed",
+      "evidence_manifest": "port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json",
+      "manifest_implementation_scope": "Checked serialized material technique selector and ordered name lookup; original material constructor, compiled renderer/profile ownership and GL blend/depth states excluded",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/glitch_video_CMaterialRenderer-a2aa4bc66635-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_engine_selector_or_dependency_evidence",
+      "source_paths": [
+        "port/scene-materials/technique_selector.hpp",
+        "port/scene-materials/technique_selector.cpp"
+      ],
+      "implementation_limit": "Checked serialized material technique selector and ordered name lookup; original material constructor, compiled renderer/profile ownership and GL blend/depth states excluded; Bounded ordered-name lookup over checked names; serialized table ordinal distinguished from runtime compiled ordinal; original interner/renderer storage not reconstructed; serialized-view host tests and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json"
+      ],
+      "additional_mappings": []
+    },
+    {
+      "original_symbol": "_ZNK6glitch5video9CMaterial12getTechniqueEv",
+      "demangled": "glitch::video::CMaterial::getTechnique() const",
+      "elf_address": "0x5c5d34",
+      "size": 72,
+      "sha256": "2b7c66ed451f2786bd962a0dbcf910c20307e994bd0e0242a005b1a930b9ff0e",
+      "scope": "Supporting active/profile-byte use evidence only; profile/pass/render-state body not reconstructed",
+      "evidence_manifest": "port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json",
+      "manifest_implementation_scope": "Checked serialized material technique selector and ordered name lookup; original material constructor, compiled renderer/profile ownership and GL blend/depth states excluded",
+      "assembly_file": "recovered/native/assembly/libDungeonHunter2.so/glitch_video_CMaterial-938c40b685b3-001.asm",
+      "in_pinned_adam_ledger": false,
+      "mapping_category": "bounded_engine_selector_or_dependency_evidence",
+      "source_paths": [
+        "port/scene-materials/technique_selector.hpp",
+        "port/scene-materials/technique_selector.cpp"
+      ],
+      "implementation_limit": "Checked serialized material technique selector and ordered name lookup; original material constructor, compiled renderer/profile ownership and GL blend/depth states excluded; Supporting active/profile-byte use evidence only; profile/pass/render-state body not reconstructed; serialized-view host tests and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.",
+      "evidence_manifests": [
+        "port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json"
       ],
       "additional_mappings": []
     }

@@ -31,7 +31,7 @@ ASSEMBLY = re.compile(
     r"start=\((-?[0-9.]+),(-?[0-9.]+),(-?[0-9.]+)\) "
     r"diffuse_refs=(\d+) diffuse_draws=(\d+) "
     r"AlphaMap_refs=(\d+) AlphaMap_unresolved_refs=(\d+) "
-    r"AlphaMap_(cutout|AL_preview)_draws=(\d+)"
+    r"AlphaMap_(cutout|AL_preview|AL)_draws=(\d+)"
 )
 ROOM_ASSEMBLY = re.compile(
     r"SWAMP module 0 assembled in Irrlicht r6038: .*?source_draws=(\d+) "
@@ -41,7 +41,7 @@ ROOM_ASSEMBLY = re.compile(
     r"start=\((-?[0-9.]+),(-?[0-9.]+),(-?[0-9.]+)\) "
     r"diffuse_refs=(\d+) diffuse_draws=(\d+) "
     r"AlphaMap_refs=(\d+) AlphaMap_unresolved_refs=(\d+) "
-    r"AlphaMap_(cutout|AL_preview)_draws=(\d+)"
+    r"AlphaMap_(cutout|AL_preview|AL)_draws=(\d+)"
 )
 MOVE = re.compile(
     r"MOVE state=(IDLE|MOVE|BLOCKED|REJECTED) "
@@ -256,6 +256,8 @@ def main() -> int:
                         help="Require exact source root/floor/exit render roles with all navigation input retained")
     parser.add_argument("--require-source-alpha-preview", action="store_true",
                         help="Require the blue-channel AL preview and explicit unresolved AL/AT selection")
+    parser.add_argument("--require-source-alpha-selector", action="store_true",
+                        help="Require checked source selector-derived AL and explicit profile/render-state limits")
     args = parser.parse_args()
     if args.require_source_actor: args.require_prince_character=True
     if args.require_prince_character: args.require_prince=True
@@ -323,7 +325,8 @@ def main() -> int:
         (source_draws, visible, omitted, vertices, indices, mask,
          start_x, start_y, start_z, diffuse_refs, diffuse_draws,
          alpha_refs, alpha_unresolved_refs, alpha_mode, alpha_draws) = assembly.groups()
-    alpha_count_key = "alpha_al_preview_draws" if alpha_mode == "AL_preview" else "alpha_cutout_draws"
+    alpha_count_key = {"AL_preview": "alpha_al_preview_draws", "AL": "alpha_source_al_draws",
+                       "cutout": "alpha_cutout_draws"}[alpha_mode]
     geometry = {
         "source_draws": int(source_draws), "vertices": int(vertices),
         "indices": int(indices), "path_mask": int(mask, 16),
@@ -356,7 +359,9 @@ def main() -> int:
     if (not any(marker in log for marker in ("Irrlicht is confirmed as the game engine family", "Irrlicht is confirmed as the engine family")) or
             "exact customized DH2 Irrlicht fork/revision" not in log):
         raise RuntimeError("source report did not identify the confirmed engine and exact-fork boundary")
-    alpha_summary = "AlphaMap refs=22 AL-preview draws=22" if alpha_mode == "AL_preview" else "AlphaMap cutout refs=22/draws=22"
+    alpha_summary = {"AL_preview": "AlphaMap refs=22 AL-preview draws=22",
+                     "AL": "AlphaMap refs=22 source-selector-derived AL draws=22 AT draws=0 selector-unresolved=0",
+                     "cutout": "AlphaMap cutout refs=22/draws=22"}[alpha_mode]
     if ("depth-write-off" not in log or
             alpha_summary not in log or
             "ignored lightmap=" not in log.lower()):
@@ -367,6 +372,21 @@ def main() -> int:
         if alpha_mode != "AL_preview" or not all(marker in log for marker in markers):
             raise RuntimeError("blue-channel AL preview or unresolved AL/AT selection marker is absent")
         geometry["alpha_preview_scope"] = "Material__11611 blue-channel AL shader output with Irrlicht alpha blending; original AL/AT selection and blend/depth state unresolved"
+    if args.require_source_alpha_selector:
+        markers = ("alpha_map_policy=source-selector-derived", "AlphaMap_AT_draws=0",
+                   "AlphaMap_selector_unresolved_draws=0", "alpha_profile_selection=unresolved",
+                   "effect_named_table_ordinals=GLES:2,GLES2:4", "chosen_effect_group=unresolved",
+                   "alpha_compiled_ordinal=unresolved", "source_blend_depth_state=unresolved",
+                   "AT_threshold=0.8", "source mask uses decoded blue channel",
+                   "profile_selectors={GLES:L1_Vc_Al_----_----_----_----;GLES2:L1_Vc_Al_Sp_----_----_----}")
+        if alpha_mode != "AL" or not all(marker in log for marker in markers):
+            raise RuntimeError("source CurrentTechnique AL selectors or unresolved render-state markers are absent")
+        geometry.update(alpha_source_at_draws=0, alpha_selector_unresolved_draws=0,
+                        alpha_policy="source-selector-derived",
+                        alpha_selectors={"GLES": "L1_Vc_Al_----_----_----_----",
+                                         "GLES2": "L1_Vc_Al_Sp_----_----_----"},
+                        effect_named_table_ordinals={"GLES": 2, "GLES2": 4},
+                        alpha_scope="Both source profiles select AL; blue mask and fractional blending mapped. Runtime profile/effect group/compiled ordinal and original GL blend/depth state unresolved.")
     additive_mapped = "additive_one_one_mapped=2" in log
     if args.require_prince and not additive_mapped:
         raise RuntimeError("the two source ONE/ONE ADD overlay passes are not mapped")

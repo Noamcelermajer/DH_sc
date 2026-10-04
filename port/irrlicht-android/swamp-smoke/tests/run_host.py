@@ -62,7 +62,7 @@ def main() -> None:
          '-fno-exceptions', '-fno-rtti', SMOKE / 'tests/alpha_map_policy.cpp',
          '-o', alpha_exe])
     alpha_output = run([alpha_exe])
-    if 'source AlphaMap binding scope and AL-preview blue-to-diffuse-alpha composition pass' not in alpha_output:
+    if 'source CurrentTechnique AL/AT profile resolution, fail-closed selector handling, and blue-to-alpha composition pass' not in alpha_output:
         raise RuntimeError('Irrlicht source AlphaMap policy assertions did not report pass')
 
     scene_output = run([sys.executable,
@@ -73,7 +73,7 @@ def main() -> None:
         '53 drawn diagnostics; 1 unresolved diagnostic draw omitted)')
     if expected_scene not in scene_output:
         raise RuntimeError('SWAMP source module scene assertions changed:\n' + scene_output)
-    expected_alpha = '22 resolved AlphaMap refs/22 Material__11611 AL previews'
+    expected_alpha = '22 resolved AlphaMap refs/22 source-selector-derived AL draws (AT=0 unresolved=0'
     if expected_alpha not in scene_output or '10816 vertices, 13284 indices' not in scene_output:
         raise RuntimeError('SWAMP AlphaMap/cache-source assertions changed:\n' + scene_output)
     if 'correction=(-52000,-3000,0); BRES unchanged' not in scene_output:
@@ -119,10 +119,13 @@ def main() -> None:
         raise RuntimeError('Existing bounded source SWAMP movement assertions failed or changed scope')
 
     source_files = [SMOKE / 'main.cpp', SMOKE / 'README.md', SMOKE / 'alpha_map_policy.hpp',
+                    REPO / 'port/scene-materials/technique_selector.hpp',
+                    REPO / 'port/scene-materials/technique_selector.cpp',
                     SMOKE / 'tests/run_host.py',
                     SMOKE / 'tests/alpha_map_policy.cpp', SMOKE / 'control_policy.hpp',
                     SMOKE / 'tests/control_policy.cpp',
                     REPO / 'port/android-app/tests/swamp_scene.cpp',
+                    REPO / 'port/android-app/tests/run_swamp_scene.py',
                     REPO / 'port/swamp-movement/movement.cpp',
                     REPO / 'port/irrlicht-android/game/tests/run_prince_host.py']
     source_files = list(dict.fromkeys(source_files))
@@ -132,7 +135,7 @@ def main() -> None:
     source_hashes.update(prince_report.get('source_sha256', {}))
     report = {
         'pass': True,
-        'scope': 'Host assertions validate SWAMP module-zero import/placement, the exact 22 resolved AlphaMap-to-AL-preview mappings and blue-channel composition, path-mask movement and touch/fixed-step policy, plus four source Prince warrior skins, idle/walk deformation, idle release, and one-time owner translation; Android render/install remains separate.',
+        'scope': 'Host assertions validate SWAMP module-zero import/placement, exact source CurrentTechnique AL/AT selection by GLES/GLES2 profile with unsupported/conflicting selectors fail-closed, all 22 AlphaMap-to-AL mappings and blue-channel composition, path-mask movement and touch/fixed-step policy, plus four source Prince warrior skins, idle/walk deformation, idle release, and one-time owner translation; Android render/install remains separate.',
         'source_scene': expected_scene,
         'source_alpha_map': expected_alpha,
         'control_policy': control_output.strip(),

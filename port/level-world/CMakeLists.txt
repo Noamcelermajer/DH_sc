@@ -48,6 +48,18 @@ target_sources(dh2_level_world PRIVATE
 target_sources(dh2_level_world PRIVATE character_ai_attack.cpp)
 
 target_sources(dh2_level_world PRIVATE character_script_timers.cpp)
+target_sources(dh2_level_world PRIVATE character_enemy_retention.cpp character_target_search.cpp)
+target_sources(dh2_level_world PRIVATE character_ai_master_update.cpp)
+target_sources(dh2_level_world PRIVATE character_ai_update_target.cpp)
+target_sources(dh2_level_world PRIVATE character_ai_melee_range.cpp)
+
+target_sources(dh2_level_world PRIVATE character_ai_interaction_range.cpp ais_external_update.cpp)
+
+target_sources(dh2_level_world PRIVATE ais_state_callbacks.cpp)
+
+target_sources(dh2_level_world PRIVATE character_ai_pause_update.cpp)
+
+target_sources(dh2_level_world PRIVATE ais_default_collision_persist.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_events.cpp)
 target_sources(dh2_level_world PRIVATE character_attack_geometry.cpp)
 target_include_directories(dh2_level_world PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

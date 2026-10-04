@@ -22,6 +22,8 @@ def main():
     parser.add_argument('--runtime', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--include-acquisition-sources', action='store_true')
+    parser.add_argument('--include-frame-sources', action='store_true')
+    parser.add_argument('--include-native-owner-sources', action='store_true')
     args = parser.parse_args()
     runtime = json.loads(args.runtime.read_text(encoding='utf-8'))
     digest = sha(args.apk)
@@ -63,8 +65,19 @@ def main():
         'character_enemy_spotted', 'monster_external_script_session',
         'character_ai_set_target', 'character_ai_relations', 'character_ai_in_combat',
     )
-    if args.include_acquisition_sources:
+    acquisition = args.include_acquisition_sources or args.include_frame_sources or args.include_native_owner_sources
+    if acquisition:
         ai_units += ('character_aggro_acquisition_prefix', 'character_ai_sight', 'ghost_ai_session', 'character_monster_retarget')
+    if args.include_frame_sources or args.include_native_owner_sources:
+        ai_units += ('character_enemy_retention', 'character_ai_update_target', 'character_ai_master_update',
+                     'character_ai_melee_range', 'character_ai_interaction_range', 'ais_external_update',
+                     'ais_state_callbacks', 'character_ai_pause_update', 'ais_default_collision_persist')
+        paths.extend(('port/scene-materials/CMakeLists.txt', 'port/scene-materials/technique_selector.hpp',
+                      'port/scene-materials/technique_selector.cpp', 'port/material-bindings/bindings.hpp',
+                      'port/material-bindings/bindings.cpp'))
+    if args.include_native_owner_sources:
+        paths.extend(('port/android-native/app/src/main/cpp/ghost_ai_owner.hpp',
+                      'port/android-native/app/src/main/cpp/ghost_ai_owner.cpp'))
     for unit in ai_units:
         paths.extend(f'port/level-world/{unit}{suffix}' for suffix in ('.hpp', '.cpp'))
     paths.extend((
@@ -79,8 +92,8 @@ def main():
                 local = REPO / 'port/android-native/app/src/main' / name
                 assert local.read_bytes() == raw, name
                 assets[name.removeprefix('assets/')] = {'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()}
-    assert len(assets) == (243 if args.include_acquisition_sources else 240)
-    if args.include_acquisition_sources:
+    assert len(assets) == (243 if acquisition else 240)
+    if acquisition:
         from prepare_monster_ai import CACHE_SHA256, SCRIPTS
         for name, digest_expected in SCRIPTS.items():
             assert assets['scripts/ai/' + name]['sha256'] == digest_expected

@@ -70,6 +70,34 @@ int main(int argc, char** argv) {
         require(dh2_bres_open(&bres, bres_bytes.data(), bres_bytes.size()) ==
                     dh2::resources::BresError::ok,
                 "swamp catalogue BRES parse failed");
+        const auto material_count = dh2_bres_library_count(
+            &bres, dh2::resources::Library::material);
+        std::vector<dh2::irrlicht_swamp::AlphaMapMode> material_alpha_modes(
+            material_count, dh2::irrlicht_swamp::AlphaMapMode::unsupported);
+        std::uint32_t alpha_selector_materials = 0;
+        for (std::uint32_t i = 0; i < material_count; ++i) {
+            dh2::materials::Material material{};
+            require(dh2_material_record(&material, &bres,
+                        static_cast<std::int32_t>(i)) == dh2::materials::Error::ok,
+                    "scene material inventory failed checked BRES decoding");
+            std::vector<dh2::scene_materials::CurrentTechnique> selectors;
+            std::string selector_error;
+            require(dh2::scene_materials::material_current_techniques(
+                        material, selectors, selector_error) ==
+                        dh2::scene_materials::TechniqueSelectorError::ok,
+                    "scene CurrentTechnique material failed checked decoding");
+            const auto selection = dh2::irrlicht_swamp::resolve_alpha_map_selection(selectors);
+            material_alpha_modes[i] = selection.mode;
+            if (!selectors.empty()) ++alpha_selector_materials;
+            if (std::strcmp(material.id, "Material__11610") == 0)
+                require(selection.mode == dh2::irrlicht_swamp::AlphaMapMode::no_alpha_variant,
+                        "Material__11610 GLES/GLES2 selector pair must remain opaque");
+            if (std::strcmp(material.id, "Material__11611") == 0)
+                require(selection.mode == dh2::irrlicht_swamp::AlphaMapMode::source_al_fractional,
+                        "Material__11611 source CurrentTechnique must derive AL mode");
+        }
+        require(alpha_selector_materials == 2,
+                "source SWAMP BRES selector material inventory changed");
         dh2::scene_payload::Scene scene{};
         require(dh2_scene_open(&scene, &bres) == dh2::scene_payload::Error::ok,
                 "swamp catalogue scene parse failed");
@@ -141,7 +169,9 @@ int main(int argc, char** argv) {
         std::uint32_t next_vertex = 0, next_index = 0, texture_refs = 0;
         std::uint32_t visible_source_draws = 0, omitted_diagnostic_draws = 0;
         std::uint32_t alpha_map_parameter_refs = 0, alpha_map_refs = 0;
-        std::uint32_t alpha_preview_draws = 0;
+        std::uint32_t alpha_selector_draws = 0;
+        std::uint32_t alpha_al_draws = 0, alpha_at_draws = 0;
+        std::uint32_t alpha_selector_unresolved_draws = 0;
         std::uint32_t alpha_material_draws = 0;
         std::uint32_t additive_source_draws = 0;
         std::set<std::string> sampler_paths, sampler_parameters, material_ids;
@@ -229,17 +259,28 @@ int main(int argc, char** argv) {
                 }
             }
             const auto* draw_references = placed.texture_references + draw.first_texture;
-            const bool uses_alpha_preview = dh2::irrlicht_swamp::swamp_draw_uses_alpha_al_preview(
-                draw, draw_references, draw.texture_count);
+            const auto alpha_mode = dh2::irrlicht_swamp::alpha_map_mode_for_material(
+                draw.material_index, material_alpha_modes);
+            const bool uses_alpha_map = dh2::irrlicht_swamp::swamp_draw_uses_alpha_map_mode(
+                draw, draw_references, draw.texture_count, alpha_mode);
             if (std::strcmp(draw.material_id, "Material__11611") == 0) {
-                require(uses_alpha_preview && draw.visible,
-                        "Material__11611 no longer maps to its visible source AlphaMap AL preview");
+                require(uses_alpha_map && draw.visible &&
+                        alpha_mode == dh2::irrlicht_swamp::AlphaMapMode::source_al_fractional,
+                        "Material__11611 source selector no longer maps its visible AlphaMap as AL");
                 ++alpha_material_draws;
             } else {
-                require(!uses_alpha_preview,
-                        "source AlphaMap AL-preview policy expanded beyond Material__11611");
+                require(!uses_alpha_map ||
+                        alpha_mode == dh2::irrlicht_swamp::AlphaMapMode::source_at_cutout,
+                        "alpha treatment must be supported by the material's source selector");
             }
-            alpha_preview_draws += uses_alpha_preview ? 1U : 0U;
+            alpha_selector_draws += uses_alpha_map ? 1U : 0U;
+            alpha_al_draws += uses_alpha_map &&
+                alpha_mode == dh2::irrlicht_swamp::AlphaMapMode::source_al_fractional ? 1U : 0U;
+            alpha_at_draws += uses_alpha_map &&
+                alpha_mode == dh2::irrlicht_swamp::AlphaMapMode::source_at_cutout ? 1U : 0U;
+            alpha_selector_unresolved_draws +=
+                dh2::irrlicht_swamp::swamp_draw_has_alpha_map_pair(
+                    draw, draw_references, draw.texture_count) && !uses_alpha_map ? 1U : 0U;
             texture_refs += draw.texture_count;
             next_vertex += draw.vertex_count;
             next_index += draw.index_count;
@@ -248,9 +289,11 @@ int main(int argc, char** argv) {
                 "unresolved translucent diagnostic policy must select exactly one source draw");
         require(additive_source_draws == 2,
                 "source additive state must select exactly the two verified overlay draws");
-        require(alpha_map_refs == 22 && alpha_preview_draws == 22 &&
+        require(alpha_map_refs == 22 && alpha_selector_draws == 22 &&
+                alpha_al_draws == 22 && alpha_at_draws == 0 &&
+                alpha_selector_unresolved_draws == 0 &&
                 alpha_material_draws == 22,
-                "source AlphaMap AL-preview mapping must cover the 22 Material__11611 draws");
+                "source CurrentTechnique AL mapping must cover all 22 AlphaMap draws");
         require(visible_source_draws == 54,
                 "module zero source-visible draw count changed from the tested baseline");
         require(!dh2::viewer::omit_unresolved_swamp_draw("other-node", "ColorMaterial") &&
@@ -293,11 +336,12 @@ int main(int argc, char** argv) {
         require(bres_bytes == bres_before, "BRES input bytes were modified");
         std::printf("SWAMP module 0: %u subtree records, %u source draw commands (%u source-visible; "
                     "%u drawn diagnostics; "
-                    "%u unresolved diagnostic draw omitted), %u resolved AlphaMap refs/%u Material__11611 AL previews (%u AlphaMap parameter refs total), %u vertices, "
+                    "%u unresolved diagnostic draw omitted), %u resolved AlphaMap refs/%u source-selector-derived AL draws (AT=%u unresolved=%u; %u AlphaMap parameter refs total), %u vertices, "
                     "%u indices, %u materials, %u sampler refs; correction=(%.0f,%.0f,%.0f); BRES unchanged\n",
                     record_count, placed.draw_commands, visible_source_draws,
                     visible_source_draws - omitted_diagnostic_draws, omitted_diagnostic_draws,
-                    alpha_map_refs, alpha_preview_draws, alpha_map_parameter_refs,
+                    alpha_map_refs, alpha_al_draws, alpha_at_draws,
+                    alpha_selector_unresolved_draws, alpha_map_parameter_refs,
                     placed.vertex_count,
                     placed.index_count, static_cast<unsigned>(material_ids.size()),
                     placed.texture_reference_count, binding.placement_delta[0],

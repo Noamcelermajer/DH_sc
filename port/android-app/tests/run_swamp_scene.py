@@ -29,6 +29,7 @@ SOURCES = [
     REPO / 'port/engine-resources/resources.cpp',
     REPO / 'port/engine-math/math.cpp',
     REPO / 'port/material-bindings/bindings.cpp',
+    REPO / 'port/scene-materials/technique_selector.cpp',
 ]
 
 
