@@ -4,6 +4,7 @@
 #include "character_ai_relations.hpp"
 #include "character_ai_set_target.hpp"
 #include "character_aggro_candidate_events.hpp"
+#include "character_aggro_character_list.hpp"
 #include "character_aggro_target_search.hpp"
 #include "character_controller_commands.hpp"
 #include "character_enemy_spotted.hpp"
@@ -152,8 +153,25 @@ public:
                                const dh2::character::aggro_search::RoomRegistry* rooms,
                                float view_radius, float cone, ScanResult* result);
 
+    // Actual _UpdateAggro producer: the borrowed flat ObjectManager Character
+    // list. It uses the same retained VM/event/controller context as the
+    // historical room-query route. It does not infer RoomZone/PFRoom identity.
+    Status search_characters_and_dispatch(
+        dh2::character::aggro_search::TargetList* list,
+        dh2::character::aggro_character_list::CharacterList* characters,
+        float view_radius, float cone, ScanResult* result);
+    Status search_objects_and_dispatch(
+        dh2::character::aggro_search::TargetList* list,
+        const dh2::character::aggro_character_list::ObjectListMethods* objects,
+        float view_radius, float cone, ScanResult* result);
+
 private:
     struct Impl;
+    Status search_and_dispatch_impl(dh2::character::aggro_search::TargetList*,
+        const dh2::character::aggro_search::RoomRegistry*,
+        dh2::character::aggro_character_list::CharacterList*,
+        const dh2::character::aggro_character_list::ObjectListMethods*,
+        float, float, ScanResult*);
     Status prepare_callbacks(const Bindings&, const character::ScriptLifecycleState64*,
                              std::string& error);
     std::shared_ptr<Impl> impl_;

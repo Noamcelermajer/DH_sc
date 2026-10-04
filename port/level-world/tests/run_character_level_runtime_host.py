@@ -13,7 +13,7 @@ def main():
     original_fixture=MODULE/'tests/monster_initialization_debug_persistence.cpp';text=original_fixture.read_text();marker='int main(int argc,char** argv)';assert text.count(marker)==1
     generated=objects/'character-level-runtime-fixture.hpp';generated.write_text(text[:text.index(marker)])
     c_sources=[RUNTIME/'lua'/(name+'.c') for name in CORE]+[RUNTIME/'script_runtime.c',ROOT/'port/lua-numeric/numeric.c',ROOT/'port/pydata-constants/constants.c']
-    names=['ais_native_bindings','monster_external_script_session','lua_script_level_queries','character_script_set_level','character_regeneration','debug_switches_runtime','debug_switches_persistence','character_level_runtime']
+    names=['ais_native_bindings','monster_external_script_session','lua_script_level_queries','character_script_set_level','character_regeneration','character_init_hp_mp','debug_switches_runtime','debug_switches_persistence','character_level_runtime']
     cpp_sources=[RUNTIME/'script_function_alias.cpp',*[MODULE/(name+'.cpp') for name in names],*[ROOT/'port/game-data'/(name+'.cpp') for name in ['data','class_tables','properties','vitals','level_tables']],ROOT/'port/gameplay-object-callbacks/gameplay_object_callbacks.cpp',MODULE/'tests/character_level_runtime.cpp']
     commands=[];linked=[];warnings=[]
     for source in c_sources+cpp_sources:
@@ -28,7 +28,7 @@ def main():
     cache=a.cache.resolve();configuration=cache/'DebugSwitches.savegame';original_configuration_sha=sha(configuration);assert original_configuration_sha=='51a3827f0109e16d1520e76d5b19736df3afe38375b91b955ac519f954234d6b'
     folder=exe.parent/'native-files';folder.mkdir(exist_ok=True);result=subprocess.run([str(exe),str(cache),str(common),str(monster),str(folder)],cwd=ROOT,capture_output=True,text=True)
     if result.returncode:raise RuntimeError(result.stdout+result.stderr)
-    host=json.loads(result.stdout);assert host['validation']=='PASS' and host['host_cases']==42 and host['unchanged_on_init_positive_cases']==18 and sha(configuration)==original_configuration_sha
+    host=json.loads(result.stdout);assert host['validation']=='PASS' and host['host_cases']==50 and host['initial_hp_mp_cases']==8 and host['initial_hp_mp_native_adapter'] and host['unchanged_on_init_positive_cases']==18 and sha(configuration)==original_configuration_sha
     deps=c_sources+cpp_sources+list((RUNTIME/'lua').glob('*.h'))+[MODULE/(name+'.hpp') for name in names]+list((ROOT/'port/game-data').glob('*.hpp'))+[RUNTIME/'script_runtime.h',RUNTIME/'script_function_alias.h',ROOT/'port/lua-numeric/numeric.h',ROOT/'port/pydata-constants/constants.h',ROOT/'port/gameplay-object-callbacks/gameplay_object_callbacks.hpp',ROOT/'port/persistence/binary.h',MODULE/'tests/monster_initialization_session.cpp',original_fixture,MODULE/'tests/run_monster_external_script_session_host.py',pathlib.Path(__file__).resolve(),MODULE/'reference/character-level-runtime/NOTES.md',MODULE/'reference/character-level-runtime/original-functions.json']
     files=[cache/'data/pydata'/name for name in ['character_properties_pyarray.bin','character_properties_pyarraynames.bin','character_properties_pystructnames.bin','character_classes_pyarray.bin','character_classes_pyarraynames.bin','character_classes_pystructnames.bin','design_pycst.bin','levels_pyarray.bin','levels_pyarraynames.bin','levels_pystructnames.bin']]+[configuration]
     persisted={f.relative_to(folder).as_posix():{'sha256':sha(f),'bytes':f.stat().st_size} for f in sorted(folder.glob('*/DebugSwitches.savegame'))}

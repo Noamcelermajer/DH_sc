@@ -21,6 +21,7 @@ def main():
     p.add_argument('--sdk',type=Path,required=True)
     p.add_argument('--java',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--require-native-character-list',action='store_true')
     a=p.parse_args();digest=sha(a.apk)
     production=json.loads(a.production_snapshot.read_text())
     runtime=json.loads(a.runtime_report.read_text())
@@ -31,6 +32,10 @@ def main():
     for key in ('native_monster_unchanged_oninit_live_properties','native_monster_vm_health_and_timers_retained',
                 'unfinished_ai_dot_timer_providers_paused','native_level_constructor_fields_and_range_callbacks'):
         assert runtime[key],key
+    if a.require_native_character_list:
+        assert runtime['native_character_list_load_reload_recreation']
+        counts=runtime['native_character_list_counts']
+        assert len(counts)>=3 and all(row==[14,14,0,0,0] for row in counts)
     sources=production['source_sha256']
     for name,value in sources.items():
         assert sha(ROOT/name)==value,('actual compiled input changed',name)
@@ -57,6 +62,12 @@ def main():
             'native_full_character_bindings':False,'native_full_skill_initialization':False,
             'native_autonomous_ghost_ai':False,'full_game_playable':False,'physical_arm64_phone_tested':False,
             'scope':'Exact source-built monster OnInit/native properties/managed fallback host/Level/design/real Debug file and retained VM, damaged health, paused timers across reload/rotation on API37/16KiB. Source skills/post/final/full bindings and autonomous AI remain pending.'}
+    if a.require_native_character_list:
+        report['native_character_list_load_reload_recreation']=True
+        report['native_character_list_count']=14
+        report['native_character_list_owned_nodes']=14
+        report['native_full_object_manager_factory']=False
+        report['scope']+=' Native ownership/enrollment of the Prince and 13 live monster projections uses the source flat Character-list shape. Full name-map/factory/manager cleanup and autonomous Ghost acquisition are unproved.'
     a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps({'validation':'PASS','apk_sha256':digest,'assets':len(assets),'native_libraries':len(libraries),'actual_compiler_inputs':len(sources)}))
 

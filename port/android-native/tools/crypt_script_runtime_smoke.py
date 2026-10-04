@@ -34,6 +34,8 @@ def main():
                         help='require original constructor field selection and source range callbacks on load/reload/recreation')
     parser.add_argument('--require-native-monster-initialization', action='store_true',
                         help='require unchanged monster OnInit on native owners, real Debug file and retained damaged health/VM/timers')
+    parser.add_argument('--require-native-character-list', action='store_true',
+                        help='require actual native Character enrollment and owned source-list nodes on load/reload/recreation')
     args = parser.parse_args()
     assert args.serial.startswith('emulator-')
     out = args.output.resolve()
@@ -232,6 +234,17 @@ def main():
             assert not any(token in text[offset:] for token in
                            ('Combat target selected |', 'Native combat hit |', 'Spawn source state |'))
         report['unbound_gated_combat_target_pairs_rejected'] = rejected_pairs
+        # The development target probes also focus their source object. Put
+        # the camera back on the Prince before checking reload/recreation;
+        # otherwise a correct restored view can leave him outside the frame.
+        offset = len(text)
+        adb('shell', 'am', 'start', '-f', '0x20000000', '-n', PACKAGE + '/.MainActivity',
+            '--ei', 'object_index', '-1', '--ez', 'enemy_ai', 'false')
+        # A reused Activity reports "Actor state unchanged"; a newly created
+        # Activity reports its loaded world. Both routes apply this focus.
+        text = wait(lambda value: 'Actor command applied | index -1 | state null | time -1 |'
+                    in value[offset:], 'return camera focus to the player after target probes')
+        report['camera_focus_restored_to_player_after_target_probes'] = True
         damage_after = None
         if args.require_native_monster_initialization:
             offset = len(text)
@@ -313,6 +326,15 @@ def main():
             report['unfinished_ai_dot_timer_providers_paused'] = True
             report['native_character_function_registration_scope'] = '10 supported OnInit closures; complete 265 ordered bindings pending'
             report['autonomous_ghost_ai_and_full_init_script_process_complete'] = False
+        if args.require_native_character_list:
+            character_lists = re.findall(
+                r'Native Character list \| characters (\d+) \| owned nodes (\d+) \| copied links (\d+) \| full ObjectManager factory (\d+) \| autonomous Ghost AI (\d+)', text)
+            assert len(character_lists) >= 3, 'native Character list missing on load/reload/recreation'
+            assert all(tuple(map(int, row)) == (14, 14, 0, 0, 0) for row in character_lists), 'native Character ownership/list scope changed'
+            assert 'Native Character list |' in text[offset:], 'native Character list missing after Activity recreation'
+            report['native_character_list_load_reload_recreation'] = True
+            report['native_character_list_counts'] = [list(map(int, row)) for row in character_lists]
+            report['native_character_list_scope'] = 'Prince and 13 live monster projections; native owned source-list nodes; full ObjectManager factory/name-map and autonomous Ghost AI remain pending'
         capture('authored-ambush-restored')
         report['validation'] = 'PASS'
         report['scope'] = 'Original GhostAmbush01 contact/timed spawning on authored placement, approached with actual root-motion touch input from an explicit fan spawn override; source completion/body creation and reload/recreation; no complete-level or full AI claim.'

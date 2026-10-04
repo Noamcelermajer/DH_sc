@@ -48,6 +48,7 @@ def main() -> int:
         ROOT / "port/game-data/ai.cpp",
         MODULE / "ais_native_bindings.cpp",
         MODULE / "character_aggro_target_search.cpp",
+        MODULE / "character_aggro_character_list.cpp",
         MODULE / "character_aggro_candidate_events.cpp",
         MODULE / "character_ai_relations.cpp",
         MODULE / "character_enemy_spotted.cpp",
@@ -109,7 +110,7 @@ def main() -> int:
     if tested.returncode:
         return tested.returncode
     host = json.loads(tested.stdout)
-    assert host["ghost_ai_session_cases"] == 13 and host["mismatches"] == 0, host
+    assert host["ghost_ai_session_cases"] == 19 and host["mismatches"] == 0, host
     for key in ("source_search_to_path", "per_actor_vm_and_target_identity",
                 "stale_owner_rebind", "reentrant_rebind_guard", "partial_failure_effects",
                 "fresh_empty_search_event_12", "fresh_all_false_relation_event_12",
@@ -119,10 +120,12 @@ def main() -> int:
                 "lifecycle_output_alias_guard",
                 "unbuilt_updateaggro_prefix"):
         assert host[key] is True, (key, host)
+    assert host["flat_character_route_cases"] == 6 and host["source_flat_character_to_path"] is True
     assert host["native_wired"] is False
 
     dependencies = cpp_sources + c_sources + [
         MODULE / "ghost_ai_session.hpp",
+        MODULE / "character_aggro_character_list.hpp",
         MODULE / "character_script_lifecycle.hpp",
         MODULE / "character_ai_set_target.hpp",
         MODULE / "character_ai_relations.hpp",

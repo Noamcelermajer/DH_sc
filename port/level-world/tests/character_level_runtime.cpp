@@ -36,5 +36,53 @@ int main(int argc,char** argv){try{
  {NativeFixture f(characters,classes,rules,design,"Crypt_Ghost",folder/std::to_string(cases),configuration);auto storage=f.storage();sl::Globals globals{&f.application};sl::Arguments args{0x9191,1,3};lr::NumberServices numbers{};lr::Result result{};require(f.runtime.set_level(&storage,&args,&globals,&numbers,&result)==lr::Status::number_unavailable&&!result.level.applied,"missing argument reader fabricated number");++cases;}
  {NativeFixture f(characters,classes,rules,design,"Crypt_Ghost",folder/std::to_string(cases),configuration);f.properties.saved[36]-=256;auto storage=f.storage();sl::Globals globals{&f.application};lr::Result result{};f.fail_write_at=2;require(f.runtime.set_level_fixed(&storage,&globals,256,&result)==lr::Status::debug_failed&&f.debug_globals.loaded&&f.save_calls==1&&f.write_closes==0&&!result.hp.added&&!result.mp_attempted,"native source file failure added stats or closed resources");++cases;}
  {NativeFixture f(characters,classes,rules,design,"Crypt_Ghost",folder/std::to_string(cases),configuration);auto storage=f.storage();sl::Globals globals{&f.application};lr::Result result{};require(f.runtime.set_level_fixed(nullptr,&globals,256,&result)==lr::Status::invalid_argument,"null native storage accepted");storage.view->saved=storage.base;require(f.runtime.set_level_fixed(&storage,&globals,256,&result)==lr::Status::invalid_argument,"aliased mutable native sheets accepted");++cases;}
- std::printf("{\"validation\":\"PASS\",\"host_cases\":%u,\"unchanged_on_init_positive_cases\":%u,\"live_non_atomic_class_property_kernel\":true,\"actual_design_constants\":true,\"finite_f2iz_only\":true,\"actual_source_debug_and_real_file_backend\":true,\"native_runtime_adapter\":true,\"android_wired\":false}\n",cases,positive_cases);return 0;
+ for(const char* name:{"Crypt_Ghost","Crypt_Ghost_RE"}){
+  NativeFixture f(characters,classes,rules,design,name,folder/std::to_string(cases),configuration);
+  auto storage=f.storage();const auto base=f.properties.base,gear=f.properties.gear;
+  require(!dh2_property_add(storage.view,36,-256)&&!dh2_property_add(storage.view,41,-512),"live initial vitals depletion failed");
+  storage.classes=nullptr;storage.class_count=0;storage.designs=nullptr;storage.design_count=0;
+  lr::Result result{};
+  require(f.runtime.initialize_hp_mp(&storage,&result)==lr::Status::complete&&result.init.captured_character==f.owner&&
+          result.init.calls==2&&result.init.hp_completed&&result.init.mp_completed&&result.hp.added&&result.mp.added&&
+          result.hp.positive_amount==256&&result.mp.positive_amount==512&&f.properties.resolved[36]==f.properties.resolved[38]&&
+          f.properties.resolved[41]==f.properties.resolved[43]&&f.properties.base==base&&f.properties.gear==gear&&
+          !result.level.applied&&!result.number_reads&&!result.design_reads&&f.runtime.retained_strings()==0&&
+          f.save_calls==5&&f.write_closes==5&&read(f.filename.string())==configuration,
+          "source initial vitals changed Level/classes or skipped real regeneration/files");++cases;
+ }
+ {NativeFixture f(characters,classes,rules,design,"Crypt_Ghost",folder/std::to_string(cases),configuration);
+  auto storage=f.storage();storage.debug_globals=nullptr;storage.debug_services=nullptr;lr::Result result{};
+  const auto before=f.properties.resolved;
+  require(f.runtime.initialize_hp_mp(&storage,&result)==lr::Status::complete&&result.init.calls==2&&result.init.mp_completed&&
+          result.hp_attempted&&result.mp_attempted&&!result.hp.added&&!result.mp.added&&f.properties.resolved==before&&!f.save_calls,
+          "full vitals must still call both source kernels without unused Debug providers");++cases;}
+ {NativeFixture f(characters,classes,rules,design,"Crypt_Ghost",folder/std::to_string(cases),configuration);
+  auto storage=f.storage();require(!dh2_property_add(storage.view,41,-128),"mana depletion failed");lr::Result result{};
+  require(f.runtime.initialize_hp_mp(&storage,&result)==lr::Status::complete&&result.init.hp_completed&&result.init.mp_completed&&
+          !result.hp.added&&result.mp.added&&result.mp.positive_amount==128&&f.properties.resolved[41]==f.properties.resolved[43]&&
+          f.save_calls==5&&f.runtime.retained_strings()==0,"MP initialization was skipped after no-op source HP result");++cases;}
+ {NativeFixture f(characters,classes,rules,design,"Crypt_Ghost",folder/std::to_string(cases),configuration);
+  auto storage=f.storage();require(!dh2_property_add(storage.view,36,-256)&&!dh2_property_add(storage.view,41,-128),"vitals depletion failed");
+  const auto saved=f.properties.saved;f.fail_write_at=2;lr::Result result{};
+  require(f.runtime.initialize_hp_mp(&storage,&result)==lr::Status::debug_failed&&result.init.calls==1&&!result.init.hp_completed&&
+          !result.mp_attempted&&f.properties.saved==saved&&f.debug_globals.loaded&&f.save_calls==1&&f.write_closes==0,
+          "initial HP file failure continued MP or rolled back preceding Debug effects");++cases;}
+ {NativeFixture f(characters,classes,rules,design,"Crypt_Ghost",folder/std::to_string(cases),configuration);
+  auto storage=f.storage();require(!dh2_property_add(storage.view,36,-256),"HP depletion failed");
+  storage.debug_globals=nullptr;storage.debug_services=nullptr;lr::Result result{};
+  require(f.runtime.initialize_hp_mp(&storage,&result)==lr::Status::debug_failed&&result.init.calls==1&&!result.mp_attempted&&
+          !result.hp.added&&!f.save_calls,"initial HP fabricated missing Debug provider");++cases;}
+ {NativeFixture f(characters,classes,rules,design,"Crypt_Ghost",folder/std::to_string(cases),configuration);
+  auto storage=f.storage();const auto maximum=f.properties.resolved[38];require(!dh2_property_add(storage.view,36,-256),"HP depletion failed");
+  f.mutate_hp_during_save=true;f.write_services={static_cast<PositiveFixture*>(&f),NativeFixture::mutating_write};lr::Result result{};
+  require(f.runtime.initialize_hp_mp(&storage,&result)==lr::Status::complete&&result.hp.current==std::uint32_t(maximum-256)&&
+          result.hp.positive_amount==256&&f.properties.resolved[36]==maximum+64&&result.init.mp_completed,
+          "initial HP lost captured amount after real Debug file-time mutation");++cases;}
+ {NativeFixture f(characters,classes,rules,design,"Crypt_Ghost",folder/std::to_string(cases),configuration);
+  auto storage=f.storage();lr::Result result{};const auto before=f.properties.saved;
+  require(f.runtime.initialize_hp_mp(nullptr,&result)==lr::Status::invalid_argument,"null initial vitals storage accepted");
+  storage.view->saved=storage.base;
+  require(f.runtime.initialize_hp_mp(&storage,&result)==lr::Status::invalid_argument&&f.properties.saved==before&&!f.save_calls,
+          "initial vitals accepted aliased mutable sheets");++cases;}
+ std::printf("{\"validation\":\"PASS\",\"host_cases\":%u,\"unchanged_on_init_positive_cases\":%u,\"initial_hp_mp_native_adapter\":true,\"initial_hp_mp_cases\":8,\"live_non_atomic_class_property_kernel\":true,\"actual_design_constants\":true,\"finite_f2iz_only\":true,\"actual_source_debug_and_real_file_backend\":true,\"native_runtime_adapter\":true,\"android_wired\":false}\n",cases,positive_cases);return 0;
 }catch(const std::exception& error){std::fprintf(stderr,"character level runtime: %s\n",error.what());return 1;}}

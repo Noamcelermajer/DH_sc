@@ -1,4 +1,5 @@
 #include "../monster_external_script_session.hpp"
+#include "../ais_external_init_callbacks.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -407,6 +408,55 @@ int main(int argc, char** argv) {
                 "native membership must read actual VFTable on the same staged VM");
         ++cases;
 
+        {
+            // Original commons post/final bodies are empty. They must execute
+            // on this exact retained VM without invoking OnInit or its stats.
+            Session retained; Fixture live;
+            initialized(retained, live, commons, monster);
+            const auto bound=bind(live);
+            namespace init=dh2::ais_external_init_callbacks;
+            init::State ais{0x456789ab00000047ull};init::Result result{};
+            const init::Services caller{&retained,[](void* raw,init::State*,const init::Request* request)->std::int32_t {
+                std::string failure;
+                const auto event=request->callback==init::Callback::post?Event::init_post:Event::init_final;
+                return static_cast<Session*>(raw)->dispatch(event,0,failure)==Status::complete?0:1;
+            }};
+            require(init::invoke(&ais,init::Callback::post,&caller,&result)==init::Status::complete && result.calls==1 && !result.default_init_completed &&
+                    init::invoke(&ais,init::Callback::final,&caller,&result)==init::Status::complete && result.calls==1 && !result.default_init_completed &&
+                    retained.ready() && retained.uses_services(bound) && live.trace.empty() && live.property_reads==1 &&
+                    retained.statistics().completed_callbacks==2 && retained.statistics().failed_callbacks==0,
+                    "post/final callers must retain the VM and avoid replaying OnInit");
+            require(std::string(retained.source_alias(Event::init_post))=="OnInitPost" &&
+                    std::string(retained.source_alias(Event::init_final))=="OnInitFinal",
+                    "common post/final use current source alias fallback");
+            ++cases;
+        }
+        {
+            // A fan callback returns a table whose ordinary _this lookup adds
+            // a Final alias. The next call must observe that discarded return
+            // effect through the same source alias map and VM.
+            const std::string extension=std::string(monster_bytes.begin(),monster_bytes.end())+R"lua(
+function NativePostProof()
+    HasTarget()
+    return setmetatable({}, {__index=function(_, key)
+        assert(key=='_this')
+        AddToVFTable('OnInitFinal', 'NativeFinalProof')
+        return nil
+    end})
+end
+function NativeFinalProof() HasTarget() end
+AddToVFTable('OnInitPost', 'NativePostProof')
+)lua";
+            Session retained;Fixture live;
+            initialized(retained,live,commons,source(extension));
+            require(retained.dispatch(Event::init_post,0,error)==Status::complete &&
+                    std::string(retained.source_alias(Event::init_final))=="NativeFinalProof" &&
+                    retained.dispatch(Event::init_final,0,error)==Status::complete &&
+                    retained.statistics().completed_callbacks==2 && retained.ready(),
+                    "post discarded returns and fresh final alias resolution lost");
+            trace(live,{"HasTarget","HasTarget"});++cases;
+        }
+
         std::printf("{\"monster_external_session_cases\":%u,\"unchanged_original_scripts_executed\":true,"
                     "\"spotted_callback_order\":true,\"idle_path_short_circuit\":true,"
                     "\"fresh_target_after_path_query\":true,\"opaque_64bit_identity_tables\":true,"
@@ -414,6 +464,7 @@ int main(int argc, char** argv) {
                     "\"staged_same_vm_lifecycle\":true,\"staged_errors_stop_without_fallback\":true,"
                     "\"source_libraries_and_35_bindings\":true,\"unsupported_globals_fail_closed\":true,"
                     "\"numeric_result_arity\":true,\"unknown_callbacks_rejected\":true,"
+                    "\"same_vm_post_final_callbacks\":true,\"post_discarded_return_updates_final_alias\":true,"
                     "\"native_wired\":false,\"mismatches\":0}\n", cases);
         return 0;
     } catch (const std::exception& error) {

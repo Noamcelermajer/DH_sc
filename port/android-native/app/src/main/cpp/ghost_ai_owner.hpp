@@ -55,6 +55,10 @@ struct Bindings {
     std::int32_t (*resolve_character)(void*, std::uintptr_t,
                                      character::aggro_search::Character**);
     std::uint32_t candidate_capacity;
+    // Select exactly one producer. This is the source _UpdateAggro list;
+    // `rooms` is retained only for the historical host adapter.
+    character::aggro_character_list::CharacterList* characters = nullptr;
+    const character::aggro_character_list::ObjectListMethods* objects = nullptr;
 };
 
 struct FrameInput {

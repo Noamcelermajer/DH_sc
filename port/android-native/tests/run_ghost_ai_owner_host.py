@@ -20,6 +20,8 @@ CPP = [
     ROOT / "port/game-data/ai.cpp",
     LEVEL / "character_aggro_delay.cpp", LEVEL / "character_ai_turn.cpp",
     LEVEL / "character_aggro_target_search.cpp",
+    LEVEL / "character_aggro_character_list.cpp",
+    LEVEL / "character_aggro_object_manager_list.cpp",
     LEVEL / "character_aggro_candidate_events.cpp",
     LEVEL / "character_ai_relations.cpp", LEVEL / "character_enemy_spotted.cpp",
     LEVEL / "character_ai_events.cpp", LEVEL / "character_ai_set_target.cpp",
@@ -36,6 +38,7 @@ CPP = [
     LEVEL / "character_monster_retarget.cpp", LEVEL / "character_enemy_retention.cpp",
     LEVEL / "character_target_search.cpp",
     ROOT / "port/android-native/app/src/main/cpp/ghost_ai_owner.cpp",
+    ROOT / "port/android-native/app/src/main/cpp/native_character_list.cpp",
     ROOT / "port/android-native/tests/ghost_ai_owner_host.cpp",
 ]
 
@@ -108,13 +111,18 @@ def main() -> int:
     host = json.loads(run.stdout)
     assert host["ghost_ai_owner_host_cases"] == 8 and host["existing_target_cases"] == 6 and host["mismatches"] == 0, host
     assert host["pending_vm_shared"] is True, host
+    assert host["manager_cursor_owner_cases"] == 2 and host["manager_cursor_live_links"] is True, host
+    assert host["flat_character_owner_cases"] == 4 and host["flat_published_vm_shared"] is True, host
     assert host["status"] == "PASS" and host["candidates"] == 1 and host["events"] == 1, host
     assert host["script_callbacks"] == host["set_target_calls"] == host["head_to_calls"] == host["path_count"] == 1, host
     assert host["ais_update_calls"] == 2, host
     inputs = c_sources + CPP + [common, monster, Path(__file__).resolve(),
         LEVEL / "tests/ghost_ai_session.cpp", LEVEL / "ghost_ai_session.hpp",
         LEVEL / "character_script_lifecycle.hpp", LEVEL / "monster_external_script_session.hpp",
-        ROOT / "port/android-native/app/src/main/cpp/ghost_ai_owner.hpp"]
+        LEVEL / "character_aggro_character_list.hpp",
+        LEVEL / "character_aggro_object_manager_list.hpp",
+        ROOT / "port/android-native/app/src/main/cpp/ghost_ai_owner.hpp",
+        ROOT / "port/android-native/app/src/main/cpp/native_character_list.hpp"]
     report = {
         "validation": "PASS", "host": host, "commands": commands + [link],
         "source_sha256": {p.relative_to(ROOT).as_posix(): sha(p) for p in inputs},

@@ -14,6 +14,7 @@ if(NOT TARGET dh2_box2d_201)
 endif()
 add_library(dh2_level_world SHARED world.cpp objects.cpp navigation.cpp navigation_search.cpp navigation_world.cpp navigation_path.cpp navigation_motion.cpp navigation_objects.cpp navigation_avoidance.cpp navigation_producers.cpp navigation_heading.cpp navigation_controller.cpp physical_controls.cpp body_transform.cpp subobjects_update.cpp controller_physical.cpp character_body_config.cpp collision.cpp octree.cpp selector.cpp floor_source.cpp floors.cpp)
 target_compile_features(dh2_level_world PUBLIC cxx_std_17)
+target_sources(dh2_level_world PRIVATE character_aggro_character_list.cpp character_aggro_object_manager_list.cpp)
 target_sources(dh2_level_world PRIVATE physical_world.cpp physical_lifecycle.cpp native_body.cpp visual_motion.cpp move_state.cpp decor_body_config.cpp visual_timeline.cpp actor_rotation.cpp actor_runtime.cpp actor_playback.cpp decor_scene.cpp character_scene.cpp)
 target_sources(dh2_level_world PRIVATE character_state.cpp animation_blender.cpp)
 target_sources(dh2_level_world PRIVATE character_coordinator.cpp)
@@ -71,12 +72,14 @@ target_sources(dh2_level_world PRIVATE lua_script_level_queries.cpp
 target_sources(dh2_level_world PRIVATE debug_switches_runtime.cpp debug_switches_persistence.cpp)
 target_sources(dh2_level_world PRIVATE level_construction_fields.cpp)
 
-target_sources(dh2_level_world PRIVATE character_level_runtime.cpp
+target_sources(dh2_level_world PRIVATE character_level_runtime.cpp character_init_hp_mp.cpp
  ../pydata-constants/constants.c ../player-info-level/character_level_member.cpp
  ../player-info-level/player_manager_host_level.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_update_all_skills.cpp)
 
 target_sources(dh2_level_world PRIVATE ais_state_callbacks.cpp)
+
+target_sources(dh2_level_world PRIVATE ais_external_init_callbacks.cpp)
 
 target_sources(dh2_level_world PRIVATE character_ai_pause_update.cpp)
 

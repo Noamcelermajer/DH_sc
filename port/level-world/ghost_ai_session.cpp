@@ -600,9 +600,31 @@ monster_external_script::Statistics ActorSession::script_statistics() const noex
 Status ActorSession::search_and_dispatch(character::aggro_search::TargetList* list,
     const character::aggro_search::RoomRegistry* rooms, float view_radius, float cone,
     ScanResult* result) {
+    return search_and_dispatch_impl(list, rooms, nullptr, nullptr, view_radius, cone, result);
+}
+
+Status ActorSession::search_characters_and_dispatch(character::aggro_search::TargetList* list,
+    character::aggro_character_list::CharacterList* characters, float view_radius,
+    float cone, ScanResult* result) {
+    return search_and_dispatch_impl(list, nullptr, characters, nullptr, view_radius, cone, result);
+}
+
+Status ActorSession::search_objects_and_dispatch(character::aggro_search::TargetList* list,
+    const character::aggro_character_list::ObjectListMethods* objects, float view_radius,
+    float cone, ScanResult* result) {
+    return search_and_dispatch_impl(list, nullptr, nullptr, objects, view_radius, cone, result);
+}
+
+Status ActorSession::search_and_dispatch_impl(character::aggro_search::TargetList* list,
+    const character::aggro_search::RoomRegistry* rooms,
+    character::aggro_character_list::CharacterList* characters,
+    const character::aggro_character_list::ObjectListMethods* objects, float view_radius,
+    float cone, ScanResult* result) {
     auto current = impl_;
     if (!current || !current->active_script() || !current->active_script()->ready()) return Status::not_ready;
-    if (!list || !rooms || !result) return Status::invalid_argument;
+    if (!list || !result || (int(rooms != nullptr) + int(characters != nullptr) +
+                            int(objects != nullptr)) != 1)
+        return Status::invalid_argument;
     if (current->busy) return Status::busy;
     if (!current->live()) return Status::stale_binding;
     if (!list->owner || list->owner->identity != current->owner || !list->owner->object)
@@ -610,7 +632,7 @@ Status ActorSession::search_and_dispatch(character::aggro_search::TargetList* li
 
     // `result` is committed after source callbacks have run. Reject aliases of
     // every directly known borrowed projection first, so that this final write
-    // cannot corrupt state that a callback/provider still owns. Dynamic room
+    // cannot corrupt state that a callback/provider still owns. Dynamic list
     // nodes and backing service data have caller-owned disjointness contracts;
     // their complete extents are not represented by these bounded adapters.
     const auto aliases = [result](const void* input, std::size_t size) {
@@ -631,7 +653,9 @@ Status ActorSession::search_and_dispatch(character::aggro_search::TargetList* li
         aliases(list, sizeof(*list)) ||
         aliases(list->owner, sizeof(*list->owner)) ||
         aliases(list->owner->object, sizeof(*list->owner->object)) ||
-        aliases(rooms, sizeof(*rooms)) ||
+        (rooms && aliases(rooms, sizeof(*rooms))) ||
+        (characters && aliases(characters, sizeof(*characters))) ||
+        (objects && aliases(objects, sizeof(*objects))) ||
         aliases(list->heap,
             static_cast<std::size_t>(list->capacity) * sizeof(character::aggro_search::TargetInfo)))
         return Status::invalid_argument;
@@ -650,8 +674,13 @@ Status ActorSession::search_and_dispatch(character::aggro_search::TargetList* li
     character_aggro_candidate_events::State candidates{
         current->ai, current->owner, current->b.set_target_state->target};
     current->current_candidates = &candidates;
-    const int search_status = character::aggro_search::dh2_aggro_target_search(list, rooms,
-        view_radius, cone, &current->search_bound);
+    const int search_status = objects ?
+        character::aggro_character_list::dh2_aggro_target_search_object_list(
+            list, objects, view_radius, cone, &current->search_bound) : characters ?
+        character::aggro_character_list::dh2_aggro_target_search_character_list(
+            list, characters, view_radius, cone, &current->search_bound) :
+        character::aggro_search::dh2_aggro_target_search(list, rooms,
+            view_radius, cone, &current->search_bound);
     completed.search_status = search_status;
     if (search_status != character::aggro_search::complete) {
         current->current_result = nullptr;

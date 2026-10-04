@@ -1,6 +1,7 @@
 #pragma once
 #include "character_script_set_level.hpp"
 #include "character_regeneration.hpp"
+#include "character_init_hp_mp.hpp"
 #include "debug_switches_runtime.hpp"
 #include "../game-data/properties.hpp"
 extern "C" {
@@ -35,6 +36,7 @@ struct Result {
     character_script_set_level::Result level;
     character_regeneration::Result hp,mp;
     std::uint32_t class_result,number_reads,design_reads,hp_attempted,mp_attempted;
+    character_init_hp_mp::Result init;
 };
 class Runtime {
 public:
@@ -47,6 +49,9 @@ public:
     // Its two source reads return the same retained value. Full set_level above
     // supports genuinely fresh argument reads when the native caller has them.
     Status set_level_fixed(const Storage*,const character_script_set_level::Globals*,float raw,Result*);
+    // Source _InitHpMp: restore HP then MP with -1 using the existing live
+    // regeneration, property, Debug and file providers. No Level/class update.
+    Status initialize_hp_mp(const Storage*,Result*);
     std::size_t retained_strings()const{return strings_.size();}
 private:
     struct Context;

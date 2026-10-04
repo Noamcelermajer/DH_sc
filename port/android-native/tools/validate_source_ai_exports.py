@@ -102,6 +102,24 @@ NATIVE_MONSTER_DEPENDENCIES = {
     'player_level_reconciliation': cpp_prefix('player_manager_host_level', 'reconcile_character_level'),
     'ai_update_all_skills': cpp_prefix('character_ai_update_all_skills', 'update'),
 }
+CHARACTER_LIST_DEPENDENCIES = {
+    'character_list_query': 'dh2_aggro_target_search_character_list',
+    'object_list_query': 'dh2_aggro_target_search_object_list',
+    'manager_character_list_initialize': '_ZN3dh29character5aggro19object_manager_list10initialize',
+    'manager_character_list_append': '_ZN3dh29character5aggro19object_manager_list16append_after_add',
+    'manager_character_list_remove': '_ZN3dh29character5aggro19object_manager_list19remove_after_remove',
+    'manager_object_list_methods': '_ZN3dh29character5aggro19object_manager_list19object_list_methods',
+}
+INIT_CALLBACK_DEPENDENCIES = {
+    'ais_init_callback_callers': cpp_prefix('ais_external_init_callbacks','invoke'),
+    'ais_default_init': cpp_prefix('ais_external_init_callbacks','default_init'),
+    'ais_default_post': cpp_prefix('ais_external_init_callbacks','default_post'),
+    'ais_default_final': cpp_prefix('ais_external_init_callbacks','default_final'),
+}
+HP_MP_INIT_DEPENDENCIES = {
+    'character_hp_mp_init_caller': cpp_prefix('character_init_hp_mp','execute'),
+    'native_hp_mp_init_adapter': cpp_prefix('character_level_runtime','Runtime') + '16initialize_hp_mp',
+}
 
 
 def main():
@@ -118,6 +136,9 @@ def main():
     parser.add_argument('--require-debug-persistence-units', action='store_true')
     parser.add_argument('--require-level-construction-unit', action='store_true')
     parser.add_argument('--require-native-monster-dependencies', action='store_true')
+    parser.add_argument('--require-character-list-dependencies', action='store_true')
+    parser.add_argument('--require-init-callback-dependencies', action='store_true')
+    parser.add_argument('--require-hp-mp-init-dependencies', action='store_true')
     args = parser.parse_args()
     initialization = args.require_initialization_units or args.require_debug_persistence_units or args.require_level_construction_unit or args.require_native_monster_dependencies
     lifecycle = args.require_lifecycle_units or initialization
@@ -132,9 +153,14 @@ def main():
              **(INITIALIZATION_UNITS if initialization else {}),
              **(DEBUG_PERSISTENCE_UNITS if args.require_debug_persistence_units else {}),
              **(LEVEL_CONSTRUCTION_UNITS if args.require_level_construction_unit else {}),
-             **(NATIVE_MONSTER_DEPENDENCIES if args.require_native_monster_dependencies else {})}
+             **(NATIVE_MONSTER_DEPENDENCIES if args.require_native_monster_dependencies else {}),
+             **(CHARACTER_LIST_DEPENDENCIES if args.require_character_list_dependencies else {}),
+             **(INIT_CALLBACK_DEPENDENCIES if args.require_init_callback_dependencies else {}),
+             **(HP_MP_INIT_DEPENDENCIES if args.require_hp_mp_init_dependencies else {})}
     # Sight has two overload groups; melee caller and radius share one unit.
     source_units = len(units) - int(acquisition) - int(frame) - 5 * int(runtime_dependencies) - 7 * int(lifecycle) - 3 * int(initialization) - 3 * int(args.require_debug_persistence_units) - 2 * int(args.require_native_monster_dependencies)
+    source_units -= 4 * int(args.require_character_list_dependencies) + 3 * int(args.require_init_callback_dependencies)
+    source_units -= int(args.require_hp_mp_init_dependencies) # adapter already counted in level unit.
     raw = args.apk.read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
     artifact = json.loads(args.artifact.read_text())
@@ -145,6 +171,7 @@ def main():
             exports = {}
             lua_definitions = []
             debug_backend = []
+            native_character_owner = []
             for path in archive.namelist():
                 if not path.startswith(f'lib/{abi}/') or not path.endswith('.so'):
                     continue
@@ -158,20 +185,28 @@ def main():
                     lua_definitions.append(path)
                 if path.endswith('/libdh2_native.so') and args.require_native_monster_dependencies:
                     debug_backend = sorted(n for n in defined if n.startswith('_ZN3dh26native11debug_files7Backend10initialize'))
+                if path.endswith('/libdh2_native.so') and args.require_character_list_dependencies:
+                    native_character_owner = sorted(n for n in defined if n.startswith('_ZN3dh26native14character_list5Owner16enroll_after_add'))
                 if path.endswith('/libdh2_level_world.so'):
                     exports = {
                         unit: sorted(n for n in defined if n.startswith(prefix))
                         for unit, prefix in units.items()
                     }
             assert all(exports.get(unit) for unit in units), (abi, exports)
-            assert set(exports['target_search']) == {
+            expected_target_exports = {
                 'dh2_aggro_target_list_init', 'dh2_aggro_target_search', 'dh2_aggro_target_pop',
-            }, (abi, exports['target_search'])
+            }
+            if args.require_character_list_dependencies:
+                expected_target_exports.update(('dh2_aggro_target_search_character_list', 'dh2_aggro_target_search_object_list'))
+            assert set(exports['target_search']) == expected_target_exports, (abi, exports['target_search'])
             assert lua_definitions == [f'lib/{abi}/libdh2_script_runtime.so'], (abi, lua_definitions)
             if args.require_native_monster_dependencies:
                 assert debug_backend, (abi, 'real native Debug file backend missing')
+            if args.require_character_list_dependencies:
+                assert native_character_owner, (abi, 'native owned Character list missing')
             abis[abi] = {'source_unit_exports': exports, 'lua_core_definitions': lua_definitions,
-                         'native_debug_file_backend': debug_backend}
+                         'native_debug_file_backend': debug_backend,
+                         'native_character_list_owner': native_character_owner}
     report = {
         'validation': 'PASS', 'apk_sha256': digest, 'apk_bytes': len(raw),
         'artifact_report_sha256': hashlib.sha256(args.artifact.read_bytes()).hexdigest(),

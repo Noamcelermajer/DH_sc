@@ -31,6 +31,19 @@ struct CharacterList {
     Entry* end;
 };
 
+// Typed source IObjectList boundary for a list with a different owned node
+// layout. Methods read the live cursor/node at each call. The descriptor and
+// cursor are borrowed, remain alive and disjoint from query output storage,
+// and may not be destroyed by a synchronous candidate callback.
+struct ObjectListMethods {
+    void* context;
+    int (*reset)(void*);
+    int (*at_end)(void*, std::uint32_t*);
+    int (*get)(void*, GameObject**);
+    int (*get_char)(void*, Character**);
+    int (*next)(void*);
+};
+
 // Bind a borrowed ObjectManager+0x60 sentinel and initialize the cursor.
 // All entries and actors must remain alive for the synchronous query.
 extern "C" int dh2_aggro_character_list_init(CharacterList*, Entry* sentinel);
@@ -51,7 +64,12 @@ extern "C" int dh2_aggro_target_search_character_list(
     TargetList*, CharacterList*, float view_radius, float cone,
     const Services*);
 
+extern "C" int dh2_aggro_target_search_object_list(
+    TargetList*, const ObjectListMethods*, float view_radius, float cone,
+    const Services*);
+
 static_assert(sizeof(Entry) == 16);
 static_assert(sizeof(CharacterList) == 24);
+static_assert(sizeof(ObjectListMethods) == 48);
 
 }  // namespace dh2::character::aggro_character_list

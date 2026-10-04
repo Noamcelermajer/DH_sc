@@ -93,7 +93,8 @@ Status Owner::bind_impl(const Bindings& bindings, monster_external_script::Sessi
         !bindings.acquisition_state || !bindings.acquisition_services ||
         !bindings.acquisition_services->invoke ||
         !bindings.acquisition_services->capture_ai_props || !bindings.random ||
-        !bindings.rooms || !bindings.character_registry_context ||
+        (int(bindings.rooms != nullptr) + int(bindings.characters != nullptr) +
+         int(bindings.objects != nullptr)) != 1 || !bindings.character_registry_context ||
         !bindings.resolve_character || !bindings.candidate_capacity ||
         bindings.candidate_capacity > 65536 ||
         reinterpret_cast<std::uintptr_t>(bindings.acquisition_state) %
@@ -369,8 +370,13 @@ std::int32_t Owner::update_aggro(character::AIFrameState32* frame) {
     report.source_search_started = 1;
     const float view_radius = float_from_word(report.acquisition.radius_word);
     const float cone = float_from_word(kFullCircleWord);
-    const auto scan_status = script_.search_and_dispatch(
-        &candidate_list_, bindings_.rooms, view_radius, cone, &report.scan);
+    const auto scan_status = bindings_.objects ?
+        script_.search_objects_and_dispatch(&candidate_list_, bindings_.objects,
+            view_radius, cone, &report.scan) : bindings_.characters ?
+        script_.search_characters_and_dispatch(&candidate_list_, bindings_.characters,
+            view_radius, cone, &report.scan) :
+        script_.search_and_dispatch(&candidate_list_, bindings_.rooms,
+            view_radius, cone, &report.scan);
     report.candidate_count = report.scan.candidates_before_dispatch;
     report.source_aggro_status = static_cast<std::int32_t>(scan_status);
     if (scan_status != ghost_ai_session::Status::complete) return 1;

@@ -54,6 +54,8 @@ enum class Event : std::uint32_t {
     enemy_spotted = 0,
     target_out_of_range = 1,
     init = 2,
+    init_post = 3,
+    init_final = 4,
 };
 
 enum class Status : std::int32_t {
@@ -87,8 +89,11 @@ struct Statistics {
 };
 
 // Owns one source-built float32 Lua5.1.4 VM and its source VFTable alias map.
-// Load order is unchanged ai/_commons.luac, then ai/monster.luac. Only the three
-// events above are dispatchable through explicit source providers. Combat,
+// Load order is unchanged ai/_commons.luac, then ai/monster.luac. Only the five
+// events above are dispatchable through explicit source providers. Post/final
+// dispatch uses the current alias map and retained VM. The source caller owns
+// skills-before-post/final ordering; adding dispatch support does not perform
+// SetSkillsAndSpells or complete InitScriptProcess. Combat,
 // timers/candidate search and full AISExternal lifecycle remain outside this
 // bounded session. Dispatching OnInit does not by itself promote an active AIS.
 //

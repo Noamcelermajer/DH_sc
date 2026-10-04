@@ -1,3 +1,4 @@
+#include "../app/src/main/cpp/native_character_list.hpp"
 #define main ghost_ai_session_original_host_main
 #include "../../level-world/tests/ghost_ai_session.cpp"
 #undef main
@@ -364,7 +365,7 @@ void run_owner_pipeline(const std::string& commons, const std::string& monster) 
     require(zonable != f.trace.end() && target_update != f.trace.end() &&
             master_update != f.trace.end() && zonable < target_update && target_update < master_update,
             "CharAI source dispatcher service order changed");
-    std::printf("{\"ghost_ai_owner_host_cases\":8,\"existing_target_cases\":6,\"pending_vm_shared\":true,\"status\":\"PASS\","
+    std::printf("{\"ghost_ai_owner_host_cases\":8,\"existing_target_cases\":6,\"pending_vm_shared\":true,\"flat_character_owner_cases\":4,\"flat_published_vm_shared\":true,\"manager_cursor_owner_cases\":2,\"manager_cursor_live_links\":true,\"status\":\"PASS\","
         "\"frame_status\":%d,\"last_service\":%u,\"candidates\":%u,"
         "\"events\":%u,\"script_callbacks\":%u,\"set_target_calls\":%u,"
         "\"head_to_calls\":%u,\"path_count\":%u,\"target_id\":%llu,"
@@ -374,6 +375,114 @@ void run_owner_pipeline(const std::string& commons, const std::string& monster) 
         result.scan.script_dispatches, result.scan.set_target_calls,
         result.scan.head_to_calls, result.scan.path_requests,
         static_cast<unsigned long long>(result.target_identity), result.ais_update_calls);
+}
+
+void run_flat_owner(const std::string& commons, const std::string& monster) {
+    using character::aggro_character_list::Entry;
+    using character::aggro_character_list::CharacterList;
+    { OwnerFixture f(0x780000000ull);Entry end{},enemy{&end,&f.target_character};end.next=&enemy;
+      CharacterList chars{&end,&enemy,&end};auto bindings=f.make_owner_bindings(commons,monster);
+      bindings.rooms=nullptr;bindings.characters=&chars;f.room_sentinel.next=&f.room_sentinel;
+      std::string error;require(f.owner.bind(bindings,error)==native::ghost_ai::Status::complete,
+        "flat native owner binding failed");
+      const FrameInput input{f.identity,{f.owner_id,f.owner_id+0x80,0x100,0,0,0,0,0,0,0},0,0};FrameResult r{};
+      require(f.owner.tick(input,&r)==native::ghost_ai::Status::complete && r.source_search_started &&
+        r.scan.script_dispatches==1 && r.scan.path_requests==1 && r.target_identity==f.target_object_id &&
+        f.owner.script_statistics().completed_callbacks==1,
+        "native frame did not use flat Character producer for original Lua/path dispatch"); }
+    { OwnerFixture f(0x790000000ull);Entry end{};end.next=&end;CharacterList chars{&end,&end,&end};
+      auto bindings=f.make_owner_bindings(commons,monster);bindings.characters=&chars;std::string error;
+      require(f.owner.bind(bindings,error)==native::ghost_ai::Status::invalid_argument && !f.owner.ready(),
+        "native owner accepted ambiguous room and flat Character producers"); }
+    { OwnerFixture f(0x7a0000000ull);
+      f.mutate_target_during_search=true;f.search_replacement_target=f.target_object_id;f.expected_event12_payload=f.target_object_id;
+      Entry end{};end.next=&end;CharacterList chars{&end,&end,&end};
+      auto bindings=f.make_owner_bindings(commons,monster);bindings.rooms=nullptr;bindings.characters=&chars;
+      std::string error;require(f.owner.bind(bindings,error)==native::ghost_ai::Status::complete,
+        "empty flat native owner binding failed");
+      const FrameInput input{f.identity,{f.owner_id,f.owner_id+0x80,0x100,0,0,0,0,0,0,0},0,0};FrameResult r{};
+      require(f.owner.tick(input,&r)==native::ghost_ai::Status::complete && r.source_search_started &&
+        !r.candidate_count && !r.scan.script_dispatches && f.event12_calls==1 && !f.path_calls,
+        "empty native flat producer fell back to historical room membership"); }
+    { monster_external_script::Session vm;OwnerFixture f(0x7b0000000ull);
+      character::ScriptLifecycleState64 lifecycle{f.owner_id,0,f.active_id,1,6,-1,-1,0,1,0,0,0};
+      f.enemy_state.active={0,0};f.event_state.active=0;monster_external_script::Services services{};
+      std::shared_ptr<void> lifetime;std::string error;
+      require(f.owner.prepare_pending(f.make_bindings(),&lifecycle,services,lifetime,error)==native::ghost_ai::Status::complete &&
+        vm.create(services,error,2*1024*1024,lifetime)==monster_external_script::Status::complete &&
+        vm.bind_functions(error)==monster_external_script::Status::complete &&
+        vm.load_common({commons.data(),commons.size()},error)==monster_external_script::Status::complete &&
+        vm.load_external({monster.data(),monster.size()},error)==monster_external_script::Status::complete,
+        "flat pending source VM preparation failed");
+      publish_pending(f,lifecycle);Entry end{},enemy{&end,&f.target_character};end.next=&enemy;CharacterList chars{&end,&enemy,&end};
+      auto bindings=f.make_owner_bindings(commons,monster);bindings.rooms=nullptr;bindings.characters=&chars;
+      require(f.owner.bind_staged(bindings,vm,error)==native::ghost_ai::Status::complete && vm.uses_services(services),
+        "flat native owner did not adopt the exact published VM");
+      const FrameInput input{f.identity,{f.owner_id,f.owner_id+0x80,0x100,0,0,0,0,0,0,0},0,0};FrameResult r{};
+      require(f.owner.tick(input,&r)==native::ghost_ai::Status::complete && r.scan.script_dispatches==1 &&
+        vm.statistics().completed_callbacks==1 && f.owner.script_statistics().completed_callbacks==1,
+        "flat native acquisition created a duplicate VM or missed source callbacks"); }
+}
+
+void run_manager_cursor_owner(const std::string& commons, const std::string& monster) {
+    namespace manager = character::aggro::object_manager_list;
+    struct Ring {
+        native::character_list::Owner owned;
+        const auto& methods() const {return owned.methods();}
+        const auto& source() const {return owned.source();}
+        auto owned_nodes() const {return owned.owned_nodes();}
+        auto remove_after_remove(character::aggro_search::Character* p,std::size_t* n) {return owned.remove_after_remove(p,n);}
+        void append(character::aggro_search::Character* p) {
+            bool added=false;
+            require(owned.enroll_after_add(p,false,&added)==manager::Status::ok && added,
+                "native owned Character node enrollment failed");
+        }
+    };
+    { OwnerFixture f(0x7c0000000ull);Ring ring;
+      character::aggro_search::GameObject skipped_object=f.target_object;skipped_object.identity+=0x100;
+      character::aggro_search::Character skipped=f.target_character;skipped.identity+=0x100;skipped.object=&skipped_object;
+      ring.append(&f.target_character);ring.append(&skipped);
+      const auto& list=ring.methods();
+      struct Removal {OwnerFixture* fixture;Ring* ring;character::aggro_search::Character* skipped;unsigned calls=0;};
+      Removal removal{&f,&ring,&skipped};f.search_services.context=&removal;
+      f.search_services.invoke=[](void* raw,const character::aggro_search::Request* req,character::aggro_search::Response* out) {
+          auto& s=*static_cast<Removal*>(raw);const auto rc=Fixture::search_invoke(s.fixture,req,out);
+          if(!rc && req->operation==character::aggro_search::is_interactive && !s.calls) {
+              std::size_t removed=0;
+              if(s.ring->remove_after_remove(s.skipped,&removed)!=manager::Status::ok || removed!=1) return 1;
+              ++s.calls;
+          }
+          return rc;
+      };
+      auto bindings=f.make_owner_bindings(commons,monster);bindings.rooms=nullptr;bindings.objects=&list;
+      std::string error;require(f.owner.bind(bindings,error)==native::ghost_ai::Status::complete,
+          "manager cursor native owner bind failed");
+      const FrameInput input{f.identity,{f.owner_id,f.owner_id+0x80,0x100,0,0,0,0,0,0,0},0,0};FrameResult r{};
+      require(f.owner.tick(input,&r)==native::ghost_ai::Status::complete && removal.calls==1 &&
+          ring.source().character_count==1 && ring.owned_nodes()==1 && r.candidate_count==1 && r.scan.script_dispatches==1 &&
+          r.scan.path_requests==1 && r.target_identity==f.target_object_id,
+          "live manager link removal was snapshotted or did not reach original Lua/path");
+      require(f.owner.reset(error)==native::ghost_ai::Status::complete,"manager owner detach failed"); }
+    { monster_external_script::Session vm;OwnerFixture f(0x7d0000000ull);Ring ring;ring.append(&f.target_character);
+      const auto& list=ring.methods();
+      character::ScriptLifecycleState64 lifecycle{f.owner_id,0,f.active_id,1,6,-1,-1,0,1,0,0,0};
+      f.enemy_state.active={0,0};f.event_state.active=0;monster_external_script::Services services{};
+      std::shared_ptr<void> lifetime;std::string error;
+      require(f.owner.prepare_pending(f.make_bindings(),&lifecycle,services,lifetime,error)==native::ghost_ai::Status::complete &&
+        vm.create(services,error,2*1024*1024,lifetime)==monster_external_script::Status::complete &&
+        vm.bind_functions(error)==monster_external_script::Status::complete &&
+        vm.load_common({commons.data(),commons.size()},error)==monster_external_script::Status::complete &&
+        vm.load_external({monster.data(),monster.size()},error)==monster_external_script::Status::complete,
+        "manager pending VM preparation failed");
+      publish_pending(f,lifecycle);auto bindings=f.make_owner_bindings(commons,monster);bindings.rooms=nullptr;bindings.objects=&list;
+      require(f.owner.bind_staged(bindings,vm,error)==native::ghost_ai::Status::complete && vm.uses_services(services),
+          "manager cursor native owner duplicated the published VM");
+      const FrameInput input{f.identity,{f.owner_id,f.owner_id+0x80,0x100,0,0,0,0,0,0,0},0,0};FrameResult r{};
+      require(f.owner.tick(input,&r)==native::ghost_ai::Status::complete && r.scan.script_dispatches==1 &&
+          r.scan.path_requests==1 && vm.statistics().completed_callbacks==1,
+          "published VM did not receive manager cursor source acquisition callback");
+      require(f.owner.reset(error)==native::ghost_ai::Status::complete && vm.reset(error)==monster_external_script::Status::complete,
+          "manager borrowed callback teardown failed"); }
 }
 
 void run_existing_targets(const std::string& commons, const std::string& monster) {
@@ -472,6 +581,8 @@ int main(int argc, char** argv) {
         require(argc == 3, "expected original _commons and monster script paths");
         const auto commons = read_file(argv[1]);
         const auto monster = read_file(argv[2]);
+        run_manager_cursor_owner(commons, monster);
+        run_flat_owner(commons, monster);
         run_pending_owner(commons, monster);
         run_existing_targets(commons, monster);
         run_owner_pipeline(commons, monster);

@@ -334,6 +334,50 @@ void run_one(ActorSession& session, Fixture& fixture) {
 }
 void run_one(Fixture& fixture) { run_one(fixture.session, fixture); }
 
+void run_flat_character_routes(const std::string& common, const std::string& monster) {
+    using character::aggro_character_list::Entry;
+    using character::aggro_character_list::CharacterList;
+    using character::aggro_character_list::dh2_aggro_character_list_init;
+    const auto scan = [](Fixture& f, CharacterList& chars, ScanResult& result) {
+        return f.session.search_characters_and_dispatch(&f.list,&chars,1500.f,6.2831855f,&result);
+    };
+    { Fixture f(0xf10000000ull); initialize(f,common,monster);
+      Entry end{}, own{}, enemy{}; end.next=&own; own={&enemy,&f.owner_character}; enemy={&end,&f.target_character};
+      CharacterList chars{}; require(dh2_aggro_character_list_init(&chars,&end)==0,"flat list init failed");
+      f.room_sentinel.next=&f.room_sentinel; // The independent historical room route is empty.
+      ScanResult result{};
+      require(scan(f,chars,result)==Status::complete && result.candidates_before_dispatch==1 &&
+        result.script_dispatches==1 && result.path_requests==1 && f.target_state.target==f.target_object_id &&
+        f.path_calls==1 && f.requested_path[0]==100.f && f.session.script_statistics().completed_callbacks==1,
+        "flat ObjectManager Character route did not reach unchanged Lua/SetTarget/PathTo"); }
+    { Fixture f(0xf20000000ull); initialize(f,common,monster);
+      f.mutate_target_during_search=true;f.search_replacement_target=f.target_object_id;f.expected_event12_payload=f.target_object_id;
+      Entry end{nullptr,nullptr};end.next=&end;CharacterList chars{&end,&end,&end};ScanResult result{};
+      require(scan(f,chars,result)==Status::complete && !result.candidates_before_dispatch &&
+        !result.script_dispatches && f.event12_calls==1 && !f.path_calls,
+        "empty flat Character query invented an enemy or omitted source event12"); }
+    { Fixture f(0xf30000000ull); initialize(f,common,monster);f.fail_search=true;
+      Entry end{}, enemy{&end,&f.target_character};end.next=&enemy;
+      CharacterList chars{&end,&enemy,&end};ScanResult result{};
+      require(scan(f,chars,result)==Status::source_failed && result.search_status!=0 &&
+        !result.script_dispatches && !f.path_calls,"flat query provider failure reached a Lua callback"); }
+    { Fixture f(0xf40000000ull); initialize(f,common,monster);f.enemy_state.owner_identity+=1;
+      Entry end{};end.next=&end;CharacterList chars{&end,&end,&end};ScanResult result{};result.search_status=1234;
+      require(scan(f,chars,result)==Status::stale_binding && !f.search_calls && result.search_status==1234,
+        "flat query used stale owner or wrote the output before validation"); }
+    { Fixture f(0xf50000000ull); initialize(f,common,monster);
+      Entry end{};end.next=&end;CharacterList chars{&end,&end,&end};const auto before=chars;
+      require(f.session.search_characters_and_dispatch(&f.list,&chars,1500.f,6.2831855f,
+        reinterpret_cast<ScanResult*>(&chars))==Status::invalid_argument && !f.search_calls &&
+        std::memcmp(&before,&chars,sizeof(chars))==0,"flat query output corrupted borrowed iterator storage"); }
+    { Fixture f(0xf60000000ull); initialize(f,common,monster);f.rebind_in_search=true;
+      Entry end{}, enemy{&end,&f.target_character};end.next=&enemy;
+      CharacterList chars{&end,&enemy,&end};ScanResult result{};
+      require(scan(f,chars,result)==Status::complete && f.nested_bind_status==Status::busy &&
+        result.script_dispatches==1 && result.path_requests==1,
+        "flat query reentry replaced the retained VM or lost the outer callback"); }
+}
+
 void unexpected_publication_service(void*, character::ScriptLifecycleState64*,
     const character::ScriptLifecycleRequest32*, character::ScriptLifecycleResponse16*) {
     throw std::runtime_error("source stage 6 unexpectedly dispatched a provider");
@@ -615,7 +659,8 @@ int main(int argc,char** argv) {
                 "lifecycle alias VM teardown failed");
     }
 
-    std::puts("{\"ghost_ai_session_cases\":13,\"mismatches\":0,\"native_wired\":false,\"source_search_to_path\":true,\"per_actor_vm_and_target_identity\":true,\"stale_owner_rebind\":true,\"reentrant_rebind_guard\":true,\"partial_failure_effects\":true,\"fresh_empty_search_event_12\":true,\"fresh_all_false_relation_event_12\":true,\"output_alias_guard\":true,\"staged_vm_adopted_without_duplicate\":true,\"source_pending_publication\":true,\"pending_replacement_guard\":true,\"pending_owner_guard\":true,\"lifecycle_output_alias_guard\":true,\"unbuilt_updateaggro_prefix\":true}");
+    run_flat_character_routes(common,monster);
+    std::puts("{\"ghost_ai_session_cases\":19,\"flat_character_route_cases\":6,\"source_flat_character_to_path\":true,\"mismatches\":0,\"native_wired\":false,\"source_search_to_path\":true,\"per_actor_vm_and_target_identity\":true,\"stale_owner_rebind\":true,\"reentrant_rebind_guard\":true,\"partial_failure_effects\":true,\"fresh_empty_search_event_12\":true,\"fresh_all_false_relation_event_12\":true,\"output_alias_guard\":true,\"staged_vm_adopted_without_duplicate\":true,\"source_pending_publication\":true,\"pending_replacement_guard\":true,\"pending_owner_guard\":true,\"lifecycle_output_alias_guard\":true,\"unbuilt_updateaggro_prefix\":true}");
     return 0;
  } catch(const std::exception& error) { std::fprintf(stderr,"ghost_ai_session: %s\n",error.what());return 1; }
 }

@@ -1,6 +1,6 @@
 # Recovery status — current source milestone 2026-10-04
 
-**Current development build:** See the [combined status](COMBINED-RECONSTRUCTION-STATUS.md) and [native monster initialization checkpoint](NATIVE-MONSTER-INITIALIZATION-CHECKPOINT-2026-10-04.md) for source rebuilt, Android17/API37/16KiB tests, the tested APK and remaining work. Both original Ghost OnInit callbacks now run natively, and their damaged health/VM/timers survive reload and rotation. Entries below retain historical test scopes and build identities. The full native game is unfinished.
+**Current development build:** See the [combined status](COMBINED-RECONSTRUCTION-STATUS.md) and [native Character query/initialization checkpoint](NATIVE-CHARACTER-QUERY-INIT-CHECKPOINT-2026-10-04.md). APK `88fd3181...` passes Android17/API37/16KiB original ambush/OnInit and recreation tests with 440 actual compiler/build inputs. The native list owns 14 Character nodes; original point-query comparisons exposed and fixed a callback-order bug. Initial HP/MP and Post/Final providers are compiled; full skills and autonomous frames remain pending. Entries below retain historical identities and scopes. The full native game is unfinished.
 
 **Quest activation in the source APK:** Actual native population helpers and
 four kill/clear Compile methods match 27,516 population and 21,372 compilation

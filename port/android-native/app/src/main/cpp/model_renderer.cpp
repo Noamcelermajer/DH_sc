@@ -38,6 +38,7 @@
 #include "character_controller_commands.hpp"
 #include "character_path_commands.hpp"
 #include "ghost_ai_owner.hpp"
+#include "../../../../../../port/level-world/ais_external_init_callbacks.hpp"
 #include "character_ai_initialization.hpp"
 #include "character_ai_association.hpp"
 #include "character_level_runtime.hpp"
@@ -46,6 +47,7 @@
 #include "ais_external_initialization.hpp"
 #include "ais_external_init_vcb.hpp"
 #include "native_debug_files.hpp"
+#include "native_character_list.hpp"
 #include "../../../../../player-info-level/player_manager_host_level.hpp"
 #include "navigation_producers.hpp"
 #include <GLES2/gl2.h>
@@ -136,6 +138,7 @@ struct SearchWorld {
  bool ready=false;
  void clear(){registry={};room_sentinel={};rooms.clear();object_heads.clear();object_entries.clear();characters.clear();objects.clear();ready=false;}
 } search_world;
+dh2::native::character_list::Owner native_characters;
 dh2::data::AiTables actor_ai_tables;bool enemy_ai_enabled=true;
 std::map<int,dh2::animation::Player> prince_attack_clips;
 dh2::data::AnimationBank prince_animation_bank;
@@ -389,6 +392,7 @@ void retire_native_monster_scripts(bool preserve);
 void clear_actor_world(bool preserve_scripts=false) {
  retire_native_monster_scripts(preserve_scripts);
  actor_world.clear();
+ native_characters.clear();
  search_world.clear();
  source_char_ai.clear();
  actor_level_fields_ready=false;
@@ -578,6 +582,16 @@ struct NativeMonsterInitialization {
  static std::int32_t membership(void* raw,dh2::ais_external_init_vcb::State* state,const char* key,bool* output) {
   auto& s=self(raw);return state->ais==s.ais.identity&&output&&s.vm.contains_source_alias(key,*output)?0:1;
  }
+ static std::int32_t init_callback(void* raw,dh2::ais_external_init_callbacks::State*,
+        const dh2::ais_external_init_callbacks::Request* request) {
+  auto& s=self(raw);if(!request||request->ais!=s.ais.identity)return 1;
+  namespace init=dh2::ais_external_init_callbacks;
+  const auto event=request->callback==init::Callback::init?dh2::monster_external_script::Event::init:
+   request->callback==init::Callback::post?dh2::monster_external_script::Event::init_post:
+                                        dh2::monster_external_script::Event::init_final;
+  std::string error;
+  return s.vm.dispatch(event,0,error)==dh2::monster_external_script::Status::complete?0:1;
+ }
  static void lifecycle_service(void* raw,dh2::character::ScriptLifecycleState64* state,const dh2::character::ScriptLifecycleRequest32* request,dh2::character::ScriptLifecycleResponse16* reply) {
   using namespace dh2::character;auto& s=self(raw);if(state!=&s.lifecycle)throw std::runtime_error("Native AIS lifecycle owner differs");
   std::string error;
@@ -603,6 +617,20 @@ struct NativeMonsterInitialization {
    case script_load_external:completed(s.vm.load_external(s.external,error));break;
    case script_ai_init:
     if(dh2_character_script_lifecycle(state,script_on_init,0,&nested)!=1)throw std::runtime_error("Native CharAI OnInit failed");break;
+   case script_refresh_vitals: {
+    // This service is reached by the source InitScriptProcess, after pending
+    // AIS publication and before skills/post/final. LoadScriptProcess alone
+    // does not call it, and graphics restoration must not replay it.
+    auto& properties=s.actor().properties;
+    auto view=dh2::data::property_view(actor_property_rules,properties);
+    dh2::character_level_runtime::Storage storage{s.ai->character_identity,
+     reinterpret_cast<std::uintptr_t>(&properties),properties.base.data(),&view,
+     nullptr,0,nullptr,0,native_debug?&native_debug->globals():nullptr,
+     native_debug?&native_debug->services():nullptr};
+    if(s.stats.initialize_hp_mp(&storage,&s.last_stats)!=dh2::character_level_runtime::Status::complete)
+     throw std::runtime_error("Native monster initial HP/MP failed");
+    break;
+   }
    case script_owner_is_character:reply->word=1;break; // This fixed owner is an actual Character.
    case script_owner_is_dead:reply->word=s.actor().combat_state.dead;break;
    case script_timer_stop:
@@ -616,7 +644,22 @@ struct NativeMonsterInitialization {
     const auto timer=s.owner->character.start_timer(request->argument0,-1,request->argument1,0);
     if(timer<0)throw std::runtime_error("Native AI timer allocation failed");reply->word=std::uint32_t(timer);++s.timers_started;break;
    }
-   case script_ais_init:completed(s.vm.dispatch(dh2::monster_external_script::Event::init,0,error));++s.init_calls;break;
+   case script_ais_init:
+   case script_ais_init_post:
+   case script_ais_init_final: {
+    // Production currently reaches OnInit during LoadScriptProcess. Post and
+    // Final providers preserve source caller/VM semantics for the later full
+    // skills-first InitScriptProcess; they are not invoked early here.
+    namespace init=dh2::ais_external_init_callbacks;
+    const auto callback=request->service==script_ais_init?init::Callback::init:
+     request->service==script_ais_init_post?init::Callback::post:init::Callback::final;
+    init::State projection{s.ais.identity};init::Result result{};
+    const init::Services provider{&s,init_callback};
+    if(init::invoke(&projection,callback,&provider,&result)!=init::Status::complete)
+     throw std::runtime_error("Native AIS initialization callback failed");
+    if(callback==init::Callback::init)++s.init_calls;
+    break;
+   }
    case script_pending_init_vcb: {
     dh2::ais_external_init_vcb::State flags{s.ais.identity,s.ais.flags_b8};
     const dh2::ais_external_init_vcb::Services services{&s,membership};dh2::ais_external_init_vcb::Result result{};
@@ -870,6 +913,7 @@ void sync_prince_search_projection() {
 
 void build_search_world() {
  search_world.clear();
+ native_characters.clear();
  if(!level.rooms||level.rooms>512||world_objects.empty())
   throw std::runtime_error("Character search room projection unavailable");
  search_world.rooms.resize(level.rooms);
@@ -884,6 +928,14 @@ void build_search_world() {
                              &search_world.rooms.front(),nullptr};
  search_world.registry={&search_world.room_sentinel};
  std::vector<ObjectActor*> actors(world_objects.size(),nullptr);
+ // A distinct owned flat Character list supplies the actual aggro iterator
+ // shape. This native enrollment follows created Character projections;
+ // complete ObjectManager name/map/factory registration remains separate.
+ sync_prince_search_projection();
+ bool appended=false;
+ if(native_characters.enroll_after_add(&prince_search_projection.character,false,&appended)!=
+      dh2::native::character_list::Owner::Status::ok || !appended)
+  throw std::runtime_error("Native player Character-list enrollment failed");
  for(auto& group:object_groups)for(auto& actor:group.instances) {
   if(actor.identity<0x100000002ull)continue;
   const auto index=std::size_t(actor.identity-0x100000002ull);
@@ -900,12 +952,18 @@ void build_search_world() {
   if(actor.kind==1) {
    if(!search_world.characters.emplace(identity,&actor.search_projection.character).second)
     throw std::runtime_error("Duplicate Character search identity");
+   if(native_characters.enroll_after_add(&actor.search_projection.character,false,&appended)!=
+       dh2::native::character_list::Owner::Status::ok || !appended)
+    throw std::runtime_error("Native actor Character-list enrollment failed");
   }
   auto& entry=search_world.object_entries[i];entry={&search_world.object_heads[record.room],
                                                    &actor.search_projection.object};
   tails[record.room]->next=&entry;tails[record.room]=&entry;
  }
  search_world.ready=true;
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+  "Native Character list | characters %zu | owned nodes %zu | copied links 0 | full ObjectManager factory 0 | autonomous Ghost AI 0",
+  native_characters.source().character_count,native_characters.owned_nodes());
 }
 
 void sync_search_world() {

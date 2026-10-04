@@ -116,4 +116,50 @@ Status Runtime::set_level_fixed(const Storage* storage,const sl::Globals* global
     sl::Arguments arguments{reinterpret_cast<std::uintptr_t>(&raw),1,3};NumberServices numbers{&raw,fixed_number};
     return set_level(storage,&arguments,globals,&numbers,result);
 }
+Status Runtime::initialize_hp_mp(const Storage* storage,Result* result){
+    Range controls[3];
+    if(!range(this,sizeof(*this),alignof(Runtime),controls[0])||
+       !range(storage,sizeof(*storage),alignof(Storage),controls[1])||
+       !range(result,sizeof(*result),alignof(Result),controls[2]))return Status::invalid_argument;
+    for(unsigned i=0;i<3;++i)for(unsigned j=0;j<i;++j)
+        if(overlaps(controls[i],controls[j]))return Status::invalid_argument;
+    if(busy_)return Status::busy;
+    if(!storage->character||!storage->properties)return Status::invalid_argument;
+    Range view;
+    if(!range(storage->view,sizeof(*storage->view),alignof(data::PropertyView),view)||
+       storage->view->base!=storage->base)return Status::invalid_argument;
+    for(auto control:controls)if(overlaps(control,view))return Status::invalid_argument;
+    Range sheets[6];const auto& properties=*storage->view;
+    const std::int32_t* addresses[6]={storage->base,properties.saved,properties.resolved,
+                                    properties.defaults,properties.types,properties.gear};
+    for(unsigned i=0;i<6;++i){
+        if(!range(addresses[i],224*sizeof(std::int32_t),alignof(std::int32_t),sheets[i])||
+           overlaps(view,sheets[i]))return Status::invalid_argument;
+        for(auto control:controls)if(overlaps(control,sheets[i]))return Status::invalid_argument;
+        for(unsigned j=0;j<i;++j)if((i<3||j<3)&&overlaps(sheets[i],sheets[j]))return Status::invalid_argument;
+    }
+    *result={};busy_=true;
+    struct BusyGuard{bool& busy;~BusyGuard(){busy=false;}} guard{busy_};
+    Context context{this,*storage,{},result};
+    namespace init=character_init_hp_mp;
+    init::Owner owner{storage->character};
+    const init::Services services{&context,
+        [](void* raw,const init::Request* request)->std::int32_t {
+            auto& captured=*static_cast<Context*>(raw);
+            if(request->character!=captured.storage.character)return 1;
+            const sl::Request bridge{sl::Operation::regen_hp,request->character,
+                                     request->raw_amount,0,nullptr,nullptr};
+            std::uint32_t unused=0;return level_operation(raw,nullptr,&bridge,&unused);
+        },
+        [](void* raw,const init::Request* request)->std::int32_t {
+            auto& captured=*static_cast<Context*>(raw);
+            if(request->character!=captured.storage.character)return 1;
+            const sl::Request bridge{sl::Operation::regen_mp,request->character,
+                                     request->raw_amount,0,nullptr,nullptr};
+            std::uint32_t unused=0;return level_operation(raw,nullptr,&bridge,&unused);
+        }};
+    const auto status=init::execute(&owner,&services,&result->init);
+    if(status==init::Status::complete)return Status::complete;
+    return context.error==Status::complete?Status::source_failed:context.error;
+}
 } // namespace dh2::character_level_runtime

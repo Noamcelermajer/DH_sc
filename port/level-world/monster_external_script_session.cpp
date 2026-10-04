@@ -23,6 +23,8 @@ const char* callback_name(Event event) {
         case Event::enemy_spotted: return "OnEnemySpotted";
         case Event::target_out_of_range: return "OnTargetOutOfRange";
         case Event::init: return "OnInit";
+        case Event::init_post: return "OnInitPost";
+        case Event::init_final: return "OnInitFinal";
     }
     return nullptr;
 }

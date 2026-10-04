@@ -44,6 +44,7 @@ def main() -> int:
     c_sources = [RUNTIME / "lua" / (name + ".c") for name in CORE] + [
         RUNTIME / "script_runtime.c", ROOT / "port/lua-numeric/numeric.c"]
     cpp_sources = [RUNTIME / "script_function_alias.cpp", MODULE / "ais_native_bindings.cpp",
+                   MODULE / "ais_external_init_callbacks.cpp",
                    MODULE / "monster_external_script_session.cpp",
                    MODULE / "tests/monster_external_script_session.cpp"]
     compiled = []
@@ -77,7 +78,7 @@ def main() -> int:
     if result.returncode:
         return result.returncode
     host = json.loads(result.stdout)
-    assert host["monster_external_session_cases"] == 30 and host["mismatches"] == 0, host
+    assert host["monster_external_session_cases"] == 32 and host["mismatches"] == 0, host
     for key in ("unchanged_original_scripts_executed", "spotted_callback_order", "idle_path_short_circuit",
                 "fresh_target_after_path_query", "opaque_64bit_identity_tables", "service_lifetime_and_reentry",
                 "failure_preserves_prior_effects", "unknown_callbacks_rejected"):
@@ -87,8 +88,10 @@ def main() -> int:
     for key in ("source_libraries_and_35_bindings", "unsupported_globals_fail_closed"):
         assert host[key] is True, (key, host)
     assert host["numeric_result_arity"] is True, host
+    assert host["same_vm_post_final_callbacks"] is True and host["post_discarded_return_updates_final_alias"] is True
     assert host["native_wired"] is False
     dependencies = c_sources + cpp_sources + [MODULE / "monster_external_script_session.hpp",
+        MODULE / "ais_external_init_callbacks.hpp",
         MODULE / "ais_native_bindings.hpp", ROOT / "port/adam-script-runtime/script_runtime.h",
         RUNTIME / "script_runtime.h", RUNTIME / "script_function_alias.h", ROOT / "port/lua-numeric/numeric.h",
         Path(__file__).resolve()] + list((RUNTIME / "lua").glob("*.h"))
@@ -97,7 +100,7 @@ def main() -> int:
         "unchanged_script_sha256": {p.relative_to(ROOT).as_posix(): digest(p) for p in (commons, monster)},
         "executable_sha256": digest(output), "dependency_warnings": warnings,
         "native_wired": False, "whole_original_vm_parity": False,
-        "scope": "Two original monster Lua callbacks through borrowed typed services and identity-only tables; original candidate search, actor services and full lifecycle not wired"}
+        "scope": "Original monster Lua callbacks through borrowed typed services and identity-only tables, plus original commons post/final on the same VM and explicit fan callback discarded-return/alias mutation proof; source skills/full lifecycle and live autonomous actor services remain pending"}
     report = args.report.resolve()
     report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf8")

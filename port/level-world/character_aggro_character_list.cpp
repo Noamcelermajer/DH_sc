@@ -190,13 +190,32 @@ extern "C" int dh2_aggro_target_search_character_list(
     const Services* services) {
     if (!valid_list(list) || !aligned(characters) || !aligned(characters->sentinel) ||
         !aligned(characters->current) || characters->end != characters->sentinel ||
+        (list && overlaps(list, sizeof(*list), characters, sizeof(*characters))) ||
+        (list && overlaps(list->heap, static_cast<std::size_t>(list->capacity) * sizeof(TargetInfo),
+                           characters, sizeof(*characters))) ||
+        (services && overlaps(services, sizeof(*services), characters, sizeof(*characters)))) {
+        return invalid_argument;
+    }
+    const ObjectListMethods methods{characters,
+        [](void* p) {return dh2_aggro_character_list_reset(static_cast<CharacterList*>(p));},
+        [](void* p,std::uint32_t* out) {return dh2_aggro_character_list_at_end(static_cast<CharacterList*>(p),out);},
+        [](void* p,GameObject** out) {return dh2_aggro_character_list_get(static_cast<CharacterList*>(p),out);},
+        [](void* p,Character** out) {return dh2_aggro_character_list_get_char(static_cast<CharacterList*>(p),out);},
+        [](void* p) {return dh2_aggro_character_list_next(static_cast<CharacterList*>(p));}};
+    return dh2_aggro_target_search_object_list(list,&methods,view_radius,cone,services);
+}
+
+extern "C" int dh2_aggro_target_search_object_list(
+    TargetList* list, const ObjectListMethods* methods, float view_radius, float cone,
+    const Services* services) {
+    if (!valid_list(list) || !aligned(methods) || !methods->context || !methods->reset || !methods->at_end ||
+        !methods->get || !methods->get_char || !methods->next ||
         !valid_services(services) || !std::isfinite(view_radius) ||
         !std::isfinite(cone) || cone < 0.0f ||
-        list->capacity > SIZE_MAX / sizeof(TargetInfo) ||
-        overlaps(list, sizeof(*list), characters, sizeof(*characters)) ||
+        overlaps(list, sizeof(*list), methods, sizeof(*methods)) ||
         overlaps(list, sizeof(*list), services, sizeof(*services)) ||
         overlaps(list->heap, static_cast<std::size_t>(list->capacity) * sizeof(TargetInfo),
-                 characters, sizeof(*characters)) ||
+                 methods, sizeof(*methods)) ||
         overlaps(list->heap, static_cast<std::size_t>(list->capacity) * sizeof(TargetInfo),
                  services, sizeof(*services))) {
         return invalid_argument;
@@ -212,13 +231,13 @@ extern "C" int dh2_aggro_target_search_character_list(
     const float owner_radius = response.number;
 
     while (list->count) heap_pop(list);
-    if (dh2_aggro_character_list_reset(characters) != complete) return invalid_topology;
+    if (methods->reset(methods->context) != complete) return invalid_topology;
     std::uint32_t visited = 0;
     constexpr float pi = 3.1415927410125732421875f;
 
     for (;;) {
         std::uint32_t at_end = 0;
-        if (dh2_aggro_character_list_at_end(characters, &at_end) != complete) {
+        if (methods->at_end(methods->context, &at_end) != complete) {
             return invalid_topology;
         }
         if (at_end) break;
@@ -226,14 +245,13 @@ extern "C" int dh2_aggro_target_search_character_list(
 
         GameObject* object = nullptr;
         Character* character = nullptr;
-        if (dh2_aggro_character_list_get(characters, &object) != complete ||
-            dh2_aggro_character_list_get_char(characters, &character) != complete) {
+        if (methods->get(methods->context, &object) != complete ||
+            methods->get_char(methods->context, &character) != complete) {
             return invalid_topology;
         }
 
-        if (object && object != owner_object && object->visible && character) {
-            if (!aligned(object) || !aligned(character->object) ||
-                character->object != object || !character->identity) {
+        if (object && object != owner_object && object->visible) {
+            if (!aligned(object)) {
                 return invalid_topology;
             }
 
@@ -247,26 +265,35 @@ extern "C" int dh2_aggro_target_search_character_list(
                             owner_object->identity, can_interact)) {
                     return source_service_failed;
                 }
-                if (can_interact.word &&
-                    list->owner->source_word_1314 >= character->source_word_1310) {
-                    Response target_radius_result{};
-                    if (!invoke(services, interaction_radius, object->identity, 0,
-                                target_radius_result)) {
-                        return source_service_failed;
+                // The original Search visits the visible object's zonable and
+                // interactive virtuals before it rejects a non-Character
+                // ObjectList entry. Keep those observable calls in source
+                // order; Character-only source-word/range work starts here.
+                if (can_interact.word && character) {
+                    if (!aligned(character->object) || character->object != object ||
+                        !character->identity) {
+                        return invalid_topology;
                     }
-                    const auto* target = target_center(object);
-                    const float delta[3] = {
-                        sub(target[0], origin[0]), sub(target[1], origin[1]),
-                        sub(target[2], origin[2])
-                    };
-                    const float adjusted_distance =
-                        sub(sub(length(delta), target_radius_result.number), owner_radius);
-                    if (!(adjusted_distance > view_radius)) {
-                        const float target_angle = angle(delta, forward);
-                        if (!(cone < pi && cone < target_angle)) {
-                            if (list->count >= list->capacity) return capacity_exhausted;
-                            heap_push(list, {object->identity, character->identity,
-                                             adjusted_distance, target_angle, 1U, 0U});
+                    if (list->owner->source_word_1314 >= character->source_word_1310) {
+                        Response target_radius_result{};
+                        if (!invoke(services, interaction_radius, object->identity, 0,
+                                    target_radius_result)) {
+                            return source_service_failed;
+                        }
+                        const auto* target = target_center(object);
+                        const float delta[3] = {
+                            sub(target[0], origin[0]), sub(target[1], origin[1]),
+                            sub(target[2], origin[2])
+                        };
+                        const float adjusted_distance =
+                            sub(sub(length(delta), target_radius_result.number), owner_radius);
+                        if (!(adjusted_distance > view_radius)) {
+                            const float target_angle = angle(delta, forward);
+                            if (!(cone < pi && cone < target_angle)) {
+                                if (list->count >= list->capacity) return capacity_exhausted;
+                                heap_push(list, {object->identity, character->identity,
+                                                 adjusted_distance, target_angle, 1U, 0U});
+                            }
                         }
                     }
                 }
@@ -276,7 +303,7 @@ extern "C" int dh2_aggro_target_search_character_list(
         // CharacterList::Next reads current->next after all candidate
         // callbacks, preserving source live-link advancement rather than a
         // list snapshot taken before the search.
-        if (dh2_aggro_character_list_next(characters) != complete) {
+        if (methods->next(methods->context) != complete) {
             return invalid_topology;
         }
     }

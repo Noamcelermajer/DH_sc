@@ -63,15 +63,30 @@ AI_MANIFESTS = {
     'port/level-world/reference/debug-switches-persistence/original-functions.json': 'debug_switches_persistence',
     'port/level-world/reference/module-room-zone-bounds/original-functions.json': 'module_room_zone_bounds',
     'port/level-world/reference/level-construction-fields/original-functions.json': 'level_construction_fields',
+    'port/level-world/reference/character-ai-update-all-skills/original-functions.json': 'character_ai_update_all_skills',
+    'port/level-world/reference/character-faery-selection/original-functions.json': 'character_faery_selection',
+    'port/level-world/reference/character-ai-skill-script-constructor/original-functions.json': 'character_ai_skill_script_constructor',
+    'port/level-world/reference/character-aggro-character-list/original-functions.json': 'character_aggro_character_list',
+    'port/level-world/reference/character-aggro-object-manager-list/original-functions.json': 'character_aggro_object_manager_list',
+    'port/level-world/reference/character-dot-tick/original-functions.json': 'character_dot_tick',
+    'port/level-world/reference/character-dot-attack/original-functions.json': 'character_dot_attack',
+    'port/level-world/reference/ais-external-init-callbacks/original-functions.json': 'ais_external_init_callbacks',
+    'port/level-world/reference/character-init-hp-mp/original-functions.json': 'character_init_hp_mp',
+    'port/level-world/reference/character-apply-result/original-functions.json': 'character_apply_result',
+    'port/level-world/reference/character-skill-state-queries/original-functions.json': 'character_skill_state_queries',
 }
 MANIFESTS.extend(AI_MANIFESTS)
 ENGINE_MANIFESTS = {
+    'port/game-data/reference/skill-faery-tables/original-functions.json':
+        ['port/game-data/skill_tables.hpp', 'port/game-data/skill_tables.cpp'],
     'port/game-data/reference/level-tables/original-functions.json':
         ['port/game-data/level_tables.hpp', 'port/game-data/level_tables.cpp'],
     'port/level-world/reference/module-scene-root-bounds/original-functions.json':
         ['port/level-world/module_scene_root_bounds.hpp', 'port/level-world/module_scene_root_bounds.cpp'],
     'port/player-info-level/reference/character-level-member/original-functions.json':
         ['port/player-info-level/character_level_member.hpp', 'port/player-info-level/character_level_member.cpp'],
+    'port/player-info-level/reference/player-manager-host-level/original-functions.json':
+        ['port/player-info-level/player_manager_host_level.hpp', 'port/player-info-level/player_manager_host_level.cpp'],
     'port/level-world/reference/room-zone-enrollment/original-functions.json':
         ['port/level-world/room_zone_enrollment.hpp', 'port/level-world/room_zone_enrollment.cpp'],
     'port/scene-materials/reference/swamp-technique-selection-audit/original-functions.json':
@@ -93,7 +108,7 @@ def classify(row):
     if row.get('evidence_manifest') in ENGINE_MANIFESTS:
         return ('bounded_engine_kernel_or_dependency_evidence',
                 ENGINE_MANIFESTS[row['evidence_manifest']],
-                row['manifest_implementation_scope'] + '; ' + row['scope'] +
+                row['manifest_implementation_scope'] + '; ' + row.get('scope', row.get('port_coverage', 'Supporting range evidence.')) +
                 '; host tests, original instruction checks and artifact-specific renderer wiring are established separately. This is not a complete reconstruction of every supporting original function.')
     if row.get('evidence_manifest') in AI_MANIFESTS:
         unit = AI_MANIFESTS[row['evidence_manifest']]

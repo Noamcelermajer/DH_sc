@@ -91,3 +91,19 @@ Host PlayerInfo and current-Level identity have separate producer routes in
 `reference/lua-script-level-queries/NOTES.md`: PlayerManager character-level
 synchronization and the retained current GSLevel/Level. This backend does not
 substitute an authored Prince level or install an unproduced host/global owner.
+
+## Source initial HP and MP adapter
+
+`Runtime::initialize_hp_mp` composes the separately reconstructed
+`Character::_InitHpMp` caller with these same real HP/MP, property, string,
+Debug and filesystem providers. It restores HP then MP using raw -1, with no
+Level store or class recalculation. Each regeneration phase captures its live
+Debug singleton independently. Missing used services fail, preceding file and
+property effects remain, and mutable sheet/control aliases reject.
+
+The extended gate has 50 host cases, including eight initial-vitals cases on
+both authored Ghost records. These cover actual HP/MP depletion and restoration,
+full-health fast paths, MP-only restoration, real file failure, missing Debug,
+file-time HP mutation and aliased sheets. The preceding 42-case report remains
+a historical checkpoint. This adapter is a provider for native InitScriptProcess;
+its presence alone does not prove production skill/post/final execution.
