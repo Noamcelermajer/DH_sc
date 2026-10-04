@@ -1,4 +1,5 @@
 #include "../game/scene_mesh_adapter.hpp"
+#include "../game/prince_character_runtime.hpp"
 #include "alpha_map_policy.hpp"
 #include "control_policy.hpp"
 #include "../../android-app/scene_buffers.hpp"
@@ -35,8 +36,6 @@ constexpr char kSpawnAsset[] = "dh2/swamp-entry-mgp.mgp";
 constexpr char kDiffuseAsset[] = "dh2/swamp-diffuse.tga";
 constexpr char kAlphaMapAsset[] = "dh2/swamp-alpha.tga";
 constexpr char kPrinceModelAsset[] = "dh2/prince-modular.bdae";
-constexpr char kPrinceIdleAsset[] = "dh2/prince-idle-shield.bdae";
-constexpr char kPrinceWalkAsset[] = "dh2/prince-walk-1hand.bdae";
 constexpr char kPrinceAtlasAsset[] = "dh2/prince-atlas.tga";
 constexpr float kMovementSpeed = 30.0f;  // Explicit preview choice, not recovered source speed.
 constexpr std::uint32_t kPlayerPathMask = dh2::movement::baseline_object_path_mask;
@@ -69,6 +68,15 @@ bool read_asset(AAssetManager* manager, const char* path,
     }
     AAsset_close(asset);
     return true;
+}
+
+bool read_prince_asset(void* context, const char* path,
+                       std::vector<std::uint8_t>* output, std::string* error) {
+    auto* manager = static_cast<AAssetManager*>(context);
+    if (read_asset(manager, path, output)) return true;
+    if (error) *error = std::string("Android APK Prince asset is missing: ") +
+                         (path ? path : "(null)");
+    return false;
 }
 
 struct TextureContext {
@@ -662,16 +670,13 @@ void android_main(android_app* app) {
     const auto screen = device->getVideoDriver()->getScreenSize();
     input.set_screen(screen.Width, screen.Height);
     std::vector<std::uint8_t> bres_bytes, mlx_bytes, spawn_bytes, diffuse_bytes,
-        alpha_map_bytes, prince_model_bytes, prince_idle_bytes,
-        prince_walk_bytes, prince_atlas_bytes;
+        alpha_map_bytes, prince_model_bytes, prince_atlas_bytes;
     if (!read_asset(app->activity->assetManager, kBresAsset, &bres_bytes) ||
         !read_asset(app->activity->assetManager, kMlxAsset, &mlx_bytes) ||
         !read_asset(app->activity->assetManager, kSpawnAsset, &spawn_bytes) ||
         !read_asset(app->activity->assetManager, kDiffuseAsset, &diffuse_bytes) ||
         !read_asset(app->activity->assetManager, kAlphaMapAsset, &alpha_map_bytes) ||
         !read_asset(app->activity->assetManager, kPrinceModelAsset, &prince_model_bytes) ||
-        !read_asset(app->activity->assetManager, kPrinceIdleAsset, &prince_idle_bytes) ||
-        !read_asset(app->activity->assetManager, kPrinceWalkAsset, &prince_walk_bytes) ||
         !read_asset(app->activity->assetManager, kPrinceAtlasAsset, &prince_atlas_bytes)) {
         log(ANDROID_LOG_ERROR, "Could not read the local SWAMP/Prince cache assets packaged in this APK");
         device->drop();
@@ -680,12 +685,9 @@ void android_main(android_app* app) {
 
     dh2::irrlicht_game::PrinceActor prince;
     std::string prince_error;
-    if (!prince.load(prince_model_bytes.data(), prince_model_bytes.size(),
-                     prince_idle_bytes.data(), prince_idle_bytes.size(),
-                     prince_walk_bytes.data(), prince_walk_bytes.size(),
-                     prince_error)) {
+    if (!prince.load(prince_model_bytes.data(), prince_model_bytes.size(), prince_error)) {
         __android_log_print(ANDROID_LOG_ERROR, kTag,
-            "Source Prince skin/animation import failed: %s", prince_error.c_str());
+            "Source Prince rig import failed: %s", prince_error.c_str());
         device->drop();
         return;
     }
@@ -738,20 +740,36 @@ void android_main(android_app* app) {
         return;
     }
 
-    auto* scene_manager = device->getSceneManager();
-    const std::array<float, 3> initial_owner{
-        player_position.X, player_position.Y, player_position.Z};
-    const auto initial_idle = prince.clip_start(dh2::irrlicht_game::PrinceMotion::idle);
-    if (!prince.sample(dh2::irrlicht_game::PrinceMotion::idle, initial_idle,
-                       initial_owner, prince_error)) {
+    dh2::irrlicht_game::PrinceCharacterRuntime prince_character;
+    if (!prince_character.load(prince, read_prince_asset,
+                               app->activity->assetManager, prince_error)) {
         __android_log_print(ANDROID_LOG_ERROR, kTag,
-            "Initial source Prince idle pose failed: %s", prince_error.c_str());
+            "Source Prince Character/bank initialization failed: %s",
+            prince_error.c_str());
         dh2_viewer_scene_mesh_free(&source_mesh);
         dh2_nav_free(&navigation);
         dh2_world_free(&level);
         device->drop();
         return;
     }
+
+    using Clock = std::chrono::steady_clock;
+    std::uint32_t actor_clock_ms = 1;
+    const std::array<float, 3> initial_owner{
+        player_position.X, player_position.Y, player_position.Z};
+    if (!prince_character.scene_phase(actor_clock_ms, prince_error) ||
+        !prince_character.animator_phase(prince_error) ||
+        !prince_character.update_pose(initial_owner.data(), prince_error)) {
+        __android_log_print(ANDROID_LOG_ERROR, kTag,
+            "Initial source Prince Character pose failed: %s", prince_error.c_str());
+        dh2_viewer_scene_mesh_free(&source_mesh);
+        dh2_nav_free(&navigation);
+        dh2_world_free(&level);
+        device->drop();
+        return;
+    }
+
+    auto* scene_manager = device->getSceneManager();
     PrinceTextureContext prince_texture_context{prince_atlas};
     dh2::irrlicht_adapter::MutablePrinceMesh prince_mesh;
     if (!dh2::irrlicht_adapter::build_mutable_prince_mesh(
@@ -774,19 +792,23 @@ void android_main(android_app* app) {
         device->drop();
         return;
     }
-    // PrinceActor uses a development-only first-Idle-pose bounds anchor and
-    // applies one output offset. This does not reproduce Adam's full
-    // owner/helper/source-graph composition. Keep the Irrlicht node at identity.
+    // Source SceneBinding produces owner * helper * authored graph world
+    // transforms in the CPU-skinned vertices. Keep Irrlicht at identity so the
+    // spawn owner is not applied a second time.
     player->setPosition(irr::core::vector3df(0, 0, 0));
     player->setRotation(irr::core::vector3df(0, 0, 0));
     player->setScale(irr::core::vector3df(1, 1, 1));
     player->setAutomaticCulling(irr::scene::EAC_OFF);
     __android_log_print(ANDROID_LOG_INFO, kTag,
-        "PRINCE: controllers=%u joints=%u vertices=%u triangles=%u parts=%u atlas mapped=%u unmapped diffuse=%u ignored AlphaMaps=%u; source idle/walk; source_visual_binding=owner_helper_graph; placement=development first-Idle bounds anchor with source root compensation; Character scale/state/blended playback not implemented; Irrlicht node identity",
+        "PRINCE: controllers=%u joints=%u vertices=%u triangles=%u parts=%u atlas mapped=%u unmapped diffuse=%u ignored AlphaMaps=%u; source_visual_binding=owner_helper_graph; Character=shared_source_coordinator; authored_bank_resources=%u registration_occurrences=%u state=%d sequence=%d clip=%d; SWAMP owner position development producer; Irrlicht node identity",
         prince.controller_count(), prince.joint_count(), prince.vertex_count(),
         prince.triangle_count(), static_cast<unsigned>(prince.parts().size()),
         prince_mesh.mapped_textures, prince_mesh.unmapped_diffuse_textures,
-        prince_mesh.alpha_map_materials);
+        prince_mesh.alpha_map_materials,
+        prince_character.registered_resource_count(),
+        prince_character.registration_occurrence_count(),
+        prince_character.state_id(), prince_character.sequence_id(),
+        prince_character.clip_id());
     auto* camera = scene_manager->addCameraSceneNode();
     if (camera) {
         camera->setNearValue(1.0f);
@@ -813,8 +835,8 @@ void android_main(android_app* app) {
         "SOURCE XYZ  X %.2f  Y %.2f  Z %.2f  | player path mask 0x%X\n"
         "Shown draws %u/%u; omitted unresolved bridge-root draws %u; Material__11598 additive passes %u; exact GL_ONE/GL_ONE + GL_FUNC_ADD mapped %u.\n"
         "Samplers: Diffuse refs %u (%u draws mapped); AlphaMap %u refs (%u Material__11611 cutouts), %u unresolved; LightMap %u, Specular %u, other %u ignored. No-texture draws %u (%u visible default-material fallbacks).\n"
-        "Prince: %u warrior skins, %u joints, %u vertices; atlas parts %u, unmapped diffuse %u, source AlphaMaps %u ignored; idle/walk clips enabled.\n"
-        "Unsupported: external Collada effects/native lighting, complete source movement animation, AI, walls and swept collision.",
+        "Prince: %u warrior skins, %u joints, %u vertices; authored bank %u resources/%u registrations; state %d, sequence %d, clip %d.\n"
+        "Limits: external Collada effects/native lighting, AI/gameplay services, actor physics, walls and swept collision.",
         player_position.X, player_position.Y, player_position.Z, kPlayerPathMask,
         visible_draws, source_draws, omitted_draws, additive_draws,
         additive_one_one_mapped,
@@ -822,11 +844,13 @@ void android_main(android_app* app) {
         unresolved_alpha_refs,
         lightmap_refs, specular_refs, other_refs, no_texture_draws,
         visible_no_texture_draws, prince.controller_count(), prince.joint_count(),
-        prince.vertex_count(), prince_mesh.mapped_textures,
-        prince_mesh.unmapped_diffuse_textures, prince_mesh.alpha_map_materials);
+        prince.vertex_count(), prince_character.registered_resource_count(),
+        prince_character.registration_occurrence_count(),
+        prince_character.state_id(), prince_character.sequence_id(),
+        prince_character.clip_id());
     if (diagnostics) diagnostics->setText(utf8_wide(initial_status).c_str());
     __android_log_print(ANDROID_LOG_INFO, kTag,
-        "ENGINE: Irrlicht is confirmed as the game engine family; this diagnostic embeds official upstream OGL-ES r6038. The exact customized DH2 Irrlicht fork/revision and game-specific layer remain under investigation. SWAMP controls: 20 ms fixed-step, speed %.1f units/s, endpoint path-mask checks only. Prince uses four source warrior skins plus source idle/walk clips; full Character playback, actor radius, sweeps, wall collision, AI and combat remain unsupported.",
+        "ENGINE: Irrlicht is confirmed as the game engine family; this diagnostic embeds official upstream OGL-ES r6038. The exact customized DH2 Irrlicht fork/revision and game-specific layer remain under investigation. SWAMP owner movement is a development producer: 20 ms fixed-step, speed %.1f units/s, endpoint path-mask checks. Prince uses the shared source Character coordinator and full authored bank playback; source physics, AI and combat services remain unsupported.",
         kMovementSpeed);
     __android_log_print(ANDROID_LOG_INFO, kTag,
         "RENDER-LIMITS: omitted unresolved bridge-root draws=%u; Material__11598 additive passes=%u exact GL_ONE/GL_ONE + GL_FUNC_ADD mapped=%u with source LEQUAL/depth-write-off; SWAMP diffuse draws=%u; AlphaMap cutout refs=%u/draws=%u with %u unresolved AlphaMap refs; ignored LightMap=%u Specular=%u other=%u; visible no-texture defaults=%u. Prince: four source warrior skins, atlas mapped parts=%u, unmapped diffuse=%u, ignored source AlphaMap parts=%u; exact remaining source shader/effects not reconstructed.",
@@ -840,9 +864,11 @@ void android_main(android_app* app) {
     irr::video::IVideoDriver* driver = device->getVideoDriver();
     using Clock = std::chrono::steady_clock;
     auto previous = Clock::now();
-    auto animation_epoch = previous;
-    auto current_motion = dh2::irrlicht_game::PrinceMotion::idle;
-    bool animation_failure_logged = false;
+    bool character_failure_logged = false;
+    bool pose_changed = false;
+    bool character_runtime_ok = true;
+    bool first_source_character_frame_reported = false;
+    auto last_movement_status = dh2::movement::Error::ok;
     dh2::irrlicht_swamp::FixedStepAccumulator fixed_steps;
     auto last_report = previous;
     auto last_movement_log = previous - std::chrono::seconds(1);
@@ -861,54 +887,74 @@ void android_main(android_app* app) {
         auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(now - previous);
         previous = now;
         const auto steps = fixed_steps.advance(static_cast<std::uint64_t>(elapsed.count()));
-        dh2::movement::Error movement_status = dh2::movement::Error::ok;
+        auto movement_status = last_movement_status;
         dh2::movement::Output movement_output{};
+        pose_changed = false;
         for (std::uint32_t step = 0; step < steps; ++step) {
+            actor_clock_ms += 20;
+            if (!prince_character.scene_phase(actor_clock_ms, prince_error)) {
+                character_runtime_ok = false;
+            }
+            if (!character_runtime_ok) {
+                if (!character_failure_logged) {
+                    __android_log_print(ANDROID_LOG_ERROR, kTag,
+                        "Source Character scene phase stopped: %s", prince_error.c_str());
+                    character_failure_logged = true;
+                }
+                break;
+            }
             const dh2::movement::Input movement_input{{
                 player_position.X, player_position.Y, player_position.Z},
                 0.0f, input.x(), input.y(), 0.02f};
             movement_status = dh2_swamp_movement_step(
                 &navigation, &movement_input, kMovementSpeed, &movement_output);
+            last_movement_status = movement_status;
             if (movement_status == dh2::movement::Error::ok &&
                 movement_output.floor_sample_valid) {
                 player_position.set(movement_output.position[0],
                                     movement_output.position[1],
                                     movement_output.position[2]);
             }
+            const bool accepted = movement_status == dh2::movement::Error::ok &&
+                                  movement_output.floor_sample_valid;
+            if (!prince_character.update_timers(20, prince_error) ||
+                !prince_character.set_input(input.x(), input.y(), accepted,
+                                            prince_error) ||
+                !prince_character.request_move(prince_error) ||
+                !prince_character.update_state(20, prince_error) ||
+                !prince_character.animator_phase(prince_error)) {
+                character_runtime_ok = false;
+                if (!character_failure_logged) {
+                    __android_log_print(ANDROID_LOG_ERROR, kTag,
+                        "Source Character fixed-step update stopped: %s",
+                        prince_error.c_str());
+                    character_failure_logged = true;
+                }
+                break;
+            }
+            const float owner_position[3]{player_position.X, player_position.Y,
+                                          player_position.Z};
+            if (!prince_character.update_pose(owner_position, prince_error)) {
+                character_runtime_ok = false;
+                if (!character_failure_logged) {
+                    __android_log_print(ANDROID_LOG_ERROR, kTag,
+                        "Source Character pose update stopped: %s",
+                        prince_error.c_str());
+                    character_failure_logged = true;
+                }
+                break;
+            }
+            pose_changed = true;
         }
-
-        // Movement remains controlled by accepted fixed steps. A released
-        // stick always selects source Idle, even on frames without a tick.
-        const auto next_motion = dh2::irrlicht_swamp::prince_walk_requested(
-            input.x(), input.y(),
-            movement_status == dh2::movement::Error::ok)
-                ? dh2::irrlicht_game::PrinceMotion::walk
-                : dh2::irrlicht_game::PrinceMotion::idle;
-        if (next_motion != current_motion) {
-            current_motion = next_motion;
-            animation_epoch = now;
-        }
-        const auto clip_start = prince.clip_start(current_motion);
-        const auto clip_end = prince.clip_end(current_motion);
-        const std::int64_t clip_duration =
-            static_cast<std::int64_t>(clip_end) - clip_start;
-        const auto animation_elapsed =
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                now - animation_epoch).count();
-        const auto clip_time = static_cast<std::int32_t>(
-            clip_start + (clip_duration > 0 ? animation_elapsed % clip_duration : 0));
-        const std::array<float, 3> owner_position{
-            player_position.X, player_position.Y, player_position.Z};
-        if (clip_duration <= 0 ||
-            !prince.sample(current_motion, clip_time, owner_position, prince_error) ||
+        if (pose_changed &&
             !dh2::irrlicht_adapter::update_mutable_prince_mesh(
                 prince, prince_mesh, prince_error)) {
-            if (!animation_failure_logged) {
+            character_runtime_ok = false;
+            if (!character_failure_logged) {
                 __android_log_print(ANDROID_LOG_ERROR, kTag,
-                    "Prince source animation/vertex update stopped: %s",
-                    clip_duration <= 0 ? "selected clip has no playback interval" :
-                                         prince_error.c_str());
-                animation_failure_logged = true;
+                    "Source Character Irrlicht vertex update stopped: %s",
+                    prince_error.c_str());
+                character_failure_logged = true;
             }
         }
         set_follow_camera(camera, player_position);
@@ -924,11 +970,15 @@ void android_main(android_app* app) {
                 mode = "MOVE";
             std::snprintf(status, sizeof(status),
                 "%s  |  SOURCE XYZ  X %.2f  Y %.2f  Z %.2f  | player mask 0x%X\n"
-                "Prince animation: %s source clip; four warrior skins (%u joints, %u vertices); atlas parts %u; ignored Prince AlphaMaps %u.\n"
+                "Prince source Character state %d; sequence %d (%s), clip %d; four warrior skins (%u joints, %u vertices); atlas parts %u; ignored Prince AlphaMaps %u.\n"
                 "Floor: current + candidate endpoint, module zero; water mask 2 eligible; no actor-radius or wall collision. SWAMP draws %u/%u; unresolved bridge-root omitted %u; additive %u GL_ONE/GL_ONE + ADD mapped %u; diffuse %u/%u; AlphaMap %u/%u (%u unresolved); ignored LightMap %u, Specular %u, other %u; no-texture %u (%u visible).",
                 mode, player_position.X, player_position.Y, player_position.Z,
                 kPlayerPathMask,
-                current_motion == dh2::irrlicht_game::PrinceMotion::walk ? "WALK" : "IDLE",
+                prince_character.state_id(), prince_character.sequence_id(),
+                prince_character.sequence_id() == prince_character.walk_sequence_id()
+                    ? "WALK" : prince_character.sequence_id() == prince_character.idle_sequence_id()
+                        ? "IDLE" : "OTHER",
+                prince_character.clip_id(),
                 prince.joint_count(), prince.vertex_count(), prince_mesh.mapped_textures,
                 prince_mesh.alpha_map_materials,
                 visible_draws, source_draws, omitted_draws, additive_draws,
@@ -956,9 +1006,13 @@ void android_main(android_app* app) {
         if (std::strcmp(movement_mode, last_logged_mode) != 0 ||
             now - last_movement_log >= log_interval) {
             __android_log_print(ANDROID_LOG_INFO, kTag,
-                "MOVE state=%s animation=%s x=%.3f y=%.3f z=%.3f stick_x=%.3f stick_y=%.3f path_mask=0x%X",
+                "MOVE state=%s animation=%s source_state=%d sequence=%d clip=%d x=%.3f y=%.3f z=%.3f stick_x=%.3f stick_y=%.3f path_mask=0x%X",
                 movement_mode,
-                current_motion == dh2::irrlicht_game::PrinceMotion::walk ? "WALK" : "IDLE",
+                prince_character.sequence_id() == prince_character.walk_sequence_id()
+                    ? "WALK" : prince_character.sequence_id() == prince_character.idle_sequence_id()
+                        ? "IDLE" : "OTHER",
+                prince_character.state_id(), prince_character.sequence_id(),
+                prince_character.clip_id(),
                 player_position.X, player_position.Y, player_position.Z,
                 input.x(), input.y(), kPlayerPathMask);
             last_logged_mode = movement_mode;
@@ -969,7 +1023,16 @@ void android_main(android_app* app) {
         scene_manager->drawAll();
         draw_touch_pad(driver, input);
         gui->drawAll();
-        driver->endScene();
+        const bool frame_presented = driver->endScene();
+        if (frame_presented && !first_source_character_frame_reported) {
+            __android_log_print(ANDROID_LOG_INFO, kTag,
+                "FIRST_SOURCE_CHARACTER_FRAME: source_state=%d sequence=%d clip=%d authored_bank_resources=%u registration_occurrences=%u; renderer swap succeeded",
+                prince_character.state_id(), prince_character.sequence_id(),
+                prince_character.clip_id(),
+                prince_character.registered_resource_count(),
+                prince_character.registration_occurrence_count());
+            first_source_character_frame_reported = true;
+        }
         device->yield();
     }
 

@@ -1,6 +1,11 @@
 # DH2 native Android reconstruction
 
-Latest saved checkpoint: [dh2-native-prince-bank-4f5b7d11.apk](build/checkpoints/dh2-native-prince-bank-4f5b7d11.apk),
+Current continuation: [shared Character / Crypt Spawn checkpoint](../../docs/CHARACTER-RUNTIME-CHECKPOINT-2026-10-04.md).
+It adds two original Ghosts, exact-name source Spawn requests, real body
+creation, lifecycle checks and shared state/timer ownership. Full Ghost AI and
+combat remain pending. The complete goal remains active.
+
+Inherited saved checkpoint: [dh2-native-prince-bank-4f5b7d11.apk](build/checkpoints/dh2-native-prince-bank-4f5b7d11.apk),
 20,726,897 bytes, SHA-256 `4f5b7d11891e575793f0b5e99056fe5d3cf3cf7a1a705f7ee0f5b632ba19bd82`.
 The live Prince now uses native two-slot playback with all116 exact animation
 resources and158 original registration occurrences, including template1111 and

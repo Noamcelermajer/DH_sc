@@ -22,13 +22,15 @@ std::array<float,16> placement(const Record& r){
 }
 bool load_records(const std::uint8_t* input,std::size_t size,unsigned rooms,const data::CharacterTable& table,const data::Dictionary& models,std::vector<Record>& out,std::string& error){
  out.clear();error.clear();try{
-  if(!input||size<16||std::memcmp(input,"DACT",4)||word(input+4)!=1||word(input+12)||!rooms||rooms>512)throw std::runtime_error("Object descriptor rejected");
+  if(!input||size<16||std::memcmp(input,"DACT",4)||(word(input+4)!=1&&word(input+4)!=2)||word(input+12)||!rooms||rooms>512)throw std::runtime_error("Object descriptor rejected");
+  const auto version=word(input+4);
   unsigned count=word(input+8);if(!count||count>10000||size!=16+std::uint64_t(count)*256)throw std::runtime_error("Object record count rejected");
   std::vector<Record> candidate;std::set<std::pair<unsigned,std::string>> names;
   for(unsigned i=0;i<count;++i){const auto* p=input+16+i*256;Record r;r.kind=word(p);r.room=word(p+4);r.name=text(p+8);r.character=text(p+72,true);r.model=text(p+136);
    if((r.kind!=1&&r.kind!=2)||r.room>=rooms||basename(r.model)!=r.model||r.model.find("..")!=std::string::npos||!names.insert({r.room,r.name}).second)throw std::runtime_error("Object type, room or resource rejected");
    for(unsigned j=0;j<3;++j){r.position[j]=number(p+200+j*4,10000000);r.rotation_degrees[j]=number(p+212+j*4,3600);r.scale[j]=number(p+224+j*4,100);if(r.scale[j]<=0)throw std::runtime_error("Object scale rejected");}
-   for(unsigned j=236;j<256;++j)if(p[j])throw std::runtime_error("Object reserved bytes rejected");
+   if(version==2){const auto gate=word(p+236);if(gate>1||(gate&&r.kind!=1))throw std::runtime_error("Object spawn gate rejected");r.gated_spawn=gate!=0;}
+   for(unsigned j=version==2?240u:236u;j<256;++j)if(p[j])throw std::runtime_error("Object reserved bytes rejected");
    if(r.kind==1){auto* id=data::property(table,r.character,"ModelFile");if(!id||*id<0||unsigned(*id)>=models.values.size()||basename(models.values[*id])!=r.model)throw std::runtime_error("Character model differs from original table");}
    else if(!r.character.empty())throw std::runtime_error("Decor contains character link");
    r.placement=placement(r);for(float f:r.placement)if(!std::isfinite(f))throw std::runtime_error("Object placement overflow");candidate.push_back(std::move(r));

@@ -27,7 +27,13 @@ enum Service : std::uint32_t {
  stop=1,pin,unpin,set_animation,set_speed,swap_animation,stop_loop,
  start_timer,look_at,remove_highlight,set_death_filter,reset_filter,
  disable_state_fx,disable_self_fx,remove_buffs,cancel_sneaking,
- raise_event,remove_body,idle_common_update,set_heading
+ raise_event,remove_body,idle_common_update,set_heading,
+ // Actor-owned source services used by the Limbus/Spawn slice below. The
+ // +0x40 virtual resolves to GameObject::IsUpdatable and is a pure query.
+ query_is_updatable,limbus_member_reset,restore_limbus_position,
+ restore_limbus_rotation,revive_character,set_limbus_group_status,
+ clear_all_aggro,clear_ai_target,sync_last_ai_target,start_fade_in,
+ init_physical_object,enable_collisions
 };
 struct Request {
  std::uint32_t service;
@@ -49,6 +55,22 @@ struct Request {
 // Animation/body/timer/AI/FX services must preserve the emitted call order.
 using Callback=void(*)(void*,State*,const Request*);
 struct Services {void* context;Callback invoke;};
+// Additional source facts for the actor-owned Limbus/Spawn path. These are
+// separate from Facts so existing Character-state fixture and adapter ABI
+// remain unchanged. respawn_timer_eligible is the caller's resolved source
+// gate (Respawnable && delay>0 && offline-or-local-host); group inputs reflect
+// the source group predicate and are not reconstructed by this bounded core.
+struct SpawnFacts {
+ std::int32_t spawn_animation=-1;
+ // Reserved to preserve the initial SpawnFacts ABI. CSSpawn selects a stance
+ // only when entering from PreSpawn with Character flags bit 0x2000 set; the
+ // source transition reads that prior State directly, never this caller fact.
+ std::uint32_t reserved_zero=0,visual_present=0;
+ float raw_fade_in_argument=0;
+ std::uint32_t respawn_timer_eligible=0,respawn_delay_ms=0,
+              can_respawn=0,group_present=0,group_has_active_other=0;
+};
+static_assert(sizeof(SpawnFacts)==36);
 static_assert(sizeof(State)==56&&sizeof(Facts)==96);
 static_assert(sizeof(Request)==32&&sizeof(Services)==16);
 static_assert(sizeof(void*)==8,"native coordinator requires 64-bit pointers");
@@ -70,4 +92,18 @@ int dh2_character_state_event(dh2::character::State*,const dh2::character::Facts
 // machine stun/scare enforcement and general timers/AI are outside this API.
 int dh2_character_state_update(dh2::character::State*,const dh2::character::Facts*,
  std::uint32_t dt_ms,const dh2::character::Services*);
+// Source-backed Limbus(0), Spawn(1), and existing Idle(3) transitions. The
+// original SpawnCharacter script and Limbus respawn timer both arrive here.
+int dh2_character_spawn_transition(dh2::character::State*,const dh2::character::Facts*,
+ const dh2::character::SpawnFacts*,std::int32_t next,const dh2::character::Services*);
+// Event 0x28 carries the exact string "is_interactive" to construct the body;
+// event 0x22 completes Spawn into Idle. Limbus event 0x2f is gated by the
+// source CanRespawn result supplied in SpawnFacts. Other events are ignored.
+int dh2_character_spawn_event(dh2::character::State*,const dh2::character::Facts*,
+ const dh2::character::SpawnFacts*,std::uint32_t event,const char* event_name,
+ const dh2::character::Services*);
+// Limbus and CSSpawn OnUpdate are source no-ops; this never invents a timeout
+// or idle transition. Return 0 for a valid no-op and -1 for malformed input.
+int dh2_character_spawn_update(const dh2::character::State*,
+ const dh2::character::SpawnFacts*);
 }

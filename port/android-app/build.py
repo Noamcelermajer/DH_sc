@@ -126,17 +126,31 @@ IRRLICHT_SWAMP_ASSETS = {
     'data/3d/textures/pvr2_env_swamp_alpha.tga': 'dh2/swamp-alpha.tga',
     'data/3d/characters/prince/prince_modular.bdae':
         'dh2/prince-modular.bdae',
-    'data/3d/characters/prince/animations/prince_idle_shield.bdae':
-        'dh2/prince-idle-shield.bdae',
-    'data/3d/characters/prince/animations/prince_walk_1hand.bdae':
-        'dh2/prince-walk-1hand.bdae',
     'data/3d/textures/atlas_modular_warrior.tga':
         'dh2/prince-atlas.tga',
 }
 
+IRRLICHT_PRINCE_ANIMATION_DATA = (
+    'animations_pyarray.bin',
+    'animations_pyarraynames.bin',
+    'animations_pystructnames.bin',
+    'animations_dictionary_pyarraynames.bin',
+    'animations_dictionary_pyarray.bin',
+    'prince-animation-bank.bin',
+    'character_properties_pyarray.bin',
+    'character_properties_pyarraynames.bin',
+    'character_properties_pystructnames.bin',
+    'character_classes_pyarray.bin',
+    'character_classes_pyarraynames.bin',
+    'character_classes_pystructnames.bin',
+)
+IRRLICHT_PRINCE_ANIMATION_DATA_ROOT = (
+    REPO / 'port/android-native/app/src/main/assets/data')
+IRRLICHT_PRINCE_ANIMATION_APK_ROOT = 'dh2/prince-animation'
+
 
 def irrlicht_swamp_assets(cache_root: Path, assets_root: Path) -> dict:
-    """Stage the minimal owner-supplied SWAMP source slice in local build output."""
+    """Stage local SWAMP inputs and the checked authored Prince animation bank."""
     root = cache_root.resolve(strict=True)
     if not root.is_dir():
         raise NotADirectoryError(root)
@@ -156,12 +170,89 @@ def irrlicht_swamp_assets(cache_root: Path, assets_root: Path) -> dict:
         records.append({'source': relative, 'apk_asset': apk_asset,
                         'role': 'local-only original game/cache input', **identity})
 
+    # The PAB1 bank carries authored resource IDs, identities and registration
+    # order. Its resource bytes remain a local-cache-only input, but its binary
+    # and parser tables are checked source assets already used by the native
+    # app. Preserve the bank asset paths below a diagnostic-only APK prefix.
+    bank_json_path = IRRLICHT_PRINCE_ANIMATION_DATA_ROOT / 'prince-animation-bank.json'
+    bank = json.loads(bank_json_path.read_text(encoding='utf-8'))
+    if (bank.get('character') != 'KnightPlayerBase' or
+            bank.get('animation_table') != 48 or
+            bank.get('animation_set_id') != 12302 or
+            bank.get('template_clip_id') != 1111 or
+            len(bank.get('resources', [])) != 116 or
+            len(bank.get('registration_requests', [])) != 158):
+        raise ValueError('checked Prince animation bank metadata identity/counts differ')
+
+    table_records = []
+    for name in IRRLICHT_PRINCE_ANIMATION_DATA:
+        source = IRRLICHT_PRINCE_ANIMATION_DATA_ROOT / name
+        if not source.is_file():
+            raise FileNotFoundError(f'checked Prince animation input missing: {source}')
+        apk_asset = f'{IRRLICHT_PRINCE_ANIMATION_APK_ROOT}/data/{name}'
+        target = assets_root / Path(apk_asset)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+        identity = {'bytes': source.stat().st_size, 'sha256': sha(source)}
+        if {'bytes': target.stat().st_size, 'sha256': sha(target)} != identity:
+            raise ValueError(f'Prince animation input changed while staging: {name}')
+        table_records.append({
+            'source': source.relative_to(REPO).as_posix(),
+            'apk_asset': apk_asset,
+            'role': 'checked source animation table or bank metadata', **identity})
+
+    cache_prefix = 'com.gameloft.android.GAND.GloftD2SS/files/'
+    resource_records = []
+    for resource in bank['resources']:
+        cache_entry = resource['cache_entry']
+        if not cache_entry.startswith(cache_prefix):
+            raise ValueError(f'Prince clip cache entry has an unknown root: {cache_entry}')
+        relative = Path(cache_entry[len(cache_prefix):])
+        if relative.is_absolute() or '..' in relative.parts:
+            raise ValueError(f'Prince clip cache path escapes input root: {cache_entry}')
+        source = (root / relative).resolve(strict=True)
+        if root not in source.parents:
+            raise ValueError(f'Prince clip input resolves outside --cache: {cache_entry}')
+        identity = {'bytes': source.stat().st_size, 'sha256': sha(source)}
+        if identity != {'bytes': resource['bytes'], 'sha256': resource['sha256']}:
+            raise ValueError(f'Prince clip size/hash differs for source id {resource["clip_id"]}')
+        asset_relative = Path(resource['asset'])
+        if (asset_relative.is_absolute() or '..' in asset_relative.parts or
+                not resource['asset'].startswith('animations/')):
+            raise ValueError(f'Prince bank asset path is outside animation namespace: {resource["asset"]}')
+        apk_asset = f'{IRRLICHT_PRINCE_ANIMATION_APK_ROOT}/{asset_relative.as_posix()}'
+        target = assets_root / Path(apk_asset)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+        if {'bytes': target.stat().st_size, 'sha256': sha(target)} != identity:
+            raise ValueError(f'Prince clip changed while staging: {resource["asset"]}')
+        resource_records.append({
+            'clip_id': resource['clip_id'],
+            'source': relative.as_posix(),
+            'bank_asset': resource['asset'],
+            'apk_asset': apk_asset,
+            'role': 'local-only registered Prince animation resource', **identity})
+    if len(resource_records) != len(bank['resources']):
+        raise ValueError('Prince bank did not stage every unique registered resource')
+    records.extend(resource_records)
+
     manifest_path = assets_root / 'dh2/local-irrlicht-swamp-manifest.json'
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps({
-        'scope': 'development diagnostic; source-driven SWAMP module-zero rendering and movement plus four source Prince warrior skins and idle/walk; not full-game parity',
+        'scope': 'development diagnostic; source-driven SWAMP module-zero rendering and movement plus four Prince warrior skins and authored Character/BlendedPlayback source bank; not full-game parity',
         'source_cache_root': 'external --cache argument (absolute path omitted)',
-        'assets': records,
+        'assets': records + table_records,
+        'animation_bank': {
+            'source': bank_json_path.relative_to(REPO).as_posix(),
+            'character': bank['character'],
+            'animation_table': bank['animation_table'],
+            'animation_set_id': bank['animation_set_id'],
+            'template_clip_id': bank['template_clip_id'],
+            'unique_resources': len(resource_records),
+            'registration_requests': len(bank['registration_requests']),
+            'resources': resource_records,
+            'checked_inputs': table_records,
+        },
     }, indent=2) + '\n', encoding='utf-8')
     asset_notice = (Path(__file__).resolve().parent.parent /
                     'irrlicht-android/swamp-smoke/ASSET-NOTICE.txt')
@@ -172,6 +263,18 @@ def irrlicht_swamp_assets(cache_root: Path, assets_root: Path) -> dict:
         'release_eligible': False,
         'source_cache_root': 'external --cache argument (absolute path omitted)',
         'assets': records,
+        'animation_bank': {
+            'character': bank['character'],
+            'animation_table': bank['animation_table'],
+            'animation_set_id': bank['animation_set_id'],
+            'template_clip_id': bank['template_clip_id'],
+            'unique_resources': len(resource_records),
+            'registration_requests': len(bank['registration_requests']),
+            'resources': resource_records,
+            'checked_inputs': table_records,
+        },
+        'apk_assets': sorted(row['apk_asset'] for row in records + table_records),
+        'cache_apk_assets': sorted(row['apk_asset'] for row in records),
         'apk_manifest_asset': 'dh2/local-irrlicht-swamp-manifest.json',
         'apk_asset_notice': 'dh2/LOCAL-ASSET-NOTICE.txt',
     }
@@ -534,7 +637,6 @@ def build_irrlicht_host(ndk: Path, build: Path, *,
             REPO / 'port/skin-payloads/skin.cpp',
             REPO / 'port/animation-pose/pose.cpp',
             REPO / 'port/animation-values/values.cpp',
-            REPO / 'port/animation-timeline/timeline.cpp',
             REPO / 'port/animation-mixing/mixing.cpp',
             REPO / 'port/animation-layers/layers.cpp',
             REPO / 'port/navigation/navigation.cpp',
@@ -551,12 +653,35 @@ def build_irrlicht_host(ndk: Path, build: Path, *,
             REPO / 'port/texture-assets/texture.cpp',
             REPO / 'port/texture-assets/decode.cpp',
             engine / 'game/prince_actor.cpp',
+            engine / 'game/prince_character_runtime.cpp',
             engine / 'game/prince_mesh_adapter.cpp',
             REPO / 'port/level-world/visual_motion.cpp',
             REPO / 'port/level-world/physical_controls.cpp',
+            REPO / 'port/level-world/actor_playback.cpp',
+            REPO / 'port/level-world/actor_blended_playback.cpp',
+            REPO / 'port/level-world/animation_blender.cpp',
+            REPO / 'port/level-world/visual_timeline.cpp',
+            REPO / 'port/level-world/character_coordinator.cpp',
+            REPO / 'port/level-world/character_state.cpp',
+            REPO / 'port/level-world/character_timers.cpp',
+            REPO / 'port/level-world/character_stance.cpp',
+            REPO / 'port/level-world/character_scene.cpp',
+            REPO / 'port/level-world/move_state.cpp',
+            REPO / 'port/level-world/decor_scene.cpp',
+            REPO / 'port/level-world/decor_body_config.cpp',
             REPO / 'port/engine-skinning/skinning.cpp',
             REPO / 'port/scene-materials/scene.cpp',
+            REPO / 'port/game-data/data.cpp',
+            REPO / 'port/game-data/animation_bank.cpp',
+            REPO / 'port/game-data/animation_tables.cpp',
+            REPO / 'port/game-data/animation_scheduler.cpp',
+            REPO / 'port/game-data/animation_selection.cpp',
+            REPO / 'port/game-data/class_tables.cpp',
+            REPO / 'port/game-data/properties.cpp',
+            REPO / 'port/engine-animation/animation_registration.cpp',
             REPO / 'port/engine-animation/animation.cpp',
+            REPO / 'port/engine-animation/animation_blend.cpp',
+            REPO / 'port/engine-animation/component_applicator.cpp',
             REPO / 'port/engine-animation/angle_interpreter.cpp',
             REPO / 'port/engine-animation/events.cpp',
             REPO / 'port/engine-animation/event_track.cpp',
@@ -588,7 +713,21 @@ def build_irrlicht_host(ndk: Path, build: Path, *,
             source_flags = flags
             if source in {
                 REPO / 'port/engine-skinning/skinning.cpp',
+                engine / 'game/prince_character_runtime.cpp',
+                REPO / 'port/level-world/actor_playback.cpp',
+                REPO / 'port/level-world/actor_blended_playback.cpp',
                 REPO / 'port/scene-materials/scene.cpp',
+                REPO / 'port/level-world/character_coordinator.cpp',
+                REPO / 'port/level-world/character_scene.cpp',
+                REPO / 'port/level-world/decor_scene.cpp',
+                REPO / 'port/game-data/data.cpp',
+                REPO / 'port/game-data/animation_bank.cpp',
+                REPO / 'port/game-data/animation_tables.cpp',
+                REPO / 'port/game-data/animation_scheduler.cpp',
+                REPO / 'port/game-data/animation_selection.cpp',
+                REPO / 'port/game-data/class_tables.cpp',
+                REPO / 'port/game-data/properties.cpp',
+                REPO / 'port/engine-animation/animation_registration.cpp',
                 REPO / 'port/engine-animation/animation.cpp',
                 REPO / 'port/engine-animation/angle_interpreter.cpp',
                 REPO / 'port/engine-animation/events.cpp',
@@ -781,6 +920,9 @@ def build_irrlicht_swamp_package(sdk: Path, ndk: Path, cache: Path,
     libraries, native_report = build_irrlicht_host(
         ndk, build, swamp=True, cache_root=cache,
         irrlicht_static_root=irrlicht_static_root)
+    cache_asset_report = native_report.get('local_cache_assets')
+    if not cache_asset_report:
+        raise RuntimeError('SWAMP host build did not report its staged local assets')
     base = build / 'base-swamp.apk'
     manifest = HERE / 'AndroidManifest.irrlicht-swamp.xml'
     assets = build / 'irrlicht-swamp/assets'
@@ -815,7 +957,8 @@ def build_irrlicht_swamp_package(sdk: Path, ndk: Path, cache: Path,
 
     with zipfile.ZipFile(apk_path, 'r') as apk:
         names = set(apk.namelist())
-    expected_cache_assets = {'assets/' + value for value in IRRLICHT_SWAMP_ASSETS.values()}
+    expected_cache_assets = {
+        'assets/' + value for value in cache_asset_report['cache_apk_assets']}
     included_cache_assets = {name for name in names if name in expected_cache_assets}
     if included_cache_assets != expected_cache_assets:
         raise RuntimeError('SWAMP local APK does not contain the exact selected source asset set')
@@ -838,7 +981,7 @@ def build_irrlicht_swamp_package(sdk: Path, ndk: Path, cache: Path,
             raise RuntimeError(f'Local SWAMP APK missing required notice/manifest: {name}')
 
     report = {
-        'scope': 'Development diagnostic: SWAMP module-zero Irrlicht source render/path-mask movement plus four source Prince warrior skins and idle/walk; not full-game parity',
+        'scope': 'Development diagnostic: SWAMP module-zero Irrlicht source render/path-mask movement plus four Prince warrior skins driven by the authored Character state and BlendedPlayback bank; not full-game parity',
         'package_name': 'local.dh2.sourceviewer.irrlichtswamp',
         'launcher_activity': 'android.app.NativeActivity',
         'min_sdk': 26,
@@ -849,6 +992,7 @@ def build_irrlicht_swamp_package(sdk: Path, ndk: Path, cache: Path,
         'local_cache_only': True,
         'release_eligible': False,
         'included_cache_assets': sorted(included_cache_assets),
+        'prince_animation_bank': cache_asset_report['animation_bank'],
         'apk_entry_count': len(names),
         'apk_asset_count': sum(name.startswith('assets/') for name in names),
         'apk_notice_assets': sorted(name for name in names

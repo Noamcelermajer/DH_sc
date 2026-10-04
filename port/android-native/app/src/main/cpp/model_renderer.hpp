@@ -16,6 +16,7 @@ std::string load_world(const std::uint8_t*,std::size_t,AAssetManager*);
 void move_axis(float x,float y);
 void focus_object(int index);
 std::string set_object_state(int index,const std::string& state);
+std::string spawn_character(const std::string& exact_name);
 std::string set_combat_target(int index,int target);
 std::string player_attack(int target=-1);
 std::array<int,7> player_vitals();

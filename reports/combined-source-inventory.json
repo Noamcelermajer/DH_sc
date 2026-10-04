@@ -62,8 +62,8 @@
       "origin": "Existing reconstruction",
       "source_category": "reconstruction_and_port",
       "source_files": 24,
-      "source_lines": 7858,
-      "source_bytes": 405751,
+      "source_lines": 8002,
+      "source_bytes": 413852,
       "test_files": 41
     },
     {
@@ -80,9 +80,9 @@
       "origin": "Adam import with local adaptations",
       "source_category": "reconstruction_and_port",
       "source_files": 7,
-      "source_lines": 1749,
-      "source_bytes": 164272,
-      "test_files": 69
+      "source_lines": 1932,
+      "source_bytes": 177250,
+      "test_files": 70
     },
     {
       "module": "android-smoke",
@@ -349,9 +349,9 @@
       "module": "irrlicht-android",
       "origin": "Existing reconstruction",
       "source_category": "reconstruction_and_port",
-      "source_files": 15,
-      "source_lines": 4476,
-      "source_bytes": 212758,
+      "source_files": 17,
+      "source_lines": 5082,
+      "source_bytes": 239185,
       "test_files": 6
     },
     {
@@ -385,10 +385,10 @@
       "module": "level-world",
       "origin": "Adam import with local adaptations",
       "source_category": "reconstruction_and_port",
-      "source_files": 112,
-      "source_lines": 6455,
-      "source_bytes": 413659,
-      "test_files": 185
+      "source_files": 118,
+      "source_lines": 7196,
+      "source_bytes": 444797,
+      "test_files": 191
     },
     {
       "module": "loot-tables",
@@ -662,16 +662,16 @@
     }
   ],
   "totals": {
-    "source_files": 676,
-    "source_lines": 78412,
-    "source_bytes": 3694367,
-    "test_files": 545
+    "source_files": 684,
+    "source_lines": 80086,
+    "source_bytes": 3773011,
+    "test_files": 552
   },
   "reconstruction_and_port_totals": {
-    "source_files": 388,
-    "source_lines": 43881,
-    "source_bytes": 2375205,
-    "test_files": 545
+    "source_files": 396,
+    "source_lines": 45555,
+    "source_bytes": 2453849,
+    "test_files": 552
   },
   "files": [
     {
@@ -886,10 +886,10 @@
     },
     {
       "path": "port/android-app/build.py",
-      "bytes": 66978,
-      "lines": 1180,
+      "bytes": 75079,
+      "lines": 1324,
       "kind": "source",
-      "sha256": "5a9263725f19cc7ab7228649213f7669c5ba5582850d0a0bd990925693c87961"
+      "sha256": "18dd1fe72439a945e337b0cb9f8f94b4b98935ffa94732a68fccb0ed94bc2179"
     },
     {
       "path": "port/android-app/gameplay.cpp",
@@ -1187,10 +1187,10 @@
     },
     {
       "path": "port/android-app/tests/irrlicht_swamp_native_runtime.py",
-      "bytes": 22566,
-      "lines": 452,
+      "bytes": 24880,
+      "lines": 478,
       "kind": "test_or_tool",
-      "sha256": "ebb3cf39c9de5074a1257e63585780ed6401898b1bb69fa799abebe5166e5cf4"
+      "sha256": "5ce36716e1f755e78c0772ae3cbd48f229b57aa286a7adfcb095d089686f1d6e"
     },
     {
       "path": "port/android-app/tests/property_runtime.py",
@@ -3364,38 +3364,38 @@
     },
     {
       "path": "port/android-native/app/src/main/cpp/model_renderer.cpp",
-      "bytes": 129749,
-      "lines": 1266,
+      "bytes": 140697,
+      "lines": 1421,
       "kind": "source",
-      "sha256": "34eb595c134f3dc4dc0a8581c3641e18bd8497c5143c4f6bf4d20c31d3c884b7"
+      "sha256": "342d05804921d107ebd1c9d1d89c4aa11909e9520a98778ddd6a1ec215101b99"
     },
     {
       "path": "port/android-native/app/src/main/cpp/model_renderer.hpp",
-      "bytes": 880,
-      "lines": 26,
+      "bytes": 939,
+      "lines": 27,
       "kind": "source",
-      "sha256": "3cc571593b5adfd16a5c1fb4b5ac3ccbb9df0b96b3b39cb64810675d98a1bc70"
+      "sha256": "41acb54c70884fa0a5932ee07e65d0d18f81dd6b9f208a781789dbc2876589b9"
     },
     {
       "path": "port/android-native/app/src/main/cpp/native_app.cpp",
-      "bytes": 11602,
-      "lines": 153,
+      "bytes": 12106,
+      "lines": 160,
       "kind": "source",
-      "sha256": "8b634eaa8a4e273043f489dd9da0a15588d3e1278bfb54abe226f2b905cfc78b"
+      "sha256": "2cad5f2778ec4deb29b138171020766afaa006a76e490dc37b2d3ed8dc35ac4c"
     },
     {
       "path": "port/android-native/app/src/main/java/com/example/dh2/MainActivity.java",
-      "bytes": 17848,
-      "lines": 218,
+      "bytes": 19257,
+      "lines": 237,
       "kind": "source",
-      "sha256": "c0121ed1e7b00b590808673a877ad69d115f27ce07c61943951a51a3a7d813ea"
+      "sha256": "efd5afb75a3b8aa4e7aa6902e4c310bd866b606ad5e87238e3d75daa19f2266d"
     },
     {
       "path": "port/android-native/app/src/main/java/com/example/dh2/NativeBridge.java",
-      "bytes": 1168,
-      "lines": 22,
+      "bytes": 1226,
+      "lines": 23,
       "kind": "source",
-      "sha256": "21bd08f8e261993a0574dea5c3d6d37ee06ef679601e07b81efa7b5ae9444689"
+      "sha256": "f5b22c5009f34103c304b095a72fa22d405ed7e9ca78298d07685d1f5a13c574"
     },
     {
       "path": "port/android-native/tools/actor_states_smoke.py",
@@ -3452,6 +3452,13 @@
       "lines": 338,
       "kind": "test_or_tool",
       "sha256": "001c539e1989151a84ebdf91452bdc047be6a0b466b71532fcc7330293820b87"
+    },
+    {
+      "path": "port/android-native/tools/character_spawn_smoke.py",
+      "bytes": 8069,
+      "lines": 115,
+      "kind": "test_or_tool",
+      "sha256": "ee91cc50ae81c8bd751e5137d8255052968aecf033bcdf06af1e189208705496"
     },
     {
       "path": "port/android-native/tools/check_mod_assets.py",
@@ -5674,17 +5681,31 @@
     },
     {
       "path": "port/irrlicht-android/game/prince_actor.cpp",
-      "bytes": 20508,
-      "lines": 450,
+      "bytes": 14796,
+      "lines": 335,
       "kind": "source",
-      "sha256": "cf3d604178879e1aab6744e587a1360941afa9aa4579b59c3470e456582b7edf"
+      "sha256": "2149507da88557f4bb7779bbc914d96c2b176d204179e146c86c609b5d218742"
     },
     {
       "path": "port/irrlicht-android/game/prince_actor.hpp",
-      "bytes": 2739,
-      "lines": 78,
+      "bytes": 2326,
+      "lines": 73,
       "kind": "source",
-      "sha256": "371b72ac0859c5566b7730ad2b4960007ee0066ec6c8fe1f5bff33f052574db0"
+      "sha256": "893356c1d5fe8bdd4f51882f4d831657bd21180e22a9525d3570252edb84a3f6"
+    },
+    {
+      "path": "port/irrlicht-android/game/prince_character_runtime.cpp",
+      "bytes": 27523,
+      "lines": 609,
+      "kind": "source",
+      "sha256": "d5dc88f262593346d147b02017dec2b48ea00c1160fc839eac6939a787f5b530"
+    },
+    {
+      "path": "port/irrlicht-android/game/prince_character_runtime.hpp",
+      "bytes": 2134,
+      "lines": 54,
+      "kind": "source",
+      "sha256": "7c82114e417214fb8070df064408c5c06a0730312ff6e6fc5ed592a2f2e98582"
     },
     {
       "path": "port/irrlicht-android/game/prince_mesh_adapter.cpp",
@@ -5716,17 +5737,17 @@
     },
     {
       "path": "port/irrlicht-android/game/tests/prince_actor_host.cpp",
-      "bytes": 13512,
-      "lines": 279,
+      "bytes": 9330,
+      "lines": 201,
       "kind": "test_or_tool",
-      "sha256": "ba1faaa72a6dbc9037f71e735928e4d457d97b237bf13e1e5ff9b819778b86bd"
+      "sha256": "a3d333f0242e7529235611a11c31693ca220027db7fc2c0bfa615b75d24e22cd"
     },
     {
       "path": "port/irrlicht-android/game/tests/run_prince_host.py",
-      "bytes": 9909,
-      "lines": 260,
+      "bytes": 11120,
+      "lines": 246,
       "kind": "test_or_tool",
-      "sha256": "e5ad3d275ea798fa41a145e011f61c7e9f02ed54d464c93c27256836e0ca43bc"
+      "sha256": "e2d2625f0553a231905e9c667fdab4e5deafd6d488002785e4459a9525fa63ec"
     },
     {
       "path": "port/irrlicht-android/run_runtime_smoke.py",
@@ -5751,10 +5772,10 @@
     },
     {
       "path": "port/irrlicht-android/swamp-smoke/main.cpp",
-      "bytes": 47916,
-      "lines": 980,
+      "bytes": 50811,
+      "lines": 1043,
       "kind": "source",
-      "sha256": "0d68cd85ec99b7abb578493397213c7dc4d014a33ead3cfd96365b632b67da93"
+      "sha256": "0513e97e0e911df0f4a7fea3fad662b99cbfa4c6003029f6ef4c5c6e5837509c"
     },
     {
       "path": "port/irrlicht-android/swamp-smoke/tests/alpha_map_policy.cpp",
@@ -6114,6 +6135,34 @@
       "sha256": "ee16f28dee18d04156601f32edcc7235f3356d9ae891e10f8ba77710864c787b"
     },
     {
+      "path": "port/level-world/character_coordinator.cpp",
+      "bytes": 7993,
+      "lines": 194,
+      "kind": "source",
+      "sha256": "2ab1ac65a49ddd120f6bbc09e7da4ca2b88be329e0aef2434755cdf5cad2338a"
+    },
+    {
+      "path": "port/level-world/character_coordinator.hpp",
+      "bytes": 3499,
+      "lines": 81,
+      "kind": "source",
+      "sha256": "de7ab3a0328a69a290bd706167d71347403ad3b86f83dc7ac4cc1fbb062b8452"
+    },
+    {
+      "path": "port/level-world/character_factory.cpp",
+      "bytes": 2109,
+      "lines": 53,
+      "kind": "source",
+      "sha256": "28f86f3a3b87fdee1ecb476110a145a6935847229ac6e48ddaceccafa5a65168"
+    },
+    {
+      "path": "port/level-world/character_factory.hpp",
+      "bytes": 1529,
+      "lines": 46,
+      "kind": "source",
+      "sha256": "f8aefdcc79cb403f988668c276b49af88fb990bd82d24c0b6cc05be1c0fb539e"
+    },
+    {
       "path": "port/level-world/character_path_commands.cpp",
       "bytes": 2353,
       "lines": 38,
@@ -6227,17 +6276,17 @@
     },
     {
       "path": "port/level-world/character_state.cpp",
-      "bytes": 7117,
-      "lines": 129,
+      "bytes": 12297,
+      "lines": 244,
       "kind": "source",
-      "sha256": "62545e8ebc5052b5141a3f59815a13cda20efc58d6aa988234ccb1e179cd1ebc"
+      "sha256": "7131944db0eb52a958b0b35aadd657545a79a6c5196ba0b923f9a3c6e89b84e5"
     },
     {
       "path": "port/level-world/character_state.hpp",
-      "bytes": 4114,
-      "lines": 73,
+      "bytes": 6431,
+      "lines": 109,
       "kind": "source",
-      "sha256": "37c77748ca48cfc276c606f4e11594fd85b1948342592b902dbf56ed79bd1695"
+      "sha256": "46de117245693cc26bf924d1f6d23d57a204014e929d6a89c7cac022b665819d"
     },
     {
       "path": "port/level-world/character_target_search.cpp",
@@ -6252,6 +6301,20 @@
       "lines": 38,
       "kind": "source",
       "sha256": "c22abdb55677bf15192b0fd97b5dee91bf4dad437ed244d776b5812f40d5297a"
+    },
+    {
+      "path": "port/level-world/character_template_factory.cpp",
+      "bytes": 5466,
+      "lines": 130,
+      "kind": "source",
+      "sha256": "b6ca36853b309a9b8476a632a76c71f80847ea0a5dbd4788777aee1774b562e0"
+    },
+    {
+      "path": "port/level-world/character_template_factory.hpp",
+      "bytes": 2483,
+      "lines": 79,
+      "kind": "source",
+      "sha256": "5424f335b98b2dfa2508544d8878ffe4820c315d882b2c1f8ea1b14e7af3c16c"
     },
     {
       "path": "port/level-world/character_timers.cpp",
@@ -6521,17 +6584,17 @@
     },
     {
       "path": "port/level-world/objects.cpp",
-      "bytes": 8786,
-      "lines": 96,
+      "bytes": 9011,
+      "lines": 98,
       "kind": "source",
-      "sha256": "cba86079f526391cce9c46229dcc95d54faa8619de03bdd6cdf4770355db7ed7"
+      "sha256": "8a4de5306ba09867a29c66859b15712c1c5bc8f3d12a8e38aabbdafcf957c93f"
     },
     {
       "path": "port/level-world/objects.hpp",
-      "bytes": 1538,
-      "lines": 37,
+      "bytes": 1875,
+      "lines": 42,
       "kind": "source",
-      "sha256": "c2d54017b8b88aa35c5ac4d61a1d4a02876c9dae8f25e2fd40a04c72f6461634"
+      "sha256": "fc801b16c8b834f8479f89366427854dab19ffe867c930278324aba51885e9ea"
     },
     {
       "path": "port/level-world/octree.cpp",
@@ -7031,6 +7094,13 @@
       "sha256": "14cbb3416b3d5ef5376a5daa0f34f74968461cc58e9232002c3ca0db0cd5f4dc"
     },
     {
+      "path": "port/level-world/tests/character_coordinator.cpp",
+      "bytes": 10946,
+      "lines": 220,
+      "kind": "test_or_tool",
+      "sha256": "a15ee980c7945142d6bae896555e0ad559f8244621fd8abe1dc44c58f636fce3"
+    },
+    {
       "path": "port/level-world/tests/character_path_commands.cpp",
       "bytes": 7926,
       "lines": 76,
@@ -7157,6 +7227,13 @@
       "sha256": "70f056889c80b35e404482d879f25a5234369021e4c635bc00f6f55eaf947858"
     },
     {
+      "path": "port/level-world/tests/character_spawn.cpp",
+      "bytes": 11141,
+      "lines": 209,
+      "kind": "test_or_tool",
+      "sha256": "8b0da68da55de7e97d787686eb10860c97ea9c3efadc347bee882c8c27bb38e2"
+    },
+    {
       "path": "port/level-world/tests/character_stance.cpp",
       "bytes": 1665,
       "lines": 20,
@@ -7211,6 +7288,13 @@
       "lines": 27,
       "kind": "test_or_tool",
       "sha256": "cb8f87eefc7c7146bdea56b717f25219bc4101f60df0a482e3aa71a1e564e53b"
+    },
+    {
+      "path": "port/level-world/tests/character_template_factory.cpp",
+      "bytes": 6738,
+      "lines": 129,
+      "kind": "test_or_tool",
+      "sha256": "92dfd58b1f95196acacb1237a01b3e337ad276dbb12fd492d9c77f0050364392"
     },
     {
       "path": "port/level-world/tests/character_timers.cpp",
@@ -7535,6 +7619,13 @@
       "sha256": "dccb5a034427b30319a58e2e006bc37fc9a2b29073f11d2b6cdf571e0e496a4c"
     },
     {
+      "path": "port/level-world/tests/objects_spawn.cpp",
+      "bytes": 3425,
+      "lines": 63,
+      "kind": "test_or_tool",
+      "sha256": "be1707b95838508e752a701f4fcad20290ebe65aa280a80cb7e402080ddfd9e1"
+    },
+    {
       "path": "port/level-world/tests/octree.cpp",
       "bytes": 6024,
       "lines": 88,
@@ -7617,6 +7708,20 @@
       "lines": 106,
       "kind": "test_or_tool",
       "sha256": "950c9204a54c3f831503049e5b86ee64f2dbf4bcf3213bb311599f40286a8db0"
+    },
+    {
+      "path": "port/level-world/tests/run_character_spawn_host.py",
+      "bytes": 2735,
+      "lines": 86,
+      "kind": "test_or_tool",
+      "sha256": "9b4e34cd27648e31fc9199441d1ef521961312b71ee3195094343e9460a9d6e2"
+    },
+    {
+      "path": "port/level-world/tests/run_character_template_factory_host.py",
+      "bytes": 9282,
+      "lines": 203,
+      "kind": "test_or_tool",
+      "sha256": "961e71dc20bb7c6e7b0982ae7f5f913feb38bb884759075a0a83313db095997c"
     },
     {
       "path": "port/level-world/tests/selector.cpp",
@@ -7851,17 +7956,17 @@
     },
     {
       "path": "port/level-world/tools/prepare_actor_states.py",
-      "bytes": 2614,
-      "lines": 28,
+      "bytes": 2820,
+      "lines": 30,
       "kind": "test_or_tool",
-      "sha256": "340ad4ff4df73a81e5b7ee709af330ddcd878178f993089d1b1f198e0d459588"
+      "sha256": "b91550fbad4bf5f3eb9a49ed85a183c4847f951b9678888e6e481e5e0df6b759"
     },
     {
       "path": "port/level-world/tools/prepare_actors.py",
-      "bytes": 6255,
-      "lines": 71,
+      "bytes": 7221,
+      "lines": 76,
       "kind": "test_or_tool",
-      "sha256": "86a7a693836995016a016ac3fe8a562e3dc5f4fade905a3f4682ff06bb7f0c04"
+      "sha256": "dfe20360a54032a13fdff3cf2e8cf44fa91bd81bea0c94cf191b5ed8a7667b9b"
     },
     {
       "path": "port/level-world/tools/prepare_ai.py",

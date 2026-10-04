@@ -9,6 +9,10 @@ struct Record {
  std::string name,character,model;
  world::Point position{},rotation_degrees{},scale{};
  std::array<float,16> placement{};
+ // DACT v2 retains an authored auto_spawn=0 / AI Limbus gate. This is
+ // descriptor metadata; loaded actors must remain hidden until a source spawn
+ // request changes their state. It is not a script/trigger execution claim.
+ bool gated_spawn=false;
 };
 struct Vertex {float p[3]{},uv[2]{},color[4]{1,1,1,1};};
 struct Primitive {
@@ -26,7 +30,8 @@ struct Resource {
  unsigned removed_helpers=0,triangles=0;
 };
 // Development descriptor preserves authored placements and original table
-// links. Conditional/template factories remain outside this format.
+// links. v1 covers automatic direct actors; v2 can also retain resolved direct
+// Limbus actors. Conditional/template factories remain outside this format.
 bool load_records(const std::uint8_t*,std::size_t,unsigned rooms,const data::CharacterTable&,const data::Dictionary&,std::vector<Record>&,std::string&);
 // Historical baseline audit fixture selection. Android resolves CharAnim
 // states through game-data/animation_tables.hpp instead. Empty means decor.

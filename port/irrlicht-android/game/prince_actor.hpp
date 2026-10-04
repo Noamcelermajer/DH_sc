@@ -7,6 +7,9 @@
 #include <string>
 #include <vector>
 
+namespace dh2::scene { struct Scene; }
+namespace dh2::visual { class SceneBinding; }
+
 namespace dh2::irrlicht_game {
 
 struct PrinceVertex {
@@ -35,16 +38,11 @@ struct PrinceMeshPart {
     std::vector<std::uint16_t> indices;
 };
 
-enum class PrinceMotion : std::uint32_t { idle, walk };
-
-// A renderer-neutral view of the source Prince. It assembles the four default
-// warrior equipment controllers, samples the recovered idle/walk clips, and
-// deforms every primitive from immutable bind-pose positions with the checked
-// engine-skinning palette. The source visual binding supplies owner * helper *
-// authored graph transforms and source animated-root compensation. A fixed
-// first-Idle bounds offset remains a development placement choice. Full
-// Character scale/state/blended playback are not reconstructed; the renderer
-// adapter must keep its scene-node transform at identity.
+// Renderer-neutral Prince rig and mutable vertex source. It assembles the four
+// selected default-warrior controllers, preserves immutable bind-pose streams,
+// and deforms against the live source Scene after the caller advances authored
+// Character playback. SceneBinding owns owner * helper * authored graph and
+// root-displacement composition. The Irrlicht node must remain at identity.
 class PrinceActor {
     struct Impl;
     std::unique_ptr<Impl> impl_;
@@ -58,20 +56,17 @@ public:
     PrinceActor& operator=(const PrinceActor&) = delete;
 
     bool load(const std::uint8_t* model, std::size_t model_size,
-              const std::uint8_t* idle, std::size_t idle_size,
-              const std::uint8_t* walk, std::size_t walk_size,
               std::string& error);
-    bool sample(PrinceMotion motion, std::int32_t milliseconds,
-                const std::array<float, 3>& owner_position,
-                std::string& error);
+    dh2::scene::Scene& scene();
+    const dh2::scene::Scene& scene() const;
+    dh2::visual::SceneBinding& visual_binding();
+    bool deform(std::string& error);
 
     const std::vector<PrinceMeshPart>& parts() const;
     std::uint32_t controller_count() const;
     std::uint32_t joint_count() const;
     std::uint32_t vertex_count() const;
     std::uint32_t triangle_count() const;
-    std::int32_t clip_start(PrinceMotion motion) const;
-    std::int32_t clip_end(PrinceMotion motion) const;
     bool ready() const;
 };
 

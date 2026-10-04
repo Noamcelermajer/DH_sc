@@ -141,10 +141,17 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_objectSta
  return env->NewStringUTF(model_renderer::set_object_state(index,name).c_str());
 }
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_loadWorld(JNIEnv* env,jclass,jbyteArray input,jobject assets){
+// SpawnCharacter's exact-name script boundary is exposed separately below.
   if(!input||!assets)return result(env,"Null world input");const auto n=env->GetArrayLength(input);
   if(n<=0||n>65560)return result(env,"World descriptor outside limit");
   std::vector<std::uint8_t> bytes(n);env->GetByteArrayRegion(input,0,n,reinterpret_cast<jbyte*>(bytes.data()));if(env->ExceptionCheck())return nullptr;
   report_model_frame=true;return result(env,model_renderer::load_world(bytes.data(),bytes.size(),AAssetManager_fromJava(env,assets)));
+}
+extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_spawnCharacter(JNIEnv* env,jclass,jstring character){
+ if(!character)return env->NewStringUTF("SpawnCharacter name is absent");
+ const char* raw=env->GetStringUTFChars(character,nullptr);if(!raw)return nullptr;
+ const std::string name(raw);env->ReleaseStringUTFChars(character,raw);
+ return env->NewStringUTF(model_renderer::spawn_character(name).c_str());
 }
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_combatTarget(JNIEnv* env,jclass,jint index,jint target){return env->NewStringUTF(model_renderer::set_combat_target(index,target).c_str());}
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_playerAttack(JNIEnv* env,jclass,jint target){return env->NewStringUTF(model_renderer::player_attack(target).c_str());}

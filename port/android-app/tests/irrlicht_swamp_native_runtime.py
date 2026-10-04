@@ -20,6 +20,7 @@ FATAL_MARKERS = (
     "GL_INVALID_OPERATION", "GL_INVALID_ENUM", "Fatal signal",
     "FATAL EXCEPTION", "Tried to set a texture not owned by this driver",
     "Failed to create Irrlicht device",
+    "Source Character",
 )
 ASSEMBLY = re.compile(
     r"SWAMP module 0 assembled in Irrlicht r6038: .*?source_draws=(\d+) "
@@ -33,6 +34,7 @@ ASSEMBLY = re.compile(
 MOVE = re.compile(
     r"MOVE state=(IDLE|MOVE|BLOCKED|REJECTED) "
     r"(?:animation=(IDLE|WALK) )?"
+    r"(?:source_state=(-?\d+) sequence=(-?\d+) clip=(-?\d+) )?"
     r"x=(-?[0-9.]+) y=(-?[0-9.]+) z=(-?[0-9.]+) "
     r"stick_x=(-?[0-9.]+) stick_y=(-?[0-9.]+) path_mask=0x([0-9A-Fa-f]+)"
 )
@@ -109,8 +111,11 @@ def move_records(log: str) -> list[dict]:
         match = MOVE.search(line)
         if not match:
             continue
-        state, animation, x, y, z, stick_x, stick_y, path_mask = match.groups()
+        state, animation, source_state, sequence, clip, x, y, z, stick_x, stick_y, path_mask = match.groups()
         rows.append({"state": state, "animation": animation,
+                     "source_state": int(source_state) if source_state is not None else None,
+                     "sequence": int(sequence) if sequence is not None else None,
+                     "clip": int(clip) if clip is not None else None,
                      "x": float(x), "y": float(y),
                      "z": float(z), "stick_x": float(stick_x),
                      "stick_y": float(stick_y), "path_mask": int(path_mask, 16)})
@@ -130,7 +135,7 @@ def app_log(adb_path: Path, serial: str, pid: str) -> str:
 
 
 def wait_for_assembly(adb_path: Path, serial: str,
-                      timeout: float) -> tuple[str, str]:
+                      timeout: float, require_character: bool=False) -> tuple[str, str]:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         pid_output = adb(adb_path, serial, "shell", "pidof", PACKAGE)
@@ -138,10 +143,11 @@ def wait_for_assembly(adb_path: Path, serial: str,
             raise RuntimeError("SWAMP NativeActivity exited before assembling module zero")
         pid = pid_output.split()[0]
         log = app_log(adb_path, serial, pid)
-        if ASSEMBLY.search(log):
+        if ASSEMBLY.search(log) and (not require_character or
+                ("PRINCE:" in log and "FIRST_SOURCE_CHARACTER_FRAME:" in log)):
             return pid, log
         time.sleep(0.25)
-    raise RuntimeError("SWAMP module-zero assembly did not finish; inspect the saved device log and screen")
+    raise RuntimeError("SWAMP/Character first-frame readiness did not finish; inspect the saved device log and screen")
 
 
 def wait_for_mode(adb_path: Path, serial: str, state: str,
@@ -211,7 +217,10 @@ def main() -> int:
     parser.add_argument("--swipe-ms", type=int, default=900)
     parser.add_argument("--require-prince", action="store_true",
                         help="Require the four-part source-skinned Prince and Idle/Walk touch transitions")
+    parser.add_argument("--require-prince-character", action="store_true",
+                        help="Also require the authored 116-resource bank and shared Character state path")
     args = parser.parse_args()
+    if args.require_prince_character: args.require_prince=True
 
     apk = args.apk.resolve(strict=True)
     adb_path = args.adb.resolve(strict=True)
@@ -247,7 +256,7 @@ def main() -> int:
         raise RuntimeError(f"NativeActivity launch failed: {launch}")
     time.sleep(max(0.0, args.settle_seconds))
     pid, startup_log = wait_for_assembly(adb_path, args.serial,
-                                         max(1.0, args.startup_timeout_seconds))
+                                         max(1.0, args.startup_timeout_seconds),args.require_prince_character)
 
     initial = screen(adb_path, args.serial, output, "initial")
     if initial["changed_pixels"] < 5000:
@@ -300,6 +309,7 @@ def main() -> int:
         log,
     )
     prince_record = None
+    character_record = None
     if prince:
         keys = ("controllers", "joints", "vertices", "triangles", "parts",
                 "mapped_diffuse_parts", "unmapped_diffuse_parts", "ignored_alpha_maps")
@@ -320,6 +330,16 @@ def main() -> int:
             raise RuntimeError(f"source Prince assembly differs: {prince_record}")
         if not prince_record["source_visual_binding_reported"]:
             raise RuntimeError("Prince renderer is missing the source visual owner/helper/graph binding")
+    if args.require_prince_character:
+        bank = re.search(r"authored_bank_resources=(\d+) registration_occurrences=(\d+) state=(-?\d+) sequence=(-?\d+) clip=(-?\d+)",log)
+        if not bank or tuple(map(int,bank.groups()))!=(116,158,3,262,1040):
+            raise RuntimeError("Authored Prince bank/source Idle initialization differs")
+        if "Character=shared_source_coordinator" not in log or "Irrlicht node identity" not in log:
+            raise RuntimeError("Shared source Character or single owner composition marker is missing")
+        character_record={"bank_resources":116,"registration_occurrences":158,
+            "shared_coordinator_reported":True,"initial_state":3,"idle_sequence":262,
+            "walk_sequence":280,"scope":"Original bank/playback/state composition; SWAMP movement is a development producer, physics/AI/combat unsupported"}
+        prince_record["placement"]="source owner/helper/graph composition with Irrlicht node identity; original camera pending"
 
     width, height = initial["width"], initial["height"]
     center = (round(width * 0.18), round(height * 0.77))
@@ -358,6 +378,11 @@ def main() -> int:
                                    idle_start["animation"] != "IDLE" or
                                    idle_end["animation"] != "IDLE"):
             raise RuntimeError(f"Prince did not select Walk and return to Idle: {moved}, {idle_start}, {idle_end}")
+        if args.require_prince_character:
+            if (moved["source_state"],moved["sequence"],moved["clip"])!=(4,280,1126):
+                raise RuntimeError(f"Source Character Walk selection differs: {moved}")
+            if any(row["source_state"]!=3 or row["sequence"]!=262 or row["clip"] not in (1040,1041) for row in (idle_start,idle_end)):
+                raise RuntimeError("Release did not return to original source Idle selection")
         captures[f"{axis}_movement"] = {"from": prior_idle, "during": moved,
                                           "idle_start": idle_start, "idle_end": idle_end,
                                           "screenshot": held_capture}
@@ -423,6 +448,7 @@ def main() -> int:
                                 "sha256": installed_hash},
         "source_geometry": geometry,
         "source_prince": prince_record,
+        "source_prince_character": character_record,
         "prince_motion_assertions_required": args.require_prince,
         "texture_visual_qa": {
             "sample": "initial screenshot central scene region",

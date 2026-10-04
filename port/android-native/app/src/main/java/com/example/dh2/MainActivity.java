@@ -128,6 +128,23 @@ public final class MainActivity extends Activity {
             debugAttackReceiver=new BroadcastReceiver(){
                 @Override public void onReceive(Context context,Intent intent){
                     if(!ready||loadedAsset==null||!loadedAsset.startsWith("worlds/"))return;
+                    if("com.example.dh2.DEBUG_RELOAD_WORLD".equals(intent.getAction())){
+                        final String world=loadedAsset;
+                        surface.queueEvent(()->{
+                            try {
+                                byte[] encoded=NativeBridge.readAsset(world,getAssets());
+                                String report=NativeBridge.loadWorld(encoded,getAssets());
+                                baseReport=world+"\n"+report;Log.i("DH2Native","World reload command applied | "+report);
+                                show(baseReport);surface.requestRender();
+                            } catch(java.io.IOException e) {Log.e("DH2Native","World reload failed",e);show("World reload failed: "+e.getMessage());}
+                        });
+                        return;
+                    }
+                    if("com.example.dh2.DEBUG_SPAWN_CHARACTER".equals(intent.getAction())){
+                        final String name=intent.getStringExtra("character_name");
+                        surface.queueEvent(()->{String report=NativeBridge.spawnCharacter(name);Log.i("DH2Native","Spawn command applied | "+report);show(baseReport+"\n"+report);surface.requestRender();});
+                        return;
+                    }
                     if("com.example.dh2.DEBUG_ANIMATION_TIME".equals(intent.getAction())){
                         final int time=intent.getIntExtra("time_ms",-1);
                         surface.queueEvent(()->{NativeBridge.animationTime(time);Log.i("DH2Native","Animation time command applied | time "+time);surface.requestRender();});
@@ -139,6 +156,8 @@ public final class MainActivity extends Activity {
             };
             IntentFilter filter=new IntentFilter("com.example.dh2.DEBUG_PLAYER_ATTACK");
             filter.addAction("com.example.dh2.DEBUG_ANIMATION_TIME");
+            filter.addAction("com.example.dh2.DEBUG_SPAWN_CHARACTER");
+            filter.addAction("com.example.dh2.DEBUG_RELOAD_WORLD");
             if(Build.VERSION.SDK_INT>=33)registerReceiver(debugAttackReceiver,filter,"android.permission.DUMP",null,Context.RECEIVER_EXPORTED);
             else registerReceiver(debugAttackReceiver,filter,"android.permission.DUMP",null);
         }

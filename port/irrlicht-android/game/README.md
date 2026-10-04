@@ -21,25 +21,29 @@ was assembled from a selected source animation pose.
 
 ## Prince source actor adapter
 
-`PrinceActor` is a separate renderer-neutral path used by the local SWAMP
-diagnostic. It loads the four source `_default_warrior-mesh-skin` controllers,
+`PrinceActor` is the renderer-neutral rig/skin adapter used by the local SWAMP
+diagnostic. It loads four source `_default_warrior-mesh-skin` controllers,
 resolves each primitive's semantic position/color/UV slots through that
 primitive's own `attributes[0]`, `attributes[2]`, and `attributes[4]` mapping,
 and checks the corresponding weight/vertex counts. It retains immutable source
-positions, samples the source Idle and Walk clips, and deforms each pose through
-the checked engine-skinning palette. `prince_mesh_adapter.cpp` copies that pose
-into mutable `SMeshBuffer`s and marks the vertex streams dirty after each
-update. Skinned vertices already include their source joint transforms, so the
-Irrlicht node stays at identity. The portable source visual binding applies the
-owner, helper, authored graph and animated-root compensation. A fixed
-first-Idle bounds offset remains a development placement choice; it is applied
-once so skinned vertices are not translated twice.
+positions and deforms each pose through the checked engine-skinning palette.
+`prince_mesh_adapter.cpp` copies the mutable positions into Irrlicht
+`SMeshBuffer`s and marks vertex streams dirty after updates.
 
-The preview is not native Character playback: it does not reproduce full
-Character scale/state, blend slots, locomotion state machine, combat, or
-original effect/shader material behavior. Read the
-[SWAMP source diagnostic](../swamp-smoke/README.md) for the app's scope and
-runtime limits.
+`PrinceCharacterRuntime` composes the shared source `character::Coordinator`,
+the authored AnimationBank/table, and two-slot `actor::BlendedPlayback`. It
+verifies and loads 116 registered resources and 158 ordered registration
+occurrences, resolves KnightPlayerBase properties, and routes touch input
+through recovered Idle/Move state updates. Registered assets with no serialized
+animation payload remain registered without fabricated timing. SceneBinding
+applies owner, helper, authored graph and root-displacement composition once;
+the Irrlicht node stays at identity. The SWAMP floor-checked point movement
+remains an explicit development producer. External Character/AI callbacks,
+native physics, combat, and full game orchestration remain outside this slice.
+
+Read the [SWAMP source diagnostic](../swamp-smoke/README.md) for the package
+scope, current APK verification state, build command, and remaining renderer
+limits.
 
 Run the host assertions (including per-primitive source stream equivalence):
 
@@ -48,9 +52,9 @@ python port/irrlicht-android/game/tests/run_prince_host.py `
   --assets port/android-native/app/src/main/assets
 ```
 
-The test can also take the extracted cache tree through `--assets`. It stages
-asset copies and writes its JSON evidence below ignored
-`port/irrlicht-android/build/prince-host-checks/`; no Android device is used.
+The test stages the checked APK-format asset tree and writes JSON evidence
+below ignored `port/irrlicht-android/build/prince-character-host-checks/`; no
+Android device is used.
 
 ## Provenance
 

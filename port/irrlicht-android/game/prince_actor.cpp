@@ -1,7 +1,6 @@
 #include "prince_actor.hpp"
 
 #include "../../asset-payloads/payloads.hpp"
-#include "../../engine-animation/animation.hpp"
 #include "../../engine-resources/resources.hpp"
 #include "../../engine-skinning/skinning.hpp"
 #include "../../level-world/visual_motion.hpp"
@@ -10,7 +9,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <limits>
 #include <utility>
 
 namespace dh2::irrlicht_game {
@@ -36,13 +34,7 @@ struct PrinceActor::Impl {
     std::vector<skinning::Skin> skins;
     std::vector<PartSource> part_sources;
     std::vector<PrinceMeshPart> parts;
-    animation::Player idle;
-    animation::Player walk;
     visual::SceneBinding binding;
-    std::array<float, 3> visual_anchor_offset{};
-    bool visual_anchor_ready = false;
-    bool has_sampled_motion = false;
-    PrinceMotion previous_motion = PrinceMotion::idle;
     std::uint32_t vertex_count = 0;
     std::uint32_t triangle_count = 0;
     bool loaded = false;
@@ -211,13 +203,10 @@ PrinceActor::PrinceActor(PrinceActor&&) noexcept = default;
 PrinceActor& PrinceActor::operator=(PrinceActor&&) noexcept = default;
 
 bool PrinceActor::load(const std::uint8_t* model, std::size_t model_size,
-                       const std::uint8_t* idle, std::size_t idle_size,
-                       const std::uint8_t* walk, std::size_t walk_size,
                        std::string& error) {
     error.clear();
-    if (!impl_ || !model || !model_size || !idle || !idle_size ||
-        !walk || !walk_size) {
-        error = "Prince model and idle/walk source animations are required";
+    if (!impl_ || !model || !model_size) {
+        error = "Prince model source is required";
         return false;
     }
 
@@ -272,11 +261,6 @@ bool PrinceActor::load(const std::uint8_t* model, std::size_t model_size,
         error = "Prince source does not provide exactly four default-warrior controllers";
         return false;
     }
-    if (!candidate.idle.load(idle, idle_size, candidate.source_scene, error) ||
-        !candidate.walk.load(walk, walk_size, candidate.source_scene, error)) {
-        if (error.empty()) error = "Prince idle/walk source animation rejected";
-        return false;
-    }
     if (!candidate.binding.bind(candidate.source_scene, error)) {
         if (error.empty()) error = "Prince source visual binding rejected";
         return false;
@@ -286,132 +270,41 @@ bool PrinceActor::load(const std::uint8_t* model, std::size_t model_size,
     return true;
 }
 
-bool PrinceActor::sample(PrinceMotion motion, std::int32_t milliseconds,
-                         const std::array<float, 3>& owner_position,
-                         std::string& error) {
+dh2::scene::Scene& PrinceActor::scene() { return impl_->source_scene; }
+const dh2::scene::Scene& PrinceActor::scene() const { return impl_->source_scene; }
+dh2::visual::SceneBinding& PrinceActor::visual_binding() { return impl_->binding; }
+
+bool PrinceActor::deform(std::string& error) {
     error.clear();
-    if (!ready() || !finite3(owner_position)) {
-        error = "Prince actor or owner position is invalid";
+    if (!ready()) {
+        error = "Prince source rig is not ready";
         return false;
     }
     auto& impl = *impl_;
-    const animation::Player& player = motion == PrinceMotion::walk
-        ? impl.walk : impl.idle;
-    if (player.end <= player.start) {
-        error = "Prince source animation has an empty playback interval";
-        return false;
-    }
-    const std::int64_t duration = static_cast<std::int64_t>(player.end) -
-                                  player.start;
-    const std::int64_t relative = static_cast<std::int64_t>(milliseconds) -
-                                  player.start;
-    const std::int64_t wrapped64 = player.start +
-        ((relative % duration + duration) % duration);
-    const auto wrapped = static_cast<std::int32_t>(wrapped64);
-    const bool reset_binding = !impl.has_sampled_motion ||
-                               impl.previous_motion != motion;
-    if (!impl.visual_anchor_ready && motion != PrinceMotion::idle) {
-        error = "Prince development placement must be initialized from source Idle";
-        return false;
-    }
-    std::array<float, 3> binding_position = owner_position;
-    if (impl.visual_anchor_ready) {
-        for (unsigned axis = 0; axis < 3; ++axis)
-            binding_position[axis] -= impl.visual_anchor_offset[axis];
-    }
-    std::copy(binding_position.begin(), binding_position.end(),
-              impl.binding.root.position);
-    const auto source_timestamp = static_cast<std::uint32_t>(wrapped);
-    if (!impl.binding.sample(impl.source_scene, player, wrapped,
-                             source_timestamp, reset_binding, true, error))
-        return false;
-    // Source root displacement is redirected into the visual helper by the
-    // binding. Fixed-step SWAMP movement remains the caller's position owner,
-    // so discard the binding's temporary root-position delta and rebuild the
-    // authored world with the caller's owner transform.
-    std::copy(binding_position.begin(), binding_position.end(),
-              impl.binding.root.position);
     if (!impl.binding.update_world(impl.source_scene, error)) return false;
-    impl.has_sampled_motion = true;
-    impl.previous_motion = motion;
-
-    auto deform_parts = [&]() {
-        std::vector<std::vector<std::array<float, 3>>> output(impl.parts.size());
-        for (std::uint32_t skin_index = 0; skin_index < impl.skins.size(); ++skin_index) {
-            std::vector<skinning::Matrix> palette;
-            if (!skinning::palette(impl.skins[skin_index], impl.source_scene,
-                                   palette, error)) return std::vector<
-                                       std::vector<std::array<float, 3>>>{};
-            for (std::size_t part_index = 0;
-                 part_index < impl.parts.size(); ++part_index) {
-                const auto& part = impl.parts[part_index];
-                if (part.skin_index != skin_index) continue;
-                const auto& rest = impl.part_sources[part_index].positions;
-                if (!skinning::positions(impl.skins[skin_index], palette, rest,
-                                         output[part_index], error) ||
-                    output[part_index].size() != part.vertices.size()) {
-                    if (error.empty()) error = "Prince source deformation dimensions differ";
-                    return std::vector<std::vector<std::array<float, 3>>>{};
-                }
-            }
-        }
-        return output;
-    };
-    auto deformed_parts = deform_parts();
-    if (deformed_parts.size() != impl.parts.size()) return false;
-
-    // Keep one first-Idle placement offset for this source slice. The
-    // coordinates here already include the recovered owner * helper * authored
-    // source graph composition and animated-root compensation.
-    if (!impl.visual_anchor_ready) {
-        std::array<float, 3> low{
-            std::numeric_limits<float>::infinity(),
-            std::numeric_limits<float>::infinity(),
-            std::numeric_limits<float>::infinity()};
-        std::array<float, 3> high{
-            -std::numeric_limits<float>::infinity(),
-            -std::numeric_limits<float>::infinity(),
-            -std::numeric_limits<float>::infinity()};
-        for (const auto& part : deformed_parts) {
-            for (const auto& position : part) {
-                if (!finite3(position)) {
-                    error = "Prince source pose contains a nonfinite position";
-                    return false;
-                }
-                for (unsigned axis = 0; axis < 3; ++axis) {
-                    low[axis] = std::min(low[axis], position[axis]);
-                    high[axis] = std::max(high[axis], position[axis]);
-                }
-            }
-        }
-        if (!std::isfinite(low[0]) || !std::isfinite(low[1]) ||
-            !std::isfinite(low[2])) {
-            error = "Prince source pose has no renderable vertices";
-            return false;
-        }
-        impl.visual_anchor_offset = {
-            (low[0] + high[0]) * 0.5f - owner_position[0],
-            (low[1] + high[1]) * 0.5f - owner_position[1],
-            low[2] - owner_position[2]};
-        impl.visual_anchor_ready = true;
-        for (unsigned axis = 0; axis < 3; ++axis)
-            binding_position[axis] = owner_position[axis] -
-                                     impl.visual_anchor_offset[axis];
-        std::copy(binding_position.begin(), binding_position.end(),
-                  impl.binding.root.position);
-        if (!impl.binding.update_world(impl.source_scene, error)) return false;
-        deformed_parts = deform_parts();
-        if (deformed_parts.size() != impl.parts.size()) return false;
-    }
-    for (std::size_t part_index = 0; part_index < impl.parts.size(); ++part_index) {
-        auto& part = impl.parts[part_index];
-        for (std::size_t vertex = 0; vertex < part.vertices.size(); ++vertex) {
-            auto position = deformed_parts[part_index][vertex];
-            if (!finite3(position)) {
-                error = "Prince animated position is nonfinite";
+    for (std::uint32_t skin_index = 0; skin_index < impl.skins.size(); ++skin_index) {
+        std::vector<skinning::Matrix> palette;
+        if (!skinning::palette(impl.skins[skin_index], impl.source_scene,
+                               palette, error)) return false;
+        for (std::size_t part_index = 0;
+             part_index < impl.parts.size(); ++part_index) {
+            const auto& part = impl.parts[part_index];
+            if (part.skin_index != skin_index) continue;
+            const auto& rest = impl.part_sources[part_index].positions;
+            std::vector<std::array<float, 3>> deformed;
+            if (!skinning::positions(impl.skins[skin_index], palette, rest,
+                                     deformed, error) ||
+                deformed.size() != part.vertices.size()) {
+                if (error.empty()) error = "Prince source deformation dimensions differ";
                 return false;
             }
-            part.vertices[vertex].position = position;
+            for (std::size_t vertex = 0; vertex < deformed.size(); ++vertex) {
+                if (!finite3(deformed[vertex])) {
+                    error = "Prince animated position is nonfinite";
+                    return false;
+                }
+                impl.parts[part_index].vertices[vertex].position = deformed[vertex];
+            }
         }
     }
     return true;
@@ -436,14 +329,6 @@ std::uint32_t PrinceActor::vertex_count() const {
 }
 std::uint32_t PrinceActor::triangle_count() const {
     return impl_ ? impl_->triangle_count : 0;
-}
-std::int32_t PrinceActor::clip_start(PrinceMotion motion) const {
-    if (!impl_) return 0;
-    return motion == PrinceMotion::walk ? impl_->walk.start : impl_->idle.start;
-}
-std::int32_t PrinceActor::clip_end(PrinceMotion motion) const {
-    if (!impl_) return 0;
-    return motion == PrinceMotion::walk ? impl_->walk.end : impl_->idle.end;
 }
 bool PrinceActor::ready() const { return impl_ && impl_->loaded; }
 

@@ -50,29 +50,31 @@ material. Draw and sampler counts are reported on screen and in Android logcat.
 
 The scene adapter loads four `_default_warrior-mesh-skin` controllers from
 `prince_modular.bdae`, binds `atlas_modular_warrior.tga` on all four selected
-source primitives, and samples `prince_idle_shield.bdae` and
-`prince_walk_1hand.bdae`. Each sample deforms fresh vertices from immutable
-bind-pose positions through the engine-skinning palette, writes positions and
-rebuilt normals into mutable Irrlicht `SMeshBuffer`s, and marks vertex buffers
-dirty for upload. Accepted directional input selects source Walk; zero or
-released input and blocked floor motion select source Idle.
+source primitives, then deforms fresh vertices from immutable bind-pose
+positions through the engine-skinning palette into mutable Irrlicht
+`SMeshBuffer`s. The Irrlicht renderer node remains at identity. The source
+`SceneBinding` computes owner, helper, authored graph, and animated-root
+composition once; SWAMP spawn position is the development owner producer.
 
-The selected mesh has a distant authored local origin. It applies the source
-visual binding's owner/helper/authored-graph transforms and animated-root
-compensation, plus a fixed first-Idle bounds offset used only as a development
-placement anchor. The X/Y bounds center maps to the player position and the
-lowest Z maps to the checked floor. The renderer node stays at identity, so
-the owner transform is not applied twice. The four source parts total 487
-vertices and 586 triangles; the first-Idle anchored bounds are about 140 by
-166 by 343 source units. No automatic rescale is applied.
+The current candidate now loads the complete authored Prince AnimationBank
+(116 unique resources, 158 ordered registration occurrences), animation and
+class/property tables, then drives source `Character::State` through the
+shared `character::Coordinator`. The source Idle (state 3, sequence 262) and
+Move/Walk (state 4, sequence 280; clip 1126) transitions run through the
+shared two-slot `BlendedPlayback`; Idle selects clips 1040/1041. Registered
+resources with no serialized animation payload are retained without made-up
+timing. The host check verifies Walk pose deformation, release to Idle, and
+single application of source owner translation.
 
-This is source mesh and two-clip sampling, not native Character playback. It
-does not recover the source blended/two-slot locomotion transition,
-root-motion controller, facing policy, gameplay state, or combat. Selected
-source materials use the atlas and preserve UV/material-color input, but
-external Collada effects and the original shader are not reconstructed. The
-four selected primitives have no AlphaMap references; other model/material
-variants remain outside this slice.
+This remains a bounded source integration, not full-game parity. The SWAMP
+module-zero endpoint/path-mask movement is still a development producer; it
+does not instantiate native Character physics or actor-radius collision.
+External Character/AI services, full combat, triggers, and game-level
+orchestration are not implemented here. Selected source materials use the
+atlas and preserve UV/material-color input, but external Collada effects and
+the original shader are not reconstructed. The four selected primitives have
+no AlphaMap references; other model/material variants remain outside this
+slice.
 
 ## Rendering and gameplay limits
 
@@ -95,15 +97,17 @@ change the appearance of bridges, water and other transparent or lit surfaces.
 Movement uses a point-sized endpoint check. It does not reproduce the original
 player controller's acceleration, actor radius, continuous/swept collision,
 wall response, integrated movement animation, AI, combat, triggers, scripted
-gameplay, camera behavior or save state. The displayed Prince switches only
-between the sampled Idle and Walk clips. An endpoint can cross a thin wall or
+gameplay, camera behavior or save state. This diagnostic currently exercises
+the source Idle and Move state path only; it does not run the full native input,
+physics or gameplay service stack. An endpoint can cross a thin wall or
 narrow gap. The
 full nine-module SWAMP floor collection supports the checked navigation
 queries, while this scene and movement mode are restricted to module zero.
 
 ## Local build and status
 
-Build a separate, local-only APK from the extracted supplied cache:
+Build a separate, local-only APK from the extracted supplied cache. Keep the
+candidate output separate from the prior tested build:
 
 ```powershell
 python port/android-app/build.py `
@@ -112,7 +116,7 @@ python port/android-app/build.py `
   --cache ..\cache\files `
   --irrlicht-swamp `
   --irrlicht-static-dir port\irrlicht-android\build\variant-curated-api37\static `
-  --build-dir port\android-app\build\irrlicht-swamp-prince-preview
+  --build-dir port\android-app\build\irrlicht-swamp-prince-character-candidate
 ```
 
 First build the pinned engine libraries with
@@ -123,56 +127,62 @@ Install the runtime-smoke helper dependency with
 This is a development diagnostic, not full-game parity. It packages the
 owner-supplied cache inputs listed below and has no Drive/GitHub upload step.
 
-The isolated output used for the current build and runtime run is
-`port/android-app/build/irrlicht-swamp-prince-preview/`; the APK is
+The previous runtime-tested artifact lives in
+`port/android-app/build/irrlicht-swamp-prince-preview/`. The full-bank candidate
+is written to
+`port/android-app/build/irrlicht-swamp-prince-character-candidate/`; its APK is
 `dh2-swamp-irrlicht-source-local-debug.apk`. It uses the separate package
 `local.dh2.sourceviewer.irrlichtswamp` and launches directly into the native
-SWAMP activity, so it can be installed alongside the default app:
+SWAMP activity, so it can be installed alongside the default app. Host source
+Character assertions and Android compile/package gates pass. Device smoke must
+wait for `FIRST_SOURCE_CHARACTER_FRAME`, emitted after the first successful
+renderer buffer swap; the earlier assembly token can arrive before Prince and
+bank startup finish:
 
 ```powershell
 python port/android-app/tests/irrlicht_swamp_native_runtime.py `
-  --apk port\android-app\build\irrlicht-swamp-prince-preview\dh2-swamp-irrlicht-source-local-debug.apk `
+  --apk port\android-app\build\irrlicht-swamp-prince-character-candidate\dh2-swamp-irrlicht-source-local-debug.apk `
   --adb ..\emulator-test\sdk\platform-tools\adb.exe `
   --serial emulator-5558 `
-  --require-prince `
-  --output port\android-app\build\irrlicht-swamp-prince-preview\runtime-final-16k
+  --require-prince-character `
+  --output port\android-app\build\irrlicht-swamp-prince-character-candidate\runtime-character-16k
 ```
 
-The app bundle contains only the nine cache inputs the diagnostic uses (SWAMP
-BRES, MLX, entrypoint MGP, diffuse texture, AlphaMap, Prince modular model,
-idle clip, walk clip, and warrior atlas), the pinned upstream Irrlicht shaders
-and native library, a hash manifest, and local/third-party notices. It does
-not bundle the other encounter, village or actor cache sets.
+The app bundle contains the SWAMP BRES/MLX/entrypoint/diffuse/AlphaMap, Prince
+modular model and atlas, plus the 12 checked animation/character table inputs
+and 116 source animation-bank assets with per-file size/hash verification.
+It also includes the pinned upstream Irrlicht shaders/native library, a hash
+manifest, and local/third-party notices. It does not bundle unrelated
+encounter or village cache sets.
 The bundled `LOCAL-ASSET-NOTICE.txt` records the original cache provenance;
 the `third-party-notices/` directory carries Irrlicht and bundled library
 notices. See the repository [provenance and rights](../../../RIGHTS.md) record.
 
-The current local APK was built with Android build tools 37.0.0 and NDK r29
-for `arm64-v8a` and `x86_64`, signed, checked with `zipalign`, and inspected as
-an API 37 NativeActivity package. Both native libraries have 16 KiB ELF load
-alignment. The exact APK passed the source Prince, scene, texture, movement,
-and visual checks on Android 17/API 37 x86_64 with 16 KiB pages. A current
-4 KiB run is not requested for this Prince build. Older 4 KiB/16 KiB results
-below refer to an earlier geometry-only artifact and do not verify the Prince
-renderer. The separate integrated app has its own record in
+The current APK is built with Android build tools 37.0.0 and NDK r29 for
+`arm64-v8a` and `x86_64`, signed and checked with `zipalign`, and packaged as an
+API 37 NativeActivity. Host source Character assertions and both ABI 16 KiB ELF
+alignment checks pass. The parent-owned Android 17/API 37 x86_64 16 KiB runtime
+also passes for this exact APK: complete-bank state selection, visible Idle/Walk,
+both touch axes, release stability and same-process resume. The
+separate integrated app has its own record in
 [IRRLICHT-SWAMP-IN-APP.md](../../android-app/IRRLICHT-SWAMP-IN-APP.md).
 
 ```text
-APK: port/android-app/build/irrlicht-swamp-prince-preview/dh2-swamp-irrlicht-source-local-debug.apk
-Size: 70,054,398 bytes
-SHA-256: eeb3b1932b5584c1d9766bfc86e239ab3edfd9f4033407bfb4e2424491dfe9a0
-Build report: port/android-app/build/irrlicht-swamp-prince-preview/irrlicht-swamp-build-validation.json
-Runtime report: port/android-app/build/irrlicht-swamp-prince-preview/runtime-final-16k/irrlicht-swamp-runtime-validation.json
+APK: port/android-app/build/irrlicht-swamp-prince-character-candidate/dh2-swamp-irrlicht-source-local-debug.apk
+Size: 71,416,410 bytes
+SHA-256: b367d0fa2e21ebae18c2552e81c16a398f0d4adb3d60b9c07eaf18f9f74dd8f1
+Build report: port/android-app/build/irrlicht-swamp-prince-character-candidate/irrlicht-swamp-build-validation.json
+Host report: port/irrlicht-android/build/prince-character-host-checks/validation.json
+Runtime report: port/android-app/build/irrlicht-swamp-prince-character-candidate/runtime-character-final-16k/irrlicht-swamp-runtime-validation.json
 ```
 
-The runtime helper verifies API/device/page size, exact installed-base APK
-hash, module-zero record/draw/vertex/index counts, 49 mapped diffuse draws,
-two mapped additive passes, four skinned Prince parts, Idle/Walk touch
-transitions, source-coordinate +X/+Y movement, stable positions after release,
-Prince visibility, and app-scoped renderer errors. It saves initial and
-held/released screenshots plus app-PID logcat. Runtime results below are
-separate from the upstream dwarf HelloWorld smoke; that sample proves engine
-startup only and is not a game run.
+The helper run recorded below covers the prior eeb3 source-Prince preview artifact.
+It is separate from the upstream dwarf HelloWorld smoke; that sample proves
+engine startup only and is not a game run. The new full-bank candidate passed
+its own host and device visual/movement/resume checks. Consolidated reports
+and exact scope are in [the Character checkpoint](../../../docs/CHARACTER-RUNTIME-CHECKPOINT-2026-10-04.md).
+
+## Previous artifact runtime record
 
 | Device | Result | Source scene and Prince | Movement / rendering | Runtime evidence |
 | --- | --- | --- | --- | --- |
@@ -203,6 +213,7 @@ python port/irrlicht-android/swamp-smoke/tests/run_host.py --cache ..\cache\file
 ```
 
 The report is written under the ignored local `port/irrlicht-android/build/`
-directory. The current Prince APK has been installed and exercised on the 16
-KiB profile only; the 4 KiB result above belongs to an older geometry-only
-build. The rendering and gameplay limits listed above remain open work.
+directory. The prior source-Prince APK was installed and exercised on the
+16 KiB profile only; the 4 KiB result above belongs to an older geometry-only
+build. The new Character/AnimationBank candidate passes its own 16 KiB device validation.
+The rendering and gameplay limits listed above remain open work.

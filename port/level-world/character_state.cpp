@@ -3,13 +3,15 @@
 #include <cstring>
 namespace {
 using namespace dh2::character;
+std::int32_t signed_bits(std::uint32_t value){std::int32_t result;std::memcpy(&result,&value,sizeof result);return result;}
 bool id(int value){return value==-1||value==3||value==4||value==5||value==12;}
-bool valid(const State* s,const Facts* f,const Services* c){
- return s&&f&&c&&c->invoke&&id(s->current)&&f->is_player<=1&&!f->reserved&&
+bool valid_base(const State* s,const Facts* f,const Services* c){
+ return s&&f&&c&&c->invoke&&f->is_player<=1&&!f->reserved&&
  f->is_at_destination<=1&&f->following_path<=1&&f->has_ranged_weapon<=1&&
  s->idle_suppressed<=255&&s->stop_attack_allowed<=255&&s->heading_active<=255&&
  s->controller_locked<=255&&s->dead_alternate<=255&&s->body_present<=1&&s->move_type<=2;
 }
+bool valid(const State* s,const Facts* f,const Services* c){return valid_base(s,f,c)&&id(s->current);}
 void call(State& s,const Services& c,Service service,int a=0,int b=0,int d=0,float value=0,std::uint64_t identity=0){
  const Request request{service,{a,b,d},value,0,identity};c.invoke(c.context,&s,&request);
 }
@@ -69,6 +71,80 @@ int transition(State& s,const Facts& f,int next,int event,std::uint64_t payload,
  focus(s,f,prior,payload,c);call(s,c,raise_event,0x1d,prior,0,0,std::uint64_t(std::int64_t(prior)));
  (void)event;return 1;
 }
+bool spawn_state_id(int value){return value==-1||value==0||value==1||value==3||value==17;}
+bool valid_spawn(const State* s,const Facts* f,const SpawnFacts* sf,const Services* c){
+ return valid_base(s,f,c)&&spawn_state_id(s->current)&&sf&&sf->spawn_animation>=0&&
+  sf->reserved_zero==0&&sf->visual_present<=1&&std::isfinite(sf->raw_fade_in_argument)&&
+  sf->raw_fade_in_argument>=0&&sf->respawn_timer_eligible<=1&&sf->can_respawn<=1&&
+  sf->group_present<=1&&sf->group_has_active_other<=1&&
+  (!sf->group_has_active_other||sf->group_present);
+}
+void limbus_blur(State& s,const SpawnFacts& sf,const Services& c){
+ // CSLimbus::OnBlur first resets its actor-owned Limbus slot, then invokes
+ // Character vtable slot +0x40, restores authored position/rotation and revives.
+ call(s,c,limbus_member_reset);
+ call(s,c,query_is_updatable,1);
+ call(s,c,restore_limbus_position);
+ call(s,c,restore_limbus_rotation);
+ call(s,c,revive_character);
+ // The original group update is conditional on the source group role. The
+ // caller supplies the already-resolved predicate; active peers select 2.
+ if(sf.group_present)call(s,c,set_limbus_group_status,sf.group_has_active_other?2:0);
+}
+void limbus_focus(State& s,const SpawnFacts& sf,const Services& c){
+ s.flags=0;
+ call(s,c,query_is_updatable,0);
+ if(sf.respawn_timer_eligible&&sf.respawn_delay_ms)
+  call(s,c,start_timer,signed_bits(sf.respawn_delay_ms),0,0x2f);
+ call(s,c,clear_all_aggro);
+}
+void spawn_blur(State& s,const Services& c){
+ if(!(s.flags&0x2000u)){
+  call(s,c,init_physical_object);s.body_present=1;
+ }
+}
+void spawn_focus(State& s,const SpawnFacts& sf,int prior,
+                 std::uint32_t prior_flags,const Services& c){
+ s.flags=0x241;
+ if(prior==17&&(prior_flags&0x2000u))s.flags|=0x2000u;
+ // CSSpawn reads CharAnimTable+0x80 and requests that exact sequence. It does
+ // not apply Character::GetAnimStance or an AnimStancedAnim table offset here.
+ call(s,c,set_animation,sf.spawn_animation);
+ call(s,c,clear_ai_target);
+ call(s,c,sync_last_ai_target);
+ call(s,c,cancel_sneaking);
+ // The pinned VisualObject::StartFadeIn implementation is a `bx lr` stub.
+ // Retain its authored raw argument as an observation; the adapter must not
+ // synthesize an alpha ramp for this source build.
+ if(sf.visual_present)call(s,c,start_fade_in,0,0,0,sf.raw_fade_in_argument);
+}
+void source_blur(State& s,const Facts& f,const SpawnFacts& sf,const Services& c){
+ switch(s.current){
+ case -1:break;
+ case 0:limbus_blur(s,sf,c);break;
+ case 1:spawn_blur(s,c);break;
+ case 3:blur(s,f,c);break;
+ case 17:
+  // CSSPreSpawn::OnBlur: restore virtual actor hook, revive and collisions.
+  call(s,c,query_is_updatable,1);call(s,c,revive_character);call(s,c,enable_collisions);break;
+ }
+}
+void source_focus(State& s,const Facts& f,const SpawnFacts& sf,int prior,
+                  std::uint32_t prior_flags,const Services& c){
+ switch(s.current){
+ case 0:limbus_focus(s,sf,c);break;
+  case 1:spawn_focus(s,sf,prior,prior_flags,c);break;
+ case 3:focus(s,f,prior,0,c);break;
+ }
+}
+int spawn_transition(State& s,const Facts& f,const SpawnFacts& sf,int next,
+                     const Services& c){
+ const int prior=s.current;const std::uint32_t prior_flags=s.flags;
+ source_blur(s,f,sf,c);s.current=next;if(prior!=next)s.elapsed_ms=0;
+ source_focus(s,f,sf,prior,prior_flags,c);
+ call(s,c,raise_event,0x1d,prior,0,0,std::uint64_t(std::int64_t(prior)));
+ return 1;
+}
 }
 extern "C" int dh2_character_state_transition(dh2::character::State* s,const dh2::character::Facts* f,
  std::int32_t next,std::int32_t event,std::uint64_t payload,const dh2::character::Services* c){
@@ -126,4 +202,43 @@ extern "C" int dh2_character_attack_speed(float* out,const std::int32_t* propert
 extern "C" int dh2_character_state_is_idle(std::int32_t current,std::uint32_t include_dialog){
  if(include_dialog>1)return -1;
  return current==3||current==13||(current==18&&!include_dialog);
+}
+extern "C" int dh2_character_spawn_transition(dh2::character::State* s,
+ const dh2::character::Facts* f,const dh2::character::SpawnFacts* sf,
+ std::int32_t next,const dh2::character::Services* c){
+ using namespace dh2::character;
+ if(!valid_spawn(s,f,sf,c)||(next!=0&&next!=1&&next!=3))return -1;
+ return spawn_transition(*s,*f,*sf,next,*c);
+}
+extern "C" int dh2_character_spawn_event(dh2::character::State* s,
+ const dh2::character::Facts* f,const dh2::character::SpawnFacts* sf,
+ std::uint32_t event,const char* event_name,const dh2::character::Services* c){
+ using namespace dh2::character;
+ if(!valid_spawn(s,f,sf,c))return -1;
+ if(event==0x28){
+  if(s->current!=1||!event_name)return -1;
+  std::size_t length=0;while(length<64&&event_name[length])++length;
+  if(length==64)return -1;
+  if(std::strcmp(event_name,"is_interactive")!=0)return 0;
+  s->flags|=0x2000u;
+  call(*s,*c,init_physical_object);s->body_present=1;
+  return 1;
+ }
+ if(s->current==0&&event==0x2f){
+  if(!sf->can_respawn)return 0;
+  return spawn_transition(*s,*f,*sf,1,*c);
+ }
+ if(s->current==1&&event==0x22)
+  return spawn_transition(*s,*f,*sf,3,*c);
+ if(s->current==3)
+  return dh2_character_state_event(s,f,event,0,c);
+ // CSLimbus::OnEvent and CSSpawn::OnEvent have no other source-owned effect.
+ return 0;
+}
+extern "C" int dh2_character_spawn_update(const dh2::character::State* s,
+ const dh2::character::SpawnFacts* sf){
+ if(!s||!sf||!spawn_state_id(s->current)||sf->reserved_zero!=0||
+    sf->visual_present>1||!std::isfinite(sf->raw_fade_in_argument)||sf->raw_fade_in_argument<0)
+  return -1;
+ return 0;
 }
