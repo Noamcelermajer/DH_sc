@@ -76,6 +76,7 @@ port/quest-compile/build/
 
 # Private documents and local compiler crash dumps stay outside source snapshots.
 private-documents/
+.local-inputs/
 *[Aa]greement*.pdf
 *[Ss]igned*.pdf
 hs_err_pid*.log
