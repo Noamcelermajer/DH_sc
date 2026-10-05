@@ -35,9 +35,9 @@
       "origin": "Adam import with local adaptations",
       "source_category": "reconstruction_and_port",
       "source_files": 6,
-      "source_lines": 542,
-      "source_bytes": 27379,
-      "test_files": 9
+      "source_lines": 730,
+      "source_bytes": 38415,
+      "test_files": 11
     },
     {
       "module": "ambush-spawn-runtime",
@@ -79,10 +79,10 @@
       "module": "android-native",
       "origin": "Adam import with local adaptations",
       "source_category": "reconstruction_and_port",
-      "source_files": 17,
-      "source_lines": 4996,
-      "source_bytes": 341518,
-      "test_files": 88
+      "source_files": 19,
+      "source_lines": 6140,
+      "source_bytes": 424487,
+      "test_files": 90
     },
     {
       "module": "android-smoke",
@@ -304,10 +304,10 @@
       "module": "engine-ui",
       "origin": "Adam import with local adaptations",
       "source_category": "reconstruction_and_port",
-      "source_files": 4,
-      "source_lines": 202,
-      "source_bytes": 16206,
-      "test_files": 3
+      "source_files": 14,
+      "source_lines": 642,
+      "source_bytes": 59872,
+      "test_files": 8
     },
     {
       "module": "equipment-bonuses",
@@ -331,10 +331,10 @@
       "module": "game-data",
       "origin": "Adam import with local adaptations",
       "source_category": "reconstruction_and_port",
-      "source_files": 35,
-      "source_lines": 2024,
-      "source_bytes": 126066,
-      "test_files": 38
+      "source_files": 63,
+      "source_lines": 4158,
+      "source_bytes": 272066,
+      "test_files": 71
     },
     {
       "module": "gameplay-object-callbacks",
@@ -412,10 +412,10 @@
       "module": "level-world",
       "origin": "Adam import with local adaptations",
       "source_category": "reconstruction_and_port",
-      "source_files": 278,
-      "source_lines": 24619,
-      "source_bytes": 1270108,
-      "test_files": 364
+      "source_files": 330,
+      "source_lines": 30218,
+      "source_bytes": 1587636,
+      "test_files": 423
     },
     {
       "module": "loot-tables",
@@ -698,16 +698,16 @@
     }
   ],
   "totals": {
-    "source_files": 887,
-    "source_lines": 105690,
-    "source_bytes": 4991980,
-    "test_files": 783
+    "source_files": 979,
+    "source_lines": 115195,
+    "source_bytes": 5593179,
+    "test_files": 884
   },
   "reconstruction_and_port_totals": {
-    "source_files": 599,
-    "source_lines": 71159,
-    "source_bytes": 3672818,
-    "test_files": 783
+    "source_files": 691,
+    "source_lines": 80664,
+    "source_bytes": 4274017,
+    "test_files": 884
   },
   "files": [
     {
@@ -810,17 +810,17 @@
     },
     {
       "path": "port/adam-script-runtime/script_runtime.c",
-      "bytes": 12165,
-      "lines": 241,
+      "bytes": 19862,
+      "lines": 380,
       "kind": "source",
-      "sha256": "5f74884d23e5a60f59bb1315a8f38a040cca9383ff41599703ffcc5147cf2f00"
+      "sha256": "ded42720a4c8cf997d51bdf094c63123752bb627964476c3093a435937905019"
     },
     {
       "path": "port/adam-script-runtime/script_runtime.h",
-      "bytes": 3813,
-      "lines": 71,
+      "bytes": 7152,
+      "lines": 120,
       "kind": "source",
-      "sha256": "098e91c41f269339a21b3216ef0034a32af8ec72f87b9110306784eba79f916a"
+      "sha256": "d4d7e324a656dedad0f298aec568368734d062a8f2b0529ea451455113c73484"
     },
     {
       "path": "port/adam-script-runtime/tests/lua514.cpp",
@@ -835,6 +835,13 @@
       "lines": 165,
       "kind": "test_or_tool",
       "sha256": "925cb9d61235a157753dd6f1703135ef663f1ea0642ba1870ad188dccfef617e"
+    },
+    {
+      "path": "port/adam-script-runtime/tests/run_source_compatibility_host.py",
+      "bytes": 4076,
+      "lines": 54,
+      "kind": "test_or_tool",
+      "sha256": "7a5751383b3c3c0a13a2a9f10d5d04521bf733b67948786657c787077a15483f"
     },
     {
       "path": "port/adam-script-runtime/tests/run_weak_mode_gc_host.py",
@@ -877,6 +884,13 @@
       "lines": 41,
       "kind": "test_or_tool",
       "sha256": "b1a508dfc7eb303b494587d4142d8862bda55de19c5044547415873526b9123e"
+    },
+    {
+      "path": "port/adam-script-runtime/tests/source_compatibility.cpp",
+      "bytes": 21235,
+      "lines": 232,
+      "kind": "test_or_tool",
+      "sha256": "8c120ac90ca195a95830c2bc39dfa2cedf0efdbd1d11893516e3eb3739a8c709"
     },
     {
       "path": "port/adam-script-runtime/tests/weak_mode_gc.cpp",
@@ -3428,24 +3442,24 @@
     },
     {
       "path": "port/android-native/app/src/main/cpp/model_renderer.cpp",
-      "bytes": 218934,
-      "lines": 2597,
+      "bytes": 234953,
+      "lines": 2821,
       "kind": "source",
-      "sha256": "a63145c347a51b91a13b5783b36062dd4936395287de5a14601779a268826bd7"
+      "sha256": "c8102dc48df355de6516fba9e7ed53540bd8e9275970edcf726e1dda42489cda"
     },
     {
       "path": "port/android-native/app/src/main/cpp/model_renderer.hpp",
-      "bytes": 1046,
-      "lines": 29,
+      "bytes": 1320,
+      "lines": 34,
       "kind": "source",
-      "sha256": "7801f63bdc75e188ab2cf2af7ab3225d42747b78468cb31aba1a81810d6b4a42"
+      "sha256": "a6f98a0a4198dbf87c1ced3e471a1e57b6abce563e3f4c4718e19c850274b11a"
     },
     {
       "path": "port/android-native/app/src/main/cpp/native_app.cpp",
-      "bytes": 12841,
-      "lines": 171,
+      "bytes": 14054,
+      "lines": 179,
       "kind": "source",
-      "sha256": "b6fc876aff4efeaaab77f07327c74cb3669793bddd596e9aa97f36c02f36f9b9"
+      "sha256": "02fc5187a6950640b45f74150fd3b60ec61fe9acaa7b41759f5ff36e01f46cd2"
     },
     {
       "path": "port/android-native/app/src/main/cpp/native_character_list.cpp",
@@ -3504,6 +3518,20 @@
       "sha256": "bb3859be852ffc283b7281f4c712e414cbd2a276c32146cf5945f69f3c087f11"
     },
     {
+      "path": "port/android-native/app/src/main/cpp/native_player_skills.cpp",
+      "bytes": 57999,
+      "lines": 775,
+      "kind": "source",
+      "sha256": "1e131055793c45fc14d2fe5404e7319db4897226c58421d07079cb709a151db6"
+    },
+    {
+      "path": "port/android-native/app/src/main/cpp/native_player_skills.hpp",
+      "bytes": 4215,
+      "lines": 90,
+      "kind": "source",
+      "sha256": "6ad1ff521e09c23d6f1e29014b22a4f587cc439692b2c19d3aeb324b61437b8c"
+    },
+    {
       "path": "port/android-native/app/src/main/cpp/tests/native_ghost_skills_host.cpp",
       "bytes": 9391,
       "lines": 181,
@@ -3519,17 +3547,17 @@
     },
     {
       "path": "port/android-native/app/src/main/java/com/example/dh2/MainActivity.java",
-      "bytes": 19907,
-      "lines": 247,
+      "bytes": 22863,
+      "lines": 284,
       "kind": "source",
-      "sha256": "e10e36cfa5ae27e17ab1e6177c03a29a996d952b1b6922c5149bad8ebe7a73b8"
+      "sha256": "231279b52d4ffa3dbb113203a9e6f3b4076cc4b9b612c3342e3dcb2f3ed3e2b8"
     },
     {
       "path": "port/android-native/app/src/main/java/com/example/dh2/NativeBridge.java",
-      "bytes": 1343,
-      "lines": 25,
+      "bytes": 1636,
+      "lines": 30,
       "kind": "source",
-      "sha256": "d55b2f66f41d18bce1bb2c1a2405a9548692d898ef941a8f3730c580e60688a1"
+      "sha256": "1f07e91f365010781fb9cd6cfc843c1543104b92b3171fdbd9066e7aecb9af73"
     },
     {
       "path": "port/android-native/tests/ghost_ai_owner_host.cpp",
@@ -3610,10 +3638,10 @@
     },
     {
       "path": "port/android-native/tools/capture_native_build.py",
-      "bytes": 6726,
-      "lines": 119,
+      "bytes": 8101,
+      "lines": 141,
       "kind": "test_or_tool",
-      "sha256": "b174fc9ff0f0da88c3d00133f4240ee7f69c9b56b6f0175162b097d2765d4460"
+      "sha256": "562b2739b08ee4140c2ffbfe218dae68fcab1e1df6a2151a7cea25dcac7991bb"
     },
     {
       "path": "port/android-native/tools/character_combat_smoke.py",
@@ -3645,17 +3673,17 @@
     },
     {
       "path": "port/android-native/tools/crypt_script_runtime_smoke.py",
-      "bytes": 30175,
+      "bytes": 30178,
       "lines": 420,
       "kind": "test_or_tool",
-      "sha256": "a25cb0819364161447418b6fc548d8c568b868cc1d9cda1df8ad1532161c9713"
+      "sha256": "07568b50400e4c6f6b136851f6ab88ee039e9950bd208ed54360c011025041b2"
     },
     {
       "path": "port/android-native/tools/emulator_smoke.py",
-      "bytes": 6760,
+      "bytes": 6790,
       "lines": 107,
       "kind": "test_or_tool",
-      "sha256": "164b6e5835f25fa3d537cb80de33f336c8c5b7f766b60a04022772818db176c5"
+      "sha256": "a0fcd3d619cec908eb31e68c2321ede2263da3bafac40689b2036dabed1632dc"
     },
     {
       "path": "port/android-native/tools/enemy_ai_smoke.py",
@@ -3714,11 +3742,25 @@
       "sha256": "f6e83bc442eaa45e1b43c400dd47565e9997df4d344906fd256517c221d6916f"
     },
     {
+      "path": "port/android-native/tools/player_death_runtime_smoke.py",
+      "bytes": 11762,
+      "lines": 161,
+      "kind": "test_or_tool",
+      "sha256": "c4bb1a5e528599343b74978b78ef797125db248ca93b2a3253272376f80c61a8"
+    },
+    {
       "path": "port/android-native/tools/player_defender_smoke.py",
       "bytes": 11588,
       "lines": 71,
       "kind": "test_or_tool",
       "sha256": "1ce738c70cc515dc903bf34aa762e78b8ebc175caad490d89f5bf70c8f2c3125"
+    },
+    {
+      "path": "port/android-native/tools/player_skill_runtime_smoke.py",
+      "bytes": 30323,
+      "lines": 425,
+      "kind": "test_or_tool",
+      "sha256": "d66473a7f9d4a18945c5e22e20fe8c3870f56bf527589aaeb3d957580b8736cb"
     },
     {
       "path": "port/android-native/tools/prepare_crypt_scripts.py",
@@ -3820,10 +3862,10 @@
     },
     {
       "path": "port/android-native/tools/snapshot_production_compiler_inputs.py",
-      "bytes": 3605,
-      "lines": 47,
+      "bytes": 4455,
+      "lines": 57,
       "kind": "test_or_tool",
-      "sha256": "05e449902dff77a4b98858d9862ca82a84c81a9cd1a175800545da5c96dabd07"
+      "sha256": "207f46ad287eb54a884f34193d9b59058e62893c1d0643fcd09d4219d11a05e1"
     },
     {
       "path": "port/android-native/tools/validate_actor_timing_source.py",
@@ -4093,10 +4135,10 @@
     },
     {
       "path": "port/android-native/tools/validate_source_ai_exports.py",
-      "bytes": 23335,
-      "lines": 353,
+      "bytes": 28564,
+      "lines": 428,
       "kind": "test_or_tool",
-      "sha256": "88791e35fd67d9064f5b2f0bfd5f6caa835714ae31b9be929a3d78ae9a6b87b9"
+      "sha256": "b73330463b1b82c5ba11d137d4eca7ea3ba73c77a65dcb2d86bd472f88986260"
     },
     {
       "path": "port/android-native/tools/validate_states_checkpoint.py",
@@ -5450,11 +5492,116 @@
       "sha256": "601646de8d663764cd35626df42ff652b9d1a64bd9de2699e414c1b14cfe319d"
     },
     {
+      "path": "port/engine-ui/hud_text_format_v1.cpp",
+      "bytes": 5050,
+      "lines": 49,
+      "kind": "source",
+      "sha256": "3cce5aba708b6b9f90abb835ad3aafd7c092397d2498f38dba4c57008deaf76d"
+    },
+    {
+      "path": "port/engine-ui/hud_text_format_v1.hpp",
+      "bytes": 1422,
+      "lines": 25,
+      "kind": "source",
+      "sha256": "79870b445ca0d172fd4c851eacf17325d68f3b2f820d2c7de9c6215fb38b7190"
+    },
+    {
+      "path": "port/engine-ui/hud_text_v1.cpp",
+      "bytes": 11036,
+      "lines": 95,
+      "kind": "source",
+      "sha256": "396accf2605ba07b5b7862a2958c30b82e81e702d6dccff3bf31b62413e388d8"
+    },
+    {
+      "path": "port/engine-ui/hud_text_v1.hpp",
+      "bytes": 2308,
+      "lines": 38,
+      "kind": "source",
+      "sha256": "bff8a8c58ccba0c7c669a9bd072f677f7bdc07fc12284f65c65e019ab2a1d702"
+    },
+    {
+      "path": "port/engine-ui/item_text_owner_v5.cpp",
+      "bytes": 3228,
+      "lines": 16,
+      "kind": "source",
+      "sha256": "10d33680977a883edf2e2c2a330e17ae67f0c90e1509ece6e187ce08c8508dc8"
+    },
+    {
+      "path": "port/engine-ui/item_text_owner_v5.hpp",
+      "bytes": 1126,
+      "lines": 19,
+      "kind": "source",
+      "sha256": "fc3f230a6b4883ff93dc0f213ee68e5f59b36b81ace41a6302151739247b9524"
+    },
+    {
+      "path": "port/engine-ui/item_text_varargs_v5.cpp",
+      "bytes": 3938,
+      "lines": 26,
+      "kind": "source",
+      "sha256": "22f6fa8e792b582eeac0ede1b4fde4152f3eb0176a45aebef770f2e7cbe14e07"
+    },
+    {
+      "path": "port/engine-ui/item_text_varargs_v5.hpp",
+      "bytes": 599,
+      "lines": 11,
+      "kind": "source",
+      "sha256": "b895cb56d41a1e2450a745d097ce8a0dc07189cce58f99c5f737411ab6ac5901"
+    },
+    {
+      "path": "port/engine-ui/localization.cpp",
+      "bytes": 11686,
+      "lines": 108,
+      "kind": "source",
+      "sha256": "b519ab31e8553ccc808822fc1c9f846ebdff5f9e608eb31cd2fe3245d2860611"
+    },
+    {
+      "path": "port/engine-ui/localization.hpp",
+      "bytes": 3273,
+      "lines": 53,
+      "kind": "source",
+      "sha256": "48433e35464d7fc14118de3d60a5323766a22c8116761e61eb605809187bbc8c"
+    },
+    {
       "path": "port/engine-ui/tests/gfnt.cpp",
       "bytes": 3697,
       "lines": 14,
       "kind": "test_or_tool",
       "sha256": "40688b30d5a94d3dda6f88a1364f281d463c193bd7852a2d6bb3b8d7a9a6a5a0"
+    },
+    {
+      "path": "port/engine-ui/tests/hud_text_format_v1.cpp",
+      "bytes": 4487,
+      "lines": 24,
+      "kind": "test_or_tool",
+      "sha256": "247ae1e11305a4d442f0177b76505d22a232ff144337ee884de988b10fd8f132"
+    },
+    {
+      "path": "port/engine-ui/tests/inventory_binding_text_queries_v1.cpp",
+      "bytes": 13148,
+      "lines": 68,
+      "kind": "test_or_tool",
+      "sha256": "0a7e61ac00561d09c1f3c9b04040eb64a43f54ac38876724aa53f1c10b2ebb86"
+    },
+    {
+      "path": "port/engine-ui/tests/item_text_varargs_v5.cpp",
+      "bytes": 2248,
+      "lines": 20,
+      "kind": "test_or_tool",
+      "sha256": "bf0c437a152c8e36b7c38f7e7514a0b041df40cfe1d6bb756a15adb64454fadd"
+    },
+    {
+      "path": "port/engine-ui/tests/item_text_varargs_v5_fixture.cpp",
+      "bytes": 1724,
+      "lines": 10,
+      "kind": "test_or_tool",
+      "sha256": "95cb88ed36db767a828cb979c45939b0568f744b0379fe30299e4d4e750a25cc"
+    },
+    {
+      "path": "port/engine-ui/tests/run_inventory_binding_v1_host.py",
+      "bytes": 6164,
+      "lines": 91,
+      "kind": "test_or_tool",
+      "sha256": "1fdd559d33ec5dc004282a231aa5be893e118f59570bdc56c91e12eba96bdc0e"
     },
     {
       "path": "port/engine-ui/tests/viewport.cpp",
@@ -5709,6 +5856,20 @@
       "sha256": "ecc6a73c30c67685af8a3c9d5e70c5ddb9e74143da47abcd355592f791dd2901"
     },
     {
+      "path": "port/game-data/fresh_inventory_owned_v4.cpp",
+      "bytes": 21019,
+      "lines": 70,
+      "kind": "source",
+      "sha256": "9abbd1a0f5eed7bd6f6acb801bc2a7be18e3613bd17f43bf063caaa5057535e4"
+    },
+    {
+      "path": "port/game-data/fresh_inventory_owned_v4.hpp",
+      "bytes": 6273,
+      "lines": 82,
+      "kind": "source",
+      "sha256": "e666cc21941ab7cbe39ae3ac0d1edbdd4f3cd0e70fdcffef6c7ffc06055d67a2"
+    },
+    {
       "path": "port/game-data/health.cpp",
       "bytes": 1546,
       "lines": 23,
@@ -5721,6 +5882,62 @@
       "lines": 31,
       "kind": "source",
       "sha256": "fa8d4508a841c26cfcb72526cb5b811eee0a7775d82bea1b209588149c630aa8"
+    },
+    {
+      "path": "port/game-data/item_gear_properties_v5.cpp",
+      "bytes": 3289,
+      "lines": 48,
+      "kind": "source",
+      "sha256": "cdcaa4df6038198b9b6b36ba828bc9ac89c67ceaade52f0059f3a7d85a56107b"
+    },
+    {
+      "path": "port/game-data/item_gear_properties_v5.hpp",
+      "bytes": 1074,
+      "lines": 21,
+      "kind": "source",
+      "sha256": "b8c100585f7654e47741555a0314f564f1f2b052cca6afd986eab9ca2fcb4a4e"
+    },
+    {
+      "path": "port/game-data/item_instance.cpp",
+      "bytes": 235,
+      "lines": 13,
+      "kind": "source",
+      "sha256": "d3d0160862d89b1d512ad7682ba16b65540d496c83148bb463b1ef672ef5d423"
+    },
+    {
+      "path": "port/game-data/item_instance.hpp",
+      "bytes": 647,
+      "lines": 24,
+      "kind": "source",
+      "sha256": "c95b0b07ca099ac525ac7bead4e327934164e959c2369a3fb3661aeabe9f9578"
+    },
+    {
+      "path": "port/game-data/item_power_tables_v5.cpp",
+      "bytes": 4203,
+      "lines": 40,
+      "kind": "source",
+      "sha256": "61bf6b39245ef0e88743946be9ec6f36538aca24845e35ff933cb230df766391"
+    },
+    {
+      "path": "port/game-data/item_power_tables_v5.hpp",
+      "bytes": 1380,
+      "lines": 20,
+      "kind": "source",
+      "sha256": "bec8e56696dd291c0e50b6e6b4c4724ee8ccead446ea7e6d21a4df9420eccb80"
+    },
+    {
+      "path": "port/game-data/item_presentation_v5.cpp",
+      "bytes": 8372,
+      "lines": 50,
+      "kind": "source",
+      "sha256": "a6900bc1065b6928ea2b8c247aae6b61b9664e34840af1b851e1d814e15e8128"
+    },
+    {
+      "path": "port/game-data/item_presentation_v5.hpp",
+      "bytes": 2392,
+      "lines": 32,
+      "kind": "source",
+      "sha256": "732ed9ad83e3adc0cee0c3827f5e4dc94da90b4d690bb2afb5d80e65f266272d"
     },
     {
       "path": "port/game-data/items.cpp",
@@ -5751,6 +5968,118 @@
       "sha256": "aa20e39db0aaab7dfdd9556db275e3d41c2e3709939c9f074851907a6470f742"
     },
     {
+      "path": "port/game-data/loot_power_creation_v7.cpp",
+      "bytes": 12989,
+      "lines": 161,
+      "kind": "source",
+      "sha256": "9b87befc02c3a3d3588dcc77c0bd8a2df09f0e0e3231dd629a7ed9a9f9d30ef3"
+    },
+    {
+      "path": "port/game-data/loot_power_creation_v7.hpp",
+      "bytes": 3709,
+      "lines": 63,
+      "kind": "source",
+      "sha256": "a9e391ef52a3e5efed6d549a8c598425a9e3daee112b8b19debec4cafbb7c0b4"
+    },
+    {
+      "path": "port/game-data/loot_power_resources_v7.cpp",
+      "bytes": 7114,
+      "lines": 98,
+      "kind": "source",
+      "sha256": "afb52f3f7f8bb8b596d818d10c47130d81831660cbe7a7dc5c41a291a23be244"
+    },
+    {
+      "path": "port/game-data/loot_power_resources_v7.hpp",
+      "bytes": 1616,
+      "lines": 36,
+      "kind": "source",
+      "sha256": "ba129428839360f209db56af1a51b80e3a0d749d36f339973be6b2dfddc2fb2b"
+    },
+    {
+      "path": "port/game-data/loot_tables_v2.cpp",
+      "bytes": 6594,
+      "lines": 51,
+      "kind": "source",
+      "sha256": "ba72e90ac1003fe2e931024b3a21a99231048e8788d449794d80fffbc609892a"
+    },
+    {
+      "path": "port/game-data/loot_tables_v2.hpp",
+      "bytes": 2561,
+      "lines": 47,
+      "kind": "source",
+      "sha256": "2e7cf1a4ece3778e109b1d758be4c3e052ee7a9154a41917a53840c83c387d72"
+    },
+    {
+      "path": "port/game-data/player_equipment_live_services_v1.cpp",
+      "bytes": 8454,
+      "lines": 101,
+      "kind": "source",
+      "sha256": "9e75499afff0884c0b3b3e51e80167c1e368b30d1cef63af384f3374eaa51986"
+    },
+    {
+      "path": "port/game-data/player_equipment_live_services_v1.hpp",
+      "bytes": 4976,
+      "lines": 95,
+      "kind": "source",
+      "sha256": "614afe87f8b492ce60ce0b6a7fbe7ee5e4cdaa9f1dd527be32ea8a2b9825092a"
+    },
+    {
+      "path": "port/game-data/player_equipment_queries_live_v1.cpp",
+      "bytes": 2932,
+      "lines": 34,
+      "kind": "source",
+      "sha256": "c93ce664885042b3daa650b7b3c7de2d9f2503c0809259423484fd4b456977f2"
+    },
+    {
+      "path": "port/game-data/player_equipment_queries_live_v1.hpp",
+      "bytes": 1716,
+      "lines": 35,
+      "kind": "source",
+      "sha256": "1b4a55ced7dbee79659b2fa972a00f2a82513c306f2a716576e6540873e19978"
+    },
+    {
+      "path": "port/game-data/player_gear_effects_v5.cpp",
+      "bytes": 4978,
+      "lines": 37,
+      "kind": "source",
+      "sha256": "863f410ae216da1e43399be9c8983999475dd9af7a6e03ce30d062c67fa9ad42"
+    },
+    {
+      "path": "port/game-data/player_gear_effects_v5.hpp",
+      "bytes": 1677,
+      "lines": 25,
+      "kind": "source",
+      "sha256": "14fda13f2d6758d456fc08e23aebe9b78211dc2e0f59e1c030b202bfbf2d9eb7"
+    },
+    {
+      "path": "port/game-data/player_saved_skill_slots_v1.cpp",
+      "bytes": 2721,
+      "lines": 70,
+      "kind": "source",
+      "sha256": "77f3682f9b8f675d7901126938437b67ec990b5f59238c4429a88da5417e63e8"
+    },
+    {
+      "path": "port/game-data/player_saved_skill_slots_v1.hpp",
+      "bytes": 2103,
+      "lines": 58,
+      "kind": "source",
+      "sha256": "4ce996da152ff134ed745afbdafe488c574382fedea66c5da5e5cc55b596f321"
+    },
+    {
+      "path": "port/game-data/player_savegame_v1.cpp",
+      "bytes": 20931,
+      "lines": 552,
+      "kind": "source",
+      "sha256": "e9088a632d74ee276e2157a32130ade41a2f566ef20fb0082e7ad5709c021483"
+    },
+    {
+      "path": "port/game-data/player_savegame_v1.hpp",
+      "bytes": 8106,
+      "lines": 198,
+      "kind": "source",
+      "sha256": "050edc426773e456d8f1aec7d0dfda30f37e6886ae27d2a73e4e397fa0114aeb"
+    },
+    {
       "path": "port/game-data/properties.cpp",
       "bytes": 4375,
       "lines": 44,
@@ -5763,6 +6092,20 @@
       "lines": 35,
       "kind": "source",
       "sha256": "aeaaa77b0134ab614892cd726c8124548d3c249cf7c4f8a2e43964fdcd41217d"
+    },
+    {
+      "path": "port/game-data/savegame_options_v1.cpp",
+      "bytes": 2057,
+      "lines": 39,
+      "kind": "source",
+      "sha256": "6e29f8d64dd697513804f8f138a0157e2ba5e99b1266fb4c23e6519e8c693b3b"
+    },
+    {
+      "path": "port/game-data/savegame_options_v1.hpp",
+      "bytes": 1882,
+      "lines": 34,
+      "kind": "source",
+      "sha256": "26863444946843b5e1c2e51157140a578ae0560ead7b0409ca76a146c338483e"
     },
     {
       "path": "port/game-data/skill_tables.cpp",
@@ -5912,6 +6255,27 @@
       "sha256": "4b30ffcd92331f5511a287f001695c7cc75d0902cd9040278ab95077ef1fe952"
     },
     {
+      "path": "port/game-data/tests/fresh_inventory_owned_v4.cpp",
+      "bytes": 16813,
+      "lines": 64,
+      "kind": "test_or_tool",
+      "sha256": "11ebf2705e8fc099ea60bb015ee372ba2a4d5df12c841c00e9b34bfd93178c8b"
+    },
+    {
+      "path": "port/game-data/tests/fresh_inventory_owned_v4_original.py",
+      "bytes": 6685,
+      "lines": 94,
+      "kind": "test_or_tool",
+      "sha256": "a950b66fe623445b0c2c3de6e91bc279e60c20ca08b3ac67761c2a7903ab1739"
+    },
+    {
+      "path": "port/game-data/tests/fresh_inventory_v2_original.py",
+      "bytes": 3577,
+      "lines": 47,
+      "kind": "test_or_tool",
+      "sha256": "fe9bc78a4ed7a3765c0a12c0da605717b487ce58cc2d18a413b6e68780d6a39a"
+    },
+    {
       "path": "port/game-data/tests/health.cpp",
       "bytes": 3230,
       "lines": 31,
@@ -5926,6 +6290,62 @@
       "sha256": "5330340a25e94c506ca68150a1bab87b8b461cfb7aea11e346961bc2ff6dff44"
     },
     {
+      "path": "port/game-data/tests/item_gear_properties_v5.cpp",
+      "bytes": 4707,
+      "lines": 23,
+      "kind": "test_or_tool",
+      "sha256": "a423c04213f22c149a5f5ab30b6d0a698d07d98b059c12029b931d1ef5df34cb"
+    },
+    {
+      "path": "port/game-data/tests/item_gear_properties_v5_original.py",
+      "bytes": 10438,
+      "lines": 112,
+      "kind": "test_or_tool",
+      "sha256": "c84fa374112f56a031f1c94fd528fe4cf5f07f0fe539f2709b197879bedfc5a1"
+    },
+    {
+      "path": "port/game-data/tests/item_inventory_v1_original.py",
+      "bytes": 6290,
+      "lines": 85,
+      "kind": "test_or_tool",
+      "sha256": "ad586044ca5861b18aa45ed4c11cf8a5c6543433027d732316f74b909d79787e"
+    },
+    {
+      "path": "port/game-data/tests/item_loot_backbone_v7.cpp",
+      "bytes": 13529,
+      "lines": 123,
+      "kind": "test_or_tool",
+      "sha256": "b31ab521d26edbf9caeda080b8539ef2747c0c200fb302cdf25bb1e8a4a6d309"
+    },
+    {
+      "path": "port/game-data/tests/item_power_instance_v5_fixture.cpp",
+      "bytes": 1851,
+      "lines": 10,
+      "kind": "test_or_tool",
+      "sha256": "f85989864d9853f543261d0434a0e929b6fbf1589c042a24565f00de8c75ee4d"
+    },
+    {
+      "path": "port/game-data/tests/item_power_tables_v5_original.py",
+      "bytes": 6093,
+      "lines": 52,
+      "kind": "test_or_tool",
+      "sha256": "109dfd9abf467f8eb91ed8401c72ebab0f7a014a049ae2de0644ad0dbac3d81d"
+    },
+    {
+      "path": "port/game-data/tests/item_presentation_v5.cpp",
+      "bytes": 3670,
+      "lines": 17,
+      "kind": "test_or_tool",
+      "sha256": "3327a31dd94cbee81db25268acad5041481e9d7457349aa853970cd29f41dba2"
+    },
+    {
+      "path": "port/game-data/tests/item_presentation_v5_fixture.cpp",
+      "bytes": 2947,
+      "lines": 18,
+      "kind": "test_or_tool",
+      "sha256": "8cf5008fbd7917a092f44c3bf4f0991d37852b696350b44b98344dcdd5f4f3ae"
+    },
+    {
       "path": "port/game-data/tests/items.cpp",
       "bytes": 7454,
       "lines": 46,
@@ -5938,6 +6358,13 @@
       "lines": 100,
       "kind": "test_or_tool",
       "sha256": "7f7fb185583e3d3ccb68b0c99648b5f04867a2cfffdc564eeab7facf10e1f000"
+    },
+    {
+      "path": "port/game-data/tests/items_differential_v4_original.py",
+      "bytes": 8894,
+      "lines": 100,
+      "kind": "test_or_tool",
+      "sha256": "fb12163810bd97fdaf74f62af247d65fe34003b4fea1121a4185fd72681730dd"
     },
     {
       "path": "port/game-data/tests/items_host.py",
@@ -5961,6 +6388,90 @@
       "sha256": "e6a83ea440ee2349d576891c62b6024518807066d917585d515b686409d22307"
     },
     {
+      "path": "port/game-data/tests/loot_power_creation_v7_fixture.cpp",
+      "bytes": 3700,
+      "lines": 39,
+      "kind": "test_or_tool",
+      "sha256": "c3a060bbdaec9d354a0bcd1e10b11a40b45dd8e50beb68d8700497c2b9fb91a1"
+    },
+    {
+      "path": "port/game-data/tests/loot_power_resources_v7.cpp",
+      "bytes": 3663,
+      "lines": 37,
+      "kind": "test_or_tool",
+      "sha256": "c4eddc38c4cc46308b4864e1bce8da58dd18de05ee8f3fc9c7236926a11e894c"
+    },
+    {
+      "path": "port/game-data/tests/loot_tables_v2.cpp",
+      "bytes": 3507,
+      "lines": 21,
+      "kind": "test_or_tool",
+      "sha256": "ef6bce7067c0a6345a62aaab4b77d39e35a34448f90797cd3a27e500a6771568"
+    },
+    {
+      "path": "port/game-data/tests/loot_tables_v2_original.py",
+      "bytes": 4679,
+      "lines": 50,
+      "kind": "test_or_tool",
+      "sha256": "bf92eeec8365ae4c13827c7f60f44cf5fbf57a65e9eacd403ce2ee580a99fa1d"
+    },
+    {
+      "path": "port/game-data/tests/navigation_differential_v4_original.py",
+      "bytes": 18589,
+      "lines": 189,
+      "kind": "test_or_tool",
+      "sha256": "2aa5c138f6866c3f78e0ee077497420af2f11144d85fab675ad23b3ffaf3dbfe"
+    },
+    {
+      "path": "port/game-data/tests/player_equipment_live_services_v1.cpp",
+      "bytes": 17702,
+      "lines": 107,
+      "kind": "test_or_tool",
+      "sha256": "2e0035480cb20011870acb550c91821e19e906b6a8242076eee09ae52b17f3cf"
+    },
+    {
+      "path": "port/game-data/tests/player_gear_effects_v5.cpp",
+      "bytes": 5982,
+      "lines": 29,
+      "kind": "test_or_tool",
+      "sha256": "536ad0a2dc99227f9aa10d6ea33f11cfb1e7200d920389bcc6e26129342dcb42"
+    },
+    {
+      "path": "port/game-data/tests/player_gear_effects_v5_original.py",
+      "bytes": 3735,
+      "lines": 37,
+      "kind": "test_or_tool",
+      "sha256": "3b280ff632468e1aeaab2d1d281ab1e974bd2c362a1e90f3f8d241e4caced942"
+    },
+    {
+      "path": "port/game-data/tests/player_saved_skill_slots_v1.cpp",
+      "bytes": 9185,
+      "lines": 202,
+      "kind": "test_or_tool",
+      "sha256": "d853aca9babde403bf2cfe1e08cfa02c69a4fe844fcb327cd42fba0fc4013d3a"
+    },
+    {
+      "path": "port/game-data/tests/player_saved_skill_slots_v1_original.py",
+      "bytes": 4040,
+      "lines": 95,
+      "kind": "test_or_tool",
+      "sha256": "8eb2fb9158acfd30ebd8bcec935a26f46abe7ebaecd9e48ecb0a09d5d477bfa7"
+    },
+    {
+      "path": "port/game-data/tests/player_savegame_v1.cpp",
+      "bytes": 18822,
+      "lines": 409,
+      "kind": "test_or_tool",
+      "sha256": "8de433c862ba37919258e7e8009c0303d05cfbcffef33afe03f753d009dc7128"
+    },
+    {
+      "path": "port/game-data/tests/player_savegame_v1_original.py",
+      "bytes": 4882,
+      "lines": 71,
+      "kind": "test_or_tool",
+      "sha256": "c702984b55168ad6d52e5cf7c0ce8024072963184b58dc2be77d4a3b7f7f5409"
+    },
+    {
       "path": "port/game-data/tests/properties.cpp",
       "bytes": 4506,
       "lines": 28,
@@ -5982,6 +6493,27 @@
       "sha256": "3e4db2f1759d1cae616e9ac467977c820afd5a7eeb02ab43cb0d902197c2af90"
     },
     {
+      "path": "port/game-data/tests/run_adam_integrated_host.py",
+      "bytes": 4527,
+      "lines": 54,
+      "kind": "test_or_tool",
+      "sha256": "7fbb42087ed5752f03c2df17b41d9f6b59daabe27e8d26b515e86b7b5be363c2"
+    },
+    {
+      "path": "port/game-data/tests/run_equipment_live_services_v1_host.py",
+      "bytes": 5286,
+      "lines": 86,
+      "kind": "test_or_tool",
+      "sha256": "ad78ef86b6ab5a3cb6e417b8b53cc687ca4c05f9375cb195c412a50d91f4a7ab"
+    },
+    {
+      "path": "port/game-data/tests/run_item_loot_backbone_v7_host.py",
+      "bytes": 5863,
+      "lines": 105,
+      "kind": "test_or_tool",
+      "sha256": "5c76fb46e3bda3ead71704cc23df37ad4aa98e2eb7d9d661aa7b96c72c1cfb03"
+    },
+    {
       "path": "port/game-data/tests/run_level_tables_host.py",
       "bytes": 3923,
       "lines": 68,
@@ -5989,11 +6521,39 @@
       "sha256": "4c5212321988077efa81dd7514ec1b89a12a0935bea2c6436e20c0988cedb672"
     },
     {
+      "path": "port/game-data/tests/run_player_saved_skill_slots_v1_host.py",
+      "bytes": 9561,
+      "lines": 182,
+      "kind": "test_or_tool",
+      "sha256": "3fcb611f1e55f050cd470831e85dff694477a307f0cd92fa0a643d77b3594741"
+    },
+    {
+      "path": "port/game-data/tests/run_player_savegame_v1_host.py",
+      "bytes": 3090,
+      "lines": 74,
+      "kind": "test_or_tool",
+      "sha256": "4a3886b87763dfed93ef4092bb84ba9df3016d524f3eb30bc2757a2f41151da1"
+    },
+    {
+      "path": "port/game-data/tests/run_savegame_options_v1_host.py",
+      "bytes": 7112,
+      "lines": 79,
+      "kind": "test_or_tool",
+      "sha256": "e00d210dcc404f353e6133019b4409ccd89849a8100aebbb46d108a332a544c6"
+    },
+    {
       "path": "port/game-data/tests/run_skill_tables_host.py",
       "bytes": 17885,
       "lines": 375,
       "kind": "test_or_tool",
       "sha256": "267feb737fdd789dddb3180cd46aadb063dea3b138b46d1031daf5ff10a6a8e7"
+    },
+    {
+      "path": "port/game-data/tests/savegame_options_v1.cpp",
+      "bytes": 2778,
+      "lines": 39,
+      "kind": "test_or_tool",
+      "sha256": "fc48643ffdd03d1d268f224f36cb86ccc0873c6f71fcb034fb0c1d3b5ebdedda"
     },
     {
       "path": "port/game-data/tests/skill_tables.cpp",
@@ -6043,6 +6603,20 @@
       "lines": 41,
       "kind": "test_or_tool",
       "sha256": "c2f67d8290ce4ff373cf6001d8c6ec041f5b485443fbd1d9ba1a995ef1ae5f63"
+    },
+    {
+      "path": "port/game-data/tools/run_fresh_inventory_owned_v4_host.py",
+      "bytes": 5795,
+      "lines": 129,
+      "kind": "test_or_tool",
+      "sha256": "6fe53ea41a0e34eaaa128372c5cdb04e3ccbe9a65eb33e32b2b5be2c05a16adf"
+    },
+    {
+      "path": "port/game-data/tools/run_loot_tables_v2_host.py",
+      "bytes": 3905,
+      "lines": 84,
+      "kind": "test_or_tool",
+      "sha256": "17c9f957fcb593f2eb23c979f32bff37249346a092ba24e5852d358a6ce6049b"
     },
     {
       "path": "port/game-data/vitals.cpp",
@@ -6487,10 +7061,10 @@
     },
     {
       "path": "port/level-world/actor_blended_playback.hpp",
-      "bytes": 7650,
-      "lines": 127,
+      "bytes": 8000,
+      "lines": 133,
       "kind": "source",
-      "sha256": "6bfe572044fa203f877acdd500fe48e2a3eef41886a6fd0a673694b02bef3bf2"
+      "sha256": "94dd5a83d6f962aa519369eb263935160b841cbc52eab5657f1e149fe1692388"
     },
     {
       "path": "port/level-world/actor_playback.cpp",
@@ -6533,6 +7107,20 @@
       "lines": 65,
       "kind": "source",
       "sha256": "e1e0f84529dbf69811994a73c092afded509ec07a066d7f411fc7ed849195c38"
+    },
+    {
+      "path": "port/level-world/actor_scene_retention_v1.cpp",
+      "bytes": 3696,
+      "lines": 64,
+      "kind": "source",
+      "sha256": "65e0d722b36925fef958e2cf1bee99ef034558cf6929da178fe26a8c27f2fdf6"
+    },
+    {
+      "path": "port/level-world/actor_scene_retention_v1.hpp",
+      "bytes": 2010,
+      "lines": 38,
+      "kind": "source",
+      "sha256": "5f7e6a09cae7b6e310e66117643a85417fc1a83420bf0ac21b701bbeb3ec9669"
     },
     {
       "path": "port/level-world/ais_default_collision_persist.cpp",
@@ -6617,6 +7205,20 @@
       "lines": 51,
       "kind": "source",
       "sha256": "09a53e2655519e0ecdcad7b99b18c081f47eecc26a4812b56b77c623cd66b81d"
+    },
+    {
+      "path": "port/level-world/ais_player_init_vcb.cpp",
+      "bytes": 1683,
+      "lines": 34,
+      "kind": "source",
+      "sha256": "69de158e86ff88cd52a56072c68f2f2f69b7d9d2ee32bb7ea187c185e1be6cb0"
+    },
+    {
+      "path": "port/level-world/ais_player_init_vcb.hpp",
+      "bytes": 871,
+      "lines": 18,
+      "kind": "source",
+      "sha256": "5676ada6948a4fca723210bf8ed2c642235c58715cca8e69354d57ecad53ae63"
     },
     {
       "path": "port/level-world/ais_state_callbacks.cpp",
@@ -6997,6 +7599,20 @@
       "sha256": "ae36f54ffd97cfb079905e3e03854fc354853304609135aba76591bfb07e9a81"
     },
     {
+      "path": "port/level-world/character_ai_skill_dispatch_v1.cpp",
+      "bytes": 6666,
+      "lines": 90,
+      "kind": "source",
+      "sha256": "6c0b66c20356b2a0768861dd8e36a2378068bc64cff81125922f37e71a8361f5"
+    },
+    {
+      "path": "port/level-world/character_ai_skill_dispatch_v1.hpp",
+      "bytes": 3026,
+      "lines": 68,
+      "kind": "source",
+      "sha256": "218f99dac2503c662a5ab34320f79a5a108fc13a9a57093c7effd3f1fa076be7"
+    },
+    {
       "path": "port/level-world/character_ai_skill_script_check.cpp",
       "bytes": 6883,
       "lines": 114,
@@ -7208,17 +7824,17 @@
     },
     {
       "path": "port/level-world/character_coordinator.cpp",
-      "bytes": 7993,
-      "lines": 194,
+      "bytes": 8405,
+      "lines": 202,
       "kind": "source",
-      "sha256": "2ab1ac65a49ddd120f6bbc09e7da4ca2b88be329e0aef2434755cdf5cad2338a"
+      "sha256": "b5f57fbf0006c623812457f95725888f128ae6139c50e365b81752961dd3b3a5"
     },
     {
       "path": "port/level-world/character_coordinator.hpp",
-      "bytes": 3499,
-      "lines": 81,
+      "bytes": 4095,
+      "lines": 89,
       "kind": "source",
-      "sha256": "de7ab3a0328a69a290bd706167d71347403ad3b86f83dc7ac4cc1fbb062b8452"
+      "sha256": "e5b902e1981cac0c1a2df4d8fb469ca32865fdbd5ab9fbed0cc8023cedbf7ae4"
     },
     {
       "path": "port/level-world/character_culling_runtime.cpp",
@@ -7233,6 +7849,48 @@
       "lines": 45,
       "kind": "source",
       "sha256": "098857e211dda9172c4e76ed23f03119482cfccf281701d1402d7b02c1335bfd"
+    },
+    {
+      "path": "port/level-world/character_current_equipped_faery_v1.cpp",
+      "bytes": 5050,
+      "lines": 129,
+      "kind": "source",
+      "sha256": "a77a0568748477413e1b89d7decd280f6294e5caba2ebb7267e1b189492b9bdd"
+    },
+    {
+      "path": "port/level-world/character_current_equipped_faery_v1.hpp",
+      "bytes": 1696,
+      "lines": 47,
+      "kind": "source",
+      "sha256": "f14ab8fded0fed2a9e6844554a84dfb5d89e350e0975a8253f45f117ee7aba42"
+    },
+    {
+      "path": "port/level-world/character_current_spell_v1.cpp",
+      "bytes": 4955,
+      "lines": 77,
+      "kind": "source",
+      "sha256": "03ef88e1647b9839dde121512fd9bac481499dd680c269fe15489b49aa32b311"
+    },
+    {
+      "path": "port/level-world/character_current_spell_v1.hpp",
+      "bytes": 2712,
+      "lines": 58,
+      "kind": "source",
+      "sha256": "0d67d8acbbd8f25b77bdbf10126bffadc877267add65f45d43f96376f328c82d"
+    },
+    {
+      "path": "port/level-world/character_dead_focus_services_v1.cpp",
+      "bytes": 9411,
+      "lines": 141,
+      "kind": "source",
+      "sha256": "3d58cde2c3bc78c0f91c4f38f3723c7ab4a094b9eb9e8b4e90819d7480d3f360"
+    },
+    {
+      "path": "port/level-world/character_dead_focus_services_v1.hpp",
+      "bytes": 3122,
+      "lines": 63,
+      "kind": "source",
+      "sha256": "f36e6fcb9f35e40e0f9d9965303857047a22a0949bb5efd5942a7e0b957d361f"
     },
     {
       "path": "port/level-world/character_dot_attack.cpp",
@@ -7289,6 +7947,20 @@
       "lines": 110,
       "kind": "source",
       "sha256": "5d20b123a81196e43f84b10a50467b3fe92cba98b91de707ea56fd455581fb60"
+    },
+    {
+      "path": "port/level-world/character_equipped_faery_element_v1.cpp",
+      "bytes": 4066,
+      "lines": 72,
+      "kind": "source",
+      "sha256": "5ae73b9bc8c3c163003ba121ffd315d52e44588c49066b91e3f16b57062de441"
+    },
+    {
+      "path": "port/level-world/character_equipped_faery_element_v1.hpp",
+      "bytes": 1825,
+      "lines": 30,
+      "kind": "source",
+      "sha256": "fc46d126a7193cc7b5407cf8fe19be84568f8748accd4f8bfe196f36b17058ef"
     },
     {
       "path": "port/level-world/character_factory.cpp",
@@ -7403,6 +8075,20 @@
       "sha256": "b222b2b395603a18aa9e7b41968e8a5ebffc5d1e3161a0466f33272c014f11ba"
     },
     {
+      "path": "port/level-world/character_mana_services_v1.cpp",
+      "bytes": 13005,
+      "lines": 230,
+      "kind": "source",
+      "sha256": "79fc54e162ebfa52bb29fc20b91a63f88405c61c885c0a4a0d345991e319826d"
+    },
+    {
+      "path": "port/level-world/character_mana_services_v1.hpp",
+      "bytes": 3823,
+      "lines": 110,
+      "kind": "source",
+      "sha256": "81a0648743d853ba112c949bbf6938eabc6149caaa8b7829b335b3ec0aa602d1"
+    },
+    {
       "path": "port/level-world/character_monster_retarget.cpp",
       "bytes": 4824,
       "lines": 82,
@@ -7459,18 +8145,46 @@
       "sha256": "51f100f7a69f513a512b16769275637b883104d56a407feca64abb78bd4f8297"
     },
     {
-      "path": "port/level-world/character_player_skills_preparation_v3.cpp",
-      "bytes": 16900,
-      "lines": 286,
+      "path": "port/level-world/character_player_buffs_v1.cpp",
+      "bytes": 18659,
+      "lines": 277,
       "kind": "source",
-      "sha256": "dd49d1590c50de245d9af9589cecb69eea9f06874a0d0678a52a2851179c58f7"
+      "sha256": "50815022fe18a5852df9fb88ef9c79af71560cb559a9ab9792540e6dd951ed6e"
+    },
+    {
+      "path": "port/level-world/character_player_buffs_v1.hpp",
+      "bytes": 4019,
+      "lines": 65,
+      "kind": "source",
+      "sha256": "95155c0eceb7de6605ee2f88dc11e275f8fb53255fcff4f0fc02ae19fd2ff7b5"
+    },
+    {
+      "path": "port/level-world/character_player_scalar_services_v1.cpp",
+      "bytes": 8546,
+      "lines": 118,
+      "kind": "source",
+      "sha256": "0e33d32a5f641a5476965680ac7dcf49880fe0bf540cc97fcd9809556fbbb103"
+    },
+    {
+      "path": "port/level-world/character_player_scalar_services_v1.hpp",
+      "bytes": 2761,
+      "lines": 47,
+      "kind": "source",
+      "sha256": "ea8dc46aa7d67f5a820cfe919b29ff2b3e0565ac9cf3e70fb10c9d435fb8235e"
+    },
+    {
+      "path": "port/level-world/character_player_skills_preparation_v3.cpp",
+      "bytes": 20095,
+      "lines": 349,
+      "kind": "source",
+      "sha256": "64976cdb79acb35551f01b8d2a46a5f1afb2a2959cde158ae8009b6b200e2754"
     },
     {
       "path": "port/level-world/character_player_skills_preparation_v3.hpp",
-      "bytes": 3317,
-      "lines": 66,
+      "bytes": 4657,
+      "lines": 94,
       "kind": "source",
-      "sha256": "8736475af4c3fec7e3b4eafc1cae8565f578cd97b11989d02d32848f7873a97f"
+      "sha256": "f0dbd9fb93861cb4e8a2f8c3707fedd2c192bf2157f051421591d0fb632b94ba"
     },
     {
       "path": "port/level-world/character_range_capability.cpp",
@@ -7485,6 +8199,20 @@
       "lines": 60,
       "kind": "source",
       "sha256": "9ed2dbeeb69409ae56501cc7942c5831e962421b53e8cbb5c2fc552b9e5b5a8f"
+    },
+    {
+      "path": "port/level-world/character_regen_tick_v1.cpp",
+      "bytes": 2711,
+      "lines": 40,
+      "kind": "source",
+      "sha256": "8c57d5fcf6fdd93ae169fe46a180ed34bb5ebf81ec202dbd3b43cdd81d54d2d2"
+    },
+    {
+      "path": "port/level-world/character_regen_tick_v1.hpp",
+      "bytes": 1366,
+      "lines": 28,
+      "kind": "source",
+      "sha256": "c1e32a2f11e99657cc3933efb933e050533f3d1c423a661cc44b055e96a5c74d"
     },
     {
       "path": "port/level-world/character_regeneration.cpp",
@@ -7613,6 +8341,48 @@
       "sha256": "d50372020d0f99fe88aa12c5172fcee54b2c5e4f81a464d080ade1f89c30a4d4"
     },
     {
+      "path": "port/level-world/character_skill_cooldown_services.cpp",
+      "bytes": 6647,
+      "lines": 85,
+      "kind": "source",
+      "sha256": "12cd73f290f4dd2754b4cafcf6258f9c53152ae7d677c7fe61315603b99df393"
+    },
+    {
+      "path": "port/level-world/character_skill_cooldown_services.hpp",
+      "bytes": 2264,
+      "lines": 37,
+      "kind": "source",
+      "sha256": "5f2bea042897ace60b062e667727db0efd6a916bff809e5f854da8485b57ec5f"
+    },
+    {
+      "path": "port/level-world/character_skill_fsm_callbacks_v1.cpp",
+      "bytes": 5899,
+      "lines": 87,
+      "kind": "source",
+      "sha256": "d71a62f8879f577155f59f73a270add2f15d0cf4189bf72d42bf1a98e072ad9a"
+    },
+    {
+      "path": "port/level-world/character_skill_fsm_callbacks_v1.hpp",
+      "bytes": 3224,
+      "lines": 64,
+      "kind": "source",
+      "sha256": "8aa4cac14b16bf539d35a960286b1d4685e48f1072e332e281ef1d953da84401"
+    },
+    {
+      "path": "port/level-world/character_skill_state_dispatch_v1.cpp",
+      "bytes": 5137,
+      "lines": 114,
+      "kind": "source",
+      "sha256": "796b4e2358e1fefe77352b8dcf3d34cb7c905ab4f88e5a13a9dacf363bb0ce79"
+    },
+    {
+      "path": "port/level-world/character_skill_state_dispatch_v1.hpp",
+      "bytes": 2808,
+      "lines": 54,
+      "kind": "source",
+      "sha256": "1a17ebec9088e2c6fa1a14c1872ff408b0ae9d81cdffa774c0dc74d8c7e0c2bf"
+    },
+    {
       "path": "port/level-world/character_skill_state_queries.cpp",
       "bytes": 1164,
       "lines": 26,
@@ -7642,17 +8412,17 @@
     },
     {
       "path": "port/level-world/character_state.cpp",
-      "bytes": 12239,
-      "lines": 245,
+      "bytes": 12271,
+      "lines": 246,
       "kind": "source",
-      "sha256": "f96e42ac27ad675b732a729ab5ca0a8d9d48f58c3a71491b868b25946c6fd6aa"
+      "sha256": "83365af7871692940fd757e67211621c4fea0ef5d82cdc2fae1a4869d0ae2765"
     },
     {
       "path": "port/level-world/character_state.hpp",
-      "bytes": 6505,
-      "lines": 111,
+      "bytes": 6682,
+      "lines": 114,
       "kind": "source",
-      "sha256": "a90e256b5cfc353537f6202c749783086df8b16622123d844046c4e9497bc5c1"
+      "sha256": "436749bd60dc6708cb9ee2072a50044edcfba0f9e6ff65939eedec0f457c2dfa"
     },
     {
       "path": "port/level-world/character_target_search.cpp",
@@ -8299,6 +9069,146 @@
       "sha256": "6041e04d6ffe0f95319eb2b66c614c013bc0f35f0205a89428f4ad9ceb7ce3c6"
     },
     {
+      "path": "port/level-world/player_ai_death_v1.cpp",
+      "bytes": 10165,
+      "lines": 156,
+      "kind": "source",
+      "sha256": "ef78c1b2bb7b5b034f7813420fbc943c8c41d34300a90351c2c85d364f73f281"
+    },
+    {
+      "path": "port/level-world/player_ai_death_v1.hpp",
+      "bytes": 4219,
+      "lines": 83,
+      "kind": "source",
+      "sha256": "8143599c0e96756dcd88a3d94cd17d75f2ffd1aebfc18719f40611fb50024315"
+    },
+    {
+      "path": "port/level-world/player_ai_timer_events_v1.cpp",
+      "bytes": 11374,
+      "lines": 141,
+      "kind": "source",
+      "sha256": "b7ff135faad53be2ce6c8733c695bd655cdba4a42a487a843316bf5e5736bd9b"
+    },
+    {
+      "path": "port/level-world/player_ai_timer_events_v1.hpp",
+      "bytes": 3000,
+      "lines": 67,
+      "kind": "source",
+      "sha256": "4368f5e0fab4989297a25ea6297cfe1d84fdc7980f830e3de0ec5cd97e688a5e"
+    },
+    {
+      "path": "port/level-world/player_ais_lifecycle_v1.cpp",
+      "bytes": 14381,
+      "lines": 213,
+      "kind": "source",
+      "sha256": "13ea6d501f14bb7adc074abd98f2dbe84237c50decf079b3a1a8d528dde62f98"
+    },
+    {
+      "path": "port/level-world/player_ais_lifecycle_v1.hpp",
+      "bytes": 5098,
+      "lines": 101,
+      "kind": "source",
+      "sha256": "baf78808c7c9dd7189eea72460390e53108b4c7e0339a9db6283fda3a9fc9f09"
+    },
+    {
+      "path": "port/level-world/player_initial_equipment_v1.cpp",
+      "bytes": 7905,
+      "lines": 101,
+      "kind": "source",
+      "sha256": "9ba9217ff3de3f630e379d8541beaae381b36f063eb37b87e669c7cbd1725b80"
+    },
+    {
+      "path": "port/level-world/player_initial_equipment_v1.hpp",
+      "bytes": 2949,
+      "lines": 65,
+      "kind": "source",
+      "sha256": "84d37319afa29d076ae9287acfcc5495ad1f90638e04039bd2606c92d390b7bf"
+    },
+    {
+      "path": "port/level-world/player_initial_skill_grants_v1.cpp",
+      "bytes": 10432,
+      "lines": 198,
+      "kind": "source",
+      "sha256": "b1129e7faaed57c0e98baca5f3f1096f6adc2a141f99efeb7750e6e00033b33c"
+    },
+    {
+      "path": "port/level-world/player_initial_skill_grants_v1.hpp",
+      "bytes": 3133,
+      "lines": 64,
+      "kind": "source",
+      "sha256": "1e69e0ba9e89a0600b2b194dc5abac2e4a5348905bc54ce9aeef0a7b81df28cb"
+    },
+    {
+      "path": "port/level-world/player_kill_continuation_v1.cpp",
+      "bytes": 6541,
+      "lines": 131,
+      "kind": "source",
+      "sha256": "0c5f76ad36f8852dcebaaae44e2b19ff153120ff6a54443ee837f91baed4d478"
+    },
+    {
+      "path": "port/level-world/player_kill_continuation_v1.hpp",
+      "bytes": 3827,
+      "lines": 79,
+      "kind": "source",
+      "sha256": "cdb42711dd1856c933c51ee0f135f21d4f996590acd410e5f8fee8ca6d67f05b"
+    },
+    {
+      "path": "port/level-world/player_skill_cleanup_session_v1.cpp",
+      "bytes": 10694,
+      "lines": 181,
+      "kind": "source",
+      "sha256": "db5f24869e9df900aaee476eb210cbe61d14198a8bdda5871b56f61eaa3e7152"
+    },
+    {
+      "path": "port/level-world/player_skill_cleanup_session_v1.hpp",
+      "bytes": 2484,
+      "lines": 46,
+      "kind": "source",
+      "sha256": "d43ce1d05141db89d5a23c9e2b01571d1f4a4ecd52ace967b76c319badc4095e"
+    },
+    {
+      "path": "port/level-world/player_skill_progression_v1.cpp",
+      "bytes": 16309,
+      "lines": 386,
+      "kind": "source",
+      "sha256": "d1ee6fb7f60f23c610a3d90ac3d2c0a58ea60e4f77bdd7c3cc98b5b7eaf5f888"
+    },
+    {
+      "path": "port/level-world/player_skill_progression_v1.hpp",
+      "bytes": 4408,
+      "lines": 131,
+      "kind": "source",
+      "sha256": "7d55d0ad63bd04cf29b0a3dc0281b70fe4c4be6ec8daea1148418b3f543cf385"
+    },
+    {
+      "path": "port/level-world/player_skill_property_services_v1.cpp",
+      "bytes": 12339,
+      "lines": 236,
+      "kind": "source",
+      "sha256": "aa7368c244009e688c17cc68b7f1391a2e0e78422db153851a44a341a66b8ea7"
+    },
+    {
+      "path": "port/level-world/player_skill_property_services_v1.hpp",
+      "bytes": 1914,
+      "lines": 43,
+      "kind": "source",
+      "sha256": "3935943508a6cabb00986ec8370b359a1168f0f073e873efa8ab6a09190851f5"
+    },
+    {
+      "path": "port/level-world/player_skill_session_v1.cpp",
+      "bytes": 19719,
+      "lines": 271,
+      "kind": "source",
+      "sha256": "e2c3e403ea204d347fbcca05fa837228c5e8e8d6c7b2cedd20d399134b606152"
+    },
+    {
+      "path": "port/level-world/player_skill_session_v1.hpp",
+      "bytes": 5381,
+      "lines": 106,
+      "kind": "source",
+      "sha256": "3dc2913807f11b5f97fee293aafb750b93c680abfcfb89c9e5918dfaa9f61c48"
+    },
+    {
       "path": "port/level-world/player_skill_tables_adapter.cpp",
       "bytes": 3541,
       "lines": 55,
@@ -8311,6 +9221,34 @@
       "lines": 34,
       "kind": "source",
       "sha256": "aa486d3b4938a5fe4316b32733e3f3f979e21e67cfcba18e72a52f22abe3cbb9"
+    },
+    {
+      "path": "port/level-world/player_skill_update_session_v1.cpp",
+      "bytes": 7999,
+      "lines": 138,
+      "kind": "source",
+      "sha256": "7a89894fa16698708e48004b3a14c02621991f35163ffba5bb9bc1c9201da12b"
+    },
+    {
+      "path": "port/level-world/player_skill_update_session_v1.hpp",
+      "bytes": 1581,
+      "lines": 36,
+      "kind": "source",
+      "sha256": "05afe73353ca68d50fb780f29a17f937c94041bd44e64640d8fe4e65be6e99cf"
+    },
+    {
+      "path": "port/level-world/player_skill_use_session_v1.cpp",
+      "bytes": 11509,
+      "lines": 178,
+      "kind": "source",
+      "sha256": "fb56fba1a713feb4106e275f607c5328138afd3b53db6f72ec394ee238e9082a"
+    },
+    {
+      "path": "port/level-world/player_skill_use_session_v1.hpp",
+      "bytes": 2407,
+      "lines": 46,
+      "kind": "source",
+      "sha256": "76a69f6cdfdfaacd1221ded9a470fdd8ec5fa43d911eb4745a0224a6983e6491"
     },
     {
       "path": "port/level-world/room_zone_enrollment.cpp",
@@ -8509,6 +9447,13 @@
       "sha256": "fd0039e467ab7824acc564464a02dda248fe74689ba82a80bf0bb14227c5e107"
     },
     {
+      "path": "port/level-world/tests/actor_scene_retention_v1.cpp",
+      "bytes": 13289,
+      "lines": 120,
+      "kind": "test_or_tool",
+      "sha256": "085d58803f61870254061790c649319afa891e54c1052fb43aeb3bd9ef779af6"
+    },
+    {
       "path": "port/level-world/tests/ais_default_collision_persist.cpp",
       "bytes": 9577,
       "lines": 130,
@@ -8549,6 +9494,13 @@
       "lines": 89,
       "kind": "test_or_tool",
       "sha256": "0c8aadb63c09dd1868eb0d19e7671f90fc2cca30744bc433295046f50b0fe334"
+    },
+    {
+      "path": "port/level-world/tests/ais_player_init_vcb.cpp",
+      "bytes": 8053,
+      "lines": 85,
+      "kind": "test_or_tool",
+      "sha256": "140b76453acd8c7b2cbba01f00df6ca36fd1555f729417275d826d9795f59a88"
     },
     {
       "path": "port/level-world/tests/ais_state_callbacks.cpp",
@@ -8831,6 +9783,13 @@
       "sha256": "59d2ec79e679743bb9c00ca04fef96ea31bac8c46284ccc9de0a1e05dd6bef4b"
     },
     {
+      "path": "port/level-world/tests/character_ai_skill_dispatch_v1.cpp",
+      "bytes": 16276,
+      "lines": 176,
+      "kind": "test_or_tool",
+      "sha256": "2a1cf747cc26a82a09142b282b77fc4fe7c23ee702ae87d3b5860a7f3ea0a6bc"
+    },
+    {
       "path": "port/level-world/tests/character_ai_skill_script_check.cpp",
       "bytes": 11116,
       "lines": 136,
@@ -9069,6 +10028,34 @@
       "sha256": "114b2f90f2d7d50f4034e349f2b46221816d3f900702dd4c4a6e8a7f125859be"
     },
     {
+      "path": "port/level-world/tests/character_current_equipped_faery_v1.cpp",
+      "bytes": 14731,
+      "lines": 340,
+      "kind": "test_or_tool",
+      "sha256": "a1492ba55fe0053bbf2f48fbb5ac21caafd161e9735d0d10f9b91c4b920ad6dd"
+    },
+    {
+      "path": "port/level-world/tests/character_current_spell_v1.cpp",
+      "bytes": 16730,
+      "lines": 163,
+      "kind": "test_or_tool",
+      "sha256": "c8a20efb550ac9c493e7d4c17c04f07b275853bddfe23455fd7e4fbb7360bc60"
+    },
+    {
+      "path": "port/level-world/tests/character_dead_focus_services_v1.cpp",
+      "bytes": 11935,
+      "lines": 109,
+      "kind": "test_or_tool",
+      "sha256": "fdc44d0b90ad915febfef39289a6b29379d996366e0b6e19f5fb78e4a0c1ba99"
+    },
+    {
+      "path": "port/level-world/tests/character_dead_focus_source.py",
+      "bytes": 3863,
+      "lines": 42,
+      "kind": "test_or_tool",
+      "sha256": "a9656800f9559c3c124be616705935c84e5a288244d8aaafc9ec10415f5d3401"
+    },
+    {
       "path": "port/level-world/tests/character_dot_attack.cpp",
       "bytes": 13436,
       "lines": 140,
@@ -9095,6 +10082,13 @@
       "lines": 282,
       "kind": "test_or_tool",
       "sha256": "2a1fa6f66e7801100f224c6306ab1f09935d8452d921c6c30610f32533e81a34"
+    },
+    {
+      "path": "port/level-world/tests/character_equipped_faery_element_v1.cpp",
+      "bytes": 9690,
+      "lines": 87,
+      "kind": "test_or_tool",
+      "sha256": "3486fbbd47351b99533453f4db722facb6b3c1d12f65da966f524774f1dd4cf8"
     },
     {
       "path": "port/level-world/tests/character_faery_selection.cpp",
@@ -9146,6 +10140,13 @@
       "sha256": "3ed2154fb1db91958a8db4adf441667aa820cda02156f7f7f4ba217e9ae74f82"
     },
     {
+      "path": "port/level-world/tests/character_mana_services_v1.cpp",
+      "bytes": 15221,
+      "lines": 126,
+      "kind": "test_or_tool",
+      "sha256": "41660eac5c05836ab8bf519cbf80ca18e38bff7f9943c34e8210605b515dd9d9"
+    },
+    {
       "path": "port/level-world/tests/character_monster_retarget.cpp",
       "bytes": 7645,
       "lines": 107,
@@ -9188,11 +10189,32 @@
       "sha256": "4575a29ff21bb184eb675631937be48daba761831db09469a5ab458e2e28d250"
     },
     {
-      "path": "port/level-world/tests/character_player_skills_preparation_v3.cpp",
-      "bytes": 19029,
-      "lines": 238,
+      "path": "port/level-world/tests/character_player_buffs_v1.cpp",
+      "bytes": 19858,
+      "lines": 130,
       "kind": "test_or_tool",
-      "sha256": "d13869ef6cc254293dbde8e6158bf438bef742d670ac129cd9f993b0b770c553"
+      "sha256": "ea4305d6af1aa317e57ac6dbcbe672aad20ebf4c4f4a2c1fde2197a03a62b600"
+    },
+    {
+      "path": "port/level-world/tests/character_player_buffs_v1_original.py",
+      "bytes": 6112,
+      "lines": 91,
+      "kind": "test_or_tool",
+      "sha256": "a528e29cf7f4f8450d5d00d23842f7a7bb0913f4a18d22f811df771daec61e13"
+    },
+    {
+      "path": "port/level-world/tests/character_player_scalar_services_v1.cpp",
+      "bytes": 14141,
+      "lines": 130,
+      "kind": "test_or_tool",
+      "sha256": "cb8de25f1482f18e5d4b689ddbe0ea18176cefb8d1bbd47f54e257d2a6526e61"
+    },
+    {
+      "path": "port/level-world/tests/character_player_skills_preparation_v3.cpp",
+      "bytes": 27808,
+      "lines": 368,
+      "kind": "test_or_tool",
+      "sha256": "56a85f306bbc83432491e06765c6a6ecca26ad72cd2953143925e0b8b3d75963"
     },
     {
       "path": "port/level-world/tests/character_range_capability.cpp",
@@ -9328,6 +10350,27 @@
       "sha256": "bd1ddca352079efd78fd3567c83ccb82a6af7331d730286dbd48cabd9a413af8"
     },
     {
+      "path": "port/level-world/tests/character_skill_cooldown_services.cpp",
+      "bytes": 13974,
+      "lines": 99,
+      "kind": "test_or_tool",
+      "sha256": "94149d0b16168c8d03feb5b71711c4508c52ccca54ce551af759ea2ccdae1210"
+    },
+    {
+      "path": "port/level-world/tests/character_skill_fsm_callbacks_v1.cpp",
+      "bytes": 17136,
+      "lines": 173,
+      "kind": "test_or_tool",
+      "sha256": "50fa19ff6a9b45460ddaee9d43f625ed3a84b6dae19e24a51ece59135e710e62"
+    },
+    {
+      "path": "port/level-world/tests/character_skill_state_dispatch_v1.cpp",
+      "bytes": 9778,
+      "lines": 143,
+      "kind": "test_or_tool",
+      "sha256": "4171b80a0c0468c5857a7737ad6d9ff881e1921c23033ea2fb32a29e5a161ba7"
+    },
+    {
       "path": "port/level-world/tests/character_skill_state_queries.cpp",
       "bytes": 4386,
       "lines": 65,
@@ -9350,17 +10393,17 @@
     },
     {
       "path": "port/level-world/tests/character_state.cpp",
-      "bytes": 7423,
-      "lines": 89,
+      "bytes": 8622,
+      "lines": 105,
       "kind": "test_or_tool",
-      "sha256": "f4b06e24e1b37ca7cfaf9b38eb65fb82ddb14348d1c847bd491c45e8c1f5c2bd"
+      "sha256": "1766be48d39a8b9a7c5b09e9e07e4718a4d56ef0e66eb73bb3d09b4a404cad39"
     },
     {
       "path": "port/level-world/tests/character_state_differential.py",
-      "bytes": 17713,
-      "lines": 190,
+      "bytes": 18325,
+      "lines": 197,
       "kind": "test_or_tool",
-      "sha256": "1e06e6c28f040a7e25b31b1e52e9d76af2b11f17a16d63635ad51411594c5478"
+      "sha256": "6d3aad353194f76524884b515a83982d8a9bd2a180d2a07d434d7910c6e8fc34"
     },
     {
       "path": "port/level-world/tests/character_state_timers.cpp",
@@ -9564,6 +10607,13 @@
       "lines": 139,
       "kind": "test_or_tool",
       "sha256": "5db20a9e9d877e56aa1fbd1fa3bcd4b33934f11b8d6502002f8195bc4d999c04"
+    },
+    {
+      "path": "port/level-world/tests/freeze_player_initial_equipment_v1.py",
+      "bytes": 2614,
+      "lines": 26,
+      "kind": "test_or_tool",
+      "sha256": "b5561b890937bb60e5e2c345b250d3353e9da1403d7cbf38f3148d2873965d21"
     },
     {
       "path": "port/level-world/tests/game_object_set_visible.cpp",
@@ -9986,11 +11036,137 @@
       "sha256": "8ffde00124e0a0d962e6524257ec01252dd971228d43c0ba5c8a04fe81b7d87a"
     },
     {
+      "path": "port/level-world/tests/player_ai_death_v1.cpp",
+      "bytes": 16713,
+      "lines": 161,
+      "kind": "test_or_tool",
+      "sha256": "e3c6fbb1b3590f614950157f77a125ca32ebd8ffd3ccf1ebf12526cb0d0d7b6d"
+    },
+    {
+      "path": "port/level-world/tests/player_ai_death_v1_original.py",
+      "bytes": 9367,
+      "lines": 118,
+      "kind": "test_or_tool",
+      "sha256": "1b03d589faf32b6c034e95016db79ce6a3e4854b3f693275c06c0610d4c2152b"
+    },
+    {
+      "path": "port/level-world/tests/player_ai_timer_events_v1.cpp",
+      "bytes": 14498,
+      "lines": 151,
+      "kind": "test_or_tool",
+      "sha256": "236d147176e7f4b6c9cf62ac37119d0728409d774be62d2e12ed4fa6cffeb255"
+    },
+    {
+      "path": "port/level-world/tests/player_ai_timer_events_v1_original.py",
+      "bytes": 7918,
+      "lines": 99,
+      "kind": "test_or_tool",
+      "sha256": "be51b7b3ef538280ed414a208572003d76e063a7c9475eb165aa41535f7441c8"
+    },
+    {
+      "path": "port/level-world/tests/player_ais_lifecycle_v1.cpp",
+      "bytes": 19065,
+      "lines": 191,
+      "kind": "test_or_tool",
+      "sha256": "89ebd9c5ac34fc87e8b21003f9c6836c10b09f7e25403e9024b8ea808d2f30ce"
+    },
+    {
+      "path": "port/level-world/tests/player_ais_lifecycle_v1_original.py",
+      "bytes": 11692,
+      "lines": 147,
+      "kind": "test_or_tool",
+      "sha256": "9ab7799bfc952099f124fa306ba3548a990af1cf3d8844f2ba4711012d161281"
+    },
+    {
       "path": "port/level-world/tests/player_combat.cpp",
       "bytes": 6052,
       "lines": 35,
       "kind": "test_or_tool",
       "sha256": "63c587e0d8a95789c5d9eaba10a046211f5306e29affa900c4e89c48f313d9a3"
+    },
+    {
+      "path": "port/level-world/tests/player_initial_equipment_v1.cpp",
+      "bytes": 19080,
+      "lines": 149,
+      "kind": "test_or_tool",
+      "sha256": "209cee2080ba316611aaab68671bf3e8581d8e0528bfad76a4d15e24de5cd953"
+    },
+    {
+      "path": "port/level-world/tests/player_initial_equipment_v1_original.py",
+      "bytes": 6424,
+      "lines": 75,
+      "kind": "test_or_tool",
+      "sha256": "deea1902fae84d196f6133ada044bda9e0bd0a7df0365616e544824d46f74c3d"
+    },
+    {
+      "path": "port/level-world/tests/player_initial_skill_grants_v1.cpp",
+      "bytes": 15508,
+      "lines": 189,
+      "kind": "test_or_tool",
+      "sha256": "f33705ba662d6218dfbb3d89605dd4aa4a6f6b3940a11c3554882946375e7949"
+    },
+    {
+      "path": "port/level-world/tests/player_kill_continuation_v1.cpp",
+      "bytes": 27273,
+      "lines": 281,
+      "kind": "test_or_tool",
+      "sha256": "130e3f179a43c62b399fcf550c260466e75d32506c7f94a2198d006d25ced0d6"
+    },
+    {
+      "path": "port/level-world/tests/player_kill_continuation_v1_original.py",
+      "bytes": 8287,
+      "lines": 108,
+      "kind": "test_or_tool",
+      "sha256": "6dbe62b82ba484c3bca1cf6c98e75e0476b10613e5b1a633e0c773f1e646b5f0"
+    },
+    {
+      "path": "port/level-world/tests/player_skill_cleanup_session_v1.cpp",
+      "bytes": 10387,
+      "lines": 75,
+      "kind": "test_or_tool",
+      "sha256": "c2f6793c0bde7e022c45e29becd80a52f3d538deb993b960d01df215864eea93"
+    },
+    {
+      "path": "port/level-world/tests/player_skill_cleanup_session_v1_original.py",
+      "bytes": 6009,
+      "lines": 70,
+      "kind": "test_or_tool",
+      "sha256": "d4035a3419a3c8205d1a0c21ebf591e04a35efb12c04b1def661aea9f1da10ba"
+    },
+    {
+      "path": "port/level-world/tests/player_skill_progression_v1_host.cpp",
+      "bytes": 20107,
+      "lines": 446,
+      "kind": "test_or_tool",
+      "sha256": "27132cb47d6a5a94875004736d985b7bf4586e45bbda46789c4d6af1334ec0e8"
+    },
+    {
+      "path": "port/level-world/tests/player_skill_property_services_v1.cpp",
+      "bytes": 15121,
+      "lines": 256,
+      "kind": "test_or_tool",
+      "sha256": "a1f13c59bb67763bc1fa8326eff16e8f5d930e6e88cb8119afec7af7a878c5e8"
+    },
+    {
+      "path": "port/level-world/tests/player_skill_session_v1.cpp",
+      "bytes": 24496,
+      "lines": 232,
+      "kind": "test_or_tool",
+      "sha256": "2ed674cac81554e45966e02fec39372e38577e3c037386d237690905bea89042"
+    },
+    {
+      "path": "port/level-world/tests/player_skill_update_session_v1.cpp",
+      "bytes": 12616,
+      "lines": 247,
+      "kind": "test_or_tool",
+      "sha256": "f64117e9f63c97ded547f6ff9842b0560da3ea307584a39195dc0fa1429eae83"
+    },
+    {
+      "path": "port/level-world/tests/player_skill_use_session_v1.cpp",
+      "bytes": 11514,
+      "lines": 99,
+      "kind": "test_or_tool",
+      "sha256": "0d98ba8263614c44af127657b58c4d00393295c4f9c592908ad1b2e96a485563"
     },
     {
       "path": "port/level-world/tests/prince_attack_services_discovery.py",
@@ -10019,6 +11195,13 @@
       "lines": 81,
       "kind": "test_or_tool",
       "sha256": "b504fc5dd97e7e3476889cee148dd1aab36fca40ece68eb65823cb22af0d8004"
+    },
+    {
+      "path": "port/level-world/tests/run_actor_scene_retention_v1_host.py",
+      "bytes": 4975,
+      "lines": 38,
+      "kind": "test_or_tool",
+      "sha256": "e38edb19068f7ee6adbebf3fe8ae7db6121e42dbafca663e8dc97adc5db1f680"
     },
     {
       "path": "port/level-world/tests/run_ais_default_collision_persist_host.py",
@@ -10061,6 +11244,13 @@
       "lines": 98,
       "kind": "test_or_tool",
       "sha256": "842b546e417e17810084632d9a42bf9988d05967108f92652adf7453a97d8f98"
+    },
+    {
+      "path": "port/level-world/tests/run_ais_player_init_vcb_host.py",
+      "bytes": 12091,
+      "lines": 142,
+      "kind": "test_or_tool",
+      "sha256": "6a04800a13553969374e1eb2882c271c38ff3ac2f17f6609a99095455e59cfe8"
     },
     {
       "path": "port/level-world/tests/run_ais_state_callbacks_host.py",
@@ -10224,6 +11414,13 @@
       "sha256": "5552a89b20b9db2c6957c603f952bf75d9c12b436662cbeefdfe0b8cfd7decca"
     },
     {
+      "path": "port/level-world/tests/run_character_ai_skill_dispatch_v1_host.py",
+      "bytes": 11352,
+      "lines": 130,
+      "kind": "test_or_tool",
+      "sha256": "425694c9d370036ca7770f43cacc142ce422ff6265d99e46f9a156bf746b3106"
+    },
+    {
       "path": "port/level-world/tests/run_character_ai_skill_script_check_host.py",
       "bytes": 12754,
       "lines": 136,
@@ -10280,6 +11477,27 @@
       "sha256": "fdad37c3fa1a4999a66c1543f8734ced08fefec192ab0853ca10e6e8adc94dec"
     },
     {
+      "path": "port/level-world/tests/run_character_current_equipped_faery_v1_host.py",
+      "bytes": 13125,
+      "lines": 257,
+      "kind": "test_or_tool",
+      "sha256": "77430424fb408e4fc0a3e12ecbeabd0cf44dcb80022b6eea20ff97cbaa74a753"
+    },
+    {
+      "path": "port/level-world/tests/run_character_current_spell_v1_host.py",
+      "bytes": 13906,
+      "lines": 153,
+      "kind": "test_or_tool",
+      "sha256": "4e876e73a9d1b60382438f99248cd9bb85a2b4b9c02fb9896ed35aceb0da88fd"
+    },
+    {
+      "path": "port/level-world/tests/run_character_dead_focus_services_v1_host.py",
+      "bytes": 6676,
+      "lines": 52,
+      "kind": "test_or_tool",
+      "sha256": "22011ead98947aa3d63f0f8bf3c0fa564603bbb36b022e17ed15864f8049537c"
+    },
+    {
       "path": "port/level-world/tests/run_character_dot_attack_host.py",
       "bytes": 13068,
       "lines": 137,
@@ -10306,6 +11524,13 @@
       "lines": 260,
       "kind": "test_or_tool",
       "sha256": "6c1ef63086077253e1c7ac940a19b89f82168e2511465beffd27745c54402a0e"
+    },
+    {
+      "path": "port/level-world/tests/run_character_equipped_faery_element_v1_host.py",
+      "bytes": 11872,
+      "lines": 118,
+      "kind": "test_or_tool",
+      "sha256": "ff2a78a6c8fc2e5c0dbc61956b9f8e81a5066318911dfce83d6bc010874119a0"
     },
     {
       "path": "port/level-world/tests/run_character_faery_selection_host.py",
@@ -10357,6 +11582,13 @@
       "sha256": "9c44eb5f90d29c7707af063f6ced4522325fb943f648b3c8d1262cd9c1fddc3a"
     },
     {
+      "path": "port/level-world/tests/run_character_mana_services_v1.py",
+      "bytes": 24286,
+      "lines": 318,
+      "kind": "test_or_tool",
+      "sha256": "07286c88fd7d76ac829521f77e22eb1655ad4b02af8b9a357e39f47da01b6472"
+    },
+    {
       "path": "port/level-world/tests/run_character_monster_retarget_host.py",
       "bytes": 10746,
       "lines": 146,
@@ -10378,11 +11610,25 @@
       "sha256": "3698bc37a1712434113dd5b6b1d109f4127ad2daf6bcf9f8bc9aab54250e27dd"
     },
     {
-      "path": "port/level-world/tests/run_character_player_skills_preparation_v3_host.py",
-      "bytes": 16100,
-      "lines": 233,
+      "path": "port/level-world/tests/run_character_player_buffs_v1_host.py",
+      "bytes": 10352,
+      "lines": 103,
       "kind": "test_or_tool",
-      "sha256": "f188dfc1ef2ab6667cb39adc87e3f5cf0dea495702cbf28191cd6a1840951957"
+      "sha256": "917acbde88aa9eb665e84b64d57f9c1350f26121300b25184b4bbdd719bce4e0"
+    },
+    {
+      "path": "port/level-world/tests/run_character_player_scalar_services_v1_host.py",
+      "bytes": 15876,
+      "lines": 165,
+      "kind": "test_or_tool",
+      "sha256": "a8dc30278978b4079dee073532fad6b5d1d61284878b775b2c9b5b53d2d9656c"
+    },
+    {
+      "path": "port/level-world/tests/run_character_player_skills_preparation_v3_host.py",
+      "bytes": 16338,
+      "lines": 236,
+      "kind": "test_or_tool",
+      "sha256": "8a430793a2863ecbdd66f89950ba7163eb811d76ab3b0ab465df21d6422de57e"
     },
     {
       "path": "port/level-world/tests/run_character_range_capability_host.py",
@@ -10411,6 +11657,27 @@
       "lines": 142,
       "kind": "test_or_tool",
       "sha256": "3c6177c8e79dbb8061592a9e4bba279961af0383acba92935d2b44d20745ab6c"
+    },
+    {
+      "path": "port/level-world/tests/run_character_skill_cooldown_services_host.py",
+      "bytes": 12537,
+      "lines": 124,
+      "kind": "test_or_tool",
+      "sha256": "234aff91936e9d97754d39e583043c9d65740eb43576df641a6b36af7c578b7f"
+    },
+    {
+      "path": "port/level-world/tests/run_character_skill_fsm_callbacks_v1_host.py",
+      "bytes": 12859,
+      "lines": 131,
+      "kind": "test_or_tool",
+      "sha256": "0c9150ae493eb8f27455946935745c1e6adb3445d1ba7726cee7324ea0ba8d66"
+    },
+    {
+      "path": "port/level-world/tests/run_character_skill_state_dispatch_v1_host.py",
+      "bytes": 13809,
+      "lines": 248,
+      "kind": "test_or_tool",
+      "sha256": "78c292aa2eda09c70b9d1c49b068cc3956e9d8ce50907617cb165379fc4d8dbc"
     },
     {
       "path": "port/level-world/tests/run_character_skill_state_queries_host.py",
@@ -10607,6 +11874,90 @@
       "lines": 299,
       "kind": "test_or_tool",
       "sha256": "892d1cd533be2747b970a745c30bc927ef4905a15b4745c0be0da82aa9a6ced4"
+    },
+    {
+      "path": "port/level-world/tests/run_player_ai_death_v1_host.py",
+      "bytes": 6712,
+      "lines": 46,
+      "kind": "test_or_tool",
+      "sha256": "679bdf1f198f9c9d009905b0df7214423433f16f9c14aa4e16e935ce108762e7"
+    },
+    {
+      "path": "port/level-world/tests/run_player_ai_timer_events_v1_host.py",
+      "bytes": 5914,
+      "lines": 54,
+      "kind": "test_or_tool",
+      "sha256": "3548cc71c87eef7d8ef8e3446004d6654d31ce01c2dd77a2b0ac37095f05875f"
+    },
+    {
+      "path": "port/level-world/tests/run_player_ais_lifecycle_v1_host.py",
+      "bytes": 7290,
+      "lines": 71,
+      "kind": "test_or_tool",
+      "sha256": "742119dcb6694810a3a840fd65df2611a75cccbdcd2015e21673e311b9cf335b"
+    },
+    {
+      "path": "port/level-world/tests/run_player_initial_equipment_v1_host.py",
+      "bytes": 7327,
+      "lines": 61,
+      "kind": "test_or_tool",
+      "sha256": "626a00707c07cebd786c6e8037105dd30a1d96e64bd7be7fa196bf58426d2c5b"
+    },
+    {
+      "path": "port/level-world/tests/run_player_initial_skill_grants_v1_host.py",
+      "bytes": 17313,
+      "lines": 308,
+      "kind": "test_or_tool",
+      "sha256": "c8343a0a4f0fe57eff6596124bef912ac58a7fe6a62874a6bf14a9a379b9f412"
+    },
+    {
+      "path": "port/level-world/tests/run_player_kill_continuation_v1_host.py",
+      "bytes": 9373,
+      "lines": 83,
+      "kind": "test_or_tool",
+      "sha256": "b0fcd394a990ea05c234315f19bbafc3302a796ca82d3fac3554f91b0dfdd251"
+    },
+    {
+      "path": "port/level-world/tests/run_player_skill_cleanup_session_v1_host.py",
+      "bytes": 9095,
+      "lines": 82,
+      "kind": "test_or_tool",
+      "sha256": "911addc93e093546ed2fc216ebb93f534bd0e0a8b6d29d69651d3fda4e3e961d"
+    },
+    {
+      "path": "port/level-world/tests/run_player_skill_progression_v1_host.py",
+      "bytes": 14116,
+      "lines": 303,
+      "kind": "test_or_tool",
+      "sha256": "6db8bb12cfd6d69c1bcce51fc3d10f339aece14d745001fab4cf567dad156476"
+    },
+    {
+      "path": "port/level-world/tests/run_player_skill_property_services_v1_host.py",
+      "bytes": 10559,
+      "lines": 205,
+      "kind": "test_or_tool",
+      "sha256": "0551d1e9aa294ad84e5609bef8bb9ce6cf3a95983ae699088c3a014e112e24f1"
+    },
+    {
+      "path": "port/level-world/tests/run_player_skill_session_v1_host.py",
+      "bytes": 8069,
+      "lines": 69,
+      "kind": "test_or_tool",
+      "sha256": "f70f9dc91511e47be1d4ebe1bc1ab444b645a0221fef803fab550abbfd0510fd"
+    },
+    {
+      "path": "port/level-world/tests/run_player_skill_update_session_v1_host.py",
+      "bytes": 11662,
+      "lines": 212,
+      "kind": "test_or_tool",
+      "sha256": "9a005c3a09fb7ae35b2dc90071e35c88d661825a51e5a2645677a8283c2ebc9e"
+    },
+    {
+      "path": "port/level-world/tests/run_player_skill_use_session_v1_host.py",
+      "bytes": 12190,
+      "lines": 122,
+      "kind": "test_or_tool",
+      "sha256": "830fec0d36589f639fc565ae567444b2937c939e9a5ebf17a6b3484a7e691276"
     },
     {
       "path": "port/level-world/tests/run_room_zone_enrollment_host.py",

@@ -98,6 +98,12 @@ public:
  std::int32_t engine_index(std::int32_t dictionary_id)const;
  std::int32_t dictionary_id(std::int32_t engine_index)const;
  const animation::TransformSet& transform_set()const{return compiled;}
+ // Read-only resource/graph validation for CPU scene recreation. This performs
+ // no clip selection, sampling, clock, event, root or completion work.
+ bool matches_binding(const ClipBank& bank,const visual::SceneBinding& visual,
+                      const scene::Scene& scene,std::string& error)const {
+  return ready(bank,visual,scene,error);
+ }
  const std::vector<float>& values(std::size_t target)const{return target_values.at(target).values;}
  timeline::State& current_timeline(){return slots.at(blend.current).timeline;}
  const timeline::State& current_timeline()const{return slots.at(blend.current).timeline;}

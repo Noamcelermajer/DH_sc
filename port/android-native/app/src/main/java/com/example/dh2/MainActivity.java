@@ -33,11 +33,13 @@ public final class MainActivity extends Activity {
     private volatile String baseReport;
     private volatile boolean pendingActorCommand;
     private volatile boolean enemyAi=true;
+    private volatile int inspectionTimeMs=-1;
     private volatile boolean attackDisplayPending;
     private BroadcastReceiver debugAttackReceiver;
     @Override public void onCreate(Bundle state) {
         setTheme(android.R.style.Theme_Material_NoActionBar);super.onCreate(state);
         enemyAi=state!=null?state.getBoolean("enemyAi",true):getIntent().getBooleanExtra("enemy_ai",true);
+        inspectionTimeMs=state!=null?state.getInt("inspectionTimeMs",-1):getIntent().getIntExtra("time_ms",-1);
         LinearLayout layout=new LinearLayout(this);layout.setOrientation(LinearLayout.VERTICAL);
         layout.setBackgroundColor(Color.rgb(24,27,32));
         layout.setOnApplyWindowInsetsListener((view,insets)->{
@@ -87,17 +89,20 @@ public final class MainActivity extends Activity {
         surface.setRenderer(new GLSurfaceView.Renderer(){
             long lastVitals;
             @Override public void onSurfaceCreated(GL10 gl,EGLConfig config){
+                ready=false;loadedAsset=null;
                 java.io.File external=getExternalFilesDir(null);
                 java.io.File mods=new java.io.File(external!=null?external:getFilesDir(),"mods");
                 if(!mods.isDirectory()&&!mods.mkdirs())Log.e("DH2Native","Could not create mod directory");
                 NativeBridge.modDirectory(mods.getAbsolutePath());
                 NativeBridge.runtimeDirectory(getFilesDir().getAbsolutePath());
-                Log.i("DH2Native",NativeBridge.initialize());loadedAsset=null;ready=true;
+                String initialization=NativeBridge.initialize();Log.i("DH2Native",initialization);
+                if(initialization==null||!initialization.startsWith("Renderer: ")){show(initialization);return;}
+                ready=true;
                 NativeBridge.enemyAi(enemyAi);
                 if(assets.length>0)loadSelected();else show("No bundled asset fixtures");
             }
             @Override public void onSurfaceChanged(GL10 gl,int w,int h){NativeBridge.resize(w,h);}
-            @Override public void onDrawFrame(GL10 gl){NativeBridge.draw();long now=android.os.SystemClock.uptimeMillis();if(now-lastVitals>=200&&loadedAsset!=null&&loadedAsset.startsWith("worlds/")){lastVitals=now;int[] values=NativeBridge.playerVitals();if(attackDisplayPending&&values[6]!=5){attackDisplayPending=false;show(baseReport+"\n"+(values[4]!=0?"Defeated":"Attack finished."));}runOnUiThread(()->{vitals.setText(String.format(java.util.Locale.ROOT,"HP %.1f / %.1f   MP %.1f / %.1f%s",values[0]/256f,values[1]/256f,values[2]/256f,values[3]/256f,values[4]!=0?"   Defeated":""));vitals.setTextColor(values[4]!=0||values[5]==0?Color.rgb(255,150,150):Color.WHITE);});}}
+            @Override public void onDrawFrame(GL10 gl){if(!ready)return;NativeBridge.draw();long now=android.os.SystemClock.uptimeMillis();if(now-lastVitals>=200&&loadedAsset!=null&&loadedAsset.startsWith("worlds/")){lastVitals=now;int[] values=NativeBridge.playerVitals();if(attackDisplayPending&&values[6]!=5){attackDisplayPending=false;show(baseReport+"\n"+(values[4]!=0?"Defeated":"Attack finished."));}runOnUiThread(()->{vitals.setText(String.format(java.util.Locale.ROOT,"HP %.1f / %.1f   MP %.1f / %.1f%s",values[0]/256f,values[1]/256f,values[2]/256f,values[3]/256f,values[4]!=0?"   Defeated":""));vitals.setTextColor(values[4]!=0||values[5]==0?Color.rgb(255,150,150):Color.WHITE);});}}
         });
         surface.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         FrameLayout viewport=new FrameLayout(this);viewport.addView(surface,new FrameLayout.LayoutParams(-1,-1));
@@ -154,6 +159,7 @@ public final class MainActivity extends Activity {
                     }
                     if("com.example.dh2.DEBUG_ANIMATION_TIME".equals(intent.getAction())){
                         final int time=intent.getIntExtra("time_ms",-1);
+                        inspectionTimeMs=time;
                         surface.queueEvent(()->{NativeBridge.animationTime(time);Log.i("DH2Native","Animation time command applied | time "+time);surface.requestRender();});
                         return;
                     }
@@ -204,9 +210,10 @@ public final class MainActivity extends Activity {
     @Override protected void onNewIntent(Intent intent){
         super.onNewIntent(intent);setIntent(intent);
         if(intent.hasExtra("enemy_ai"))enemyAi=intent.getBooleanExtra("enemy_ai",true);
+        if(intent.hasExtra("time_ms"))inspectionTimeMs=intent.getIntExtra("time_ms",-1);
         pendingActorCommand=true;
         if(!ready||loadedAsset==null||!loadedAsset.startsWith("worlds/"))return;
-        final int index=intent.getIntExtra("object_index",-1),time=intent.getIntExtra("time_ms",-1),target=intent.getIntExtra("combat_target_index",-1);
+        final int index=intent.getIntExtra("object_index",-1),time=inspectionTimeMs,target=intent.getIntExtra("combat_target_index",-1);
         final String state=intent.getStringExtra("object_state");
         surface.queueEvent(()->{
             NativeBridge.enemyAi(enemyAi);
@@ -230,7 +237,7 @@ public final class MainActivity extends Activity {
             String report=name.startsWith("worlds/")?NativeBridge.loadWorld(encoded,getAssets()):name.startsWith("models/")?NativeBridge.loadModel(encoded,getAssets()):NativeBridge.loadTexture(encoded);
             if(!report.contains("failed")&&!report.contains("error"))loadedAsset=name;
             baseReport=name+"\n"+report;
-            if(name.startsWith("models/")||name.startsWith("worlds/"))NativeBridge.animationTime(getIntent().getIntExtra("time_ms",-1));
+            if(name.startsWith("models/")||name.startsWith("worlds/"))NativeBridge.animationTime(inspectionTimeMs);
             if(name.startsWith("worlds/"))NativeBridge.focusObject(getIntent().getIntExtra("object_index",-1));
             if(name.startsWith("worlds/")&&pendingActorCommand&&getIntent().getBooleanExtra("player_attack",false)){
                 String attackReport=NativeBridge.playerAttack(getIntent().getIntExtra("player_target_index",-1));report+="\n"+attackReport;
@@ -273,5 +280,5 @@ public final class MainActivity extends Activity {
     @Override protected void onPause(){super.onPause();ready=false;movement.stop();surface.onPause();}
     @Override protected void onResume(){super.onResume();surface.onResume();}
     @Override protected void onDestroy(){if(debugAttackReceiver!=null)unregisterReceiver(debugAttackReceiver);super.onDestroy();}
-    @Override protected void onSaveInstanceState(Bundle state){super.onSaveInstanceState(state);if(assets.length>0)state.putString("asset",assets[selected]);state.putBoolean("pendingPlayerAttack",pendingActorCommand&&getIntent().getBooleanExtra("player_attack",false));state.putBoolean("enemyAi",enemyAi);}
+    @Override protected void onSaveInstanceState(Bundle state){super.onSaveInstanceState(state);if(assets.length>0)state.putString("asset",assets[selected]);state.putBoolean("pendingPlayerAttack",pendingActorCommand&&getIntent().getBooleanExtra("player_attack",false));state.putBoolean("enemyAi",enemyAi);state.putInt("inspectionTimeMs",inspectionTimeMs);}
 }

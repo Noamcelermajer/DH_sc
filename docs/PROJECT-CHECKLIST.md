@@ -10,11 +10,14 @@ Source ref: `native-camera-frustum-2026-10-05` at `41e75b7`.
 APK: 25,219,583 bytes; SHA-256 `80ed755e81ed8ddbcd30093999c094e40cc160b98f312f8ba36f18635794fbff`.
 Matching source: [download ZIP](https://github.com/Noamcelermajer/DH_sc/releases/download/native-camera-frustum-2026-10-05/crypt-source-camera-culling-reviewed-source.zip); SHA-256 `8fcde7c2f770428cfc8d9426b94dd408c42bff791d5e38d212333a2054ec2c6b`.
 
-**Newer tested local build:** `DH2-native-player-death-2026-10-05.apk` in Downloads;
-SHA-256 `2a93a0e2d9ad48310e123f1050f62d7f1d2384b4bf862667da0b431fab0605ec`.
-Source AI death/cleanup, Player startup/regen/retention and Crypt regressions pass
-on API37/16KiB. Full Kill/rewards, inventory and gameplay remain open.
-[Evidence](../reports/reconstruction-2026-10-05/player-death/validation.json).
+**Newer tested local build:** `DH2-native-backbone-2026-10-05.apk` in Downloads;
+30,076,721 bytes, SHA-256 `220b2b659a3216316feab26c83aeeada6704bfe4e0e3ca8ecdf3892dbfa1797f`.
+Both native ABIs compile from 597 actual compiler/configure inputs; the source
+capture covers 623 files. API37/16KiB death/reload/rotation retains exact CPU
+pose/playback without event replay. Terminal preview releases Player owners and
+cancels four Ghost timers before VM closure. Equipment and Kill continuation
+pass selected-host gates; their native providers remain open.
+Player skills/regen and Crypt touch/Wait/Spawn regressions also pass on this APK. [Evidence](../reports/reconstruction-2026-10-05/player-backbone/validation.json).
 
 ## How to read this checklist
 
@@ -38,15 +41,15 @@ still require live gameplay integration. All final completion gates remain open.
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
-| Character properties, equipment and state | 16 | 5 |
-| Lua, skills and enemy AI | 47 | 15 |
-| Combat, death, loot and progression | 6 | 7 |
+| Character properties, equipment and state | 17 | 5 |
+| Lua, skills and enemy AI | 48 | 14 |
+| Combat, death, loot and progression | 7 | 7 |
 | Quests, campaign, UI, audio and saves | 4 | 9 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **123** | **72** |
+| **Total scoped tasks** | **126** | **71** |
 
-Latest local gate: [native Player death](../reports/reconstruction-2026-10-05/player-death/validation.json). Source AI death/cleanup, one InitProcess skill update, regen/retention and Crypt regressions pass. Three new backbone adapters share existing owners. Full Kill/event2, linked aggro, inventory/loot, activation and autonomous pursuit remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
+Latest local gate: [Player backbone](../reports/reconstruction-2026-10-05/player-backbone/validation.json). CPU pose/playback retention is live. Borrowed initial equipment and ordinary Player Kill continuation are host verified and Android compiled. Native profile/locality/InitPost, inventory/AddLoot/text/Skin, Kill providers, skill activation and autonomous pursuit remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -186,6 +189,8 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [ ] Replace remaining development inputs/facts with the original game-owned producers.
 - [ ] Validate all character types and states together in live encounters.
 
+- [x] Select borrowed Character::_InitEquipment over the sole V4 inventory and buff-aware properties: 18 original caller cases, 2,151 host checks, three class tables, 13 failure prefixes and eight guards pass; both Android ABIs compile. Genuine profile/locality/InitPost, full AddLoot and native text/Skin remain unbound.
+
 ## 6. Lua, skills and enemy AI — current implementation focus
 
 - [x] Reuse source-built float32 Lua and preserve native pointer identities without numeric narrowing.
@@ -277,7 +282,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Verify native direct state12/null, target synchronization, timer33/34 retirement, all13 cleanup callbacks, buff removal, authored body removal and same-VM dead-state reload through a controlled fatal-hit fixture.
 - [x] Remove invented per-frame UpdateAllSkills replay; original initialization/progression callers own this update. Live InitProcess/reload receipts retain exactly one call.
 - [ ] Bind genuine linked-aggro/group/OnAggro producers and reached inventory-stance/nonnull-FX services for death; finish outer Character Kill/event2 routing.
-- [ ] Preserve Player animation pose/cursor across Activity recreation; current development sequence restarts on reload, including the dead pose.
+- [x] Retain Player CPU playback and actual scene pose through development reload and Activity recreation without event replay: seven host boundaries, 402 exact continuation frames and nine guards pass. The API37/16KiB frozen dead-pose fixture retains exact playback/pose hashes and event count.
 - [ ] Complete enemy movement, attacks, skill decisions, combat state changes and target cleanup.
 - [ ] Complete other AIS factories, enemy types, bosses and player AI/input behavior.
 - [ ] Playtest all enemy/skill combinations and preserve original decisions and timing.
@@ -297,6 +302,8 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [ ] Complete XP, leveling, rewards, gold and difficulty scaling through actual game owners.
 - [ ] Validate boss encounters and any original cooperative/network behavior retained by the project.
 - [ ] Complete a real original level through its exit using the integrated combat loop.
+
+- [x] Select ordinary Player Kill continuation, exact Ctrl_Kill and event2 composition: 58 ARM comparisons with zero mismatches, 43 host continuations, 27 failure prefixes, seven guards and three same-Session classes pass; both Android ABIs compile. Native locality/trophy/online providers and general Kill/rewards remain open.
 
 ## 8. Quests, campaign, UI, audio and saves
 
@@ -340,7 +347,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 ## Immediate work order
 
-1. Finish Player Kill/event2 continuation and bind profile/inventory/equipment/text/Skin producers on the same retained owners; preserve the dead pose during recreation.
+1. Bind genuine offline profile/locality/InitPost and inventory/AddLoot/text/Skin producers on the same owners; connect the selected Player Kill/event2 continuation through real providers.
 2. Connect full Player/enemy AIS frames, nonempty skill activation and autonomous acquisition/pursuit/attacks.
 3. Finish combat/death/rewards/loot/quest delivery and complete one original level.
 4. Expand factories/content/transitions, all classes, UI/audio and persistent campaign saves.

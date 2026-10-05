@@ -60,7 +60,10 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_com_example_dh2_NativeBridge_readAs
   }
 }
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_initialize(JNIEnv* env,jclass){
-  model_renderer::reset_context();program=0;texture=0;const GLuint vs=compile(GL_VERTEX_SHADER,vs_source),fs=compile(GL_FRAGMENT_SHADER,fs_source);
+  program=0;texture=0;
+  try{model_renderer::reset_context();}
+  catch(const std::exception& error){return result(env,std::string("Renderer recreation failed: ")+error.what());}
+  const GLuint vs=compile(GL_VERTEX_SHADER,vs_source),fs=compile(GL_FRAGMENT_SHADER,fs_source);
   if(!vs||!fs){if(vs)glDeleteShader(vs);if(fs)glDeleteShader(fs);return result(env,"Shader initialization failed; see DH2Native Logcat");}
   program=glCreateProgram();glAttachShader(program,vs);glAttachShader(program,fs);glLinkProgram(program);
   glDeleteShader(vs);glDeleteShader(fs);GLint linked=0;glGetProgramiv(program,GL_LINK_STATUS,&linked);

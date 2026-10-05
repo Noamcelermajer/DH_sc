@@ -31,6 +31,7 @@
 #include "navigation_heading.hpp"
 #include "actor_runtime.hpp"
 #include "actor_blended_playback.hpp"
+#include "actor_scene_retention_v1.hpp"
 #include "physical_world.hpp"
 #include "character_scene.hpp"
 #include "character_state.hpp"
@@ -387,6 +388,7 @@ dh2::actor::RuntimeState prince_runtime{};
 dh2::physical::NativeBody prince_body{};
 dh2::visual::SceneBinding prince_visual;
 dh2::actor::BlendedPlayback prince_locomotion;
+dh2::actor_scene_retention_v1::Snapshot prince_retained_pose;
 dh2::character::Coordinator prince_character(0x100000001ull);
 dh2::character::State& prince_state=prince_character.state;
 b2FilterData prince_initial_filter;
@@ -602,6 +604,16 @@ struct NativeMonsterInitialization {
  std::vector<unsigned> init_phases;
  bool initialized=false;
  unsigned timer_gates=0;
+ NativeMonsterInitialization(){lifecycle.timer33=lifecycle.timer34=-1;}
+ void retire_timers() noexcept {
+  if(!owner)return;
+  for(auto* timer:{&lifecycle.timer33,&lifecycle.timer34})if(*timer>=0){
+   const auto id=*timer;const auto status=owner->character.stop_timer(std::uint32_t(id));
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Ghost timer retired before VM close | event %x | slot %d | status %d",timer==&lifecycle.timer33?0x33:0x34,id,status);
+   if(status>=0)*timer=-1;
+  }
+ }
+ ~NativeMonsterInitialization(){retire_timers();}
  ObjectActor& actor() {if(!owner||!owner->actor)throw std::runtime_error("Native monster owner is stale");return *owner->actor;}
  bool subject(std::uintptr_t id) {return ai&&id==ai->character_identity&&owner&&owner->actor&&owner->actor->identity==id;}
  static auto& self(void* raw) {return *static_cast<NativeMonsterInitialization*>(raw);}
@@ -865,10 +877,7 @@ void retire_native_monster_scripts(bool preserve) {
  for(auto& projection:source_char_ai.projections)if(projection->initialization) {
   auto& script=*projection->initialization;
   if(preserve&&script.initialized)continue;
-  if(script.owner) {
-   if(script.lifecycle.timer33!=-1)script.owner->character.stop_timer(std::uint32_t(script.lifecycle.timer33));
-   if(script.lifecycle.timer34!=-1)script.owner->character.stop_timer(std::uint32_t(script.lifecycle.timer34));
-  }
+   script.retire_timers();
   script.initialized=false;
  }
 }
@@ -1306,10 +1315,30 @@ Matrix camera(int width,int height){
 void mod_directory(std::string directory){mod_root=std::move(directory);}
 void runtime_directory(std::string directory){runtime_root=std::move(directory);}
 std::vector<std::uint8_t> read_asset(AAssetManager* assets,const std::string& name){return read(assets,name,"");}
-void reset_context(){native_actor_ready=false;clear_actor_world(world_mode||resume_world);search_world.clear();prince_search_projection={};prince_body={};resume_world=resume_world||world_mode;if(world_mode){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}world_mode=false;move_x=move_y=0;draws.clear();images.clear();object_groups.clear();world_objects.clear();prince_locomotion=dh2::actor::BlendedPlayback{};prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;inspected_object=-1;current_scene={};player=dh2::animation::Player{};walk_player=dh2::animation::Player{};level={};program=0;enabled=false;}
+void reset_context(){
+ // EGL has already replaced the context. Forget its old GPU names before a
+ // fallible CPU snapshot; deleting those names here could affect the new context.
+ program=0;enabled=false;native_actor_ready=false;draws.clear();images.clear();
+ for(auto& group:object_groups)group.draws.clear();
+ const bool retain=world_mode||resume_world;
+ if(world_mode){
+  std::string error;
+  if(!prince_retained_pose.capture(prince_locomotion,prince_attack_clips,prince_visual,current_scene,error))
+   throw std::runtime_error("Player scene retention failed: "+error);
+  saved_actors.clear();
+  for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);
+ }
+ native_actor_ready=false;clear_actor_world(retain);search_world.clear();prince_search_projection={};prince_body={};
+ resume_world=retain;world_mode=false;move_x=move_y=0;draws.clear();images.clear();object_groups.clear();world_objects.clear();
+ if(!retain){
+  prince_retained_pose.clear();prince_locomotion=dh2::actor::BlendedPlayback{};
+  prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;
+ }
+ inspected_object=-1;current_scene={};player=dh2::animation::Player{};walk_player=dh2::animation::Player{};level={};program=0;enabled=false;
+}
 void deactivate(){
  source_camera={};
- prince_skills.reset();prince_source_ai.reset();source_char_ai.clear();
+  prince_skills.reset();prince_source_ai.reset();
  // Terminal discard differs from GL recreation: clear every actor copy after
  // retiring timers and tearing down bodies, then release the owning groups.
  std::vector<std::weak_ptr<NativeMonsterInitialization>> retired;
@@ -1321,6 +1350,8 @@ void deactivate(){
  crypt_spawn_script.clear();crypt_trigger_state={};saved_actors.clear();
  release_objects(object_groups);release(draws,images);world_objects.clear();
  actor_skill_catalogue.reset();level={};current_scene={};
+ prince_retained_pose.clear();prince_locomotion=dh2::actor::BlendedPlayback{};
+ prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;
  enabled=false;world_mode=false;resume_world=false;move_x=move_y=0;
  const auto remaining=std::count_if(retired.begin(),retired.end(),[](const auto& owner){return !owner.expired();});
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native terminal world discard | Ghost references %zu | remaining %zu | groups %zu | saved actors %zu | catalogue %u",retired.size(),std::size_t(remaining),object_groups.size(),saved_actors.size(),unsigned(bool(actor_skill_catalogue)));
@@ -1339,6 +1370,34 @@ void set_time(int milliseconds){
    for(const auto& node:current_scene.graph){digest(node.translation,3);digest(node.quaternion,4);digest(node.scale,3);digest(node.world.data(),16);}
    const auto body=prince_body.body?prince_body.body->GetPosition():b2Vec2(actor_position[0]*.01f,actor_position[1]*.01f);
    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Prince blended inspection | frozen %u | scene %u | Step %u | actor %u | clip %d | ms %d | body %.6g %.6g | pose %016llx",unsigned(frozen),unsigned(scene_clock),native_physics_steps,native_actor_frames,prince_locomotion.current_clip(),prince_locomotion.current_timeline().current_ms,body.x,body.y,static_cast<unsigned long long>(pose));
+   // Development evidence only. Hash semantic playback fields and cached
+   // contributions without sampling or advancing the retained source owner.
+   std::uint64_t playback_hash=14695981039346656037ull;
+   auto word=[&](std::uint32_t value){for(unsigned i=0;i<4;++i){playback_hash^=(value>>(i*8))&255;playback_hash*=1099511628211ull;}};
+   auto floats=[&](const float* values,unsigned count){for(unsigned i=0;i<count;++i){std::uint32_t value;std::memcpy(&value,values+i,4);word(value);}};
+   auto delta=[&](const dh2::visual::Delta& value){word(value.timestamp);floats(value.previous,3);floats(value.value,3);};
+   const auto& blend=prince_locomotion.blend;
+   word(blend.current);word(blend.previous);word(blend.duration);word(blend.remaining);floats(&blend.reciprocal,1);word(blend.last_time);floats(blend.weights,2);
+   for(const auto& slot:prince_locomotion.slots){
+    const auto& time=slot.timeline;
+    word(time.current_ms);word(time.start_ms);word(time.end_ms);word(time.loop);
+    floats(&time.frame_seconds,1);floats(&time.start_seconds,1);floats(&time.length_seconds,1);
+    floats(&time.last_seconds,1);floats(&time.current_seconds,1);floats(&time.scale,1);
+    word(time.library_present);word(time.clip_index);word(time.ended);word(time.initialized);
+    word(slot.event_cursor.last_entry);delta(slot.root_history);word(slot.clip_id);word(slot.compiled_clip);
+    word(std::uint32_t(slot.generation));word(std::uint32_t(slot.generation>>32));word(std::uint32_t(slot.key_cursors.size()));
+    for(auto key:slot.key_cursors)word(key);
+   }
+   for(const auto& frame:prince_locomotion.scheduler.frames()){word(frame.sequence);word(frame.loops);word(frame.step);}
+   word(prince_locomotion.scheduler.active());word(prince_locomotion.applicator_completion.extra_ms);word(prince_locomotion.applicator_completion.pending);
+   word(prince_locomotion.completion.extra_ms);word(prince_locomotion.completion.pending);delta(prince_locomotion.aggregate);
+   word(prince_locomotion.root_timestamp);word(prince_locomotion.completions);word(prince_locomotion.restarts);word(prince_locomotion.sequence_closed);
+   word(prince_locomotion.displacement);word(prince_locomotion.stop_requested);word(prince_locomotion.last_event_lag);
+   for(auto enabled:prince_locomotion.target_enabled)word(enabled);
+   for(std::size_t target=0;target<prince_locomotion.transform_set().targets().size();++target){const auto& values=prince_locomotion.values(target);floats(values.data(),unsigned(values.size()));}
+   word(actor_random.seed);word(actor_random.calls);
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Prince retained animation inspection | state %d | frozen %u | scene %u | clip %d | engine %d | ms %d | playback %016llx | pose %016llx",
+    prince_state.current,unsigned(frozen),unsigned(scene_clock),prince_locomotion.current_clip(),prince_locomotion.current_engine_clip(),prince_locomotion.current_timeline().current_ms,static_cast<unsigned long long>(playback_hash),static_cast<unsigned long long>(pose));
    return;
   }
   if(milliseconds<0){epoch=std::chrono::steady_clock::now()-std::chrono::milliseconds(sampled_ms-player.start);frozen=false;}
@@ -1413,7 +1472,14 @@ static std::string load_scene(const std::uint8_t* bytes,std::size_t size,AAssetM
     const float extent[3]{high[0]-low[0],high[1]-low[1],high[2]-low[2]};
     float next_radius=std::sqrt(extent[0]*extent[0]+extent[1]*extent[1]+extent[2]*extent[2])*.5f;
     if(!std::isfinite(next_radius)||next_radius<.001f)throw std::runtime_error("Degenerate scene bounds");
-    clear_actor_world(preserve_level_session);release_objects(object_groups);world_objects.clear();inspected_object=-1;release(draws,images);draws=std::move(candidate);images=std::move(textures);radius=next_radius;
+    // A standalone model ends the world, including saved actor copies and
+    // retained script/CPU Player owners. Candidate GPU resources remain local.
+    if(preserve_level_session)clear_actor_world(true);else deactivate();
+    release_objects(object_groups);world_objects.clear();inspected_object=-1;release(draws,images);draws=std::move(candidate);images=std::move(textures);radius=next_radius;
+    if(!preserve_level_session){
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player preview owners retired | bank %zu | retained pose %u | skill owner %u | AI owner %u",
+       prince_attack_clips.size(),unsigned(!prince_retained_pose.empty()),unsigned(bool(prince_skills)),unsigned(bool(prince_source_ai)));
+    }
     native_actor_ready=false;prince_body={};
     if(!preserve_level_session){crypt_spawn_script.clear();crypt_trigger_state={};}
     world_mode=false;resume_world=false;move_x=move_y=0;
@@ -1980,8 +2046,12 @@ void initialize_native_actor(AAssetManager* assets,bool restore){
  std::copy(prince_runtime.object.motion.position,prince_runtime.object.motion.position+3,prince_runtime.subobjects.previous_position);
  std::copy(prince_runtime.object.motion.position,prince_runtime.object.motion.position+3,prince_runtime.subobjects.position);
  std::copy(prince_runtime.object.motion.position,prince_runtime.object.motion.position+3,actor_position.begin());
- // Activity recreation rebuilds a complete CPU playback session and explicitly
- // restarts its saved sequence below. It does not restore interrupted fades.
+ // GPU/world recreation retains the original CPU playback and immutable bank.
+ // Restore the last rendered pose without a time/fade/event/root-motion pass.
+ if(restore){
+  if(prince_retained_pose.empty()||!prince_retained_pose.restore(prince_locomotion,prince_attack_clips,prince_visual,current_scene,error))
+   throw std::runtime_error("Retained Prince scene restoration failed: "+error);
+ }else{
  prince_visual=dh2::visual::SceneBinding{};
  if(!prince_visual.bind(current_scene,error))throw std::runtime_error(error);
  prince_locomotion=dh2::actor::BlendedPlayback{};scene_clock=0;
@@ -1998,6 +2068,7 @@ void initialize_native_actor(AAssetManager* assets,bool restore){
  std::copy(actor_position.begin(),actor_position.end(),prince_visual.root.position);
  std::copy(mesh.effective_scale,mesh.effective_scale+3,prince_visual.root.scale);
  const float euler[3]{0,0,heading};if(!prince_visual.set_rotation(euler))throw std::runtime_error("Native player rotation rejected");
+ }
  prince_locomotion.observer={nullptr,character_playback_event};
  prince_character.bind({nullptr,[](void*){return prince_facts();},
                          {nullptr,character_service},prince_timer_before,prince_timer_after,nullptr,prince_timer_route});
@@ -2019,9 +2090,10 @@ void initialize_native_actor(AAssetManager* assets,bool restore){
   character_service(nullptr,&prince_state,&filter);
   if(restore_without_body){actor_world.destroy(prince_body.body);prince_state.body_present=0;}
  }
- if(restore&&prince_state.current!=3&&prince_state.current!=4&&prince_state.current_animation>=0){
-  if(!prince_locomotion.start(actor_animation_tables,prince_state.current_animation,actor_random,prince_attack_clips,prince_visual,current_scene,prince_state.cached_speed,error))throw std::runtime_error("Restored Prince sequence failed: "+error);
-  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player blended sequence restarted | state %d | sequence %d | clip %d | engine %d | development recreation",prince_state.current,prince_state.current_animation,prince_locomotion.current_clip(),prince_locomotion.current_engine_clip());
+ if(restore){
+  prince_retained_pose.clear();
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player blended playback retained | state %d | sequence %d | clip %d | engine %d | scene %u | ms %d | replays %u | completion %u | same CPU bank, cursors, fade and root history",
+   prince_state.current,prince_state.current_animation,prince_locomotion.current_clip(),prince_locomotion.current_engine_clip(),unsigned(scene_clock),prince_locomotion.current_timeline().current_ms,prince_locomotion.restarts,prince_locomotion.completions);
  }
  prince_flags=prince_state.flags;prince_move_type=prince_state.move_type;
  for(const auto& group:object_groups){
@@ -2267,8 +2339,12 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
   const bool restore=world_mode||resume_world;const auto previous=actor_position;
   const auto previous_heading=heading;
   const auto previous_random=actor_random;
+  const bool previous_frozen=frozen;
   if(restore&&!object_groups.empty()){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}
   try{
+    std::string retention_error;
+    if(world_mode&&!prince_retained_pose.capture(prince_locomotion,prince_attack_clips,prince_visual,current_scene,retention_error))
+      throw std::runtime_error("Player scene retention failed: "+retention_error);
     if(!restore){prince_skills.reset();prince_source_ai.reset();}
     auto raw=read(assets,"crypt.bdae","worlds");dh2::resources::BresView view{};
     if(dh2_bres_open(&view,raw.data(),raw.size())!=dh2::resources::BresError::ok)throw std::runtime_error("World BRES rejected");
@@ -2453,7 +2529,8 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     environment.insert(environment.end(),std::make_move_iterator(draws.begin()),std::make_move_iterator(draws.end()));draws=std::move(environment);
     images.insert(images.end(),textures.begin(),textures.end());textures.clear();
     object_groups=std::move(candidate_groups);world_objects=std::move(object_records);unsigned monsters=0,decors=0,object_triangles=0,object_draws=0;
-    actor_animation_tables=std::move(animation_tables);actor_clip_table=std::move(clip_table);actor_random=restore?previous_random:animation_random;actor_property_rules=property_rules;actor_ai_tables=std::move(ai_tables);
+    if(!restore){actor_animation_tables=std::move(animation_tables);actor_clip_table=std::move(clip_table);}
+    actor_random=restore?previous_random:animation_random;actor_property_rules=property_rules;actor_ai_tables=std::move(ai_tables);
     actor_ai_classification_rows.clear();actor_ai_classification_rows.reserve(actor_ai_tables.rows.size());
     for(const auto& row:actor_ai_tables.rows)actor_ai_classification_rows.push_back({row.flags,row.type});
     actor_ai_classification_table={actor_ai_classification_rows.data(),std::uint32_t(actor_ai_classification_rows.size())};
@@ -2476,15 +2553,17 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     }}else{combat_random={0xD22026u,0};combat_hits=0;}
     saved_actors.clear();
     if(!restore)prince_combat=std::move(fresh_player);
-    // Detach before replacing the explicit immutable bank owner.
-    prince_locomotion=dh2::actor::BlendedPlayback{};
-    prince_attack_clips=std::move(candidate_player_clips);prince_animation_bank=std::move(candidate_bank);
+    if(!restore){
+      // Only a new world/session replaces the explicit immutable bank owner.
+      prince_retained_pose.clear();prince_locomotion=dh2::actor::BlendedPlayback{};
+      prince_attack_clips=std::move(candidate_player_clips);prince_animation_bank=std::move(candidate_bank);
+    }
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player properties | KnightPlayerBase | HP %d | MP %d | checksum %016llx | attempts %u | attacking %d",prince_combat.properties.resolved[36],prince_combat.properties.resolved[41],static_cast<unsigned long long>(snapshot_checksum(prince_combat.properties.resolved)),prince_combat.attempts,int(prince_state.current==5));
     for(const auto& group:object_groups)for(const auto& object:group.instances){monsters+=object.kind==1;decors+=object.kind==2;object_triangles+=group.resource.triangles;object_draws+=group.draws.size();}
     level=std::move(candidate);player=std::move(candidate_idle);walk_player=std::move(candidate_walk);current_scene=std::move(rest);
     actor_position=restore?previous:level.spawn;
     world_mode=true;resume_world=false;walking=false;move_x=move_y=0;heading=restore?previous_heading:0;movement_steps=blocked_steps=0;
-    radius=350;yaw=-1.57f;pitch=.75f;zoom=1;object_epoch=epoch=last_frame=std::chrono::steady_clock::now();sampled_ms=0;frozen=false;
+    radius=350;yaw=-1.57f;pitch=.75f;zoom=1;object_epoch=epoch=last_frame=std::chrono::steady_clock::now();sampled_ms=0;frozen=restore?previous_frozen:false;
     initialize_native_actor(assets,restore);
     actor_level_fields=candidate_level_fields;actor_level_file=candidate_level_file;actor_level_fields_ready=true;
     std::int32_t source_ranges[6]{};

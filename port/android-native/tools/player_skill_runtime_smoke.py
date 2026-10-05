@@ -313,7 +313,7 @@ def main():
             retained_ais(text)
             source_timer_receipts(text,startup)
         assert int(first_vm[2]) == 1, 'UpdateAllSkills must be delivered by the single source InitProcess, not renderer frames'
-        # Reload resumes the frame; ensure pending cooldown survives recreation.
+        # Inspection remains frozen across reload; ensure cooldown survives recreation.
         adb('shell', 'cmd', 'window', 'user-rotation', 'lock', '1')
         text = wait(lambda t: len(re.findall(r'Native Player skills retained \|', t)) >= 2, 'retained rotation')
         restores = re.findall(r'Native Player skills retained \| VM (\S+) \| paths 15 \| update attempts (\d+)', text)
@@ -366,6 +366,8 @@ def main():
                 assert all(row['phase']=='restore' and row['MP']==0 for row in restored), 'reload healed/drained source MP before frames'
                 baseline=restored[0]
                 target_count=baseline['delivered']+1
+                # Reload now preserves inspection time instead of unfreezing it.
+                resume()
                 def reached_regen(t):
                     return any(row[0]=='33' and int(row[2])==target_count for row in TIMER_DELIVERED.findall(t))
                 text=wait(reached_regen,'first resumed source33 regeneration',35)

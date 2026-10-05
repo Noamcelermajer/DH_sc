@@ -5,9 +5,9 @@ Adam reference: [`AdamCelermajer/DH_sc`](https://github.com/AdamCelermajer/DH_sc
 
 This report supersedes older documents' descriptions of the current default development build. Historical reports retain their original artifact identities and test scopes.
 
-**Latest work:** Source Player OnDied→AI_SetDead now borrows the same VM/preparation, AI, Coordinator, buffs and properties. Direct state12/null, target synchronization, two timer stops and all13 cleanup callbacks pass live. Three selected-host gates cover real classes, 23 cleanup/18 death ARM routes, 58 death failure prefixes and 3,910 state comparisons. The original caller audit also removed invented per-frame UpdateAllSkills replay. Adam's existing V4/V5/V7, skill and five-TU text selections were rechecked; no duplicate authorities were introduced. Full Character Kill/event2, linked aggro, inventory/profile/grants, positive DoT, skill activation and full AIS frame remain open. [Evidence](../reports/reconstruction-2026-10-05/player-death/validation.json).
+**Latest work:** CPU scene retention preserves the existing bank, playback, clock and actual pose through development reload and Activity recreation. The live frozen dead-pose fixture retains exact playback/pose hashes without event duplicates. Terminal preview releases Player owners and cancels four Ghost timers before VM closure. Character::_InitEquipment and ordinary Player Kill/Ctrl_Kill/event2 composition pass selected-host gates and both Android ABI builds. Native profile/locality/InitPost, AddLoot/text/Skin and trophy/online providers remain required. Player skills/regen and Crypt touch/Wait/Spawn regressions also pass on this APK. [Evidence](../reports/reconstruction-2026-10-05/player-backbone/validation.json).
 
-**Latest tested local APK:** `2a93a0e2...`, 30,063,961 bytes; 591 actual compiler/configure inputs, both native ABIs, 20 ELF64/16 KiB libraries and alignment/signing checks. Native death, Player regen/buffs/dictionary/cooldowns and Crypt touch/Wait/Spawn regressions pass on API37/16KiB; 545 host inputs per gate match actual APK inputs. The fatal-hit test is a controlled fixture, not complete combat/rewards. Root inspected the dead/reloaded views: state is retained, but development recreation restarts the death animation; exact pose/cursor restoration remains open. Local copy: `C:/Users/noamc/Downloads/DH2-native-player-death-2026-10-05.apk`. [Current evidence](../reports/reconstruction-2026-10-05/player-death/validation.json). The published camera release retains its own identity. [Remaining tasks](PROJECT-CHECKLIST.md).
+**Latest tested local APK:** `220b2b65...`, 30,076,721 bytes; 597 actual compiler/configure inputs and 623 captured files, both native ABIs and 20 ELF64/16KiB libraries. Exact CPU pose/playback retention and terminal teardown pass on API37/16KiB. The fatal-hit test remains a controlled fixture; full combat/rewards and native inventory remain open. Local copy: `C:/Users/noamc/Downloads/DH2-native-backbone-2026-10-05.apk`. [Current evidence](../reports/reconstruction-2026-10-05/player-backbone/validation.json). The published camera release retains its own identity. [Remaining tasks](PROJECT-CHECKLIST.md).
 
 ## Latest Adam reconciliation
 
@@ -28,6 +28,9 @@ native-combat and loader milestones against actual code/build selections at
 | CSSkill state callbacks/dispatch | Adapted source | Selected library, 214 ARM dispatch comparisons and Android compilation pass. Native state6/input/animation/target activation remains disconnected. |
 | Initial skill grants | Adapted source | Existing progression/slot callers share the actual save, inventory and buff-aware property view. Selected-host/ARM and Android gates pass; real profile/InitPost producers and native inventory binding remain required. |
 | Equipment render owner | Adapted services | Reuses V4/V5 algorithms through our exact property view and real provider contracts. Requirements/pruning/Skin-before-vitals and retirement-prefix tests pass; native visual/text/HUD and whole-item lifetime binding remain open. |
+| Character::_InitEquipment | Adapted/selected | Sole V4 inventory/property view; 18 original caller cases and 2,151 host checks across three classes pass, both Android ABIs compile. Full AddLoot, profile/locality/InitPost and native text/Skin remain required. |
+| Ordinary Player Kill continuation | Adapted/selected | 58 ARM comparisons/zero mismatches; 43 host continuations, 27 failures, seven guards and three real-class event2 compositions pass. Shares Session/death owner/Coordinator. Native locality/trophy/online and general Kill/rewards remain open. |
+| Actor scene retention | Port lifecycle adapter, live | Seven host boundaries/402 exact frames/nine guards. API37/16KiB dead pose retains playback/pose hashes through reload/rotation; terminal CPU teardown passes. Zero new original bodies; full animation/GPU parity remains open. |
 | Weapon/equipment queries | Imported/adapted | Borrows sole V4 inventory/property view; 1,000 original weapon cases, both sets and combat projections pass. Native inventory producer remains required. |
 | Localization/item text dependencies | Imported/selected | Five shared text TUs use existing game-data DSO; 1,322 actual items/936 power descriptions and 1,087 formatter/355 varargs replays pass. Actual native language/file/Application/HUD providers remain unbound. |
 | Player AIS initialization/death dependencies | Adapted and live | Native load/InitProcess and OnDied cleanup share the same owners. Real timers33/34, regen, source timer retirement and all13 cleanup callbacks pass. UpdateAllSkills is delivered once by InitProcess; real progression callers remain required. Full Kill/event2, positive DoT, linked-aggro producers, full AIS frame and profile/grants remain open. |
@@ -40,18 +43,18 @@ dictionary; adapt those fixtures through existing providers before reuse.
 Its native factories remain unbound. Our `origin/main` refresh (`1219a43a`)
 adds no gameplay source beyond the reviewed branch.
 
-Next live milestone: finish Player Kill/event2 continuation, preserve animation
-pose during recreation, and bind profile/inventory/equipment producers. Then
-connect skill activation and an enemy encounter with animation-driven hits,
-death rewards and loot pickup. OnDied→AI_SetDead now stops both AI timers and
-directly enters state12/null. Nonempty linked-aggro cleanup still needs matching
-OnAggro producers. Autonomous enemy frames, positive-target skill damage and
-full campaign loading remain open.
+Next live milestone: bind genuine offline PlayerManager/PlayerInfo/Matching
+locality and profile/SG_Load/InitPost producers, then deliver initial equipment
+through the sole inventory, full AddLoot and native text/Skin. Bind the selected
+Player Kill continuation through real locality/trophy/online services. Then
+connect skill activation and one enemy encounter with animation-driven hits,
+rewards and loot pickup. Linked aggro, autonomous enemy frames, positive-target
+skill damage and campaign loading remain open.
 
 ### Rough estimate
 
-Planning ranges for focused development with parallel agents and the available
-evidence/cache: **2–4 weeks** for a useful integrated player/enemy/skill encounter;
+Planning ranges assume sustained focused development, parallel work on independent
+services and reuse of verified source/cache, without major new factory/save discoveries: **2–4 weeks** for a useful integrated player/enemy/skill encounter;
 **4–8 weeks** for one level with progression, death rewards, loot pickup and
 retained state; **6–12+ months** for complete campaign/UI/audio/rendering,
 durable saves, modding and ARM64 acceptance. The full-game range has low
@@ -103,7 +106,7 @@ Use the following concrete measures instead:
 | Engine `.text` bytes accounted for | 99.989968% | Assembly/disassembly accounting only. No source/game-completion percentage follows from it. |
 | Original plaintext scripts recovered | 219 files / 900,493 bytes | Actual cache Lua source, preserved exactly. Native service ownership and complete live execution remain incomplete. |
 | Repaired/decompiled Android Java | 288 source files | Source recovery/reconstruction of Android glue; distinguish it from independently reconstructed native gameplay. |
-| Maintained reconstruction/port code | 599 source files / 71,159 lines / 3,672,818 bytes; 783 test/tool files | Git-index inventory excludes dependencies, recovered evidence, packaged scripts/assets and unfinished drafts. Includes imported code with local changes. Source size is not game completion. |
+| Maintained reconstruction/port code | 691 source files / 80,664 lines / 4,274,017 bytes; 884 test/tool files | Git-index inventory excludes dependencies, recovered evidence, packaged scripts/assets and unfinished drafts. Includes imported code with local changes. Source size is not game completion. |
 | Adam core modules imported | 577 files / 2,929,226 bytes | Seven modules imported at a pinned commit before dependency-path adaptations; includes headers/tools/tests, not 577 gameplay implementations. |
 | Adam script runtime imported | 158 files / 1,064,065 bytes | Isolated import includes Lua dependency source; do not count all of it as reconstructed game code. |
 | Current native app bundled assets | 255 | A selected Crypt/Prince development bundle, unchanged monster scripts and seven real Skill/Faery table/constants inputs; not the complete game cache. |
@@ -127,7 +130,7 @@ remains pinned at c3 for reproducibility.
 | Evidence and cache | Exact assembly, symbols, pseudocode, Java/smali, shaders/configuration; complete-cache verification | Further subsystem disassembly, original-instruction comparisons and runtime checkpoints | Broad evidence with two independent research trails; references/report corpora require reconciliation. |
 | Engine resources | BRES fixups, math and payload views; full-cache differential checks | Shared identical math/resource foundation; deeper scene/animation resource consumers | Buildable source readers; source contracts differ in some payload APIs and must stay explicit. |
 | Materials/textures | Texture/material parsers and Android/Irrlicht previews | Scene-material resolution, GLES rendering and actor resources | Complementary rendering paths; full original GPU pass/effect fidelity remains open. |
-| Animation/skinning | Typed values, pose/timeline/mixing/layers/transitions/root delta; mutable Irrlicht meshes and shared Character coordinator | Live Prince bank, compiled transforms, two-slot playback, event routing, skin deformation and visual owner/helper composition | Complete authored bank registration/blended playback now feeds both renderers; bounded Irrlicht Idle/Move and Crypt gameplay pass. Complete AI/Lua ownership and full pose parity remain pending. |
+| Animation/skinning | Typed values, pose/timeline/mixing/layers/transitions/root delta; mutable Irrlicht meshes and shared Character coordinator | Live Prince bank, compiled transforms, two-slot playback, event routing, skin deformation and visual owner/helper composition | Complete authored bank registration/blended playback now feeds both renderers; bounded Irrlicht Idle/Move and Crypt gameplay pass. CPU dead-pose/playback retention through reload/rotation now passes; full animation-state coverage and GPU parity remain open. Complete AI/Lua ownership and full pose parity remain pending. |
 | World/navigation | SWAMP and Infected Village data, movement/floor components; source-to-actor floor bridge and level session | Authored Crypt, native floor graph, path search, smoothing, avoidance, producers | SWAMP module-zero geometry/flags feed Adam's collision/graph view live; Android verifies free motion and validated boundary sliding. Generated rooms, remaining modules, complete environment collision and enemy pursuit remain incomplete. |
 | Physics/actor | Actor registry, shared state/timer ownership, exact-name spawn factory, Limbus/Spawn/respawn/group kernels and owned SWAMP session | Box2D source, native body/filter/transform services and Prince actor/frame coordinator | Source Character services own Irrlicht Stop/pin/unpin; each logical tick has one world step. Two Ghosts create real bodies on source Spawn completion. Full template/factory/lifecycle and enemy controllers remain open. |
 | Stats/equipment | Character properties/classes, item/power calculations, Lua object bindings | Live actor properties, vitals, animation/combat tables | Tested calculations exist. Complete inventory/equip/power/buff ownership is not live in the combined Crypt app. |
