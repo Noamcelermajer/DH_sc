@@ -1,4 +1,4 @@
-# Dungeon Hunter 2 — source reconstruction
+# source reconstruction
 
 **Local agent: start with [LOCAL_AGENT_HANDOFF.md](LOCAL_AGENT_HANDOFF.md).** It includes the current Test 5 diagnosis, device retest, exact build layout, open issues, emulator failure evidence, and a verified workspace-preparation helper. For the independent native-source route, read [RECONSTRUCTION-HANDOFF.md](RECONSTRUCTION-HANDOFF.md).
 
