@@ -73,7 +73,8 @@ target_link_libraries(player_skill_update_session_audit PRIVATE
     commands.append(configure)
     configure_out = run(configure, ROOT)
     selected_commands = run([ninja, "-C", str(build), "-t", "commands",
-                             "player_skill_update_session_audit"], ROOT)
+                             "player_skill_update_session_audit", "player_savegame_v1_audit",
+                             "player_skill_property_services_v1_audit"], ROOT)
     compile_db_path = build / "compile_commands.json"
     compile_db = json.loads(compile_db_path.read_text(encoding="utf-8"))
     selected_sources = {
@@ -85,6 +86,10 @@ target_link_libraries(player_skill_update_session_audit PRIVATE
         MODULE / "player_skill_update_session_v1.cpp",
         MODULE / "character_ai_update_all_skills.cpp",
         MODULE / "character_ai_skill_script_update.cpp",
+        MODULE / "player_skill_property_services_v1.cpp",
+        MODULE / "tests/player_skill_property_services_v1.cpp",
+        ROOT / "port/game-data/player_savegame_v1.cpp",
+        ROOT / "port/game-data/tests/player_savegame_v1.cpp",
         test,
     }
     missing = [path for path in required if path.resolve() not in selected_sources]
@@ -100,10 +105,13 @@ target_link_libraries(player_skill_update_session_audit PRIVATE
     selected_inputs = sorted(set(selected_inputs))
     before = {path: digest(path) for path in selected_inputs if path.is_file()}
     build_command = [cmake, "--build", str(build), "--target",
-                     "player_skill_update_session_audit", "--parallel", "2"]
+                     "player_skill_update_session_audit", "player_savegame_v1_audit",
+                     "player_skill_property_services_v1_audit", "--parallel", "2"]
     commands.append(build_command)
     build_out = run(build_command, ROOT)
     executable = build / "player_skill_update_session_audit.exe"
+    saved_executable = build / "selected-world/game-data/player_savegame_v1_audit.exe"
+    property_executable = build / "selected-world/player_skill_property_services_v1_audit.exe"
     libraries = sorted(build.rglob("*.dll"))
     world = next((p for p in libraries if p.name == "libdh2_level_world.dll"), None)
     script_runtime = next((p for p in libraries if p.name == "libdh2_script_runtime.dll"), None)
@@ -113,12 +121,14 @@ target_link_libraries(player_skill_update_session_audit PRIVATE
         raise RuntimeError("selected build contains more than one Lua core DSO")
     objdump = compiler.with_name("objdump.exe")
     imports = {}
-    for binary in [executable, world]:
+    for binary in [executable, world, saved_executable, property_executable]:
         output = run([str(objdump), "-p", str(binary)], ROOT)
         imports[binary.name] = [line.split(":", 1)[1].strip()
                                for line in output.splitlines() if "DLL Name:" in line]
     if script_runtime.name not in imports[executable.name] or script_runtime.name not in imports[world.name]:
         raise RuntimeError("selected test/world do not share the same Lua runtime DSO")
+    if "libdh2_game_data.dll" not in imports[saved_executable.name] or world.name not in imports[property_executable.name]:
+        raise RuntimeError("saved-skill/property tests do not import selected production DSOs")
 
     env = os.environ.copy()
     env["PATH"] = os.pathsep.join([str(compiler.parent), *(str(p.parent) for p in libraries),
@@ -128,7 +138,9 @@ target_link_libraries(player_skill_update_session_audit PRIVATE
     host = json.loads(execution)
     expected = {
         "validation": "PASS", "source_slots": 21, "fsm_skips": 2,
+        "cross_character_guard": True,
         "zero_return_updates": 13, "one_return_updates": 13,
+        "multi_return_updates": 13, "multi_return_set_skill_updates": 13,
         "one_return_set_skill_updates": 13, "ordinary_set_skill_errors": 13,
         "ordinary_update_errors": 13, "required_failures": 1,
         "retained_failed_resources": 1, "real_cache_preparation": True,
@@ -136,6 +148,13 @@ target_link_libraries(player_skill_update_session_audit PRIVATE
     }
     if any(host.get(key) != value for key, value in expected.items()):
         raise RuntimeError(f"unexpected selected-library host result: {execution}")
+    gold = ROOT / "port/game-data/reference/player-savegame-v1/fixtures.bin"
+    saved = json.loads(run([str(saved_executable), str(gold), str(cache / "data/pydata")], ROOT, env=env))
+    if saved.get("validation") != "PASS" or saved.get("source_gold_cases") != 64 or saved.get("mismatches") != 0:
+        raise RuntimeError(f"selected saved-skill replay failed: {saved}")
+    property_output = run([str(property_executable), str(cache / "data/pydata")], ROOT, env=env)
+    if "PASS checks=21" not in property_output or "actual_bashdown_data=PASS" not in property_output:
+        raise RuntimeError(f"selected property regression failed: {property_output}")
     changed = [str(path) for path, value in before.items() if digest(path) != value]
     if changed:
         raise RuntimeError(f"selected production/test source changed during build or replay: {changed}")
@@ -159,6 +178,9 @@ target_link_libraries(player_skill_update_session_audit PRIVATE
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report = {
         **host,
+        "selected_saved_skills": saved,
+        "selected_property_output": property_output,
+        "saved_gold_sha256": digest(gold),
         "cache_root": str(cache),
         "cache_inputs_sha256": {path.relative_to(cache).as_posix(): digest(path) for path in cache_inputs},
         "selected_source_sha256": {path.relative_to(ROOT).as_posix(): digest(path)
@@ -171,12 +193,16 @@ target_link_libraries(player_skill_update_session_audit PRIVATE
             "script_runtime_library": str(script_runtime.relative_to(out).as_posix()),
             "executable_imports": imports[executable.name],
             "world_imports": imports[world.name],
+            "saved_test_imports": imports[saved_executable.name],
+            "property_test_imports": imports[property_executable.name],
         },
         "compiler_commands": commands,
         "configure_output": configure_out,
         "build_output": build_out,
         "test_executable_sha256": digest(executable),
-        "scope": "Actual selected dh2_level_world and single dh2_script_runtime CMake libraries; actual Knight source tables/Arguments, actual AI common, test skill Lua overlays. No Android Player skill wiring claim.",
+        "saved_test_executable_sha256": digest(saved_executable),
+        "property_test_executable_sha256": digest(property_executable),
+        "scope": "Actual selected dh2_game_data/dh2_level_world and single dh2_script_runtime CMake libraries; original saved-skill gold, actual Bashdown property data, actual Knight source tables/Arguments and AI common, test skill Lua overlays. No Android Player skill wiring claim.",
     }
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(host, separators=(",", ":")))

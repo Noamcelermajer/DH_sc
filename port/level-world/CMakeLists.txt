@@ -75,7 +75,11 @@ target_sources(dh2_level_world PRIVATE ais_player_init_vcb.cpp)
 target_sources(dh2_level_world PRIVATE character_skill_cooldown_services.cpp)
 target_sources(dh2_level_world PRIVATE player_skill_tables_adapter.cpp
  character_player_skills_preparation_v3.cpp character_ai_skill_script_update.cpp
- player_skill_session_v1.cpp player_skill_update_session_v1.cpp)
+ player_skill_session_v1.cpp player_skill_update_session_v1.cpp
+ character_ai_skill_script_check.cpp script_value_boolean.cpp
+ script_value_boolean_lua.cpp player_skill_use_session_v1.cpp
+ player_skill_property_services_v1.cpp character_ai_skill_dispatch_v1.cpp)
+target_include_directories(dh2_level_world PRIVATE ../adam-script-runtime/lua)
 
 target_sources(dh2_level_world PRIVATE ais_external_initialization.cpp ais_native_bindings.cpp room_zone_enrollment.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_association.cpp character_native_bindings.cpp)
@@ -111,6 +115,8 @@ target_link_libraries(dh2_level_world PUBLIC dh2_engine_skinning dh2_game_data d
 if(ANDROID)
  target_link_options(dh2_level_world PRIVATE -Wl,-z,max-page-size=16384 -Wl,--no-undefined)
 else()
+ add_executable(player_skill_property_services_v1_audit tests/player_skill_property_services_v1.cpp)
+ target_link_libraries(player_skill_property_services_v1_audit PRIVATE dh2_level_world)
  add_executable(objects_spawn_audit tests/objects_spawn.cpp)
  target_link_libraries(objects_spawn_audit PRIVATE dh2_level_world)
  add_executable(character_coordinator_audit tests/character_coordinator.cpp)

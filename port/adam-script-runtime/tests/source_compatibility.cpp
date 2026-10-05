@@ -39,6 +39,36 @@ struct Snapshot {
         return 0;
     }
 };
+struct AllSnapshot {
+    dh2_script_vm* vm=nullptr;
+    std::vector<dh2_script_first_return_v1> values;
+    std::vector<std::string> texts;
+    unsigned calls=0;
+    int error=0;
+    bool empty_pointer=false,reentry_rejected=false;
+    static int observe(void* raw,const dh2_script_first_return_v1* values,unsigned count,char* text,size_t capacity) {
+        auto& self=*static_cast<AllSnapshot*>(raw);++self.calls;++observers;
+        try {
+            self.empty_pointer=!values;
+            self.values.clear();self.texts.clear();self.texts.resize(count);
+            for(unsigned i=0;i<count;++i){
+                if(values[i].count!=count)return 1;
+                self.values.push_back(values[i]);
+                if(values[i].text)self.texts[i].assign(values[i].text,values[i].text_bytes);
+            }
+            for(unsigned i=0;i<count;++i)if(self.values[i].text)self.values[i].text=self.texts[i].c_str();
+            dh2_script_value guard{};guard.reserved=0xa5;
+            self.reentry_rejected=dh2_script_vm_get_global(self.vm,"changed",&guard)==-1 && guard.reserved==0xa5 &&
+                dh2_script_vm_call_all_source_v1(self.vm,"empty",nullptr,0,observe,&self)==-1;
+            if(self.error){std::snprintf(text,capacity,"all observer rejected");return self.error;}
+            return 0;
+        }catch(...){return DH2_SCRIPT_REQUIRED_SERVICE_FAILURE;}
+    }
+};
+static int all(dh2_script_vm* vm,const char* name,AllSnapshot& result,
+               const dh2_script_value* args=nullptr,unsigned count=0) {
+    result.vm=vm;return dh2_script_vm_call_all_source_v1(vm,name,args,count,AllSnapshot::observe,&result);
+}
 static int indexed(dh2_script_vm* vm,const char* name,unsigned index,Snapshot& result,
                    const dh2_script_value* args=nullptr,unsigned count=0) {
     result.vm=vm;return dh2_script_vm_call_indexed_source_v3(vm,name,args,count,index,Snapshot::observe,&result);
@@ -120,6 +150,37 @@ int main(){try {
     Snapshot rejected;rejected.error=1;check(indexed(vm,"one",0,rejected)==2 && rejected.calls==1,"ordinary observer failure lost");
     Snapshot required;required.error=DH2_SCRIPT_REQUIRED_SERVICE_FAILURE;auto epoch=dh2_script_vm_required_failure_epoch(vm);
     check(indexed(vm,"one",0,required)==DH2_SCRIPT_REQUIRED_FAILURE_STATUS && dh2_script_vm_required_failure_epoch(vm)==epoch+1,"observer required marker lost");
+    // A skill check returns usable AND active from one source Lua call. Full
+    // ReturnValues must not replay side effects to observe the second value.
+    check(!source_file(vm,"pair_calls=0; function pair() pair_calls=pair_calls+1; return false,true end"),"pair fixture failed");
+    AllSnapshot pair;check(!all(vm,"pair",pair) && pair.calls==1 && pair.values.size()==2 &&
+        pair.values[0].type==1 && !pair.values[0].boolean && pair.values[1].type==1 && pair.values[1].boolean &&
+        global(vm,"pair_calls").number==1 && pair.reentry_rejected,"all return observer replayed pair or entered busy VM");
+    check(!source_file(vm,"projection_order=''; captured=Identity()"),"all projection reset failed");
+    AllSnapshot many;check(!all(vm,"many",many) && many.calls==1 && many.values.size()==10 &&
+        many.values[0].type==7 && many.values[0].identity==0x1234567887654321ull &&
+        many.values[1].type==4 && many.texts[1]=="a" && many.values[1].text_bytes==1 &&
+        many.values[3].number==16777216.f && std::signbit(many.values[4].number) &&
+        many.values[5].identity==0x1234567887654321ull && many.values[6].type==0 &&
+        many.values[7].type==0 && many.values[8].type==0 && many.values[9].type==7 &&
+        !many.values[9].identity && std::string(global(vm,"projection_order").text)=="AB",
+        "all projection lost order, tags, strings, float32 or native identities");
+    AllSnapshot zero;check(!all(vm,"empty",zero) && zero.calls==1 && zero.empty_pointer && zero.values.empty(),"all zero returns differs");
+    AllSnapshot large;check(!all(vm,"lots",large) && large.values.size()==96 && large.values[95].number==96,"all return cap introduced");
+    AllSnapshot all_echo;check(!all(vm,"echo",all_echo,args.data(),unsigned(args.size())) && all_echo.values.size()==32 && all_echo.values.back().number==31,"all argument cap introduced");
+    AllSnapshot broken;check(all(vm,"bad_projection",broken)==2 && !broken.calls && global(vm,"projection_started").number==1,"all observer saw partial failed projection");
+    AllSnapshot caught_all;epoch=dh2_script_vm_required_failure_epoch(vm);
+    check(all(vm,"caught",caught_all)==-5 && caught_all.calls==1 && dh2_script_vm_required_failure_epoch(vm)==epoch+1,"all caught required failure lost");
+    AllSnapshot raw_all;check(all(vm,"raw_required",raw_all)==-5 && !raw_all.calls,"all uncaught required observed results");
+    AllSnapshot ordinary_all;check(!all(vm,"ordinary_caught",ordinary_all) && ordinary_all.values[0].number==7,"all ordinary caught error rejected");
+    AllSnapshot error_all;check(all(vm,"argument_error",error_all)==2 && !error_all.calls && all(vm,"nil_error",error_all)==-4,"all Lua error semantics changed");
+    AllSnapshot reject_all;reject_all.error=1;check(all(vm,"pair",reject_all)==2 && reject_all.calls==1,"all ordinary observer status changed");
+    AllSnapshot required_all;required_all.error=-1001;epoch=dh2_script_vm_required_failure_epoch(vm);
+    check(all(vm,"pair",required_all)==-5 && required_all.calls==1 && dh2_script_vm_required_failure_epoch(vm)==epoch+1,"all required observer marker lost");
+    check(dh2_script_vm_call_all_source_v1(vm,"pair",nullptr,0,nullptr,nullptr)==-1 &&
+        dh2_script_vm_call_all_source_v1(nullptr,"pair",nullptr,0,AllSnapshot::observe,&pair)==-1 &&
+        all(vm,nullptr,pair)==-1 && all(vm,"pair",pair,nullptr,1)==-1 &&
+        all(vm,"pair",pair,args.data(),0xffffffffu)==-1,"all malformed inputs accepted");
     // Existing generic and discarded source APIs retain their old statuses.
     unsigned returned=0;dh2_script_value output[2]{};
     check(dh2_script_vm_call(vm,"caught",nullptr,0,output,2,&returned)==0 && returned==1 && output[0].boolean==1,"legacy caught status changed");

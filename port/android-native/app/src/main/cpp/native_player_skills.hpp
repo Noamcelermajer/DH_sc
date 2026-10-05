@@ -7,6 +7,7 @@
 struct AAssetManager;
 struct dh2_pycst_view;
 namespace dh2::character {class Coordinator;}
+namespace dh2::data {class PlayerSavegameV1;}
 namespace dh2::native::debug_files {class Backend;}
 namespace dh2::native::player_skills {
 struct Bindings {
@@ -16,9 +17,12 @@ struct Bindings {
     std::shared_ptr<const void> catalogue_lifetime;
     data::PropertyRules* rules=nullptr;
     data::PropertyState* properties=nullptr;
+    data::PropertySheet* shared_property_temp=nullptr;
+    std::shared_ptr<data::PlayerSavegameV1> savegame;
     const data::ClassTables* classes=nullptr;
     const std::vector<std::string>* fields=nullptr;
     const dh2_pycst_view* design=nullptr;
+    const dh2_pycst_view* ai_constants=nullptr;
     const dh2_pycst_view* faery_constants=nullptr;
     character::Coordinator* coordinator=nullptr;
     debug_files::Backend* debug=nullptr;
@@ -38,6 +42,7 @@ public:
     void timer(std::uint32_t id);
     void restore(AAssetManager*,const void* ai_owner,const void* catalogue_owner);
     std::string cooldown_probe(std::uint32_t delay_ms);
+    std::string check_probe(std::uint32_t slot);
 private:
     struct Impl;
     explicit Runtime(std::unique_ptr<Impl>);

@@ -1,7 +1,8 @@
 """Original Player skill preparation/cooldown composition on API37/16KiB.
 
-The shell cooldown fixture invokes the unchanged skill framework, not a full
-skill-use/combat lifecycle. The missing saved-skill provider must fail visibly.
+The shell fixtures invoke the unchanged skill framework, not a full activation
+or combat lifecycle. Optional --saved-skills checks the integrated saved owner,
+eight Knight updates and full two-result checks; faery spell info stays pending.
 """
 import argparse
 import hashlib
@@ -22,11 +23,12 @@ def main():
     p.add_argument('--serial', required=True)
     p.add_argument('--apk', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--saved-skills', action='store_true')
     a = p.parse_args()
     assert a.serial.startswith('emulator-'), 'emulator only'
     out = a.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
-    report = {'validation': 'FAIL', 'scope': 'Live native Player preparation and original framework cooldown shell fixture. Full Player AIS/savegame/skill-use/combat loop remains unfinished.',
+    report = {'validation': 'FAIL', 'scope': 'Live native Player preparation, optional saved-skill/property/check integration and original framework cooldown shell fixture. Full Player AIS/profile/starter grant/skill activation/combat loop remains unfinished.',
               'apk_sha256': hashlib.sha256(a.apk.read_bytes()).hexdigest(),
               'libraries': inspect(a.apk), 'serial': a.serial}
     transcript = []
@@ -59,6 +61,20 @@ def main():
         path = out / (name + '.png')
         path.write_bytes(raw)
         return {'file': path.name, 'sha256': hashlib.sha256(raw).hexdigest()}
+    def skill_check(slot, usable, active):
+        prior = len(re.findall(r'Native Player skill check probe \|', logs()))
+        command('PLAYER_SKILL_CHECK', '--ei', 'skill_slot', str(slot))
+        text = wait(lambda t: len(re.findall(r'Native Player skill check probe \|', t)) == prior + 1,
+                    'two-result source skill check')
+        rows = re.findall(r'Native Player skill check probe \| script (\S+) \| slot (\d+) \| saved level (\d+) \| usable (\d+) \| active (\d+) \| usable returns (\d+) \| active returns (\d+) \| MP (\d+) \| SnS_Level (-?\d+) \| temp ManaCost (-?\d+)', text)
+        assert rows, 'source skill check did not report both result vectors'
+        row = rows[-1]
+        assert tuple(map(int, row[1:7])) == (slot, 0, usable, active, 2, 2), row
+        assert int(row[7]) == 6976, 'HasMana/check changed the live fresh Knight MP'
+        report.setdefault('skill_checks', []).append({'script': row[0], 'slot': slot,
+            'saved_level': 0, 'usable': usable, 'active': active, 'return_counts': [2, 2],
+            'MP': int(row[7]), 'SnS_Level': int(row[8]), 'temporary_mana_cost': int(row[9])})
+        return text
     try:
         report['api'] = int(adb('shell', 'getprop', 'ro.build.version.sdk'))
         report['page_size'] = int(adb('shell', 'getconf', 'PAGE_SIZE'))
@@ -78,16 +94,26 @@ def main():
         pid = adb('shell', 'pidof', PACKAGE)
         # Each nonnull script has DeclareSkill(name,index), then the no-args
         # DeclareSkill() reset after loading: 26 real calls for 13 instances.
+        callbacks = 8 if a.saved_skills else 0
+        boundary = 'GetCurrentSpellInfo' if a.saved_skills else 'GetCurrentSkillInfo__'
         text = wait(lambda t: 'Native Player skill preparation | skills 16 | faeries 5 | loaded paths 15 | declarations 26' in t and
-                    'Native Player skill update blocked | attempt 1 | callbacks 0 | VM status -5' in t and 'Native actor frame |' in t, 'real Player preparation/update boundary')
-        assert 'GetCurrentSkillInfo__' in text
+                    f'Native Player skill update blocked | attempt 1 | callbacks {callbacks} | VM status -5' in t and 'Native actor frame |' in t, 'real Player preparation/update boundary')
+        assert f'unresolved native Player skill provider: {boundary}' in text
+        if a.saved_skills:
+            assert 'rows 16 | slot0 level 0 | source _InitSkills; starter grant/profile load pending' in text
+            assert text.count('Native Player saved skills ready |') == 1
         assert text.count('Native Player skill preparation |') == 1
         report['initial'] = {'source_skill_slots': 16, 'source_faery_slots': 5, 'nonnull_instances': 13,
-                             'source_paths': 15, 'source_declaration_calls': 26, 'update_boundary': 'GetCurrentSkillInfo__',
+                             'source_paths': 15, 'source_declaration_calls': 26, 'completed_knight_updates': callbacks,
+                             'update_boundary': boundary, 'saved_skill_rows': 16 if a.saved_skills else 0,
                              'update_vm_status': -5, 'full_skill_update_complete': False}
         report['screenshots'] = [screenshot('player-skills-initial')]
         command('ANIMATION_TIME', '--ei', 'time_ms', '0')
         wait(lambda t: 'Animation time command applied | time 0' in t, 'freeze')
+        if a.saved_skills:
+            skill_check(0, 1, 0)
+            assert report['skill_checks'][-1]['temporary_mana_cost'] == 1024
+            skill_check(7, 0, 1)  # Original passive check selects the second result.
         command('PLAYER_SKILL_COOLDOWN', '--ei', 'delay_ms', '12000')
         text = wait(lambda t: 'Player skill cooldown command applied | Original skill cooldown callback armed' in t, 'source cooldown fixture')
         match = re.search(r'Native Player skill cooldown probe \| script prince_warrior_bashdown \| slot0 field18 (\d+) \| timer (\d+) \| duration 12000', text)
@@ -95,6 +121,9 @@ def main():
         timer_id = int(match[1])
         report['cooldown_fixture'] = {'script': 'prince_warrior_bashdown', 'slot': 0, 'field18': timer_id,
                                       'native_timer_id': timer_id, 'duration_ms': 12000, 'full_skill_use': False}
+        # Authored Bashdown has no cooldown: its check is HasMana,false. This
+        # deliberately armed framework timer must not add a new check gate.
+        if a.saved_skills: skill_check(0, 1, 0)
         command('RELOAD_WORLD')
         text = wait(lambda t: 'World reload command applied |' in t and 'Native Player skills retained |' in t, 'retained world reload')
         assert text.count('Native Player skill preparation |') == 1 and text.count('Native Player skill update blocked |') == 1
@@ -107,8 +136,12 @@ def main():
         assert vms and set(vms) == {first_vm[1]}, 'Player VM replaced on graphics restore'
         assert text.count('Native Player skill preparation |') == 1 and text.count('Native Player skill update blocked |') == 1
         report['restore'] = {'same_process': pid, 'same_vm': first_vm[1], 'reload_and_rotation': True, 'preparation_count': 1, 'blocked_update_attempts': 1}
+        if a.saved_skills:
+            assert text.count('Native Player saved skills ready |') == 1
+            skill_check(0, 1, 0)
         text = wait(lambda t: re.search(r'Native Player skill timer callback \| timer ' + str(timer_id) + r' \| callbacks 1 \| slot0 field18 -1', t), 'original cooldown expiry', 35)
         report['cooldown_expiry'] = {'callback_count': 1, 'slot0_field18': -1, 'same_native_timer_id': timer_id}
+        if a.saved_skills: skill_check(0, 1, 0)
         command('PLAYER_SKILL_COOLDOWN', '--ei', 'delay_ms', '300')
         text = wait(lambda t: re.search(r'Native Player skill timer callback \| timer \d+ \| callbacks 2 \| slot0 field18 -1', t), 'cooldown rearm/expiry')
         assert text.count('Player skill cooldown command applied | Original skill cooldown callback armed') == 2

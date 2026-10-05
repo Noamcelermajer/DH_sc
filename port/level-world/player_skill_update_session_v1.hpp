@@ -14,8 +14,8 @@ struct Result {
 // Composition adapter: uses the selected source list/FSM/update callers and
 // the same retained preparation arguments and VM. No extra frame/timer store.
 // ReturnValues owns native projected storage, not a 112B ARM Value overlay.
-// The indexed VM protocol retains zero/one result in one actual Lua call;
-// multiple returns reject explicitly until a full-result observer is provided.
+// The full source VM observer retains all results from one actual Lua call,
+// including copied strings and native-width object identities; no replay.
 class Runtime {
 public:
     Runtime(player_skill_session_v1::Session&,

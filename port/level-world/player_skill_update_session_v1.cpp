@@ -19,7 +19,7 @@ struct Runtime::Impl {
     struct Returns {
         single::ValueVector projection{};
         std::vector<dh2_script_value> values;
-        std::string text;
+        std::vector<std::string> texts;
         void sync(){
             const auto b=values.empty()?0:reinterpret_cast<std::uintptr_t>(values.data());
             projection={b,b?b+values.size()*sizeof(dh2_script_value):0};
@@ -31,21 +31,26 @@ struct Runtime::Impl {
     bool busy=false;Result* output=nullptr;std::string error;
     Impl(player_skill_session_v1::Session& s,prep::Owner& p,std::uintptr_t a,
          std::uintptr_t c,const std::int32_t& m):session(s),owner(p),ai(a),character(c),machine(m){}
-    static int observe(void* raw,const dh2_script_first_return_v1* v,char* why,std::size_t n){
+    static int observe(void* raw,const dh2_script_first_return_v1* v,std::uint32_t count,char* why,std::size_t n){
         auto& r=*static_cast<Returns*>(raw);
-        if(!v||v->count>1){if(why&&n)std::snprintf(why,n,"multiple skill returns unsupported");return 1;}
-        r.values.clear();r.text.clear();
-        if(v->count){
-            dh2_script_value value{};value.type=v->type;value.number=v->number;
-            value.boolean=v->boolean;value.identity=v->identity;
-            if(v->type==DH2_SCRIPT_STRING){
-                if(!v->text)return 1;
-                r.text.assign(v->text,v->text_bytes);
-                value.text=r.text.c_str();value.text_bytes=r.text.size();
+        if(!v&&count)return DH2_SCRIPT_REQUIRED_SERVICE_FAILURE;
+        try{
+            r.values.clear();r.texts.clear();r.texts.resize(count);r.values.reserve(count);
+            for(std::uint32_t i=0;i<count;++i){
+                dh2_script_value value{};value.type=v[i].type;value.number=v[i].number;
+                value.boolean=v[i].boolean;value.identity=v[i].identity;
+                if(v[i].type==DH2_SCRIPT_STRING){
+                    if(!v[i].text)throw std::runtime_error("source skill string unavailable");
+                    r.texts[i].assign(v[i].text,v[i].text_bytes);
+                    value.text=r.texts[i].c_str();value.text_bytes=r.texts[i].size();
+                }
+                r.values.push_back(value);
             }
-            r.values.push_back(value);
+            r.sync();return 0;
+        }catch(...){
+            r.sync();if(why&&n)std::snprintf(why,n,"source skill ReturnValues storage failed");
+            return DH2_SCRIPT_REQUIRED_SERVICE_FAILURE;
         }
-        r.sync();return 0;
     }
     int call(const char* fn,const prep::Arguments* arguments,Returns& r,single::ReturnValues& projection){
         std::vector<dh2_script_value> a;
@@ -57,11 +62,11 @@ struct Runtime::Impl {
                 else {std::int32_t integer;std::memcpy(&integer,&v.word,4);value.number=static_cast<float>(integer);}}
             a.push_back(value);
         }
-        const int status=session.call(fn,a.empty()?nullptr:a.data(),std::uint32_t(a.size()),0,observe,&r,error);
+        const int status=session.call_all(fn,a.empty()?nullptr:a.data(),std::uint32_t(a.size()),observe,&r,error);
         output->last_lua_status=status;
         if(status<0)return -1;
         projection.error=static_cast<std::uint32_t>(status);
-        if(status){++output->lua_errors;r.values.clear();r.text.clear();r.sync();}
+        if(status){++output->lua_errors;r.values.clear();r.texts.clear();r.sync();}
         return 0;
     }
     static std::int32_t invoke_one(void* raw,single::State* state,const single::Request* q,single::ReturnValues* value){
@@ -83,7 +88,7 @@ struct Runtime::Impl {
         }
         case single::Operation::erase_values:
             if(q->first!=r.projection.begin||q->last!=r.projection.end)return -1;
-            r.values.clear();r.text.clear();r.sync();return 0;
+            r.values.clear();r.texts.clear();r.sync();return 0;
         case single::Operation::call_on_skill_update:
             if(q->script!=reinterpret_cast<std::uintptr_t>(s.session.vm()))return -1;
             return s.call(q->function,nullptr,r,*value);
@@ -114,7 +119,7 @@ struct Runtime::Impl {
 };
 Runtime::Runtime(player_skill_session_v1::Session& s,prep::Owner& p,std::uintptr_t ai,
                  std::uintptr_t character,const std::int32_t& machine):impl_(std::make_unique<Impl>(s,p,ai,character,machine)){
-    if(!ai||!character||p.state().owner!=character||!s.vm())throw std::invalid_argument("invalid player skill update owners");
+    if(!ai||!character||p.state().owner!=character||s.character_identity()!=character||!s.vm())throw std::invalid_argument("invalid player skill update owners");
 }
 Runtime::~Runtime()=default;
 std::size_t Runtime::retained_failed_returns()const noexcept{return impl_->returns.size();}

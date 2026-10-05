@@ -81,6 +81,15 @@ typedef struct dh2_script_first_return_v1 {
   size_t text_bytes;
 } dh2_script_first_return_v1;
 typedef int (*dh2_script_return_observer_v1)(void*,const dh2_script_first_return_v1*,char*,size_t);
+/* One synchronous observation of ALL projected ReturnValues, in original
+ * order. Values/text are borrowed only during this observer; each count field
+ * holds the complete arity. Zero returns passes NULL/count0. All projection
+ * finishes before observation, so a later table._this error observes nothing.
+ * No replay, extra VM, fixed return cap, or generic Lua truthiness conversion.
+ * Memory is charged to this VM and the full Lua result stack remains rooted. */
+typedef int (*dh2_script_returns_observer_v1)(void*,const dh2_script_first_return_v1*,uint32_t,char*,size_t);
+int dh2_script_vm_call_all_source_v1(dh2_script_vm*,const char*,
+  const dh2_script_value*,uint32_t,dh2_script_returns_observer_v1,void*);
 /* 0 success; positive Lua status; -1 invalid/busy/input alias of VM storage;
  * -4 unsupported error object;
  * -5 required native service failure, including one caught by Lua pcall.

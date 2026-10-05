@@ -33,14 +33,14 @@ still require live gameplay integration. All final completion gates remain open.
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
 | Character properties, equipment and state | 12 | 5 |
-| Lua, skills and enemy AI | 25 | 13 |
+| Lua, skills and enemy AI | 28 | 13 |
 | Combat, death, loot and progression | 5 | 7 |
 | Quests, campaign, UI, audio and saves | 3 | 9 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **94** | **70** |
+| **Total scoped tasks** | **97** | **70** |
 
-Latest local gate: [native player skills](../reports/reconstruction-2026-10-05/native-player-skills/validation.json). Both ABIs compile the selected session/preparation/update adapters. Android 17/16 KiB loads the Knight's 13 original skill/faery instances; framework cooldown expiry/rearm and Crypt ambush/recreation pass. Full skill use, inventory and loot pickup remain open.
+Latest local gate: [native player skill checks](../reports/reconstruction-2026-10-05/native-player-skill-checks/validation.json). Both ABIs compile the selected save/check/use/property adapters. Android 17/16 KiB completes eight Knight updates, two-result Bashdown/passive checks, cooldown expiry/rearm and Crypt ambush/recreation. Full skill use, autonomous Ghost pursuit, inventory and loot pickup remain open.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Latest source/build/test scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -187,12 +187,12 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Reconstruct UpdateAllSkills, faery selection and CharAISkillScript construction kernels.
 - [x] Reconstruct bounded `OnSkillUpdate`, `OnSkillCheck_Usable` and
   `OnSkillCheck_Active` callers; compare host behavior with original ARM execution.
-  These callers are not yet connected to native nonempty skill scripts.
+  Native nonempty checks now pass; full activation remains open.
 - [x] Host-test the per-VM resolved-path execution cache with 60 real Lua checks.
   Full `LuaManager::AddFile`, shared byte caching and Android wiring remain open.
 - [x] Reconstruct source `Value::getBool` and its isolated real Lua adapter:
   276 original ARM comparisons, 269 host cases and 42 real Lua cases pass.
-  Actual native Value/ReturnValues and skill-call integration remain open.
+  Native full-return skill calls now pass; complete Value lifecycle remains open.
 - [x] Decode all 183 original Skill/Faery list/row records; compare with original ARM readers.
 - [x] Adapt Adam's player skill ownership to our source callers: each class has 16 skill/5 faery slots and 13 instances; 29 script names overall. Host/ARM gates pass; full Player AIS/FSM lifecycle remains open.
 - [x] Adapt Player callback membership and skill/spell cooldowns through the
@@ -234,6 +234,12 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
   in one retained native VM; use current properties/timers/catalogue. Reload/rotation pass.
 - [x] Dispatch the original framework Bashdown cooldown through the same native timer
   and slot field18; expiry/rearm pass. This shell fixture does not execute full skill use.
+- [x] Adapt the sole saved-skill owner and read callbacks; replay 64 original sessions/
+  1,536 snapshots. Native fresh SkillTree rows have level0; starter grants/profile load remain open.
+- [x] Select same-VM full ReturnValues and original check/use/outer-dispatch adapters;
+  host and original ARM gates pass. Full native CSSkill/input activation remains open.
+- [x] Run eight original Knight updates and both Bashdown/passive check returns on
+  Android 17/16 KiB with one shared temporary property sheet. Next missing provider: faery info.
 - [ ] Complete nonempty skills for all classes through full Player AIS construction,
   saved skill levels, `LuaManager::AddFile` and lifecycle ownership.
 - [ ] Connect real Arguments/ReturnValues ownership, skill update/check/use callbacks and Lua errors.

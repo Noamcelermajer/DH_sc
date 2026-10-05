@@ -76,8 +76,13 @@ public:
     // extra call. Source alias is captured before dispatch. VM statuses retained.
     int call(const char*,const dh2_script_value*,std::uint32_t,std::uint32_t index,
              dh2_script_return_observer_v1,void*,std::string& error);
+    // Same source alias and one Lua call; observes all source ReturnValues.
+    int call_all(const char*,const dh2_script_value*,std::uint32_t,
+                 dh2_script_returns_observer_v1,void*,std::string& error);
     int initialize_vcb(ais_player_init_vcb::Result*,std::string& error);
     dh2_script_vm* vm()const noexcept;
+    std::uintptr_t character_identity()const noexcept;
+    std::uintptr_t ais_identity()const noexcept;
     Stage stage()const noexcept;
     const std::string& script_path()const noexcept;
     const std::string& last_error()const noexcept;

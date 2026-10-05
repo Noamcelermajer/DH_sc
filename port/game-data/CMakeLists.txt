@@ -4,6 +4,7 @@ add_library(dh2_game_data SHARED data.cpp items.cpp animation_bank.cpp animation
 target_compile_features(dh2_game_data PUBLIC cxx_std_17)
 target_sources(dh2_game_data PRIVATE level_tables.cpp)
 target_sources(dh2_game_data PRIVATE skill_tables.cpp)
+target_sources(dh2_game_data PRIVATE player_savegame_v1.cpp)
 target_sources(dh2_game_data PRIVATE item_gear_properties_v5.cpp item_power_tables_v5.cpp
  loot_power_resources_v7.cpp)
 target_sources(dh2_game_data PRIVATE item_instance.cpp loot_tables_v2.cpp
@@ -16,6 +17,8 @@ target_compile_options(dh2_game_data PRIVATE -Wall -Wextra -fno-fast-math)
 if(ANDROID)
  target_link_options(dh2_game_data PRIVATE -Wl,-z,max-page-size=16384 -Wl,--no-undefined)
 else()
+ add_executable(player_savegame_v1_audit tests/player_savegame_v1.cpp)
+ target_link_libraries(player_savegame_v1_audit PRIVATE dh2_game_data)
  add_executable(item_gear_properties_v5_audit tests/item_gear_properties_v5.cpp)
  target_link_libraries(item_gear_properties_v5_audit PRIVATE dh2_game_data)
  add_executable(loot_power_resources_v7_audit tests/loot_power_resources_v7.cpp)

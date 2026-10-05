@@ -20,6 +20,7 @@ std::string set_object_state(int index,const std::string& state);
 std::string spawn_character(const std::string& exact_name);
 std::string debug_character_hit(const std::string& exact_name,std::uint32_t raw_damage);
 std::string debug_player_skill_cooldown(std::uint32_t delay_ms);
+std::string debug_player_skill_check(std::uint32_t slot);
 std::string set_combat_target(int index,int target);
 std::string player_attack(int target=-1);
 std::array<int,7> player_vitals();

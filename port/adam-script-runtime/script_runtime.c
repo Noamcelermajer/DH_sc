@@ -263,10 +263,27 @@ int dh2_script_vm_call_discard_source(dh2_script_vm* vm,const char* name,
 }
 typedef struct {
   Operation call;uint32_t index;
-  dh2_script_return_observer_v1 observer;void* context;char error[512];
+  dh2_script_return_observer_v1 observer;
+  dh2_script_returns_observer_v1 all_observer;void* context;char error[512];
 } SourceReturn;
+static void source_project_return(lua_State* L,int index,uint32_t count,dh2_script_first_return_v1* value) {
+  memset(value,0,sizeof(*value));value->count=count;
+  value->type=(uint32_t)lua_type(L,index);
+  switch(value->type) {
+    case LUA_TTABLE:
+      lua_getfield(L,index,"_this");value->identity=(uintptr_t)lua_touserdata(L,-1);lua_pop(L,1);value->type=7;break;
+    case LUA_TSTRING:
+      value->text=lua_tolstring(L,index,NULL);value->text_bytes=strlen(value->text);break;
+    case LUA_TBOOLEAN:
+      value->boolean=(uint32_t)lua_toboolean(L,index);value->number=(float)value->boolean;break;
+    case LUA_TNUMBER:value->number=lua_tonumber(L,index);break;
+    case LUA_TLIGHTUSERDATA:value->identity=(uintptr_t)lua_touserdata(L,index);break;
+    default:value->type=0;break;
+  }
+}
 static void source_return_direct(lua_State* L,void* context) {
   SourceReturn* op=(SourceReturn*)context;dh2_script_first_return_v1 selected;
+  dh2_script_first_return_v1* all=NULL;
   uint32_t i;int first,last,index,result;char error[256]={0};
   memset(&selected,0,sizeof(selected));
   if(!lua_checkstack(L,(int)op->call.count+20))luaL_error(L,"source call stack exhausted");
@@ -274,25 +291,19 @@ static void source_return_direct(lua_State* L,void* context) {
   if(!lua_isfunction(L,-1))luaL_error(L,"missing function: %s",op->call.name);
   for(i=0;i<op->call.count;++i)push(L,op->call.args+i);
   lua_call(L,(int)op->call.count,LUA_MULTRET);last=lua_gettop(L);
-  if(!lua_checkstack(L,1))luaL_error(L,"source return projection stack exhausted");
+  if(!lua_checkstack(L,2))luaL_error(L,"source return projection stack exhausted");
   selected.count=(uint32_t)(last-first+1);
-  for(index=first;index<=last;++index) {
-    dh2_script_first_return_v1 value;memset(&value,0,sizeof(value));
-    value.type=(uint32_t)lua_type(L,index);
-    switch(value.type) {
-      case LUA_TTABLE:
-        lua_getfield(L,index,"_this");value.identity=(uintptr_t)lua_touserdata(L,-1);lua_pop(L,1);value.type=7;break;
-      case LUA_TSTRING:
-        value.text=lua_tolstring(L,index,NULL);value.text_bytes=strlen(value.text);break;
-      case LUA_TBOOLEAN:
-        value.boolean=(uint32_t)lua_toboolean(L,index);value.number=(float)value.boolean;break;
-      case LUA_TNUMBER:value.number=lua_tonumber(L,index);break;
-      case LUA_TLIGHTUSERDATA:value.identity=(uintptr_t)lua_touserdata(L,index);break;
-      default:value.type=0;break;
-    }
-    if((uint32_t)(index-first)==op->index){value.count=selected.count;selected=value;}
+  if(op->all_observer&&selected.count) {
+    if((size_t)selected.count>SIZE_MAX/sizeof(*all))luaL_error(L,"source return storage overflow");
+    all=(dh2_script_first_return_v1*)lua_newuserdata(L,(size_t)selected.count*sizeof(*all));
   }
-  result=op->observer(op->context,&selected,error,sizeof(error));
+  for(index=first;index<=last;++index) {
+    dh2_script_first_return_v1 value;source_project_return(L,index,selected.count,&value);
+    if(all)all[index-first]=value;
+    if((uint32_t)(index-first)==op->index)selected=value;
+  }
+  result=op->all_observer?op->all_observer(op->context,all,selected.count,error,sizeof(error)):
+    op->observer(op->context,&selected,error,sizeof(error));
   if(result) {
     if(result==DH2_SCRIPT_REQUIRED_SERVICE_FAILURE)++op->call.vm->required_failure_epoch;
     error[sizeof(error)-1]=0;luaL_error(L,"%s",error[0]?error:"source return observer rejected");
@@ -302,10 +313,11 @@ static void source_error_direct(lua_State* L,void* context) {
   SourceReturn* op=(SourceReturn*)context;const char* text=lua_tolstring(L,-1,NULL);
   snprintf(op->error,sizeof(op->error),"%s",text?text:"unsupported source callback error object");
 }
-int dh2_script_vm_call_indexed_source_v3(dh2_script_vm* vm,const char* name,
-  const dh2_script_value* args,uint32_t count,uint32_t index,dh2_script_return_observer_v1 observer,void* context) {
+static int call_source(dh2_script_vm* vm,const char* name,
+  const dh2_script_value* args,uint32_t count,uint32_t index,dh2_script_return_observer_v1 observer,
+  dh2_script_returns_observer_v1 all_observer,void* context) {
   SourceReturn op;lua_State* L;uint32_t i;int top,status,error_status;uint64_t epoch;
-  if(!vm||vm->busy||!name||!observer||(!args&&count)||(uint64_t)count+20>INT_MAX)return -1;
+  if(!vm||vm->busy||!name||(!observer&&!all_observer)||(!args&&count)||(uint64_t)count+20>INT_MAX)return -1;
   if(source_aliases_vm(vm,name,1))return -1;
   if(count&&((uintptr_t)args%sizeof(void*) || source_aliases_vm(vm,args,(size_t)count*sizeof(*args))))return -1;
   for(i=0;i<count;++i) {
@@ -313,7 +325,7 @@ int dh2_script_vm_call_indexed_source_v3(dh2_script_vm* vm,const char* name,
     if(args[i].type==DH2_SCRIPT_STRING && source_aliases_vm(vm,args[i].text,args[i].text_bytes))return -1;
   }
   memset(&op,0,sizeof(op));op.call.vm=vm;op.call.name=name;op.call.args=args;op.call.count=count;
-  op.index=index;op.observer=observer;op.context=context;L=vm->state;top=lua_gettop(L);
+  op.index=index;op.observer=observer;op.all_observer=all_observer;op.context=context;L=vm->state;top=lua_gettop(L);
   epoch=vm->required_failure_epoch;vm->busy=1;vm->error[0]=0;
   status=luaD_pcall(L,source_return_direct,&op,savestack(L,L->top),0);
   if(status) {
@@ -326,6 +338,14 @@ int dh2_script_vm_call_indexed_source_v3(dh2_script_vm* vm,const char* name,
   }
   snprintf(vm->error,sizeof(vm->error),"%s",op.error);lua_settop(L,top);vm->busy=0;
   return vm->required_failure_epoch!=epoch?DH2_SCRIPT_REQUIRED_FAILURE_STATUS:status;
+}
+int dh2_script_vm_call_indexed_source_v3(dh2_script_vm* vm,const char* name,
+  const dh2_script_value* args,uint32_t count,uint32_t index,dh2_script_return_observer_v1 observer,void* context) {
+  return call_source(vm,name,args,count,index,observer,NULL,context);
+}
+int dh2_script_vm_call_all_source_v1(dh2_script_vm* vm,const char* name,
+  const dh2_script_value* args,uint32_t count,dh2_script_returns_observer_v1 observer,void* context) {
+  return call_source(vm,name,args,count,0,NULL,observer,context);
 }
 int dh2_script_vm_call_first_source_v1(dh2_script_vm* vm,const char* name,
   const dh2_script_value* args,uint32_t count,dh2_script_return_observer_v1 observer,void* context) {

@@ -28,6 +28,7 @@ RegisterSkill(function()
   if skill_update_mode == 1 then return "one" end
   if skill_update_mode == 2 then error("ordinary update error") end
   if skill_update_mode == 3 then GetCurrentSkillInfo__() end
+  if skill_update_mode == 4 then return "left", false, nil, "right" end
 end, function() return true end, function() end, function() end, function() end)
 )lua";
 
@@ -86,6 +87,21 @@ void run() {
     load_helpers(f);
 
     std::int32_t machine = 6;
+    // A valid VM for another Character cannot be paired with this owner. Fail
+    // before running Lua or touching either Character's prepared instances.
+    std::string identity_error;
+    auto foreign = p::Owner::create(catalogue.tables,
+        {CHAR + 1, AIS, &f.view, 0}, f.session->preparation_services(), identity_error);
+    check(bool(foreign), "foreign preparation fixture rejected");
+    const auto identity_calls = f.native_names.size();
+    bool identity_rejected = false;
+    try {
+        update_session::Runtime invalid(*f.session, *foreign, AIS, CHAR + 1, machine);
+    } catch (const std::invalid_argument&) {
+        identity_rejected = true;
+    }
+    check(identity_rejected && f.native_names.size() == identity_calls && counter(f) == 0,
+          "cross-Character Session/owner pairing was accepted or called Lua");
     update_session::Runtime runtime(*f.session, *f.owner, AIS, CHAR, machine);
     update_session::Result result{};
     std::string error;
@@ -147,6 +163,17 @@ void run() {
     }else check(false,"unexpected source faery argument type");
     check(observed_slot.number==expected_slot,"stored source slot argument changed");
 
+    // All source returns are retained and the complete SetSkill vector is
+    // erased before one update call per instance; callback effects never replay.
+    f.overlay("fixture/multi_set_skill",
+              "SetSkill=function(name,id) source_set_skill(name,id); return 'left',false,nil,'right' end");
+    check(f.load("fixture/multi_set_skill", wrapped)==0 && wrapped.source_success,
+          "multiple SetSkill fixture load failed");
+    set_mode(f,4);const auto before_multiple=counter(f);
+    check(runtime.update(result,error)==0 && result.callbacks==13 && result.lua_errors==0 &&
+          runtime.retained_failed_returns()==0 && counter(f)==before_multiple+13,
+          "multiple source ReturnValues were rejected, leaked or replayed");
+
     // An ordinary SetSkill Lua error follows the source error-code branch:
     // the update callback is skipped and its ReturnValues object is destroyed.
     f.overlay("fixture/wrap_set_skill_error",
@@ -190,8 +217,10 @@ void run() {
           "failed ReturnValues/callback was replayed through the FSM skip");
 
     std::cout << "{\"validation\":\"PASS\",\"source_slots\":21,"
+                 "\"cross_character_guard\":true,"
                  "\"fsm_skips\":2,\"zero_return_updates\":13,"
                  "\"one_return_updates\":13,\"one_return_set_skill_updates\":13,"
+                 "\"multi_return_updates\":13,\"multi_return_set_skill_updates\":13,"
                  "\"ordinary_set_skill_errors\":13,"
                  "\"ordinary_update_errors\":13,\"required_failures\":1,"
                  "\"retained_failed_resources\":" << runtime.retained_failed_returns()

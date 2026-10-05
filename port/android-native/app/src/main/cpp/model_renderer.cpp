@@ -12,6 +12,7 @@
 #include "animation_bank.hpp"
 #include "class_tables.hpp"
 #include "skill_tables.hpp"
+#include "player_savegame_v1.hpp"
 #include "level_tables.hpp"
 #include "level_construction_fields.hpp"
 #include "lua_script_level_queries.hpp"
@@ -123,6 +124,7 @@ std::vector<ObjectGroup> object_groups;
 std::vector<ObjectActor> saved_actors;
 struct PlayerCombat {
  dh2::data::PropertyState properties;dh2::data::CombatActorState life;
+ std::shared_ptr<dh2::data::PlayerSavegameV1> savegame;
  int animation_table=-1,target=-1;unsigned attempts=0,received=0;
  bool pending_death=false;std::uint64_t death_target=0;
  AggroStorage aggro;
@@ -214,12 +216,17 @@ std::uint32_t native_actor_zonability(ObjectActor& actor) {
 std::map<int,dh2::animation::Player> prince_attack_clips;
 dh2::data::AnimationBank prince_animation_bank;
 dh2::data::PropertyRules actor_property_rules;
+// Original CharProperties::s_temp is shared process storage, borrowed by every
+// skill callback. ClearProps(true) seeds it from the current Character owner.
+dh2::data::PropertySheet skill_property_temp{};
 dh2::data::LevelTables actor_level_tables;
 dh2::data::ClassTables actor_class_tables;
 struct NativeSkillCatalogue {
  std::shared_ptr<const dh2::player_skill_tables_adapter::Tables> tables;
  std::vector<std::uint8_t> faery_constants_bytes;
  dh2_pycst_view faery_constants{};
+ std::vector<std::uint8_t> ai_constants_bytes;
+ dh2_pycst_view ai_constants{};
 };
 std::shared_ptr<const NativeSkillCatalogue> actor_skill_catalogue;
 std::vector<dh2::data::ClassRow> actor_class_rows;
@@ -1177,11 +1184,21 @@ std::unique_ptr<dh2::native::player_skills::Runtime> prince_skills;
 void initialize_native_player_skills(AAssetManager* assets,bool restore){
  if(restore&&prince_skills){prince_skills->restore(assets,prince_source_ai.get(),actor_skill_catalogue.get());return;}
  if(!prince_source_ai||!actor_skill_catalogue)throw std::runtime_error("Native Player skill owners missing");
+ if(!prince_combat.savegame){
+  auto saved=std::make_shared<dh2::data::PlayerSavegameV1>();
+  saved->set_character(prince_source_ai->character_identity);
+  auto view=dh2::data::property_view(actor_property_rules,prince_combat.properties);
+  std::int32_t selector=0;std::string error;
+  if(dh2_property_resolve(&view,28,&selector)||!saved->initialize_skills(actor_skill_catalogue->tables->skills(),selector,error))
+   throw std::runtime_error("Native Player saved-skill initialization: "+error);
+  prince_combat.savegame=std::move(saved);
+ }
  dh2::native::player_skills::Bindings b{};
  b.character=prince_source_ai->character_identity;b.ai=prince_source_ai->ai_identity;
  b.ai_lifetime=prince_source_ai;b.tables=actor_skill_catalogue->tables;b.catalogue_lifetime=actor_skill_catalogue;
  b.rules=&actor_property_rules;b.properties=&prince_combat.properties;b.classes=&actor_class_tables;b.fields=&actor_character_fields;
- b.design=&actor_design;b.faery_constants=&actor_skill_catalogue->faery_constants;b.coordinator=&prince_character;b.debug=native_debug.get();
+ b.shared_property_temp=&skill_property_temp;b.savegame=prince_combat.savegame;
+ b.design=&actor_design;b.ai_constants=&actor_skill_catalogue->ai_constants;b.faery_constants=&actor_skill_catalogue->faery_constants;b.coordinator=&prince_character;b.debug=native_debug.get();
  b.assets=assets;b.read=[](AAssetManager* a,const std::string& path){return read(a,path,"");};
  std::string error;auto candidate=dh2::native::player_skills::Runtime::create(std::move(b),error);
  if(!candidate)throw std::runtime_error(error);prince_skills=std::move(candidate);
@@ -2151,6 +2168,11 @@ std::string debug_player_skill_cooldown(std::uint32_t delay){
  return prince_skills->cooldown_probe(delay);
 }
 
+std::string debug_player_skill_check(std::uint32_t slot){
+ if(!world_mode||!native_actor_ready||!prince_skills)return "Player skill check probe rejected";
+ return prince_skills->check_probe(slot);
+}
+
 std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetManager* assets){
   std::vector<Draw> environment;std::vector<GLuint> textures;
   std::vector<ObjectGroup> candidate_groups;
@@ -2179,6 +2201,9 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     skill_catalogue->faery_constants_bytes=read(assets,"faeries_pycst.bin","data");
     if(skill_catalogue->faery_constants_bytes.size()>UINT32_MAX||
        dh2_pycst_open(&skill_catalogue->faery_constants,skill_catalogue->faery_constants_bytes.data(),std::uint32_t(skill_catalogue->faery_constants_bytes.size())))throw std::runtime_error("Original Faery constants rejected");
+    skill_catalogue->ai_constants_bytes=read(assets,"ai_pycst.bin","data");
+    if(skill_catalogue->ai_constants_bytes.size()>UINT32_MAX||
+       dh2_pycst_open(&skill_catalogue->ai_constants,skill_catalogue->ai_constants_bytes.data(),std::uint32_t(skill_catalogue->ai_constants_bytes.size())))throw std::runtime_error("Original AI constants rejected");
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native skill catalogue | skill lists %zu | skills %zu | faery lists %zu | faeries %zu | shared immutable tables; full skill callbacks pending",skill_catalogue->tables->skills().skill_lists.size(),skill_catalogue->tables->skills().skills.size(),skill_catalogue->tables->faeries().faery_lists.size(),skill_catalogue->tables->faeries().faeries.size());
     auto design_bytes=read(assets,"design_pycst.bin","data");dh2_pycst_view design_view{};
     if(design_bytes.size()>UINT32_MAX||dh2_pycst_open(&design_view,design_bytes.data(),std::uint32_t(design_bytes.size())))throw std::runtime_error("Original design constants rejected");

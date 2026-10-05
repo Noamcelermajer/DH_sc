@@ -125,6 +125,14 @@ struct Session::Impl {
         error=dh2_script_vm_error(vm.get());if(status==-5 && error.empty())error="required native service failure caught by Lua";
         return status;
     }
+    int call_all(const char* name,const dh2_script_value* args,std::uint32_t count,
+                 dh2_script_returns_observer_v1 observer,void* context) {
+        const char* alias=dh2_script_alias_resolve(aliases,name);if(!alias){error="invalid source callback alias";return -1;}
+        std::string captured(alias);
+        int status=dh2_script_vm_call_all_source_v1(vm.get(),captured.c_str(),args,count,observer,context);
+        error=dh2_script_vm_error(vm.get());if(status==-5 && error.empty())error="required native service failure caught by Lua";
+        return status;
+    }
     static int contains(void* p,ais_player_init_vcb::State*,const char* name,bool* out) {
         int member=dh2_script_alias_contains(static_cast<Impl*>(p)->aliases,name);if(member<0)return -1;*out=member!=0;return 0;
     }
@@ -243,7 +251,16 @@ int Session::initialize_vcb(ais_player_init_vcb::Result* out,std::string& error)
     if(impl_->busy || impl_->stage!=Stage::character_bound || !impl_->output(out,sizeof(*out),alignof(ais_player_init_vcb::Result)) || overlap(out,sizeof(*out),this,sizeof(*this)))return -1;
     Busy busy(impl_->busy);impl_->error.clear();int status=impl_->vcb(out);error=impl_->error;return status;
 }
+int Session::call_all(const char* name,const dh2_script_value* args,std::uint32_t count,
+                     dh2_script_returns_observer_v1 observer,void* context,std::string& error) {
+    if(impl_->busy || impl_->stage!=Stage::character_bound || !name || !observer)return -1;
+    Busy busy(impl_->busy);impl_->error.clear();
+    try{int status=impl_->call_all(name,args,count,observer,context);error=impl_->error;return status;}
+    catch(...){error="source callback dependency exception";return -1;}
+}
 dh2_script_vm* Session::vm()const noexcept{return impl_->vm.get();}
+std::uintptr_t Session::character_identity()const noexcept{return impl_->config.character;}
+std::uintptr_t Session::ais_identity()const noexcept{return impl_->config.ais->ais;}
 Stage Session::stage()const noexcept{return impl_->stage;}
 const std::string& Session::script_path()const noexcept{return impl_->path;}
 const std::string& Session::last_error()const noexcept{return impl_->error;}

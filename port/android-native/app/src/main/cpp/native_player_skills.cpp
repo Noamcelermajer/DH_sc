@@ -1,6 +1,9 @@
 #include "native_player_skills.hpp"
 #include "player_skill_session_v1.hpp"
 #include "player_skill_update_session_v1.hpp"
+#include "player_skill_use_session_v1.hpp"
+#include "player_skill_property_services_v1.hpp"
+#include "player_savegame_v1.hpp"
 #include "character_skill_cooldown_services.hpp"
 #include "character_coordinator.hpp"
 #include "native_debug_files.hpp"
@@ -32,7 +35,9 @@ struct Runtime::Impl {
  std::optional<dh2::character_player_skills_preparation_v3::Owner::TimerFieldLease> timer_fields;
  std::unique_ptr<dh2::player_skill_session_v1::Session> session;
  std::unique_ptr<dh2::player_skill_update_session_v1::Runtime> updates;
+ std::unique_ptr<dh2::player_skill_use_session_v1::Runtime> uses;
  dh2::character_skill_cooldown_services::Services cooldown{};
+ dh2::player_skill_property_services_v1::Bindings property_services{};
  dh2_script_game_bindings timer_bindings{};
  std::map<std::string,std::vector<std::uint8_t>> named_bytes;
  std::map<std::string,dh2_pynames_view> named_views;
@@ -42,7 +47,7 @@ struct Runtime::Impl {
  bool update_blocked=false;
  std::string error;
  explicit Impl(Bindings b):bindings(std::move(b)),assets(bindings.assets){}
- ~Impl(){updates.reset();session.reset();timer_fields.reset();preparation.reset();}
+ ~Impl(){uses.reset();updates.reset();session.reset();timer_fields.reset();preparation.reset();}
  static auto& self(void* raw){return *static_cast<Impl*>(raw);}
  static int fail(char* message,std::size_t size,const char* name){
   if(message&&size)std::snprintf(message,size,"unresolved native Player skill provider: %s",name?name:"unknown");
@@ -117,6 +122,14 @@ struct Runtime::Impl {
      if(!std::strcmp(a[0].text,"ClassTable")){
       auto it=std::find(s.bindings.classes->names.begin(),s.bindings.classes->names.end(),a[1].text);
       if(it!=s.bindings.classes->names.end())value=std::int32_t(it-s.bindings.classes->names.begin());
+     }else if(!std::strcmp(a[0].text,"SkillTable")){
+      const auto& rows=s.bindings.tables->skills().skills;
+      auto it=std::find_if(rows.begin(),rows.end(),[&](const auto& row){return row.table_name==a[1].text;});
+      if(it!=rows.end())value=std::int32_t(it-rows.begin());
+     }else if(!std::strcmp(a[0].text,"SkillListTable")){
+      const auto& rows=s.bindings.tables->skills().skill_lists;
+      auto it=std::find_if(rows.begin(),rows.end(),[&](const auto& row){return row.name==a[1].text;});
+      if(it!=rows.end())value=std::int32_t(it-rows.begin());
      }else{
       const auto it=s.named_views.find(a[0].text);
       if(it==s.named_views.end()||a[1].text_bytes>UINT32_MAX||dh2_pynames_get(&it->second,a[1].text,std::uint32_t(a[1].text_bytes),&value))return fail(text,bytes,q.name);
@@ -124,6 +137,7 @@ struct Runtime::Impl {
     }else{
      dh2_pycst_result result{};
      if(dh2_pycst_get(s.bindings.design,a[0].text,a[0].text_bytes,a[1].text,a[1].text_bytes,&result))return fail(text,bytes,q.name);
+     if(!result.found&&dh2_pycst_get(s.bindings.ai_constants,a[0].text,a[0].text_bytes,a[1].text,a[1].text_bytes,&result))return fail(text,bytes,q.name);
      if(result.found)value=result.value;
     }
     number(out[0],static_cast<float>(value));*returned=1;return 0;
@@ -138,12 +152,31 @@ struct Runtime::Impl {
     return dh2_script_game_start_timer(&s.timer_bindings,a,count,out,capacity,returned,text,bytes);
    if(q.character_function==Fn::character_stop_timer)
     return dh2_script_game_stop_timer(&s.timer_bindings,a,count,out,capacity,returned,text,bytes);
-   if(q.character_function==Fn::character_get_prop){
-    std::int32_t id=0,value=0;
-    if(!count||!integer(a[0],id)||!out||!capacity||(count>1&&a[1].type==DH2_SCRIPT_BOOLEAN&&a[1].boolean))return fail(text,bytes,q.name);
+   if(q.character_function==Fn::character_get_prop||q.character_function==Fn::character_set_prop||q.character_function==Fn::character_apply_prop_class||q.character_function==Fn::character_clear_props)
+    return dh2::player_skill_property_services_v1::invoke(&s.property_services,q.character,q.character_function,a,count,out,capacity,returned,text,bytes);
+   if(q.character_function==Fn::character_get_current_skill_info||q.character_function==Fn::character_get_skill_id_from_oid){
+    std::int32_t index=0;
+    if(!count)return 0;
+    if(a[0].type!=DH2_SCRIPT_NUMBER)return fail(text,bytes,q.name);
+    if(!integer(a[0],index)||!out||!capacity||s.bindings.savegame->character()!=q.character)return fail(text,bytes,q.name);
     s.property_view=dh2::data::property_view(*s.bindings.rules,*s.bindings.properties);
-    if(dh2_property_resolve(&s.property_view,id,&value))return fail(text,bytes,q.name);
-    number(out[0],static_cast<float>(value));*returned=1;return 0;
+    using namespace dh2::player_saved_skill_callbacks_v1;
+    const auto value=q.character_function==Fn::character_get_current_skill_info?
+     get_current_skill_info(&s.property_view,&s.bindings.tables->skills(),s.bindings.savegame.get(),q.character,index):
+     get_skill_id_from_oid(&s.property_view,&s.bindings.tables->skills(),index);
+    if(value.disposition==Disposition::no_return)return 0;
+    if(value.disposition!=Disposition::append_integer)return fail(text,bytes,q.name);
+    number(out[0],static_cast<float>(value.integer));*returned=1;return 0;
+   }
+   if(q.character_function==Fn::character_has_mana){
+    // This current app slice is offline. Source HasMana's online/player
+    // exemption is not selected; the sole Character cached MP is authoritative.
+    // Unsupported float/assertion domains remain an explicit boundary.
+    if(!count||a[0].type!=DH2_SCRIPT_NUMBER)return 0;
+    std::int32_t cost=0;
+    if(!integer(a[0],cost)||cost<0||!out||!capacity)return fail(text,bytes,q.name);
+    const auto mana=s.bindings.properties->resolved[41];
+    out[0]={};out[0].type=DH2_SCRIPT_BOOLEAN;out[0].boolean=mana>=cost;*returned=1;return 0;
    }
   }
   return fail(text,bytes,q.name);
@@ -160,6 +193,7 @@ struct Runtime::Impl {
    if(dh2_pynames_open(&named_views[pair.first],retained.data(),std::uint32_t(retained.size())))throw std::runtime_error("Player dictionary names rejected");
   }
   ais={reinterpret_cast<std::uintptr_t>(this),0};
+  property_services={bindings.character,bindings.rules,bindings.classes,bindings.properties,bindings.shared_property_temp,false};
   cooldown={this,bindings.character,list_count,slot,unsupported_number};
   timer_bindings={this,bindings.character,start_timer,stop_timer,0};
   dh2::player_skill_session_v1::Configuration config{};
@@ -180,8 +214,11 @@ struct Runtime::Impl {
   timer_fields=preparation->lease_timer_fields(bindings.character);
   if(!timer_fields)throw std::runtime_error("Player skill field18 lease unavailable");
   updates=std::make_unique<dh2::player_skill_update_session_v1::Runtime>(*session,*preparation,bindings.ai,bindings.character,bindings.coordinator->state.current);
+  uses=std::make_unique<dh2::player_skill_use_session_v1::Runtime>(*session,*preparation,bindings.character);
   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill preparation | skills %zu | faeries %zu | loaded paths %zu | declarations %u | flags %x | one VM; Player lifecycle and skill-use providers pending",
    preparation->slots(dh2::character_ai_set_skills_and_spells::List::skill).size(),preparation->slots(dh2::character_ai_set_skills_and_spells::List::faery).size(),session->loaded_path_count(),session->statistics().declarations,ais.flags_b8);
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player saved skills ready | owner %p | rows %zu | slot0 level %d | source _InitSkills; starter grant/profile load pending",
+   static_cast<void*>(bindings.savegame.get()),bindings.savegame->skills().size(),bindings.savegame->skill_level(0));
  }
  void update(){
   if(update_blocked||!updates)return;
@@ -227,10 +264,33 @@ std::string Runtime::cooldown_probe(std::uint32_t delay){
  return "Original skill cooldown callback armed";
 }
 
+std::string Runtime::check_probe(std::uint32_t slot){
+ auto& s=*impl_;
+ using List=dh2::player_skill_use_session_v1::List;
+ using Check=dh2::player_skill_use_session_v1::Check;
+ const auto& slots=s.preparation->slots(List::skill);
+ if(slot>=slots.size()||!slots[slot])return "Player skill check slot unavailable";
+ const auto* instance=s.preparation->instance(slots[slot]);
+ if(!instance)return "Player skill check instance unavailable";
+ dh2::player_skill_use_session_v1::Result usable{},active{};
+ // These are two distinct original callers. Each invokes OnSkillCheck once
+ // and converts its own return index from that call's complete result vector.
+ if(s.uses->check(List::skill,slot,Check::usable,usable,s.error)||
+    s.uses->check(List::skill,slot,Check::active,active,s.error)){
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill check blocked | slot %u | %s",slot,s.error.c_str());
+  return "Original skill check blocked: "+s.error;
+ }
+ const auto mana=s.bindings.properties->resolved[41];
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill check probe | script %s | slot %u | saved level %d | usable %u | active %u | usable returns %u | active returns %u | MP %d | SnS_Level %d | temp ManaCost %d | same Prince VM/properties/save; inner caller shell fixture, full activation pending",
+  instance->script_name,slot,s.bindings.savegame->skill_level(slot),usable.value,active.value,usable.return_count,active.return_count,mana,
+  s.bindings.properties->resolved[172],(*s.bindings.shared_property_temp)[173]);
+ return "Original skill check completed";
+}
+
 Runtime::Runtime(std::unique_ptr<Impl> p):impl_(std::move(p)){}
 Runtime::~Runtime()=default;
 std::unique_ptr<Runtime> Runtime::create(Bindings b,std::string& error){
- if(!b.character||!b.ai||!b.ai_lifetime||!b.tables||!b.catalogue_lifetime||!b.rules||!b.properties||!b.classes||!b.fields||!b.design||!b.faery_constants||!b.coordinator||!b.debug||!b.assets||!b.read||b.coordinator->owner()!=b.character){error="invalid native Player skill owner";return {};}
+ if(!b.character||!b.ai||!b.ai_lifetime||!b.tables||!b.catalogue_lifetime||!b.rules||!b.properties||!b.shared_property_temp||!b.savegame||b.savegame->character()!=b.character||!b.savegame->skills_initialized()||!b.classes||!b.fields||!b.design||!b.ai_constants||!b.faery_constants||!b.coordinator||!b.debug||!b.assets||!b.read||b.coordinator->owner()!=b.character){error="invalid native Player skill owner";return {};}
  try{auto p=std::make_unique<Impl>(std::move(b));p->prepare();return std::unique_ptr<Runtime>(new Runtime(std::move(p)));}
  catch(const std::exception& e){error=e.what();return {};}
 }
