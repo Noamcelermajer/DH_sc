@@ -5,9 +5,9 @@ Adam reference: [`AdamCelermajer/DH_sc`](https://github.com/AdamCelermajer/DH_sc
 
 This report supersedes older documents' descriptions of the current default development build. Historical reports retain their original artifact identities and test scopes.
 
-**Latest work:** Player source load/InitProcess now drives the native retained VM, skills, properties and Coordinator. Real unpaused regeneration and zero-DoT timers run without an extra FSM event; reload preserves their elapsed/count state. Selected-host gates pass five lifecycle completions/four failure prefixes/seven guards/two split cases and 11 original regeneration traces/33 compositions/93 failure prefixes. Adam's weapon queries and five shared text dependencies are selected; 99,622 cache-composition checks and original formatter/query replays pass. Native inventory/text/Skin/profile/grants, positive DoT, death cleanup and full AIS frame remain open. [Evidence](../reports/reconstruction-2026-10-05/player-ais-timers/validation.json).
+**Latest work:** Source Player OnDied→AI_SetDead now borrows the same VM/preparation, AI, Coordinator, buffs and properties. Direct state12/null, target synchronization, two timer stops and all13 cleanup callbacks pass live. Three selected-host gates cover real classes, 23 cleanup/18 death ARM routes, 58 death failure prefixes and 3,910 state comparisons. The original caller audit also removed invented per-frame UpdateAllSkills replay. Adam's existing V4/V5/V7, skill and five-TU text selections were rechecked; no duplicate authorities were introduced. Full Character Kill/event2, linked aggro, inventory/profile/grants, positive DoT, skill activation and full AIS frame remain open. [Evidence](../reports/reconstruction-2026-10-05/player-death/validation.json).
 
-**Latest tested local APK:** `aee78d52...`, 30,126,619 bytes; 583 actual compiler/configure inputs, both native ABIs, 20 ELF64/16 KiB libraries, alignment/signing and 22 adapter export checks. All13 unchanged updates, authored Celest resistance, AIS/VM/timer retention, exact MP0→741 regeneration, buff/dictionary/cooldowns and Crypt touch/Wait/Spawn regressions pass on API37/16KiB. Root inspected Prince and spawned Ghost views. Local copy: `C:/Users/noamc/Downloads/DH2-native-player-ais-2026-10-05.apk`. [Current evidence](../reports/reconstruction-2026-10-05/player-ais-timers/validation.json). The published camera release retains its own identity. [Remaining tasks](PROJECT-CHECKLIST.md).
+**Latest tested local APK:** `2a93a0e2...`, 30,063,961 bytes; 591 actual compiler/configure inputs, both native ABIs, 20 ELF64/16 KiB libraries and alignment/signing checks. Native death, Player regen/buffs/dictionary/cooldowns and Crypt touch/Wait/Spawn regressions pass on API37/16KiB; 545 host inputs per gate match actual APK inputs. The fatal-hit test is a controlled fixture, not complete combat/rewards. Root inspected the dead/reloaded views: state is retained, but development recreation restarts the death animation; exact pose/cursor restoration remains open. Local copy: `C:/Users/noamc/Downloads/DH2-native-player-death-2026-10-05.apk`. [Current evidence](../reports/reconstruction-2026-10-05/player-death/validation.json). The published camera release retains its own identity. [Remaining tasks](PROJECT-CHECKLIST.md).
 
 ## Latest Adam reconciliation
 
@@ -30,7 +30,7 @@ native-combat and loader milestones against actual code/build selections at
 | Equipment render owner | Adapted services | Reuses V4/V5 algorithms through our exact property view and real provider contracts. Requirements/pruning/Skin-before-vitals and retirement-prefix tests pass; native visual/text/HUD and whole-item lifetime binding remain open. |
 | Weapon/equipment queries | Imported/adapted | Borrows sole V4 inventory/property view; 1,000 original weapon cases, both sets and combat projections pass. Native inventory producer remains required. |
 | Localization/item text dependencies | Imported/selected | Five shared text TUs use existing game-data DSO; 1,322 actual items/936 power descriptions and 1,087 formatter/355 varargs replays pass. Actual native language/file/Application/HUD providers remain unbound. |
-| Player AIS initialization | Adapted and live | Native split load/InitProcess uses same Session/preparation/Coordinator; phase7 precedes one vitals/configure/update pass. Real timers33/34, retention and regen pass. Positive DoT, full AIS frame, death cleanup and profile/grants remain required. |
+| Player AIS initialization/death dependencies | Adapted and live | Native load/InitProcess and OnDied cleanup share the same owners. Real timers33/34, regen, source timer retirement and all13 cleanup callbacks pass. UpdateAllSkills is delivered once by InitProcess; real progression callers remain required. Full Kill/event2, positive DoT, linked-aggro producers, full AIS frame and profile/grants remain open. |
 | Native combat/NPC candidates | Audit/selective reuse | Useful target/event contracts. Upstream melee shortcuts, no-target skill receipts and unselected NPC candidates do not prove our full enemy/skill combat loop. |
 | Separate menu and level-loader contributions | Deferred integration | Keep their research; connect actual factories, save/StartGame handoffs and quest/campaign state before calling them gameplay complete. |
 
@@ -40,13 +40,13 @@ dictionary; adapt those fixtures through existing providers before reuse.
 Its native factories remain unbound. Our `origin/main` refresh (`1219a43a`)
 adds no gameplay source beyond the reviewed branch.
 
-Next live milestone: bind genuine Player death/AI cleanup and profile/inventory/
-equipment producers, then skill activation and an enemy encounter with actual
-animation-driven hits, death rewards and loot pickup. Original OnDied→AI_SetDead
-stops both AI timers and directly enters state12 with null payload; the current
-development death-event request is incomplete. Nonempty linked-aggro cleanup
-needs the matching OnAggro producer, not a generic pair clear. Autonomous enemy
-frames, positive-target skill damage and full campaign loading remain open.
+Next live milestone: finish Player Kill/event2 continuation, preserve animation
+pose during recreation, and bind profile/inventory/equipment producers. Then
+connect skill activation and an enemy encounter with animation-driven hits,
+death rewards and loot pickup. OnDied→AI_SetDead now stops both AI timers and
+directly enters state12/null. Nonempty linked-aggro cleanup still needs matching
+OnAggro producers. Autonomous enemy frames, positive-target skill damage and
+full campaign loading remain open.
 
 ### Rough estimate
 

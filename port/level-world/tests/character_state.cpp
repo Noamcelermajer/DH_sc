@@ -27,10 +27,22 @@ struct Fixture {
  std::uint32_t mode=0;
  Facts* facts=nullptr;
  bool complete_on_notification=false;
+ std::uint32_t original_flags=0,debug_preludes=0;
+ bool fail_debug_prelude=false;
 };
 void callback(void* context,State* state,const Request* request){
  require(reinterpret_cast<std::uintptr_t>(context)>0xffffffffu,"64-bit callback context");
- auto& fixture=*static_cast<Fixture*>(context);require(request->reserved==0,"request reserved");fixture.calls.push_back(*request);
+ auto& fixture=*static_cast<Fixture*>(context);require(request->reserved==0,"request reserved");
+ if(request->service==dead_focus_prelude){
+  require(state->current==12&&state->flags==fixture.original_flags,"dead Debug prelude before flags");
+  ++fixture.debug_preludes;
+  if(fixture.fail_debug_prelude)throw std::runtime_error("injected mandatory Debug failure");
+  // The frozen historical oracle explicitly fixtures Debug callees, so this
+  // added mandatory integration request is counted separately from its trace.
+  // The dead-focus adapter audit executes the actual selected Debug owner.
+  return;
+ }
+ fixture.calls.push_back(*request);
  if(request->service==stop){state->heading_active=0;if(fixture.mode==4)for(float& heading:fixture.facts->heading)heading=0;}
  if(request->service==set_animation){state->current_animation=request->argument[0];if(fixture.mode==2)state->body_present=0;}
  if(request->service==swap_animation&&fixture.mode==1)state->heading_active=0;
@@ -48,7 +60,7 @@ int main(int argc,char** argv){
   Fixture fixture;Services services{&fixture,callback};std::uint64_t request_count=0;
   for(std::uint32_t index=0;index<count;++index){
    Case item=read<Case>(input);State state=read<State>(input);Facts facts=read<Facts>(input);State expected=read<State>(input);
-   fixture.calls.clear();fixture.mode=item.callback_mode;fixture.facts=&facts;int result=0;
+   fixture.calls.clear();fixture.mode=item.callback_mode;fixture.facts=&facts;fixture.original_flags=state.flags;int result=0;
    if(item.operation==0)result=dh2_character_state_transition(&state,&facts,static_cast<std::int32_t>(item.a),static_cast<std::int32_t>(item.b),item.payload,&services);
    else if(item.operation==1)result=dh2_character_state_event(&state,&facts,item.a,item.payload,&services);
    else if(item.operation==2)result=dh2_character_state_update(&state,&facts,item.a,&services);
@@ -83,7 +95,11 @@ int main(int argc,char** argv){
   require(fixture.calls.size()==11,"reentry service count");for(unsigned n=0;n<11;++n)require(fixture.calls[n].service==order[n],"reentry service order");
   require(fixture.calls[2].argument[0]==253,"AttackMoving source Attack+stance selection");
   require(fixture.calls[7].argument[0]==400&&fixture.calls[7].argument[2]==0x2a,"attack blur delay event");
-  std::printf("{\"original_reference_cases\":%u,\"ordered_service_requests\":%llu,\"malformed_no_mutation_cases\":%u,\"synchronous_reentry_passed\":true,\"mismatches\":0}\n",count,static_cast<unsigned long long>(request_count),malformed);
+  State dead;dead.current=3;dead.flags=0x2380;dead.elapsed_ms=41;
+  fixture.original_flags=dead.flags;fixture.fail_debug_prelude=true;fixture.calls.clear();
+  bool threw=false;try{dh2_character_state_transition(&dead,&facts,12,0xc358,0,&services);}catch(const std::runtime_error&){threw=true;}
+  require(threw&&dead.current==12&&dead.elapsed_ms==0&&dead.flags==0x2380&&!dead.controller_locked&&fixture.calls.empty(),"Debug failure preserves reached transition prefix");
+  std::printf("{\"original_reference_cases\":%u,\"ordered_service_requests\":%llu,\"mandatory_dead_debug_preludes\":%u,\"debug_failure_prefix_passed\":true,\"malformed_no_mutation_cases\":%u,\"synchronous_reentry_passed\":true,\"mismatches\":0}\n",count,static_cast<unsigned long long>(request_count),fixture.debug_preludes,malformed);
   return 0;
  }catch(const std::exception& failure){std::fprintf(stderr,"character_state audit: %s\n",failure.what());return 1;}
 }

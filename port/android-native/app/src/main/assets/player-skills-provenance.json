@@ -1,6 +1,6 @@
 {
   "attribution": "Dungeon Hunter 2 original cached game resources; unchanged bytes. Native session adaptation reuses Adam Celermajer c3ae797 research.",
-  "scope": "29 original player/faery scripts plus both commons, 2 native name dictionaries and original AI constants. Skill use/savegame/buff providers remain unfinished.",
+  "scope": "Unchanged player/faery scripts, dictionaries, AI and animation constants. Source initialization/death composition borrows the same native owners; full activation/profile/combat remain unfinished.",
   "files": {
     "scripts/ai/_commons.luac": {
       "bytes": 13535,
@@ -137,6 +137,10 @@
     "data/ai_pycst.bin": {
       "bytes": 1042,
       "sha256": "c3e5338160ef790decc62163c551b24be6401332aa5867d7274de8fd89e1d94e"
+    },
+    "data/animations_pycst.bin": {
+      "bytes": 1089,
+      "sha256": "dfac957b74e79c293f99651d2089489f855397f1de7256a9e555af681c1b990f"
     }
   }
 }

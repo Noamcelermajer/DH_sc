@@ -10,10 +10,11 @@ Source ref: `native-camera-frustum-2026-10-05` at `41e75b7`.
 APK: 25,219,583 bytes; SHA-256 `80ed755e81ed8ddbcd30093999c094e40cc160b98f312f8ba36f18635794fbff`.
 Matching source: [download ZIP](https://github.com/Noamcelermajer/DH_sc/releases/download/native-camera-frustum-2026-10-05/crypt-source-camera-culling-reviewed-source.zip); SHA-256 `8fcde7c2f770428cfc8d9426b94dd408c42bff791d5e38d212333a2054ec2c6b`.
 
-**Newer tested local build:** `DH2-native-player-ais-2026-10-05.apk` in Downloads;
-SHA-256 `aee78d528868cbde8355f968b3f45466a525f3f4548b0eb7fb3e39e98d366abf`.
-Native source startup/regen/retention and Crypt regressions pass; inventory/text
-providers and full gameplay remain open. [Evidence](../reports/reconstruction-2026-10-05/player-ais-timers/validation.json).
+**Newer tested local build:** `DH2-native-player-death-2026-10-05.apk` in Downloads;
+SHA-256 `2a93a0e2d9ad48310e123f1050f62d7f1d2384b4bf862667da0b431fab0605ec`.
+Source AI death/cleanup, Player startup/regen/retention and Crypt regressions pass
+on API37/16KiB. Full Kill/rewards, inventory and gameplay remain open.
+[Evidence](../reports/reconstruction-2026-10-05/player-death/validation.json).
 
 ## How to read this checklist
 
@@ -38,17 +39,17 @@ still require live gameplay integration. All final completion gates remain open.
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
 | Character properties, equipment and state | 16 | 5 |
-| Lua, skills and enemy AI | 42 | 14 |
+| Lua, skills and enemy AI | 47 | 15 |
 | Combat, death, loot and progression | 6 | 7 |
 | Quests, campaign, UI, audio and saves | 4 | 9 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **113** | **70** |
+| **Total scoped tasks** | **123** | **72** |
 
-Latest local gate: [player services](../reports/reconstruction-2026-10-05/player-services/validation.json). Five new adapters are selected in both Android libraries: saved slots, progression, initial grants, equipment services and Player AIS lifecycle. Selected-host/original tests pass; their native binding remains open. APK `3a850b12...` passes Android17/16KiB all13 unchanged updates, Celest resistance and retention, dictionary/MP/cooldowns and Crypt ambush/recreation. Full skill activation, live inventory/loot and autonomous pursuit remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
+Latest local gate: [native Player death](../reports/reconstruction-2026-10-05/player-death/validation.json). Source AI death/cleanup, one InitProcess skill update, regen/retention and Crypt regressions pass. Three new backbone adapters share existing owners. Full Kill/event2, linked aggro, inventory/loot, activation and autonomous pursuit remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
-Latest source/build/test scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
+Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
 Its newer local APK passes the Crypt regression on Android 17/16 KiB; the
 published download above retains its original release identity.
 
@@ -270,7 +271,13 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [ ] Complete all 265 original Character bindings and every actually used game/engine service.
 - [ ] Connect native Ghost acquisition and pursuit through real frame/path/body services.
 - [ ] Bind positive Player DoT attack/application and Ghost AI/DoT providers; Ghost timers remain paused.
-- [ ] Bind original Player OnDied→AI_SetDead cleanup, direct state12/null transition and genuine linked-aggro/group producers; no invented dead-regeneration skip.
+- [x] Reconstruct same-Session skill/faery cleanup: three actual classes, 23 ARM comparisons, ordinary-error branches and required-failure prefixes; no extra VM, timer stop or instance destruction.
+- [x] Select source OnDied→AI_SetDead composition: 18 ARM routes/473 pinned words, 58 failure prefixes and three real classes through the existing world/VM libraries.
+- [x] Bind dead-focus Debug, CancelSneaking, buff removal and constructor-null FX paths to canonical fields/owners; 18 host cases and 3,910 selected-state comparisons pass. Nonnull FX remains required.
+- [x] Verify native direct state12/null, target synchronization, timer33/34 retirement, all13 cleanup callbacks, buff removal, authored body removal and same-VM dead-state reload through a controlled fatal-hit fixture.
+- [x] Remove invented per-frame UpdateAllSkills replay; original initialization/progression callers own this update. Live InitProcess/reload receipts retain exactly one call.
+- [ ] Bind genuine linked-aggro/group/OnAggro producers and reached inventory-stance/nonnull-FX services for death; finish outer Character Kill/event2 routing.
+- [ ] Preserve Player animation pose/cursor across Activity recreation; current development sequence restarts on reload, including the dead pose.
 - [ ] Complete enemy movement, attacks, skill decisions, combat state changes and target cleanup.
 - [ ] Complete other AIS factories, enemy types, bosses and player AI/input behavior.
 - [ ] Playtest all enemy/skill combinations and preserve original decisions and timing.
@@ -333,7 +340,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 ## Immediate work order
 
-1. Bind source Player death/AI cleanup and profile/inventory/equipment/text/Skin producers on the same retained owners.
+1. Finish Player Kill/event2 continuation and bind profile/inventory/equipment/text/Skin producers on the same retained owners; preserve the dead pose during recreation.
 2. Connect full Player/enemy AIS frames, nonempty skill activation and autonomous acquisition/pursuit/attacks.
 3. Finish combat/death/rewards/loot/quest delivery and complete one original level.
 4. Expand factories/content/transitions, all classes, UI/audio and persistent campaign saves.

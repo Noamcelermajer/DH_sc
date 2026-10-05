@@ -136,6 +136,11 @@ struct PlayerCombat {
  // ObjectBase C1/C2 source stores +110=-1 and +118=0. These live fields,
  // shared by regen/remote predicates, are not an inferred online flag.
  dh2::object_update_culling::Object object_update_fields{0,UINT32_MAX,0,0,{0,0}};
+ // Source Character C1/C2 initializes marker14d0 and FX1484/148c/14a0
+ // to0. These are the actual retained Character fields, not fake providers.
+ dh2::character::set_target::OwnerFacts target_owner{};
+ dh2::player_ai_death_v1::DeadFields dead_fields{};
+ std::uintptr_t self_fx_1484=0,state_fx_148c=0,highlight_fx_14a0=0;
 };
 PlayerCombat prince_combat;
 SearchObjectProjection prince_search_projection{};
@@ -144,6 +149,9 @@ struct NativeCharAIProjection {
  std::uintptr_t character_identity=0,ai_identity=0;
  dh2::character_ai_initialization::State state{};
  dh2::character_ai_initialization::Result constructor_result{};
+ // Full-width form of constructor-initialized GroupInfo+34. Native group
+ // production is still unbound; nonnull death dispatch fails explicitly.
+ std::uintptr_t group_identity=0;
  std::shared_ptr<NativeMonsterInitialization> initialization;
 };
 struct NativeCharAIRegistry {
@@ -1210,6 +1218,22 @@ void initialize_native_player_skills(AAssetManager* assets,bool restore){
  b.character=prince_source_ai->character_identity;b.ai=prince_source_ai->ai_identity;
  b.ai_lifetime=prince_source_ai;b.tables=actor_skill_catalogue->tables;b.catalogue_lifetime=actor_skill_catalogue;
  b.source_ai=&prince_source_ai->state;b.declaration=dh2::data::ai_props(actor_ai_tables,prince_combat.properties.resolved[1]);
+ prince_combat.target_owner.identity=b.character;
+ prince_combat.target_owner.character_ai_id=prince_combat.properties.resolved[1];
+ b.target_owner=&prince_combat.target_owner;b.dead_fields=&prince_combat.dead_fields;
+ b.group_identity=&prince_source_ai->group_identity;
+ b.ai_tables=&actor_ai_tables;b.animation_tables=&actor_animation_tables;
+ b.self_fx=&prince_combat.self_fx_1484;b.state_fx=&prince_combat.state_fx_148c;b.highlight_fx=&prince_combat.highlight_fx_14a0;
+ b.is_player=[](void*,std::uintptr_t identity,std::uint32_t* out,std::string& error)->int {
+  using namespace dh2::character_ai_classification;
+  if(identity!=prince_character.owner()||!out){error="Character cleanup classification identity differs";return 1;}
+  // The retained authored Player row has type1. Source IsPlayer takes that
+  // branch without needing the unbound type0 Character name producer.
+  State state{identity,prince_combat.properties.resolved[1],prince_combat.properties.resolved[0],nullptr,std::uint8_t(prince_combat.life.dead)};
+  const Services services{nullptr,native_classification_service};Result result{};
+  if(query(Query::player,&state,&services,&result)!=Status::complete){error="Character cleanup source IsPlayer failed";return 1;}
+  *out=result.word;return 0;
+ };
  prince_combat.object_update_fields.identity=b.character;
  b.dead=&prince_combat.life.dead;b.object=&prince_combat.object_update_fields;b.controller=reinterpret_cast<std::uintptr_t>(&prince_state);
  b.rules=&actor_property_rules;b.properties=&prince_combat.properties;b.classes=&actor_class_tables;b.fields=&actor_character_fields;
@@ -1727,6 +1751,9 @@ int prince_look_service(void*,const dh2::character::CharacterControlRequest32* r
 void character_service(void*,dh2::character::State* state,const dh2::character::Request* request){
  using namespace dh2::character;std::string error;
  switch(request->service){
+ case dead_focus_prelude:case remove_highlight:case cancel_sneaking:case disable_state_fx:case disable_self_fx:case remove_buffs:
+  if(!prince_skills)throw std::runtime_error("Character cleanup requires native Player owner");
+  prince_skills->state_service(request->service);break;
  case stop:{
   dh2::move::Policy policy{};dh2_move_policy(&policy,&state->flags);
   if(prince_body.body&&policy.position_from_physics&&dh2_native_body_stop(&prince_body,prince_runtime.subobjects.position))throw std::runtime_error("Character Stop body failed");
@@ -1839,10 +1866,11 @@ void character_playback_event(void*,dh2::actor::BlendedPlayback&,const dh2::acto
 }
 void request_prince_death(){
  if(!prince_combat.pending_death)return;
- const auto facts=prince_facts();prince_state.animation_override=facts.death;
- const int accepted=prince_event(0xc358,prince_combat.death_target);
- if(accepted<0)throw std::runtime_error("Character death state request failed");
+ if(!prince_skills)throw std::runtime_error("Player source death owner unavailable");
+ // A reached failure keeps its prefix. Consume this one callback request;
+ // the frame must not replay OnDied against a partially completed owner.
  prince_combat.pending_death=false;
+ prince_skills->died(prince_combat.death_target);
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player death animation selected | clip %d | dead %u | lifecycle %d | state %d",prince_locomotion.current_clip(),prince_combat.life.dead,prince_combat.life.lifecycle,prince_state.current);
 }
 void initialize_gated_characters(AAssetManager* assets) {
@@ -2041,7 +2069,10 @@ void advance_native_actor(unsigned dt_ms){
  // step. The CharAI frame belongs between these calls; native Ghost AI is not
  // wired yet, so do not report this interim sequence as a complete update.
  if(prince_character.update_timers(dt_ms,0)!=1)throw std::runtime_error("Character timer update failed");
- if(prince_skills)prince_skills->update();
+ // UpdateAllSkills is invoked by source initialization/progression callers,
+ // not CharAI::Update or virtual OnUpdate. InitProcess already performs the
+ // original update once; an unconditional renderer-frame call recreated
+ // buffs and repeated callbacks. Full CharAI/AIS frame providers stay open.
  for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.spawn_owner){
   auto& character=actor.spawn_owner->character;
   if(character.update_timers(dt_ms,0)<0||character.update_state(dt_ms)<0)
@@ -2205,6 +2236,29 @@ std::string debug_player_mana(std::uint32_t amount){
 std::string debug_player_scalar(std::int32_t value,bool write){
  if(!world_mode||!native_actor_ready||!prince_skills)return "Player scalar probe rejected";
  return prince_skills->scalar_probe(value,write);
+}
+std::string debug_player_death(){
+ if(!world_mode||!native_actor_ready||!prince_skills||!prince_skills->initialized()||prince_combat.life.dead)return "Player death fixture rejected";
+ // Shell-only lifecycle fixture: a forced raw CombatResult goes through the
+ // existing source F_ApplyResult health/Kill prefix. It is not authored hit
+ // calculation, Player Kill trophies/online continuation or a campaign test.
+ try{
+  ObjectActor* attacker=nullptr;
+  for(auto& group:object_groups)for(auto& actor:group.instances)if(!attacker&&actor.kind==1&&!actor.combat_state.dead&&actor.properties.resolved[36]>0)attacker=&actor;
+  if(!attacker)return "Player death fixture has no live source attacker";
+  auto attack=dh2::data::property_view(actor_property_rules,attacker->properties);
+  auto defend=dh2::data::property_view(actor_property_rules,prince_combat.properties);
+  dh2::data::CombatResult result{};result.amount=prince_combat.properties.resolved[36];
+  dh2::data::MonsterApplication applied{};
+  dh2::data::MonsterApplicationRequest request{&result,&attack,&defend,&attacker->combat_state,&prince_combat.life};
+  if(dh2_combat_apply_monster_to_player(&applied,&request,unsigned(dh2_character_state_is_idle(prince_state.current,0)))||!applied.health.kill_requested||!prince_combat.life.dead||prince_combat.properties.resolved[36]!=0)
+   throw std::runtime_error("Player fatal source health prefix failed");
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player death fixture | raw damage %d | HP before %d | HP after %d | dead %u | killer %zu | actual health/Kill prefix; full Kill continuation pending",result.amount,applied.health.before,applied.health.after,prince_combat.life.dead,std::size_t(attacker->identity));
+  prince_combat.pending_death=true;prince_combat.death_target=attacker->identity;move_x=move_y=0;
+  request_prince_death();return "Source AI death cleanup completed; full Kill continuation pending";
+ }catch(const std::exception& e){
+  __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Native Player death fixture failed | %s | reached effects retained",e.what());return std::string("Player death fixture failed: ")+e.what();
+ }
 }
 
 std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetManager* assets){

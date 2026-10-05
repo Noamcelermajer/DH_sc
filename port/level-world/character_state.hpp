@@ -33,7 +33,10 @@ enum Service : std::uint32_t {
  set_visible,reset_controller_lock,restore_limbus_position,
  restore_limbus_rotation,revive_character,set_limbus_group_status,
  clear_all_aggro,clear_ai_target,sync_last_ai_target,start_fade_in,
- init_physical_object,enable_collisions
+ init_physical_object,enable_collisions,
+ // Source CSDead OnFocus begins with two real Debug load/query calls before
+ // flags/LookAt. Appended service preserves all previous enum values and ABI.
+ dead_focus_prelude
 };
 struct Request {
  std::uint32_t service;

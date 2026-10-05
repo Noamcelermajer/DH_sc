@@ -312,13 +312,13 @@ def main():
             assert first_vm[1]==startup['VM'],'source VM replaced after startup'
             retained_ais(text)
             source_timer_receipts(text,startup)
-        assert int(first_vm[2]) > 1 if a.full_update else int(first_vm[2]) == 1
+        assert int(first_vm[2]) == 1, 'UpdateAllSkills must be delivered by the single source InitProcess, not renderer frames'
         # Reload resumes the frame; ensure pending cooldown survives recreation.
         adb('shell', 'cmd', 'window', 'user-rotation', 'lock', '1')
         text = wait(lambda t: len(re.findall(r'Native Player skills retained \|', t)) >= 2, 'retained rotation')
         restores = re.findall(r'Native Player skills retained \| VM (\S+) \| paths 15 \| update attempts (\d+)', text)
         assert restores and {row[0] for row in restores} == {first_vm[1]}, 'Player VM replaced on graphics restore'
-        if a.full_update: assert int(restores[-1][1]) >= int(first_vm[2])
+        if a.full_update: assert all(int(row[1]) == 1 for row in restores), 'reload replayed an UpdateAllSkills caller'
         assert text.count('Native Player skill preparation |') == 1 and text.count('Native Player skill update blocked |') == expected_blocked
         retained_ais(text)
         report['restore'] = {'same_process': pid, 'same_vm': first_vm[1], 'reload_and_rotation': True, 'preparation_count': 1,

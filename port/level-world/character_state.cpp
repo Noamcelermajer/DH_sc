@@ -52,6 +52,7 @@ void focus(State& s,const Facts& f,int prior,std::uint64_t payload,const Service
   speed(s,c,f.attack_speed);call(s,c,cancel_sneaking);break;
  }
  case 12:
+  call(s,c,dead_focus_prelude);
   s.flags=0x241;if(f.is_player)s.flags|=0x2000;
   call(s,c,look_at,1,0,0,0,payload);s.controller_locked=1;call(s,c,remove_highlight);
   if(!s.dead_alternate){

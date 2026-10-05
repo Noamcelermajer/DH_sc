@@ -2,6 +2,10 @@
 #include "player_skill_session_v1.hpp"
 #include "player_skill_update_session_v1.hpp"
 #include "player_skill_use_session_v1.hpp"
+#include "player_skill_cleanup_session_v1.hpp"
+#include "character_dead_focus_services_v1.hpp"
+#include "animation_tables.hpp"
+#include "ai.hpp"
 #include "player_skill_property_services_v1.hpp"
 #include "player_savegame_v1.hpp"
 #include "savegame_options_v1.hpp"
@@ -70,6 +74,11 @@ struct Runtime::Impl {
  std::unique_ptr<dh2::player_skill_session_v1::Session> session;
  std::unique_ptr<dh2::player_skill_update_session_v1::Runtime> updates;
  std::unique_ptr<dh2::player_skill_use_session_v1::Runtime> uses;
+ std::unique_ptr<dh2::player_skill_cleanup_session_v1::Runtime> cleanups;
+ std::unique_ptr<dh2::player_ai_death_v1::Runtime> death;
+ std::unique_ptr<dh2::character_dead_focus_services_v1::Adapter> focus_services;
+ dh2::character::set_target::Services target_services{};
+ dh2::player_ai_death_v1::Result died_result{};
  dh2::character_skill_cooldown_services::Services cooldown{};
  dh2::player_skill_property_services_v1::Bindings property_services{};
  dh2::character_mana_services_v1::State mana_state{};
@@ -91,6 +100,8 @@ struct Runtime::Impl {
  dh2_script_game_bindings timer_bindings{};
  std::map<std::string,std::vector<std::uint8_t>> named_bytes;
  std::map<std::string,dh2_pynames_view> named_views;
+ std::vector<std::uint8_t> animation_constants_bytes;
+ dh2_pycst_view animation_constants{};
  dh2::character_ai_set_skills_and_spells::Result prepared{};
  dh2::player_skill_update_session_v1::Result updated{};
  unsigned update_attempts=0,timers_started=0,timer_callbacks=0;
@@ -131,7 +142,7 @@ struct Runtime::Impl {
     }
    }
   }
-  ai_ticks.reset();lifecycle.reset();uses.reset();updates.reset();session.reset();
+  death.reset();focus_services.reset();cleanups.reset();ai_ticks.reset();lifecycle.reset();uses.reset();updates.reset();session.reset();
   if(buffs){dh2::character_player_buffs_v1::Result result{};
    if(buffs->retire(&result)!=dh2::character_player_buffs_v1::Status::complete)
     __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Native Player buff retirement provider failed");
@@ -172,6 +183,10 @@ struct Runtime::Impl {
   const auto& timers=bindings.coordinator->timers();
   for(const auto event:{0x33,0x34}){
    const auto id=event==0x33?bindings.source_ai->word_10:bindings.source_ai->word_14;
+   if(id==UINT32_MAX){
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player AI timer detached | phase %s | event %x | source id %u | no source timer association",phase,event,id);
+    continue;
+   }
    if(id>=timers.count)throw std::runtime_error("Native Player AI timer slot unavailable");
    const auto& timer=timers.slots[id];
    if(timer.id!=id||timer.event!=event||timer.user_ref!=0)
@@ -180,8 +195,73 @@ struct Runtime::Impl {
     phase,event,id,timer.duration_ms,timer.repeat,timer.elapsed_ms,unsigned(timer.active),unsigned(timer.paused),std::size_t(timer.user_ref),
     event==0x33?regen_ticks:dot_ticks,bindings.properties->resolved[36],bindings.properties->resolved[38],bindings.properties->resolved[41],bindings.properties->resolved[43]);
   }
+  if(bindings.coordinator->state.current==12){
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player dead snapshot | phase %s | state %d | HP %d | dead %u | buffs %u | groups %u | update attempts %u | VM %p | AIS %p | source timer33 %u | source timer34 %u",
+    phase,bindings.coordinator->state.current,bindings.properties->resolved[36],unsigned(*bindings.dead),buffs->count(),property_view.group_count,update_attempts,static_cast<void*>(session->vm()),reinterpret_cast<void*>(ais.ais),bindings.source_ai->word_10,bindings.source_ai->word_14);
+   for(std::uint32_t i=0;i<timers.count;++i){const auto& timer=timers.slots[i];
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player dead timer | phase %s | slot %u | event %x | active %u | paused %u | elapsed %u | ref %zu",phase,i,unsigned(timer.event),unsigned(timer.active),unsigned(timer.paused),timer.elapsed_ms,std::size_t(timer.user_ref));
+   }
+  }
  }
  static auto& self(void* raw){return *static_cast<Impl*>(raw);}
+ static int target_service(void* raw,const dh2::character::set_target::Request* q,dh2::character::set_target::Response* r){
+  auto& s=self(raw);using namespace dh2::character::set_target;
+  if(!q||!r||q->ai_identity!=s.bindings.ai)return 1;
+  auto& debug=*s.bindings.debug;using Status=dh2::debug_switches::Status;
+  if(q->operation==debug_switches_load)return debug.runtime().load(debug.globals(),debug.services())==Status::complete?0:1;
+  if(q->operation==debug_switch_lookup){
+   const char* key=q->key==trace_target_changes?"IsTracingCharAITarget":q->key==trace_target_details?"isTracingCharAITarget":nullptr;
+   if(!key)return 1;std::uint8_t value=0;
+   if(debug.runtime().get_switch(key,debug.globals(),debug.services(),value)!=Status::complete)return 1;
+   r->word=value;r->reserved=0;return 0;
+  }
+  // A null death target takes the genuine source branch without these
+  // services. Nonnull target/sight providers are not manufactured here.
+  return 1;
+ }
+ static int death_service(void* raw,const dh2::player_ai_death_v1::Request* q,dh2::player_ai_death_v1::Reply* r,std::string& why){
+  auto& s=self(raw);using namespace dh2::player_ai_death_v1;
+  if(!q||!r||q->ai!=s.bindings.ai||q->character!=s.bindings.character){why="Player death identity differs";return 1;}
+  switch(q->operation){
+  case Operation::animation_table:{
+   const auto value=s.bindings.properties->resolved[2];const auto count=s.bindings.animation_tables->characters.size();
+   if(count>UINT32_MAX){why="Player animation table count exceeds source bound";return 1;}
+   // Original GetCharAnimTableId60B@3a3228 reads cached property2 and falls
+   // back to17. SM_SetDeadState independently validates that returned row.
+   r->word=value>=0&&std::uint32_t(value)<count?value:17;r->count=std::uint32_t(count);return 0;
+  }
+  case Operation::animation_value:{
+   const char* key=q->animation==Animation::died?"Died":q->animation==Animation::deadly_great_kb?"DeadlyGreatKB":q->animation==Animation::despawn?"Despawn":"DespawnGreatKB";
+   const auto& tables=*s.bindings.animation_tables;
+   if(q->row<0||std::uint32_t(q->row)>=tables.characters.size()){why="Player death animation row unavailable";return 1;}
+   const auto field=std::find(tables.state_names.begin(),tables.state_names.end(),key);
+   if(field==tables.state_names.end()){why="Player death animation field unavailable";return 1;}
+   const auto index=std::size_t(field-tables.state_names.begin());
+   if(index>=tables.characters[q->row].fields.size()||tables.characters[q->row].fields[index].size()!=1){why="Player death animation scalar unavailable";return 1;}
+   r->word=tables.characters[q->row].fields[index][0];return 0;
+  }
+  case Operation::stance_mask:{
+   dh2_pycst_result value{};
+   if(!q->group||!q->key||dh2_pycst_get(&s.animation_constants,q->group,std::strlen(q->group),q->key,std::strlen(q->key),&value)||!value.found){why="Player death stance constant unavailable";return 1;}
+   r->word=value.value;return 0;
+  }
+  case Operation::anim_stance:why="Player death reached unbound native inventory stance";return 1;
+  case Operation::relations:case Operation::clear_relations:{
+   auto& tree=q->direction==Direction::outgoing?s.bindings.source_ai->tree_7c:s.bindings.source_ai->tree_94;
+   const auto header=reinterpret_cast<std::uintptr_t>(&tree);
+   if(tree.count||tree.parent||tree.left!=header||tree.right!=header){why="Player death reached unbound nonempty source aggro graph";return 1;}
+   r->count=0;r->peers=nullptr;return 0;
+  }
+  case Operation::skill_cleanup:case Operation::spell_cleanup:{
+   using List=dh2::character_player_skills_preparation_v3::source::List;
+   dh2::player_skill_cleanup_session_v1::Result result{};
+   if(!s.cleanups||s.cleanups->cleanup(q->operation==Operation::skill_cleanup?List::skill:List::faery,result,why))return 1;
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player source cleanup | list %u | examined %u | callbacks %u | completed %u | lua errors %u | same VM/instances; no blanket timer stop",unsigned(result.list),result.examined,result.cleanup_calls,result.completed,result.lua_errors);
+   return 0;
+  }
+  default:why="Player death reached unbound group/AIS/nonempty aggro provider";return 1;
+  }
+ }
  static int fail(char* message,std::size_t size,const char* name){
   if(message&&size)std::snprintf(message,size,"unresolved native Player skill provider: %s",name?name:"unknown");
   return DH2_SCRIPT_REQUIRED_SERVICE_FAILURE;
@@ -414,6 +494,9 @@ struct Runtime::Impl {
  }
  void initialize(){
   if(!bindings.character||!bindings.tables||!bindings.debug)throw std::runtime_error("Native Player skill owners missing");
+  animation_constants_bytes=bindings.read(assets,"data/animations_pycst.bin");
+  if(animation_constants_bytes.size()>UINT32_MAX||dh2_pycst_open(&animation_constants,animation_constants_bytes.data(),std::uint32_t(animation_constants_bytes.size())))
+   throw std::runtime_error("Native Player animation constants rejected");
   for(const auto& pair:std::vector<std::pair<std::string,std::string>>{{"AnimatedEffectTable","effects"},{"ProjectileTable","projectiles"}}){
    auto bytes=bindings.read(assets,"data/"+pair.second+"_pyarraynames.bin");
    const auto word=[&](std::size_t at){if(at>bytes.size()||bytes.size()-at<4)throw std::runtime_error("Player names truncated");std::uint32_t n;std::memcpy(&n,bytes.data()+at,4);return n;};
@@ -468,6 +551,22 @@ struct Runtime::Impl {
    throw std::runtime_error("Native Player source InitProcess: "+error);
   if(initialized_result.init_phase_mask!=31||bindings.source_ai->active_ais_1c!=ais.ais||bindings.source_ai->alternate_ais_20!=ais.ais)
    throw std::runtime_error("Native Player completed InitProcess owners differ");
+  cleanups=std::make_unique<dh2::player_skill_cleanup_session_v1::Runtime>(&session_slot,*preparation,bindings.character);
+  target_services={this,std::int32_t(bindings.ai_tables->rows.size()),target_service};
+  dh2::player_ai_death_v1::Bindings death_bindings{};
+  death_bindings.ai=bindings.source_ai;death_bindings.coordinator=bindings.coordinator;
+  death_bindings.target_owner=bindings.target_owner;death_bindings.target_services=&target_services;
+  death_bindings.dead_fields=bindings.dead_fields;death_bindings.group_identity=bindings.group_identity;
+  death_bindings.player_ais_identity=ais.ais;death_bindings.backend={this,death_service};
+  death=std::make_unique<dh2::player_ai_death_v1::Runtime>(death_bindings);
+  dh2::character_dead_focus_services_v1::Bindings focus{};
+  focus.character=bindings.character;focus.properties=&property_view;focus.buffs=buffs.get();
+  focus.byte415=&bindings.source_ai->targetable_4d;
+  focus.self_fx=bindings.self_fx;focus.state_fx=bindings.state_fx;focus.highlight=bindings.highlight_fx;
+  focus.debug_globals=&bindings.debug->globals();focus.debug_services=&bindings.debug->services();
+  focus.skills=&bindings.tables->skills();focus.preparation=preparation.get();focus.skill_calls=uses.get();
+  focus.services={bindings.character_queries_context,bindings.is_player,nullptr};
+  focus_services=std::make_unique<dh2::character_dead_focus_services_v1::Adapter>(focus);
   initialized=true;updated=initialized_result.update;++update_attempts;
   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill preparation | skills %zu | faeries %zu | loaded paths %zu | declarations %u | flags %x | one VM; Player lifecycle and skill-use providers pending",
    preparation->slots(dh2::character_ai_set_skills_and_spells::List::skill).size(),preparation->slots(dh2::character_ai_set_skills_and_spells::List::faery).size(),session->loaded_path_count(),session->statistics().declarations,ais.flags_b8);
@@ -598,7 +697,7 @@ Runtime::Runtime(std::unique_ptr<Impl> p):impl_(std::move(p)){}
 Runtime::~Runtime()=default;
 std::unique_ptr<Runtime> Runtime::create(Bindings b,std::string& error){
  if(!b.character||!b.ai||!b.ai_lifetime||!b.source_ai||b.source_ai->identity!=b.ai||b.source_ai->owner_04!=b.character||
-    !b.declaration||b.declaration->script!="__player__"||!b.dead||!b.object||b.object->identity!=b.character||!b.controller||
+    !b.target_owner||!b.dead_fields||!b.group_identity||!b.ai_tables||!b.animation_tables||!b.self_fx||!b.state_fx||!b.highlight_fx||!b.is_player||!b.declaration||b.declaration->script!="__player__"||!b.dead||!b.object||b.object->identity!=b.character||!b.controller||
     !b.tables||!b.catalogue_lifetime||!b.rules||!b.properties||!b.shared_property_temp||!b.savegame||b.savegame->character()!=b.character||!b.savegame->skills_initialized()||!b.application_singleton||!*b.application_singleton||!b.saved_options||!b.online||!b.online_identity||!b.mana_exempt_14f0||!b.current_difficulty||!b.classes||!b.fields||!b.design||!b.ai_constants||!b.faery_constants||!b.coordinator||!b.debug||!b.assets||!b.read||b.coordinator->owner()!=b.character){error="invalid native Player skill owner";return {};}
  std::unique_ptr<Runtime> owner;
  try{owner=std::unique_ptr<Runtime>(new Runtime(std::make_unique<Impl>(std::move(b))));}
@@ -608,17 +707,38 @@ std::unique_ptr<Runtime> Runtime::create(Bindings b,std::string& error){
  // failure must not retire an AIS already borrowed by source_ai.
  try{p->initialize();}
  catch(const std::exception& e){
-  p->error=e.what();p->update_blocked=true;
+  p->update_blocked=true;
   // Source publication can precede a required InitProcess failure. Retain the
   // AIS/Session/instances/timers and reached effects until explicit teardown.
   __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Native Player AIS failure retained | phase %zu | active %p | pending %p | VM %p | %s | no automatic initialization retry",
    std::size_t(p->bindings.source_ai->pointer_28),reinterpret_cast<void*>(p->bindings.source_ai->active_ais_1c),
-   reinterpret_cast<void*>(p->bindings.source_ai->alternate_ais_20),p->session?static_cast<void*>(p->session->vm()):nullptr,p->error.c_str());
+   reinterpret_cast<void*>(p->bindings.source_ai->alternate_ais_20),p->session?static_cast<void*>(p->session->vm()):nullptr,e.what());
+  // Diagnostics may allocate too. They cannot retire a published owner when
+  // the source failure itself came from exhausted allocation.
+  try{p->error=e.what();}catch(...){ }
  }
- error=p->error;return owner;
+ try{error=p->error;}catch(...){error.clear();}
+ return owner;
 }
 bool Runtime::initialized()const noexcept{return impl_->initialized;}
 void Runtime::update(){impl_->update();}
+void Runtime::state_service(std::uint32_t service){
+ auto& s=*impl_;if(!s.focus_services)throw std::runtime_error("Native Character cleanup owner unavailable");
+ s.refresh_properties();dh2::character_dead_focus_services_v1::Result result{};
+ if(s.focus_services->deliver(dh2::character::Service(service),&result,s.error)!=dh2::character_dead_focus_services_v1::Status::complete)
+  throw std::runtime_error("Native Character cleanup failed: "+s.error);
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Character cleanup service | service %u | calls %u | sneak %d | byte415 %u | buffs %u | groups %u | same source Character/buff/property owners",service,result.calls,result.sneak,unsigned(s.bindings.source_ai->targetable_4d),s.buffs->count(),s.property_view.group_count);
+}
+void Runtime::died(std::uintptr_t killer){
+ auto& s=*impl_;if(!s.initialized||!s.death)throw std::runtime_error("Player source death owners unavailable");
+ s.refresh_properties();s.bindings.target_owner->character_ai_id=s.bindings.properties->resolved[1];
+ s.target_services.ai_property_count=std::int32_t(s.bindings.ai_tables->rows.size());
+ if(s.death->died(killer,&s.died_result,s.error)!=dh2::player_ai_death_v1::Status::complete)
+  throw std::runtime_error("Native Player source death failed: "+s.error);
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player source death complete | state %d | payload null | target %zu | last target %zu | timer stops %u | timer33 %u | timer34 %u | outgoing %u | incoming %u | skill %u | faery %u | buffs %u | groups %u | VM %p | AIS %p | update attempts %u | HP %d | same retained owners; Character Kill continuation pending",
+  s.bindings.coordinator->state.current,std::size_t(s.bindings.source_ai->target_40),std::size_t(s.bindings.source_ai->last_target_44),s.died_result.timer_stops,s.bindings.source_ai->word_10,s.bindings.source_ai->word_14,s.died_result.outgoing_completed,s.died_result.incoming_completed,s.died_result.skill_completed,s.died_result.spell_completed,s.buffs->count(),s.property_view.group_count,static_cast<void*>(s.session->vm()),reinterpret_cast<void*>(s.ais.ais),s.update_attempts,s.bindings.properties->resolved[36]);
+ s.log_ai_timers("dead");
+}
 void Runtime::timer(std::uint32_t id){impl_->timer(id);}
 void Runtime::buff_expired(const character::Timer32& timer){
  auto& s=*impl_;s.refresh_properties();dh2::character_player_buffs_v1::Result result{};

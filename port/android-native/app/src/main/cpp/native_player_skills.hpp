@@ -1,6 +1,7 @@
 #pragma once
 #include "properties.hpp"
 #include "player_skill_tables_adapter.hpp"
+#include "player_ai_death_v1.hpp"
 #include <memory>
 #include <vector>
 #include <string>
@@ -10,6 +11,7 @@ namespace dh2::character {class Coordinator;struct Timer32;}
 namespace dh2::character_ai_initialization {struct State;}
 namespace dh2::object_update_culling {struct Object;}
 namespace dh2::data {class PlayerSavegameV1;struct AiProps;}
+namespace dh2::data {struct AiTables;struct AnimationTables;}
 namespace dh2::data::savegame_options_v1 {class Owner;}
 namespace dh2::native::debug_files {class Backend;}
 namespace dh2::native::player_skills {
@@ -17,6 +19,16 @@ struct Bindings {
     std::uintptr_t character=0,ai=0;
     std::shared_ptr<void> ai_lifetime;
     character_ai_initialization::State* source_ai=nullptr;
+    character::set_target::OwnerFacts* target_owner=nullptr;
+    player_ai_death_v1::DeadFields* dead_fields=nullptr;
+    const std::uintptr_t* group_identity=nullptr;
+    const data::AiTables* ai_tables=nullptr;
+    const data::AnimationTables* animation_tables=nullptr;
+    std::uintptr_t* self_fx=nullptr;
+    std::uintptr_t* state_fx=nullptr;
+    std::uintptr_t* highlight_fx=nullptr;
+    void* character_queries_context=nullptr;
+    int (*is_player)(void*,std::uintptr_t,std::uint32_t*,std::string&)=nullptr;
     const data::AiProps* declaration=nullptr;
     const std::uint32_t* dead=nullptr;
     const object_update_culling::Object* object=nullptr;
@@ -55,6 +67,10 @@ public:
     ~Runtime();
     Runtime(const Runtime&)=delete;Runtime& operator=(const Runtime&)=delete;
     void update();
+    // Source CharAI::OnDied only. Character::Kill/rewards/event2 caller is a
+    // separate integration boundary; this retains the same AIS and VM.
+    void died(std::uintptr_t killer);
+    void state_service(std::uint32_t service);
     void timer(std::uint32_t id);
     void buff_expired(const character::Timer32&);
     bool ai_timer(std::int32_t event,const character::Timer32&);
