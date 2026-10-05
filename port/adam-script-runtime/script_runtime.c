@@ -2,14 +2,17 @@
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
+#include "ldo.h"
+#include "lstate.h"
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 typedef char number_must_be_float32[(sizeof(lua_Number)==4)?1:-1];
 typedef char native_int_must_be_32[(sizeof(int)==4)?1:-1];
 typedef char pointers_must_be_64[(sizeof(void*)==8)?1:-1];
-struct dh2_script_vm { lua_State* state; size_t limit,used; char error[512]; int busy; };
-typedef struct { dh2_script_function fn; void* context; int source_values; } Binding;
+struct dh2_script_vm { lua_State* state; size_t limit,used; char error[512]; int busy; uint64_t required_failure_epoch; };
+typedef struct { dh2_script_function fn; void* context; int source_values; dh2_script_vm* vm; } Binding;
 typedef struct {
   dh2_script_vm* vm; const char* name; const void* bytes; size_t size;
   const dh2_script_value* args; uint32_t count;
@@ -56,7 +59,7 @@ static void pull(lua_State* L,int index,dh2_script_value* v) {
 static int trampoline(lua_State* L) {
   Binding* b=(Binding*)lua_touserdata(L,lua_upvalueindex(1));
   dh2_script_value args[16],out[16]; uint32_t n=0,i; char error[256]={0};
-  int count=lua_gettop(L); if(count>16) return luaL_error(L,"service argument limit");
+  int count=lua_gettop(L),result; if(count>16) return luaL_error(L,"service argument limit");
   memset(out,0,sizeof(out));
   for(i=0;i<(uint32_t)count;i++) {
     pull(L,(int)i+1,&args[i]);
@@ -72,7 +75,9 @@ static int trampoline(lua_State* L) {
       }
     } else if(!valid_value(&args[i])) return luaL_error(L,"unsupported service argument");
   }
-  if(b->fn(b->context,args,(uint32_t)count,out,16,&n,error,sizeof(error))) {
+  result=b->fn(b->context,args,(uint32_t)count,out,16,&n,error,sizeof(error));
+  if(result) {
+    if(result==DH2_SCRIPT_REQUIRED_SERVICE_FAILURE)++b->vm->required_failure_epoch;
     error[sizeof(error)-1]=0; return luaL_error(L,"%s",error[0]?error:"game service rejected");
   }
   if(n>16) return luaL_error(L,"service result limit");
@@ -141,6 +146,46 @@ int dh2_script_vm_load(dh2_script_vm* vm,const void* bytes,size_t size,const cha
   Operation op={0}; if(!valid_source(vm,bytes,size,name))return -1;
   op.vm=vm;op.bytes=bytes;op.size=size;op.name=name;
   return protected_operation(vm,load_entry,&op);
+}
+/* These additive source operations deliberately use Lua's existing internal
+ * protected call, without adding the lua_cpcall argument/C frame used by the
+ * legacy convenience APIs. One state and allocator; no replacement VM/TU. */
+typedef struct {
+  const unsigned char* bytes;size_t size,offset;int status;char error[512];
+} SourceFile;
+static int source_aliases_vm(const dh2_script_vm* vm,const void* pointer,size_t size) {
+  uintptr_t start=(uintptr_t)pointer,owner=(uintptr_t)vm;
+  return size&&(start>UINTPTR_MAX-size || (start<owner+sizeof(*vm)&&owner<start+size));
+}
+static const char* source_file_reader(lua_State* L,void* context,size_t* size) {
+  SourceFile* op=(SourceFile*)context;size_t n;(void)L;
+  if(op->offset==op->size){*size=0;return NULL;}
+  n=op->size-op->offset;if(n>1024)n=1024;
+  *size=n;op->offset+=n;return (const char*)op->bytes+op->offset-n;
+}
+static void source_file_direct(lua_State* L,void* context) {
+  SourceFile* op=(SourceFile*)context;const char* text;
+  op->status=lua_load(L,source_file_reader,op,"loadFile()");
+  if(!op->status)op->status=lua_pcall(L,0,0,0);
+  if(op->status) {
+    text=lua_tolstring(L,-1,NULL);
+    if(text)snprintf(op->error,sizeof(op->error),"%s",text);
+    else {op->status=-4;snprintf(op->error,sizeof(op->error),"%s","unsupported source file error object");}
+    lua_pop(L,1);
+  }
+}
+int dh2_script_vm_load_source_file(dh2_script_vm* vm,const void* bytes,size_t size) {
+  SourceFile op;lua_State* L;int top,status;
+  if(!vm||vm->busy||(!bytes&&size)||size>8388608||source_aliases_vm(vm,bytes,size))return -1;
+  memset(&op,0,sizeof(op));op.bytes=(const unsigned char*)bytes;op.size=size;
+  L=vm->state;top=lua_gettop(L);vm->busy=1;vm->error[0]=0;
+  status=luaD_pcall(L,source_file_direct,&op,savestack(L,L->top),0);
+  if(status) {
+    const char* text=lua_type(L,-1)==LUA_TSTRING?lua_tostring(L,-1):NULL;
+    snprintf(op.error,sizeof(op.error),"%s",text?text:"Lua error (no text)");
+  } else status=op.status;
+  snprintf(vm->error,sizeof(vm->error),"%s",op.error);
+  lua_settop(L,top);vm->busy=0;return status;
 }
 static int writer(lua_State* L,const void* bytes,size_t size,void* opaque) {
   Operation* op=(Operation*)opaque; (void)L;
@@ -216,18 +261,92 @@ int dh2_script_vm_call_discard_source(dh2_script_vm* vm,const char* name,
   op.name=name;op.args=args;op.count=count;
   return protected_operation(vm,discard_source_entry,&op);
 }
+typedef struct {
+  Operation call;uint32_t index;
+  dh2_script_return_observer_v1 observer;void* context;char error[512];
+} SourceReturn;
+static void source_return_direct(lua_State* L,void* context) {
+  SourceReturn* op=(SourceReturn*)context;dh2_script_first_return_v1 selected;
+  uint32_t i;int first,last,index,result;char error[256]={0};
+  memset(&selected,0,sizeof(selected));
+  if(!lua_checkstack(L,(int)op->call.count+20))luaL_error(L,"source call stack exhausted");
+  first=lua_gettop(L)+1;lua_getglobal(L,op->call.name);
+  if(!lua_isfunction(L,-1))luaL_error(L,"missing function: %s",op->call.name);
+  for(i=0;i<op->call.count;++i)push(L,op->call.args+i);
+  lua_call(L,(int)op->call.count,LUA_MULTRET);last=lua_gettop(L);
+  if(!lua_checkstack(L,1))luaL_error(L,"source return projection stack exhausted");
+  selected.count=(uint32_t)(last-first+1);
+  for(index=first;index<=last;++index) {
+    dh2_script_first_return_v1 value;memset(&value,0,sizeof(value));
+    value.type=(uint32_t)lua_type(L,index);
+    switch(value.type) {
+      case LUA_TTABLE:
+        lua_getfield(L,index,"_this");value.identity=(uintptr_t)lua_touserdata(L,-1);lua_pop(L,1);value.type=7;break;
+      case LUA_TSTRING:
+        value.text=lua_tolstring(L,index,NULL);value.text_bytes=strlen(value.text);break;
+      case LUA_TBOOLEAN:
+        value.boolean=(uint32_t)lua_toboolean(L,index);value.number=(float)value.boolean;break;
+      case LUA_TNUMBER:value.number=lua_tonumber(L,index);break;
+      case LUA_TLIGHTUSERDATA:value.identity=(uintptr_t)lua_touserdata(L,index);break;
+      default:value.type=0;break;
+    }
+    if((uint32_t)(index-first)==op->index){value.count=selected.count;selected=value;}
+  }
+  result=op->observer(op->context,&selected,error,sizeof(error));
+  if(result) {
+    if(result==DH2_SCRIPT_REQUIRED_SERVICE_FAILURE)++op->call.vm->required_failure_epoch;
+    error[sizeof(error)-1]=0;luaL_error(L,"%s",error[0]?error:"source return observer rejected");
+  }
+}
+static void source_error_direct(lua_State* L,void* context) {
+  SourceReturn* op=(SourceReturn*)context;const char* text=lua_tolstring(L,-1,NULL);
+  snprintf(op->error,sizeof(op->error),"%s",text?text:"unsupported source callback error object");
+}
+int dh2_script_vm_call_indexed_source_v3(dh2_script_vm* vm,const char* name,
+  const dh2_script_value* args,uint32_t count,uint32_t index,dh2_script_return_observer_v1 observer,void* context) {
+  SourceReturn op;lua_State* L;uint32_t i;int top,status,error_status;uint64_t epoch;
+  if(!vm||vm->busy||!name||!observer||(!args&&count)||(uint64_t)count+20>INT_MAX)return -1;
+  if(source_aliases_vm(vm,name,1))return -1;
+  if(count&&((uintptr_t)args%sizeof(void*) || source_aliases_vm(vm,args,(size_t)count*sizeof(*args))))return -1;
+  for(i=0;i<count;++i) {
+    if(!valid_value(args+i))return -1;
+    if(args[i].type==DH2_SCRIPT_STRING && source_aliases_vm(vm,args[i].text,args[i].text_bytes))return -1;
+  }
+  memset(&op,0,sizeof(op));op.call.vm=vm;op.call.name=name;op.call.args=args;op.call.count=count;
+  op.index=index;op.observer=observer;op.context=context;L=vm->state;top=lua_gettop(L);
+  epoch=vm->required_failure_epoch;vm->busy=1;vm->error[0]=0;
+  status=luaD_pcall(L,source_return_direct,&op,savestack(L,L->top),0);
+  if(status) {
+    int type=lua_type(L,-1);
+    error_status=luaD_pcall(L,source_error_direct,&op,savestack(L,L->top),0);
+    if(error_status) {
+      const char* text=lua_type(L,-1)==LUA_TSTRING?lua_tostring(L,-1):NULL;
+      snprintf(op.error,sizeof(op.error),"%s",text?text:"Lua error (no text)");status=error_status;
+    }else if(type!=LUA_TSTRING&&type!=LUA_TNUMBER)status=-4;
+  }
+  snprintf(vm->error,sizeof(vm->error),"%s",op.error);lua_settop(L,top);vm->busy=0;
+  return vm->required_failure_epoch!=epoch?DH2_SCRIPT_REQUIRED_FAILURE_STATUS:status;
+}
+int dh2_script_vm_call_first_source_v1(dh2_script_vm* vm,const char* name,
+  const dh2_script_value* args,uint32_t count,dh2_script_return_observer_v1 observer,void* context) {
+  return dh2_script_vm_call_indexed_source_v3(vm,name,args,count,0,observer,context);
+}
+uint64_t dh2_script_vm_required_failure_epoch(const dh2_script_vm* vm) {
+  return vm?vm->required_failure_epoch:0;
+}
 static int bind_entry(lua_State* L) {
   Operation* op=(Operation*)lua_touserdata(L,1);Binding* binding;
   binding=(Binding*)lua_newuserdata(L,sizeof(*binding)); binding->fn=op->callback;binding->context=op->context;
   binding->source_values=op->source_values;
+  binding->vm=op->vm;
   lua_pushcclosure(L,trampoline,1);lua_setglobal(L,op->name);return 0;
 }
 int dh2_script_vm_bind(dh2_script_vm* vm,const char* name,dh2_script_function fn,void* context) {
-  Operation op={0};if(!vm||!name||!fn)return -1;op.name=name;op.callback=fn;op.context=context;
+  Operation op={0};if(!vm||!name||!fn)return -1;op.vm=vm;op.name=name;op.callback=fn;op.context=context;
   return protected_operation(vm,bind_entry,&op);
 }
 int dh2_script_vm_bind_source_values(dh2_script_vm* vm,const char* name,dh2_script_function fn,void* context) {
-  Operation op={0};if(!vm||!name||!fn)return -1;op.name=name;op.callback=fn;op.context=context;op.source_values=1;
+  Operation op={0};if(!vm||!name||!fn)return -1;op.vm=vm;op.name=name;op.callback=fn;op.context=context;op.source_values=1;
   return protected_operation(vm,bind_entry,&op);
 }
 static int get_entry(lua_State* L) {

@@ -180,6 +180,43 @@ CAMERA_CULLING_LIBRARIES = {
     'character_culling_composition': 'libdh2_level_world.so',
     'native_character_stop': 'libdh2_native.so',
 }
+ADAM_RECONCILIATION_UNITS = {
+    'item_instance_quantity': '_ZNK3dh24data14ItemInstanceV115signed_quantity',
+    # Both exports come from the single loot_tables_v2.cpp source unit.
+    'loot_tables_decode_owner': ('dh2_loot_v2_decode',
+                                 nested_cpp_prefix(('data', 'LootTablesV2'), 'load')),
+    'fresh_inventory_v4': nested_cpp_prefix(('data', 'FreshInventoryOwnedV4'), 'add_fixed_loot'),
+    'item_gear_properties_v5': 'dh2_gear_reset_v5',
+    'item_power_tables_v5': 'dh2_item_power_decode_v5',
+    'player_gear_effects_v5': nested_cpp_prefix(('data', 'PlayerGearEffectsV5'), 'update_properties'),
+    'loot_power_resources_v7': nested_cpp_prefix(('data', 'LootPowerResourcesV7'), 'load'),
+    'ais_player_init_vcb': cpp_prefix('ais_player_init_vcb', 'initialize'),
+    'character_skill_cooldown_services': (
+        cpp_prefix('character_skill_cooldown_services', 'skill'),
+        cpp_prefix('character_skill_cooldown_services', 'spell')),
+}
+ADAM_RECONCILIATION_LIBRARIES = {
+    'item_instance_quantity': 'libdh2_game_data.so',
+    'loot_tables_decode_owner': 'libdh2_game_data.so',
+    'fresh_inventory_v4': 'libdh2_game_data.so',
+    'item_gear_properties_v5': 'libdh2_game_data.so',
+    'item_power_tables_v5': 'libdh2_game_data.so',
+    'player_gear_effects_v5': 'libdh2_game_data.so',
+    'loot_power_resources_v7': 'libdh2_game_data.so',
+    'ais_player_init_vcb': 'libdh2_level_world.so',
+    'character_skill_cooldown_services': 'libdh2_level_world.so',
+}
+ADAM_RECONCILIATION_SOURCE_PATHS = {
+    'item_instance_quantity': ('port/game-data/item_instance.cpp',),
+    'loot_tables_decode_owner': ('port/game-data/loot_tables_v2.cpp',),
+    'fresh_inventory_v4': ('port/game-data/fresh_inventory_owned_v4.cpp',),
+    'item_gear_properties_v5': ('port/game-data/item_gear_properties_v5.cpp',),
+    'item_power_tables_v5': ('port/game-data/item_power_tables_v5.cpp',),
+    'player_gear_effects_v5': ('port/game-data/player_gear_effects_v5.cpp',),
+    'loot_power_resources_v7': ('port/game-data/loot_power_resources_v7.cpp',),
+    'ais_player_init_vcb': ('port/level-world/ais_player_init_vcb.cpp',),
+    'character_skill_cooldown_services': ('port/level-world/character_skill_cooldown_services.cpp',),
+}
 
 
 def main():
@@ -207,6 +244,7 @@ def main():
     parser.add_argument('--require-frame-foundation-units', action='store_true')
     parser.add_argument('--require-frame-bridge-units', action='store_true')
     parser.add_argument('--require-camera-culling-units', action='store_true')
+    parser.add_argument('--require-adam-reconciliation-units', action='store_true')
     args = parser.parse_args()
     initialization = args.require_initialization_units or args.require_debug_persistence_units or args.require_level_construction_unit or args.require_native_monster_dependencies
     lifecycle = args.require_lifecycle_units or initialization
@@ -228,7 +266,8 @@ def main():
              **(GHOST_SKILL_INIT_DEPENDENCIES if args.require_ghost_skill_init_dependencies else {}),
              **(FRAME_FOUNDATION_UNITS if args.require_frame_foundation_units else {}),
              **(FRAME_BRIDGE_UNITS if args.require_frame_bridge_units else {}),
-             **(CAMERA_CULLING_UNITS if args.require_camera_culling_units else {})}
+             **(CAMERA_CULLING_UNITS if args.require_camera_culling_units else {}),
+             **(ADAM_RECONCILIATION_UNITS if args.require_adam_reconciliation_units else {})}
     # Sight has two overload groups; melee caller and radius share one unit.
     source_units = len(units) - int(acquisition) - int(frame) - 5 * int(runtime_dependencies) - 7 * int(lifecycle) - 3 * int(initialization) - 3 * int(args.require_debug_persistence_units) - 2 * int(args.require_native_monster_dependencies)
     source_units -= 4 * int(args.require_character_list_dependencies) + 3 * int(args.require_init_callback_dependencies)
@@ -237,6 +276,7 @@ def main():
     source_units -= 3 * int(args.require_frame_foundation_units) # three Session methods extend its existing unit.
     source_units -= 2 * int(args.require_frame_bridge_units) # installer/identity extend the existing Session unit.
     source_units -= len(CAMERA_CULLING_UNITS) * int(args.require_camera_culling_units)
+    source_units -= len(ADAM_RECONCILIATION_UNITS) * int(args.require_adam_reconciliation_units)
     raw = args.apk.read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
     if args.artifact:
@@ -292,6 +332,17 @@ def main():
                         'sha256': hashlib.sha256(image).hexdigest(),
                         'load_alignments': loads,
                     }
+                if args.require_adam_reconciliation_units and Path(path).name in {
+                    'libdh2_game_data.so', 'libdh2_level_world.so'
+                }:
+                    loads = [segment['p_align'] for segment in elf.iter_segments()
+                             if segment['p_type'] == 'PT_LOAD']
+                    assert loads and min(loads) >= 16384, (abi, path, loads)
+                    native_libraries[Path(path).name] = {
+                        'path': path, 'bytes': len(image),
+                        'sha256': hashlib.sha256(image).hexdigest(),
+                        'load_alignments': loads,
+                    }
                 symbols = elf.get_section_by_name('.dynsym')
                 defined = {s.name for s in symbols.iter_symbols() if s['st_shndx'] != 'SHN_UNDEF'}
                 if LUA_SYMBOL in defined:
@@ -301,11 +352,13 @@ def main():
                 if path.endswith('/libdh2_native.so') and args.require_character_list_dependencies:
                     native_character_owner = sorted(n for n in defined if n.startswith('_ZN3dh26native14character_list5Owner16enroll_after_add'))
                 for unit, prefix in units.items():
-                    library = CAMERA_CULLING_LIBRARIES.get(unit)
+                    library = CAMERA_CULLING_LIBRARIES.get(unit) or ADAM_RECONCILIATION_LIBRARIES.get(unit)
                     if library is None:
                         library = 'libdh2_game_data.so' if unit in ('owned_skill_tables', 'owned_faery_tables') else 'libdh2_level_world.so'
                     if path.endswith('/'+library):
-                        exports[unit] = sorted(n for n in defined if n.startswith(prefix))
+                        prefixes = prefix if isinstance(prefix, tuple) else (prefix,)
+                        exports[unit] = sorted(n for n in defined
+                                               if any(n.startswith(item) for item in prefixes))
                         export_libraries[unit] = path
             assert all(exports.get(unit) for unit in units), (abi, exports)
             expected_target_exports = {
@@ -320,9 +373,27 @@ def main():
             if args.require_character_list_dependencies:
                 assert native_character_owner, (abi, 'native owned Character list missing')
             if args.require_camera_culling_units:
-                assert set(native_libraries) == {
+                expected_camera_libraries = {
                     'libdh2_engine_camera.so', 'libdh2_level_world.so', 'libdh2_native.so'
-                }, (abi, native_libraries)
+                }
+                if args.require_adam_reconciliation_units:
+                    expected_camera_libraries.add('libdh2_game_data.so')
+                assert set(native_libraries) == expected_camera_libraries, (abi, native_libraries)
+            if args.require_adam_reconciliation_units:
+                for unit, prefix in ADAM_RECONCILIATION_UNITS.items():
+                    assert export_libraries.get(unit, '').endswith('/' + ADAM_RECONCILIATION_LIBRARIES[unit]), (abi, unit, export_libraries)
+                    prefixes = prefix if isinstance(prefix, tuple) else (prefix,)
+                    actual = exports.get(unit, [])
+                    assert all(any(name.startswith(wanted) for name in actual)
+                               for wanted in prefixes), (abi, unit, prefixes, actual)
+                    for source_path in ADAM_RECONCILIATION_SOURCE_PATHS[unit]:
+                        assert source_path in source_sha256, (abi, unit, 'source input missing from build capture', source_path)
+                expected_libraries = {
+                    'libdh2_game_data.so', 'libdh2_level_world.so'
+                }
+                if args.require_camera_culling_units:
+                    expected_libraries |= {'libdh2_engine_camera.so', 'libdh2_native.so'}
+                assert expected_libraries <= set(native_libraries), (abi, native_libraries)
             abis[abi] = {'source_unit_exports': exports, 'lua_core_definitions': lua_definitions,
                          'source_unit_export_libraries': export_libraries,
                          'native_debug_file_backend': debug_backend,
@@ -331,6 +402,8 @@ def main():
     scope = f'{source_units} bounded source AI/script units compiled and exported for ELF64 ARM64/x86_64; one reused Adam Lua core per ABI. Export verification establishes compilation only; live AI/controller/body behavior requires separate device evidence.'
     if args.require_camera_culling_units:
         scope += f' Also verifies {len(CAMERA_CULLING_UNITS)} camera/culling/visibility/Stop export groups and 16 KiB PT_LOAD alignment for camera, level-world and native libraries.'
+    if args.require_adam_reconciliation_units:
+        scope += f' Also verifies {len(ADAM_RECONCILIATION_UNITS)} Adam reconciliation export groups in game-data/level-world and 16 KiB PT_LOAD alignment; these are compilation checks, not live inventory/loot behavior.'
     report = {
         'validation': 'PASS', 'apk_sha256': digest, 'apk_bytes': len(raw),
         'artifact_report_sha256': artifact_report_sha256,
@@ -339,6 +412,8 @@ def main():
         'abis': abis, 'source_sha256': source_sha256,
         'compiled_source_units': source_units,
         'camera_culling_export_groups': len(CAMERA_CULLING_UNITS) if args.require_camera_culling_units else 0,
+        'adam_reconciliation_export_groups': len(ADAM_RECONCILIATION_UNITS) if args.require_adam_reconciliation_units else 0,
+        'adam_reconciliation_source_paths': ADAM_RECONCILIATION_SOURCE_PATHS if args.require_adam_reconciliation_units else {},
         'required_export_groups': len(units),
         'native_ai_wired': False, 'full_game_playable': False,
         'scope': scope,

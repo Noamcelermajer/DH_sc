@@ -61,3 +61,10 @@ reports/reconstruction-2026-10-05/native-camera/** -text whitespace=cr-at-eol
 reports/reconstruction-2026-10-05/native-camera/*.log -text -whitespace
 port/level-world/tests/run_native_character_stop_host.py -text whitespace=cr-at-eol
 port/engine-camera/ANALYSIS.md -text -whitespace
+# Preserve the tested/imported terminal blank lines and raw Android log bytes.
+port/game-data/item_power_tables_v5.cpp -text -whitespace
+port/game-data/item_power_tables_v5.hpp -text -whitespace
+port/game-data/player_gear_effects_v5.cpp -text -whitespace
+port/game-data/tests/fresh_inventory_owned_v4_original.py -text -whitespace
+port/game-data/tests/player_gear_effects_v5.cpp -text -whitespace
+reports/branch-audit-2026-10-05/adam-runtime/*.log -text -whitespace

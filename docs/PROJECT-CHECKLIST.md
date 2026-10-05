@@ -5,10 +5,10 @@ Updated: 2026-10-05. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest published tested build:** [download the Crypt native frame foundations APK](https://github.com/Noamcelermajer/DH_sc/releases/download/native-frame-foundations-2026-10-04/crypt-native-frame-foundations-candidate.apk).
-Source ref: release tag `native-frame-foundations-2026-10-04`.
-APK: 26,068,604 bytes; SHA-256 `1b3a255122f0248f5d6608d1b2fe15def631645765ce40792481ceb89125a6e8`.
-Compiled-source archive: [download ZIP](https://github.com/Noamcelermajer/DH_sc/releases/download/native-frame-foundations-2026-10-04/crypt-native-frame-foundations-compiled-source.zip), 888,934 bytes; SHA-256 `cc06bdc53e364873e23ab360a38336dc60e05b911204fff8dd3fcd3818189660`.
+**Latest published tested build:** [download the camera APK](https://github.com/Noamcelermajer/DH_sc/releases/download/native-camera-frustum-2026-10-05/crypt-source-camera-culling.apk).
+Source ref: `native-camera-frustum-2026-10-05` at `41e75b7`.
+APK: 25,219,583 bytes; SHA-256 `80ed755e81ed8ddbcd30093999c094e40cc160b98f312f8ba36f18635794fbff`.
+Matching source: [download ZIP](https://github.com/Noamcelermajer/DH_sc/releases/download/native-camera-frustum-2026-10-05/crypt-source-camera-culling-reviewed-source.zip); SHA-256 `8fcde7c2f770428cfc8d9426b94dd408c42bff791d5e38d212333a2054ec2c6b`.
 
 ## How to read this checklist
 
@@ -32,15 +32,15 @@ still require live gameplay integration. All final completion gates remain open.
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
-| Character properties, equipment and state | 10 | 5 |
-| Lua, skills and enemy AI | 22 | 13 |
+| Character properties, equipment and state | 12 | 5 |
+| Lua, skills and enemy AI | 23 | 13 |
 | Combat, death, loot and progression | 5 | 7 |
 | Quests, campaign, UI, audio and saves | 3 | 9 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **89** | **70** |
+| **Total scoped tasks** | **92** | **70** |
 
-Latest local gate: [native camera checkpoint](../reports/reconstruction-2026-10-05/native-camera/index.json). Crypt movement/ambush/recreation pass on Android 17/16 KiB; nine live frustum snapshots match original ARM. Culling is compiled; native invocation remains open.
+Latest local gate: [Adam reconciliation](../reports/branch-audit-2026-10-05/adam-reconciliation-validation.json). Nine reused module groups compile for both ABIs; host gates and Android 17/16 KiB Crypt ambush/recreation pass. Nine live frustum snapshots match original ARM. Native nonempty player skills, inventory and loot pickup remain open.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Latest source/build/test scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -143,6 +143,9 @@ published download above retains its original release identity.
 
 ## 5. Character properties, equipment and state
 
+The bounded Adam item-system decisions and remaining native integration are in
+the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation-at-c3ae797).
+
 - [x] Reconstruct original Character property readers and typed property operations.
 - [x] Reconstruct bounded base/gear/class stat composition and class recalculation.
 - [x] Decode original class, item, power, health/mana, AI and level tables used by the source components.
@@ -157,6 +160,15 @@ published download above retains its original release identity.
 - [x] Reconstruct the Character physics-position override and live flag adapter;
   verify 67,594 Character flag cases and 1,024 base-object cases against ARM.
   Native Stop integration remains open.
+- [x] Select V4 as the single source-style item/equipment graph; its live API
+  borrows caller-owned properties/RNG. All 84 source sessions/1,720 steps and
+  60 earlier regressions pass through that path: 676 draws, 3,584 aliases,
+  zero mismatches. Native player binding remains open.
+- [x] Host-verify V5 gear effects on the V4 owner/property graph and V7 power
+  resources: 6 source sessions/112 steps across three classes, plus 121 power
+  lists and 39 quantity lists. Text/debug and visual Skin providers remain
+  bounded fixtures; this is not live loot or player gameplay. See the
+  [selected-library host report](../reports/branch-audit-2026-10-05/adam-integrated-host.json).
 - [ ] Complete Character construction, all property sheet/buff/gear ownership and lifecycle phases.
 - [ ] Connect full inventory/equipment mutation, requirements, random powers and visual updates.
 - [ ] Complete player classes, skill progression, buffs/debuffs, auras and status effects in gameplay.
@@ -183,6 +195,10 @@ published download above retains its original release identity.
   Actual native Value/ReturnValues and skill-call integration remain open.
 - [x] Decode all 183 original Skill/Faery list/row records; compare with original ARM readers.
 - [x] Adapt Adam's player skill ownership to our source callers: each class has 16 skill/5 faery slots and 13 instances; 29 script names overall. Host/ARM gates pass; real player VM/FSM integration remains open.
+- [x] Adapt Player callback membership and skill/spell cooldowns through the
+  selected Lua core and borrowed timer fields; host/real-Lua gates and 545
+  cooldown ARM comparisons pass. Additive VM protocols pass 145 host checks.
+  Native nonempty player dispatch remains open.
 - [x] Run bounded authored Ghost `LoadNInitScriptProcess(true)` through HP/MP,
   SetSkillsAndSpells, UpdateAllSkills, Post and Final in source order: 0 ordinary
   skill entries and 5 null-script faeries on the same retained VM.
