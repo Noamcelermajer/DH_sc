@@ -7,6 +7,8 @@
 #include "savegame_options_v1.hpp"
 #include "character_mana_services_v1.hpp"
 #include "character_current_spell_v1.hpp"
+#include "character_player_scalar_services_v1.hpp"
+#include "character_equipped_faery_element_v1.hpp"
 #include "character_skill_cooldown_services.hpp"
 #include "character_coordinator.hpp"
 #include "native_debug_files.hpp"
@@ -50,6 +52,12 @@ struct Runtime::Impl {
  dh2::character_faery_selection::Services faery_services{};
  dh2::character_current_spell_v1::SavedBindings spell_saved{};
  dh2::character_current_spell_v1::Bindings spell_callback{};
+ dh2::character_equipped_faery_element_v1::Bindings element_callback{};
+ // LuaScript+0x1c belongs to this AIS and its retained VM. It is a distinct
+ // source component, not the Character property sheet or a global dictionary.
+ dh2::character_player_scalar_services_v1::IntegerMap script_integers;
+ dh2::character_player_scalar_services_v1::State scalar_state{};
+ dh2::character_player_scalar_services_v1::Bindings scalar_callbacks{};
  dh2_script_game_bindings timer_bindings{};
  std::map<std::string,std::vector<std::uint8_t>> named_bytes;
  std::map<std::string,dh2_pynames_view> named_views;
@@ -142,6 +150,12 @@ struct Runtime::Impl {
   *returned=0;
   if(q.domain==dh2::player_skill_session_v1::Domain::ais){
    using Fn=dh2::ais_native_bindings::Function;
+   if(q.ais_function==Fn::get_int||q.ais_function==Fn::set_int){
+    if(q.userdata!=s.ais.ais)return fail(text,bytes,q.name);
+    return q.ais_function==Fn::get_int?
+     dh2::character_player_scalar_services_v1::get_int(&s.scalar_callbacks,a,count,out,capacity,returned,text,bytes):
+     dh2::character_player_scalar_services_v1::set_int(&s.scalar_callbacks,a,count,out,capacity,returned,text,bytes);
+   }
    if(q.ais_function==Fn::trace)return dh2_script_game_trace(nullptr,a,count,out,capacity,returned,text,bytes);
    if(q.ais_function==Fn::get_py_struct||q.ais_function==Fn::get_py_oid||q.ais_function==Fn::get_py_cst){
     if(count<2||a[0].type!=DH2_SCRIPT_STRING||a[1].type!=DH2_SCRIPT_STRING||!a[0].text||!a[1].text||!out||!capacity)return fail(text,bytes,q.name);
@@ -204,6 +218,10 @@ struct Runtime::Impl {
     s.saved_slot=s.bindings.savegame.get();
     return dh2::character_current_spell_v1::current_spell_info_v1(&s.spell_callback,a,count,out,capacity,returned,text,bytes);
    }
+   if(q.character_function==Fn::character_get_equipped_faery_element){
+    s.saved_slot=s.bindings.savegame.get();
+    return dh2::character_equipped_faery_element_v1::equipped_faery_element_v1(&s.element_callback,a,count,out,capacity,returned,text,bytes);
+   }
    if(q.character_function==Fn::character_has_mana||q.character_function==Fn::character_use_mana){
     s.property_view=dh2::data::property_view(*s.bindings.rules,*s.bindings.properties);
     return q.character_function==Fn::character_has_mana?
@@ -225,6 +243,7 @@ struct Runtime::Impl {
    if(dh2_pynames_open(&named_views[pair.first],retained.data(),std::uint32_t(retained.size())))throw std::runtime_error("Player dictionary names rejected");
   }
   ais={reinterpret_cast<std::uintptr_t>(this),0};
+  scalar_state={ais.ais,&script_integers};scalar_callbacks={&scalar_state,nullptr};
   property_services={bindings.character,bindings.rules,bindings.classes,bindings.properties,bindings.shared_property_temp,false};
   mana_state={bindings.character,bindings.mana_exempt_14f0,&property_view};
   mana_globals={bindings.application_singleton,&bindings.debug->globals(),&bindings.debug->services()};
@@ -234,6 +253,7 @@ struct Runtime::Impl {
   faery_services={this,faery_constant,faery_assert};
   spell_saved={bindings.character,&saved_slot,bindings.current_difficulty,&bindings.properties->resolved[29],&faery_globals,&faery_services};
   spell_callback={bindings.character,dh2::character_current_spell_v1::saved_services(&spell_saved)};
+  element_callback={bindings.character,dh2::character_equipped_faery_element_v1::saved_services(&spell_saved)};
   cooldown={this,bindings.character,list_count,slot,unsupported_number};
   timer_bindings={this,bindings.character,start_timer,stop_timer,0};
   dh2::player_skill_session_v1::Configuration config{};
@@ -346,6 +366,26 @@ std::string Runtime::mana_probe(std::uint32_t amount){
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player mana probe | amount %u | has %u | used %u | MP before %d | MP after %d | exempt14f0 %u | options %zu | same Prince VM/properties; debug debit, not skill activation",
   amount,has.boolean,used.boolean,before,s.bindings.properties->resolved[41],unsigned(*s.bindings.mana_exempt_14f0),s.bindings.saved_options->size());
  return "Original mana callbacks completed";
+}
+
+std::string Runtime::scalar_probe(std::int32_t value,bool write){
+ auto& s=*impl_;
+ // A debug fixture calls the original globals through this same Player VM.
+ // It gives reload tests an observable nonzero entry without altering authored
+ // faery cooldown values or loading a second script/VM.
+ constexpr const char* key="Native_Dictionary_Probe";
+ dh2_script_value arguments[2]{};
+ arguments[0].type=DH2_SCRIPT_STRING;arguments[0].text=key;arguments[0].text_bytes=std::strlen(key);
+ Impl::number(arguments[1],static_cast<float>(value));
+ const auto before=s.script_integers.size();
+ const auto discard=[](void*,const dh2_script_first_return_v1*,char*,std::size_t){return 0;};
+ if(write&&s.session->call("SetInt",arguments,2,0,discard,nullptr,s.error))return "Original scalar write blocked: "+s.error;
+ dh2_script_first_return_v1 observed{};
+ const auto capture=[](void* p,const dh2_script_first_return_v1* result,char*,std::size_t){*static_cast<dh2_script_first_return_v1*>(p)=*result;return 0;};
+ if(s.session->call("GetInt",arguments,1,0,capture,&observed,s.error)||observed.type!=DH2_SCRIPT_NUMBER)return "Original scalar read blocked: "+s.error;
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player scalar probe | write %u | input %d | observed %.0f | entries before %zu | entries after %zu | AIS %p | VM %p | same LuaScript dictionary; debug fixture",
+  unsigned(write),value,double(observed.number),before,s.script_integers.size(),reinterpret_cast<void*>(s.ais.ais),static_cast<void*>(s.session->vm()));
+ return "Original scalar callbacks completed";
 }
 
 Runtime::Runtime(std::unique_ptr<Impl> p):impl_(std::move(p)){}

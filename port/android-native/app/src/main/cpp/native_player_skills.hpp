@@ -53,6 +53,7 @@ public:
     std::string cooldown_probe(std::uint32_t delay_ms);
     std::string check_probe(std::uint32_t slot);
     std::string mana_probe(std::uint32_t raw_amount);
+    std::string scalar_probe(std::int32_t value,bool write);
 private:
     struct Impl;
     explicit Runtime(std::unique_ptr<Impl>);

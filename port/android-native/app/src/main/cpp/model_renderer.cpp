@@ -2188,6 +2188,10 @@ std::string debug_player_mana(std::uint32_t amount){
  if(!world_mode||!native_actor_ready||!prince_skills)return "Player mana probe rejected";
  return prince_skills->mana_probe(amount);
 }
+std::string debug_player_scalar(std::int32_t value,bool write){
+ if(!world_mode||!native_actor_ready||!prince_skills)return "Player scalar probe rejected";
+ return prince_skills->scalar_probe(value,write);
+}
 
 std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetManager* assets){
   std::vector<Draw> environment;std::vector<GLuint> textures;

@@ -22,6 +22,7 @@ std::string debug_character_hit(const std::string& exact_name,std::uint32_t raw_
 std::string debug_player_skill_cooldown(std::uint32_t delay_ms);
 std::string debug_player_skill_check(std::uint32_t slot);
 std::string debug_player_mana(std::uint32_t amount);
+std::string debug_player_scalar(std::int32_t value,bool write);
 std::string set_combat_target(int index,int target);
 std::string player_attack(int target=-1);
 std::array<int,7> player_vitals();

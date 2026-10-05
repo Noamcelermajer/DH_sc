@@ -27,11 +27,13 @@ def main():
     p.add_argument('--saved-skills', action='store_true')
     p.add_argument('--full-update', action='store_true')
     p.add_argument('--mana-faeries', action='store_true', help='verify saved faeries and MP callbacks at an explicit unfinished update provider')
+    p.add_argument('--scalar-dictionary', action='store_true', help='verify same-AIS GetInt/SetInt and nonzero dictionary retention across reload/rotation')
     p.add_argument('--update-boundary', default='GetInt')
     p.add_argument('--completed-updates', type=int, default=8)
     a = p.parse_args()
     assert not (a.full_update or a.mana_faeries) or a.saved_skills, 'new owner checks require --saved-skills'
     assert not (a.full_update and a.mana_faeries), 'select complete updates or a bounded update checkpoint'
+    assert not a.scalar_dictionary or a.full_update or a.mana_faeries, 'scalar retention checks require the current player/save integration'
     assert 8 <= a.completed_updates < 13
     assert a.serial.startswith('emulator-'), 'emulator only'
     out = a.output.resolve()
@@ -83,6 +85,17 @@ def main():
             'saved_level': 0, 'usable': usable, 'active': active, 'return_counts': [2, 2],
             'MP': int(row[7]), 'SnS_Level': int(row[8]), 'temporary_mana_cost': int(row[9])})
         return text
+    def scalar_probe(write, value, observed, before, after):
+        prior = len(re.findall(r'Native Player scalar probe \|', logs()))
+        command('PLAYER_SCALAR', '--ei', 'raw_value', str(value), '--ez', 'write', str(write).lower())
+        text = wait(lambda t: len(re.findall(r'Native Player scalar probe \|', t)) == prior + 1, 'original script dictionary')
+        rows = re.findall(r'Native Player scalar probe \| write (\d+) \| input (-?\d+) \| observed (-?\d+) \| entries before (\d+) \| entries after (\d+) \| AIS (\S+) \| VM (\S+)', text)
+        row = rows[-1]
+        assert tuple(map(int,row[:5])) == (int(write),value,observed,before,after), row
+        receipts = report.setdefault('scalar_dictionary',[])
+        assert not receipts or (row[5],row[6]) == (receipts[0]['AIS'],receipts[0]['VM']), 'LuaScript dictionary owner changed'
+        receipts.append({'write':write,'input':value,'observed':observed,'entries_before':before,'entries_after':after,'AIS':row[5],'VM':row[6]})
+        return text
     try:
         report['api'] = int(adb('shell', 'getprop', 'ro.build.version.sdk'))
         report['page_size'] = int(adb('shell', 'getconf', 'PAGE_SIZE'))
@@ -126,6 +139,9 @@ def main():
         report['screenshots'] = [screenshot('player-skills-initial')]
         command('ANIMATION_TIME', '--ei', 'time_ms', '0')
         wait(lambda t: 'Animation time command applied | time 0' in t, 'freeze')
+        if a.scalar_dictionary:
+            scalar_probe(False,0,0,1,2)  # Source missing read inserts one entry.
+            scalar_probe(True,7312,7312,2,2)
         if a.saved_skills:
             skill_check(0, 1, 0)
             assert report['skill_checks'][-1]['temporary_mana_cost'] == 1024
@@ -144,6 +160,7 @@ def main():
         text = wait(lambda t: 'World reload command applied |' in t and 'Native Player skills retained |' in t, 'retained world reload')
         expected_blocked = 0 if a.full_update else 1
         assert text.count('Native Player skill preparation |') == 1 and text.count('Native Player skill update blocked |') == expected_blocked
+        if a.scalar_dictionary: scalar_probe(False,0,7312,2,2)
         first_vm = re.search(r'Native Player skills retained \| VM (\S+) \| paths 15 \| update attempts (\d+) \| timer callbacks 0', text)
         assert first_vm, 'VM/paths/update attempt not retained'
         assert int(first_vm[2]) > 1 if a.full_update else int(first_vm[2]) == 1
@@ -156,6 +173,9 @@ def main():
         assert text.count('Native Player skill preparation |') == 1 and text.count('Native Player skill update blocked |') == expected_blocked
         report['restore'] = {'same_process': pid, 'same_vm': first_vm[1], 'reload_and_rotation': True, 'preparation_count': 1,
                              'blocked_update_attempts': expected_blocked, 'observed_update_attempts': [int(row[1]) for row in restores]}
+        if a.scalar_dictionary:
+            scalar_probe(False,0,7312,2,2)
+            scalar_probe(True,-37,-37,2,2)
         if a.saved_skills:
             assert text.count('Native Player saved skills ready |') == 1
             skill_check(0, 1, 0)
@@ -188,6 +208,10 @@ def main():
             assert text.count('Native Player skill update blocked |') == expected_blocked
             assert text.count('Native Player saved faeries ready |') == 1
             report['zero_MP_retained_on_reload'] = True
+            if a.scalar_dictionary:
+                scalar_probe(False,0,-37,2,2)
+                assert report['scalar_dictionary'][0]['VM'] == first_vm[1]
+                report['scalar_dictionary_retained_on_reload_and_rotation'] = True
         report['screenshots'].append(screenshot('player-skills-restored'))
         report['validation'] = 'PASS'
     except Exception as exc:

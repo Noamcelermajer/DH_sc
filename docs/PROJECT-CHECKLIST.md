@@ -33,14 +33,14 @@ still require live gameplay integration. All final completion gates remain open.
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
 | Character properties, equipment and state | 13 | 5 |
-| Lua, skills and enemy AI | 30 | 13 |
+| Lua, skills and enemy AI | 32 | 13 |
 | Combat, death, loot and progression | 5 | 7 |
 | Quests, campaign, UI, audio and saves | 3 | 9 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **100** | **70** |
+| **Total scoped tasks** | **102** | **70** |
 
-Latest local gate: [native mana/current-spell integration](../reports/reconstruction-2026-10-05/native-mana-current-spell/validation.json). Both ABIs compile the selected adapters. Android 17/16 KiB verifies MP debit/rejection/zero-MP reload, eight Knight updates, checks, cooldowns and Crypt ambush/recreation. The first faery update now reaches `GetInt`; full activation, buffs, pursuit and loot remain open.
+Latest local gate: [native dictionary/faery-element integration](../reports/reconstruction-2026-10-05/native-scalar-faery-element/validation.json). Both ABIs compile the selected adapters. Android 17/16 KiB verifies dictionary insertion/writes/reload/rotation, MP debit/rejection, eight Knight updates, cooldowns and Crypt ambush/recreation. Celest now reaches `GetCurrentEquippedFaeryLevel`; full activation, buffs, pursuit and loot remain open.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Latest source/build/test scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -240,9 +240,11 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select same-VM full ReturnValues and original check/use/outer-dispatch adapters;
   host and original ARM gates pass. Full native CSSkill/input activation remains open.
 - [x] Run eight original Knight updates and both Bashdown/passive check returns on
-  Android 17/16 KiB with one shared temporary property sheet. Next missing provider: `GetInt`.
+  Android 17/16 KiB with one shared temporary property sheet; faery providers remain incomplete.
 - [x] Adapt Adam's CurrentSpell caller to the sole native save/faery catalogue: 436 ARM comparisons, same-VM Lua tests and source five-row initialization; no invented selection/grant.
 - [x] Connect original HasMana/UseMana to native properties/options/Debug: 34 host cases, 26 ARM comparisons and live MP debit/rejection/reload. Full networking remains open.
+- [x] Adapt Adam's GetInt/SetInt to the retained native AIS dictionary: 440 ARM comparisons and live signed writes/insertion/reload/rotation; no second property store.
+- [x] Adapt Adam's equipped-faery element query to the sole save/catalogue: 112 caller plus 180 nested ARM comparisons, selected-library tests and native Celest execution to the next provider.
 - [ ] Complete nonempty skills for all classes through full Player AIS construction,
   saved skill levels, `LuaManager::AddFile` and lifecycle ownership.
 - [ ] Connect real Arguments/ReturnValues ownership, skill update/check/use callbacks and Lua errors.

@@ -5,9 +5,9 @@ Adam reference: [`AdamCelermajer/DH_sc`](https://github.com/AdamCelermajer/DH_sc
 
 This report supersedes older documents' descriptions of the current default development build. Historical reports retain their original artifact identities and test scopes.
 
-**Latest work:** Adam's CurrentSpell algorithm now borrows the sole native save/faery catalogue. Source option predicates and HasMana/UseMana debit the existing Prince properties. Android 17/16 KiB verifies MP spending/rejection/reload, cooldowns and Crypt recreation. Eight Knight updates complete; the first faery update reaches the missing `GetInt` dictionary provider. Full Player AIS/FSM, buffs and combat/loot remain open. [Evidence](../reports/reconstruction-2026-10-05/native-mana-current-spell/validation.json).
+**Latest work:** Adam's dictionary and equipped-faery element algorithms now use the retained native Player VM, source private map and sole save/catalogue. Android 17/16 KiB verifies dictionary insertion/signed writes/reload/rotation, MP checks and Crypt touch/timed spawning/recreation. Eight Knight updates complete; Celest reaches `GetCurrentEquippedFaeryLevel`. Full Player AIS/FSM, faery buffs and combat/loot remain open. [Evidence](../reports/reconstruction-2026-10-05/native-scalar-faery-element/validation.json).
 
-**Latest tested local APK:** `257a4f0f...`, 28,555,008 bytes; 554 frozen compiler/build inputs, both native ABIs, ELF64/16 KiB/signing checks and 22 new export checks. [Mana/current-spell evidence](../reports/reconstruction-2026-10-05/native-mana-current-spell/validation.json) separates host tests, Android compilation and live gameplay. The published camera release retains its own identity. [Earlier frame checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md); [remaining tasks](PROJECT-CHECKLIST.md).
+**Latest tested local APK:** `4598e16b...`, 28,725,208 bytes; 558 frozen build inputs, both native ABIs, ELF64/16 KiB/signing and 18 adapter export checks. [Dictionary/faery-element evidence](../reports/reconstruction-2026-10-05/native-scalar-faery-element/validation.json) separates host tests, Android compilation and live gameplay. The published camera release retains its own identity. [Remaining tasks](PROJECT-CHECKLIST.md).
 
 
 ## Improved project brief

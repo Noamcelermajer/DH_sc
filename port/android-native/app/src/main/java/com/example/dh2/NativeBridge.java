@@ -17,6 +17,7 @@ final class NativeBridge {
     static native String debugPlayerSkillCooldown(int delayMs);
     static native String debugPlayerSkillCheck(int slot);
     static native String debugPlayerMana(int rawAmount);
+    static native String debugPlayerScalar(int value,boolean write);
     static native String combatTarget(int index,int target);
     static native String playerAttack(int target);
     static native int[] playerVitals();

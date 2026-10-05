@@ -81,6 +81,8 @@ target_sources(dh2_level_world PRIVATE player_skill_tables_adapter.cpp
  player_skill_property_services_v1.cpp character_ai_skill_dispatch_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_mana_services_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_current_spell_v1.cpp)
+target_sources(dh2_level_world PRIVATE character_player_scalar_services_v1.cpp
+ character_equipped_faery_element_v1.cpp)
 target_include_directories(dh2_level_world PRIVATE ../adam-script-runtime/lua)
 
 target_sources(dh2_level_world PRIVATE ais_external_initialization.cpp ais_native_bindings.cpp room_zone_enrollment.cpp)
