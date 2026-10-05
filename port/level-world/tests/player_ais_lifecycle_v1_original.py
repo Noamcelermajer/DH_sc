@@ -114,6 +114,31 @@ def capture(elf:Path,output:Path):
     result['original_load_and_init']={'source_return':source_return,'load_phase_28':w(char_ai+0x28),'active_equals_pending':True,
         'timer_ids':timer_ids,'events':events,'executed_pinned_function_words':len(cpu.seen),'import_calls':cpu.import_calls,
         'scope':'Original load/init phase stores, actual factory/CharAIScript/vector bodies, OnInit timer caller and Default Player init/post/final leaves execute. Selector facts, binding/file, stats/configure/update and design/timer allocation are explicit providers.'}
+    # Execute the two distinct source entry points with a real publication
+    # boundary between them. No new phase/active store or replay guard is added.
+    cpu.uc.mem_write(char_ai,bytes(0x100));cpu.pointer(char_ai,cpu.symbols['_ZTV6CharAI']+8)
+    cpu.pointer(char_ai+4,character);cpu.pointer(char_ai+0x10,0xffffffff);cpu.pointer(char_ai+0x14,0xffffffff)
+    cpu.uc.mem_write(pending,bytes([0xcd])*0xd8);events.clear();timer_ids.clear()
+    cpu.invoke(0x3cf1f0,[char_ai])
+    assert w(char_ai+0x28)==7 and w(char_ai+0x1c)==w(char_ai+0x20)==pending
+    load_events=list(events)
+    assert [e['operation'] for e in load_events]==['select_player','allocate','lua_construct','bind_ais','set_character','load_common','is_dead','design_tick','start_timer','design_tick','start_timer']
+    cpu.invoke(0x3cf1f0,[char_ai])
+    assert events==load_events
+    assert cpu.invoke(0x3cf3a4,[char_ai,1])==0 and events==load_events
+    cpu.invoke(0x3ce7c0,[char_ai,0])
+    finish_events=events[len(load_events):]
+    assert [e['operation'] for e in finish_events]==['refresh_vitals','configure_skills','update_skills']
+    assert all(e['phase']==7 and e['active']==e['pending']==1 for e in finish_events)
+    assert cpu.invoke(0x3cf3a4,[char_ai,1])==0 and events==load_events+finish_events
+    assert not cpu.import_calls
+    result['original_split_load_init']={'load_phase_28':w(char_ai+0x28),'active_equals_pending':True,
+        'load_events':load_events,'finish_events':finish_events,'load_performs_init_process':False,
+        'repeated_load_no_services':True,'load_and_init_active_guard_no_services':True,
+        'explicit_finish_init_final':0,'constructor_calls':sum(e['operation']=='lua_construct' for e in events),
+        'vitals_calls':sum(e['operation']=='refresh_vitals' for e in events),'configure_calls':sum(e['operation']=='configure_skills' for e in events),
+        'executed_pinned_function_words':len(cpu.seen),'import_calls':cpu.import_calls,
+        'scope':'Actual original LoadScriptProcess followed by actual InitScriptProcess. The void source wrappers have no meaningful r0 return; native wrapper completion is 1. Profile/equipment/slot-grant bodies are not supplied by this fixture.'}
     output.parent.mkdir(parents=True,exist_ok=True);output.write_text(json.dumps(result,indent=2)+'\n')
     return result
 if __name__=='__main__':

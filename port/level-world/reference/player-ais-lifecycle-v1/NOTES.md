@@ -64,6 +64,26 @@ pending-to-active publication and phase advancement. Only then does it run
 vitals, configure, update, Post and optional Final. Player VCB runs through the
 actual preparation provider in the same Session.
 
+`load(result, error)` dispatches exact `script_load_process`/LoadScriptProcess
+0x3cf1f0. It delivers constructor/binding/commons/OnInit and publication, then
+returns wrapper completion 1 without vitals, preparation, skill update or
+Post/Final. Its original phase>6 guard returns completion without services.
+`initialize_process(final, result, error)` dispatches exact
+`script_init_process`/InitScriptProcess 0x3ce7c0. It runs vitals, configure,
+update, Post and optional Final at the caller's explicit boundary. It has no
+source active or replay guard; the native InitPost caller must deliver that
+operation once. All three methods share the same busy/failed latch and control
+alias checks. Calling compatibility `initialize` after `load` returns source 0
+through the active guard and does not deliver the pending InitProcess.
+
+The split permits actual Character InitPost profile/equipment/property/slot
+producers between source load and final InitProcess. In original InitPost,
+LoadScriptProcess is called at 0x3b5010; host skill-slot initialization branches
+from 0x3b51b8 to 0x3b54d4 and resumes at 0x3b51bc, after profile/equipment and
+property recalc/cache. Revive/_InitHpMp and final InitScriptProcess at 0x3b54c8
+occur later. These out-of-line block addresses do not denote temporal order.
+This API adds none of those missing profile/grant bodies.
+
 The original phase 7 publication precedes InitProcess. A required configure or
 update failure therefore leaves phase 7 and active/pending AIS intact. Status
 failed is latched and does not replay or roll back source effects. Phase 7 alone
@@ -86,12 +106,16 @@ backed HP/MP, real preparation/VCB and update/use owners. Explicit skill/faery
 update overlays isolate lifecycle ordering; unchanged gameplay callback delivery
 is a separate native gate.
 
-The gate completed four lifecycles: three real Player classes and one dead
-owner with Final false. Three failure cases cover constructor, configure after
-publication, and a required update callback failure caught by Lua pcall. Five
-guard cases cover provider reentry plus invalid/aliased output, including the
-declaration's own Script string as error output, rejected before it can mutate
-borrowed authored input. It checks
+The gate completed five lifecycles: three real Player classes, one dead
+owner with Final false, and a separate load/InitProcess with Final false.
+Four failure cases cover constructor, configure after publication, a required
+update callback failure caught by Lua pcall, and split-phase configure failure
+with the shared failure latch across all methods. Seven guard cases cover
+provider reentry, invalid/aliased output, and the declaration's own Script
+string as error output before it can mutate borrowed authored input. Split
+tests check publication without healing/preparation, a real saved-row writer
+between calls, and repeated load/compatibility calls without duplicate VM,
+healing or preparation. No profile or grant caller credit is inferred. It checks
 actual AI/DoT repeat -1 timers, source duration/order/reference, retained active
 guard and same VM. All eleven original constructor scalar words and the empty
 registry agree with the actual ARM factory capture.
@@ -104,12 +128,15 @@ InitProcess with the original Player vtable's empty Init/Post/Final leaves
 publication are not intercepted. Selection, allocation, Lua construction,
 binding/files, vitals/configure/update and design/timer allocation are explicit
 service fixtures. Both original runs execute no imported functions.
+The same pinned original source also executes a separate LoadScriptProcess
+followed by InitScriptProcess, plus repeated load and active LoadNInit guards.
+It observes exactly one constructor, one vitals and one configure service.
 
 The report records all compiled inputs before/after, actual compiler commands,
-DSO imports and binary hashes. The initial gate compiles this scoped new module
-against the actual selected dependencies; parent must select it and rerun the
-same gate. Host and original proof do not imply an Android build or live
-gameplay delivery.
+DSO imports and binary hashes. The final split-phase gate compiles this module
+exactly once in the actual selected level-world DSO, with one script runtime
+translation unit. Host and original proof do not imply an Android build or
+live gameplay delivery.
 
 ## Remaining mandatory providers
 

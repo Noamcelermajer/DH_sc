@@ -56,6 +56,7 @@
 #include "native_character_list.hpp"
 #include "native_ghost_skills.hpp"
 #include "native_player_skills.hpp"
+#include "object_update_culling.hpp"
 #include "character_ai_update_all_skills.hpp"
 #include "character_skill_state_queries.hpp"
 #include "../../../../../player-info-level/player_manager_host_level.hpp"
@@ -132,6 +133,9 @@ struct PlayerCombat {
  // Source Character constructor zeros +14f0. UseMana reads this separate
  // exemption byte; it is unrelated to the movement type at +53c.
  std::uint8_t mana_exempt_14f0=0;
+ // ObjectBase C1/C2 source stores +110=-1 and +118=0. These live fields,
+ // shared by regen/remote predicates, are not an inferred online flag.
+ dh2::object_update_culling::Object object_update_fields{0,UINT32_MAX,0,0,{0,0}};
 };
 PlayerCombat prince_combat;
 SearchObjectProjection prince_search_projection{};
@@ -1205,6 +1209,9 @@ void initialize_native_player_skills(AAssetManager* assets,bool restore){
  dh2::native::player_skills::Bindings b{};
  b.character=prince_source_ai->character_identity;b.ai=prince_source_ai->ai_identity;
  b.ai_lifetime=prince_source_ai;b.tables=actor_skill_catalogue->tables;b.catalogue_lifetime=actor_skill_catalogue;
+ b.source_ai=&prince_source_ai->state;b.declaration=dh2::data::ai_props(actor_ai_tables,prince_combat.properties.resolved[1]);
+ prince_combat.object_update_fields.identity=b.character;
+ b.dead=&prince_combat.life.dead;b.object=&prince_combat.object_update_fields;b.controller=reinterpret_cast<std::uintptr_t>(&prince_state);
  b.rules=&actor_property_rules;b.properties=&prince_combat.properties;b.classes=&actor_class_tables;b.fields=&actor_character_fields;
  b.shared_property_temp=&skill_property_temp;b.savegame=prince_combat.savegame;
  b.application_singleton=&native_application.identity;b.saved_options=&native_saved_options;
@@ -1801,7 +1808,6 @@ void prince_timer_before(void*,dh2::character::Coordinator&,std::int32_t event,d
  // Bounded native composition forwards ScriptTimer to this same skill VM.
  // Full Player CharAI event/lifecycle routing is still a separate boundary.
  if(event==0x35&&prince_skills)prince_skills->timer(timer.id);
- if(event==0x36&&prince_skills)prince_skills->buff_expired(timer);
  // Source Character/AI forwarding must reach the machine even when the AI
  // virtual expired callback is suppressed by the controller lock. Full
  // Prince AIS behavior is pending; its optional callback is not fabricated.
@@ -1809,6 +1815,12 @@ void prince_timer_before(void*,dh2::character::Coordinator&,std::int32_t event,d
   constexpr auto ai_boundary=std::uint64_t(1)<<60;
   if(!(pending_character_services&ai_boundary)){pending_character_services|=ai_boundary;__android_log_print(ANDROID_LOG_INFO,"DH2Native","Character AI expiry service pending | event 0x2a | before state event");}
  }
+}
+dh2::character::TimerRouting prince_timer_route(void*,dh2::character::Coordinator&,std::int32_t event,dh2::character::Timer32& timer,std::uint32_t){
+ using Route=dh2::character::TimerRouting;
+ if(event==0x33||event==0x34)return prince_skills&&prince_skills->ai_timer(event,timer)?Route::delivered:Route::failed;
+ if(event==0x36){if(!prince_skills)return Route::failed;prince_skills->buff_expired(timer);return Route::delivered;}
+ return Route::machine;
 }
 void prince_timer_after(void*,dh2::character::Coordinator&,std::int32_t event,dh2::character::Timer32& timer,std::uint32_t gate){
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Character timer expired | slot %u | event 0x%x | elapsed %u | duration %u | gate %x %x | Step %u | before state update",timer.id,unsigned(event),timer.elapsed_ms,timer.duration_ms,gate,prince_state.attack_gate,native_physics_steps);
@@ -1960,7 +1972,7 @@ void initialize_native_actor(AAssetManager* assets,bool restore){
  const float euler[3]{0,0,heading};if(!prince_visual.set_rotation(euler))throw std::runtime_error("Native player rotation rejected");
  prince_locomotion.observer={nullptr,character_playback_event};
  prince_character.bind({nullptr,[](void*){return prince_facts();},
-                         {nullptr,character_service},prince_timer_before,prince_timer_after});
+                         {nullptr,character_service},prince_timer_before,prince_timer_after,nullptr,prince_timer_route});
  if(!restore){
   prince_state={};pending_character_services=0;
   prince_character.reset_timers(0x100000001ull);
@@ -2181,6 +2193,7 @@ std::string debug_player_skill_cooldown(std::uint32_t delay){
  return prince_skills->cooldown_probe(delay);
 }
 
+
 std::string debug_player_skill_check(std::uint32_t slot){
  if(!world_mode||!native_actor_ready||!prince_skills)return "Player skill check probe rejected";
  return prince_skills->check_probe(slot);
@@ -2271,9 +2284,12 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     dh2::animation::Player candidate_idle,candidate_walk;
     if(!candidate_idle.load(idle.data(),idle.size(),rest,error)||!candidate_walk.load(walk.data(),walk.size(),rest,error))throw std::runtime_error(error);
     const auto knight=std::find(character_table.names.begin(),character_table.names.end(),"KnightPlayerBase");if(knight==character_table.names.end())throw std::runtime_error("Original default player preset missing");
-    PlayerCombat fresh_player;dh2::data::reset_properties(property_rules,fresh_player.properties,&character_table.rows.at(knight-character_table.names.begin()));dh2::data::SpawnVitals player_vitals;
+    PlayerCombat fresh_player;dh2::data::reset_properties(property_rules,fresh_player.properties,&character_table.rows.at(knight-character_table.names.begin()));
     fresh_player.aggro.initialize(object_records.size()+1);
-    if(!dh2::data::recalc_properties_with_class(class_table,property_rules,fresh_player.properties,error)||!dh2::data::initialize_spawn_vitals(property_rules,fresh_player.properties,player_vitals,error))throw std::runtime_error(error);
+    // Player vitals now initialize once through actual AIS InitProcess after
+    // publication, with the retained Debug/property providers. The separate
+    // development two-pass spawn helper would add another regeneration pass.
+    if(!dh2::data::recalc_properties_with_class(class_table,property_rules,fresh_player.properties,error))throw std::runtime_error(error);
     fresh_player.animation_table=fresh_player.properties.resolved[2];
     const auto bank_bytes=read(assets,"prince-animation-bank.bin","data");
     dh2::data::AnimationBank candidate_bank;

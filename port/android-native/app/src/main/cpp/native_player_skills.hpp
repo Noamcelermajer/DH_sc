@@ -7,13 +7,20 @@
 struct AAssetManager;
 struct dh2_pycst_view;
 namespace dh2::character {class Coordinator;struct Timer32;}
-namespace dh2::data {class PlayerSavegameV1;}
+namespace dh2::character_ai_initialization {struct State;}
+namespace dh2::object_update_culling {struct Object;}
+namespace dh2::data {class PlayerSavegameV1;struct AiProps;}
 namespace dh2::data::savegame_options_v1 {class Owner;}
 namespace dh2::native::debug_files {class Backend;}
 namespace dh2::native::player_skills {
 struct Bindings {
     std::uintptr_t character=0,ai=0;
     std::shared_ptr<void> ai_lifetime;
+    character_ai_initialization::State* source_ai=nullptr;
+    const data::AiProps* declaration=nullptr;
+    const std::uint32_t* dead=nullptr;
+    const object_update_culling::Object* object=nullptr;
+    std::uintptr_t controller=0;
     std::shared_ptr<const player_skill_tables_adapter::Tables> tables;
     std::shared_ptr<const void> catalogue_lifetime;
     data::PropertyRules* rules=nullptr;
@@ -50,6 +57,8 @@ public:
     void update();
     void timer(std::uint32_t id);
     void buff_expired(const character::Timer32&);
+    bool ai_timer(std::int32_t event,const character::Timer32&);
+    bool initialized()const noexcept;
     void restore(AAssetManager*,const void* ai_owner,const void* catalogue_owner);
     std::string cooldown_probe(std::uint32_t delay_ms);
     std::string check_probe(std::uint32_t slot);

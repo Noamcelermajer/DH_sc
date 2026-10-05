@@ -50,7 +50,8 @@ def main():
             candidates = sorted(set([row['file'] for row in rows] + [line.strip() for line in deps.splitlines() if line.startswith('    ')]))
             used = {}
             for name in candidates:
-                path = Path(name).resolve()
+                path = Path(name)
+                path = (path if path.is_absolute() else database.parent/path).resolve()
                 if not path.is_relative_to(REPO):
                     # Studio's app copy is checked against the repository copy.
                     main = (project/'app/src/main').resolve()
@@ -79,12 +80,15 @@ def main():
                          if line.startswith('build build.ninja: RERUN_CMAKE '))
             for token in re.findall(r'(?:\$[^\r\n]|[^\s])+', rerun.partition('RERUN_CMAKE ')[2]):
                 decoded = re.sub(r'\$(.)', r'\1', token)
-                if not decoded.endswith('CMakeLists.txt'):
+                if not decoded.endswith(('CMakeLists.txt','.cmake')):
                     continue
-                path = Path(decoded).resolve()
+                path = Path(decoded)
+                path = (path if path.is_absolute() else database.parent/path).resolve()
                 if not path.is_relative_to(REPO):
                     continue
                 key = path.relative_to(REPO).as_posix()
+                if '/.cxx/' in key or '/build/' in key:
+                    continue
                 payload = path.read_bytes()
                 assert key not in sources or sources[key] == sha(payload), 'Configure input changed during capture'
                 sources[key] = sha(payload)

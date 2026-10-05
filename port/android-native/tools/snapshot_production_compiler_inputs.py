@@ -14,7 +14,7 @@ if a.phase=='before':
     assert not before.exists(), 'Refusing to replace a prebuild source snapshot'
     names=subprocess.check_output(['git','ls-files','-z','--cached','--others','--exclude-standard'],cwd=ROOT).decode().split('\0')
     wanted=[name for name in names if name.startswith(('port/','vendor/','third_party/')) and
-            (Path(name).suffix in ('.cpp','.c','.hpp','.h','.inl','.java','.kts','.toml') or Path(name).name=='CMakeLists.txt')]
+            (Path(name).suffix in ('.cpp','.c','.hpp','.h','.inl','.java','.kts','.toml','.cmake') or Path(name).name=='CMakeLists.txt')]
     hashes={name:sha(ROOT/name) for name in wanted if (ROOT/name).is_file()}
     before.write_text(json.dumps(hashes,indent=2)+'\n');print('prebuild_inputs='+str(len(hashes)));raise SystemExit(0)
 expected=json.loads(before.read_text());sources={};compilers={};configure_inputs=set()
@@ -30,9 +30,11 @@ for abi in ('arm64-v8a','x86_64'):
     rerun=next(line for line in (database.parent/'build.ninja').read_text().splitlines() if line.startswith('build build.ninja: RERUN_CMAKE '))
     for token in re.findall(r'(?:\$[^\r\n]|[^\s])+',rerun.partition('RERUN_CMAKE ')[2]):
         decoded=re.sub(r'\$(.)',r'\1',token)
-        if not decoded.endswith('CMakeLists.txt'):continue
-        path=Path(decoded).resolve()
-        if path.is_relative_to(ROOT):configure_inputs.add(path.relative_to(ROOT).as_posix())
+        if not decoded.endswith(('CMakeLists.txt','.cmake')):continue
+        path=Path(decoded);path=(path if path.is_absolute() else database.parent/path).resolve()
+        if path.is_relative_to(ROOT):
+            key=path.relative_to(ROOT).as_posix()
+            if '/.cxx/' not in key and '/build/' not in key:configure_inputs.add(key)
     candidates=[r['file'] for r in rows]+[line.strip() for line in deps.splitlines() if line.startswith('    ')]
     used={}
     for name in candidates:

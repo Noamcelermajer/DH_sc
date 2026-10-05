@@ -142,9 +142,17 @@ void Coordinator::timer_expired(void* context, std::uintptr_t owner,
     if (coordinator.bindings_.before_timer_event)
         coordinator.bindings_.before_timer_event(coordinator.bindings_.context,
             coordinator, event_id, *timer, gate);
-    if (coordinator.event(static_cast<std::uint32_t>(event_id),
-                          reinterpret_cast<std::uintptr_t>(timer)) < 0)
-        throw std::runtime_error("Character timer state forwarding failed");
+    const auto route = coordinator.bindings_.route_timer_event
+        ? coordinator.bindings_.route_timer_event(coordinator.bindings_.context,
+            coordinator, event_id, *timer, gate)
+        : TimerRouting::machine;
+    if (route == TimerRouting::machine) {
+        if (coordinator.event(static_cast<std::uint32_t>(event_id),
+                              reinterpret_cast<std::uintptr_t>(timer)) < 0)
+            throw std::runtime_error("Character timer state forwarding failed");
+    } else if (route != TimerRouting::delivered) {
+        throw std::runtime_error("Character timer source routing failed");
+    }
     if (coordinator.bindings_.after_timer_event)
         coordinator.bindings_.after_timer_event(coordinator.bindings_.context,
             coordinator, event_id, *timer, gate);

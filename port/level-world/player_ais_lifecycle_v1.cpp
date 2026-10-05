@@ -187,7 +187,10 @@ bool separate(const Bindings& b,Range output){
 }
 }
 Runtime::Runtime(Bindings bindings):bindings_(bindings){if(!valid(bindings_))throw std::invalid_argument("Invalid borrowed Player AIS lifecycle owners");}
-Status Runtime::initialize(std::uint32_t final,Result* out,std::string& error){
+Status Runtime::load(Result* out,std::string& error){return execute(character::script_load_process,0,out,error);}
+Status Runtime::initialize_process(std::uint32_t final,Result* out,std::string& error){return execute(character::script_init_process,final,out,error);}
+Status Runtime::initialize(std::uint32_t final,Result* out,std::string& error){return execute(character::script_load_and_init,final,out,error);}
+Status Runtime::execute(character::ScriptLifecycleOperation operation,std::uint32_t final,Result* out,std::string& error){
     if(busy_)return Status::busy;
     Range r,t,e;
     if(final>1||!valid(bindings_)||!range(out,r)||!range(this,t)||!range(&error,e)||
@@ -198,10 +201,10 @@ Status Runtime::initialize(std::uint32_t final,Result* out,std::string& error){
     Call call(bindings_,*out,error);
     // DelayedLoad is the actual immutable AI declaration, applied only before
     // the first source load phase. A retained initialized AIS is never replayed.
-    if(!call.state.active&&!call.state.pending&&call.state.load_step==0){call.state.delayed=bindings_.declaration->delayed_load;call.push();}
+    if(operation!=character::script_init_process&&!call.state.active&&!call.state.pending&&call.state.load_step==0){call.state.delayed=bindings_.declaration->delayed_load;call.push();}
     try{
         const character::ScriptLifecycleServices16 services{&call,Call::dispatch};
-        out->source_return=dh2_character_script_lifecycle(&call.state,character::script_load_and_init,final,&services);
+        out->source_return=dh2_character_script_lifecycle(&call.state,operation,final,&services);
         call.push();
         if(out->source_return<0){failed_=true;error="Player source lifecycle rejected controls";return Status::failed;}
         return Status::complete;

@@ -10,6 +10,11 @@ Source ref: `native-camera-frustum-2026-10-05` at `41e75b7`.
 APK: 25,219,583 bytes; SHA-256 `80ed755e81ed8ddbcd30093999c094e40cc160b98f312f8ba36f18635794fbff`.
 Matching source: [download ZIP](https://github.com/Noamcelermajer/DH_sc/releases/download/native-camera-frustum-2026-10-05/crypt-source-camera-culling-reviewed-source.zip); SHA-256 `8fcde7c2f770428cfc8d9426b94dd408c42bff791d5e38d212333a2054ec2c6b`.
 
+**Newer tested local build:** `DH2-native-player-ais-2026-10-05.apk` in Downloads;
+SHA-256 `aee78d528868cbde8355f968b3f45466a525f3f4548b0eb7fb3e39e98d366abf`.
+Native source startup/regen/retention and Crypt regressions pass; inventory/text
+providers and full gameplay remain open. [Evidence](../reports/reconstruction-2026-10-05/player-ais-timers/validation.json).
+
 ## How to read this checklist
 
 - `[x]` means the specific stated task is verified. Its scope matters: a tested
@@ -32,10 +37,10 @@ still require live gameplay integration. All final completion gates remain open.
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
-| Character properties, equipment and state | 15 | 5 |
-| Lua, skills and enemy AI | 39 | 13 |
+| Character properties, equipment and state | 16 | 5 |
+| Lua, skills and enemy AI | 42 | 14 |
 | Combat, death, loot and progression | 6 | 7 |
-| Quests, campaign, UI, audio and saves | 3 | 9 |
+| Quests, campaign, UI, audio and saves | 4 | 9 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
 | **Total scoped tasks** | **113** | **70** |
@@ -174,6 +179,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select borrowing equipment requirements/recalculation services over the same V4 inventory and buff-aware properties; 7,451 selected-host checks and both Android ABIs pass. Review fixed retirement before item deletion. Native Skin/text/HUD and final teardown remain open.
 - [ ] Complete Character construction, all property sheet/buff/gear ownership and lifecycle phases.
 - [x] Select Adam's V5 item presentation on existing item identities/table authority; 4,031 presentation and 1,119 power-instance gold replays pass. Native text/localization remains open.
+- [x] Select borrowing weapon queries over sole V4 inventory/properties; 1,000 original cases, both equipment sets and preserved combat fields pass. Native inventory binding remains open.
 - [ ] Connect full inventory/equipment mutation, requirements, random powers and visual updates.
 - [ ] Complete player classes, skill progression, buffs/debuffs, auras and status effects in gameplay.
 - [ ] Replace remaining development inputs/facts with the original game-owned producers.
@@ -202,7 +208,10 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select saved skill-slot access on the actual current save, preserving source map0/skill-set0 semantics; selected initial-grant regressions and Android builds pass.
 - [x] Select original skill progression/slot initialization callers; prerequisite 777 ARM predicate cases and selected initial-grant 150 ARM comparisons pass. No invented free skill grants.
 - [x] Compose initial grants with the same save, inventory and live buff-aware properties; 113 normal/15 failure cases and five guards pass in the actual selected libraries. Profile/InitPost/native binding remains open.
-- [x] Compose Player AIS construction/load/InitProcess through the same Session and Coordinator; selected-host four lifecycle completions/three failure prefixes/five guards and both Android ABIs pass. Native backend and AI/DoT expiry remain open; phase7 alone is not readiness.
+- [x] Compose Player AIS construction and separate load/InitProcess phases through the same Session/Coordinator; five lifecycle completions/four failure prefixes/seven guards/two split cases pass in selected host libraries. Phase7 alone is not readiness.
+- [x] Drive native Knight initialization through those source phases; one vitals pass, 13 unchanged updates, canonical AIS flags/VM/preparation/properties and timer identities survive reload/rotation on API37/16KiB. Profile/grants/full frame remain open.
+- [x] Select real RegenTick and Player33/34 dispatch through sole Coordinator traversal; 11 original traces, 33 compositions, 93 failure prefixes/five guards and existing Coordinator regressions pass. No extra FSM event/store/frame update.
+- [x] Run unpaused Player AI3000ms/DoT1000ms timers live; retain counts/elapsed/repeat identities and verify MP0→741 through source regeneration. Positive DoT attack/application remains unbound.
 - [x] Adapt Player callback membership and skill/spell cooldowns through the
   selected Lua core and borrowed timer fields; host/real-Lua gates and 545
   cooldown ARM comparisons pass. Additive VM protocols pass 145 host checks.
@@ -260,7 +269,8 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [ ] Connect real Arguments/ReturnValues ownership, skill update/check/use callbacks and Lua errors.
 - [ ] Complete all 265 original Character bindings and every actually used game/engine service.
 - [ ] Connect native Ghost acquisition and pursuit through real frame/path/body services.
-- [ ] Bind actual AI/DoT timer-expiry providers and enable their currently paused timers.
+- [ ] Bind positive Player DoT attack/application and Ghost AI/DoT providers; Ghost timers remain paused.
+- [ ] Bind original Player OnDied→AI_SetDead cleanup, direct state12/null transition and genuine linked-aggro/group producers; no invented dead-regeneration skip.
 - [ ] Complete enemy movement, attacks, skill decisions, combat state changes and target cleanup.
 - [ ] Complete other AIS factories, enemy types, bosses and player AI/input behavior.
 - [ ] Playtest all enemy/skill combinations and preserve original decisions and timing.
@@ -286,6 +296,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Decode all 64 original quest records and their conditions/objectives/rewards/script slots.
 - [x] Reconstruct bounded counted-kill/clear compilation and progress components with diagnostic integration.
 - [x] Decode 33 FastTravel and 51 Level catalogue rows; connect bounded source range callbacks.
+- [x] Select Adam's five-TU shared localization/item-text closure on existing data DSO; 1,322 real items/936 powers and 99,622 composition checks pass. Native language/file/Application/HUD providers remain open.
 - [ ] Complete quest conditions, automatic event dispatch, objective types, rewards and persistence.
 - [ ] Complete campaign progression, story/dialogue, unlocks and difficulty transitions.
 - [ ] Restore title/menu flow, character creation/selection, HUD, inventory, skill and quest interfaces.
@@ -322,10 +333,10 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 ## Immediate work order
 
-1. Connect autonomous enemy acquisition, pursuit and attacks in the same owned runtime.
-2. Complete nonempty skill callbacks, Value/ReturnValues ownership and Lua loading/cache integration.
-3. Finish the combat/death/loot/quest loop and complete one original level.
-4. Expand factories/content/transitions, full skills, UI/audio and persistent campaign saves.
+1. Bind source Player death/AI cleanup and profile/inventory/equipment/text/Skin producers on the same retained owners.
+2. Connect full Player/enemy AIS frames, nonempty skill activation and autonomous acquisition/pursuit/attacks.
+3. Finish combat/death/rewards/loot/quest delivery and complete one original level.
+4. Expand factories/content/transitions, all classes, UI/audio and persistent campaign saves.
 5. Complete campaign coverage, mod examples, clean builds and physical ARM64 release tests.
 
 Update the relevant checkboxes only after their stated verification passes. Keep

@@ -7,6 +7,7 @@
 namespace dh2::character {
 
 class Coordinator;
+enum class TimerRouting { machine, delivered, failed };
 
 // Runtime composition of the recovered state and timer kernels. This is a
 // native owner, not an original Character/CharAI memory-layout overlay.
@@ -23,6 +24,13 @@ struct CoordinatorBindings {
     void (*after_timer_event)(void*, Coordinator&, std::int32_t,
                               Timer32&, std::uint32_t gate_before) = nullptr;
     SpawnFacts (*spawn_facts)(void*) = nullptr;
+    // Source Character::RaiseEvent/CharAI dispatch may deliver an event without
+    // forwarding to SM_RaiseEvent (for example 0x33/0x34 and direct buff 0x36).
+    // Runs between existing before/after observers. Default preserves the
+    // existing machine route. Failed/throw preserves timer/provider effects
+    // and stops before machine forwarding and the after observer.
+    TimerRouting (*route_timer_event)(void*, Coordinator&, std::int32_t,
+                                      Timer32&, std::uint32_t gate_before) = nullptr;
 };
 
 class Coordinator {

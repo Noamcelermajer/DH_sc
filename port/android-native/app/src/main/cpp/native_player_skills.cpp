@@ -13,6 +13,9 @@
 #include "character_player_buffs_v1.hpp"
 #include "character_skill_cooldown_services.hpp"
 #include "character_coordinator.hpp"
+#include "player_ais_lifecycle_v1.hpp"
+#include "ais_external_init_callbacks.hpp"
+#include "player_ai_timer_events_v1.hpp"
 #include "native_debug_files.hpp"
 #include "mod_assets.hpp"
 #include "../../../../../../port/adam-script-runtime/script_game_bindings.h"
@@ -29,14 +32,35 @@ extern "C" {
 #include <stdexcept>
 
 namespace dh2::native::player_skills {
-// Nonempty original Player skill preparation is now attached to the native
-// Prince. This bounded VM context does not impersonate a completed Player AIS
-// constructor/OnInit/savegame lifecycle. Missing update/buff/combat providers
-// stop the attempted update explicitly, while the existing gameplay continues.
+// One native Player AIS/skill owner. Source load and InitProcess drive the same
+// Session/preparation/property/Coordinator graph. Full Character InitPost,
+// profile/equipment/grants, frame AI and skill activation remain separate.
+namespace {
+struct InitialVirtuals {void(*init)();void(*post)();void(*final)();};
+// Native dispatch identities for the proven inherited initial virtuals. These
+// do not represent a complete original Binder or reconstructed C++ vtable.
+const InitialVirtuals base_initials{dh2::ais_external_init_callbacks::default_init,
+ dh2::ais_external_init_callbacks::default_post,dh2::ais_external_init_callbacks::default_final};
+const InitialVirtuals player_initials=base_initials,iphone_initials=base_initials;
+}
 struct Runtime::Impl {
  Bindings bindings;
  AAssetManager* assets=nullptr;
  dh2::ais_player_init_vcb::State ais{};
+ dh2::data::AiProps declaration;
+ dh2::player_ais_lifecycle_v1::PlayerFields source_fields{};
+ dh2::player_ais_lifecycle_v1::Tables source_tables{};
+ dh2::player_skill_session_v1::Session* session_slot=nullptr;
+ dh2::character_player_skills_preparation_v3::Owner* preparation_slot=nullptr;
+ dh2::player_skill_update_session_v1::Runtime* update_slot=nullptr;
+ dh2::player_skill_use_session_v1::Runtime* use_slot=nullptr;
+ dh2::character_level_runtime::Runtime vitals;
+ dh2::character_level_runtime::DesignBinding design_binding{};
+ dh2::character_level_runtime::Storage vitals_storage{};
+ std::unique_ptr<dh2::player_ais_lifecycle_v1::Runtime> lifecycle;
+ std::unique_ptr<dh2::player_ai_timer_events_v1::Runtime> ai_ticks;
+ unsigned regen_ticks=0,dot_ticks=0;
+ dh2::player_ais_lifecycle_v1::Result loaded{},initialized_result{};
  dh2::data::PropertyView property_view{};
  std::vector<dh2::data::ClassRow> class_rows;
  std::unique_ptr<dh2::character_player_buffs_v1::Owner> buffs;
@@ -70,12 +94,33 @@ struct Runtime::Impl {
  dh2::character_ai_set_skills_and_spells::Result prepared{};
  dh2::player_skill_update_session_v1::Result updated{};
  unsigned update_attempts=0,timers_started=0,timer_callbacks=0;
- bool update_blocked=false;
+ bool update_blocked=false,initialized=false;
  std::string error;
- explicit Impl(Bindings b):bindings(std::move(b)),assets(bindings.assets){}
+ explicit Impl(Bindings b):bindings(std::move(b)),assets(bindings.assets),declaration(*bindings.declaration){
+  // Retain the immutable authored row used by this AIS. GL reload replaces
+  // the global AI table backing; it must not invalidate this live borrower.
+  bindings.declaration=&declaration;
+ }
  ~Impl(){
   // Prevent callbacks to retiring instances. The retained Coordinator remains
   // the sole timer owner; unrelated Character timers are not removed here.
+  const auto stop_owned=[&](std::uint32_t id,std::int32_t event,std::uintptr_t ref){
+   const auto& timers=bindings.coordinator->timers();
+   if(id<timers.count){const auto& timer=timers.slots[id];
+    if(timer.active&&timer.id==id&&timer.event==event&&timer.user_ref==ref)
+     bindings.coordinator->stop_timer(id);
+   }
+  };
+  if(bindings.source_ai){stop_owned(bindings.source_ai->word_10,0x33,0);stop_owned(bindings.source_ai->word_14,0x34,0);}
+  if(timer_fields&&preparation){
+   using List=dh2::character_ai_set_skills_and_spells::List;
+   for(const auto list:{List::skill,List::faery})
+    for(std::uint32_t index=0;index<preparation->slots(list).size();++index){
+     dh2::character_player_skills_preparation_v3::Owner::TimerFieldSlot slot{};
+     if(timer_fields->slot(bindings.character,list,index,slot)&&slot.field18&&*slot.field18>=0)
+      stop_owned(std::uint32_t(*slot.field18),0x35,0);
+    }
+  }
   if(buffs){dh2::character_player_buffs_v1::Snapshot row{};
    for(std::uint32_t i=0;buffs->snapshot(i,&row);++i){
     const auto& timers=bindings.coordinator->timers();
@@ -86,7 +131,7 @@ struct Runtime::Impl {
     }
    }
   }
-  uses.reset();updates.reset();session.reset();
+  ai_ticks.reset();lifecycle.reset();uses.reset();updates.reset();session.reset();
   if(buffs){dh2::character_player_buffs_v1::Result result{};
    if(buffs->retire(&result)!=dh2::character_player_buffs_v1::Status::complete)
     __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Native Player buff retirement provider failed");
@@ -103,6 +148,10 @@ struct Runtime::Impl {
   // descriptors, and rebind them before any retained buff can recalculate.
   class_rows.clear();class_rows.reserve(bindings.classes->rows.size());
   for(const auto& row:bindings.classes->rows)class_rows.push_back({row.data(),std::uint32_t(row.size())});
+  design_binding={reinterpret_cast<std::uintptr_t>(bindings.design),bindings.design};
+  vitals_storage={bindings.character,reinterpret_cast<std::uintptr_t>(bindings.properties),
+   bindings.properties->base.data(),&property_view,class_rows.data(),std::uint32_t(class_rows.size()),
+   &design_binding,1,&bindings.debug->globals(),&bindings.debug->services()};
  }
  void log_buffs(const char* phase){
   refresh_properties();
@@ -117,6 +166,19 @@ struct Runtime::Impl {
     if((*bindings.fields)[p].find("Resistance")!=std::string::npos)
      __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player buff property | phase %s | name %s | index %u | buff %d | resolved %d",
       phase,(*bindings.fields)[p].c_str(),p,row.sheet[p],bindings.properties->resolved[p]);
+  }
+ }
+ void log_ai_timers(const char* phase){
+  const auto& timers=bindings.coordinator->timers();
+  for(const auto event:{0x33,0x34}){
+   const auto id=event==0x33?bindings.source_ai->word_10:bindings.source_ai->word_14;
+   if(id>=timers.count)throw std::runtime_error("Native Player AI timer slot unavailable");
+   const auto& timer=timers.slots[id];
+   if(timer.id!=id||timer.event!=event||timer.user_ref!=0)
+    throw std::runtime_error("Native Player AI timer owner differs");
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player AI timer snapshot | phase %s | event %x | slot %u | duration %u | repeat %d | elapsed %u | active %u | paused %u | ref %zu | delivered %u | HP %d / %d | MP %d / %d",
+    phase,event,id,timer.duration_ms,timer.repeat,timer.elapsed_ms,unsigned(timer.active),unsigned(timer.paused),std::size_t(timer.user_ref),
+    event==0x33?regen_ticks:dot_ticks,bindings.properties->resolved[36],bindings.properties->resolved[38],bindings.properties->resolved[41],bindings.properties->resolved[43]);
   }
  }
  static auto& self(void* raw){return *static_cast<Impl*>(raw);}
@@ -318,7 +380,39 @@ struct Runtime::Impl {
   }
   return fail(text,bytes,q.name);
  }
- void prepare(){
+ static int lifecycle_backend(void* raw,const dh2::player_ais_lifecycle_v1::Request* q,std::string& error){
+  auto& s=self(raw);
+  if(!q||q->character!=s.bindings.character||q->ais!=s.ais.ais){error="Native Player lifecycle identity differs";return 1;}
+  if(q->operation==dh2::player_ais_lifecycle_v1::Operation::construct_vm){
+   if(q->allocation_bytes!=0xd8||q->skip_bind!=1||s.session){error="Native Player deferred constructor differs";return 1;}
+   dh2::player_skill_session_v1::Configuration config{};
+   config.character=s.bindings.character;config.ais=&s.ais;config.tables=s.bindings.tables;
+   config.debug=&s.bindings.debug->globals();config.debug_services=s.bindings.debug->services();
+   config.providers.context=&s;config.providers.resolve=resolve;config.providers.native=native;
+   config.providers.faery={&s,faery_constant,faery_assert};
+   dh2::player_skill_session_v1::Vm vm(dh2_script_vm_create_deferred(16*1024*1024));
+   s.session=dh2::player_skill_session_v1::Session::adopt(std::move(vm),std::move(config),error);
+   s.session_slot=s.session.get();
+   return s.session&&s.session->stage()==dh2::player_skill_session_v1::Stage::created?0:1;
+  }
+  if(q->operation!=dh2::player_ais_lifecycle_v1::Operation::configure_skills||!s.session||s.preparation||
+     s.bindings.source_ai->active_ais_1c!=s.ais.ais||s.bindings.source_ai->pointer_28!=7){
+   error="Native Player source configure prefix differs";return 1;
+  }
+  s.refresh_properties();
+  const dh2::character_player_skills_preparation_v3::Inputs inputs{q->character,s.bindings.source_ai->active_ais_1c,&s.property_view,0};
+  s.preparation=dh2::character_player_skills_preparation_v3::Owner::create(s.bindings.tables,inputs,s.session->preparation_services(),error);
+  s.preparation_slot=s.preparation.get();
+  if(!s.preparation||s.preparation->prepare(&s.prepared)!=dh2::character_ai_set_skills_and_spells::Status::complete){
+   error="Player original skill preparation: "+s.session->last_error();return 1;
+  }
+  s.timer_fields=s.preparation->lease_timer_fields(q->character);
+  if(!s.timer_fields){error="Player skill field18 lease unavailable";return 1;}
+  s.updates=std::make_unique<dh2::player_skill_update_session_v1::Runtime>(*s.session,*s.preparation,s.bindings.ai,q->character,s.bindings.coordinator->state.current);
+  s.uses=std::make_unique<dh2::player_skill_use_session_v1::Runtime>(*s.session,*s.preparation,q->character);
+  s.update_slot=s.updates.get();s.use_slot=s.uses.get();return 0;
+ }
+ void initialize(){
   if(!bindings.character||!bindings.tables||!bindings.debug)throw std::runtime_error("Native Player skill owners missing");
   for(const auto& pair:std::vector<std::pair<std::string,std::string>>{{"AnimatedEffectTable","effects"},{"ProjectileTable","projectiles"}}){
    auto bytes=bindings.read(assets,"data/"+pair.second+"_pyarraynames.bin");
@@ -329,7 +423,11 @@ struct Runtime::Impl {
    bytes.resize(end);auto& retained=named_bytes[pair.first];retained=std::move(bytes);
    if(dh2_pynames_open(&named_views[pair.first],retained.data(),std::uint32_t(retained.size())))throw std::runtime_error("Player dictionary names rejected");
   }
-  ais={reinterpret_cast<std::uintptr_t>(this),0};
+  ais={reinterpret_cast<std::uintptr_t>(&source_fields),0};
+  source_fields.script.identity=ais.ais;
+  source_fields.script.binder_identity=reinterpret_cast<std::uintptr_t>(&session_slot);
+  source_fields.script.path_storage_identity=reinterpret_cast<std::uintptr_t>(&session);
+  source_tables={reinterpret_cast<std::uintptr_t>(&base_initials),reinterpret_cast<std::uintptr_t>(&player_initials),reinterpret_cast<std::uintptr_t>(&iphone_initials)};
   scalar_state={ais.ais,&script_integers};scalar_callbacks={&scalar_state,nullptr};
   property_services={bindings.character,bindings.rules,bindings.classes,bindings.properties,bindings.shared_property_temp,false};
   mana_state={bindings.character,bindings.mana_exempt_14f0,&property_view};
@@ -349,41 +447,51 @@ struct Runtime::Impl {
   buffs=dh2::character_player_buffs_v1::Owner::create({bindings.character,&property_view,{this,buff_service},std::uint32_t(class_rows.size()),UINT32_MAX});
   if(!buffs)throw std::runtime_error("Native Player buff owner rejected current property graph");
   buff_callbacks={buffs.get()};
-  dh2::player_skill_session_v1::Configuration config{};
-  config.character=bindings.character;config.ais=&ais;config.tables=bindings.tables;
-  config.debug=&bindings.debug->globals();config.debug_services=bindings.debug->services();
-  config.providers.context=this;config.providers.resolve=resolve;config.providers.native=native;
-  config.providers.faery={this,faery_constant,faery_assert};
-  dh2::player_skill_session_v1::Vm vm(dh2_script_vm_create_deferred(16*1024*1024));
-  session=dh2::player_skill_session_v1::Session::adopt(std::move(vm),std::move(config),error);
-  if(!session||session->bind_ais_functions(error)||session->bind_character_functions(error))throw std::runtime_error("Player skill source bindings: "+error);
-  dh2::player_skill_session_v1::LoadResult common{};
-  if(session->load_resolved("data/scripts/ai/_commons.luac",&common,error)||!common.source_success)throw std::runtime_error("Player skill AI commons: "+error);
-  refresh_properties();
-  const dh2::character_player_skills_preparation_v3::Inputs inputs{bindings.character,ais.ais,&property_view,0};
-  preparation=dh2::character_player_skills_preparation_v3::Owner::create(bindings.tables,inputs,session->preparation_services(),error);
-  if(!preparation||preparation->prepare(&prepared)!=dh2::character_ai_set_skills_and_spells::Status::complete)
-   throw std::runtime_error("Player original skill preparation: "+session->last_error());
-  timer_fields=preparation->lease_timer_fields(bindings.character);
-  if(!timer_fields)throw std::runtime_error("Player skill field18 lease unavailable");
-  updates=std::make_unique<dh2::player_skill_update_session_v1::Runtime>(*session,*preparation,bindings.ai,bindings.character,bindings.coordinator->state.current);
-  uses=std::make_unique<dh2::player_skill_use_session_v1::Runtime>(*session,*preparation,bindings.character);
+  dh2::player_ai_timer_events_v1::Bindings tick_bindings{};
+  tick_bindings.ai=bindings.source_ai;tick_bindings.coordinator=bindings.coordinator;tick_bindings.object=bindings.object;
+  tick_bindings.controller=bindings.controller;tick_bindings.properties=reinterpret_cast<std::uintptr_t>(bindings.properties);
+  tick_bindings.view=&property_view;tick_bindings.dead=bindings.dead;
+  tick_bindings.debug_globals=&bindings.debug->globals();tick_bindings.debug_services=&bindings.debug->services();
+  // Positive DoT combat remains an explicit reached-provider failure until
+  // genuine Player F_DotAttack/F_ApplyResult storage is attached. Zero DoT is
+  // the real cached-property path, never a forced or fabricated suppression.
+  ai_ticks=std::make_unique<dh2::player_ai_timer_events_v1::Runtime>(tick_bindings);
+  dh2::player_ais_lifecycle_v1::Bindings life{bindings.source_ai,&source_fields,&ais,&source_tables,&declaration,"Player",
+   &session_slot,&preparation_slot,&update_slot,&use_slot,bindings.savegame.get(),bindings.coordinator,
+   bindings.dead,bindings.design,&vitals,&vitals_storage,{this,lifecycle_backend}};
+  lifecycle=std::make_unique<dh2::player_ais_lifecycle_v1::Runtime>(life);
+  // Character profile/equipment/slot-grant integration belongs between these
+  // original phases. The Crypt development entry has no such provider yet.
+  if(lifecycle->load(&loaded,error)!=dh2::player_ais_lifecycle_v1::Status::complete||bindings.source_ai->pointer_28!=7)
+   throw std::runtime_error("Native Player source load: "+error);
+  if(lifecycle->initialize_process(1,&initialized_result,error)!=dh2::player_ais_lifecycle_v1::Status::complete)
+   throw std::runtime_error("Native Player source InitProcess: "+error);
+  if(initialized_result.init_phase_mask!=31||bindings.source_ai->active_ais_1c!=ais.ais||bindings.source_ai->alternate_ais_20!=ais.ais)
+   throw std::runtime_error("Native Player completed InitProcess owners differ");
+  initialized=true;updated=initialized_result.update;++update_attempts;
   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill preparation | skills %zu | faeries %zu | loaded paths %zu | declarations %u | flags %x | one VM; Player lifecycle and skill-use providers pending",
    preparation->slots(dh2::character_ai_set_skills_and_spells::List::skill).size(),preparation->slots(dh2::character_ai_set_skills_and_spells::List::faery).size(),session->loaded_path_count(),session->statistics().declarations,ais.flags_b8);
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player AIS initialized | AI %p | AIS %p | active %p | pending %p | phase %zu | VM %p | init mask %x | HP %d / %d | MP %d / %d | timer33 %u | timer34 %u | one source InitProcess; Character profile/grants/frame/activation pending",
+   reinterpret_cast<void*>(bindings.ai),reinterpret_cast<void*>(ais.ais),reinterpret_cast<void*>(bindings.source_ai->active_ais_1c),
+   reinterpret_cast<void*>(bindings.source_ai->alternate_ais_20),std::size_t(bindings.source_ai->pointer_28),static_cast<void*>(session->vm()),initialized_result.init_phase_mask,
+   bindings.properties->resolved[36],bindings.properties->resolved[38],bindings.properties->resolved[41],bindings.properties->resolved[43],bindings.source_ai->word_10,bindings.source_ai->word_14);
+  log_ai_timers("initial");
+  log_initial_update();
   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player saved skills ready | owner %p | rows %zu | slot0 level %d | source _InitSkills; starter grant/profile load pending",
    static_cast<void*>(bindings.savegame.get()),bindings.savegame->skills().size(),bindings.savegame->skill_level(0));
   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player saved faeries ready | difficulty %d | selected %d | level %d | rows 5 5 5 | source constructor and _InitFaeries; same save owner",
    *bindings.current_difficulty,bindings.savegame->current_faery(*bindings.current_difficulty),bindings.savegame->faery_level(0,*bindings.current_difficulty));
  }
+ void log_initial_update(){
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill update complete | attempt %u | callbacks %u | skill slots %u | faery slots %u | buffs %u | groups %u | one VM/save/property store; source InitProcess complete, activation pending",update_attempts,updated.callbacks,updated.source.skill_slots,updated.source.faery_slots,buffs->count(),property_view.group_count);
+  log_buffs("initial");
+ }
  void update(){
-  if(update_blocked||!updates)return;
+  if(!initialized||update_blocked||!updates)return;
   refresh_properties();++update_attempts;
   if(updates->update(updated,error)){
    update_blocked=true;
    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill update blocked | attempt %u | callbacks %u | VM status %d | %s | source effects retained; remaining providers pending",update_attempts,updated.callbacks,updated.last_lua_status,error.c_str());
-  }else if(update_attempts==1){
-   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill update complete | attempt %u | callbacks %u | skill slots %u | faery slots %u | buffs %u | groups %u | one VM/save/property store; full Player AIS and activation pending",update_attempts,updated.callbacks,updated.source.skill_slots,updated.source.faery_slots,buffs->count(),property_view.group_count);
-   log_buffs("initial");
   }
  }
  void timer(std::uint32_t id){
@@ -400,6 +508,7 @@ struct Runtime::Impl {
 };
 
 std::string Runtime::cooldown_probe(std::uint32_t delay){
+ if(!impl_->initialized)return "Player skill initialization incomplete";
  if(!delay||delay>60000)return "Player skill cooldown probe rejected";
  auto& s=*impl_;
  const auto& slots=s.preparation->slots(dh2::character_ai_set_skills_and_spells::List::skill);
@@ -423,6 +532,7 @@ std::string Runtime::cooldown_probe(std::uint32_t delay){
 }
 
 std::string Runtime::check_probe(std::uint32_t slot){
+ if(!impl_->initialized)return "Player skill initialization incomplete";
  auto& s=*impl_;
  using List=dh2::player_skill_use_session_v1::List;
  using Check=dh2::player_skill_use_session_v1::Check;
@@ -446,6 +556,7 @@ std::string Runtime::check_probe(std::uint32_t slot){
 }
 
 std::string Runtime::mana_probe(std::uint32_t amount){
+ if(!impl_->initialized)return "Player skill initialization incomplete";
  auto& s=*impl_;
  // This debug command traverses the same retained Player VM and original
  // native callback wrappers. It spends real MP; it is not a skill activation.
@@ -463,6 +574,7 @@ std::string Runtime::mana_probe(std::uint32_t amount){
 }
 
 std::string Runtime::scalar_probe(std::int32_t value,bool write){
+ if(!impl_->initialized)return "Player skill initialization incomplete";
  auto& s=*impl_;
  // A debug fixture calls the original globals through this same Player VM.
  // It gives reload tests an observable nonzero entry without altering authored
@@ -485,10 +597,27 @@ std::string Runtime::scalar_probe(std::int32_t value,bool write){
 Runtime::Runtime(std::unique_ptr<Impl> p):impl_(std::move(p)){}
 Runtime::~Runtime()=default;
 std::unique_ptr<Runtime> Runtime::create(Bindings b,std::string& error){
- if(!b.character||!b.ai||!b.ai_lifetime||!b.tables||!b.catalogue_lifetime||!b.rules||!b.properties||!b.shared_property_temp||!b.savegame||b.savegame->character()!=b.character||!b.savegame->skills_initialized()||!b.application_singleton||!*b.application_singleton||!b.saved_options||!b.online||!b.online_identity||!b.mana_exempt_14f0||!b.current_difficulty||!b.classes||!b.fields||!b.design||!b.ai_constants||!b.faery_constants||!b.coordinator||!b.debug||!b.assets||!b.read||b.coordinator->owner()!=b.character){error="invalid native Player skill owner";return {};}
- try{auto p=std::make_unique<Impl>(std::move(b));p->prepare();return std::unique_ptr<Runtime>(new Runtime(std::move(p)));}
+ if(!b.character||!b.ai||!b.ai_lifetime||!b.source_ai||b.source_ai->identity!=b.ai||b.source_ai->owner_04!=b.character||
+    !b.declaration||b.declaration->script!="__player__"||!b.dead||!b.object||b.object->identity!=b.character||!b.controller||
+    !b.tables||!b.catalogue_lifetime||!b.rules||!b.properties||!b.shared_property_temp||!b.savegame||b.savegame->character()!=b.character||!b.savegame->skills_initialized()||!b.application_singleton||!*b.application_singleton||!b.saved_options||!b.online||!b.online_identity||!b.mana_exempt_14f0||!b.current_difficulty||!b.classes||!b.fields||!b.design||!b.ai_constants||!b.faery_constants||!b.coordinator||!b.debug||!b.assets||!b.read||b.coordinator->owner()!=b.character){error="invalid native Player skill owner";return {};}
+ std::unique_ptr<Runtime> owner;
+ try{owner=std::unique_ptr<Runtime>(new Runtime(std::make_unique<Impl>(std::move(b))));}
  catch(const std::exception& e){error=e.what();return {};}
+ auto& p=owner->impl_;
+ // Allocate the outer owner before source publication. A later allocation
+ // failure must not retire an AIS already borrowed by source_ai.
+ try{p->initialize();}
+ catch(const std::exception& e){
+  p->error=e.what();p->update_blocked=true;
+  // Source publication can precede a required InitProcess failure. Retain the
+  // AIS/Session/instances/timers and reached effects until explicit teardown.
+  __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Native Player AIS failure retained | phase %zu | active %p | pending %p | VM %p | %s | no automatic initialization retry",
+   std::size_t(p->bindings.source_ai->pointer_28),reinterpret_cast<void*>(p->bindings.source_ai->active_ais_1c),
+   reinterpret_cast<void*>(p->bindings.source_ai->alternate_ais_20),p->session?static_cast<void*>(p->session->vm()):nullptr,p->error.c_str());
+ }
+ error=p->error;return owner;
 }
+bool Runtime::initialized()const noexcept{return impl_->initialized;}
 void Runtime::update(){impl_->update();}
 void Runtime::timer(std::uint32_t id){impl_->timer(id);}
 void Runtime::buff_expired(const character::Timer32& timer){
@@ -496,12 +625,31 @@ void Runtime::buff_expired(const character::Timer32& timer){
  if(s.buffs->expired(&timer,&result)!=dh2::character_player_buffs_v1::Status::complete)
   throw std::runtime_error("Native Player buff expiry provider failed");
 }
+bool Runtime::ai_timer(std::int32_t event,const character::Timer32& timer){
+ auto& s=*impl_;if(!s.ai_ticks||(event!=0x33&&event!=0x34))return false;
+ const auto hp_before=s.bindings.properties->resolved[36],mp_before=s.bindings.properties->resolved[41];
+ s.refresh_properties();dh2::player_ai_timer_events_v1::Result result{};
+ const auto status=s.ai_ticks->deliver(event,&timer,&result,s.error);
+ if(status!=dh2::player_ai_timer_events_v1::Status::complete){
+  __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Native Player AI timer failed | event %x | slot %u | %s | source effects retained",event,timer.id,s.error.c_str());return false;
+ }
+ auto& count=event==0x33?s.regen_ticks:s.dot_ticks;++count;
+ if(event==0x33||count<=3||count%64==0)
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player AI timer delivered | event %x | slot %u | count %u | combat %u | remote %u | HP rate %u | MP rate %u | HP %d / %d | MP %d / %d | DoT attacks %u | HP before %d | MP before %d | no extra FSM event",
+   event,timer.id,count,result.in_combat,result.remote_word,result.regen.hp_amount,result.regen.mp_amount,
+   s.bindings.properties->resolved[36],s.bindings.properties->resolved[38],s.bindings.properties->resolved[41],s.bindings.properties->resolved[43],result.dots.attacks,hp_before,mp_before);
+ return true;
+}
 void Runtime::restore(AAssetManager* assets,const void* ai,const void* catalogue){
  auto& s=*impl_;
  if(s.bindings.ai_lifetime.get()!=ai||s.bindings.catalogue_lifetime.get()!=catalogue)throw std::runtime_error("Retained Player skill owner differs");
  s.assets=assets;
  s.refresh_class_rows();
- s.log_buffs("restore");
- __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skills retained | VM %p | paths %zu | update attempts %u | timer callbacks %u | no preparation/OnInit replay",static_cast<void*>(s.session->vm()),s.session->loaded_path_count(),s.update_attempts,s.timer_callbacks);
+ s.refresh_properties();if(s.buffs)s.log_buffs("restore");
+ if(s.initialized)s.log_ai_timers("restore");
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skills retained | VM %p | paths %zu | update attempts %u | timer callbacks %u | no preparation/OnInit replay",s.session?static_cast<void*>(s.session->vm()):nullptr,s.session?s.session->loaded_path_count():0,s.update_attempts,s.timer_callbacks);
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player AIS retained | initialized %u | AI %p | AIS %p | active %p | pending %p | phase %zu | timer33 %u | timer34 %u | same owner/failure latch; no load/InitProcess replay",
+  unsigned(s.initialized),reinterpret_cast<void*>(s.bindings.ai),reinterpret_cast<void*>(s.ais.ais),reinterpret_cast<void*>(s.bindings.source_ai->active_ais_1c),
+  reinterpret_cast<void*>(s.bindings.source_ai->alternate_ais_20),std::size_t(s.bindings.source_ai->pointer_28),s.bindings.source_ai->word_10,s.bindings.source_ai->word_14);
 }
 }

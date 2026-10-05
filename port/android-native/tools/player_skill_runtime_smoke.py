@@ -1,9 +1,11 @@
-"""Original Player skill preparation/cooldown composition on API37/16KiB.
+"""Original Player AIS startup/skills/timers composition on API37/16KiB.
 
 The shell fixtures invoke the unchanged skill framework, not a full activation
 or combat lifecycle. Optional --saved-skills checks the integrated saved owner,
 eight Knight updates and full two-result checks. --full-update additionally
-requires all13 Knight/faery callbacks, retained updates and real MP spending.
+requires all13 Knight/faery callbacks, one source InitProcess, retained owners,
+real MP spending and exact reached regeneration. Profile/grants/activation and
+the complete Player AI frame remain unfinished. No compensating heal is used.
 """
 import argparse
 import hashlib
@@ -16,7 +18,87 @@ import zipfile
 from emulator_smoke import inspect, launch_fresh
 
 PACKAGE = 'com.example.dh2'
-BAD = re.compile(r'FATAL EXCEPTION|Fatal signal|Native frame failed|World load failed|Model draw GL error')
+BAD = re.compile(r'FATAL EXCEPTION|Fatal signal|Native frame failed|World load failed|Model draw GL error|Native Player AIS failure retained|Native Player AI timer failed')
+
+AIS_INITIAL = re.compile(r'Native Player AIS initialized \| AI (\S+) \| AIS (\S+) \| active (\S+) \| pending (\S+) \| phase (\d+) \| VM (\S+) \| init mask ([0-9a-f]+) \| HP (-?\d+) / (-?\d+) \| MP (-?\d+) / (-?\d+) \| timer33 (\d+) \| timer34 (\d+)')
+AIS_RETAINED = re.compile(r'Native Player AIS retained \| initialized (\d+) \| AI (\S+) \| AIS (\S+) \| active (\S+) \| pending (\S+) \| phase (\d+) \| timer33 (\d+) \| timer34 (\d+)')
+TIMER_SNAPSHOT = re.compile(r'Native Player AI timer snapshot \| phase (initial|restore) \| event (33|34) \| slot (\d+) \| duration (\d+) \| repeat (-?\d+) \| elapsed (\d+) \| active (\d+) \| paused (\d+) \| ref (\d+) \| delivered (\d+) \| HP (-?\d+) / (-?\d+) \| MP (-?\d+) / (-?\d+)')
+TIMER_DELIVERED = re.compile(r'Native Player AI timer delivered \| event (33|34) \| slot (\d+) \| count (\d+) \| combat (\d+) \| remote (\d+) \| HP rate (\d+) \| MP rate (\d+) \| HP (-?\d+) / (-?\d+) \| MP (-?\d+) / (-?\d+) \| DoT attacks (\d+) \| HP before (-?\d+) \| MP before (-?\d+)')
+
+def source_startup(text):
+    rows = AIS_INITIAL.findall(text)
+    assert len(rows) == 1, 'Player source initialization was missing or replayed'
+    ai, ais, active, pending, phase, vm, mask, hp, max_hp, mp, max_mp, timer33, timer34 = rows[0]
+    assert int(ai,16) and int(ais,16) and int(vm,16), rows[0]
+    assert active == pending == ais and int(phase) == 7 and int(mask,16) == 31, rows[0]
+    # The authored Knight source initial-vitals pass truncates once. The old
+    # preparation path performed another fill; that extra write is not allowed.
+    assert tuple(map(int,(hp,max_hp,mp,max_mp))) == (42264,42265,6975,6976), rows[0]
+    assert (int(timer33),int(timer34))==(0,1), 'fresh source repeat timer order differs'
+    return {'AI':ai,'AIS':ais,'VM':vm,'phase':7,'init_phase_mask':31,
+            'HP':int(hp),'max_HP':int(max_hp),'MP':int(mp),'max_MP':int(max_mp),
+            'timer33':int(timer33),'timer34':int(timer34),'initialization_count':1}
+
+def source_timer_receipts(text, startup, retained=False):
+    snapshots = []
+    for match in TIMER_SNAPSHOT.finditer(text):
+        row = match.groups()
+        item = dict(zip(('phase','event','slot','duration_ms','repeat','elapsed_ms','active','paused','ref','delivered','HP','max_HP','MP','max_MP'),row))
+        item.update({key:int(value,16) if key=='event' else int(value) for key,value in item.items() if key!='phase'})
+        item['event_hex'] = hex(item['event'])
+        item['log_offset'] = match.start()
+        snapshots.append(item)
+    assert len(snapshots)>=2 and [r['event'] for r in snapshots[:2]]==[0x33,0x34], 'source timer snapshots missing'
+    assert len(snapshots)%2==0, 'incomplete timer snapshot pair'
+    prior = {}
+    for offset in range(0,len(snapshots),2):
+        pair=snapshots[offset:offset+2]
+        assert [r['event'] for r in pair]==[0x33,0x34] and pair[0]['phase']==pair[1]['phase']
+        assert pair[0]['HP']==pair[1]['HP'] and pair[0]['MP']==pair[1]['MP'], 'snapshot pair saw different properties'
+        for row in pair:
+            event=row['event']
+            assert row['slot']==startup['timer'+format(event,'x')] and row['duration_ms']==(3000 if event==0x33 else 1000)
+            assert (row['repeat'],row['active'],row['paused'],row['ref'])==(-1,1,0,0), row
+            assert 0<=row['elapsed_ms']<row['duration_ms'], row
+            assert (row['max_HP'],row['max_MP'])==(startup['max_HP'],startup['max_MP'])
+            row['accumulated_source_timer_ms']=row['delivered']*row['duration_ms']+row['elapsed_ms']
+            if event in prior:
+                old=prior[event]
+                assert row['phase']=='restore' and row['duration_ms']==old['duration_ms'], 'timer schedule replaced'
+                assert row['delivered']>=old['delivered'] and row['accumulated_source_timer_ms']>=old['accumulated_source_timer_ms'], 'source timer reset on restore'
+            else:
+                assert row['phase']=='initial' and row['delivered']==row['elapsed_ms']==0, row
+                assert (row['HP'],row['MP'])==(startup['HP'],startup['MP']), 'initial timer snapshot differs from source InitProcess vitals'
+            prior[event]=row
+        # Both repeat timers consume the same actual Coordinator dt stream.
+        # This is a source timer invariant, not an assertion about wall time.
+        assert pair[0]['accumulated_source_timer_ms']==pair[1]['accumulated_source_timer_ms'], pair
+    deliveries=[]
+    previous33=0
+    for match in TIMER_DELIVERED.finditer(text):
+        keys=('event','slot','count','combat','remote','HP_rate','MP_rate','HP','max_HP','MP','max_MP','dot_attacks','HP_before','MP_before')
+        row={key:int(value,16) if key=='event' else int(value) for key,value in zip(keys,match.groups())}
+        row['event_hex'] = hex(row['event'])
+        row['log_offset']=match.start()
+        assert row['slot']==startup['timer'+format(row['event'],'x')] and row['dot_attacks']==0, row
+        assert (row['max_HP'],row['max_MP'])==(startup['max_HP'],startup['max_MP']), row
+        if row['event']==0x33:
+            assert row['count']==previous33+1, 'reached source regeneration count skipped/reset'
+            previous33=row['count']
+            assert (row['combat'],row['remote'],row['HP_rate'],row['MP_rate'])==(0,0,1760,741), row
+            assert row['HP']==min(row['HP_before']+row['HP_rate'],row['max_HP'])
+            assert row['MP']==min(row['MP_before']+row['MP_rate'],row['max_MP']), 'source RegenMP amount/cap differs'
+        else:
+            assert row['HP_rate']==row['MP_rate']==0 and row['HP']==row['HP_before'] and row['MP']==row['MP_before'], 'zero DoT event changed vitals'
+        deliveries.append(row)
+    for row in snapshots:
+        if row['event']==0x33:
+            reached=[r['count'] for r in deliveries if r['event']==0x33 and r['log_offset']<row['log_offset']]
+            assert row['delivered']==(reached[-1] if reached else 0), 'snapshot source count differs from reached33 receipts'
+    if retained:
+        assert sum(row['phase']=='restore' for row in snapshots)>=6, 'all recreation timer snapshots missing'
+        assert previous33>0 and prior[0x33]['accumulated_source_timer_ms']>0
+    return snapshots,deliveries
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
@@ -40,12 +122,14 @@ def main():
     assert a.serial.startswith('emulator-'), 'emulator only'
     out = a.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
-    report = {'validation': 'FAIL', 'scope': 'Live native Player preparation, optional saved-skill/property/check integration and original framework cooldown shell fixture. Full Player AIS/profile/starter grant/skill activation/combat loop remains unfinished.',
+    report = {'validation': 'FAIL', 'scope': 'Live source Player AIS split load/InitProcess, same skill/property/save/buff owners, original timer regeneration and framework cooldown shell fixture. Profile/starter grants, Player AI frame, skill activation and complete combat loop remain unfinished.',
               'apk_sha256': hashlib.sha256(a.apk.read_bytes()).hexdigest(),
               'libraries': inspect(a.apk), 'serial': a.serial}
     transcript = []
     pid = since = last_logs = ''
     prior_rotation = None
+    frozen_mp = None
+    startup = None
     def adb(*args):
         r = subprocess.run([a.adb, '-s', a.serial, *args], capture_output=True, text=True, timeout=45)
         transcript.append({'args': list(args), 'exit_code': r.returncode,
@@ -73,7 +157,43 @@ def main():
         path = out / (name + '.png')
         path.write_bytes(raw)
         return {'file': path.name, 'sha256': hashlib.sha256(raw).hexdigest()}
-    def skill_check(slot, usable, active, mana=6976):
+    def freeze():
+        prior=logs().count('Animation time command applied | time 0')
+        command('ANIMATION_TIME','--ei','time_ms','0')
+        return wait(lambda t:t.count('Animation time command applied | time 0')==prior+1,'freeze source clocks')
+    def resume():
+        prior=logs().count('Animation time command applied | time -1')
+        command('ANIMATION_TIME','--ei','time_ms','-1')
+        return wait(lambda t:t.count('Animation time command applied | time -1')==prior+1,'resume source clocks')
+    def mana_probe(amount, has=None, used=None, before=None, after=None):
+        nonlocal frozen_mp
+        prior=len(re.findall(r'Native Player mana probe \|',logs()))
+        command('PLAYER_MANA','--ei','raw_amount',str(amount))
+        text=wait(lambda t:len(re.findall(r'Native Player mana probe \|',t))==prior+1,'original frozen mana probe')
+        rows=re.findall(r'Native Player mana probe \| amount (\d+) \| has (\d+) \| used (\d+) \| MP before (-?\d+) \| MP after (-?\d+) \| exempt14f0 (\d+) \| options (\d+)',text)
+        row=tuple(map(int,rows[-1]))
+        assert row[0]==amount and row[5:]==(0,0),row
+        for actual,expected in zip(row[1:5],(has,used,before,after)):
+            assert expected is None or actual==expected,row
+        if amount==0:
+            assert row[1:3]==(1,1) and row[3]==row[4], 'zero probe mutated source MP'
+        frozen_mp=row[4]
+        report.setdefault('mana_observations' if amount==0 else 'mana_debits',[]).append(
+            {'amount':amount,'has':row[1],'used':row[2],'MP_before':row[3],'MP_after':row[4]})
+        return text
+    def observe_frozen_mana():
+        return mana_probe(0)
+    def retained_ais(text):
+        if not a.full_update:return
+        assert source_startup(text)==startup, 'source InitProcess receipt changed'
+        rows=AIS_RETAINED.findall(text)
+        assert rows,'retained AIS receipt missing'
+        for row in rows:
+            assert int(row[0])==1 and row[1]==startup['AI'] and row[2]==row[3]==row[4]==startup['AIS'],row
+            assert tuple(map(int,row[5:]))==(7,startup['timer33'],startup['timer34']),row
+        report['AIS_retained']={'same_AI':startup['AI'],'same_AIS':startup['AIS'],'active_equals_pending':True,
+                               'phase':7,'initialization_count':1,'recreations':len(rows)}
+    def skill_check(slot, usable, active, mana=None):
         prior = len(re.findall(r'Native Player skill check probe \|', logs()))
         command('PLAYER_SKILL_CHECK', '--ei', 'skill_slot', str(slot))
         text = wait(lambda t: len(re.findall(r'Native Player skill check probe \|', t)) == prior + 1,
@@ -82,7 +202,8 @@ def main():
         assert rows, 'source skill check did not report both result vectors'
         row = rows[-1]
         assert tuple(map(int, row[1:7])) == (slot, 0, usable, active, 2, 2), row
-        assert int(row[7]) == mana, 'HasMana/check changed the live Knight MP'
+        expected=frozen_mp if mana is None else mana
+        assert expected is not None and int(row[7]) == expected, 'HasMana/check changed the frozen live Knight MP'
         report.setdefault('skill_checks', []).append({'script': row[0], 'slot': slot,
             'saved_level': 0, 'usable': usable, 'active': active, 'return_counts': [2, 2],
             'MP': int(row[7]), 'SnS_Level': int(row[8]), 'temporary_mana_cost': int(row[9])})
@@ -95,6 +216,8 @@ def main():
         row = rows[-1]
         assert tuple(map(int,row[:5])) == (int(write),value,observed,before,after), row
         receipts = report.setdefault('scalar_dictionary',[])
+        if startup is not None:
+            assert (row[5],row[6])==(startup['AIS'],startup['VM']), 'scalar callbacks used a different AIS/VM from source InitProcess'
         assert not receipts or (row[5],row[6]) == (receipts[0]['AIS'],receipts[0]['VM']), 'LuaScript dictionary owner changed'
         receipts.append({'write':write,'input':value,'observed':observed,'entries_before':before,'entries_after':after,'AIS':row[5],'VM':row[6]})
         return text
@@ -145,6 +268,12 @@ def main():
             assert 'rows 16 | slot0 level 0 | source _InitSkills; starter grant/profile load pending' in text
             assert text.count('Native Player saved skills ready |') == 1
         assert text.count('Native Player skill preparation |') == 1
+        if a.full_update:
+            startup=source_startup(text)
+            snapshots,deliveries=source_timer_receipts(text,startup)
+            report['source_startup']=startup
+            report['source_timers']={'snapshots':snapshots,'deliveries':deliveries,
+                'cadence_scope':'Original duration/repeat, actual delivered counts and retained elapsed fields on one Coordinator; no exact wall-clock timing claim.'}
         report['initial'] = {'source_skill_slots': 16, 'source_faery_slots': 5, 'nonnull_instances': 13,
                              'source_paths': 15, 'source_declaration_calls': 26, 'completed_knight_updates': min(callbacks,8),
                              'completed_faery_updates': max(0,callbacks-8),
@@ -152,8 +281,9 @@ def main():
                              'update_vm_status': 0 if a.full_update else -5, 'full_skill_update_complete': a.full_update}
         report['screenshots'] = [screenshot('player-skills-initial')]
         if a.buffs: buff_snapshots(text)
-        command('ANIMATION_TIME', '--ei', 'time_ms', '0')
-        wait(lambda t: 'Animation time command applied | time 0' in t, 'freeze')
+        freeze()
+        observe_frozen_mana()
+        report['initial_frozen_MP']=frozen_mp
         if a.scalar_dictionary:
             scalar_probe(False,0,0,1,2)  # Source missing read inserts one entry.
             scalar_probe(True,7312,7312,2,2)
@@ -178,6 +308,10 @@ def main():
         if a.scalar_dictionary: scalar_probe(False,0,7312,2,2)
         first_vm = re.search(r'Native Player skills retained \| VM (\S+) \| paths 15 \| update attempts (\d+) \| timer callbacks 0', text)
         assert first_vm, 'VM/paths/update attempt not retained'
+        if a.full_update:
+            assert first_vm[1]==startup['VM'],'source VM replaced after startup'
+            retained_ais(text)
+            source_timer_receipts(text,startup)
         assert int(first_vm[2]) > 1 if a.full_update else int(first_vm[2]) == 1
         # Reload resumes the frame; ensure pending cooldown survives recreation.
         adb('shell', 'cmd', 'window', 'user-rotation', 'lock', '1')
@@ -186,49 +320,91 @@ def main():
         assert restores and {row[0] for row in restores} == {first_vm[1]}, 'Player VM replaced on graphics restore'
         if a.full_update: assert int(restores[-1][1]) >= int(first_vm[2])
         assert text.count('Native Player skill preparation |') == 1 and text.count('Native Player skill update blocked |') == expected_blocked
+        retained_ais(text)
         report['restore'] = {'same_process': pid, 'same_vm': first_vm[1], 'reload_and_rotation': True, 'preparation_count': 1,
                              'blocked_update_attempts': expected_blocked, 'observed_update_attempts': [int(row[1]) for row in restores]}
+        freeze()
+        observe_frozen_mana()
         if a.scalar_dictionary:
             scalar_probe(False,0,7312,2,2)
             scalar_probe(True,-37,-37,2,2)
         if a.saved_skills:
             assert text.count('Native Player saved skills ready |') == 1
             skill_check(0, 1, 0)
+        resume()
         text = wait(lambda t: re.search(r'Native Player skill timer callback \| timer ' + str(timer_id) + r' \| callbacks 1 \| slot0 field18 -1', t), 'original cooldown expiry', 35)
         report['cooldown_expiry'] = {'callback_count': 1, 'slot0_field18': -1, 'same_native_timer_id': timer_id}
+        freeze()
+        observe_frozen_mana()
         if a.saved_skills: skill_check(0, 1, 0)
         command('PLAYER_SKILL_COOLDOWN', '--ei', 'delay_ms', '300')
+        resume()
         text = wait(lambda t: re.search(r'Native Player skill timer callback \| timer \d+ \| callbacks 2 \| slot0 field18 -1', t), 'cooldown rearm/expiry')
         assert text.count('Player skill cooldown command applied | Original skill cooldown callback armed') == 2
         report['cooldown_rearm_verified'] = True
         if a.full_update or a.mana_faeries:
-            command('ANIMATION_TIME', '--ei', 'time_ms', '0')
-            wait(lambda t: t.count('Animation time command applied | time 0') >= 2, 'freeze for MP debit')
-            def mana_debit(amount, has, used, before, after):
-                previous = len(re.findall(r'Native Player mana probe \|', logs()))
-                command('PLAYER_MANA', '--ei', 'raw_amount', str(amount))
-                t = wait(lambda t: len(re.findall(r'Native Player mana probe \|', t)) == previous + 1, 'original mana debit')
-                rows = re.findall(r'Native Player mana probe \| amount (\d+) \| has (\d+) \| used (\d+) \| MP before (-?\d+) \| MP after (-?\d+) \| exempt14f0 (\d+) \| options (\d+)', t)
-                assert tuple(map(int,rows[-1])) == (amount,has,used,before,after,0,0), rows[-1]
-                report.setdefault('mana_debits',[]).append({'amount':amount,'has':has,'used':used,'MP_before':before,'MP_after':after})
-            mana_debit(1024,1,1,6976,5952)
-            mana_debit(8000,0,0,5952,5952)
-            skill_check(0,1,0,5952)
-            mana_debit(5952,1,1,5952,0)
+            freeze()
+            observe_frozen_mana()
+            before=frozen_mp
+            assert before>=2048,'Knight source MP insufficient for debit/check fixture'
+            mana_probe(1024,1,1,before,before-1024)
+            remaining=frozen_mp
+            mana_probe(8000,0,0,remaining,remaining)
+            skill_check(0,1,0,remaining)
+            mana_probe(remaining,1,1,remaining,0)
             skill_check(0,0,0,0)
-            mana_debit(1,0,0,0,0)
+            mana_probe(1,0,0,0,0)
+            before_reload=logs()
+            snapshot_count=len(TIMER_SNAPSHOT.findall(before_reload))
             command('RELOAD_WORLD')
-            text = wait(lambda t: t.count('World reload command applied |') == 2, 'retained zero MP')
-            skill_check(0,0,0,0)
+            text = wait(lambda t: t.count('World reload command applied |') == 2, 'retained MP backing before resumed frames')
+            retained_ais(text)
+            if a.full_update:
+                snapshots,deliveries=source_timer_receipts(text,startup)
+                assert len(snapshots)==snapshot_count+2,'zero-MP reload snapshot missing or duplicated'
+                restored=snapshots[-2:]
+                assert all(row['phase']=='restore' and row['MP']==0 for row in restored), 'reload healed/drained source MP before frames'
+                baseline=restored[0]
+                target_count=baseline['delivered']+1
+                def reached_regen(t):
+                    return any(row[0]=='33' and int(row[2])==target_count for row in TIMER_DELIVERED.findall(t))
+                text=wait(reached_regen,'first resumed source33 regeneration',35)
+                snapshots,deliveries=source_timer_receipts(text,startup)
+                first=next(row for row in deliveries if row['event']==0x33 and row['count']==target_count)
+                assert first['log_offset']>baseline['log_offset'] and first['MP_before']==0 and first['MP']==741, 'first resumed source gain differs'
+                freeze()
+                text=observe_frozen_mana()
+                snapshots,deliveries=source_timer_receipts(text,startup,True)
+                resumed=[row for row in deliveries if row['event']==0x33 and row['count']>=target_count]
+                assert resumed and frozen_mp==resumed[-1]['MP'], 'MP changed outside reached source33 while frozen'
+                assert frozen_mp==min(len(resumed)*741,startup['max_MP']), 'source33 rate/count/cap composition differs'
+                skill_check(0,int(frozen_mp>=1024),0,frozen_mp)
+                report['post_reload_source_regeneration']={'MP_at_restore':0,'baseline_count':baseline['delivered'],
+                    'first_count':first['count'],'first_MP_before':0,'first_MP_after':741,'raw_MP_rate':741,
+                    'reached_ticks':len(resumed),'frozen_MP':frozen_mp,'max_MP':startup['max_MP'],
+                    'same_timer_slot':startup['timer33'],'source_duration_ms':baseline['duration_ms'],
+                    'same_VM':startup['VM'],'initialization_count':1,'no_compensating_heal':True}
+                report['source_timers']['snapshots']=snapshots
+                report['source_timers']['deliveries']=deliveries
+            else:
+                freeze()
+                observe_frozen_mana()
+                skill_check(0,0,0,0)
             assert text.count('Native Player skill update blocked |') == expected_blocked
             assert text.count('Native Player saved faeries ready |') == 1
-            report['zero_MP_retained_on_reload'] = True
+            report['zero_MP_at_reload_before_resumed_frames'] = True
             if a.scalar_dictionary:
                 scalar_probe(False,0,-37,2,2)
                 assert report['scalar_dictionary'][0]['VM'] == first_vm[1]
                 report['scalar_dictionary_retained_on_reload_and_rotation'] = True
         report['screenshots'].append(screenshot('player-skills-restored'))
         if a.buffs: buff_snapshots(logs(),True)
+        if a.full_update:
+            text=logs()
+            retained_ais(text)
+            snapshots,deliveries=source_timer_receipts(text,startup,True)
+            report['source_timers']['snapshots']=snapshots
+            report['source_timers']['deliveries']=deliveries
         report['validation'] = 'PASS'
     except Exception as exc:
         report['error'] = str(exc)

@@ -76,6 +76,8 @@ target_sources(dh2_level_world PRIVATE character_skill_cooldown_services.cpp)
 target_sources(dh2_level_world PRIVATE character_player_buffs_v1.cpp)
 target_sources(dh2_level_world PRIVATE player_initial_skill_grants_v1.cpp player_skill_progression_v1.cpp)
 target_sources(dh2_level_world PRIVATE player_ais_lifecycle_v1.cpp)
+target_sources(dh2_level_world PRIVATE character_regen_tick_v1.cpp player_ai_timer_events_v1.cpp)
+target_sources(dh2_level_world PRIVATE character_dot_tick.cpp character_dot_attack.cpp)
 target_sources(dh2_level_world PRIVATE player_skill_tables_adapter.cpp
  character_player_skills_preparation_v3.cpp character_ai_skill_script_update.cpp
  player_skill_session_v1.cpp player_skill_update_session_v1.cpp

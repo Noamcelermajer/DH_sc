@@ -65,7 +65,9 @@ struct LifecycleFixture {
   auto& s=*static_cast<LifecycleFixture*>(raw);++s.backend_calls;
   check(request&&request->character==CHAR&&request->ais==AIS,"backend native identities changed");
   if(s.reenter){s.reenter=false;l::Result nested{};nested.source_return=91;std::string unchanged="sentinel";
-   s.reentry_status=s.runtime->initialize(1,&nested,unchanged);check(s.reentry_status==l::Status::busy&&nested.source_return==91&&unchanged=="sentinel","lifecycle reentry changed output");}
+   s.reentry_status=s.runtime->initialize(1,&nested,unchanged);check(s.reentry_status==l::Status::busy&&
+    s.runtime->load(&nested,unchanged)==l::Status::busy&&s.runtime->initialize_process(1,&nested,unchanged)==l::Status::busy&&
+    nested.source_return==91&&unchanged=="sentinel","lifecycle reentry changed output");}
   if(request->operation==l::Operation::construct_vm){
    ++s.constructor_calls;s.trace.emplace_back("construct");
    check(request->allocation_bytes==0xd8&&request->skip_bind==1&&s.ai.pointer_28==0&&!s.ai.alternate_ais_20&&
@@ -89,7 +91,7 @@ struct LifecycleFixture {
  void failing_updates(){for(const auto& skill:f.catalogue.tables->skills().skills)if(skill.script_length&&!skill.script.empty())f.overlay(("data/scripts/skills/"+skill.script+".luac").c_str(),update_failure);}
 };
 void run(const std::filesystem::path& cache,const std::filesystem::path& temp){
- Catalogue catalogue(cache);unsigned successes=0,failures=0,guards=0;std::vector<std::uint32_t> constructor_words;
+ Catalogue catalogue(cache);unsigned successes=0,failures=0,guards=0,split_cases=0;std::vector<std::uint32_t> constructor_words;
  for(const auto* name:{"KnightPlayerBase","MagePlayerBase","RoguePlayerBase"}){
   LifecycleFixture f(cache,temp/name,catalogue,name);auto* vm=f.f.session->vm();
   f.reenter=true;l::Result result{};std::string error;
@@ -119,11 +121,46 @@ void run(const std::filesystem::path& cache,const std::filesystem::path& temp){
    f.backend_calls==calls&&f.f.owner.get()==owner&&f.f.session->vm()==vm&&f.f.properties.resolved[36]!=f.f.properties.resolved[38],"active source guard replayed init/healed owner");
   check(f.reentry_status==l::Status::busy,"source provider reentry did not reach guard");++successes;++guards;
  }
+ {LifecycleFixture f(cache,temp/"split-load-init",catalogue,"KnightPlayerBase");auto* vm=f.f.session->vm();
+  const auto before=f.f.properties;f.reenter=true;l::Result loaded{},finished{},guarded{};std::string error;
+  check(f.runtime->load(&loaded,error)==l::Status::complete&&loaded.source_return==1&&loaded.init_phase_mask==0&&
+   f.ai.pointer_28==7&&f.ai.active_ais_1c==AIS&&f.ai.alternate_ais_20==AIS&&f.constructor_calls==1&&!f.configure_calls&&
+   !f.preparation_slot&&!f.update_slot&&!f.use_slot&&!f.f.session->statistics().init_vcb_calls&&
+   f.f.properties.base==before.base&&f.f.properties.saved==before.saved&&f.f.properties.resolved==before.resolved&&
+   f.coordinator.timers().count==2&&f.f.session->vm()==vm,"load ran InitProcess or failed source publication");
+  const auto calls=f.backend_calls;const auto statistics=f.f.session->statistics();
+  check(f.runtime->load(&guarded,error)==l::Status::complete&&guarded.source_return==1&&!guarded.service_calls&&!guarded.init_phase_mask&&
+   f.runtime->initialize(1,&guarded,error)==l::Status::complete&&!guarded.source_return&&!guarded.service_calls&&
+   f.backend_calls==calls&&!f.configure_calls&&f.f.properties.resolved==before.resolved&&
+   f.f.session->statistics().load_calls==statistics.load_calls,"loaded source guards replayed constructor or ran InitProcess");
+  // A real caller can change the same live save between source load and finish.
+  // This uses the existing saved-row writer, not an initial-grant/profile body.
+  check(f.save.set_skill_level(0,2,error),error.c_str());
+  check(f.runtime->initialize_process(0,&finished,error)==l::Status::complete&&finished.source_return==1&&
+   finished.init_phase_mask==15&&finished.vitals.init.hp_completed==1&&finished.vitals.init.mp_completed==1&&
+   finished.vitals.hp.current==std::uint32_t(before.resolved[36])&&finished.vitals.mp.current==std::uint32_t(before.resolved[41])&&
+   finished.update.callbacks==13&&f.constructor_calls==1&&f.configure_calls==1&&f.f.session->statistics().init_vcb_calls==1&&
+   f.save.skill_level(0)==2&&f.f.session->vm()==vm,"split InitProcess duplicated or lost live save/VM effects");
+  const auto hp=f.f.properties.resolved[36],mp=f.f.properties.resolved[41];auto* owner=f.f.owner.get();
+  check(f.runtime->load(&guarded,error)==l::Status::complete&&!guarded.service_calls&&
+   f.runtime->initialize(1,&guarded,error)==l::Status::complete&&!guarded.source_return&&!guarded.service_calls&&
+   f.f.properties.resolved[36]==hp&&f.f.properties.resolved[41]==mp&&f.f.owner.get()==owner&&
+   f.constructor_calls==1&&f.configure_calls==1&&f.f.session->statistics().init_vcb_calls==1,"split compatibility guard duplicated heal/VM/preparation");
+  check(f.reentry_status==l::Status::busy,"split load did not share busy guard");++successes;++split_cases;++guards;}
  {LifecycleFixture f(cache,temp/"constructor-failure",catalogue,"KnightPlayerBase");f.fail_constructor=true;l::Result result{};std::string error;
   check(f.runtime->initialize(1,&result,error)==l::Status::failed&&!f.ai.pointer_28&&!f.ai.active_ais_1c&&!f.ai.alternate_ais_20&&
    f.fields.script.owner_98==0xdead000002ull&&f.f.ais.flags_b8==0xffffffff&&!f.coordinator.timers().count,"failed Lua construction fabricated later fields/phase");
   auto before=result;const auto calls=f.backend_calls;error="sentinel";
   check(f.runtime->initialize(1,&result,error)==l::Status::failed&&!std::memcmp(&result,&before,sizeof(result))&&error=="sentinel"&&calls==f.backend_calls,"failed lifecycle automatically replayed source prefix");++failures;}
+ {LifecycleFixture f(cache,temp/"split-configure-failure",catalogue,"KnightPlayerBase");l::Result result{};std::string error;
+  check(f.runtime->load(&result,error)==l::Status::complete&&!result.init_phase_mask,"split failure fixture load initialized skills");
+  f.fail_configure=true;check(f.runtime->initialize_process(1,&result,error)==l::Status::failed&&
+   result.init_phase_mask==3&&f.ai.pointer_28==7&&f.ai.active_ais_1c==AIS&&f.ai.alternate_ais_20==AIS&&
+   f.constructor_calls==1&&f.configure_calls==1&&!f.preparation_slot,"split failure rolled back publication or ran update/post");
+  const auto before=result;const auto calls=f.backend_calls;error="sentinel";
+  check(f.runtime->load(&result,error)==l::Status::failed&&f.runtime->initialize_process(1,&result,error)==l::Status::failed&&
+   f.runtime->initialize(1,&result,error)==l::Status::failed&&!std::memcmp(&result,&before,sizeof(result))&&
+   error=="sentinel"&&f.backend_calls==calls,"split methods did not share retained failure latch");++failures;++split_cases;}
  {LifecycleFixture f(cache,temp/"configure-failure",catalogue,"KnightPlayerBase");f.fail_configure=true;l::Result result{};std::string error;
   check(f.runtime->initialize(1,&result,error)==l::Status::failed&&f.ai.pointer_28==7&&f.ai.active_ais_1c==AIS&&
    f.ai.alternate_ais_20==AIS&&result.init_phase_mask==3&&f.coordinator.timers().count==2&&!f.preparation_slot,"failed configure erased source phase7 or ran update/post");++failures;}
@@ -140,7 +177,13 @@ void run(const std::filesystem::path& cache,const std::filesystem::path& temp){
   auto& authored=const_cast<dh2::data::AiProps*>(dh2::data::ai_props(f.ai_tables,f.f.properties.resolved[1]))->script;
   check(f.runtime->initialize(1,&result,authored)==l::Status::invalid_argument&&authored=="__player__"&&result.source_return==44&&
    !f.ai.pointer_28&&!f.ai.active_ais_1c&&!f.constructor_calls,"error output alias mutated borrowed authored declaration");++guards;}
- std::cout<<"{\"validation\":\"PASS\",\"real_player_classes\":3,\"completed_lifecycles\":"<<successes<<",\"failure_prefix_cases\":"<<failures<<",\"guard_cases\":"<<guards<<",\"constructor_scalar_words\":[";
+ {LifecycleFixture f(cache,temp/"split-guards",catalogue,"KnightPlayerBase");l::Result result{};result.source_return=44;std::string error="sentinel";
+  auto& authored=const_cast<d::AiProps*>(d::ai_props(f.ai_tables,f.f.properties.resolved[1]))->script;
+  check(f.runtime->load(&result,authored)==l::Status::invalid_argument&&authored=="__player__"&&
+   f.runtime->initialize_process(2,&result,error)==l::Status::invalid_argument&&
+   f.runtime->initialize_process(1,reinterpret_cast<l::Result*>(&f.ai),error)==l::Status::invalid_argument&&
+   result.source_return==44&&error=="sentinel"&&!f.ai.pointer_28&&!f.constructor_calls,"split API guard changed borrowed controls");++guards;}
+ std::cout<<"{\"validation\":\"PASS\",\"real_player_classes\":3,\"completed_lifecycles\":"<<successes<<",\"failure_prefix_cases\":"<<failures<<",\"guard_cases\":"<<guards<<",\"split_phase_cases\":"<<split_cases<<",\"constructor_scalar_words\":[";
  for(std::size_t i=0;i<constructor_words.size();++i)std::cout<<(i?",":"")<<constructor_words[i];
  std::cout<<"],\"constructor_tree_empty\":true,\"source_phase7_published\":true,\"single_retained_vm\":true,\"actual_coordinator_timers\":true,\"selected_native_build\":false,\"live_gameplay\":false}\n";
 }

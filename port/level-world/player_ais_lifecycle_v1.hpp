@@ -72,11 +72,22 @@ struct Result {
 class Runtime {
 public:
     explicit Runtime(Bindings);
+    // Exact LoadScriptProcess: advances load/publication only. It does not
+    // deliver vitals, preparation, skill update, Post or Final. Source phase 7
+    // permits the caller's real profile/equipment/slot work before InitProcess.
+    Status load(Result*,std::string& error);
+    // Exact InitScriptProcess, delivered by its owning caller after load.
+    // This source operation has no active/replay guard: every explicit call
+    // runs vitals/configure/update/Post and optional Final. Deliver it once at
+    // the actual InitPost boundary; this adapter invents no readiness guard.
+    Status initialize_process(std::uint32_t init_final,Result*,std::string& error);
     // Complete is successful source-call delivery, not a readiness verdict.
-    // source_return 0 means no newly completed InitProcess; callers must retain
+    // For initialize (LoadNInit), source_return 0 means no newly completed
+    // InitProcess; callers must retain
     // their full initialization result across the original active guard.
     Status initialize(std::uint32_t init_final,Result*,std::string& error);
 private:
+    Status execute(character::ScriptLifecycleOperation,std::uint32_t,Result*,std::string&);
     Bindings bindings_;
     bool busy_=false,failed_=false;
 };
