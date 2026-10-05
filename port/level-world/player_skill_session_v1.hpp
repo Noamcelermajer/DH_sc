@@ -6,6 +6,7 @@
 #include "debug_switches_runtime.hpp"
 #include "lua_script_load_once.hpp"
 #include "../adam-script-runtime/script_runtime.h"
+#include "../adam-script-runtime/script_int_bindings.hpp"
 #include <memory>
 
 namespace dh2::player_skill_session_v1 {
@@ -42,6 +43,10 @@ struct Configuration {
     debug_switches::Globals* debug=nullptr;
     debug_switches::Services debug_services{};
     Providers providers;
+    // Optional genuine source32 identity/printf services. String-keyed skill
+    // integers need neither. Unsupported projections stop as required failures.
+    dh2_script_int_identity integer_identity=nullptr;
+    dh2_script_int_format_fraction integer_format_fraction=nullptr;
     std::string initial_path="data/scripts/ai/";
 };
 enum class Stage {created,ais_bound,character_bound,faulted};

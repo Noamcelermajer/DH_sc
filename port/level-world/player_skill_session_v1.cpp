@@ -20,12 +20,18 @@ void VmDeleter::operator()(dh2_script_vm* p)const noexcept{dh2_script_vm_destroy
 struct Session::Impl {
     struct Binding {Impl* self;NativeRequest request;};
     Vm vm;Configuration config;dh2_script_aliases* aliases=nullptr;
+    std::unique_ptr<dh2_script_int_map,decltype(&dh2_script_int_destroy)> integers{nullptr,dh2_script_int_destroy};
+    dh2_script_int_bindings integer_receiver{};
     lua_script_load_once::State cache;
     std::vector<std::unique_ptr<Binding>> bindings;
     std::vector<Resource> resources;
     Statistics stats;std::string path,error;Stage stage=Stage::created;bool busy=false;
-    Impl(Vm v,Configuration c):vm(std::move(v)),config(std::move(c)),path(config.initial_path){}
-    ~Impl(){busy=true;vm.reset();config.providers.lifetime.reset();dh2_script_alias_destroy(aliases);}
+    Impl(Vm v,Configuration c):vm(std::move(v)),config(std::move(c)),path(config.initial_path){
+        integers.reset(dh2_script_int_create());
+        if(!integers)throw std::bad_alloc();
+        integer_receiver={integers.get(),config.providers.context,config.integer_identity,config.integer_format_fraction,0};
+    }
+    ~Impl(){busy=true;dh2_script_int_clear_contents(integers.get());vm.reset();config.providers.lifetime.reset();dh2_script_alias_destroy(aliases);}
     int failure(char* text,std::size_t size,const char* why){
         ++stats.required_failures;if(text && size)std::snprintf(text,size,"%s",why);
         return DH2_SCRIPT_REQUIRED_SERVICE_FAILURE;
@@ -38,6 +44,13 @@ struct Session::Impl {
         try {
             if(b.request.domain==Domain::ais) {
                 using F=ais_native_bindings::Function;auto f=b.request.ais_function;
+                if(f==F::set_int || f==F::get_int) {
+                    const auto callback=f==F::set_int?dh2_script_int_set_callback:dh2_script_int_get_callback;
+                    const int status=callback(&s.integer_receiver,args,count,out,capacity,returned,text,size);
+                    // Preserve the reconstruction's visible required-service
+                    // boundary even when Lua catches an unsupported projection.
+                    return status?s.failure(text,size,"unsupported source private integer projection"):0;
+                }
                 if(f==F::add_to_vf_table || f==F::push_vf_table || f==F::pop_vf_table) {
                     int status=f==F::add_to_vf_table?dh2_script_alias_add_values(s.aliases,args,count):
                         f==F::push_vf_table?dh2_script_alias_push(s.aliases):dh2_script_alias_pop(s.aliases);

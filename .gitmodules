@@ -1,0 +1,3 @@
+[submodule "adam-reconstruction"]
+	path = upstream/adam
+	url = https://github.com/AdamCelermajer/DH_sc.git
