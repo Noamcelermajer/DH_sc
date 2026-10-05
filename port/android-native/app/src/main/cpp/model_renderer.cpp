@@ -11,6 +11,7 @@
 #include "animation_scheduler.hpp"
 #include "animation_bank.hpp"
 #include "class_tables.hpp"
+#include "class_preview_setup.hpp"
 #include "skill_tables.hpp"
 #include "player_savegame_v1.hpp"
 #include "savegame_options_v1.hpp"
@@ -63,6 +64,9 @@
 #include "../../../../../player-info-level/player_manager_host_level.hpp"
 #include "../../../../../player-info-level/player_locality_v1.hpp"
 #include "native_player_profile.hpp"
+#include "native_menu_runtime.hpp"
+#include "character_saved_class_v1.hpp"
+#include "../../../../../player-info-level/player_local_selection_v1.hpp"
 #include "navigation_producers.hpp"
 #include <GLES2/gl2.h>
 #include <android/log.h>
@@ -130,6 +134,11 @@ std::vector<ObjectActor> saved_actors;
 struct PlayerCombat {
  dh2::data::PropertyState properties;dh2::data::CombatActorState life;
  std::shared_ptr<dh2::data::PlayerSavegameV1> savegame;
+ std::shared_ptr<dh2::data::PlayerSaveProfileV1> save_profile;
+ std::shared_ptr<const dh2::data::CharacterTable> profile_characters;
+ std::shared_ptr<dh2::native::player_profile::Transport> save_transport;
+ std::int16_t property_cache=-1,template_cache=-1;
+ std::int32_t character_class=-1;
  int animation_table=-1,target=-1;unsigned attempts=0,received=0;
  bool pending_death=false;std::uint64_t death_target=0;
  AggroStorage aggro;
@@ -146,6 +155,11 @@ struct PlayerCombat {
  std::uintptr_t self_fx_1484=0,state_fx_148c=0,highlight_fx_14a0=0;
 };
 PlayerCombat prince_combat;
+std::int32_t requested_player_class=-1;
+std::int32_t menu_gameplay_slot=-1;
+// MenuMainMenu's preview selection is separate from PlayerInfo::saveSlot664.
+// The original Character/plane producer has not been reconstructed here.
+struct MenuPreviewSelection {std::int32_t slot=-1;std::uintptr_t character=0,plane=0;} menu_preview_selection;
 SearchObjectProjection prince_search_projection{};
 struct NativeMonsterInitialization;
 struct NativeCharAIProjection {
@@ -273,6 +287,8 @@ struct NativeHostPlayer {
  dh2::player_locality_v1::Matching matching{};
  dh2::player_locality_v1::Matching* matching_singleton=nullptr;
  std::int32_t matching_provider=1;
+ std::int32_t save_slot_664=-1,last_slot_8=-1;
+ dh2::player_local_selection_v1::SavegameManager save_manager{reinterpret_cast<std::uintptr_t>(&save_manager),&last_slot_8};
  int metadata_slot=-1;
  std::unique_ptr<dh2::native::player_profile::Metadata> metadata;
  std::uint8_t online=0; // Explicit offline development session; no network owner.
@@ -1214,7 +1230,7 @@ void sync_search_world() {
  return 0;
 }
 }
-GLint position,texcoord,color,mvp,texture_matrix,material_color,has_alpha,alpha_ref;
+GLint position,texcoord,color,mvp,texture_matrix,material_color,has_alpha,alpha_ref,original_alpha_blue;
 void check(const char* operation){
   auto code=glGetError();if(code!=GL_NO_ERROR){char b[128];std::snprintf(b,sizeof(b),"%s GL error 0x%04x",operation,code);throw std::runtime_error(b);}
 }
@@ -1227,9 +1243,9 @@ void create_program(){
 uniform mat4 mvp;uniform mat4 texture_matrix;varying vec2 uv;varying vec4 tint;
 void main(){gl_Position=mvp*vec4(position,1.0);uv=(texture_matrix*vec4(texcoord,0.0,1.0)).xy;tint=color;})";
   const char* fs=R"(precision mediump float;uniform sampler2D diffuse;uniform sampler2D alpha_map;
-uniform float has_alpha;uniform float alpha_ref;uniform vec4 material_color;varying vec2 uv;varying vec4 tint;
+uniform float has_alpha;uniform float alpha_ref;uniform float original_alpha_blue;uniform vec4 material_color;varying vec2 uv;varying vec4 tint;
 void main(){vec4 c=texture2D(diffuse,uv)*tint*material_color;
-if(has_alpha>0.5)c.a*=texture2D(alpha_map,uv).r;if(c.a<=max(alpha_ref,0.0039))discard;gl_FragColor=c;})";
+if(has_alpha>0.5){if(original_alpha_blue>0.5)c.a=texture2D(alpha_map,uv).b;else c.a*=texture2D(alpha_map,uv).r;}if(c.a<=max(alpha_ref,0.0039))discard;gl_FragColor=c;})";
   GLuint v=shader(GL_VERTEX_SHADER,vs),f=0;
   try{f=shader(GL_FRAGMENT_SHADER,fs);}catch(...){glDeleteShader(v);throw;}
   program=glCreateProgram();glAttachShader(program,v);glAttachShader(program,f);glLinkProgram(program);glDeleteShader(v);glDeleteShader(f);
@@ -1237,6 +1253,7 @@ if(has_alpha>0.5)c.a*=texture2D(alpha_map,uv).r;if(c.a<=max(alpha_ref,0.0039))di
   position=glGetAttribLocation(program,"position");texcoord=glGetAttribLocation(program,"texcoord");color=glGetAttribLocation(program,"color");
   mvp=glGetUniformLocation(program,"mvp");texture_matrix=glGetUniformLocation(program,"texture_matrix");material_color=glGetUniformLocation(program,"material_color");
   has_alpha=glGetUniformLocation(program,"has_alpha");alpha_ref=glGetUniformLocation(program,"alpha_ref");
+  original_alpha_blue=glGetUniformLocation(program,"original_alpha_blue");
 }
 void release(std::vector<Draw>& batches,std::vector<GLuint>& textures){
   for(auto& b:batches){if(b.vertices)glDeleteBuffers(1,&b.vertices);if(b.indices)glDeleteBuffers(1,&b.indices);}
@@ -1264,14 +1281,16 @@ void initialize_native_player_skills(AAssetManager* assets,bool restore){
  if(restore&&prince_skills){prince_skills->restore(assets,prince_source_ai.get(),actor_skill_catalogue.get());return;}
  if(!prince_source_ai||!actor_skill_catalogue)throw std::runtime_error("Native Player skill owners missing");
  if(!prince_combat.savegame){
-  auto saved=std::make_shared<dh2::data::PlayerSavegameV1>();
-  saved->set_character(prince_source_ai->character_identity);
+  prince_combat.savegame=std::make_shared<dh2::data::PlayerSavegameV1>();
+  prince_combat.savegame->set_character(prince_source_ai->character_identity);
+ }
+ if(!prince_combat.savegame->skills_initialized()){
+  const auto& saved=prince_combat.savegame;
   auto view=dh2::data::property_view(actor_property_rules,prince_combat.properties);
   std::int32_t selector=0;std::string error;
   if(dh2_property_resolve(&view,28,&selector)||!saved->initialize_skills(actor_skill_catalogue->tables->skills(),selector,error))
    throw std::runtime_error("Native Player saved-skill initialization: "+error);
   saved->initialize_faeries();
-  prince_combat.savegame=std::move(saved);
  }
  dh2::native::player_skills::Bindings b{};
  b.character=prince_source_ai->character_identity;b.ai=prince_source_ai->ai_identity;
@@ -1361,19 +1380,95 @@ Matrix camera(int width,int height){
   }
   return result;
 }
+#include "model_menu_scene_v69.hpp"
 }
 void mod_directory(std::string directory){mod_root=std::move(directory);}
-void runtime_directory(std::string directory){runtime_root=std::move(directory);}
+void runtime_directory(std::string directory){runtime_root=std::move(directory);if(!native_application.identity)native_application.identity=reinterpret_cast<std::uintptr_t>(&native_application);}
 std::string profile_slot(int slot){
  if(slot < -1)return "Campaign metadata slot rejected";
  if(native_host.metadata_slot!=slot){native_host.metadata.reset();native_host.metadata_slot=slot;}
  return "Campaign metadata slot selected; player registration remains pending";
+}
+bool menu_debug_load(AAssetManager* assets,std::string& error){
+ if(!native_debug){
+  try{const auto seed=read(assets,"DebugSwitches.savegame","data");auto backend=std::make_unique<dh2::native::debug_files::Backend>();
+   if(!backend->initialize(runtime_root,seed.data(),seed.size(),error))return false;native_debug=std::move(backend);
+  }catch(const std::exception& e){error=e.what();return false;}
+ }
+ if(native_debug->runtime().load(native_debug->globals(),native_debug->services())!=dh2::debug_switches::Status::complete){error="Shared DebugSwitches load failed";return false;}
+ error.clear();return true;
+}
+bool menu_debug_query(AAssetManager* assets,const char* key,std::string& error){
+ if(!key){error="DebugSwitches key unavailable";return false;}
+ if(!native_debug&&!menu_debug_load(assets,error))return false;
+ std::uint8_t value=0;
+ if(native_debug->runtime().get_switch(key,native_debug->globals(),native_debug->services(),value)!=dh2::debug_switches::Status::complete){error="Shared DebugSwitches query failed";return false;}
+ error.clear();return true;
+}
+bool create_menu_save_slot(AAssetManager* assets,const std::string& name,const std::string& class_name,std::int32_t& slot,bool& published,std::string& error,void* count_context,bool (*count)(void*,std::uint32_t*,std::string&)){
+ return dh2::native::menu::create_profile(assets,runtime_root,&native_save_difficulty,&native_host.online,count_context,count,name,class_name,slot,published,error);
+}
+static dh2::player_local_selection_v1::Services menu_selection_services(dh2::player_locality_v1::Services& queries){
+ using namespace dh2::player_local_selection_v1;
+ queries=native_host.locality_services();
+ queries.internal_id_player=[](void* raw,const Registry* registry,std::int32_t id,std::uint32_t flag,PlayerInfo** out)->std::int32_t {
+  auto& self=*static_cast<NativeHostPlayer*>(raw);if(registry!=&self.registry)return 1;
+  auto services=self.services();dh2::player_manager_host_level::Result result{};
+  return dh2::player_manager_host_level::get_player_by_internal_id(registry,&services,id,flag,out,&result)==dh2::player_manager_host_level::Status::complete?0:1;
+ };
+ Services s{};s.context=&native_host;s.queries=&queries;
+ s.application=[](void*,std::uintptr_t* out)->std::int32_t{if(!native_application.identity)return 1;*out=native_application.identity;return 0;};
+ s.savegame_manager_4c=[](void* raw,std::uintptr_t app,SavegameManager** out)->std::int32_t{if(app!=native_application.identity)return 1;*out=&static_cast<NativeHostPlayer*>(raw)->save_manager;return 0;};
+ s.player_manager_40=[](void* raw,std::uintptr_t app,const Registry** out)->std::int32_t{if(app!=native_application.identity)return 1;*out=&static_cast<NativeHostPlayer*>(raw)->registry;return 0;};
+ s.local_controller_66c=[](void* raw,PlayerInfo* p,std::uint8_t* out)->std::int32_t{if(p!=&static_cast<NativeHostPlayer*>(raw)->player)return 1;*out=1;return 0;};
+ s.internal_id_670=[](void* raw,PlayerInfo* p,std::int32_t* out)->std::int32_t{if(p!=&static_cast<NativeHostPlayer*>(raw)->player)return 1;*out=p->internal_id;return 0;};
+ s.save_slot_664=[](void* raw,PlayerInfo* p,std::int32_t** out)->std::int32_t{auto& self=*static_cast<NativeHostPlayer*>(raw);if(p!=&self.player)return 1;*out=&self.save_slot_664;return 0;};
+ return s;
+}
+bool assign_menu_save_slot(std::int32_t slot,std::int32_t ordinal,std::string& error){
+ dh2::player_locality_v1::Services queries;auto services=menu_selection_services(queries);dh2::player_local_selection_v1::Result result{};
+ if(dh2::player_local_selection_v1::assign_save_slot_to_player(&services,slot,ordinal,&result)!=dh2::player_local_selection_v1::Status::complete){error="Source save-slot assignment failed";return false;}
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native menu slot assigned | slot %d | ordinal %d | manager stores %u | player stores %u | Character association pending",slot,ordinal,result.last_slot_writes,result.player_slot_writes);error.clear();return true;
+}
+bool selected_menu_save_slot(std::int32_t& slot,std::string& error){
+ dh2::player_locality_v1::Services queries;auto services=menu_selection_services(queries);dh2::player_local_selection_v1::Result result{};
+ if(dh2::player_local_selection_v1::get_local_player(&native_host.registry,&services,0,0,&result)!=dh2::player_local_selection_v1::Status::complete){error="Source local-player selection failed";return false;}
+ std::int32_t* value=nullptr;if(services.save_slot_664(services.context,result.player,&value)||!value||*value<0){error="Start Game has no assigned save slot";return false;}
+ slot=*value;error.clear();return true;
+}
+bool select_menu_preview_slot(std::int32_t slot,bool force,std::string& error){
+ if(menu_preview_selection.slot==slot&&!force){error.clear();return true;}
+ // The source DestroyCharacter null check and SetupCharacter null-plane gate
+ // are reached. The background mesh is not a fabricated Character owner.
+ if(menu_preview_selection.character||menu_preview_selection.plane){error="Source menu avatar owner requires reconstruction";return false;}
+ menu_preview_selection.slot=slot;
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native menu preview selection | slot %d | force %d | avatar producer pending",slot,force);
+ error.clear();return true;
+}
+bool request_menu_start(bool numeric,std::int32_t requested,std::int32_t& slot,std::string& error){
+ // The authored button has already called the real NativeAssign service.
+ // This bounded development continuation starts Crypt on Normal. Complete
+ // NativeStartGame temporary Save/SG_Save/online/LoadLevel effects are open.
+ if((numeric&&requested!=0)||native_save_difficulty!=0){error="This development build currently starts Crypt on Normal difficulty";return false;}
+ if(!selected_menu_save_slot(slot,error))return false;
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Development Crypt start requested | slot %d | numeric %d | requested difficulty %d | full source level transition pending",slot,numeric,requested);
+ return true;
+}
+std::string start_menu_game(std::int32_t slot,AAssetManager* assets){
+ std::string error;std::int32_t assigned=-1;
+ if(!selected_menu_save_slot(assigned,error))return error;
+ if(assigned!=slot)return "Start Game selected slot differs";
+ menu_gameplay_slot=assigned;
+ try{const auto descriptor=read(assets,"crypt01.dwld","worlds");return load_world(descriptor.data(),descriptor.size(),assets);}
+ catch(const std::exception& e){return std::string("Start Game failed: ")+e.what();}
 }
 std::vector<std::uint8_t> read_asset(AAssetManager* assets,const std::string& name){return read(assets,name,"");}
 void reset_context(){
  // EGL has already replaced the context. Forget its old GPU names before a
  // fallible CPU snapshot; deleting those names here could affect the new context.
  program=0;enabled=false;native_actor_ready=false;draws.clear();images.clear();
+ // These preview GPU names belonged to the replaced EGL context as well.
+ class_preview_actors.clear();menu_background=false;class_scene=false;
  for(auto& group:object_groups)group.draws.clear();
  const bool retain=world_mode||resume_world;
  if(world_mode){
@@ -1393,6 +1488,7 @@ void reset_context(){
 }
 void deactivate(){
  source_camera={};
+ release_class_previews();menu_background=false;class_scene=false;
   prince_skills.reset();prince_source_ai.reset();
  // Terminal discard differs from GL recreation: clear every actor copy after
  // retiring timers and tearing down bodies, then release the owning groups.
@@ -1470,9 +1566,13 @@ static std::string load_scene(const std::uint8_t* bytes,std::size_t size,AAssetM
       // Preview equipment selection is explicit. The game normally chooses
       // modular controllers dynamically; the serialized scene lists a shadow.
       const auto node=unsigned(prince-scene.graph.begin());scene.instances.clear();
+      const char* visual_class="warrior";const char* idle_class="knight";
+      if(preserve_level_session&&requested_player_class==325){visual_class="rogue";idle_class="rogue";}
+      else if(preserve_level_session&&requested_player_class==290){visual_class="mage";idle_class="mage";}
+      const auto module_suffix=std::string("_default_")+visual_class+"-mesh-skin";
       for(unsigned i=0;i<dh2_bres_library_count(&view,dh2::resources::Library::controller);++i){
         dh2::skinning::Skin skin;if(!dh2::skinning::load(view,i,scene,skin,error))throw std::runtime_error(error);
-        if(skin.id.find("_default_warrior-mesh-skin")==std::string::npos)continue;
+        if(skin.id.find(module_suffix)==std::string::npos)continue;
         dh2::assets::Mesh mesh{};dh2_mesh_open(&mesh,&view,skin.geometry);
         dh2::scene::Instance instance{prince->id,node,skin.geometry,prince->world,{}};instance.controller=i;
         for(unsigned j=0;j<mesh.primitives;++j){dh2::assets::Primitive primitive{};dh2_mesh_primitive(&mesh,j,&primitive);
@@ -1480,8 +1580,8 @@ static std::string load_scene(const std::uint8_t* bytes,std::size_t size,AAssetM
           if(material==scene.materials.end())throw std::runtime_error("Unresolved equipment material");instance.materials.push_back(material-scene.materials.begin());}
         scene.instances.push_back(std::move(instance));
       }
-      if(scene.instances.size()!=4)throw std::runtime_error("Incomplete warrior equipment preview");
-      auto clip=read(assets,"prince_menu_idle_knight.bdae","animations");
+      if(scene.instances.size()!=4)throw std::runtime_error(std::string("Incomplete ")+visual_class+" equipment preview");
+      auto clip=read(assets,std::string("prince_menu_idle_")+idle_class+".bdae","animations");
       if(!candidate_player.load(clip.data(),clip.size(),scene,error))throw std::runtime_error("Animation load failed: "+error);
       if(!candidate_player.sample(scene,0,error))throw std::runtime_error(error);
     }else if(!candidate_player.load(bytes,size,scene,error))throw std::runtime_error("Animation load failed: "+error);
@@ -1530,6 +1630,7 @@ static std::string load_scene(const std::uint8_t* bytes,std::size_t size,AAssetM
     // A standalone model ends the world, including saved actor copies and
     // retained script/CPU Player owners. Candidate GPU resources remain local.
     if(preserve_level_session)clear_actor_world(true);else deactivate();
+    release_class_previews();menu_background=false;class_scene=false;
     release_objects(object_groups);world_objects.clear();inspected_object=-1;release(draws,images);draws=std::move(candidate);images=std::move(textures);radius=next_radius;
     if(!preserve_level_session){
       __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player preview owners retired | bank %zu | retained pose %u | skill owner %u | AI owner %u",
@@ -2493,18 +2594,59 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
      const auto& receipt=native_host.metadata->receipt();
      __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native campaign metadata | slot %d | class %d | level %d | difficulty %d | level ID %u | sections %u | reads %u | file opens %u | Save %zu | profile %zu | source mask1 import; gameplay registration/mask4/writes pending",receipt.slot,receipt.character_class,receipt.level,receipt.difficulty,receipt.source_level_id,receipt.sections,receipt.field_reads,receipt.file_opens,std::size_t(native_host.metadata->save_identity()),std::size_t(native_host.metadata->profile_identity()));
     }
-    const auto knight=std::find(character_table.names.begin(),character_table.names.end(),"KnightPlayerBase");if(knight==character_table.names.end())throw std::runtime_error("Original default player preset missing");
-    PlayerCombat fresh_player;dh2::data::reset_properties(property_rules,fresh_player.properties,&character_table.rows.at(knight-character_table.names.begin()));
+    PlayerCombat fresh_player;
+    fresh_player.savegame=std::make_shared<dh2::data::PlayerSavegameV1>();
+    fresh_player.savegame->set_character(prince_character.owner());
+    fresh_player.savegame->set_slot(menu_gameplay_slot);
+    fresh_player.save_profile=std::make_shared<dh2::data::PlayerSaveProfileV1>();
+    fresh_player.profile_characters=std::make_shared<dh2::data::CharacterTable>(character_table);
+    fresh_player.save_transport=std::make_shared<dh2::native::player_profile::Transport>(*fresh_player.savegame,*fresh_player.save_profile);
+    if(!fresh_player.save_transport->bind({runtime_root,fresh_player.profile_characters.get(),&native_save_difficulty,{}},error))throw std::runtime_error(error);
+    auto* gameplay_save=fresh_player.savegame.get();auto* gameplay_loader=&fresh_player.save_transport->loader();
+    struct ClassificationBacking {const dh2::data::AiTables& tables;std::vector<dh2::character_ai_classification::AiRow> rows;dh2::character_ai_classification::AiTable table;};
+    ClassificationBacking classification{ai_tables,{}, {}};
+    for(const auto& row:ai_tables.rows)classification.rows.push_back({row.flags,row.type});
+    classification.table={classification.rows.data(),std::uint32_t(classification.rows.size())};
+    dh2::character_saved_class_v1::Bindings saved_class{};
+    saved_class.character=prince_character.owner();saved_class.property_cache=&fresh_player.property_cache;saved_class.template_cache=&fresh_player.template_cache;
+    saved_class.characters=&character_table;saved_class.current_savegame=&gameplay_save;saved_class.current_loader=&gameplay_loader;
+    saved_class.services={&classification,[](void* context,std::uintptr_t character,std::uint32_t* value,std::string& failure)->int {
+     using namespace dh2::character_ai_classification;auto& backing=*static_cast<ClassificationBacking*>(context);
+     // Native development factory supplies the original _AddCharacter name
+     // form. Uninitialized cached AI/faction words follow the source getters.
+     State state{character,-1,-1,"PlayerCharacter_0",0};
+     Services services{&backing,[](void* raw,State*,const Request* q,Response* r)->std::int32_t {
+      auto& b=*static_cast<ClassificationBacking*>(raw);
+      switch(q->operation){case Operation::ai_count:r->count=std::int32_t(b.tables.rows.size());return 0;
+       case Operation::faction_count:r->count=std::int32_t(b.tables.factions.size());return 0;
+       case Operation::ai_table:r->table=&b.table;return 0;
+       case Operation::find_player_name:if(!q->name)return 1;r->match=std::strstr(q->name,"PlayerCharacter");return 0;}
+      return 1;
+     }};Result result{};
+     if(query(Query::player,&state,&services,&result)!=Status::complete){failure="Source startup IsPlayer query failed";return 1;}
+     *value=result.word;return 0;
+    }};
+    dh2::character_saved_class_v1::Runtime class_owner(saved_class);dh2::character_saved_class_v1::Result class_result;
+    if(class_owner.resolve(&class_result,error)!=dh2::character_saved_class_v1::Status::complete||class_result.value<0||std::size_t(class_result.value)>=character_table.rows.size())throw std::runtime_error("Gameplay class load failed: "+error);
+    fresh_player.character_class=class_result.value;
+    if(restore&&prince_combat.character_class!=fresh_player.character_class)throw std::runtime_error("Retained gameplay class differs from its saved profile");
+    requested_player_class=fresh_player.character_class;
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native gameplay class | slot %d | class %d | preset %s | player queries %u | mask1 calls %u | publications %u | own Save %zu | profile %zu",menu_gameplay_slot,class_result.value,character_table.names.at(class_result.value).c_str(),class_result.player_queries,class_result.load_calls,class_result.property_publications,std::size_t(gameplay_save),std::size_t(fresh_player.save_profile->identity));
+    dh2::data::reset_properties(property_rules,fresh_player.properties,&character_table.rows.at(fresh_player.character_class));
     fresh_player.aggro.initialize(object_records.size()+1);
     // Player vitals now initialize once through actual AIS InitProcess after
     // publication, with the retained Debug/property providers. The separate
     // development two-pass spawn helper would add another regeneration pass.
     if(!dh2::data::recalc_properties_with_class(class_table,property_rules,fresh_player.properties,error))throw std::runtime_error(error);
     fresh_player.animation_table=fresh_player.properties.resolved[2];
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native gameplay property cache | class %d | animation table %d | max HP %d | max MP %d",fresh_player.character_class,fresh_player.animation_table,fresh_player.properties.resolved[38],fresh_player.properties.resolved[43]);
     const auto bank_bytes=read(assets,"prince-animation-bank.bin","data");
     dh2::data::AnimationBank candidate_bank;
     if(!dh2::data::load_animation_bank({bank_bytes.data(),bank_bytes.size()},candidate_bank,error))throw std::runtime_error("Prince metadata rejected: "+error);
-    if(candidate_bank.character!="KnightPlayerBase"||int(candidate_bank.animation_table)!=fresh_player.animation_table||candidate_bank.template_clip_id!=1111)throw std::runtime_error("Prince metadata producer does not match player properties");
+    // This existing Prince resource bank is shared by the three class tables.
+    // Its Knight registration receipt remains unchanged; class selection owns
+    // the live sequence table. Each reached authored clip is checked below.
+    if(candidate_bank.character!="KnightPlayerBase"||fresh_player.animation_table<48||fresh_player.animation_table>50||candidate_bank.template_clip_id!=1111)throw std::runtime_error("Prince metadata producer does not match player properties");
     std::map<int,dh2::animation::Player> candidate_player_clips;
     for(const auto& resource:candidate_bank.resources){
      dh2::data::AnimationStep ref;ref.anim=resource.clip_id;
@@ -2638,7 +2780,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       prince_retained_pose.clear();prince_locomotion=dh2::actor::BlendedPlayback{};
       prince_attack_clips=std::move(candidate_player_clips);prince_animation_bank=std::move(candidate_bank);
     }
-    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player properties | KnightPlayerBase | HP %d | MP %d | checksum %016llx | attempts %u | attacking %d",prince_combat.properties.resolved[36],prince_combat.properties.resolved[41],static_cast<unsigned long long>(snapshot_checksum(prince_combat.properties.resolved)),prince_combat.attempts,int(prince_state.current==5));
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player properties | %s | HP %d | MP %d | checksum %016llx | attempts %u | attacking %d",character_table.names.at(prince_combat.character_class).c_str(),prince_combat.properties.resolved[36],prince_combat.properties.resolved[41],static_cast<unsigned long long>(snapshot_checksum(prince_combat.properties.resolved)),prince_combat.attempts,int(prince_state.current==5));
     for(const auto& group:object_groups)for(const auto& object:group.instances){monsters+=object.kind==1;decors+=object.kind==2;object_triangles+=group.resource.triangles;object_draws+=group.draws.size();}
     level=std::move(candidate);player=std::move(candidate_idle);walk_player=std::move(candidate_walk);current_scene=std::move(rest);
     actor_position=restore?previous:level.spawn;
@@ -2781,7 +2923,8 @@ void draw(int width,int height){
     std::string error;if(!playback.sample(current_scene,sampled_ms,error)){animation_failed=true;__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Animation sample failed: %s",error.c_str());}
     if(world_mode&&!prince_visual.update_world(current_scene,error))throw std::runtime_error(error);
   }
-  const auto projection=camera(width,height);glUseProgram(program);
+  if(class_scene&&animation_failed)throw std::runtime_error("Class scene animation sampling failed");
+  const auto projection=class_scene?class_camera(width,height):menu_background?menu_camera():camera(width,height);glUseProgram(program);
   glUniform1i(glGetUniformLocation(program,"diffuse"),0);glUniform1i(glGetUniformLocation(program,"alpha_map"),1);
   glEnable(GL_DEPTH_TEST);glDepthFunc(GL_LEQUAL);glEnable(GL_BLEND);
   glEnableVertexAttribArray(position);glEnableVertexAttribArray(texcoord);glEnableVertexAttribArray(color);
@@ -2791,6 +2934,9 @@ void draw(int width,int height){
     glBlendFunc(GL_SRC_ALPHA,b.material.additive?GL_ONE:GL_ONE_MINUS_SRC_ALPHA);glDepthMask(b.material.additive?GL_FALSE:GL_TRUE);
     glUniformMatrix4fv(texture_matrix,1,GL_FALSE,b.material.texture_matrix);glUniform4fv(material_color,1,b.material.color);
     glUniform1f(has_alpha,b.material.alpha_map.empty()?0:1);glUniform1f(alpha_ref,b.material.alpha_ref);
+    const bool blue=b.material.effect_file=="GL_Diffuse_L1_VC_iPhone.bdae"&&
+      b.material.gles2_technique=="L1_Vc_Al_----_----_----_----";
+    glUniform1f(original_alpha_blue,blue?1:0);
     glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,b.diffuse);glActiveTexture(GL_TEXTURE1);glBindTexture(GL_TEXTURE_2D,b.alpha);
     glBindBuffer(GL_ARRAY_BUFFER,b.vertices);glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,b.indices);
     glVertexAttribPointer(position,3,GL_FLOAT,GL_FALSE,sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex,p)));
@@ -2807,6 +2953,19 @@ void draw(int width,int height){
     }
     // Native actor joints already include owner * helper * authored graph.
     const auto transform=b.environment?dh2::scene::multiply(projection,b.placement):b.skin.nodes.empty()?dh2::scene::multiply(projection,current_scene.graph[b.node].world):projection;submit(b,transform);
+  }
+  if(class_scene)for(auto& actor:class_preview_actors){
+   auto& resource=actor.resource;const auto& clip=resource.animation;std::string error;
+   const auto ms=clip.start+int(actor.sample_elapsed%unsigned(clip.end-clip.start));
+   if(!dh2::objects::sample(resource,ms,error))throw std::runtime_error("Class body animation failed: "+error);
+   Matrix placement=current_scene.graph.at(actor.anchor).world;
+   for(unsigned column=0;column<3;++column)for(unsigned row=0;row<4;++row)placement[column*4+row]*=actor.scale[column];
+   const auto owner_projection=dh2::scene::multiply(projection,placement);
+   for(unsigned i=0;i<actor.draws.size();++i){const auto& primitive=resource.primitives[i];const auto& batch=actor.draws[i];
+    glBindBuffer(GL_ARRAY_BUFFER,batch.vertices);glBufferSubData(GL_ARRAY_BUFFER,0,primitive.vertices.size()*sizeof(Vertex),primitive.vertices.data());
+    const auto transform=primitive.skin.nodes.empty()?dh2::scene::multiply(owner_projection,resource.scene.graph.at(primitive.node).world):owner_projection;
+    submit(batch,transform);
+   }
   }
   if(world_mode)for(auto& group:object_groups){
     std::string error;
@@ -2897,5 +3056,22 @@ void draw(int width,int height){
   else if(player.track_count()&&frozen&&!animation_failed&&!frozen_cursor_logged){
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Animation frame rendered at %d ms",sampled_ms);frozen_cursor_logged=true;
   }
+}
+bool with_player_status_sheet(void* context,
+ bool (*consume)(void*,const std::int32_t*,std::size_t,std::uintptr_t,std::string&),
+ std::string& error){
+ const auto character=prince_character.owner();
+ if(!consume||!enabled||!world_mode||!native_actor_ready||!character||
+    !prince_source_ai||!prince_skills||!prince_skills->initialized()||
+    prince_source_ai->character_identity!=character||prince_source_ai->state.owner_04!=character){
+  error="Published Player status owner unavailable";return false;
+ }
+ // Health, mana and XP are the current cached source words in the SAME sheet
+ // used by combat, regeneration and skills. Death does not retire this owner.
+ error.clear();
+ try{return consume(context,prince_combat.properties.resolved.data(),
+                    prince_combat.properties.resolved.size(),character,error);}
+ catch(const std::exception& failure){error=failure.what();return false;}
+ catch(...){error="Player status consumer threw";return false;}
 }
 }

@@ -28,6 +28,8 @@ android {
         }
     }
 
+    androidResources { noCompress += listOf("wav") }
+
     buildTypes {
         release {
             optimization {

@@ -62,7 +62,9 @@ static_assert(sizeof(SavedFaery4V1) == 4);
 // Exact LNAM destinations. +0xfc/+0x15c are the corresponding slots inside
 // the two existing source quest logs; their complete logs remain external.
 struct SavedLevelNameFieldsV1 {
-    std::uint32_t level_id{}; // +0x38, unsigned read
+    // Historical projection name retained for compatibility: +0x38 is the
+    // raw save date, written by SG_SetSaveDate, not a LevelTable association.
+    std::uint32_t level_id{};
     std::array<std::int32_t, 3> word50{}, word5c{};
     std::array<std::int32_t, 3> quest_wordfc{}, quest_word15c{};
 };
@@ -78,6 +80,28 @@ public:
 
     void set_character(std::uintptr_t identity) noexcept { character_ = identity; }
     void set_slot(std::int32_t slot) noexcept { slot_ = slot; }
+    // Character::SG_SetPlayerClass writes the sole Save +0x34 word.
+    void set_class(std::int32_t value) noexcept { class_ = value; }
+    // Source indexed ctor metadata projection; only a fresh, unbound Save is
+    // accepted. The caller subsequently performs its genuine SG_Load(1).
+    bool initialize_new_profile_metadata(std::int32_t slot, std::string&);
+    void set_player_level(std::int32_t value) noexcept { level_ = value; }
+    void set_player_name(const std::string& value) { name_ = value; }
+    void set_unlocked_difficulty(std::int32_t value) noexcept { unlocked_difficulty_ = value; }
+    void set_save_date(std::uint32_t value) noexcept { level_name_fields_.level_id = value; }
+    std::uint32_t save_date() const noexcept { return level_name_fields_.level_id; }
+    void generate_profile_seeds(std::uint32_t source_time) noexcept;
+    bool set_new_profile_locations(std::uint32_t difficulty_count, std::string&);
+    void set_saved_properties_byte_194(std::uint8_t value) noexcept { properties_byte_194_ = value; }
+    bool source_save_blocked() const noexcept { return save_blocked_; }
+    void set_source_save_blocked(bool value) noexcept { save_blocked_ = value; }
+    std::int32_t source_save_mode() const noexcept { return save_mode_; }
+    void set_source_save_mode(std::int32_t value) noexcept { save_mode_ = value; }
+    // Whole __LoadProperties on this Save's nonnull Character and the same
+    // existing saved sheet. No recalculation; raw byte +0x194 is retained.
+    bool load_properties(Bytes, PropertyView&, std::size_t& consumed,
+                         std::string& error);
+    std::uint8_t saved_properties_byte_194() const noexcept { return properties_byte_194_; }
 
     // Mirrors Character::GetCharSkillListId's row-3 fallback, then the
     // PlayerSavegame::_InitSkills ownership boundary. Values begin at zero.
@@ -176,6 +200,9 @@ private:
     std::array<std::int32_t, 3> level_entry_points_{};
     std::array<std::uint8_t, 3> use_spawn_points_{};
     bool level_name_loaded_{}, use_spawn_points_loaded_{};
+    std::uint8_t properties_byte_194_{};
+    bool save_blocked_{}; // source +0xc
+    std::int32_t save_mode_{}; // source +0x178, blank ctor zero
 };
 
 }  // namespace dh2::data

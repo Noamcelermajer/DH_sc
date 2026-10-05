@@ -67,10 +67,15 @@ struct Loader {
         if(n>4096)throw std::runtime_error("Too many materials");
         for(unsigned i=0;i<n;++i){
             auto p=r.item(Library::material,i);Material m;m.id=r.field(p);
+            m.effect_file=r.field(p+8,true);m.effect_uri=r.field(p+12,true);
             auto count=r.w(p+16),base=r.w(p+20);r.array(base,count,24);
             for(unsigned j=0;j<count;++j){
                 auto q=base+24*j;auto name=r.field(q);const auto type=r.w(q+8),data=r.w(q+20);
-                if(name=="Diffuse"||name=="diffuse-sampler"||name=="AlphaMap"){
+                if(name=="Multilight-fx-profile_GLES2/CurrentTechnique"){
+                    if(type!=20||r.w(q+12)!=1||r.w(r.w(q+16))!=1)
+                        throw std::runtime_error("Unexpected GLES2 technique parameter layout");
+                    r.at(data,8);m.gles2_technique=r.field(data+4);
+                }else if(name=="Diffuse"||name=="diffuse-sampler"||name=="AlphaMap"){
                     if(type!=11)throw std::runtime_error("Unexpected image parameter type");
                     auto img=r.image(q);if(name=="AlphaMap")m.alpha_map=img;else m.diffuse=img;
                 }else if(name=="__irrlicht_Diffuse_color"){

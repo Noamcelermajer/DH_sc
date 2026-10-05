@@ -1,0 +1,1677 @@
+{
+  "validation": "PASS",
+  "host_report": {
+    "validation": "PASS",
+    "original_cases": 18,
+    "required_failure_and_mutation_cases": 11,
+    "persisted_profiles": 9,
+    "metadata_writers": 7,
+    "mismatches": 0
+  },
+  "original_comparison": {
+    "validation": "PASS",
+    "original_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "cases": [
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "KnightPlayerBase",
+        "slot": 0,
+        "seed_time": 0,
+        "date_time": 0,
+        "conversions": 2,
+        "published": 0.0,
+        "fields": {
+          "slot": 0,
+          "level": 1,
+          "class": 263,
+          "difficulty": 0,
+          "unlocked": 0,
+          "date": 0,
+          "name": "ReconstructedHero",
+          "word50": [
+            41,
+            41,
+            41
+          ],
+          "seeds": [
+            0,
+            21371,
+            86186
+          ],
+          "quests": [
+            1,
+            1,
+            1
+          ],
+          "entry": [
+            0,
+            0,
+            0
+          ],
+          "spawn": [
+            1,
+            1,
+            1
+          ],
+          "byte194": 1,
+          "mode": 1
+        },
+        "registered": {
+          "LEPT": [
+            {
+              "reader": "0x468938",
+              "writer": "0x4688c8"
+            }
+          ],
+          "LNAM": [
+            {
+              "reader": "0x468b78",
+              "writer": "0x468b20"
+            }
+          ],
+          "LUSP": [
+            {
+              "reader": "0x468af0",
+              "writer": "0x4689a8"
+            }
+          ],
+          "PCLS": [
+            {
+              "reader": "0x469d88",
+              "writer": "0x4698e4"
+            }
+          ],
+          "PDFL": [
+            {
+              "reader": "0x468968",
+              "writer": "0x4688f8"
+            }
+          ],
+          "PLVL": [
+            {
+              "reader": "0x4689a0",
+              "writer": "0x468930"
+            }
+          ],
+          "PNAM": [
+            {
+              "reader": "0x4698dc",
+              "writer": "0x4688c0"
+            }
+          ]
+        },
+        "online_queries": 3,
+        "writers": {
+          "PNAM": {
+            "hex": "120000005265636f6e73747275637465644865726f00",
+            "writes": [
+              "12000000",
+              "5265636f6e73747275637465644865726f00"
+            ]
+          },
+          "PLVL": {
+            "hex": "01000000",
+            "writes": [
+              "01000000"
+            ]
+          },
+          "PCLS": {
+            "hex": "110000004b6e69676874506c617965724261736500",
+            "writes": [
+              "11000000",
+              "4b6e69676874506c617965724261736500"
+            ]
+          },
+          "PDFL": {
+            "hex": "0000000000000000",
+            "writes": [
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LNAM": {
+            "hex": "00000000290000000000000001000000290000007b5300000100000029000000aa50010001000000",
+            "writes": [
+              "00000000",
+              "29000000",
+              "00000000",
+              "01000000",
+              "29000000",
+              "7b530000",
+              "01000000",
+              "29000000",
+              "aa500100",
+              "01000000"
+            ]
+          },
+          "LEPT": {
+            "hex": "000000000000000000000000",
+            "writes": [
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LUSP": {
+            "hex": "010101",
+            "writes": [
+              "01",
+              "01",
+              "01"
+            ]
+          }
+        },
+        "profile_hex": "070000000c0000004c455054000000000000000000000000280000004c4e414d00000000290000000000000001000000290000007b5300000100000029000000aa50010001000000030000004c5553500101011500000050434c53110000004b6e69676874506c617965724261736500080000005044464c000000000000000004000000504c564c0100000016000000504e414d120000005265636f6e73747275637465644865726f00"
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "KnightPlayerBase",
+        "slot": 1,
+        "seed_time": 4294967295,
+        "date_time": 2147483648,
+        "conversions": 2,
+        "published": 1.0,
+        "fields": {
+          "slot": 1,
+          "level": 1,
+          "class": 263,
+          "difficulty": 0,
+          "unlocked": 0,
+          "date": 2147483648,
+          "name": "ReconstructedHero",
+          "word50": [
+            41,
+            41,
+            41
+          ],
+          "seeds": [
+            4294967295,
+            21370,
+            86185
+          ],
+          "quests": [
+            1,
+            1,
+            1
+          ],
+          "entry": [
+            0,
+            0,
+            0
+          ],
+          "spawn": [
+            1,
+            1,
+            1
+          ],
+          "byte194": 1,
+          "mode": 1
+        },
+        "registered": {
+          "LEPT": [
+            {
+              "reader": "0x468938",
+              "writer": "0x4688c8"
+            }
+          ],
+          "LNAM": [
+            {
+              "reader": "0x468b78",
+              "writer": "0x468b20"
+            }
+          ],
+          "LUSP": [
+            {
+              "reader": "0x468af0",
+              "writer": "0x4689a8"
+            }
+          ],
+          "PCLS": [
+            {
+              "reader": "0x469d88",
+              "writer": "0x4698e4"
+            }
+          ],
+          "PDFL": [
+            {
+              "reader": "0x468968",
+              "writer": "0x4688f8"
+            }
+          ],
+          "PLVL": [
+            {
+              "reader": "0x4689a0",
+              "writer": "0x468930"
+            }
+          ],
+          "PNAM": [
+            {
+              "reader": "0x4698dc",
+              "writer": "0x4688c0"
+            }
+          ]
+        },
+        "online_queries": 3,
+        "writers": {
+          "PNAM": {
+            "hex": "120000005265636f6e73747275637465644865726f00",
+            "writes": [
+              "12000000",
+              "5265636f6e73747275637465644865726f00"
+            ]
+          },
+          "PLVL": {
+            "hex": "01000000",
+            "writes": [
+              "01000000"
+            ]
+          },
+          "PCLS": {
+            "hex": "110000004b6e69676874506c617965724261736500",
+            "writes": [
+              "11000000",
+              "4b6e69676874506c617965724261736500"
+            ]
+          },
+          "PDFL": {
+            "hex": "0000000000000000",
+            "writes": [
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LNAM": {
+            "hex": "0000008029000000ffffffff01000000290000007a5300000100000029000000a950010001000000",
+            "writes": [
+              "00000080",
+              "29000000",
+              "ffffffff",
+              "01000000",
+              "29000000",
+              "7a530000",
+              "01000000",
+              "29000000",
+              "a9500100",
+              "01000000"
+            ]
+          },
+          "LEPT": {
+            "hex": "000000000000000000000000",
+            "writes": [
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LUSP": {
+            "hex": "010101",
+            "writes": [
+              "01",
+              "01",
+              "01"
+            ]
+          }
+        },
+        "profile_hex": "070000000c0000004c455054000000000000000000000000280000004c4e414d0000008029000000ffffffff01000000290000007a5300000100000029000000a950010001000000030000004c5553500101011500000050434c53110000004b6e69676874506c617965724261736500080000005044464c000000000000000004000000504c564c0100000016000000504e414d120000005265636f6e73747275637465644865726f00"
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "KnightPlayerBase",
+        "slot": 2,
+        "seed_time": 305419896,
+        "date_time": 2271560481,
+        "conversions": 2,
+        "published": 2.0,
+        "fields": {
+          "slot": 2,
+          "level": 1,
+          "class": 263,
+          "difficulty": 0,
+          "unlocked": 0,
+          "date": 2271560481,
+          "name": "ReconstructedHero",
+          "word50": [
+            41,
+            41,
+            41
+          ],
+          "seeds": [
+            305419896,
+            305441267,
+            305506082
+          ],
+          "quests": [
+            1,
+            1,
+            1
+          ],
+          "entry": [
+            0,
+            0,
+            0
+          ],
+          "spawn": [
+            1,
+            1,
+            1
+          ],
+          "byte194": 1,
+          "mode": 1
+        },
+        "registered": {
+          "LEPT": [
+            {
+              "reader": "0x468938",
+              "writer": "0x4688c8"
+            }
+          ],
+          "LNAM": [
+            {
+              "reader": "0x468b78",
+              "writer": "0x468b20"
+            }
+          ],
+          "LUSP": [
+            {
+              "reader": "0x468af0",
+              "writer": "0x4689a8"
+            }
+          ],
+          "PCLS": [
+            {
+              "reader": "0x469d88",
+              "writer": "0x4698e4"
+            }
+          ],
+          "PDFL": [
+            {
+              "reader": "0x468968",
+              "writer": "0x4688f8"
+            }
+          ],
+          "PLVL": [
+            {
+              "reader": "0x4689a0",
+              "writer": "0x468930"
+            }
+          ],
+          "PNAM": [
+            {
+              "reader": "0x4698dc",
+              "writer": "0x4688c0"
+            }
+          ]
+        },
+        "online_queries": 3,
+        "writers": {
+          "PNAM": {
+            "hex": "120000005265636f6e73747275637465644865726f00",
+            "writes": [
+              "12000000",
+              "5265636f6e73747275637465644865726f00"
+            ]
+          },
+          "PLVL": {
+            "hex": "01000000",
+            "writes": [
+              "01000000"
+            ]
+          },
+          "PCLS": {
+            "hex": "110000004b6e69676874506c617965724261736500",
+            "writes": [
+              "11000000",
+              "4b6e69676874506c617965724261736500"
+            ]
+          },
+          "PDFL": {
+            "hex": "0000000000000000",
+            "writes": [
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LNAM": {
+            "hex": "2143658729000000785634120100000029000000f3a93412010000002900000022a7351201000000",
+            "writes": [
+              "21436587",
+              "29000000",
+              "78563412",
+              "01000000",
+              "29000000",
+              "f3a93412",
+              "01000000",
+              "29000000",
+              "22a73512",
+              "01000000"
+            ]
+          },
+          "LEPT": {
+            "hex": "000000000000000000000000",
+            "writes": [
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LUSP": {
+            "hex": "010101",
+            "writes": [
+              "01",
+              "01",
+              "01"
+            ]
+          }
+        },
+        "profile_hex": "070000000c0000004c455054000000000000000000000000280000004c4e414d2143658729000000785634120100000029000000f3a93412010000002900000022a7351201000000030000004c5553500101011500000050434c53110000004b6e69676874506c617965724261736500080000005044464c000000000000000004000000504c564c0100000016000000504e414d120000005265636f6e73747275637465644865726f00"
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "MagePlayerBase",
+        "slot": 3,
+        "seed_time": 0,
+        "date_time": 0,
+        "conversions": 2,
+        "published": 3.0,
+        "fields": {
+          "slot": 3,
+          "level": 1,
+          "class": 290,
+          "difficulty": 0,
+          "unlocked": 0,
+          "date": 0,
+          "name": "ReconstructedHero",
+          "word50": [
+            41,
+            41,
+            41
+          ],
+          "seeds": [
+            0,
+            21371,
+            86186
+          ],
+          "quests": [
+            1,
+            1,
+            1
+          ],
+          "entry": [
+            0,
+            0,
+            0
+          ],
+          "spawn": [
+            1,
+            1,
+            1
+          ],
+          "byte194": 1,
+          "mode": 1
+        },
+        "registered": {
+          "LEPT": [
+            {
+              "reader": "0x468938",
+              "writer": "0x4688c8"
+            }
+          ],
+          "LNAM": [
+            {
+              "reader": "0x468b78",
+              "writer": "0x468b20"
+            }
+          ],
+          "LUSP": [
+            {
+              "reader": "0x468af0",
+              "writer": "0x4689a8"
+            }
+          ],
+          "PCLS": [
+            {
+              "reader": "0x469d88",
+              "writer": "0x4698e4"
+            }
+          ],
+          "PDFL": [
+            {
+              "reader": "0x468968",
+              "writer": "0x4688f8"
+            }
+          ],
+          "PLVL": [
+            {
+              "reader": "0x4689a0",
+              "writer": "0x468930"
+            }
+          ],
+          "PNAM": [
+            {
+              "reader": "0x4698dc",
+              "writer": "0x4688c0"
+            }
+          ]
+        },
+        "online_queries": 3,
+        "writers": {
+          "PNAM": {
+            "hex": "120000005265636f6e73747275637465644865726f00",
+            "writes": [
+              "12000000",
+              "5265636f6e73747275637465644865726f00"
+            ]
+          },
+          "PLVL": {
+            "hex": "01000000",
+            "writes": [
+              "01000000"
+            ]
+          },
+          "PCLS": {
+            "hex": "0f0000004d616765506c617965724261736500",
+            "writes": [
+              "0f000000",
+              "4d616765506c617965724261736500"
+            ]
+          },
+          "PDFL": {
+            "hex": "0000000000000000",
+            "writes": [
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LNAM": {
+            "hex": "00000000290000000000000001000000290000007b5300000100000029000000aa50010001000000",
+            "writes": [
+              "00000000",
+              "29000000",
+              "00000000",
+              "01000000",
+              "29000000",
+              "7b530000",
+              "01000000",
+              "29000000",
+              "aa500100",
+              "01000000"
+            ]
+          },
+          "LEPT": {
+            "hex": "000000000000000000000000",
+            "writes": [
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LUSP": {
+            "hex": "010101",
+            "writes": [
+              "01",
+              "01",
+              "01"
+            ]
+          }
+        },
+        "profile_hex": "070000000c0000004c455054000000000000000000000000280000004c4e414d00000000290000000000000001000000290000007b5300000100000029000000aa50010001000000030000004c5553500101011300000050434c530f0000004d616765506c617965724261736500080000005044464c000000000000000004000000504c564c0100000016000000504e414d120000005265636f6e73747275637465644865726f00"
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "MagePlayerBase",
+        "slot": 0,
+        "seed_time": 4294967295,
+        "date_time": 2147483648,
+        "conversions": 2,
+        "published": 0.0,
+        "fields": {
+          "slot": 0,
+          "level": 1,
+          "class": 290,
+          "difficulty": 0,
+          "unlocked": 0,
+          "date": 2147483648,
+          "name": "ReconstructedHero",
+          "word50": [
+            41,
+            41,
+            41
+          ],
+          "seeds": [
+            4294967295,
+            21370,
+            86185
+          ],
+          "quests": [
+            1,
+            1,
+            1
+          ],
+          "entry": [
+            0,
+            0,
+            0
+          ],
+          "spawn": [
+            1,
+            1,
+            1
+          ],
+          "byte194": 1,
+          "mode": 1
+        },
+        "registered": {
+          "LEPT": [
+            {
+              "reader": "0x468938",
+              "writer": "0x4688c8"
+            }
+          ],
+          "LNAM": [
+            {
+              "reader": "0x468b78",
+              "writer": "0x468b20"
+            }
+          ],
+          "LUSP": [
+            {
+              "reader": "0x468af0",
+              "writer": "0x4689a8"
+            }
+          ],
+          "PCLS": [
+            {
+              "reader": "0x469d88",
+              "writer": "0x4698e4"
+            }
+          ],
+          "PDFL": [
+            {
+              "reader": "0x468968",
+              "writer": "0x4688f8"
+            }
+          ],
+          "PLVL": [
+            {
+              "reader": "0x4689a0",
+              "writer": "0x468930"
+            }
+          ],
+          "PNAM": [
+            {
+              "reader": "0x4698dc",
+              "writer": "0x4688c0"
+            }
+          ]
+        },
+        "online_queries": 3,
+        "writers": {
+          "PNAM": {
+            "hex": "120000005265636f6e73747275637465644865726f00",
+            "writes": [
+              "12000000",
+              "5265636f6e73747275637465644865726f00"
+            ]
+          },
+          "PLVL": {
+            "hex": "01000000",
+            "writes": [
+              "01000000"
+            ]
+          },
+          "PCLS": {
+            "hex": "0f0000004d616765506c617965724261736500",
+            "writes": [
+              "0f000000",
+              "4d616765506c617965724261736500"
+            ]
+          },
+          "PDFL": {
+            "hex": "0000000000000000",
+            "writes": [
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LNAM": {
+            "hex": "0000008029000000ffffffff01000000290000007a5300000100000029000000a950010001000000",
+            "writes": [
+              "00000080",
+              "29000000",
+              "ffffffff",
+              "01000000",
+              "29000000",
+              "7a530000",
+              "01000000",
+              "29000000",
+              "a9500100",
+              "01000000"
+            ]
+          },
+          "LEPT": {
+            "hex": "000000000000000000000000",
+            "writes": [
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LUSP": {
+            "hex": "010101",
+            "writes": [
+              "01",
+              "01",
+              "01"
+            ]
+          }
+        },
+        "profile_hex": "070000000c0000004c455054000000000000000000000000280000004c4e414d0000008029000000ffffffff01000000290000007a5300000100000029000000a950010001000000030000004c5553500101011300000050434c530f0000004d616765506c617965724261736500080000005044464c000000000000000004000000504c564c0100000016000000504e414d120000005265636f6e73747275637465644865726f00"
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "MagePlayerBase",
+        "slot": 1,
+        "seed_time": 305419896,
+        "date_time": 2271560481,
+        "conversions": 2,
+        "published": 1.0,
+        "fields": {
+          "slot": 1,
+          "level": 1,
+          "class": 290,
+          "difficulty": 0,
+          "unlocked": 0,
+          "date": 2271560481,
+          "name": "ReconstructedHero",
+          "word50": [
+            41,
+            41,
+            41
+          ],
+          "seeds": [
+            305419896,
+            305441267,
+            305506082
+          ],
+          "quests": [
+            1,
+            1,
+            1
+          ],
+          "entry": [
+            0,
+            0,
+            0
+          ],
+          "spawn": [
+            1,
+            1,
+            1
+          ],
+          "byte194": 1,
+          "mode": 1
+        },
+        "registered": {
+          "LEPT": [
+            {
+              "reader": "0x468938",
+              "writer": "0x4688c8"
+            }
+          ],
+          "LNAM": [
+            {
+              "reader": "0x468b78",
+              "writer": "0x468b20"
+            }
+          ],
+          "LUSP": [
+            {
+              "reader": "0x468af0",
+              "writer": "0x4689a8"
+            }
+          ],
+          "PCLS": [
+            {
+              "reader": "0x469d88",
+              "writer": "0x4698e4"
+            }
+          ],
+          "PDFL": [
+            {
+              "reader": "0x468968",
+              "writer": "0x4688f8"
+            }
+          ],
+          "PLVL": [
+            {
+              "reader": "0x4689a0",
+              "writer": "0x468930"
+            }
+          ],
+          "PNAM": [
+            {
+              "reader": "0x4698dc",
+              "writer": "0x4688c0"
+            }
+          ]
+        },
+        "online_queries": 3,
+        "writers": {
+          "PNAM": {
+            "hex": "120000005265636f6e73747275637465644865726f00",
+            "writes": [
+              "12000000",
+              "5265636f6e73747275637465644865726f00"
+            ]
+          },
+          "PLVL": {
+            "hex": "01000000",
+            "writes": [
+              "01000000"
+            ]
+          },
+          "PCLS": {
+            "hex": "0f0000004d616765506c617965724261736500",
+            "writes": [
+              "0f000000",
+              "4d616765506c617965724261736500"
+            ]
+          },
+          "PDFL": {
+            "hex": "0000000000000000",
+            "writes": [
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LNAM": {
+            "hex": "2143658729000000785634120100000029000000f3a93412010000002900000022a7351201000000",
+            "writes": [
+              "21436587",
+              "29000000",
+              "78563412",
+              "01000000",
+              "29000000",
+              "f3a93412",
+              "01000000",
+              "29000000",
+              "22a73512",
+              "01000000"
+            ]
+          },
+          "LEPT": {
+            "hex": "000000000000000000000000",
+            "writes": [
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LUSP": {
+            "hex": "010101",
+            "writes": [
+              "01",
+              "01",
+              "01"
+            ]
+          }
+        },
+        "profile_hex": "070000000c0000004c455054000000000000000000000000280000004c4e414d2143658729000000785634120100000029000000f3a93412010000002900000022a7351201000000030000004c5553500101011300000050434c530f0000004d616765506c617965724261736500080000005044464c000000000000000004000000504c564c0100000016000000504e414d120000005265636f6e73747275637465644865726f00"
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "RoguePlayerBase",
+        "slot": 2,
+        "seed_time": 0,
+        "date_time": 0,
+        "conversions": 2,
+        "published": 2.0,
+        "fields": {
+          "slot": 2,
+          "level": 1,
+          "class": 325,
+          "difficulty": 0,
+          "unlocked": 0,
+          "date": 0,
+          "name": "ReconstructedHero",
+          "word50": [
+            41,
+            41,
+            41
+          ],
+          "seeds": [
+            0,
+            21371,
+            86186
+          ],
+          "quests": [
+            1,
+            1,
+            1
+          ],
+          "entry": [
+            0,
+            0,
+            0
+          ],
+          "spawn": [
+            1,
+            1,
+            1
+          ],
+          "byte194": 1,
+          "mode": 1
+        },
+        "registered": {
+          "LEPT": [
+            {
+              "reader": "0x468938",
+              "writer": "0x4688c8"
+            }
+          ],
+          "LNAM": [
+            {
+              "reader": "0x468b78",
+              "writer": "0x468b20"
+            }
+          ],
+          "LUSP": [
+            {
+              "reader": "0x468af0",
+              "writer": "0x4689a8"
+            }
+          ],
+          "PCLS": [
+            {
+              "reader": "0x469d88",
+              "writer": "0x4698e4"
+            }
+          ],
+          "PDFL": [
+            {
+              "reader": "0x468968",
+              "writer": "0x4688f8"
+            }
+          ],
+          "PLVL": [
+            {
+              "reader": "0x4689a0",
+              "writer": "0x468930"
+            }
+          ],
+          "PNAM": [
+            {
+              "reader": "0x4698dc",
+              "writer": "0x4688c0"
+            }
+          ]
+        },
+        "online_queries": 3,
+        "writers": {
+          "PNAM": {
+            "hex": "120000005265636f6e73747275637465644865726f00",
+            "writes": [
+              "12000000",
+              "5265636f6e73747275637465644865726f00"
+            ]
+          },
+          "PLVL": {
+            "hex": "01000000",
+            "writes": [
+              "01000000"
+            ]
+          },
+          "PCLS": {
+            "hex": "10000000526f677565506c617965724261736500",
+            "writes": [
+              "10000000",
+              "526f677565506c617965724261736500"
+            ]
+          },
+          "PDFL": {
+            "hex": "0000000000000000",
+            "writes": [
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LNAM": {
+            "hex": "00000000290000000000000001000000290000007b5300000100000029000000aa50010001000000",
+            "writes": [
+              "00000000",
+              "29000000",
+              "00000000",
+              "01000000",
+              "29000000",
+              "7b530000",
+              "01000000",
+              "29000000",
+              "aa500100",
+              "01000000"
+            ]
+          },
+          "LEPT": {
+            "hex": "000000000000000000000000",
+            "writes": [
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LUSP": {
+            "hex": "010101",
+            "writes": [
+              "01",
+              "01",
+              "01"
+            ]
+          }
+        },
+        "profile_hex": "070000000c0000004c455054000000000000000000000000280000004c4e414d00000000290000000000000001000000290000007b5300000100000029000000aa50010001000000030000004c5553500101011400000050434c5310000000526f677565506c617965724261736500080000005044464c000000000000000004000000504c564c0100000016000000504e414d120000005265636f6e73747275637465644865726f00"
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "RoguePlayerBase",
+        "slot": 3,
+        "seed_time": 4294967295,
+        "date_time": 2147483648,
+        "conversions": 2,
+        "published": 3.0,
+        "fields": {
+          "slot": 3,
+          "level": 1,
+          "class": 325,
+          "difficulty": 0,
+          "unlocked": 0,
+          "date": 2147483648,
+          "name": "ReconstructedHero",
+          "word50": [
+            41,
+            41,
+            41
+          ],
+          "seeds": [
+            4294967295,
+            21370,
+            86185
+          ],
+          "quests": [
+            1,
+            1,
+            1
+          ],
+          "entry": [
+            0,
+            0,
+            0
+          ],
+          "spawn": [
+            1,
+            1,
+            1
+          ],
+          "byte194": 1,
+          "mode": 1
+        },
+        "registered": {
+          "LEPT": [
+            {
+              "reader": "0x468938",
+              "writer": "0x4688c8"
+            }
+          ],
+          "LNAM": [
+            {
+              "reader": "0x468b78",
+              "writer": "0x468b20"
+            }
+          ],
+          "LUSP": [
+            {
+              "reader": "0x468af0",
+              "writer": "0x4689a8"
+            }
+          ],
+          "PCLS": [
+            {
+              "reader": "0x469d88",
+              "writer": "0x4698e4"
+            }
+          ],
+          "PDFL": [
+            {
+              "reader": "0x468968",
+              "writer": "0x4688f8"
+            }
+          ],
+          "PLVL": [
+            {
+              "reader": "0x4689a0",
+              "writer": "0x468930"
+            }
+          ],
+          "PNAM": [
+            {
+              "reader": "0x4698dc",
+              "writer": "0x4688c0"
+            }
+          ]
+        },
+        "online_queries": 3,
+        "writers": {
+          "PNAM": {
+            "hex": "120000005265636f6e73747275637465644865726f00",
+            "writes": [
+              "12000000",
+              "5265636f6e73747275637465644865726f00"
+            ]
+          },
+          "PLVL": {
+            "hex": "01000000",
+            "writes": [
+              "01000000"
+            ]
+          },
+          "PCLS": {
+            "hex": "10000000526f677565506c617965724261736500",
+            "writes": [
+              "10000000",
+              "526f677565506c617965724261736500"
+            ]
+          },
+          "PDFL": {
+            "hex": "0000000000000000",
+            "writes": [
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LNAM": {
+            "hex": "0000008029000000ffffffff01000000290000007a5300000100000029000000a950010001000000",
+            "writes": [
+              "00000080",
+              "29000000",
+              "ffffffff",
+              "01000000",
+              "29000000",
+              "7a530000",
+              "01000000",
+              "29000000",
+              "a9500100",
+              "01000000"
+            ]
+          },
+          "LEPT": {
+            "hex": "000000000000000000000000",
+            "writes": [
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LUSP": {
+            "hex": "010101",
+            "writes": [
+              "01",
+              "01",
+              "01"
+            ]
+          }
+        },
+        "profile_hex": "070000000c0000004c455054000000000000000000000000280000004c4e414d0000008029000000ffffffff01000000290000007a5300000100000029000000a950010001000000030000004c5553500101011400000050434c5310000000526f677565506c617965724261736500080000005044464c000000000000000004000000504c564c0100000016000000504e414d120000005265636f6e73747275637465644865726f00"
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "RoguePlayerBase",
+        "slot": 0,
+        "seed_time": 305419896,
+        "date_time": 2271560481,
+        "conversions": 2,
+        "published": 0.0,
+        "fields": {
+          "slot": 0,
+          "level": 1,
+          "class": 325,
+          "difficulty": 0,
+          "unlocked": 0,
+          "date": 2271560481,
+          "name": "ReconstructedHero",
+          "word50": [
+            41,
+            41,
+            41
+          ],
+          "seeds": [
+            305419896,
+            305441267,
+            305506082
+          ],
+          "quests": [
+            1,
+            1,
+            1
+          ],
+          "entry": [
+            0,
+            0,
+            0
+          ],
+          "spawn": [
+            1,
+            1,
+            1
+          ],
+          "byte194": 1,
+          "mode": 1
+        },
+        "registered": {
+          "LEPT": [
+            {
+              "reader": "0x468938",
+              "writer": "0x4688c8"
+            }
+          ],
+          "LNAM": [
+            {
+              "reader": "0x468b78",
+              "writer": "0x468b20"
+            }
+          ],
+          "LUSP": [
+            {
+              "reader": "0x468af0",
+              "writer": "0x4689a8"
+            }
+          ],
+          "PCLS": [
+            {
+              "reader": "0x469d88",
+              "writer": "0x4698e4"
+            }
+          ],
+          "PDFL": [
+            {
+              "reader": "0x468968",
+              "writer": "0x4688f8"
+            }
+          ],
+          "PLVL": [
+            {
+              "reader": "0x4689a0",
+              "writer": "0x468930"
+            }
+          ],
+          "PNAM": [
+            {
+              "reader": "0x4698dc",
+              "writer": "0x4688c0"
+            }
+          ]
+        },
+        "online_queries": 3,
+        "writers": {
+          "PNAM": {
+            "hex": "120000005265636f6e73747275637465644865726f00",
+            "writes": [
+              "12000000",
+              "5265636f6e73747275637465644865726f00"
+            ]
+          },
+          "PLVL": {
+            "hex": "01000000",
+            "writes": [
+              "01000000"
+            ]
+          },
+          "PCLS": {
+            "hex": "10000000526f677565506c617965724261736500",
+            "writes": [
+              "10000000",
+              "526f677565506c617965724261736500"
+            ]
+          },
+          "PDFL": {
+            "hex": "0000000000000000",
+            "writes": [
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LNAM": {
+            "hex": "2143658729000000785634120100000029000000f3a93412010000002900000022a7351201000000",
+            "writes": [
+              "21436587",
+              "29000000",
+              "78563412",
+              "01000000",
+              "29000000",
+              "f3a93412",
+              "01000000",
+              "29000000",
+              "22a73512",
+              "01000000"
+            ]
+          },
+          "LEPT": {
+            "hex": "000000000000000000000000",
+            "writes": [
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "LUSP": {
+            "hex": "010101",
+            "writes": [
+              "01",
+              "01",
+              "01"
+            ]
+          }
+        },
+        "profile_hex": "070000000c0000004c455054000000000000000000000000280000004c4e414d2143658729000000785634120100000029000000f3a93412010000002900000022a7351201000000030000004c5553500101011400000050434c5310000000526f677565506c617965724261736500080000005044464c000000000000000004000000504c564c0100000016000000504e414d120000005265636f6e73747275637465644865726f00"
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "Unknown",
+        "slot": 1,
+        "seed_time": 0,
+        "date_time": 0,
+        "conversions": 2,
+        "published": null,
+        "fields": null,
+        "registered": {},
+        "online_queries": 0
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "Unknown",
+        "slot": 2,
+        "seed_time": 4294967295,
+        "date_time": 2147483648,
+        "conversions": 2,
+        "published": null,
+        "fields": null,
+        "registered": {},
+        "online_queries": 0
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "Unknown",
+        "slot": 3,
+        "seed_time": 305419896,
+        "date_time": 2271560481,
+        "conversions": 2,
+        "published": null,
+        "fields": null,
+        "registered": {},
+        "online_queries": 0
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "Class264",
+        "slot": 0,
+        "seed_time": 0,
+        "date_time": 0,
+        "conversions": 2,
+        "published": null,
+        "fields": null,
+        "registered": {},
+        "online_queries": 0
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "Class264",
+        "slot": 1,
+        "seed_time": 4294967295,
+        "date_time": 2147483648,
+        "conversions": 2,
+        "published": null,
+        "fields": null,
+        "registered": {},
+        "online_queries": 0
+      },
+      {
+        "argc": 2,
+        "name": "ReconstructedHero",
+        "class_name": "Class264",
+        "slot": 2,
+        "seed_time": 305419896,
+        "date_time": 2271560481,
+        "conversions": 2,
+        "published": null,
+        "fields": null,
+        "registered": {},
+        "online_queries": 0
+      },
+      {
+        "argc": 0,
+        "name": "ReconstructedHero",
+        "class_name": "KnightPlayerBase",
+        "slot": 0,
+        "seed_time": 0,
+        "date_time": 0,
+        "conversions": 0,
+        "published": null,
+        "fields": null,
+        "registered": {},
+        "online_queries": 0
+      },
+      {
+        "argc": 1,
+        "name": "ReconstructedHero",
+        "class_name": "KnightPlayerBase",
+        "slot": 0,
+        "seed_time": 0,
+        "date_time": 0,
+        "conversions": 0,
+        "published": null,
+        "fields": null,
+        "registered": {},
+        "online_queries": 0
+      },
+      {
+        "argc": 3,
+        "name": "ReconstructedHero",
+        "class_name": "KnightPlayerBase",
+        "slot": 0,
+        "seed_time": 0,
+        "date_time": 0,
+        "conversions": 0,
+        "published": null,
+        "fields": null,
+        "registered": {},
+        "online_queries": 0
+      }
+    ],
+    "executed_words": 662,
+    "generator_sha256": "2de08f5f7f8fcb22b9b4ca075c64c697c17c2b9ead01202eec20d2ff2141aa73",
+    "scope": "Whole NativeCreate, indexed ctor, offline SG_Save, seven writers and saveAll.\nAS conversion, filename/profile registration, clock/online/slot providers,\nstring byte storage, stream virtuals, lock/I/O/cache publication and temporary\ndestruction are declared leaves. No private campaign or name is used.\n",
+    "declared_leaves": [
+      "AS as_string/value result",
+      "NextFreeSlot",
+      "Savegame ctor/filename/load registration (separate profile-index original proof)",
+      "GetRealTime/time",
+      "fresh offline Online",
+      "byte/string allocation/copy",
+      "stream virtuals",
+      "saveAll lock/read/write/cache publication",
+      "temporary Save destructor"
+    ],
+    "fixtures_sha256": "8e1dd2301d1d66443810ee6d9182ec06f1fa891eb38c49217039b1b9fa7dfb26"
+  },
+  "original_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "source_sha256": {
+    "port/android-native/app/src/main/cpp/native_player_profile.cpp": "02083a1af7a7853cb44ad677c11762e9e616ec9e65113b50b8d9c6fedeca01a9",
+    "port/android-native/app/src/main/cpp/native_player_profile.hpp": "99c3c960547458ebb4398a69f9d50c8bc8cc25c9c1bbdae3ca833bbe53d57521",
+    "port/engine-resources/tests/cpu.py": "23090abbc5bfb64ba36628db8b264b68f188e28f5f97cb9d9b6ba7c5244c8c1a",
+    "port/game-data/aggro.cpp": "c9f10eb5697227dad1e7fb767b07929da4b5373327d49ce350dc1318e6b2f050",
+    "port/game-data/aggro.hpp": "3a8d50a78c05e4e2759ffa92c1a881c811573d7d2e37191a9e513e7588b4e742",
+    "port/game-data/ai.cpp": "f53b4473fa4dd02ed73d514fe5b84d02058807c4bf800ab1952fc7141a229928",
+    "port/game-data/ai.hpp": "00eb983ad3120ba68f86f104186d8216e70f73da54451b59a2b760b16468e8a5",
+    "port/game-data/animation_bank.cpp": "d01fc6391ddb543eb2eadca8ce52e6b6e814cdd52d146d358c221d5a418d044f",
+    "port/game-data/animation_bank.hpp": "8e858b78976ee8d4dbaee87f6379228df12a30ed4819b2d3acf03f2df8c4ac33",
+    "port/game-data/animation_scheduler.cpp": "a75190454cb98071e91483125861abe41f84217d280b44d6db5bc1fff432cfd4",
+    "port/game-data/animation_scheduler.hpp": "001547189bcb3d47fd096541db08ce5bd3b6935725a543735dd253da840b7aa3",
+    "port/game-data/animation_selection.cpp": "f9f985cc772e1adea4cdc7dfa1bf27f987d06308f55b3603b64722877de857ad",
+    "port/game-data/animation_tables.cpp": "436cff5b347f1d756777775e35110bab113de3547b6a878932538afac21ef86e",
+    "port/game-data/animation_tables.hpp": "031dbc1ec565bc468357a21a9994abfba2c00f046796f4e8c409c63b8b872ecc",
+    "port/game-data/class_preview_setup.cpp": "b4e6d98d78277b0f8992acf81eaf9f325c9770307f80909502a9241365602312",
+    "port/game-data/class_preview_setup.hpp": "1d68419d6ec3a5346832250858b6692544a2ed0352910ba4ea9fbb230e8fcd57",
+    "port/game-data/class_tables.cpp": "2ce809b6f057fb40747ebdc8a31ecd3d1cd99529bfe79221efc5aea31ac652fd",
+    "port/game-data/class_tables.hpp": "cad8938b4edda851ccc2a2a3ed4b6b2bdbc31fa0cfaa997119e78630698c8af2",
+    "port/game-data/CMakeLists.txt": "5fa28a798a73b36afa91a680b1fd0af76b6ba39b1def063cd5cc566cff0feaac",
+    "port/game-data/combat.cpp": "228da172df7ee0ef290a59ccaf2fcf21890705f7165528366bf5f6615fdeb4cc",
+    "port/game-data/combat.hpp": "61cb840335e6eec650dc5520873067e89bafca8aac7dec22cd6c081ca846afd7",
+    "port/game-data/combat_application.cpp": "ef5c7a603160b99cbec98851f69f61f8a62612cacd6dccf1e20f8f0362769557",
+    "port/game-data/combat_application.hpp": "7b1bf8f631a3c3221c5eb2d03901dd96d43f6a168bd4a47733ce6eff97e23127",
+    "port/game-data/combat_events.cpp": "a7ac6d24c1d221506617bcfe2b2e86275e7dddac597ae28ae1911218c5238b32",
+    "port/game-data/combat_events.hpp": "5ea137c6d04a3fd19a6ef57305e304d5d7653893ec29a6ec071f311603b0b8b1",
+    "port/game-data/combat_result.cpp": "8c049006cb01b294304bb9820950f1d8da733bd8f7d4d7c5518d9718f18a18e3",
+    "port/game-data/combat_result.hpp": "80c13844301caea0c6df3f34a0f4d722c8f794a661f681a509729ab132f7c5b2",
+    "port/game-data/data.cpp": "4aed92413669a1457166e3022671a9e67fc1c483f0db1ada38e3f39570cae7c5",
+    "port/game-data/data.hpp": "fa34d805a525c31b2121d4d722b1dea793f8163480e6d2ad21316f37316fa0c4",
+    "port/game-data/fresh_inventory_owned_v4.cpp": "7b852cd80b26006521140c9e5edbf313c63cf4329338cf1dd57984b802e02542",
+    "port/game-data/fresh_inventory_owned_v4.hpp": "d81362bdcd9cda5e793fc3b3177aa7ef35ab852cf8e48e2bccefa15d35f77e13",
+    "port/game-data/health.cpp": "98035dd3c80ecac8e0e96c3f06d7f045dd42df80ecfe935411729bf8bff98595",
+    "port/game-data/health.hpp": "54dc3a4600ac752fc8c434bddcd29f3c77df9900eaf5c958ea54ad0aa39140f6",
+    "port/game-data/item_gear_properties_v5.cpp": "cdcaa4df6038198b9b6b36ba828bc9ac89c67ceaade52f0059f3a7d85a56107b",
+    "port/game-data/item_gear_properties_v5.hpp": "b8c100585f7654e47741555a0314f564f1f2b052cca6afd986eab9ca2fcb4a4e",
+    "port/game-data/item_instance.cpp": "d3d0160862d89b1d512ad7682ba16b65540d496c83148bb463b1ef672ef5d423",
+    "port/game-data/item_instance.hpp": "c95b0b07ca099ac525ac7bead4e327934164e959c2369a3fb3661aeabe9f9578",
+    "port/game-data/item_power_tables_v5.cpp": "61bf6b39245ef0e88743946be9ec6f36538aca24845e35ff933cb230df766391",
+    "port/game-data/item_power_tables_v5.hpp": "bec8e56696dd291c0e50b6e6b4c4724ee8ccead446ea7e6d21a4df9420eccb80",
+    "port/game-data/item_presentation_v5.cpp": "a6900bc1065b6928ea2b8c247aae6b61b9664e34840af1b851e1d814e15e8128",
+    "port/game-data/item_presentation_v5.hpp": "732ed9ad83e3adc0cee0c3827f5e4dc94da90b4d690bb2afb5d80e65f266272d",
+    "port/game-data/items.cpp": "2468a9e5fcc12a00859bf403dba09b66dbc9a39a3231de6c1ac88abb6fd5f091",
+    "port/game-data/items.hpp": "12661c391735a81c29ffff587a5322dc2753c3ebe324e56be2b4a86db7e9e633",
+    "port/game-data/level_tables.cpp": "f3a11df89280e6d0a4d58f40a52e4be5e4ebdb8902bf1e53f076f75f2d9fc615",
+    "port/game-data/level_tables.hpp": "aa20e39db0aaab7dfdd9556db275e3d41c2e3709939c9f074851907a6470f742",
+    "port/game-data/loot_power_creation_v7.cpp": "9b87befc02c3a3d3588dcc77c0bd8a2df09f0e0e3231dd629a7ed9a9f9d30ef3",
+    "port/game-data/loot_power_creation_v7.hpp": "a9e391ef52a3e5efed6d549a8c598425a9e3daee112b8b19debec4cafbb7c0b4",
+    "port/game-data/loot_power_resources_v7.cpp": "afb52f3f7f8bb8b596d818d10c47130d81831660cbe7a7dc5c41a291a23be244",
+    "port/game-data/loot_power_resources_v7.hpp": "ba129428839360f209db56af1a51b80e3a0d749d36f339973be6b2dfddc2fb2b",
+    "port/game-data/loot_tables_v2.cpp": "ba72e90ac1003fe2e931024b3a21a99231048e8788d449794d80fffbc609892a",
+    "port/game-data/loot_tables_v2.hpp": "2e7cf1a4ece3778e109b1d758be4c3e052ee7a9154a41917a53840c83c387d72",
+    "port/game-data/player_equipment_live_services_v1.cpp": "9e75499afff0884c0b3b3e51e80167c1e368b30d1cef63af384f3374eaa51986",
+    "port/game-data/player_equipment_live_services_v1.hpp": "614afe87f8b492ce60ce0b6a7fbe7ee5e4cdaa9f1dd527be32ea8a2b9825092a",
+    "port/game-data/player_equipment_queries_live_v1.cpp": "c93ce664885042b3daa650b7b3c7de2d9f2503c0809259423484fd4b456977f2",
+    "port/game-data/player_equipment_queries_live_v1.hpp": "1b4a55ced7dbee79659b2fa972a00f2a82513c306f2a716576e6540873e19978",
+    "port/game-data/player_gear_effects_v5.cpp": "863f410ae216da1e43399be9c8983999475dd9af7a6e03ce30d062c67fa9ad42",
+    "port/game-data/player_gear_effects_v5.hpp": "14fda13f2d6758d456fc08e23aebe9b78211dc2e0f59e1c030b202bfbf2d9eb7",
+    "port/game-data/player_profile_create_v1.cpp": "4ae5e1ba5be9617c5f7476303ae31beaa9bcd36e24edf9d19139eaa2fc3b0641",
+    "port/game-data/player_profile_create_v1.hpp": "44a626b1c9997f286a42fc7432a5d9c4d55eda50e78a16eba3cc2010bb0935a8",
+    "port/game-data/player_profile_filename_v1.cpp": "51b3652d1ec8ced62241defa4adf3feef4d436bd75f1f59a47c80a33312695d6",
+    "port/game-data/player_profile_filename_v1.hpp": "b05db5cd2b9740046cdd07dce15a5a55497e6ded3cb391a9b1324b476f898388",
+    "port/game-data/player_profile_index_v1.cpp": "e794d0229dfbd9c970f30eace3408ea88e32bbd2bcca4db37f99460191fbc5ef",
+    "port/game-data/player_profile_index_v1.hpp": "5bfcb8b934cce80ef507f8a96a0db0e9eaacc344e046d3c1817e2c398add0ef7",
+    "port/game-data/player_save_load_owner_v1.cpp": "101f7385e07d48c3ca4d03373dd61625c3dc100825cd1781304ef0b6d81e84a5",
+    "port/game-data/player_save_load_owner_v1.hpp": "e4313b94c95c8d0083c1f3d6d39f735276b1d1f5f8c4a8cf1b59923e6ad234bc",
+    "port/game-data/player_saved_skill_slots_v1.cpp": "77f3682f9b8f675d7901126938437b67ec990b5f59238c4429a88da5417e63e8",
+    "port/game-data/player_saved_skill_slots_v1.hpp": "4ce996da152ff134ed745afbdafe488c574382fedea66c5da5e5cc55b596f321",
+    "port/game-data/player_savegame_v1.cpp": "fc8881c5379ed9d6bab38bd2b20ec7ae7c11e2e92bcc4d681f04ac0443df74c2",
+    "port/game-data/player_savegame_v1.hpp": "05fba26a7dd9bce4ec37c6c8d3db84ce82ca9bd7f30adbb32070a9e100b97cfe",
+    "port/game-data/properties.cpp": "efa0bb41855d20f638f7cabe4c250a16997c041f748bf532c11d39f6bac23fb5",
+    "port/game-data/properties.hpp": "6a4219c2745c4301899f8a5c282c054822f2d317bf51f8644c38a101c5adf21d",
+    "port/game-data/reference/player-profile-create-v1/fixtures.bin": "8e1dd2301d1d66443810ee6d9182ec06f1fa891eb38c49217039b1b9fa7dfb26",
+    "port/game-data/reference/player-profile-create-v1/original-capture.json": "7a7ccc1a62ee413ed348d8126e168dc13ff347d52798c2fc6a5e13290bc4d950",
+    "port/game-data/reference/player-profile-create-v1/original-functions.asm": "813d1cbaf98b446f92bd4fc9e0caab6ab1c1c13b2adda4cd50a53dc59e44e09a",
+    "port/game-data/reference/player-profile-create-v1/original-functions.json": "9057d1f015ec1f67a0086223cfc164ad14436a4c434113b5e81eca42130b324d",
+    "port/game-data/savegame_options_v1.cpp": "6e29f8d64dd697513804f8f138a0157e2ba5e99b1266fb4c23e6519e8c693b3b",
+    "port/game-data/savegame_options_v1.hpp": "26863444946843b5e1c2e51157140a578ae0560ead7b0409ca76a146c338483e",
+    "port/game-data/skill_tables.cpp": "e9441c5e7eb0d93bfe62385645d0b88f220c13e762fa604e33a206a05c4373ac",
+    "port/game-data/skill_tables.hpp": "8004113c312d881f7e2f5e83252c3531300c68a88c902bfa35f241339a1facab",
+    "port/game-data/tests/aggro_differential.py": "bc901defb67ea653ae9b3f8e74aebddb1ee641013bc1b3f0b31e2c08eb20a955",
+    "port/game-data/tests/combat_application_differential.py": "e7b5d189e05d8c603b2ecddead9b24997d2922d9389d14590b4fa28fdb99a9c8",
+    "port/game-data/tests/combat_differential.py": "f0e4a7e19bd2ea3d79a4d20ed94d323c465cd3784cbaff74723bbcc7a893a860",
+    "port/game-data/tests/combat_result_differential.py": "2a129d4aaa7dea425b4a081ea1e9023eae647bf3dd97cd21a655fbe7319ba9cf",
+    "port/game-data/tests/health_differential.py": "b7d1309ec119210f13a8e35c16aa2f1cf6a0c1dffbf2df4081e7d79ef77a8bb6",
+    "port/game-data/tests/items_differential_v4_original.py": "fb12163810bd97fdaf74f62af247d65fe34003b4fea1121a4185fd72681730dd",
+    "port/game-data/tests/navigation_differential_v4_original.py": "2aa5c138f6866c3f78e0ee077497420af2f11144d85fab675ad23b3ffaf3dbfe",
+    "port/game-data/tests/player_profile_create_v1.cpp": "a719ea040899cd2dabbefe24de87ba39faa06e19d8354eec0a196cc041d4dbc7",
+    "port/game-data/tests/player_profile_create_v1_original.py": "2de08f5f7f8fcb22b9b4ca075c64c697c17c2b9ead01202eec20d2ff2141aa73",
+    "port/game-data/tests/player_profile_index_v1_original.py": "65df099156cf6c24ca355f71c83d89193fc7048a06d495b57a215a0fdc7e72d5",
+    "port/game-data/tests/player_savegame_v1_original.py": "c702984b55168ad6d52e5cf7c0ce8024072963184b58dc2be77d4a3b7f7f5409",
+    "port/game-data/tests/run_player_profile_create_v1_host.py": "f79a8a7bd1932bd22e77762b16b8a34b69618711b51aa15e0286b2cc8353afd8",
+    "port/game-data/vitals.cpp": "34999512b1bff69e99dd39aa9f252470366c8a950c9de03dc894cf299b67e5b9",
+    "port/game-data/vitals.hpp": "c0a378ae928dbb6a7c579385e1dcb70c7731fe1772c7d48b37991d51d6fd0de3",
+    "port/level-world/tests/run_player_skill_cleanup_session_v1_host.py": "911addc93e093546ed2fc216ebb93f534bd0e0a8b6d29d69651d3fda4e3e961d"
+  },
+  "source_before_after_equal": true,
+  "new_module_selected": true,
+  "source_tu_counts": {
+    "player_profile_create_v1.cpp": 1,
+    "player_savegame_v1.cpp": 1,
+    "player_save_load_owner_v1.cpp": 1,
+    "player_profile_index_v1.cpp": 1,
+    "native_player_profile.cpp": 1
+  },
+  "selected_compiler_objects": {
+    "CMakeFiles/profile_create_audit.dir/C_/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/tests/player_profile_create_v1.cpp.obj": "port/game-data/tests/player_profile_create_v1.cpp",
+    "CMakeFiles/profile_create_audit.dir/C_/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/android-native/app/src/main/cpp/native_player_profile.cpp.obj": "port/android-native/app/src/main/cpp/native_player_profile.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/data.cpp.obj": "port/game-data/data.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/items.cpp.obj": "port/game-data/items.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/animation_bank.cpp.obj": "port/game-data/animation_bank.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/animation_tables.cpp.obj": "port/game-data/animation_tables.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/animation_selection.cpp.obj": "port/game-data/animation_selection.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/animation_scheduler.cpp.obj": "port/game-data/animation_scheduler.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/class_tables.cpp.obj": "port/game-data/class_tables.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/properties.cpp.obj": "port/game-data/properties.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/vitals.cpp.obj": "port/game-data/vitals.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/combat.cpp.obj": "port/game-data/combat.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/combat_events.cpp.obj": "port/game-data/combat_events.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/combat_result.cpp.obj": "port/game-data/combat_result.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/health.cpp.obj": "port/game-data/health.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/combat_application.cpp.obj": "port/game-data/combat_application.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/aggro.cpp.obj": "port/game-data/aggro.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/ai.cpp.obj": "port/game-data/ai.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/level_tables.cpp.obj": "port/game-data/level_tables.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/class_preview_setup.cpp.obj": "port/game-data/class_preview_setup.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/player_profile_create_v1.cpp.obj": "port/game-data/player_profile_create_v1.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/skill_tables.cpp.obj": "port/game-data/skill_tables.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/player_savegame_v1.cpp.obj": "port/game-data/player_savegame_v1.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/player_profile_index_v1.cpp.obj": "port/game-data/player_profile_index_v1.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/player_save_load_owner_v1.cpp.obj": "port/game-data/player_save_load_owner_v1.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/player_profile_filename_v1.cpp.obj": "port/game-data/player_profile_filename_v1.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/savegame_options_v1.cpp.obj": "port/game-data/savegame_options_v1.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/item_gear_properties_v5.cpp.obj": "port/game-data/item_gear_properties_v5.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/item_power_tables_v5.cpp.obj": "port/game-data/item_power_tables_v5.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/loot_power_resources_v7.cpp.obj": "port/game-data/loot_power_resources_v7.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/item_instance.cpp.obj": "port/game-data/item_instance.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/loot_tables_v2.cpp.obj": "port/game-data/loot_tables_v2.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/fresh_inventory_owned_v4.cpp.obj": "port/game-data/fresh_inventory_owned_v4.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/player_gear_effects_v5.cpp.obj": "port/game-data/player_gear_effects_v5.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/item_presentation_v5.cpp.obj": "port/game-data/item_presentation_v5.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/loot_power_creation_v7.cpp.obj": "port/game-data/loot_power_creation_v7.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/player_saved_skill_slots_v1.cpp.obj": "port/game-data/player_saved_skill_slots_v1.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/player_equipment_live_services_v1.cpp.obj": "port/game-data/player_equipment_live_services_v1.cpp",
+    "selected-game/CMakeFiles/dh2_game_data.dir/player_equipment_queries_live_v1.cpp.obj": "port/game-data/player_equipment_queries_live_v1.cpp"
+  },
+  "selected_commands": "C:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe  -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/android-native/app/src/main/cpp -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -Werror -fno-fast-math -MD -MT CMakeFiles/profile_create_audit.dir/C_/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/tests/player_profile_create_v1.cpp.obj -MF CMakeFiles\\profile_create_audit.dir\\C_\\Users\\noamc\\Documents\\Codex\\2026-10-02\\contineu-from-where-they-left-off\\work\\DH_sc\\port\\game-data\\tests\\player_profile_create_v1.cpp.obj.d -o CMakeFiles/profile_create_audit.dir/C_/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/tests/player_profile_create_v1.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/tests/player_profile_create_v1.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe  -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/android-native/app/src/main/cpp -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -Werror -fno-fast-math -MD -MT CMakeFiles/profile_create_audit.dir/C_/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/android-native/app/src/main/cpp/native_player_profile.cpp.obj -MF CMakeFiles\\profile_create_audit.dir\\C_\\Users\\noamc\\Documents\\Codex\\2026-10-02\\contineu-from-where-they-left-off\\work\\DH_sc\\port\\android-native\\app\\src\\main\\cpp\\native_player_profile.cpp.obj.d -o CMakeFiles/profile_create_audit.dir/C_/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/android-native/app/src/main/cpp/native_player_profile.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/android-native/app/src/main/cpp/native_player_profile.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/data.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\data.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/data.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/data.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/items.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\items.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/items.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/items.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/animation_bank.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\animation_bank.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/animation_bank.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/animation_bank.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/animation_tables.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\animation_tables.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/animation_tables.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/animation_tables.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/animation_selection.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\animation_selection.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/animation_selection.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/animation_selection.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/animation_scheduler.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\animation_scheduler.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/animation_scheduler.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/animation_scheduler.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/class_tables.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\class_tables.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/class_tables.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/class_tables.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/properties.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\properties.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/properties.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/properties.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/vitals.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\vitals.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/vitals.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/vitals.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/combat.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\combat.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/combat.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/combat.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/combat_events.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\combat_events.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/combat_events.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/combat_events.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/combat_result.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\combat_result.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/combat_result.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/combat_result.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/health.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\health.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/health.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/health.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/combat_application.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\combat_application.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/combat_application.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/combat_application.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/aggro.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\aggro.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/aggro.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/aggro.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/ai.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\ai.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/ai.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/ai.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/level_tables.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\level_tables.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/level_tables.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/level_tables.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/class_preview_setup.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\class_preview_setup.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/class_preview_setup.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/class_preview_setup.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/player_profile_create_v1.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\player_profile_create_v1.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/player_profile_create_v1.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_profile_create_v1.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/skill_tables.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\skill_tables.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/skill_tables.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/skill_tables.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/player_savegame_v1.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\player_savegame_v1.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/player_savegame_v1.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_savegame_v1.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/player_profile_index_v1.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\player_profile_index_v1.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/player_profile_index_v1.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_profile_index_v1.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/player_save_load_owner_v1.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\player_save_load_owner_v1.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/player_save_load_owner_v1.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_save_load_owner_v1.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/player_profile_filename_v1.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\player_profile_filename_v1.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/player_profile_filename_v1.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_profile_filename_v1.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/savegame_options_v1.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\savegame_options_v1.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/savegame_options_v1.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/savegame_options_v1.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -ffp-contract=off -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/item_gear_properties_v5.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\item_gear_properties_v5.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/item_gear_properties_v5.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -ffp-contract=off -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/item_power_tables_v5.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\item_power_tables_v5.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/item_power_tables_v5.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_power_tables_v5.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -ffp-contract=off -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/loot_power_resources_v7.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\loot_power_resources_v7.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/loot_power_resources_v7.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_resources_v7.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -ffp-contract=off -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/item_instance.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\item_instance.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/item_instance.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_instance.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -ffp-contract=off -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/loot_tables_v2.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\loot_tables_v2.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/loot_tables_v2.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -ffp-contract=off -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/fresh_inventory_owned_v4.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\fresh_inventory_owned_v4.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/fresh_inventory_owned_v4.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -ffp-contract=off -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/player_gear_effects_v5.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\player_gear_effects_v5.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/player_gear_effects_v5.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_gear_effects_v5.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -ffp-contract=off -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/item_presentation_v5.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\item_presentation_v5.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/item_presentation_v5.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_presentation_v5.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -ffp-contract=off -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/loot_power_creation_v7.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\loot_power_creation_v7.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/loot_power_creation_v7.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/player_saved_skill_slots_v1.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\player_saved_skill_slots_v1.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/player_saved_skill_slots_v1.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_saved_skill_slots_v1.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/player_equipment_live_services_v1.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\player_equipment_live_services_v1.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/player_equipment_live_services_v1.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_equipment_live_services_v1.cpp\nC:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O1 -Wall -Wextra -fno-fast-math -MD -MT selected-game/CMakeFiles/dh2_game_data.dir/player_equipment_queries_live_v1.cpp.obj -MF selected-game\\CMakeFiles\\dh2_game_data.dir\\player_equipment_queries_live_v1.cpp.obj.d -o selected-game/CMakeFiles/dh2_game_data.dir/player_equipment_queries_live_v1.cpp.obj -c C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_equipment_queries_live_v1.cpp\nC:\\WINDOWS\\system32\\cmd.exe /C \"cd . && C:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -O1  -shared -o selected-game\\libdh2_game_data.dll -Wl,--out-implib,selected-game\\libdh2_game_data.dll.a -Wl,--major-image-version,0,--minor-image-version,0 selected-game/CMakeFiles/dh2_game_data.dir/data.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/items.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/animation_bank.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/animation_tables.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/animation_selection.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/animation_scheduler.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/class_tables.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/properties.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/vitals.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/combat.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/combat_events.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/combat_result.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/health.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/combat_application.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/aggro.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/ai.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/level_tables.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/class_preview_setup.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/player_profile_create_v1.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/skill_tables.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/player_savegame_v1.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/player_profile_index_v1.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/player_save_load_owner_v1.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/player_profile_filename_v1.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/savegame_options_v1.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/item_gear_properties_v5.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/item_power_tables_v5.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/loot_power_resources_v7.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/item_instance.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/loot_tables_v2.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/fresh_inventory_owned_v4.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/player_gear_effects_v5.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/item_presentation_v5.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/loot_power_creation_v7.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/player_saved_skill_slots_v1.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/player_equipment_live_services_v1.cpp.obj selected-game/CMakeFiles/dh2_game_data.dir/player_equipment_queries_live_v1.cpp.obj  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 && cd .\"\nC:\\WINDOWS\\system32\\cmd.exe /C \"cd . && C:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -O1  CMakeFiles/profile_create_audit.dir/C_/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/tests/player_profile_create_v1.cpp.obj CMakeFiles/profile_create_audit.dir/C_/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/android-native/app/src/main/cpp/native_player_profile.cpp.obj -o profile_create_audit.exe -Wl,--out-implib,libprofile_create_audit.dll.a -Wl,--major-image-version,0,--minor-image-version,0  selected-game/libdh2_game_data.dll.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 && cd .\"\n",
+  "wrapper_cmake": "cmake_minimum_required(VERSION 3.22)\nproject(profile_create_selected LANGUAGES C CXX)\nset(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)\nset(CMAKE_EXPORT_COMPILE_COMMANDS ON)\nadd_subdirectory(\"C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data\" selected-game)\nadd_executable(profile_create_audit \"C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/tests/player_profile_create_v1.cpp\" \"C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/android-native/app/src/main/cpp/native_player_profile.cpp\")\ntarget_include_directories(profile_create_audit PRIVATE \"C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/android-native/app/src/main/cpp\")\ntarget_compile_features(profile_create_audit PRIVATE cxx_std_17)\ntarget_compile_options(profile_create_audit PRIVATE -Wall -Wextra -Werror -fno-fast-math)\ntarget_link_libraries(profile_create_audit PRIVATE dh2_game_data)\n",
+  "binary_sha256": {
+    "build/profile_create_audit.exe": "9744cc951b51a7f5d62819a7552f4e74ab2c31b01c4527b39e81cd0725351a53",
+    "build/selected-game/libdh2_game_data.dll": "b651ac84c18187a16f891ea5f7ebc043afd883a985b23e580cb4f7ed9793a866"
+  },
+  "build_stdout": [
+    "-- The C compiler identification is GNU 15.2.0\n-- The CXX compiler identification is GNU 15.2.0\n-- Detecting C compiler ABI info\n-- Detecting C compiler ABI info - done\n-- Check for working C compiler: C:/Users/noamc/.local/mingw/mingw64/bin/gcc.exe - skipped\n-- Detecting C compile features\n-- Detecting C compile features - done\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: C:/Users/noamc/.local/mingw/mingw64/bin/g++.exe - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (1.4s)\n-- Generating done (0.1s)\n-- Build files have been written to: C:/tmp/dh2-create-r10/build\n",
+    "[1/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/data.cpp.obj\n[2/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/items.cpp.obj\n[3/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/animation_bank.cpp.obj\n[4/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/animation_tables.cpp.obj\n[5/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/animation_selection.cpp.obj\n[6/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/animation_scheduler.cpp.obj\n[7/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/class_tables.cpp.obj\n[8/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/properties.cpp.obj\n[9/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/combat.cpp.obj\n[10/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/vitals.cpp.obj\n[11/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/combat_events.cpp.obj\n[12/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/combat_result.cpp.obj\n[13/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/health.cpp.obj\n[14/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/aggro.cpp.obj\n[15/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/combat_application.cpp.obj\n[16/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/ai.cpp.obj\n[17/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/level_tables.cpp.obj\n[18/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/class_preview_setup.cpp.obj\n[19/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_profile_create_v1.cpp.obj\n[20/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_savegame_v1.cpp.obj\n[21/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/skill_tables.cpp.obj\n[22/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_profile_index_v1.cpp.obj\n[23/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_save_load_owner_v1.cpp.obj\n[24/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_profile_filename_v1.cpp.obj\n[25/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/savegame_options_v1.cpp.obj\n[26/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/item_gear_properties_v5.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp: In function 'unsigned int {anonymous}::destination(unsigned int, unsigned int, bool)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp:19:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   19 |  if(!left)return p;if(type>=7&&type<=9)return p+3;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp:19:20: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   19 |  if(!left)return p;if(type>=7&&type<=9)return p+3;\n      |                    ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp:20:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   20 |  if(type>=10&&type<=19)return p+2;if(type==28)return p+2;return p;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp:20:35: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   20 |  if(type>=10&&type<=19)return p+2;if(type==28)return p+2;return p;\n      |                                   ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp: In function 'int dh2_gear_reset_v5(int32_t*, const int32_t*)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp:24:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   24 |  if(!sheets(g,d))return -1;for(unsigned i=0;i<224;++i)g[i]=d[i];return 0;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp:24:28: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   24 |  if(!sheets(g,d))return -1;for(unsigned i=0;i<224;++i)g[i]=d[i];return 0;\n      |                            ^~~\n[27/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/item_power_tables_v5.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_power_tables_v5.cpp: In member function 'bool dh2::data::ItemPowerTablesV5::load(dh2::data::Bytes, dh2::data::Bytes, dh2::data::Bytes, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_power_tables_v5.cpp:27:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   27 |  if(snapshot_&&snapshot_.use_count()!=1)throw std::runtime_error(\"ItemPower snapshot has live borrowers\");auto next=std::make_shared<Snapshot>();Reader r(bytes),n(names),s(schema);\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_power_tables_v5.cpp:27:107: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   27 |  if(snapshot_&&snapshot_.use_count()!=1)throw std::runtime_error(\"ItemPower snapshot has live borrowers\");auto next=std::make_shared<Snapshot>();Reader r(bytes),n(names),s(schema);\n      |                                                                                                           ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_power_tables_v5.cpp:32:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   32 |  if(r.at!=bytes.size)throw std::runtime_error(\"Unexpected ItemPower trailing bytes\");auto list_names=n.strings();next->names=n.strings();if(n.at!=names.size||list_names.size()!=lists||next->names.size()!=count)throw std::runtime_error(\"ItemPower names differ\");\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_power_tables_v5.cpp:32:86: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   32 |  if(r.at!=bytes.size)throw std::runtime_error(\"Unexpected ItemPower trailing bytes\");auto list_names=n.strings();next->names=n.strings();if(n.at!=names.size||list_names.size()!=lists||next->names.size()!=count)throw std::runtime_error(\"ItemPower names differ\");\n      |                                                                                      ^~~~\n[28/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/loot_power_resources_v7.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_resources_v7.cpp: In member function 'bool dh2::data::LootPowerResourcesV7::load(const dh2::data::LootPowerInputsV7&, dh2::data::ItemPowerTablesV5::Borrow, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_resources_v7.cpp:75:4: warning: this 'while' clause does not guard... [-Wmisleading-indentation]\n   75 |    while(k--)row.push_back(monopoly.integer());next->monopolies.push_back(std::move(row));}\n      |    ^~~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_resources_v7.cpp:75:48: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'while'\n   75 |    while(k--)row.push_back(monopoly.integer());next->monopolies.push_back(std::move(row));}\n      |                                                ^~~~\n[29/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/item_instance.cpp.obj\n[30/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/loot_tables_v2.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp: In function 'int dh2_loot_v2_decode(dh2::data::LootRow64V2*, const uint8_t*, uint32_t)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:24:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   24 |  if(!read(next.random_entries,32)||!read(next.fixed_entries,32)||!read(next.sub_loots,4))return -1;next.consumed=at;*out=next;return 0;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:24:100: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   24 |  if(!read(next.random_entries,32)||!read(next.fixed_entries,32)||!read(next.sub_loots,4))return -1;next.consumed=at;*out=next;return 0;\n      |                                                                                                    ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp: In member function 'bool dh2::data::LootTablesV2::load(dh2::data::Bytes, dh2::data::Bytes, dh2::data::Bytes, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:33:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   33 |  if(snapshot_&&snapshot_.use_count()!=1)throw std::runtime_error(\"LootTable snapshot has live borrowers\");auto next=std::make_shared<Snapshot>();if(!load_items(records,names,schema,next->items,e))return false;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:33:107: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   33 |  if(snapshot_&&snapshot_.use_count()!=1)throw std::runtime_error(\"LootTable snapshot has live borrowers\");auto next=std::make_shared<Snapshot>();if(!load_items(records,names,schema,next->items,e))return false;\n      |                                                                                                           ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:36:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   36 |  if(r.at!=next->items.data_begin)throw std::runtime_error(\"Loot ItemList prefix differs\");r.at=next->items.data_consumed;count=r.count();for(std::uint32_t i=0;i<count;++i){auto bytes=r.count();r.take(bytes);}count=r.count();next->loots.reserve(count);\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:36:91: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   36 |  if(r.at!=next->items.data_begin)throw std::runtime_error(\"Loot ItemList prefix differs\");r.at=next->items.data_consumed;count=r.count();for(std::uint32_t i=0;i<count;++i){auto bytes=r.count();r.take(bytes);}count=r.count();next->loots.reserve(count);\n      |                                                                                           ^\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:40:3: warning: this 'for' clause does not guard... [-Wmisleading-indentation]\n   40 |   for(std::uint32_t j=0;j<row.sub_loots.count;++j)actual.sub_loots.push_back(signed_word(row.sub_loots.bytes+4*j));next->loots.push_back(std::move(actual));r.take(row.consumed);\n      |   ^~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:40:116: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'for'\n   40 |   for(std::uint32_t j=0;j<row.sub_loots.count;++j)actual.sub_loots.push_back(signed_word(row.sub_loots.bytes+4*j));next->loots.push_back(std::move(actual));r.take(row.consumed);\n      |                                                                                                                    ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:43:2: warning: this 'for' clause does not guard... [-Wmisleading-indentation]\n   43 |  for(unsigned i=0;i<14;++i)f.strings();auto entry=f.strings(),loot=f.strings();if(entry!=std::vector<std::string>{\"ItemListID\",\"ItemPowerList\",\"MProb\",\"NumPowerProbs\",\"Pct\",\"Prob\",\"RProb\",\"WProb\"}||loot!=std::vector<std::string>{\"RollType\",\"NumRandomItemProbs\",\"RandomLootEntries\",\"FixedLootEntries\",\"SubLoots\"})throw std::runtime_error(\"LootTable schema differs\");snapshot_=std::move(next);e.clear();return true;\n      |  ^~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:43:40: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'for'\n   43 |  for(unsigned i=0;i<14;++i)f.strings();auto entry=f.strings(),loot=f.strings();if(entry!=std::vector<std::string>{\"ItemListID\",\"ItemPowerList\",\"MProb\",\"NumPowerProbs\",\"Pct\",\"Prob\",\"RProb\",\"WProb\"}||loot!=std::vector<std::string>{\"RollType\",\"NumRandomItemProbs\",\"RandomLootEntries\",\"FixedLootEntries\",\"SubLoots\"})throw std::runtime_error(\"LootTable schema differs\");snapshot_=std::move(next);e.clear();return true;\n      |                                        ^~~~\n[31/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/fresh_inventory_owned_v4.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::add_fixed_loot_impl(int32_t, std::unique_ptr<dh2::data::ItemInstanceV1>&, bool, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:19:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   19 |  if(!mutation_allowed(e))return false;if(running_||!s.invoke){e=\"Malformed fresh loot service or unsupported owner reentry\";return false;}if(id<0||std::size_t(id)>=tables_.loots().size()){e.clear();return true;}running_=true;struct Guard{bool& b;~Guard(){b=false;}}guard{running_};std::int32_t ignored=0;auto trace=[&](std::uint32_t at){return debug(s,at,\"isTracingItemInventory_Loot\",ignored,e);};\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:19:39: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   19 |  if(!mutation_allowed(e))return false;if(running_||!s.invoke){e=\"Malformed fresh loot service or unsupported owner reentry\";return false;}if(id<0||std::size_t(id)>=tables_.loots().size()){e.clear();return true;}running_=true;struct Guard{bool& b;~Guard(){b=false;}}guard{running_};std::int32_t ignored=0;auto trace=[&](std::uint32_t at){return debug(s,at,\"isTracingItemInventory_Loot\",ignored,e);};\n      |                                       ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:20:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   20 |  if(!debug(s,0x40411c,\"MP_MinimalRandoms\",ignored,e))return false;if(ignored){e.clear();return true;}if(!trace(0x404160)||!trace(0x404190))return false;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:20:67: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   20 |  if(!debug(s,0x40411c,\"MP_MinimalRandoms\",ignored,e))return false;if(ignored){e.clear();return true;}if(!trace(0x404160)||!trace(0x404190))return false;\n      |                                                                   ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:31:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   31 |  if(!trace(0x4042fc)||!trace(0x40432c))return false;OwnedInventoryResponseV4 out;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:31:53: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   31 |  if(!trace(0x4042fc)||!trace(0x40432c))return false;OwnedInventoryResponseV4 out;\n      |                                                     ^~~~~~~~~~~~~~~~~~~~~~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:34:4: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   34 |    if(!(retained?create_item(chosen.id,1,RetainedItemSlotV4{&owned},s,e):create_item(chosen.id,1,owned,s,e)))return false;auto* instance=owned.get();\n      |    ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:34:123: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   34 |    if(!(retained?create_item(chosen.id,1,RetainedItemSlotV4{&owned},s,e):create_item(chosen.id,1,owned,s,e)))return false;auto* instance=owned.get();\n      |                                                                                                                           ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:39:4: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   39 |    if(!potion_&&inserted_type==14)potion_=instance;auto slot=std::make_unique<OwnedItemSlotV4>();slot->item=std::move(owned);items_.push_back(std::move(slot));auto index=std::uint32_t(items_.size()-1);if(!deliver(s,OwnedInventoryOperationV4::inventory_full,0x3ff6c4,instance,nullptr,0,index,out,e))return false;if(out.value&&!deliver(s,OwnedInventoryOperationV4::full_notifications,0x3ff7a8,instance,nullptr,0,index,out,e))return false;\n      |    ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:39:52: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   39 |    if(!potion_&&inserted_type==14)potion_=instance;auto slot=std::make_unique<OwnedItemSlotV4>();slot->item=std::move(owned);items_.push_back(std::move(slot));auto index=std::uint32_t(items_.size()-1);if(!deliver(s,OwnedInventoryOperationV4::inventory_full,0x3ff6c4,instance,nullptr,0,index,out,e))return false;if(out.value&&!deliver(s,OwnedInventoryOperationV4::full_notifications,0x3ff7a8,instance,nullptr,0,index,out,e))return false;\n      |                                                    ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::add_fixed_loot(int32_t, dh2::data::RetainedItemSlotV4, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:45:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   45 |  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;if(*slot.value){e=\"Fixed loot incoming slot already owns an item\";return false;}\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:45:71: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   45 |  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;if(*slot.value){e=\"Fixed loot incoming slot already owns an item\";return false;}\n      |                                                                       ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::add_fixed_loot(int32_t, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:50:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   50 |  if(temporary)observe(s,OwnedInventoryOperationV4::destroy_item,0,temporary.get());return ok;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:50:84: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   50 |  if(temporary)observe(s,OwnedInventoryOperationV4::destroy_item,0,temporary.get());return ok;\n      |                                                                                    ^~~~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::create_item(int32_t, uint32_t, dh2::data::RetainedItemSlotV4, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:73:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   73 |  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;auto& out=*slot.value;if(out||!item(tables_.items(),id)){e=\"Malformed constructor output or source item index\";return false;}\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:73:71: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   73 |  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;auto& out=*slot.value;if(out||!item(tables_.items(),id)){e=\"Malformed constructor output or source item index\";return false;}\n      |                                                                       ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::create_item(int32_t, uint32_t, std::unique_ptr<dh2::data::ItemInstanceV1>&, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:81:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   81 |  if(!mutation_allowed(e))return false;if(out||!item(tables_.items(),id)){e=\"Malformed constructor output or source item index\";return false;}\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:81:39: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   81 |  if(!mutation_allowed(e))return false;if(out||!item(tables_.items(),id)){e=\"Malformed constructor output or source item index\";return false;}\n      |                                       ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::retire_item(dh2::data::RetainedItemSlotV4, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:89:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   89 |  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;if(!*slot.value){e=\"Null retained Item retirement\";return false;}\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:89:71: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   89 |  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;if(!*slot.value){e=\"Null retained Item retirement\";return false;}\n      |                                                                       ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::split_item(dh2::data::ItemInstanceV1&, int32_t, dh2::data::RetainedItemSlotV4, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:96:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   96 |  if(!mutation_allowed(e)||!lifetime_slot(slot,&original,e))return false;auto& out=*slot.value;if(out){e=\"Split output already owns an item\";return false;}auto* info=metadata(&original,e);if(!info)return false;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:96:73: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   96 |  if(!mutation_allowed(e)||!lifetime_slot(slot,&original,e))return false;auto& out=*slot.value;if(out){e=\"Split output already owns an item\";return false;}auto* info=metadata(&original,e);if(!info)return false;\n      |                                                                         ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:98:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   98 |  if(!add_quantity(original,-amount,e)||!create_item(original.id,std::uint32_t(amount),slot,s,e))return false;auto* actual=out.get();out->value=original.value;OwnedInventoryResponseV4 r;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:98:110: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   98 |  if(!add_quantity(original,-amount,e)||!create_item(original.id,std::uint32_t(amount),slot,s,e))return false;auto* actual=out.get();out->value=original.value;OwnedInventoryResponseV4 r;\n      |                                                                                                              ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:99:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   99 |  if(!deliver(s,OwnedInventoryOperationV4::update_name,0x3fc44c,actual,nullptr,0,0,r,e))return false;if(out.get()!=actual){e=\"Split SetValue changed retained Item identity\";return false;}\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:99:101: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   99 |  if(!deliver(s,OwnedInventoryOperationV4::update_name,0x3fc44c,actual,nullptr,0,0,r,e))return false;if(out.get()!=actual){e=\"Split SetValue changed retained Item identity\";return false;}\n      |                                                                                                     ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::split_item(dh2::data::ItemInstanceV1&, int32_t, std::unique_ptr<dh2::data::ItemInstanceV1>&, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:104:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n  104 |  if(!mutation_allowed(e))return false;if(out){e=\"Split output already owns an item\";return false;}auto* info=metadata(&original,e);if(!info)return false;if(!std::uint8_t(info->record.words[7])||amount<=0||amount>=original.signed_quantity()){e.clear();return true;}\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:104:39: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n  104 |  if(!mutation_allowed(e))return false;if(out){e=\"Split output already owns an item\";return false;}auto* info=metadata(&original,e);if(!info)return false;if(!std::uint8_t(info->record.words[7])||amount<=0||amount>=original.signed_quantity()){e.clear();return true;}\n      |                                       ^~\n[32/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_gear_effects_v5.cpp.obj\n[33/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/item_presentation_v5.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_presentation_v5.cpp: In function 'bool dh2::data::item_update_name_v5(ItemInstanceV1&, const ItemTextServicesV5&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_presentation_v5.cpp:24:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   24 |  if(has_material&&!suffix)i.name=selected+\" \";i.name+=prefix;if(has_material&&suffix)i.name+=\" \"+selected;return true;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_presentation_v5.cpp:24:47: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   24 |  if(has_material&&!suffix)i.name=selected+\" \";i.name+=prefix;if(has_material&&suffix)i.name+=\" \"+selected;return true;\n      |                                               ^\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_presentation_v5.cpp: In function 'bool dh2::data::item_update_requirements_v5(ItemInstanceV1&, const ItemTextServicesV5&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_presentation_v5.cpp:33:3: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   33 |   if(!parse(s,i,text,&a,1,i.requirements,e))return false;added=true;\n      |   ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_presentation_v5.cpp:33:58: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   33 |   if(!parse(s,i,text,&a,1,i.requirements,e))return false;added=true;\n      |                                                          ^~~~~\n[34/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/loot_power_creation_v7.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp: In function 'int {anonymous}::live_draw(const dh2::data::InventoryRandomServiceV4&, int32_t, int32_t&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:30:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   30 |  if(error.empty())error=\"Required borrowed source RNG failed\";return -2;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:30:63: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   30 |  if(error.empty())error=\"Required borrowed source RNG failed\";return -2;\n      |                                                               ^~~~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp: In lambda function:\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:106:4: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n  106 |    if(error.empty())error=\"Required native loot-power service failed\";return false;}\n      |    ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:106:71: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n  106 |    if(error.empty())error=\"Required native loot-power service failed\";return false;}\n      |                                                                       ^~~~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp: In member function 'bool dh2::data::LootPowerCreationV7::add_powers(const dh2::data::LootEntry32V2&, dh2::data::ItemInstanceV1&, int32_t, int32_t, int32_t, const dh2::data::LootPowerServicesV7&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:132:4: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n  132 |    if(retries>9)break;continue;}\n      |    ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:132:23: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n  132 |    if(retries>9)break;continue;}\n      |                       ^~~~~~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:139:4: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n  139 |    if(!conflict(*row,blocked))return false;if(blocked)continue;\n      |    ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:139:44: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n  139 |    if(!conflict(*row,blocked))return false;if(blocked)continue;\n      |                                            ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp: In function 'bool dh2::data::loot_item_value_v7(ItemInstanceV1&, const ItemTable&, ItemPowerTablesV5::Borrow, const InventoryRandomServiceV4&, int32_t, const ItemTextServicesV5&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:155:3: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n  155 |   if(error.empty())error=\"Invalid native loot valuation projection\";return false;}\n      |   ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:155:69: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n  155 |   if(error.empty())error=\"Invalid native loot valuation projection\";return false;}\n      |                                                                     ^~~~~~\n[35/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_saved_skill_slots_v1.cpp.obj\n[36/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_equipment_live_services_v1.cpp.obj\n[37/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_equipment_queries_live_v1.cpp.obj\n[38/41] Building CXX object CMakeFiles/profile_create_audit.dir/C_/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/tests/player_profile_create_v1.cpp.obj\n[39/41] Building CXX object CMakeFiles/profile_create_audit.dir/C_/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/android-native/app/src/main/cpp/native_player_profile.cpp.obj\n[40/41] Linking CXX shared library selected-game\\libdh2_game_data.dll\n[41/41] Linking CXX executable profile_create_audit.exe\n",
+    "[1/1] Cleaning all built files...\nCleaning... 42 files.\n[1/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/items.cpp.obj\n[2/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/data.cpp.obj\n[3/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/animation_bank.cpp.obj\n[4/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/animation_tables.cpp.obj\n[5/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/animation_selection.cpp.obj\n[6/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/animation_scheduler.cpp.obj\n[7/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/class_tables.cpp.obj\n[8/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/properties.cpp.obj\n[9/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/combat.cpp.obj\n[10/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/vitals.cpp.obj\n[11/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/combat_events.cpp.obj\n[12/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/combat_result.cpp.obj\n[13/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/health.cpp.obj\n[14/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/aggro.cpp.obj\n[15/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/combat_application.cpp.obj\n[16/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/ai.cpp.obj\n[17/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/level_tables.cpp.obj\n[18/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/class_preview_setup.cpp.obj\n[19/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_profile_create_v1.cpp.obj\n[20/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_savegame_v1.cpp.obj\n[21/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/skill_tables.cpp.obj\n[22/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_profile_index_v1.cpp.obj\n[23/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_save_load_owner_v1.cpp.obj\n[24/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_profile_filename_v1.cpp.obj\n[25/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/savegame_options_v1.cpp.obj\n[26/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/item_gear_properties_v5.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp: In function 'unsigned int {anonymous}::destination(unsigned int, unsigned int, bool)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp:19:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   19 |  if(!left)return p;if(type>=7&&type<=9)return p+3;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp:19:20: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   19 |  if(!left)return p;if(type>=7&&type<=9)return p+3;\n      |                    ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp:20:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   20 |  if(type>=10&&type<=19)return p+2;if(type==28)return p+2;return p;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp:20:35: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   20 |  if(type>=10&&type<=19)return p+2;if(type==28)return p+2;return p;\n      |                                   ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp: In function 'int dh2_gear_reset_v5(int32_t*, const int32_t*)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp:24:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   24 |  if(!sheets(g,d))return -1;for(unsigned i=0;i<224;++i)g[i]=d[i];return 0;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_gear_properties_v5.cpp:24:28: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   24 |  if(!sheets(g,d))return -1;for(unsigned i=0;i<224;++i)g[i]=d[i];return 0;\n      |                            ^~~\n[27/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/item_power_tables_v5.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_power_tables_v5.cpp: In member function 'bool dh2::data::ItemPowerTablesV5::load(dh2::data::Bytes, dh2::data::Bytes, dh2::data::Bytes, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_power_tables_v5.cpp:27:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   27 |  if(snapshot_&&snapshot_.use_count()!=1)throw std::runtime_error(\"ItemPower snapshot has live borrowers\");auto next=std::make_shared<Snapshot>();Reader r(bytes),n(names),s(schema);\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_power_tables_v5.cpp:27:107: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   27 |  if(snapshot_&&snapshot_.use_count()!=1)throw std::runtime_error(\"ItemPower snapshot has live borrowers\");auto next=std::make_shared<Snapshot>();Reader r(bytes),n(names),s(schema);\n      |                                                                                                           ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_power_tables_v5.cpp:32:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   32 |  if(r.at!=bytes.size)throw std::runtime_error(\"Unexpected ItemPower trailing bytes\");auto list_names=n.strings();next->names=n.strings();if(n.at!=names.size||list_names.size()!=lists||next->names.size()!=count)throw std::runtime_error(\"ItemPower names differ\");\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_power_tables_v5.cpp:32:86: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   32 |  if(r.at!=bytes.size)throw std::runtime_error(\"Unexpected ItemPower trailing bytes\");auto list_names=n.strings();next->names=n.strings();if(n.at!=names.size||list_names.size()!=lists||next->names.size()!=count)throw std::runtime_error(\"ItemPower names differ\");\n      |                                                                                      ^~~~\n[28/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/loot_power_resources_v7.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_resources_v7.cpp: In member function 'bool dh2::data::LootPowerResourcesV7::load(const dh2::data::LootPowerInputsV7&, dh2::data::ItemPowerTablesV5::Borrow, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_resources_v7.cpp:75:4: warning: this 'while' clause does not guard... [-Wmisleading-indentation]\n   75 |    while(k--)row.push_back(monopoly.integer());next->monopolies.push_back(std::move(row));}\n      |    ^~~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_resources_v7.cpp:75:48: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'while'\n   75 |    while(k--)row.push_back(monopoly.integer());next->monopolies.push_back(std::move(row));}\n      |                                                ^~~~\n[29/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/item_instance.cpp.obj\n[30/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/loot_tables_v2.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp: In function 'int dh2_loot_v2_decode(dh2::data::LootRow64V2*, const uint8_t*, uint32_t)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:24:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   24 |  if(!read(next.random_entries,32)||!read(next.fixed_entries,32)||!read(next.sub_loots,4))return -1;next.consumed=at;*out=next;return 0;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:24:100: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   24 |  if(!read(next.random_entries,32)||!read(next.fixed_entries,32)||!read(next.sub_loots,4))return -1;next.consumed=at;*out=next;return 0;\n      |                                                                                                    ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp: In member function 'bool dh2::data::LootTablesV2::load(dh2::data::Bytes, dh2::data::Bytes, dh2::data::Bytes, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:33:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   33 |  if(snapshot_&&snapshot_.use_count()!=1)throw std::runtime_error(\"LootTable snapshot has live borrowers\");auto next=std::make_shared<Snapshot>();if(!load_items(records,names,schema,next->items,e))return false;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:33:107: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   33 |  if(snapshot_&&snapshot_.use_count()!=1)throw std::runtime_error(\"LootTable snapshot has live borrowers\");auto next=std::make_shared<Snapshot>();if(!load_items(records,names,schema,next->items,e))return false;\n      |                                                                                                           ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:36:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   36 |  if(r.at!=next->items.data_begin)throw std::runtime_error(\"Loot ItemList prefix differs\");r.at=next->items.data_consumed;count=r.count();for(std::uint32_t i=0;i<count;++i){auto bytes=r.count();r.take(bytes);}count=r.count();next->loots.reserve(count);\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:36:91: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   36 |  if(r.at!=next->items.data_begin)throw std::runtime_error(\"Loot ItemList prefix differs\");r.at=next->items.data_consumed;count=r.count();for(std::uint32_t i=0;i<count;++i){auto bytes=r.count();r.take(bytes);}count=r.count();next->loots.reserve(count);\n      |                                                                                           ^\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:40:3: warning: this 'for' clause does not guard... [-Wmisleading-indentation]\n   40 |   for(std::uint32_t j=0;j<row.sub_loots.count;++j)actual.sub_loots.push_back(signed_word(row.sub_loots.bytes+4*j));next->loots.push_back(std::move(actual));r.take(row.consumed);\n      |   ^~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:40:116: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'for'\n   40 |   for(std::uint32_t j=0;j<row.sub_loots.count;++j)actual.sub_loots.push_back(signed_word(row.sub_loots.bytes+4*j));next->loots.push_back(std::move(actual));r.take(row.consumed);\n      |                                                                                                                    ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:43:2: warning: this 'for' clause does not guard... [-Wmisleading-indentation]\n   43 |  for(unsigned i=0;i<14;++i)f.strings();auto entry=f.strings(),loot=f.strings();if(entry!=std::vector<std::string>{\"ItemListID\",\"ItemPowerList\",\"MProb\",\"NumPowerProbs\",\"Pct\",\"Prob\",\"RProb\",\"WProb\"}||loot!=std::vector<std::string>{\"RollType\",\"NumRandomItemProbs\",\"RandomLootEntries\",\"FixedLootEntries\",\"SubLoots\"})throw std::runtime_error(\"LootTable schema differs\");snapshot_=std::move(next);e.clear();return true;\n      |  ^~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_tables_v2.cpp:43:40: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'for'\n   43 |  for(unsigned i=0;i<14;++i)f.strings();auto entry=f.strings(),loot=f.strings();if(entry!=std::vector<std::string>{\"ItemListID\",\"ItemPowerList\",\"MProb\",\"NumPowerProbs\",\"Pct\",\"Prob\",\"RProb\",\"WProb\"}||loot!=std::vector<std::string>{\"RollType\",\"NumRandomItemProbs\",\"RandomLootEntries\",\"FixedLootEntries\",\"SubLoots\"})throw std::runtime_error(\"LootTable schema differs\");snapshot_=std::move(next);e.clear();return true;\n      |                                        ^~~~\n[31/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/fresh_inventory_owned_v4.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::add_fixed_loot_impl(int32_t, std::unique_ptr<dh2::data::ItemInstanceV1>&, bool, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:19:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   19 |  if(!mutation_allowed(e))return false;if(running_||!s.invoke){e=\"Malformed fresh loot service or unsupported owner reentry\";return false;}if(id<0||std::size_t(id)>=tables_.loots().size()){e.clear();return true;}running_=true;struct Guard{bool& b;~Guard(){b=false;}}guard{running_};std::int32_t ignored=0;auto trace=[&](std::uint32_t at){return debug(s,at,\"isTracingItemInventory_Loot\",ignored,e);};\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:19:39: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   19 |  if(!mutation_allowed(e))return false;if(running_||!s.invoke){e=\"Malformed fresh loot service or unsupported owner reentry\";return false;}if(id<0||std::size_t(id)>=tables_.loots().size()){e.clear();return true;}running_=true;struct Guard{bool& b;~Guard(){b=false;}}guard{running_};std::int32_t ignored=0;auto trace=[&](std::uint32_t at){return debug(s,at,\"isTracingItemInventory_Loot\",ignored,e);};\n      |                                       ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:20:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   20 |  if(!debug(s,0x40411c,\"MP_MinimalRandoms\",ignored,e))return false;if(ignored){e.clear();return true;}if(!trace(0x404160)||!trace(0x404190))return false;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:20:67: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   20 |  if(!debug(s,0x40411c,\"MP_MinimalRandoms\",ignored,e))return false;if(ignored){e.clear();return true;}if(!trace(0x404160)||!trace(0x404190))return false;\n      |                                                                   ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:31:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   31 |  if(!trace(0x4042fc)||!trace(0x40432c))return false;OwnedInventoryResponseV4 out;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:31:53: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   31 |  if(!trace(0x4042fc)||!trace(0x40432c))return false;OwnedInventoryResponseV4 out;\n      |                                                     ^~~~~~~~~~~~~~~~~~~~~~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:34:4: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   34 |    if(!(retained?create_item(chosen.id,1,RetainedItemSlotV4{&owned},s,e):create_item(chosen.id,1,owned,s,e)))return false;auto* instance=owned.get();\n      |    ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:34:123: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   34 |    if(!(retained?create_item(chosen.id,1,RetainedItemSlotV4{&owned},s,e):create_item(chosen.id,1,owned,s,e)))return false;auto* instance=owned.get();\n      |                                                                                                                           ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:39:4: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   39 |    if(!potion_&&inserted_type==14)potion_=instance;auto slot=std::make_unique<OwnedItemSlotV4>();slot->item=std::move(owned);items_.push_back(std::move(slot));auto index=std::uint32_t(items_.size()-1);if(!deliver(s,OwnedInventoryOperationV4::inventory_full,0x3ff6c4,instance,nullptr,0,index,out,e))return false;if(out.value&&!deliver(s,OwnedInventoryOperationV4::full_notifications,0x3ff7a8,instance,nullptr,0,index,out,e))return false;\n      |    ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:39:52: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   39 |    if(!potion_&&inserted_type==14)potion_=instance;auto slot=std::make_unique<OwnedItemSlotV4>();slot->item=std::move(owned);items_.push_back(std::move(slot));auto index=std::uint32_t(items_.size()-1);if(!deliver(s,OwnedInventoryOperationV4::inventory_full,0x3ff6c4,instance,nullptr,0,index,out,e))return false;if(out.value&&!deliver(s,OwnedInventoryOperationV4::full_notifications,0x3ff7a8,instance,nullptr,0,index,out,e))return false;\n      |                                                    ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::add_fixed_loot(int32_t, dh2::data::RetainedItemSlotV4, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:45:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   45 |  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;if(*slot.value){e=\"Fixed loot incoming slot already owns an item\";return false;}\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:45:71: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   45 |  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;if(*slot.value){e=\"Fixed loot incoming slot already owns an item\";return false;}\n      |                                                                       ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::add_fixed_loot(int32_t, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:50:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   50 |  if(temporary)observe(s,OwnedInventoryOperationV4::destroy_item,0,temporary.get());return ok;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:50:84: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   50 |  if(temporary)observe(s,OwnedInventoryOperationV4::destroy_item,0,temporary.get());return ok;\n      |                                                                                    ^~~~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::create_item(int32_t, uint32_t, dh2::data::RetainedItemSlotV4, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:73:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   73 |  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;auto& out=*slot.value;if(out||!item(tables_.items(),id)){e=\"Malformed constructor output or source item index\";return false;}\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:73:71: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   73 |  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;auto& out=*slot.value;if(out||!item(tables_.items(),id)){e=\"Malformed constructor output or source item index\";return false;}\n      |                                                                       ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::create_item(int32_t, uint32_t, std::unique_ptr<dh2::data::ItemInstanceV1>&, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:81:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   81 |  if(!mutation_allowed(e))return false;if(out||!item(tables_.items(),id)){e=\"Malformed constructor output or source item index\";return false;}\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:81:39: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   81 |  if(!mutation_allowed(e))return false;if(out||!item(tables_.items(),id)){e=\"Malformed constructor output or source item index\";return false;}\n      |                                       ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::retire_item(dh2::data::RetainedItemSlotV4, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:89:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   89 |  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;if(!*slot.value){e=\"Null retained Item retirement\";return false;}\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:89:71: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   89 |  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;if(!*slot.value){e=\"Null retained Item retirement\";return false;}\n      |                                                                       ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::split_item(dh2::data::ItemInstanceV1&, int32_t, dh2::data::RetainedItemSlotV4, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:96:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   96 |  if(!mutation_allowed(e)||!lifetime_slot(slot,&original,e))return false;auto& out=*slot.value;if(out){e=\"Split output already owns an item\";return false;}auto* info=metadata(&original,e);if(!info)return false;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:96:73: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   96 |  if(!mutation_allowed(e)||!lifetime_slot(slot,&original,e))return false;auto& out=*slot.value;if(out){e=\"Split output already owns an item\";return false;}auto* info=metadata(&original,e);if(!info)return false;\n      |                                                                         ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:98:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   98 |  if(!add_quantity(original,-amount,e)||!create_item(original.id,std::uint32_t(amount),slot,s,e))return false;auto* actual=out.get();out->value=original.value;OwnedInventoryResponseV4 r;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:98:110: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   98 |  if(!add_quantity(original,-amount,e)||!create_item(original.id,std::uint32_t(amount),slot,s,e))return false;auto* actual=out.get();out->value=original.value;OwnedInventoryResponseV4 r;\n      |                                                                                                              ^~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:99:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   99 |  if(!deliver(s,OwnedInventoryOperationV4::update_name,0x3fc44c,actual,nullptr,0,0,r,e))return false;if(out.get()!=actual){e=\"Split SetValue changed retained Item identity\";return false;}\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:99:101: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   99 |  if(!deliver(s,OwnedInventoryOperationV4::update_name,0x3fc44c,actual,nullptr,0,0,r,e))return false;if(out.get()!=actual){e=\"Split SetValue changed retained Item identity\";return false;}\n      |                                                                                                     ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp: In member function 'bool dh2::data::FreshInventoryOwnedV4::split_item(dh2::data::ItemInstanceV1&, int32_t, std::unique_ptr<dh2::data::ItemInstanceV1>&, const dh2::data::OwnedInventoryServicesV4&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:104:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n  104 |  if(!mutation_allowed(e))return false;if(out){e=\"Split output already owns an item\";return false;}auto* info=metadata(&original,e);if(!info)return false;if(!std::uint8_t(info->record.words[7])||amount<=0||amount>=original.signed_quantity()){e.clear();return true;}\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/fresh_inventory_owned_v4.cpp:104:39: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n  104 |  if(!mutation_allowed(e))return false;if(out){e=\"Split output already owns an item\";return false;}auto* info=metadata(&original,e);if(!info)return false;if(!std::uint8_t(info->record.words[7])||amount<=0||amount>=original.signed_quantity()){e.clear();return true;}\n      |                                       ^~\n[32/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_gear_effects_v5.cpp.obj\n[33/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/item_presentation_v5.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_presentation_v5.cpp: In function 'bool dh2::data::item_update_name_v5(ItemInstanceV1&, const ItemTextServicesV5&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_presentation_v5.cpp:24:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   24 |  if(has_material&&!suffix)i.name=selected+\" \";i.name+=prefix;if(has_material&&suffix)i.name+=\" \"+selected;return true;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_presentation_v5.cpp:24:47: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   24 |  if(has_material&&!suffix)i.name=selected+\" \";i.name+=prefix;if(has_material&&suffix)i.name+=\" \"+selected;return true;\n      |                                               ^\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_presentation_v5.cpp: In function 'bool dh2::data::item_update_requirements_v5(ItemInstanceV1&, const ItemTextServicesV5&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_presentation_v5.cpp:33:3: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   33 |   if(!parse(s,i,text,&a,1,i.requirements,e))return false;added=true;\n      |   ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/item_presentation_v5.cpp:33:58: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   33 |   if(!parse(s,i,text,&a,1,i.requirements,e))return false;added=true;\n      |                                                          ^~~~~\n[34/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/loot_power_creation_v7.cpp.obj\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp: In function 'int {anonymous}::live_draw(const dh2::data::InventoryRandomServiceV4&, int32_t, int32_t&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:30:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n   30 |  if(error.empty())error=\"Required borrowed source RNG failed\";return -2;\n      |  ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:30:63: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n   30 |  if(error.empty())error=\"Required borrowed source RNG failed\";return -2;\n      |                                                               ^~~~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp: In lambda function:\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:106:4: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n  106 |    if(error.empty())error=\"Required native loot-power service failed\";return false;}\n      |    ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:106:71: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n  106 |    if(error.empty())error=\"Required native loot-power service failed\";return false;}\n      |                                                                       ^~~~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp: In member function 'bool dh2::data::LootPowerCreationV7::add_powers(const dh2::data::LootEntry32V2&, dh2::data::ItemInstanceV1&, int32_t, int32_t, int32_t, const dh2::data::LootPowerServicesV7&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:132:4: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n  132 |    if(retries>9)break;continue;}\n      |    ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:132:23: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n  132 |    if(retries>9)break;continue;}\n      |                       ^~~~~~~~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:139:4: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n  139 |    if(!conflict(*row,blocked))return false;if(blocked)continue;\n      |    ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:139:44: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n  139 |    if(!conflict(*row,blocked))return false;if(blocked)continue;\n      |                                            ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp: In function 'bool dh2::data::loot_item_value_v7(ItemInstanceV1&, const ItemTable&, ItemPowerTablesV5::Borrow, const InventoryRandomServiceV4&, int32_t, const ItemTextServicesV5&, std::string&)':\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:155:3: warning: this 'if' clause does not guard... [-Wmisleading-indentation]\n  155 |   if(error.empty())error=\"Invalid native loot valuation projection\";return false;}\n      |   ^~\nC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/loot_power_creation_v7.cpp:155:69: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'\n  155 |   if(error.empty())error=\"Invalid native loot valuation projection\";return false;}\n      |                                                                     ^~~~~~\n[35/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_saved_skill_slots_v1.cpp.obj\n[36/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_equipment_queries_live_v1.cpp.obj\n[37/41] Building CXX object selected-game/CMakeFiles/dh2_game_data.dir/player_equipment_live_services_v1.cpp.obj\n[38/41] Building CXX object CMakeFiles/profile_create_audit.dir/C_/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/tests/player_profile_create_v1.cpp.obj\n[39/41] Building CXX object CMakeFiles/profile_create_audit.dir/C_/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/android-native/app/src/main/cpp/native_player_profile.cpp.obj\n[40/41] Linking CXX shared library selected-game\\libdh2_game_data.dll\n[41/41] Linking CXX executable profile_create_audit.exe\n"
+  ],
+  "dependency_guard": "Actual selected object Ninja dependencies/configured CMake plus exact original/test/reference files. Discovery, snapshot, clean rebuild, run, compare source and command closures. No adjacent-header superset.",
+  "scope": "NativeCreate two-string valid body, indexed metadata fields/SG_Load1 registration, full offline SG_Save order, seven metadata writer bodies and saveAll stream bytes. AS conversion, slot catalogue, real clocks/online/I/O/cache publication and destructor are explicit original leaves. Selected host uses actual native Transport with explicit new-file creation, flushed atomic file publication and distinct gameplay Save SG_Load1 readback; directory power-loss durability is not claimed. Full online save/volatile body, gameplay InitPost/property/VM/grants and registration remain external requirements."
+}

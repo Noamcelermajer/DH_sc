@@ -5,9 +5,9 @@ Adam reference: [`AdamCelermajer/DH_sc`](https://github.com/AdamCelermajer/DH_sc
 
 This report supersedes older documents' descriptions of the current default development build. Historical reports retain their original artifact identities and test scopes.
 
-**Latest work:** Adam's profile/startup research is adapted through our existing owners. Original filename/index/SG_Load orchestration and seven metadata readers are selected; actual campaign metadata import passes live on API37/16KiB, including corruption/slot-change rejection and retained distinct metadata/gameplay Saves. Source locality queries preserve the unregistered fallback. The original GEAR reader restores six actual items/one power on host across all three classes and compiles for both Android ABIs; native full SG_Load4/InitPost remains unbound. [Evidence](../reports/reconstruction-2026-10-06/player-profile-inventory/validation.json).
+**Latest work:** Adam v69's frontend is selected in our native app: original main menu, name/class selection, real Single Player popup and Crypt entry for all three classes. Source profile creation, canonical slot assignment and saved-class reads reuse existing owners. Original HP/MP/XP bars borrow the live 224-word sheet. Fixed GameSWF loader/builtin-table lifetime bugs, startup focus blocking and Rogue's class-property calculation. All three class flows, occupied-slot restart, Back/Home-resume and existing player death/skill regressions pass on API37/16KiB. [Evidence](../reports/reconstruction-2026-10-06/menu-crypt/validation.json).
 
-**Verified APK:** [download prerelease](https://github.com/Noamcelermajer/DH_sc/releases/download/native-profile-inventory-2026-10-06/DH2-native-profile-inventory-2026-10-06.apk), `6792de5a...`, 30,135,449 bytes. Both ABIs, 609 actual build inputs, 635 captured files and 20 ELF64/16KiB libraries. Player death/pose/skills/regen and Crypt touch/Wait/Spawn regressions pass on this APK. This is a development app; complete gameplay remains open. [Checklist](PROJECT-CHECKLIST.md).
+**Verified APK:** [download menu/class/Crypt prerelease](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-06/DH2-native-menu-crypt-2026-10-06.apk), `1487a1e0…`, 152,827,608 bytes. Both ABIs, 1,220 actual compiler inputs per ABI, 1,271 captured files and 22 ELF64/16KiB libraries. [Matching source capture](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-06/DH2-native-menu-crypt-source-capture-2026-10-06.zip). Full NativeStartGame, registration/InitPost/SG_Load2/4, equipment and campaign remain open. [Checklist](PROJECT-CHECKLIST.md).
 
 ## Latest Adam reconciliation
 
@@ -28,18 +28,19 @@ native-combat and loader milestones against actual code/build selections at
 | CSSkill state callbacks/dispatch | Adapted source | Selected library, 214 ARM dispatch comparisons and Android compilation pass. Native state6/input/animation/target activation remains disconnected. |
 | Initial skill grants | Adapted source | Existing progression/slot callers share the actual save, inventory and buff-aware property view. Selected-host/ARM and Android gates pass; real profile/InitPost producers and native inventory binding remain required. |
 | Equipment render owner | Adapted services | Reuses V4/V5 algorithms through our exact property view and real provider contracts. Requirements/pruning/Skin-before-vitals and retirement-prefix tests pass; native visual/text/HUD and whole-item lifetime binding remain open. |
-| Character::_InitEquipment | Adapted/selected | Sole V4 inventory/property view; 18 original caller cases and 2,151 host checks across three classes pass, both Android ABIs compile. Full AddLoot, profile/locality/InitPost and native text/Skin remain required. |
+| Character::_InitEquipment | Adapted/selected | Sole V4 inventory/property view; 18 original caller cases and 2,157 host checks across three classes pass, both Android ABIs compile. Full AddLoot, profile/locality/InitPost and native text/Skin remain required. |
 | Ordinary Player Kill continuation | Adapted/selected | 58 ARM comparisons/zero mismatches; 43 host continuations, 27 failures, seven guards and three real-class event2 compositions pass. Shares Session/death owner/Coordinator. Native locality/trophy/online and general Kill/rewards remain open. |
 | Actor scene retention | Port lifecycle adapter, live | Seven host boundaries/402 exact frames/nine guards. API37/16KiB dead pose retains playback/pose hashes through reload/rotation; terminal CPU teardown passes. Zero new original bodies; full animation/GPU parity remains open. |
 | Weapon/equipment queries | Imported/adapted | Borrows sole V4 inventory/property view; 1,000 original weapon cases, both sets and combat projections pass. Native inventory producer remains required. |
-| Localization/item text dependencies | Imported/selected | Five shared text TUs use existing game-data DSO; 1,322 actual items/936 power descriptions and 1,087 formatter/355 varargs replays pass. Actual native language/file/Application/HUD providers remain unbound. |
+| Localization/item text dependencies | Imported/selected | Five shared text TUs use existing game-data DSO; 1,322 actual items/936 power descriptions and 1,087 formatter/355 varargs replays pass. Menu language/file/text providers are now bound; native inventory item formatting and remaining HUD providers stay open. |
 | Player AIS initialization/death dependencies | Adapted and live | Native load/InitProcess and OnDied cleanup share the same owners. Real timers33/34, regen, source timer retirement and all13 cleanup callbacks pass. UpdateAllSkills is delivered once by InitProcess; real progression callers remain required. Full Kill/event2, positive DoT, linked-aggro producers, full AIS frame and profile/grants remain open. |
 | Native combat/NPC candidates | Audit/selective reuse | Useful target/event contracts. Upstream melee shortcuts, no-target skill receipts and unselected NPC candidates do not prove our full enemy/skill combat loop. |
-| Profile filename/index and SG_Load | Adapted/selected | 96 index and 1,780 whole-load ARM cases; 23,017 failure prefixes, 128 filename cases. Borrows the sole Save and its canonical profile; writes/backup providers remain unbound. |
+| Profile filename/index and SG_Load | Adapted/selected | 96 index and 1,780 whole-load ARM cases; 23,017 failure prefixes, 128 filename cases. Borrows the sole Save and its canonical profile. Fresh seven-writer metadata creation is live; full gameplay sections and backup/recovery remain open. |
 | Seven campaign metadata readers | Adapted and live | 128 seven-reader ARM cases; private real profile imports class263/level1/difficulty0 on API37/16KiB. One file lease survives reload/rotation; metadata Save remains separate from gameplay Save. |
 | Player/Matching locality queries | Adapted and live fallback | 141 ARM comparisons/zero mismatches. Canonical Character660 remains null: local=true is a fallback query result, not registration. Host-level synchronization correctly skips with zero reads/writes. |
-| Saved GEAR inventory | Adapted/selected | 19 original caller cases × three classes; 2,495 host checks, both Android ABI builds. Reuses V4 and presentation/power/text services. Native restoration and powered-split failure lifetime remain open. |
-| Separate menu and level-loader contributions | Deferred integration | Keep their research; connect actual factories, save/StartGame handoffs and quest/campaign state before calling them gameplay complete. |
+| Saved GEAR inventory | Adapted/selected | 19 original caller cases × three classes; 2,498 host checks, both Android ABI builds. Reuses V4 and presentation/power/text services. Retained-owner failure prefixes and retirement pass in selected host tests; native SG4 restoration remains open. |
+| Separate menu v69 contribution | Imported/adapted, live | Actual menu/name/class/Single Player movies, authored class camera/body previews, font/text/texture/shader and audio routing selected. Three-class profile creation → canonical Assign → development Crypt and original vitals HUD pass. Preview weapons, complete lighting and remaining HUD input stay open. |
+| Separate level-loader contribution | Deferred integration | Preserve factory/staging research; native factories, quest/campaign state and full Application.LoadLevel continuation remain unbound. |
 
 The newer cloud branch `6dc314db` has useful generic loader interfaces and
 coercion fixtures. Its Session integer-map patch overlaps our proven native
@@ -47,13 +48,13 @@ dictionary; adapt those fixtures through existing providers before reuse.
 Its native factories remain unbound. Our `origin/main` refresh (`1219a43a`)
 adds no gameplay source beyond the reviewed branch.
 
-Next live milestone: use the original selected-slot/controller/PlayerInfo
-registration and Spawn/InitAll chain, then restore the Character's own gameplay
-Save through SG_Load1/2/4 and actual GEAR before equipment/skill grants. Metadata
-preview alone does not perform this startup. Connect sole inventory/text/Skin,
-skill activation, enemy frames and animation-driven hits/rewards/loot pickup.
-Powered split failure retirement, quest/campaign load, backup and durable writes
-remain required.
+Next live milestone: register genuine offline PlayerInfo before authored Assign;
+then connect `_AddCharacter` → Character660 → gameplay Save → InitAll/InitPost
+→ SG_Load2/4/GEAR → equipment/grants. The existing fallback slot must not be
+copied into a newly registered record. Reuse the sole inventory, properties,
+skill VM and timer owners. Connect skill activation, enemy frames and
+animation-driven hits/rewards/loot pickup for one complete encounter.
+Full NativeStartGame/Application.LoadLevel and campaign persistence remain open.
 
 ### Rough estimate
 
@@ -110,10 +111,10 @@ Use the following concrete measures instead:
 | Engine `.text` bytes accounted for | 99.989968% | Assembly/disassembly accounting only. No source/game-completion percentage follows from it. |
 | Original plaintext scripts recovered | 219 files / 900,493 bytes | Actual cache Lua source, preserved exactly. Native service ownership and complete live execution remain incomplete. |
 | Repaired/decompiled Android Java | 288 source files | Source recovery/reconstruction of Android glue; distinguish it from independently reconstructed native gameplay. |
-| Maintained reconstruction/port code | 703 source files / 81,984 lines / 4,347,837 bytes; 896 test/tool files | Git-index inventory excludes dependencies, recovered evidence, packaged scripts/assets and unfinished drafts. Includes imported code with local changes. Source size is not game completion. |
+| Maintained reconstruction/port code at `92f3c416` | 703 source files / 81,984 lines / 4,347,837 bytes; 896 test/tool files | Git-index inventory excludes dependencies, recovered evidence, packaged scripts/assets and unfinished drafts. Includes imported code with local changes. Source size is not game completion. |
 | Adam core modules imported | 577 files / 2,929,226 bytes | Seven modules imported at a pinned commit before dependency-path adaptations; includes headers/tools/tests, not 577 gameplay implementations. |
 | Adam script runtime imported | 158 files / 1,064,065 bytes | Isolated import includes Lua dependency source; do not count all of it as reconstructed game code. |
-| Current native app bundled assets | 255 | A selected Crypt/Prince development bundle, unchanged monster scripts and seven real Skill/Faery table/constants inputs; not the complete game cache. |
+| Current native app bundled assets | 696 | Selected Crypt/Prince/menu/HUD assets and source scripts; not the complete game cache. |
 | Crypt object instantiation | 97 / 166 records | 84 decor plus 13 monster records, including two gated first-spawn actors; 69 conditional/script/template/factory records remain. This fraction applies only to this authored level's object records. |
 | Prince animation bank | 116 resources / 158 occurrences | Live two-slot registration/playback in Adam's runtime; full original pose/GPU parity is not established. |
 | New Irrlicht Prince slice | 4 controllers / 27 joint references / 487 vertices / 586 triangles; module0 has 2 floors / 99 triangles / 133 graph nodes | Four default warrior parts and complete bank/shared state feed source root motion and an owned player body. Only Idle/Move exercised live; environment bodies, other modules, original camera, AI/combat and effects remain incomplete. |

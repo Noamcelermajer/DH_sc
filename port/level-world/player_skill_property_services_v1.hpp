@@ -22,16 +22,25 @@ struct Bindings {
     data::PropertyState* state = nullptr;
     data::PropertySheet* shared_temp = nullptr;
     bool busy = false;
+    // The existing live view, including the sole buff owner's attached groups.
+    // Mandatory when ApplyPropClass targets the resolved owner sheet. It must
+    // project this exact state/rules; no local substitute or refresh is made.
+    data::PropertyView* owner_view = nullptr;
 };
 
 // Four property callbacks are implemented for the source skill path. GetProp
-// accepts every schema-valid property ID; SetProp and ApplyPropClass remain
-// bounded to recovered runtime skill fields/classes. The original external
+// accepts every schema-valid property ID; SetProp remains bounded to recovered
+// runtime skill fields. ApplyPropClass delegates every valid class row to the
+// selected class kernel regardless of destination property type. Its false/no
+// selector resolves each linear source property through owner_view; true reads
+// the cached owner source properties
+// while writing the shared temporary sheet. Reached class-kernel failures
+// retain preceding sheet writes. The original external
 // identity-sheet path is deliberately unsupported; it is not modeled by
 // substituting the player's sheet or the global temporary sheet.
 // Returns zero on the supported source path and
 // DH2_SCRIPT_REQUIRED_SERVICE_FAILURE for malformed/unavailable dependencies.
-// `returned` is set to zero before validation; output values are written only
+// `returned` is set to zero after control/alias validation; output values are written only
 // after a successful GetProp.
 int invoke(Bindings*, std::uintptr_t character,
            character_native_bindings::Function,

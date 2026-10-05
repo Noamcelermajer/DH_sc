@@ -7,6 +7,7 @@ import re
 import subprocess
 import time
 import xml.etree.ElementTree as ET
+import zipfile
 from emulator_smoke import inspect, launch_fresh
 
 PACKAGE='com.example.dh2'
@@ -62,7 +63,13 @@ def main():
         # The continuously rendered popup can prevent uiautomator idle. Navigate
         # the bundled picker order instead, then require the actual selected model.
         time.sleep(.5)
-        adb('shell','input','keyevent','20','20','20','20','23')
+        with zipfile.ZipFile(a.apk) as archive:
+            worlds=sorted(n.removeprefix('assets/') for n in archive.namelist() if n.startswith('assets/worlds/') and n.endswith('.dwld'))
+            models=sorted(n.removeprefix('assets/') for n in archive.namelist() if n.startswith('assets/models/') and n.count('/')==2)
+        choices=['ui/original-main-menu']+worlds+models
+        steps=choices.index('models/prince_modular.bdae')-choices.index('worlds/crypt01.dwld')
+        assert steps>0
+        adb('shell','input','keyevent',*(['20']*steps),'23')
     def image(name):
         raw=subprocess.check_output([a.adb,'-s',a.serial,'exec-out','screencap','-p'],timeout=30)
         assert raw.startswith(b'\x89PNG');(out/(name+'.png')).write_bytes(raw)
@@ -139,7 +146,9 @@ def main():
         # including after reset_context has moved actors into saved copies.
         select_model_preview()
         text=wait(lambda t:'Native Player preview owners retired | bank 0 | retained pose 0 | skill owner 0 | AI owner 0' in t,'terminal model-preview retirement')
-        assert 'models/prince_modular.bdae: 3D upload OK' in text
+        preview=re.findall(r'(models/\S+\.bdae): 3D upload OK',text)
+        assert preview,'Terminal boundary did not load a standalone model'
+        report['terminal_preview_asset']=preview[-1]
         ghost_retired=[(int(event,16),int(slot),int(status)) for event,slot,status in re.findall(r'Native Ghost timer retired before VM close \| event ([0-9a-f]+) \| slot (\d+) \| status (-?\d+)',text)]
         assert ghost_retired and all(status>=0 for _,_,status in ghost_retired),ghost_retired
         assert sum(event==0x33 for event,_,_ in ghost_retired)==sum(event==0x34 for event,_,_ in ghost_retired)

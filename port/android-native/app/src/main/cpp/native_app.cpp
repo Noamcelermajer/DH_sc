@@ -3,6 +3,9 @@
 #include <GLES2/gl2.h>
 #include "textures.hpp"
 #include "model_renderer.hpp"
+#include "original_ui_session.hpp"
+#include <cmath>
+#include <climits>
 #include <android/asset_manager_jni.h>
 #include <vector>
 #include <algorithm>
@@ -16,6 +19,22 @@ GLuint program=0,texture=0;
 GLint position=-1,uv=-1,scale=-1;
 int surface_width=1,surface_height=1,texture_width=1,texture_height=1;
 bool report_model_frame=true;
+dh2::android_ui::OriginalUiSession original_ui;
+AAssetManager* menu_assets=nullptr;
+bool ui_frame_failed=false;
+std::string menu_directory;
+bool difficulty_count(void*,std::uint32_t* count,std::string& error){return count&&original_ui.game_difficulty_count(*count,error);}
+void bind_menu_runtime(){
+ dh2::android_ui::FrontRuntimeServices services{};
+ services.create_save_slot=[](void*,const std::string& name,const std::string& character,std::int32_t& slot,bool& published,std::string& error){return model_renderer::create_menu_save_slot(menu_assets,name,character,slot,published,error,nullptr,difficulty_count);};
+ services.assign_save_slot=[](void*,std::int32_t slot,std::int32_t ordinal,std::string& error){return model_renderer::assign_menu_save_slot(slot,ordinal,error);};
+ services.eabi_integer=[](void*,double number,std::int32_t& value,std::string& error){if(!std::isfinite(number)||number<double(INT32_MIN)||number>double(INT32_MAX)){error="Menu integer outside native conversion boundary";return false;}value=static_cast<std::int32_t>(number);return true;};
+ services.request_start_game=[](void*,bool numeric,std::int32_t requested,std::int32_t& slot,std::string& error){return model_renderer::request_menu_start(numeric,requested,slot,error);};
+ services.change_preview_slot=[](void*,std::int32_t slot,bool force,std::string& error){return model_renderer::select_menu_preview_slot(slot,force,error);};
+ services.debug_load=[](void*,std::string& error){return model_renderer::menu_debug_load(menu_assets,error);};
+ services.debug_query=[](void*,const char* key,std::string& error){return model_renderer::menu_debug_query(menu_assets,key,error);};
+ original_ui.bind_front_runtime(services);
+}
 const char* vs_source=R"(attribute vec2 position;attribute vec2 uv;uniform vec2 scale;varying vec2 texcoord;
 void main(){texcoord=uv;gl_Position=vec4(position*scale,0.0,1.0);})";
 const char* fs_source=R"(precision mediump float;varying vec2 texcoord;uniform sampler2D image;
@@ -46,6 +65,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_runtimeDirec
   if(!directory){model_renderer::runtime_directory("");return;}
   const char* raw=env->GetStringUTFChars(directory,nullptr);if(!raw)return;
   const std::string copy(raw);env->ReleaseStringUTFChars(directory,raw);model_renderer::runtime_directory(copy);
+  menu_directory=copy;
 }
 extern "C" JNIEXPORT jbyteArray JNICALL Java_com_example_dh2_NativeBridge_readAsset(JNIEnv* env,jclass,jstring name,jobject assets){
   if(!name||!assets)return nullptr;
@@ -62,7 +82,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_com_example_dh2_NativeBridge_readAs
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_profileSlot(JNIEnv* env,jclass,jint slot){
   return result(env,model_renderer::profile_slot(slot));
 }
-extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_initialize(JNIEnv* env,jclass){
+extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_initialize(JNIEnv* env,jclass,jobject assets){
   program=0;texture=0;
   try{model_renderer::reset_context();}
   catch(const std::exception& error){return result(env,std::string("Renderer recreation failed: ")+error.what());}
@@ -72,6 +92,10 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_initializ
   glDeleteShader(vs);glDeleteShader(fs);GLint linked=0;glGetProgramiv(program,GL_LINK_STATUS,&linked);
   if(!linked){char log[2048]{};glGetProgramInfoLog(program,sizeof(log),nullptr,log);glDeleteProgram(program);program=0;
     __android_log_print(ANDROID_LOG_ERROR,tag,"Link failed: %s",log);return result(env,log);}
+  if(!assets)return result(env,"UI asset manager missing");
+  menu_assets=AAssetManager_fromJava(env,assets);std::string ui_error;
+  if(!original_ui.initialize(menu_assets,ui_error))return result(env,"Menu renderer initialization failed: "+ui_error);
+  bind_menu_runtime();ui_frame_failed=false;
   position=glGetAttribLocation(program,"position");uv=glGetAttribLocation(program,"uv");scale=glGetUniformLocation(program,"scale");
   std::string report="Renderer: ";const auto* r=glGetString(GL_RENDERER);report+=r?reinterpret_cast<const char*>(r):"unknown";
   report+="\nGLES: ";const auto* v=glGetString(GL_VERSION);report+=v?reinterpret_cast<const char*>(v):"unknown";
@@ -109,9 +133,21 @@ extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_resize(JNIEn
 }
 extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_draw(JNIEnv*,jclass){
   glClearColor(0.08f,0.09f,0.11f,1);glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+  if(original_ui.active()&&!original_ui.overlays_player()){
+    std::string error;if(!original_ui.render(surface_width,surface_height,error)){
+      if(!ui_frame_failed)__android_log_print(ANDROID_LOG_ERROR,tag,"Original menu frame failed: %s",error.c_str());ui_frame_failed=true;
+    }return;
+  }
   if(model_renderer::active()){
     try {
       model_renderer::draw(surface_width,surface_height);
+      if(original_ui.overlays_player()){
+        std::string error;
+        const bool ok=model_renderer::with_player_status_sheet(nullptr,[](void*,const std::int32_t* sheet,std::size_t count,std::uintptr_t character,std::string& failure){
+          return original_ui.render_player(surface_width,surface_height,sheet,count,character,failure);
+        },error);
+        if(!ok&&!ui_frame_failed){__android_log_print(ANDROID_LOG_ERROR,tag,"Player HUD frame failed: %s",error.c_str());ui_frame_failed=true;}
+      }
     } catch(const std::exception& e) {
       __android_log_print(ANDROID_LOG_ERROR,tag,"Native frame failed: %s",e.what());
       model_renderer::deactivate();
@@ -156,6 +192,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_loadWorld
   if(!input||!assets)return result(env,"Null world input");const auto n=env->GetArrayLength(input);
   if(n<=0||n>65560)return result(env,"World descriptor outside limit");
   std::vector<std::uint8_t> bytes(n);env->GetByteArrayRegion(input,0,n,reinterpret_cast<jbyte*>(bytes.data()));if(env->ExceptionCheck())return nullptr;
+  original_ui.deactivate();
   report_model_frame=true;return result(env,model_renderer::load_world(bytes.data(),bytes.size(),AAssetManager_fromJava(env,assets)));
 }
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_spawnCharacter(JNIEnv* env,jclass,jstring character){
@@ -180,3 +217,27 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_debugPlay
 
 extern "C" JNIEXPORT jintArray JNICALL Java_com_example_dh2_NativeBridge_playerVitals(JNIEnv* env,jclass){auto values=model_renderer::player_vitals();auto out=env->NewIntArray(values.size());if(out)env->SetIntArrayRegion(out,0,values.size(),values.data());return out;}
 extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_enemyAi(JNIEnv*,jclass,jboolean enabled){model_renderer::set_enemy_ai(enabled);}
+
+extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_loadFrontScreen(JNIEnv* env,jclass,jstring directory,jobject assets){
+ if(!directory||!assets)return result(env,"Menu launch input unavailable");
+ const char* raw=env->GetStringUTFChars(directory,nullptr);if(!raw)return nullptr;const std::string path(raw);env->ReleaseStringUTFChars(directory,raw);
+ menu_assets=AAssetManager_fromJava(env,assets);model_renderer::deactivate();
+ std::string error;ui_frame_failed=false;
+ if(!original_ui.load_front_screen(path,"main",error))return result(env,"Menu load failed: "+error);
+ return result(env,"Original menu ready");
+}
+extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_menuTouch(JNIEnv* env,jclass,jfloat x,jfloat y,jint action){
+ std::string error;if(!original_ui.touch(x,y,action,error))return result(env,"Menu touch failed: "+error);return result(env,"");
+}
+extern "C" JNIEXPORT jint JNICALL Java_com_example_dh2_NativeBridge_consumeMenuLaunch(JNIEnv*,jclass){std::int32_t slot=-1;return original_ui.consume_launch_request(slot)?slot:-1;}
+extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_startMenuGame(JNIEnv* env,jclass,jint slot,jobject assets){
+ if(!assets||slot<0)return result(env,"Start Game input unavailable");
+ original_ui.deactivate();ui_frame_failed=false;report_model_frame=true;
+ const auto startup=model_renderer::start_menu_game(slot,AAssetManager_fromJava(env,assets));
+ if(startup.find("Crypt |") == 0){
+  std::string error;if(!original_ui.attach_player(menu_directory,error))__android_log_print(ANDROID_LOG_ERROR,tag,"Player HUD attach failed: %s",error.c_str());
+ }
+ return result(env,startup);
+}
+extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_consumeMenuAudio(JNIEnv* env,jclass){return result(env,original_ui.consume_menu_audio());}
+extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_consumeMenuSound(JNIEnv* env,jclass){return result(env,original_ui.consume_menu_sound());}

@@ -6,7 +6,13 @@ final class NativeBridge {
     static native void runtimeDirectory(String directory);
     static native String profileSlot(int selectedSlot);
     static native byte[] readAsset(String name,android.content.res.AssetManager assets) throws java.io.IOException;
-    static native String initialize();
+    static native String initialize(android.content.res.AssetManager assets);
+    static native String loadFrontScreen(String directory,android.content.res.AssetManager assets);
+    static native String menuTouch(float x,float y,int action);
+    static native int consumeMenuLaunch();
+    static native String startMenuGame(int slot,android.content.res.AssetManager assets);
+    static native String consumeMenuAudio();
+    static native String consumeMenuSound();
     static native String loadTexture(byte[] encoded);
     static native String loadModel(byte[] encoded,android.content.res.AssetManager assets);
     static native String loadWorld(byte[] encoded,android.content.res.AssetManager assets);

@@ -1,0 +1,544 @@
+"""Tap the original menu/name/class/Start movie into the development Crypt.
+
+API37/16KiB emulator only. Campaign profiles stay on the device: originals
+are moved into a private transaction directory before launching, synthetic
+profiles are archived there, and originals are restored in finally. No saves
+or unfiltered Logcat are pulled. Complete NativeStartGame, campaign loading,
+inventory initialization and gameplay controls remain outside this check.
+"""
+import argparse
+import hashlib
+import io
+import json
+from pathlib import Path
+import re
+import shlex
+import struct
+import subprocess
+import time
+import uuid
+import xml.etree.ElementTree as ET
+import zipfile
+
+from PIL import Image, ImageChops, ImageStat
+
+PACKAGE = 'com.example.dh2'
+VIEWPORT = 'DH2 native texture viewport'
+CLASSES = ((0, 263, 48, 'KnightPlayerBase'),
+           (1, 325, 50, 'RoguePlayerBase'),
+           (2, 290, 49, 'MagePlayerBase'))
+POINTS = {'main': (410, 94), 'key_a': (40, 219),
+          'name_confirm': (240, 126), 'class_right': (463, 190),
+          'class_confirm': (240, 295), 'single_player': (410, 160),
+          'next_slot': (170, 75)}
+BAD = re.compile(r'FATAL EXCEPTION|Fatal signal|Native frame failed|'
+                 r'World load failed|Model draw GL error|Original menu frame failed|'
+                 r'Player HUD (?:frame|attach) failed|Menu touch failed|'
+                 r'Native Player AIS failure retained|Native Player AI timer failed|'
+                 r'Start Game (?:failed|has no assigned save slot|selected slot differs)|'
+                 r'Asset load failed|Required authored navigation clip absent')
+SAFE_EVENTS = re.compile(r'(?:Surface resized to |Owned menu (?:renderer selected|navigation) \||'
+                         r'Original class (?:selection updated|scene connected|scene animation) \||'
+                         r'Original front(?: screen loaded|/HUD screen submitted) \||'
+                         r'Native menu (?:profile created|slot assigned|preview selection) \||'
+                         r'Authored NativeStartGame request queued \||Development Crypt start requested \||'
+                         r'Native gameplay (?:class|property cache) \||'
+                         r'Menu game start \| slot \d+ \| Crypt \||'
+                         r'Connected player HUD submitted \||'
+                         r'Native Player AIS (?:initialized|retained) \|)')
+ASSIGN = re.compile(r'Native menu slot assigned \| slot (\d+) \| ordinal (\d+) \|'
+                    r' manager stores (\d+) \| player stores (\d+)')
+START = re.compile(r'Authored NativeStartGame request queued \| selected slot (\d+) \|'
+                   r' numeric difficulty (\d+) \| requested difficulty (-?\d+)')
+CLASS = re.compile(r'Native gameplay class \| slot (\d+) \| class (\d+) \| preset (\w+)')
+CLASS_INDEX = re.compile(r'Original class selection updated \| index (\d+) \| class (\w+)')
+HUD = re.compile(r'Connected player HUD submitted \| viewport (\d+) (\d+) \|'
+                 r' character (\S+) \| HP (-?\d+) (-?\d+) \| MP (-?\d+) (-?\d+) \|'
+                 r' XP (-?\d+) (-?\d+) \| frames (-?\d+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)')
+
+
+def inspect_apk(path):
+    """Inspect real packaged ELF load segments without extracting assets."""
+    result = []
+    with zipfile.ZipFile(path) as archive:
+        for name in archive.namelist():
+            if not name.startswith('lib/') or not name.endswith('.so'):
+                continue
+            abi = name.split('/')[1]
+            raw = archive.read(name)
+            assert abi in ('arm64-v8a', 'x86_64') and raw[:6] == b'\x7fELF\x02\x01', 'Packaged ELF ABI differs'
+            offset = struct.unpack_from('<Q', raw, 32)[0]
+            size, count = struct.unpack_from('<HH', raw, 54)
+            align = [struct.unpack_from('<Q', raw, offset + i * size + 48)[0]
+                     for i in range(count)
+                     if struct.unpack_from('<I', raw, offset + i * size)[0] == 1]
+            assert align and min(align) >= 16384, 'Packaged load alignment below16KiB'
+            result.append({'path': name, 'sha256': hashlib.sha256(raw).hexdigest(),
+                           'minimum_load_alignment': min(align)})
+    names = {abi: {Path(r['path']).name for r in result if r['path'].split('/')[1] == abi}
+             for abi in ('arm64-v8a', 'x86_64')}
+    assert names['arm64-v8a'] == names['x86_64'] and 'libdh2_native.so' in names['x86_64'], 'Packaged ABI library sets differ'
+    return result
+
+
+def stage_rectangle(width, height):
+    # Match OriginalUiSession::front_rectangle integer arithmetic exactly.
+    fitted_width = min(width, height * 3 // 2)
+    fitted_height = min(height, width * 2 // 3)
+    return ((width - fitted_width) // 2, (height - fitted_height) // 2,
+            fitted_width, fitted_height)
+
+
+def stage_point(bounds, surface, point):
+    x0, y0, x1, y1 = bounds
+    width, height = surface
+    assert (x1 - x0, y1 - y0) == (width, height), 'NativeSurface size and Android bounds disagree'
+    x, y, w, h = stage_rectangle(width, height)
+    return (round(x0 + x + point[0] * w / 480),
+            round(y0 + y + point[1] * h / 320))
+
+
+def parse_focused_window(text):
+    """Read actual current input focus, excluding merely resumed Activities."""
+    match = re.search(r'\bmCurrentFocus\s*=\s*Window\{[^\n}]*?\s'
+                      r'([A-Za-z0-9_.]+)/([A-Za-z0-9_.$]+)(?:\s|\})', text)
+    if not match:
+        return None
+    package, activity = match.groups()
+    if activity.startswith('.'):
+        activity = package + activity
+    return {'package': package, 'activity': activity}
+
+
+def parse_input_focused_windows(text):
+    """Read only InputDispatcher's FocusedWindows section, with display IDs."""
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        heading = re.fullmatch(r'(\s*)FocusedWindows:\s*', line)
+        if not heading:
+            continue
+        indentation = len(heading.group(1))
+        result = []
+        for entry in lines[index + 1:]:
+            if not entry.strip():
+                continue
+            if len(entry) - len(entry.lstrip()) <= indentation:
+                break
+            match = re.search(r'\bdisplayId=(\d+),\s*name=.*?\b'
+                              r'([A-Za-z0-9_.]+)/([A-Za-z0-9_.$]+)(?:\s|[\x27\x22}]|$)', entry)
+            if match:
+                display, package, activity = match.groups()
+                if activity.startswith('.'):
+                    activity = package + activity
+                result.append({'display_id': int(display), 'package': package, 'activity': activity})
+        return result
+    return []
+
+
+def operation_context(command):
+    # No stdout/stderr, private shell program, file path or profile content in
+    # failure reports. Three command words identify the failed transport step.
+    words = [word for argument in command for word in argument.split()][:3]
+    return ', '.join('[path]' if '/' in word or '\\' in word or ':' in word else word
+                     for word in words)
+
+
+def button_rectangle(stage, bounds, surface):
+    if stage == 'crypt':
+        x0, y0, _, _ = bounds
+        width, height = surface
+        cx, cy = x0 + width * .91, y0 + height * .87
+        return (round(cx - width * .035), round(cy - height * .018),
+                round(cx + width * .035), round(cy + height * .018))
+    centers = {'main': POINTS['main'], 'name': POINTS['name_confirm'],
+               'class': POINTS['class_confirm'], 'start': POINTS['single_player']}
+    cx, cy = stage_point(bounds, surface, centers[stage])
+    _, _, w, h = stage_rectangle(*surface)
+    return (round(cx - w * 35 / 480), round(cy - h * 14 / 320),
+            round(cx + w * 35 / 480), round(cy + h * 14 / 320))
+
+
+def verify_start(text, slot, character_class, preset, animation_table):
+    """Require a fresh actual assignment immediately before this launch."""
+    starts = list(START.finditer(text))
+    assert len(starts) == 1 and tuple(map(int, starts[0].groups())) == (slot, 1, 0), 'Expected one authored Normal Start request'
+    assignments = [m for m in ASSIGN.finditer(text) if m.start() < starts[0].start()]
+    assert assignments and tuple(map(int, assignments[-1].groups())) == (slot, 0, 1, 1), 'Canonical source Assign must precede NativeStart'
+    classes = list(CLASS.finditer(text))
+    assert classes and classes[-1].start() > starts[0].start(), 'Fresh gameplay class receipt missing'
+    assert classes[-1].groups() == (str(slot), str(character_class), preset), 'Gameplay class differs from selected class'
+    caches = re.findall(r'Native gameplay property cache \| class (\d+) \| animation table (\d+) \| max HP (-?\d+) \| max MP (-?\d+)', text)
+    assert caches and tuple(map(int, caches[-1][:2])) == (character_class, animation_table), 'Live cached property2 differs from source class'
+    hud = list(HUD.finditer(text))
+    assert hud and hud[-1].start() > classes[-1].start(), 'Connected source HUD missing after gameplay class'
+    values = tuple(map(int, hud[-1].groups()[3:]))
+    hp, max_hp, mp, max_mp, xp, next_xp, *frames = values
+    assert 0 < hp <= max_hp and 0 < mp <= max_mp and 0 <= xp < next_xp, 'Invalid live health/mana/XP source words'
+    assert tuple(map(int, caches[-1][2:])) == (max_hp, max_mp), 'Live HUD maxima differ from class property cache'
+    assert 0 < frames[0] < 100 and 0 < frames[1] < 100 and 0 <= frames[2] < 101, 'Original HUD health/mana/XP timelines invalid'
+    assert frames == source_hud_frames(hp, max_hp, mp, max_mp, xp, next_xp), 'Original HUD frames differ from live source words'
+    assert 'Menu game start | slot %d | Crypt |' % slot in text, 'Actual Crypt start receipt missing'
+    return {'slot': slot, 'class': character_class, 'preset': preset,
+            'cached_property2': animation_table, 'assign_before_start': True,
+            'numeric_difficulty': True, 'requested_difficulty': 0,
+            'HP': hp, 'max_HP': max_hp, 'MP': mp, 'max_MP': max_mp,
+            'XP': xp, 'next_XP': next_xp, 'HUD_frames': frames,
+            'character': hud[-1].group(3)}
+
+
+def source_hud_frames(hp, max_hp, mp, max_mp, xp, next_xp):
+    # Match selected hud_player_values.cpp: wrapped signed*100 / signedmax,
+    # HP/MP subtract1, source clamps, then HP also drives distress/hurt.
+    def quotient(current, maximum):
+        numerator = (current * 100) & 0xffffffff
+        if numerator >= 0x80000000:
+            numerator -= 0x100000000
+        assert maximum, 'Source HUD denominator zero'
+        result = abs(numerator) // abs(maximum)
+        return -result if (numerator < 0) != (maximum < 0) else result
+    hp_frame = min(99, max(0, quotient(hp, max_hp) - 1))
+    mp_frame = min(99, quotient(mp, max_mp) - 1)
+    xp_frame = min(99, quotient(xp, next_xp))
+    return [hp_frame, mp_frame, xp_frame, hp_frame, hp_frame]
+
+
+def preservation_scripts(transaction):
+    """Bounded, private, reversible filename moves; no file contents pulled."""
+    assert re.fullmatch(r'\.menu-ui-smoke-[0-9a-f]{32}', transaction)
+    base = 'files/' + transaction
+    patterns = 'files/dh2_[0-9][0-9][0-9].savegame files/dh2_[0-9][0-9][0-9].savegame.bak'
+    preserve = f'''set -eu
+test ! -e {base}
+mkdir -p {base}/original {base}/synthetic
+: > {base}/original.sha256
+count=0
+for file in {patterns}; do
+  test -f "$file" || continue
+  (cd files && sha256sum "${{file#files/}}") >> {base}/original.sha256
+  mv "$file" {base}/original/
+  count=$((count+1))
+done
+touch {base}/preserved
+echo "$count"'''
+    restore = f'''set -eu
+test -d {base} || {{ echo 0; exit 0; }}
+count=0
+if test -f {base}/preserved; then
+  for file in {patterns}; do
+    test -f "$file" || continue
+    test ! -e {base}/synthetic/"${{file##*/}}"
+    mv "$file" {base}/synthetic/
+    count=$((count+1))
+  done
+fi
+for file in {base}/original/dh2_[0-9][0-9][0-9].savegame {base}/original/dh2_[0-9][0-9][0-9].savegame.bak; do
+  test -f "$file" || continue
+  test ! -e files/"${{file##*/}}"
+  mv "$file" files/
+done
+if test -s {base}/original.sha256; then
+  (cd files && sha256sum -c {transaction}/original.sha256 >/dev/null)
+fi
+touch {base}/restored
+echo "$count"'''
+    return preserve, restore
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    for name in ('adb', 'serial'):
+        parser.add_argument('--' + name, required=True)
+    for name in ('apk', 'output'):
+        parser.add_argument('--' + name, type=Path, required=True)
+    args = parser.parse_args()
+    assert args.serial.startswith('emulator-'), 'Emulator only'
+    out = args.output.resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    transaction = '.menu-ui-smoke-' + uuid.uuid4().hex
+    preserve, restore = preservation_scripts(transaction)
+    report = {'validation': 'FAIL', 'apk_sha256': hashlib.sha256(args.apk.read_bytes()).hexdigest(),
+              'serial': args.serial, 'libraries': inspect_apk(args.apk),
+              'scope': 'Actual original menu/name/class/Start Single Player taps, selected source profile creation/Assign, development Crypt continuation, connected source HUD, occupied-slot reopen and Home/resume. Full NativeStartGame/campaign/SG4/InitPost/gameplay controls remain open.',
+              'private_transaction_directory': 'files/' + transaction,
+              'personal_saves_pulled': False, 'cases': [], 'screenshots': []}
+    events, pid, since, last_text = [], '', '', ''
+    viewport_bounds = {}
+    preservation_attempted = False
+
+    def adb(*command, allow_failure=False, binary=False):
+        result = subprocess.run([args.adb, '-s', args.serial, *command], capture_output=True,
+                                text=not binary, timeout=60)
+        if result.returncode and not allow_failure:
+            raise RuntimeError('ADB operation failed: ' + operation_context(command))
+        return result.stdout if binary else result.stdout.strip()
+
+    def private_script(script):
+        # adb shell joins arguments, so quote the complete sh program once.
+        return adb('shell', 'run-as ' + PACKAGE + ' sh -c ' + shlex.quote(script))
+
+    def logs():
+        nonlocal last_text
+        assert adb('shell', 'pidof', PACKAGE) == pid, 'App process exited or changed'
+        last_text = adb('logcat', '-d', '-T', since, '--pid=' + pid, '-v', 'brief')
+        assert not BAD.search(last_text), 'Native/UI failure observed in private Logcat'
+        return last_text
+
+    def wait(predicate, label, seconds=45):
+        deadline = time.monotonic() + seconds
+        while time.monotonic() < deadline:
+            text = logs()
+            if predicate(text):
+                return text
+            time.sleep(.2)
+        raise AssertionError('Timed out: ' + label)
+
+    def collect_events():
+        # Persist only the explicit nonpersonal source event allowlist.
+        events.extend(line[line.index(match.group(0)):]
+                      for line in last_text.splitlines()
+                      if (match := SAFE_EVENTS.search(line)))
+
+    def wait_focus(label):
+        deadline = time.monotonic() + 25
+        while time.monotonic() < deadline:
+            focused = parse_focused_window(adb('shell', 'dumpsys', 'window'))
+            input_windows = parse_input_focused_windows(adb('shell', 'dumpsys', 'input'))
+            expected = {'package': PACKAGE, 'activity': PACKAGE + '.MainActivity'}
+            expected_input = {'display_id': 0, **expected}
+            if focused == expected and expected_input in input_windows:
+                report.setdefault('focused_window_receipts', []).append(
+                    {'phase': label, **focused, 'InputDispatcher_display_id': 0})
+                return
+            logs()
+            time.sleep(.2)
+        raise AssertionError('Timed out: MainActivity input focus at ' + label)
+
+    def launch():
+        nonlocal pid, since
+        if pid:
+            collect_events()
+        adb('shell', 'am', 'force-stop', PACKAGE)
+        since = adb('shell', "date '+%m-%d %H:%M:%S.000'")
+        reply = adb('shell', 'am', 'start', '-W', '-n', PACKAGE + '/.MainActivity')
+        assert 'Status: ok' in reply and 'Activity not started' not in reply, 'Fresh launcher start failed'
+        pid = adb('shell', 'pidof', PACKAGE)
+        assert re.fullmatch(r'\d+', pid), 'Fresh app process unavailable'
+        text = wait(lambda t: 'Original front/HUD screen submitted | screen main' in t, 'rendered original main movie')
+        assert 'Original front screen loaded | screen main' in text, 'Original movie not loaded'
+        wait_focus('fresh launch')
+
+    def viewport(text=None):
+        surface_rows = re.findall(r'Surface resized to (\d+) x (\d+)', text if text is not None else logs())
+        assert surface_rows, 'Actual NativeSurface dimensions unavailable'
+        surface = tuple(map(int, surface_rows[-1]))
+        key = (pid, surface)
+        if key in viewport_bounds:
+            return viewport_bounds[key], surface
+        # This fixed full-screen NativeSurface keeps its bounds until a source
+        # resize or process change. Repeated accessibility idle waits during
+        # the authored class camera transition are unreliable on API37.
+        adb('shell', 'uiautomator', 'dump', '/sdcard/dh2-menu-smoke-window.xml')
+        document = adb('shell', 'cat', '/sdcard/dh2-menu-smoke-window.xml')
+        root = ET.fromstring(document)
+        node = next((n for n in root.iter('node') if n.get('content-desc') == VIEWPORT), None)
+        assert node is not None, 'NativeSurface bounds unavailable'
+        bounds = tuple(map(int, re.findall(r'\d+', node.get('bounds', ''))))
+        assert len(bounds) == 4, 'Malformed NativeSurface bounds'
+        stage_point(bounds, surface, (240, 160))
+        viewport_bounds[key] = bounds
+        return bounds, surface
+
+    def image():
+        raw = adb('exec-out', 'screencap', '-p', binary=True)
+        assert raw.startswith(b'\x89PNG'), 'Screenshot PNG unavailable'
+        return raw, Image.open(io.BytesIO(raw)).convert('RGB')
+
+    def visual_ready(stage):
+        # Wait for the next actual button to settle. In Crypt this is the
+        # opaque Android Attack overlay, so Android's resume animation must
+        # settle too. Never send a timed input burst while it is changing.
+        bounds, surface = viewport()
+        roi = button_rectangle(stage, bounds, surface)
+        deadline, previous, stable = time.monotonic() + 20, None, 0
+        while time.monotonic() < deadline:
+            logs()
+            _, picture = image()
+            crop = picture.crop(roi).resize((70, 28))
+            if previous is not None:
+                difference = sum(ImageStat.Stat(ImageChops.difference(crop, previous)).mean) / 3
+                stable = stable + 1 if difference < 2.5 else 0
+                if stable >= 3:
+                    assert max(ImageStat.Stat(crop).stddev) > 3, 'Authored button pixels are blank'
+                    report.setdefault('visual_readiness_receipts', []).append(
+                        {'stage': stage, 'stable_frame_comparisons': stable, 'ROI': list(roi)})
+                    return
+            previous = crop
+            time.sleep(.2)
+        raise AssertionError('Authored ' + stage + ' button did not visually settle')
+
+    def screenshot(name):
+        raw, _ = image()
+        path = out / (name + '.png')
+        path.write_bytes(raw)
+        report['screenshots'].append({'file': path.name, 'sha256': hashlib.sha256(raw).hexdigest()})
+
+    def tap(name):
+        wait_focus('tap ' + name)
+        bounds, surface = viewport()
+        x, y = stage_point(bounds, surface, POINTS[name])
+        adb('shell', 'input', '-d', '0', 'tap', str(x), str(y))
+
+    def menu_after_tap(button, name):
+        offset = len(logs())
+        tap(button)
+        wait(lambda t: 'Owned menu navigation | push ' + name + ' |' in t[offset:], 'authored ' + name + ' transition')
+
+    def select_slot(slot):
+        # A fresh original movie starts current_slot0. Observe each genuine
+        # GetSlot/preview result as the authored arrow changes that field.
+        for target in range(1, slot + 1):
+            offset = len(logs())
+            tap('next_slot')
+            wait(lambda t: 'Native menu preview selection | slot %d |' % target in t[offset:], 'authored slot arrow')
+            visual_ready('main')
+
+    def start(slot, character_class, preset, animation_table):
+        before = len(logs())
+        tap('single_player')
+        text = wait(lambda t: ('Menu game start | slot %d | Crypt |' % slot in t[before:] and
+                               HUD.search(t[before:]) is not None), 'Crypt and connected player HUD', 70)
+        return verify_start(text[before:], slot, character_class, preset, animation_table)
+
+    def back_main():
+        wait_focus('Back from Crypt')
+        visual_ready('crypt')
+        wait_focus('Back from settled Crypt')
+        offset = len(logs())
+        adb('shell', 'input', '-d', '0', 'keyevent', 'KEYCODE_BACK')
+        wait(lambda t: 'Original front/HUD screen submitted | screen main' in t[offset:], 'normal Back return to menu')
+        visual_ready('main')
+
+    failure = None
+    try:
+        report['api'] = int(adb('shell', 'getprop', 'ro.build.version.sdk'))
+        report['page_size'] = int(adb('shell', 'getconf', 'PAGE_SIZE'))
+        report['abi'] = adb('shell', 'getprop', 'ro.product.cpu.abi')
+        assert (report['api'], report['page_size'], report['abi']) == (37, 16384, 'x86_64'), 'API37/16KiB x86_64 required'
+        adb('shell', 'am', 'force-stop', PACKAGE, allow_failure=True)
+        assert 'Success' in adb('install', '-r', str(args.apk.resolve())), 'APK install failed'
+        adb('shell', 'am', 'force-stop', PACKAGE)
+        preservation_attempted = True
+        report['original_files_preserved'] = int(private_script(preserve))
+        for index, character_class, animation_table, preset in CLASSES:
+            launch()
+            visual_ready('main')
+            select_slot(index)
+            screenshot('%d-main-empty' % index)
+            menu_after_tap('main', 'menu_EnterName')
+            visual_ready('name')
+            screenshot('%d-name-empty' % index)
+            # One real A-key touch creates a deliberately synthetic name.
+            # Wait for the field/button pixels after it, then confirm.
+            tap('key_a')
+            visual_ready('name')
+            screenshot('%d-name-synthetic' % index)
+            offset = len(logs())
+            tap('name_confirm')
+            text = wait(lambda t: ('Owned menu navigation | push menu_SelectClass |' in t[offset:] and
+                                   CLASS_INDEX.search(t[offset:]) is not None), 'authored class menu')
+            current, _ = CLASS_INDEX.findall(text[offset:])[-1]
+            current = int(current)
+            assert current <= index, 'Unexpected retained class index; cannot use right-arrow progression'
+            while current < index:
+                prior = len(logs())
+                tap('class_right')
+                text = wait(lambda t: any(int(m[0]) == current + 1 for m in CLASS_INDEX.findall(t[prior:])), 'fresh class-index update')
+                current, actual_preset = CLASS_INDEX.findall(text[prior:])[-1]
+                current = int(current)
+                assert CLASSES[current][3] == actual_preset, 'Authored class index/preset mismatch'
+                visual_ready('class')
+            visual_ready('class')
+            screenshot('%d-class-%s' % (index, preset))
+            offset = len(logs())
+            tap('class_confirm')
+            text = wait(lambda t: ('Native menu profile created | slot %d | class %d |' % (index, character_class) in t[offset:] and
+                                   'Owned menu navigation | push menu_StartGame |' in t[offset:]), 'source profile creation and real Start movie')
+            assert len(re.findall(r'Native menu profile created \|', text)) == 1, 'Profile creation replayed in fresh process'
+            visual_ready('start')
+            screenshot('%d-start-new' % index)
+            created = start(index, character_class, preset, animation_table)
+            screenshot('%d-crypt-new' % index)
+            back_main()
+            screenshot('%d-main-back' % index)
+            # Reopen occupied after process restart, which resets Info664 and
+            # proves that the real Start button supplies its assignment.
+            launch()
+            visual_ready('main')
+            select_slot(index)
+            menu_after_tap('main', 'menu_StartGame')
+            visual_ready('start')
+            screenshot('%d-start-occupied' % index)
+            assert not re.search(r'Native menu profile created \|', logs()), 'Occupied slot was recreated'
+            reopened = start(index, character_class, preset, animation_table)
+            screenshot('%d-crypt-occupied' % index)
+            before = len(logs())
+            home_pid = pid
+            wait_focus('Home from Crypt')
+            adb('shell', 'input', '-d', '0', 'keyevent', 'KEYCODE_HOME')
+            deadline = time.monotonic() + 15
+            while True:
+                activity = adb('shell', 'dumpsys', 'activity', 'activities')
+                resumed = [line for line in activity.splitlines()
+                           if 'mResumedActivity:' in line or 'topResumedActivity=' in line]
+                if resumed and all(PACKAGE not in line for line in resumed):
+                    break
+                assert time.monotonic() < deadline, 'Actual Home/background transition missing'
+                time.sleep(.2)
+            # am start brings the existing Activity forward without force-stop.
+            assert 'Status: ok' in adb('shell', 'am', 'start', '-W', '-n', PACKAGE + '/.MainActivity'), 'Resume failed'
+            text = wait(lambda t: HUD.search(t[before:]) is not None, 'connected HUD after Home/resume', 70)
+            wait_focus('Home/resume')
+            assert pid == home_pid and adb('shell', 'pidof', PACKAGE) == home_pid, 'Home/resume replaced process'
+            classes = CLASS.findall(text)
+            assert classes[-1] == (str(index), str(character_class), preset), 'Home/resume changed class'
+            resumed_hud = HUD.findall(text[before:])[-1]
+            assert resumed_hud[2] == reopened['character'], 'Home/resume changed canonical Character'
+            assert tuple(map(int, (resumed_hud[4], resumed_hud[6], resumed_hud[8]))) == (reopened['max_HP'], reopened['max_MP'], reopened['next_XP']), 'Home/resume changed cached maxima'
+            screenshot('%d-crypt-resumed' % index)
+            back_main()
+            screenshot('%d-main-final' % index)
+            report['cases'].append({'class_index': index, 'created': created, 'occupied_after_restart': reopened,
+                                    'normal_back_to_main': True, 'Home_resume_same_class_and_character': True})
+        private_script('set -eu\n' + '\n'.join('test -f files/dh2_%03d.savegame' % index for index in range(3)))
+        report['synthetic_primary_profiles_created'] = 3
+        report['validation'] = 'PASS'
+    except Exception as exc:
+        # Exception messages are deliberately our own fixed assertions; never
+        # persist raw adb stdout/stderr, names, profiles or complete Logcat.
+        failure = exc
+        report['failure'] = {'type': type(exc).__name__, 'message': str(exc) if isinstance(exc, (AssertionError, RuntimeError)) else 'Smoke operation failed'}
+    finally:
+        if pid:
+            collect_events()
+        try:
+            adb('shell', 'am', 'force-stop', PACKAGE)
+            if preservation_attempted:
+                report['synthetic_files_archived'] = int(private_script(restore))
+                report['original_files_restored_and_device_checksums_verified'] = True
+        except Exception:
+            report['validation'] = 'FAIL'
+            report['original_files_restored_and_device_checksums_verified'] = False
+            report['restoration_failure'] = 'Private transaction retained on device; stop app and recover originals there before further tests.'
+            failure = failure or RuntimeError('On-device campaign restoration failed')
+        (out / 'menu-source-events.log').write_text('\n'.join(events) + '\n', encoding='utf-8')
+        report['source_events_sha256'] = hashlib.sha256((out / 'menu-source-events.log').read_bytes()).hexdigest()
+        (out / 'menu-ui-runtime-smoke.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
+    print(json.dumps({'validation': report['validation'], 'cases': len(report['cases']),
+                      'restored': report.get('original_files_restored_and_device_checksums_verified', False),
+                      'report': str(out / 'menu-ui-runtime-smoke.json')}))
+    if failure:
+        raise SystemExit(1)
+
+
+if __name__ == '__main__':
+    main()

@@ -69,7 +69,7 @@ bool call(const Services* services, std::uint32_t& calls,
           Function function, Args... args) noexcept {
     if (!function) return false;
     ++calls;
-    return function(services->context, args...) == 0;
+    try {return function(services->context, args...) == 0;} catch (...) {return false;}
 }
 
 enum class SelectStatus : std::uint32_t {
@@ -110,9 +110,10 @@ bool select_local(const PlayerRegistry* registry, std::int32_t internal_id,
 }
 
 SelectStatus select_internal_id(const PlayerRegistry* registry,
-                                const Services* services,
-                                std::int32_t internal_id,
-                                std::uint32_t& service_calls,
+                                 const Services* services,
+                                 std::int32_t internal_id,
+                                 std::uint32_t lookup_flag,
+                                 std::uint32_t& service_calls,
                                 Selection& selection) noexcept {
     if (internal_id == -1) {
         selection.player = registry->manager_plus_8;
@@ -152,7 +153,7 @@ SelectStatus select_internal_id(const PlayerRegistry* registry,
                     PlayerInfoProjection* player = nullptr;
                     if (!services->get_net_player_info) return SelectStatus::service_unavailable;
                     if (!call(services, service_calls, services->get_net_player_info,
-                              net_manager, internal_id, std::uint32_t{0}, &player))
+                               net_manager, internal_id, lookup_flag, &player))
                         return SelectStatus::service_failed;
                     if (!player) return SelectStatus::no_player;
                     selection.player = player;
@@ -275,7 +276,7 @@ Status get_hosting_level(const PlayerRegistry* registry,
 
     report.requested_internal_id = internal_id;
     Selection selected;
-    const auto selection_status = select_internal_id(registry, services, internal_id,
+    const auto selection_status = select_internal_id(registry, services, internal_id, 0,
                                                       report.service_calls, selected);
     report.local_entries_examined = selected.local_examined;
     if (selection_status != SelectStatus::selected) {
@@ -303,6 +304,50 @@ Status get_hosting_level(const PlayerRegistry* registry,
     report.status = Status::complete;
     finish_result(output, report);
     return report.status;
+}
+
+Status get_player_by_internal_id(const PlayerRegistry* registry,
+                                const Services* services,
+                                std::int32_t internal_id,
+                                std::uint32_t lookup_flag,
+                                PlayerInfoProjection** output_player,
+                                Result* output) {
+    if ((!services && internal_id!=-1) || !output_player || !output) return Status::invalid_argument;
+    if (!valid_registry(registry)) return Status::invalid_registry;
+    if (result_overlaps_registry(output, registry, services) ||
+        ranges_overlap(output_player,sizeof(*output_player),output,sizeof(*output)) ||
+        ranges_overlap(output_player,sizeof(*output_player),registry,sizeof(*registry)) ||
+        ranges_overlap(output_player,sizeof(*output_player),services,sizeof(*services)) ||
+        ranges_overlap(output_player,sizeof(*output_player),registry->entries,
+                       registry->entry_count*sizeof(*registry->entries))) return Status::invalid_argument;
+    auto cell_aliases_player=[&](const PlayerInfoProjection* player) {
+        return ranges_overlap(output_player,sizeof(*output_player),player,sizeof(*player)) ||
+            ranges_overlap(output_player,sizeof(*output_player),player->character_level_member,
+                           sizeof(*player->character_level_member));
+    };
+    if (cell_aliases_player(registry->manager_plus_8)) return Status::invalid_argument;
+    for (std::uint32_t i=0;i<registry->entry_count;++i)
+        if (cell_aliases_player(registry->entries[i])) return Status::invalid_argument;
+    Result report{};report.requested_internal_id=internal_id;
+    Selection selected;SelectStatus status=SelectStatus::service_failed;
+    try {status=select_internal_id(registry,services,internal_id,lookup_flag,
+                                  report.service_calls,selected);} catch (...) {}
+    report.local_entries_examined=selected.local_examined;
+    report.status=status==SelectStatus::selected?Status::complete:
+        status==SelectStatus::service_unavailable?Status::service_unavailable:
+        status==SelectStatus::no_player?Status::no_player_projection:Status::service_failed;
+    if (report.status==Status::complete) {
+        if (!selected.player || !selected.player->identity) report.status=Status::no_player_projection;
+        else {
+            if (ranges_overlap(output,sizeof(*output),selected.player,sizeof(*selected.player)) ||
+                ranges_overlap(output,sizeof(*output),selected.player->character_level_member,
+                               selected.player->character_level_member?sizeof(*selected.player->character_level_member):0) ||
+                cell_aliases_player(selected.player)) return Status::invalid_argument;
+            report.route=selected.route;report.player_identity=selected.player->identity;
+            *output_player=selected.player;
+        }
+    }
+    *output=report;return report.status;
 }
 
 ReconcileStatus reconcile_character_level(const ReconcileState* state,

@@ -20,6 +20,11 @@ struct LocalizationServices {
  // genuine no-character branch. Source calls it twice when the first is nonnull.
  bool (*player_character)(void*,std::uintptr_t&,std::string&){};
  bool (*player_name)(void*,std::uintptr_t character,std::string&,std::string&){};
+ // Optional front-menu Application substitutions. The title comes from the
+ // real MENU_GAME_TITLE ID; its language and the version/operator branch
+ // remain explicit Application inputs.
+ bool (*application_language)(void*,std::int32_t&,std::string&){};
+ bool (*application_version)(void*,std::string&,std::string&){};
 };
 struct LocalizationResult {std::string text;bool found{};bool sets_menu_string_flag{};};
 // Exact bounded source transforms. color mode returns source's changed flag;
@@ -36,6 +41,10 @@ class Localization {
  bool switch_pack(std::int32_t pack,bool unload_old,std::string&); // -1..8
  bool preload(std::uint32_t pack,std::uint32_t sheet,bool force,const LocalizationServices&,std::string&);
  bool native_string(const std::string& symbol,const LocalizationServices&,LocalizationResult&,std::string&);
+ bool string_id(std::uint32_t,const LocalizationServices&,std::string&,std::string&);
+ // Raw symbol result for NativeGetParsedString's later VarArgs parseEx. Uses
+ // this same cache and exact symbol/index/debug delivery, without plain parse.
+ bool raw_symbol(const std::string&,const LocalizationServices&,LocalizationResult&,std::string&);
  std::int32_t pack()const{return pack_;}
  const std::vector<std::string>& pack_names()const{return pack_names_;}
  const std::string& sheet_name(std::uint32_t pack,std::uint32_t sheet)const;

@@ -512,7 +512,7 @@ struct Runtime::Impl {
   source_fields.script.path_storage_identity=reinterpret_cast<std::uintptr_t>(&session);
   source_tables={reinterpret_cast<std::uintptr_t>(&base_initials),reinterpret_cast<std::uintptr_t>(&player_initials),reinterpret_cast<std::uintptr_t>(&iphone_initials)};
   scalar_state={ais.ais,&script_integers};scalar_callbacks={&scalar_state,nullptr};
-  property_services={bindings.character,bindings.rules,bindings.classes,bindings.properties,bindings.shared_property_temp,false};
+  property_services={bindings.character,bindings.rules,bindings.classes,bindings.properties,bindings.shared_property_temp,false,&property_view};
   mana_state={bindings.character,bindings.mana_exempt_14f0,&property_view};
   mana_globals={bindings.application_singleton,&bindings.debug->globals(),&bindings.debug->services()};
   mana_services={this,mana_service};mana_callbacks={&mana_state,&mana_globals,&mana_services};

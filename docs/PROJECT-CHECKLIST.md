@@ -5,16 +5,19 @@ Updated: 2026-10-06. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Verified APK:** [download prerelease](https://github.com/Noamcelermajer/DH_sc/releases/download/native-profile-inventory-2026-10-06/DH2-native-profile-inventory-2026-10-06.apk).
-Release/source tag: `native-profile-inventory-2026-10-06` on this reconstruction branch.
-APK: 30,135,449 bytes; SHA-256 `6792de5a33ecb272c1af76d184117a46b955fcce7240b015d8bd2d2c904820eb`.
-[Matching build input capture](https://github.com/Noamcelermajer/DH_sc/releases/download/native-profile-inventory-2026-10-06/DH2-native-profile-inventory-source-capture-2026-10-06.zip).
+**Verified APK:** [menu/class/Crypt prerelease](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-06/DH2-native-menu-crypt-2026-10-06.apk).
+Release/source tag: `native-menu-crypt-2026-10-06` on this reconstruction branch.
+APK: 152,827,608 bytes; SHA-256 `1487a1e014eb3f78e9f75072b91ae7052250cf1401ee1fd576ad14790b787a6b`.
+[Matching build input capture](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-06/DH2-native-menu-crypt-source-capture-2026-10-06.zip): 1,220 compiler inputs per ABI,
+1,271 captured source/build files; ARM64 and x86_64 compile, all 22 ELF64
+libraries and APK ZIP entries are 16 KiB aligned.
 
-Both native ABIs compile from 609 actual inputs; capture covers 635 files.
-Live API37/16KiB campaign metadata import, corruption/slot-change rejection,
-Save retention, Player death/skills/regen and Crypt regression pass. GEAR/V4
-restoration is host verified and Android compiled; native full gameplay Save,
-registration/InitPost/equipment remain open. [Evidence](../reports/reconstruction-2026-10-06/player-profile-inventory/validation.json).
+Original menu → name/class selection → real Single Player screen → Crypt runs
+for Warrior, Rogue and Mage on API37/16KiB. Original HP/MP/XP bars, occupied-slot
+restart, Back and Home/resume pass. Player death/pose/skills/regen regressions
+pass on this exact APK. Crypt uses a development continuation; full original
+startup, campaign saves, inventory/equipment and HUD controls remain open.
+[Evidence](../reports/reconstruction-2026-10-06/menu-crypt/validation.json).
 
 ## How to read this checklist
 
@@ -41,12 +44,12 @@ still require live gameplay integration. All final completion gates remain open.
 | Character properties, equipment and state | 19 | 6 |
 | Lua, skills and enemy AI | 48 | 14 |
 | Combat, death, loot and progression | 7 | 7 |
-| Quests, campaign, UI, audio and saves | 7 | 9 |
+| Quests, campaign, UI, audio and saves | 10 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **131** | **72** |
+| **Total scoped tasks** | **134** | **73** |
 
-Latest gate: [Profile/inventory backbone](../reports/reconstruction-2026-10-06/player-profile-inventory/validation.json). Metadata import and fallback locality are live; GEAR is host verified/Android compiled. Actual registration, gameplay Save/InitPost, inventory/text/Skin, full combat/skills/AI and persistent campaign remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
+Latest gate: [Original menu/classes/Crypt](../reports/reconstruction-2026-10-06/menu-crypt/validation.json). Fresh metadata creation and three-class HUD are live; retained inventory/GEAR is host verified and Android compiled. Controller/Character registration, SG_Load2/4/InitPost, equipment/text/Skin, full combat/skills/AI and persistent campaign remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -316,6 +319,10 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Run read-only real campaign metadata import on API37/16KiB; verify corruption and live-slot rejection, retained profile/file lease, and distinct metadata/gameplay Saves across reload/rotation. Gameplay load, writes and backups remain open.
 - [ ] Complete quest conditions, automatic event dispatch, objective types, rewards and persistence.
 - [ ] Complete campaign progression, story/dialogue, unlocks and difficulty transitions.
+- [x] Reuse Adam v69's original menu, name/class selection and real Single Player screen; create and reopen Warrior/Rogue/Mage profiles into development Crypt on API37/16KiB.
+- [x] Render original HP/MP/XP timelines from the retained live player property sheet for all three classes, after the single world update/render.
+- [x] Verify menu/world Back, occupied-slot cold restart and Home/resume through actual UI input; preserve and restore existing emulator saves.
+- [ ] Complete original NativeStartGame/Application.LoadLevel, difficulty/location/quest handoff and full gameplay startup.
 - [ ] Restore title/menu flow, character creation/selection, HUD, inventory, skill and quest interfaces.
 - [ ] Complete touch controls, input mapping, orientation/window/lifecycle behavior for the final app.
 - [ ] Connect music, sound, voice, visual effects and their original timing/lifetimes.
@@ -350,7 +357,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 ## Immediate work order
 
-1. Bind selected-slot/controller/PlayerInfo registration and Spawn/InitAll; load the gameplay Save through SG_Load1/2/4/GEAR before grants. Finish inventory/AddLoot/text/Skin and Player Kill providers on the same owners.
+1. Register offline controllers/PlayerInfo before authored slot assignment; connect genuine Character660 Spawn/InitAll; load the gameplay Save through SG_Load1/2/4/GEAR before grants. Finish inventory/AddLoot/text/Skin and Player Kill providers on the same owners.
 2. Connect full Player/enemy AIS frames, nonempty skill activation and autonomous acquisition/pursuit/attacks.
 3. Finish combat/death/rewards/loot/quest delivery and complete one original level.
 4. Expand factories/content/transitions, all classes, UI/audio and persistent campaign saves.

@@ -1,4 +1,4 @@
-"""Compile and validate the bounded borrowed Player skill-property adapter."""
+"""Validate the borrowed Player property callbacks; selected DSO proof is separate."""
 from __future__ import annotations
 
 import argparse
@@ -148,12 +148,12 @@ def main() -> int:
     ]
     compile_output = run(command, ROOT)
     synthetic_output = run([str(output)], ROOT)
-    if "PASS checks=20" not in synthetic_output or "actual_bashdown_data=not_requested" not in synthetic_output:
+    if "PASS checks=28" not in synthetic_output or "actual_bashdown_data=not_requested" not in synthetic_output:
         raise RuntimeError("synthetic host assertion count/output mismatch: " + synthetic_output)
     cache_output = None
     if use_cache:
         cache_output = run([str(output), str(pydata)], ROOT)
-        if "PASS checks=21" not in cache_output or "actual_bashdown_data=PASS" not in cache_output:
+        if "PASS checks=29" not in cache_output or "actual_bashdown_data=PASS" not in cache_output:
             raise RuntimeError("actual cache assertion count/output mismatch: " + cache_output)
 
     after = {path.relative_to(ROOT).as_posix() if path.is_relative_to(ROOT) else str(path): digest(path)
@@ -188,7 +188,7 @@ def main() -> int:
             "No registered buff owner/groups are supplied.",
             "The caller owns and shares one process-global temporary sheet across skill VMs.",
             "External identity-selected sheets are unsupported.",
-            "SetProp/ApplyPropClass are restricted to recovered type-8 runtime skill fields/classes.",
+            "SetProp remains bounded to recovered type-8 runtime fields; ApplyPropClass permits all class destinations and requires the canonical view for ordinary source resolution.",
             "Only the class-formula engine has a separate ARM differential; the four property callbacks are byte-pinned, not instruction-by-instruction compared here.",
         ],
     }

@@ -63,6 +63,7 @@ struct Context {
   if(c.reenter){c.reenter=false;LootEntry32V2 entry{};entry.words[1]=0;std::string nested;ck(!c.creation->add_powers(entry,*q.item,0,0,0,{p,power},nested)&&nested.find("reentry")!=std::string::npos);}
   return c.presentation->add_power(*q.item,q.power,q.difficulty,c.text_service(),error);
  }
+ static void observe(void* p,FreshInventoryOwnedV4&,const OwnedInventoryRequestV4& q){if(q.operation==OwnedInventoryOperationV4::destroy_item){std::string error;if(!static_cast<Context*>(p)->presentation->forget(*q.item,error))throw std::runtime_error(error);}}
  static bool inventory(void* p,FreshInventoryOwnedV4&,const OwnedInventoryRequestV4& q,OwnedInventoryResponseV4& response,std::string& error){
   auto& c=*static_cast<Context*>(p);auto text=c.text_service();
   switch(q.operation){
@@ -97,12 +98,12 @@ int main(int argc,char** argv){try{
  LootTablesV2 loots;ck(loots.load(bytes(raw[6]),input.loot_names,input.loot_schema,error),error);
  Random random;auto random_service=random.service();LootPowerCreationV7 creation(pinned,random_service);ItemPresentationOwnerV5 presentation(definitions.borrow());Context context{&loots.borrow().items(),&presentation,&creation};
  PropertyState properties;FreshInventoryOwnedV4 inventory(0x100000001,loots.borrow(),random_service,12,properties);ck(inventory.properties()==&properties);
- OwnedInventoryServicesV4 effects{&context,Context::inventory};LootPowerServicesV7 power_services{&context,Context::power};unsigned stored=0;
+ OwnedInventoryServicesV4 effects{&context,Context::inventory,Context::observe};LootPowerServicesV7 power_services{&context,Context::power};unsigned stored=0;
  // This explicit source-field fixture permits independent 121x3 creation
  // cases without substituting inventory fullness behaviour.
  inventory.project_unlimited(true);
  for(unsigned id=0;id<pinned.lists().size();++id)for(int difficulty=0;difficulty<3;++difficulty){
-  std::unique_ptr<ItemInstanceV1> item;ck(inventory.create_item(664,1,item,effects,error),error);auto* identity=item.get();LootEntry32V2 entry{};entry.words[1]=id;
+  std::unique_ptr<ItemInstanceV1> item;ck(inventory.create_item(664,1,RetainedItemSlotV4{&item},effects,error),error);auto* identity=item.get();LootEntry32V2 entry{};entry.words[1]=id;
   ck(creation.add_powers(entry,*item,0,1,difficulty,power_services,error),error);ck(loot_item_value_v7(*item,inventory.table(),definitions.borrow(),random_service,0,context.text_service(),error),error);
   ck(!item->name.empty());auto* powers=presentation.powers(*item);ck(powers&&powers->size()==item->powers.size());for(const auto& power:*powers)ck(!power.description.empty());
   std::int32_t index=-1;ck(inventory.add_item(item,true,false,index,effects,error),error);ck(!item&&index>=0&&inventory.items().at(index)->item.get()==identity);++stored;
@@ -117,7 +118,7 @@ int main(int argc,char** argv){try{
  std::int32_t sentinel=42;auto before=random.draws;ck(loot_quantity_v7(&sentinel,random_service,nullptr,0,0,error)==-2&&sentinel==42&&before==random.draws);++guards;
  LootQuantityChoiceV7 row{1,100};random.fail=true;error.clear();ck(loot_quantity_v7(&sentinel,random_service,&row,1,0,error)==-2&&sentinel==42&&random.draws==before+1&&error=="declared RNG failure after draw");random.fail=false;++guards;
  random.throws=true;error.clear();ck(loot_quantity_v7(&sentinel,random_service,&row,1,0,error)==-2&&sentinel==42&&random.draws==before+2&&error.find("threw")!=std::string::npos);random.throws=false;++guards;
- inventory.project_unlimited(false);std::unique_ptr<ItemInstanceV1> full;ck(inventory.create_item(664,1,full,effects,error),error);auto* identity=full.get();std::int32_t index=-1;ck(!inventory.add_item(full,true,false,index,effects,error)&&!full&&inventory.items().back()->item.get()==identity&&error=="required inventory continuation unavailable");++guards;
+ inventory.project_unlimited(false);std::unique_ptr<ItemInstanceV1> full;ck(inventory.create_item(664,1,RetainedItemSlotV4{&full},effects,error),error);auto* identity=full.get();std::int32_t index=-1;ck(!inventory.add_item(full,true,false,index,effects,error)&&!full&&inventory.items().back()->item.get()==identity&&error=="required inventory continuation unavailable");++guards;
  for(const auto& slot:inventory.items())ck(presentation.forget(*slot->item,error));resources=LootPowerResourcesV7{};definitions=ItemPowerTablesV5{};for(auto& data:raw)data.clear();quantities.clear();ck(creation.resources().lists().size()==121&&pinned.powers().rows().size()==937);
  std::cout<<"{\"validation\":\"PASS\",\"weighted_original_cases\":"<<weighted<<",\"quantity_original_cases\":"<<quantity<<",\"value_original_cases\":"<<values<<",\"coordinator_original_cases\":"<<cases<<",\"same_inventory_powered_items\":"<<stored<<",\"borrowed_rng_draws\":"<<random.draws<<",\"required_prefix_guards\":"<<guards<<",\"checks\":"<<checks<<",\"mismatches\":0,\"same_live_properties_rng\":true,\"text_debug_services_are_fixtures\":true,\"native_gameplay\":false,\"full_AddLoot\":false}\n";return 0;
  }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

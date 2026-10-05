@@ -7,6 +7,7 @@
 namespace dh2::scene {
 struct Material {
     std::string id, diffuse, alpha_map;
+    std::string effect_file,effect_uri,gles2_technique;
     float color[4]{1,1,1,1};
     float texture_matrix[16]{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
     float alpha_ref=0;

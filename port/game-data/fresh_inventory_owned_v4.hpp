@@ -14,11 +14,18 @@ enum class OwnedInventoryOperationV4:std::uint32_t {
 class FreshInventoryOwnedV4;
 struct OwnedInventoryRequestV4 {OwnedInventoryOperationV4 operation;std::uint32_t source_caller;ItemInstanceV1* item;const char* name;std::int32_t argument;std::uint32_t index;};
 struct OwnedInventoryResponseV4 {std::uintptr_t identity{};std::int32_t value{};};
-// Effects are mandatory when reached. Native storage observations are optional
-// audit notifications and cannot veto/fake native allocation/free/fullness.
+// Borrow only: the existing Item lifetime owner keeps this slot alive across
+// constructor/split/equip failure. No Item registry or additional owner.
+struct RetainedItemSlotV4 {std::unique_ptr<ItemInstanceV1>* value{};};
+// Effects are mandatory when reached. Storage observers run synchronously with
+// the actual Item alive. Retirement may reject by throwing before reset/erase;
+// stateful services require this provider. Other observations report storage.
 struct OwnedInventoryServicesV4 {
  void* context{};bool (*invoke)(void*,FreshInventoryOwnedV4&,const OwnedInventoryRequestV4&,OwnedInventoryResponseV4&,std::string&){};
  void (*observe_storage)(void*,FreshInventoryOwnedV4&,const OwnedInventoryRequestV4&){};
+ // Explicit legacy temporary contract: callbacks retain no Item pointers and
+ // create no external per-Item state. Absence of retirement is not proof.
+ bool stateless_temporaries=false;
 };
 // New authoritative owner. One actual vector/slot/item/equipment graph serves
 // creation, equipment, split, merge and removal; no const_cast or V3 mirror.
@@ -41,6 +48,9 @@ class FreshInventoryOwnedV4 {
  bool delete_instance(ItemInstanceV1*,const OwnedInventoryServicesV4&,std::string&);
  bool has_like(const ItemInstanceV1*,std::uint32_t&,bool&,std::string&)const;
  bool add_quantity(ItemInstanceV1&,std::int32_t,std::string&);
+ bool lifetime_slot(RetainedItemSlotV4,const ItemInstanceV1*,std::string&)const;
+ bool add_fixed_loot_impl(std::int32_t,std::unique_ptr<ItemInstanceV1>&,bool,const OwnedInventoryServicesV4&,std::string&);
+ bool equip_to_slot_impl(std::uint32_t,std::uint32_t,bool,std::unique_ptr<ItemInstanceV1>&,bool,const OwnedInventoryServicesV4&,std::string&);
 public:
  // Live mode borrows the Character's one authoritative PropertyState and RNG.
  // Both remain caller-owned and must outlive this inventory.
@@ -49,14 +59,20 @@ public:
  FreshInventoryOwnedV4(std::uintptr_t,LootTablesV2::Borrow,LootRandom8V2&,std::int8_t,std::shared_ptr<PropertyState>);
  FreshInventoryOwnedV4(const FreshInventoryOwnedV4&)=delete;FreshInventoryOwnedV4& operator=(const FreshInventoryOwnedV4&)=delete;
  bool add_fixed_loot(std::int32_t,const OwnedInventoryServicesV4&,std::string&);
+ bool add_fixed_loot(std::int32_t,RetainedItemSlotV4,const OwnedInventoryServicesV4&,std::string&);
  // Source-invalid indices/negative assertions and destructive native reentry
  // reject explicitly; read-only queries and live cached-property/selection writes
  // remain available synchronously in effects. Partial source prefixes persist.
  bool create_item(std::int32_t,std::uint32_t,std::unique_ptr<ItemInstanceV1>&,const OwnedInventoryServicesV4&,std::string&);
+ bool create_item(std::int32_t,std::uint32_t,RetainedItemSlotV4,const OwnedInventoryServicesV4&,std::string&);
  // GEAR's direct Item calls share this owner's existing callback guard.
  // No additional store; only SetValue's UpdateName and AddPower are accepted.
  bool saved_item_effect(OwnedInventoryOperationV4,std::uint32_t,ItemInstanceV1*,std::int32_t,std::uint32_t,const OwnedInventoryServicesV4&,std::string&);
  bool split_item(ItemInstanceV1&,std::int32_t,std::unique_ptr<ItemInstanceV1>&,const OwnedInventoryServicesV4&,std::string&);
+ bool split_item(ItemInstanceV1&,std::int32_t,RetainedItemSlotV4,const OwnedInventoryServicesV4&,std::string&);
+ // Required synchronous retirement precedes reset; rejection/exception keeps
+ // the caller's actual Item and full Presentation state in the same slot.
+ bool retire_item(RetainedItemSlotV4,const OwnedInventoryServicesV4&,std::string&);
  // Source AddItemInstance owns input only after delivered storage/merge/delete.
  // Prefix is retained on required effect failure; caller retains unconsumed input.
  bool add_item(std::unique_ptr<ItemInstanceV1>&,bool force,bool convert_gold,std::int32_t& index,const OwnedInventoryServicesV4&,std::string&);
@@ -64,6 +80,7 @@ public:
  bool auto_equip(std::uint32_t,std::int32_t& result,const OwnedInventoryServicesV4&,std::string&);
  bool character_auto_equip(std::uint32_t,std::int32_t& result,const OwnedInventoryServicesV4&,std::string&);
  bool equip_to_slot(std::uint32_t,std::uint32_t,bool,const OwnedInventoryServicesV4&,std::string&);
+ bool equip_to_slot(std::uint32_t,std::uint32_t,bool,RetainedItemSlotV4,const OwnedInventoryServicesV4&,std::string&);
  bool unequip_from_slot(std::uint32_t,std::int32_t,const OwnedInventoryServicesV4&,std::string&);
  bool is_equipped(std::uint32_t,bool&,std::string&)const;
  bool has_two_hander(bool,bool&,std::string&)const;

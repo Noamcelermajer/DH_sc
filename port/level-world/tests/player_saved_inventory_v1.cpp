@@ -9,7 +9,7 @@ struct SavedWorld:World {
  bool saved_reenter=false,mutate_character=false,destructive_probe=false;
  data::ItemTextServicesV5 actual_text{};
  SavedWorld(Tables& t,const std::filesystem::path& cache,const char* name):World(t,cache,name){
-  runtime.reset();real_text=true;save.set_character(CHARACTER);hooks.required.invoke=required_saved;
+  runtime.reset();effects.stateless_temporaries=false;real_text=true;save.set_character(CHARACTER);hooks.required.invoke=required_saved;
   actual_text=item_text->services();reader=std::make_unique<saved::Runtime>(saved::Bindings{&save,inventory.get(),&view,&effects,t.powers.borrow(),&incoming});
  }
  ~SavedWorld(){reader.reset();if(incoming){std::string e;ck(presentation->forget(*incoming,e),e);incoming.reset();}}
@@ -49,7 +49,7 @@ int main(int argc,char** argv){try{
   auto& identifier=const_cast<std::string&>(world.inventory->table().identifiers[world.yes_item]);auto authored=identifier;ck(world.reader->load(span(world.active_payload),&r,identifier)==saved::Status::invalid_argument&&identifier==authored&&!std::memcmp(&r,&before,sizeof r),"saved error aliases authored Item identifier");++guards;
   auto& power=const_cast<std::string&>(tables.powers.borrow().names()[0]);authored=power;ck(world.reader->load(span(world.active_payload),&r,power)==saved::Status::invalid_argument&&power==authored&&!std::memcmp(&r,&before,sizeof r),"saved error aliases authored Power identifier");++guards;
  }
- for(unsigned text_at:{1u,2u,3u}){SavedWorld world(tables,cache,"KnightPlayerBase");world.fail_text=text_at;saved::Result r;std::string e;ck(world.reader->load(span(cases[3].payload),&r,e)==saved::Status::failed&&!world.incoming&&world.inventory->items().empty()&&r.stage==saved::Stage::construct,"existing V4 constructor boundary published a failed local allocation");++prefixes;}
+ for(unsigned text_at:{1u,2u,3u}){SavedWorld world(tables,cache,"KnightPlayerBase");world.fail_text=text_at;saved::Result r;std::string e;ck(world.reader->load(span(cases[3].payload),&r,e)==saved::Status::failed&&world.incoming&&world.inventory->items().empty()&&r.stage==saved::Stage::construct,"retained constructor lost published identity");++prefixes;}
  {SavedWorld world(tables,cache,"KnightPlayerBase");world.mutate_character=true;saved::Result r;std::string e;ck(world.reader->load(span(cases[3].payload),&r,e)==saved::Status::failed&&r.stage==saved::Stage::add_item&&world.incoming&&world.incoming->identified==1&&world.inventory->items().empty(),"fresh Save Character producer ignored retained Item prefix");++prefixes;
   auto before=r;auto text=e;ck(world.reader->load(span(cases[3].payload),&r,e)==saved::Status::invalid_argument&&text==e&&!std::memcmp(&before,&r,sizeof r),"pending incoming failure replayed or destroyed prefix");++guards;}
  {SavedWorld world(tables,cache,"KnightPlayerBase");const auto id=world.yes_item;auto b=make_payload(world.inventory->table(),id,2,1);saved::Result r;std::string e;ck(world.reader->load(span(b),&r,e)==saved::Status::failed&&r.stage==saved::Stage::equip_first&&world.inventory->items().size()==1&&!world.incoming&&world.inventory->current_equipment()==0&&r.selection_stores==2,"failed source Equip restored selection or erased retained Item");++prefixes;}

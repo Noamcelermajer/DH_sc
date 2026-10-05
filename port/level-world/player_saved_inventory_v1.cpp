@@ -57,7 +57,7 @@ struct Call {
    std::uint32_t slot0,slot1,quantity,value,powers;const std::uint8_t* identified;
    stage(Stage::item_fields,0x46a508);if(!word(slot0))return false;stage(Stage::item_fields,0x46a514);if(!word(slot1))return false;stage(Stage::item_fields,0x46a520);if(!word(quantity))return false;stage(Stage::item_fields,0x46a52c);if(!word(value))return false;stage(Stage::item_fields,0x46a538);if(!read(1,identified))return false;stage(Stage::item_fields,0x46a544);if(!word(powers))return false;out.declared_powers=powers;out.completed_powers=0;
    const auto flag=*identified;stage(Stage::construct,0x46a560);++out.constructors;
-   if(!b.inventory->create_item(out.item_id,quantity,*b.incoming,*b.equipment_services,error))return fail("Saved inventory Item constructor failed");
+   if(!b.inventory->create_item(out.item_id,quantity,data::RetainedItemSlotV4{b.incoming},*b.equipment_services,error))return fail("Saved inventory Item constructor failed");
    auto* const item=b.incoming->get();if(!item||!valid(b))return fail("Saved inventory Item constructor changed owners");
    stage(Stage::set_value,0x46a56c);++out.set_values;item->value=signed_word(value);
    if(!effect(data::OwnedInventoryOperationV4::update_name,0x3fbc5c,item)||b.incoming->get()!=item)return fail("Saved inventory SetValue changed incoming identity");
@@ -74,7 +74,7 @@ struct Call {
    const std::uint32_t slots[]{slot0,slot1};for(unsigned set=0;set<2;++set)if(slots[set]!=UINT32_MAX){
     stage(set?Stage::equip_second:Stage::equip_first,set?0x46a6a8:0x46a660);if(!character())return false;
     const auto previous=std::uint8_t(b.inventory->current_equipment());b.inventory->project_current_equipment(std::uint8_t(set));++out.selection_stores;++out.equips;
-    if(!b.inventory->equip_to_slot(slots[set],std::uint32_t(out.inserted_index),true,*b.equipment_services,error))return fail("Saved inventory EquipItemToSlot failed");
+    if(!b.inventory->equip_to_slot(slots[set],std::uint32_t(out.inserted_index),true,data::RetainedItemSlotV4{b.incoming},*b.equipment_services,error))return fail("Saved inventory EquipItemToSlot failed");
     if(!character())return false;b.inventory->project_current_equipment(previous);++out.selection_stores;
    }
    ++out.completed_items;

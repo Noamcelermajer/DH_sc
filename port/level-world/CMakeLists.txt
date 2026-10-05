@@ -116,7 +116,8 @@ target_sources(dh2_level_world PRIVATE level_construction_fields.cpp)
 target_sources(dh2_level_world PRIVATE character_level_runtime.cpp character_init_hp_mp.cpp
  ../pydata-constants/constants.c ../player-info-level/character_level_member.cpp
  ../player-info-level/player_manager_host_level.cpp ../player-info-level/player_locality_v1.cpp
- player_saved_inventory_v1.cpp)
+ ../player-info-level/player_local_selection_v1.cpp
+ player_saved_inventory_v1.cpp character_saved_class_v1.cpp character_template_random.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_update_all_skills.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_set_skills_and_spells.cpp
  character_faery_selection.cpp character_ai_skill_script_constructor.cpp

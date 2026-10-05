@@ -11,6 +11,40 @@ struct Receipt {
  std::uint32_t source_level_id=0,sections=0,field_reads=0,file_opens=0;
  bool loaded=false;
 };
+struct TransportBindings {
+ std::filesystem::path directory;
+ const data::CharacterTable* characters=nullptr;
+ std::int32_t* current_difficulty=nullptr;
+ // Gameplay section readers and init/quest/network operations must be actual
+ // selected implementations. This service's lease survives each delivery.
+ data::PlayerSaveLoadServicesV1 continuation;
+ // Explicit source NativeCreateSaveSlot transport only. Missing primaries
+ // construct a real empty profile; existing primaries reject. Metadata's
+ // read-only import always leaves this false.
+ bool create_new=false;
+};
+// One retained LoadOwner over a caller's existing Save and canonical +8
+// profile slot. The transport owns I/O/callback backing only. It creates no
+// Save, inventory, properties, VM, RNG or timer owner. Those borrowed objects
+// and bound tables/globals must outlive this transport and synchronous calls.
+class Transport {
+ struct Impl;std::shared_ptr<Impl> impl_;
+ std::unique_ptr<data::PlayerSaveLoadOwnerV1> loader_;
+public:
+ Transport(data::PlayerSavegameV1&,data::PlayerSaveProfileV1&);
+ ~Transport();
+ Transport(const Transport&)=delete;Transport& operator=(const Transport&)=delete;
+ // Rebind table/global/service providers after a world backing replacement.
+ // A callback cannot rebind the active transport. A retained profile keeps
+ // its original bytes even when the Save slot or directory later changes.
+ bool bind(TransportBindings,std::string&);
+ // Exact registered metadata saveAll assembly / same-index publication,
+ // followed by explicit atomic durable native new-file persistence. Normal
+ // import/gameplay transports reject writes until their writer closure binds.
+ bool save_all(std::string&);
+ data::PlayerSaveLoadOwnerV1& loader() noexcept;
+ const Receipt& receipt()const noexcept;
+};
 // Read-only campaign import transport for PlayerInfo's metadata Save (+680).
 // Character's gameplay Save (+14e8), inventory/properties/VM remain distinct.
 // No inferred selected slot, Character association, save writer or new profile.

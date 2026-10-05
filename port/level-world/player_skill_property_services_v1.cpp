@@ -49,13 +49,15 @@ bool no_output_alias(const Bindings& b, const dh2_script_value* args, std::uint3
         overlaps(returned, sizeof(*returned), b.state, state_bytes) ||
         overlaps(returned, sizeof(*returned), b.shared_temp, sheet_bytes) ||
         overlaps(returned, sizeof(*returned), b.rules, rules_bytes) ||
-        overlaps(returned, sizeof(*returned), b.classes, class_bytes)) return false;
+        overlaps(returned, sizeof(*returned), b.classes, class_bytes) ||
+        overlaps(returned, sizeof(*returned), b.owner_view, sizeof(data::PropertyView))) return false;
     if (overlaps(results, result_bytes, args, std::size_t(count) * sizeof(*args)) ||
         overlaps(results, result_bytes, &b, sizeof(b)) ||
         overlaps(results, result_bytes, b.state, state_bytes) ||
         overlaps(results, result_bytes, b.shared_temp, sheet_bytes) ||
         overlaps(results, result_bytes, b.rules, rules_bytes) ||
-        overlaps(results, result_bytes, b.classes, class_bytes)) return false;
+        overlaps(results, result_bytes, b.classes, class_bytes) ||
+        overlaps(results, result_bytes, b.owner_view, sizeof(data::PropertyView))) return false;
     return true;
 }
 
@@ -65,6 +67,19 @@ bool valid_bindings(const Bindings* b) noexcept {
     if (!span(b->rules, sizeof(*b->rules), alignof(data::PropertyRules)) ||
         !span(b->state, sizeof(*b->state), alignof(data::PropertyState)) ||
         !span(b->shared_temp, sizeof(*b->shared_temp), alignof(PropertySheet))) return false;
+    if (b->owner_view &&
+        (!span(b->owner_view, sizeof(*b->owner_view), alignof(data::PropertyView)) ||
+         overlaps(b->owner_view, sizeof(*b->owner_view), b, sizeof(*b)) ||
+         overlaps(b->owner_view, sizeof(*b->owner_view), b->state, sizeof(*b->state)) ||
+         overlaps(b->owner_view, sizeof(*b->owner_view), b->rules, sizeof(*b->rules)) ||
+         overlaps(b->owner_view, sizeof(*b->owner_view), b->shared_temp, sizeof(*b->shared_temp)) ||
+         b->owner_view->defaults != b->rules->defaults.data() ||
+         b->owner_view->types != b->rules->types.data() ||
+         b->owner_view->base != b->state->base.data() ||
+         b->owner_view->saved != b->state->saved.data() ||
+         b->owner_view->gear != b->state->gear.data() ||
+         b->owner_view->resolved != b->state->resolved.data() ||
+         dh2_property_validate(b->owner_view))) return false;
     return !overlaps(b->shared_temp, sizeof(*b->shared_temp), b->state, sizeof(*b->state)) &&
            !overlaps(b->shared_temp, sizeof(*b->shared_temp), b->rules, sizeof(*b->rules));
 }
@@ -85,39 +100,6 @@ bool property_id(const dh2_script_value& value, std::uint32_t& out) noexcept {
 
 bool source_skill_property(const data::PropertyRules& rules, std::uint32_t id) noexcept {
     return id < 224 && rules.types[id] == 8;
-}
-
-bool only_runtime_skill_outputs(const ClassTables& classes, const data::PropertyRules& rules,
-                                std::int32_t root) {
-    if (root < 0 || static_cast<std::size_t>(root) >= classes.rows.size() || classes.rows.size() > 10000)
-        return false;
-    std::vector<std::uint8_t> active(classes.rows.size(), 0), visited(classes.rows.size(), 0);
-    std::size_t budget = 0;
-    auto visit = [&](auto&& self, std::int32_t id, unsigned depth) -> bool {
-        if (id < 0 || static_cast<std::size_t>(id) >= classes.rows.size() || depth >= 32) return false;
-        const auto index = static_cast<std::size_t>(id);
-        if (active[index]) return false;
-        if (visited[index]) return true;
-        active[index] = 1;
-        const auto& row = classes.rows[index];
-        if (row.size() > 10000 || budget > 100000 - row.size()) return false;
-        budget += row.size();
-        for (const auto& formula : row) {
-            if (formula.type == 0) {
-                for (const auto child : {formula.p1, formula.p2, formula.p3})
-                    if (child >= 0 && !self(self, child, depth + 1)) return false;
-                continue;
-            }
-            if (formula.type == 8) break;
-            if (formula.type < 0 || formula.type > 9 || formula.type == 3 ||
-                formula.destination < 0 || formula.destination >= 224 ||
-                rules.types[static_cast<std::size_t>(formula.destination)] != 8) return false;
-        }
-        active[index] = 0;
-        visited[index] = 1;
-        return true;
-    };
-    return visit(visit, root, 0);
 }
 
 void number_result(dh2_script_value& out, std::int32_t value) noexcept {
@@ -213,7 +195,8 @@ int invoke(Bindings* bindings, std::uintptr_t character, Function function,
             return fail(error_text, error_capacity, "unsupported ApplyPropClass arity/dependency");
         std::int32_t class_id = 0;
         if (!number_to_i32(arguments[0], class_id) || class_id < 0 ||
-            !only_runtime_skill_outputs(*bindings->classes, *bindings->rules, class_id))
+            bindings->classes->rows.empty() || bindings->classes->rows.size() > 10000 ||
+            static_cast<std::size_t>(class_id) >= bindings->classes->rows.size())
             return fail(error_text, error_capacity, "unsupported ApplyPropClass class/table");
         bool to_temp = false;
         if (argument_count == 2) {
@@ -224,8 +207,27 @@ int invoke(Bindings* bindings, std::uintptr_t character, Function function,
             to_temp = arguments[1].boolean != 0;
         }
         PropertySheet& target = to_temp ? *bindings->shared_temp : bindings->state->resolved;
-        std::string error;
-        if (!data::apply_class(*bindings->classes, class_id, target, error, &bindings->state->resolved))
+        if (!to_temp && !bindings->owner_view)
+            return fail(error_text, error_capacity, "owner ApplyPropClass requires the live property view");
+        // PROPS_ApplyClass selects the resolved owner sheet with buff=false,
+        // or the shared s_temp sheet with buff=true. _LoadClass accepts every
+        // formula destination; property type flags do not gate these raw
+        // sheet writes. In particular Rogue Roundhouse writes Critical(63).
+        // Use the sole selected class kernel directly so a reached malformed
+        // formula retains preceding source writes instead of rolling back.
+        std::vector<data::ClassRow> rows;
+        rows.reserve(bindings->classes->rows.size());
+        for (const auto& row : bindings->classes->rows) {
+            if (row.size() > 10000)
+                return fail(error_text, error_capacity, "source skill ApplyPropClass row outside limit");
+            rows.push_back({row.data(), static_cast<std::uint32_t>(row.size())});
+        }
+        const auto status = to_temp ?
+            dh2_class_apply(rows.data(), static_cast<std::uint32_t>(rows.size()), class_id,
+                            target.data(), bindings->state->resolved.data()) :
+            dh2_class_apply_to_resolved(rows.data(), static_cast<std::uint32_t>(rows.size()),
+                                        class_id, target.data(), bindings->owner_view);
+        if (status)
             return fail(error_text, error_capacity, "source skill ApplyPropClass failed");
         return 0;
     } catch (...) {

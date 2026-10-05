@@ -24,6 +24,7 @@ struct Fixture {
     d::PropertyState owner{};
     d::PropertySheet global_temp{};
     d::ClassTables classes;
+    d::PropertyView view{};
     p::Bindings bindings{};
     Fixture() {
         for (std::size_t i = 0; i < 224; ++i) {
@@ -61,6 +62,8 @@ struct Fixture {
         bindings.classes = &classes;
         bindings.state = &owner;
         bindings.shared_temp = &global_temp;
+        view = d::property_view(rules, owner);
+        bindings.owner_view = &view;
     }
 };
 
@@ -105,6 +108,8 @@ void actual_bashdown_data(const std::filesystem::path& data_dir) {
     owner.resolved[172] = 1 * 256;
     PropertySheet shared_temp{};
     p::Bindings bindings{0x123456789abcdef0ull, &rules, &classes, &owner, &shared_temp, false};
+    auto view = property_view(rules, owner);
+    bindings.owner_view = &view;
     std::uint32_t returned = 88;
     const auto clear = boolean(true);
     check(invoke(F::character_clear_props, bindings, &clear, 1, nullptr, 0, returned) == 0 &&
@@ -243,9 +248,51 @@ int main(int argc, char** argv) {
 
         // C ABI contract: even failed supported calls return zero results.
         check(returned == 0, "failed callback left nonzero result count"); ++checks;
+
+        // Class destinations use raw sheet writes, independently of property
+        // type. Ordinary linear reads resolve through the borrowed live view,
+        // including attached buff groups, before the destination write.
+        f.rules.types[60] = f.rules.types[63] = 4;
+        f.owner.base[60] = 256; f.owner.saved[60] = 512; f.owner.gear[60] = 768;
+        d::PropertySheet buff{}; buff[60] = 1024;
+        const std::int32_t* sheets[] = {buff.data()};
+        const d::PropertyBuffGroup group{sheets, 1};
+        f.view.groups = &group; f.view.group_count = 1;
+        f.owner.resolved[60] = -17;
+        f.classes.rows[0] = {{63, 1, 1792, 60, 76}};
+        const auto ordinary = num(0);
+        check(invoke(F::character_apply_prop_class, f.bindings, &ordinary, 1, nullptr, 0, returned) == 0 &&
+              f.owner.resolved[60] == 2560 && f.owner.resolved[63] == 2552,
+              "ordinary class did not resolve canonical base/saved/gear/buff source"); ++checks;
+        f.owner.resolved[60] = 512;
+        dh2_script_value general_temp[] = {num(0), boolean(true)};
+        check(invoke(F::character_apply_prop_class, f.bindings, general_temp, 2, nullptr, 0, returned) == 0 &&
+              f.global_temp[63] == 1944 && f.owner.resolved[60] == 512,
+              "temporary class recomputed cached source or rejected type4 destination"); ++checks;
+        f.classes.rows[0] = {{63, 9, 91, 0, 0}, {174, 1, 1, 224, 1}};
+        check(invoke(F::character_apply_prop_class, f.bindings, general_temp, 2, nullptr, 0, returned) == -1001 &&
+              f.global_temp[63] == 91, "temporary class kernel failure rolled back delivered prefix"); ++checks;
+        check(invoke(F::character_apply_prop_class, f.bindings, &ordinary, 1, nullptr, 0, returned) == -1001 &&
+              f.owner.resolved[63] == 91, "ordinary class kernel failure rolled back delivered prefix"); ++checks;
+        f.classes.rows[0] = {{224, 3, 0, 0, 0}, {224, 42, 0, 0, 0}, {63, 9, 72, 0, 0}, {-1, 8, 0, 0, 0}, {224, 1, 0, 224, 0}};
+        check(invoke(F::character_apply_prop_class, f.bindings, general_temp, 2, nullptr, 0, returned) == 0 &&
+              f.global_temp[63] == 72, "source ignored formulas or type8 class termination changed"); ++checks;
+        auto missing_view = f.bindings; missing_view.owner_view = nullptr;
+        before_temp = f.global_temp; owner_before = f.owner;
+        check(invoke(F::character_apply_prop_class, missing_view, &ordinary, 1, nullptr, 0, returned) == -1001 &&
+              f.owner.resolved == owner_before.resolved, "ordinary class accepted absent canonical property view"); ++checks;
+        auto detached = f.view; detached.resolved = f.global_temp.data();
+        auto wrong_view = f.bindings; wrong_view.owner_view = &detached;
+        returned = 77;
+        check(invoke(F::character_apply_prop_class, wrong_view, general_temp, 2, nullptr, 0, returned) == -1001 &&
+              returned == 77 && f.global_temp == before_temp, "detached property view changed controls"); ++checks;
+        const auto before_view = f.view;
+        check(invoke(F::character_get_prop, f.bindings, get_owner_args, 2,
+                     reinterpret_cast<dh2_script_value*>(&f.view), 1, returned) == -1001 &&
+              !std::memcmp(&before_view, &f.view, sizeof(f.view)), "result aliased borrowed property view"); ++checks;
         if (argc == 2) { actual_bashdown_data(std::filesystem::path(argv[1])); ++checks; }
         std::cout << "player_skill_property_services_v1 PASS checks=" << checks
-                  << " supported_callbacks=4 shared_temp=caller_owned source_skill_fields=172-190"
+                  << " supported_callbacks=4 shared_temp=caller_owned class_destinations=all_schema_fields"
                   << " external_identity_sheet=unresolved buff_owner=unavailable"
                   << " actual_bashdown_data=" << (argc == 2 ? "PASS" : "not_requested") << '\n';
         return 0;

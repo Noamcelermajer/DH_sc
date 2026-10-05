@@ -153,7 +153,7 @@ target_link_libraries(player_skill_update_session_audit PRIVATE
     if saved.get("validation") != "PASS" or saved.get("source_gold_cases") != 64 or saved.get("mismatches") != 0:
         raise RuntimeError(f"selected saved-skill replay failed: {saved}")
     property_output = run([str(property_executable), str(cache / "data/pydata")], ROOT, env=env)
-    if "PASS checks=21" not in property_output or "actual_bashdown_data=PASS" not in property_output:
+    if "PASS checks=29" not in property_output or "actual_bashdown_data=PASS" not in property_output:
         raise RuntimeError(f"selected property regression failed: {property_output}")
     changed = [str(path) for path, value in before.items() if digest(path) != value]
     if changed:

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 project(dh2_game_data LANGUAGES C CXX)
 add_library(dh2_game_data SHARED data.cpp items.cpp animation_bank.cpp animation_tables.cpp animation_selection.cpp animation_scheduler.cpp class_tables.cpp properties.cpp vitals.cpp combat.cpp combat_events.cpp combat_result.cpp health.cpp combat_application.cpp aggro.cpp ai.cpp)
 target_compile_features(dh2_game_data PUBLIC cxx_std_17)
-target_sources(dh2_game_data PRIVATE level_tables.cpp)
+target_sources(dh2_game_data PRIVATE level_tables.cpp class_preview_setup.cpp player_profile_create_v1.cpp)
 target_sources(dh2_game_data PRIVATE skill_tables.cpp)
 target_sources(dh2_game_data PRIVATE player_savegame_v1.cpp)
 target_sources(dh2_game_data PRIVATE player_profile_index_v1.cpp player_save_load_owner_v1.cpp

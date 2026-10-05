@@ -79,6 +79,15 @@ struct Result {
 // dereferenced as the original code would do.
 Status get_hosting_level(const PlayerRegistry*, const Services*, Result*);
 
+// Public pointer selection over the same source GetPlayerByInternalID body.
+// This does not query the Level member. On success selected receives the
+// canonical registry/fallback/network projection; failed delivery leaves it
+// unchanged. lookup_flag is forwarded to the network callee unchanged.
+Status get_player_by_internal_id(const PlayerRegistry*, const Services*,
+                                std::int32_t internal_id,
+                                std::uint32_t lookup_flag,
+                                PlayerInfoProjection** selected, Result*);
+
 struct ReconcileState {
     PlayerInfoProjection* player;
     std::uintptr_t character_identity;

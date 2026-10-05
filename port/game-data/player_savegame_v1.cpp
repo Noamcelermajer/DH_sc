@@ -4,6 +4,77 @@
 #include <cstring>
 #include <limits>
 
+namespace dh2::data {
+bool PlayerSavegameV1::initialize_new_profile_metadata(std::int32_t slot,std::string& error) {
+    const auto e=reinterpret_cast<std::uintptr_t>(&error),s=reinterpret_cast<std::uintptr_t>(this);
+    if(e>UINTPTR_MAX-sizeof(error)||s>UINTPTR_MAX-sizeof(*this)||(e<s+sizeof(*this)&&s<e+sizeof(error)))return false;
+    if(slot_!=-1||character_||level_||class_!=-1||!name_.empty()||skills_initialized_||
+       !skills_.empty()||!slots_[0].empty()||!slots_[1].empty()||level_name_loaded_||use_spawn_points_loaded_){
+        error="indexed profile constructor requires a fresh unbound Save";return false;
+    }
+    slot_=slot;level_=1;class_=-1;unlocked_difficulty_=0;
+    level_name_fields_.word50.fill(0);level_name_fields_.word5c.fill(0);
+    // The two actual QuestSavegame constructors store 1 at +44/+48/+4c.
+    level_name_fields_.quest_wordfc.fill(1);level_name_fields_.quest_word15c.fill(1);
+    level_entry_points_.fill(0);properties_byte_194_=0;save_blocked_=false;
+    error.clear();return true;
+}
+void PlayerSavegameV1::generate_profile_seeds(std::uint32_t time) noexcept {
+    const std::array<std::uint32_t,3> words{time,time+0x537bu,time+0x537bu+0xfd2fu};
+    for(std::size_t i=0;i<3;++i)std::memcpy(&level_name_fields_.word5c[i],&words[i],4);
+}
+bool PlayerSavegameV1::set_new_profile_locations(std::uint32_t count,std::string& error) {
+    const auto e=reinterpret_cast<std::uintptr_t>(&error),s=reinterpret_cast<std::uintptr_t>(this);
+    if(e>UINTPTR_MAX-sizeof(error)||s>UINTPTR_MAX-sizeof(*this)||(e<s+sizeof(*this)&&s<e+sizeof(error)))return false;
+    // Other counts reach uninitialized source spawn bytes or overflow the
+    // three fixed arrays. Native creation requires the actual table size 3.
+    if(count!=3){error="actual three GameDifficulties rows required";return false;}
+    for(std::size_t i=0;i<3;++i){level_name_fields_.word50[i]=41;level_entry_points_[i]=0;use_spawn_points_[i]=1;}
+    level_name_loaded_=true;use_spawn_points_loaded_=true;error.clear();return true;
+}
+bool PlayerSavegameV1::load_properties(Bytes bytes,PropertyView& view,
+                                      std::size_t& consumed,std::string& error) {
+    const auto overlaps=[](const void* a,std::size_t an,const void* b,std::size_t bn){
+        const auto x=reinterpret_cast<std::uintptr_t>(a),y=reinterpret_cast<std::uintptr_t>(b);
+        return an>UINTPTR_MAX-x||bn>UINTPTR_MAX-y||(an&&bn&&x<y+bn&&y<x+an);
+    };
+    const auto separate=[&](const void* p,std::size_t n){
+        if(overlaps(p,n,this,sizeof(*this))||overlaps(p,n,&view,sizeof(view))||overlaps(p,n,bytes.data,bytes.size))return false;
+        for(const auto* sheet:std::array<const std::int32_t*,6>{view.defaults,view.types,view.base,view.saved,view.gear,view.resolved})
+            if(sheet&&overlaps(p,n,sheet,224*4))return false;
+        return true;
+    };
+    if(!separate(&error,sizeof(error))||!separate(&consumed,sizeof(consumed))||
+       overlaps(&error,sizeof(error),&consumed,sizeof(consumed)))return false;
+    consumed=0;error.clear();
+    if(!character_){error="source PROP Character/Debug assertion boundary";return false;}
+    if(!bytes.data&&bytes.size){error="bounded PROP bytes required";return false;}
+    const auto word=[&](std::uint32_t& value){
+        if(bytes.size-consumed<4)return false;
+        const auto* p=bytes.data+consumed;
+        value=std::uint32_t(p[0])|(std::uint32_t(p[1])<<8)|(std::uint32_t(p[2])<<16)|(std::uint32_t(p[3])<<24);
+        consumed+=4;return true;
+    };
+    std::uint32_t count=0;
+    if(!word(count)){error="truncated source PROP count";return false;}
+    if(count!=224)return true;
+    if(!view.types||!view.saved||reinterpret_cast<std::uintptr_t>(view.types)%alignof(std::int32_t)||
+       reinterpret_cast<std::uintptr_t>(view.saved)%alignof(std::int32_t)||overlaps(view.saved,224*4,bytes.data,bytes.size)){
+        error="actual disjoint PROP types and saved sheet required";return false;
+    }
+    for(const auto* sheet:std::array<const std::int32_t*,5>{view.defaults,view.types,view.base,view.gear,view.resolved})
+        if(sheet&&overlaps(view.saved,224*4,sheet,224*4)){error="PROP saved sheet aliases another authority";return false;}
+    for(std::size_t i=0;i<224;++i){
+        std::uint32_t bits=0;
+        if(!word(bits)){error="truncated source PROP word";return false;}
+        const auto type=view.types[i]==-1?16u:std::uint32_t(view.types[i]);
+        if(type&0x20)std::memcpy(view.saved+i,&bits,4);
+    }
+    if(consumed==bytes.size){error="truncated source PROP byte194";return false;}
+    properties_byte_194_=bytes.data[consumed++];return true;
+}
+}
+
 namespace {
 using namespace dh2::data;
 

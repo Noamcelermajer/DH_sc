@@ -51,7 +51,7 @@ struct World {
   presentation=std::make_unique<data::ItemPresentationOwnerV5>(t.powers.borrow());
   hooks={this,binding,{this,world_query},&visual,{this,skin},{this,required,observe}};
   equipment=std::make_unique<data::PlayerEquipmentLiveServicesV1>(*inventory,view,t.rows.data(),t.rows.size(),t.powers.borrow(),hooks);
-  delegate=equipment->services();effects={this,effect,observed};
+  delegate=equipment->services();effects={this,effect,observed,true};
   runtime=std::make_unique<initial::Runtime>(initial::Bindings{CHARACTER,inventory.get(),&view,&effects,{this,backend}});
   for(unsigned id=0;id<inventory->table().rows.size();++id){const auto& row=inventory->table().rows[id];if(yes_item<0&&row.record.words[26]==1&&!std::uint8_t(row.record.words[7]))yes_item=id;
    if(no_item<0&&row.record.words[26]==-1&&data::item_type(row)!=13&&!std::uint8_t(row.record.words[7]))no_item=id;}

@@ -37,6 +37,11 @@ bool load_records(const std::uint8_t*,std::size_t,unsigned rooms,const data::Cha
 // states through game-data/animation_tables.hpp instead. Empty means decor.
 std::string idle_clip(const std::string& model);
 bool load_resource(const std::uint8_t* model,std::size_t model_size,const std::uint8_t* clip,std::size_t clip_size,Resource&,std::string&);
+// v69 original controller IDs selected from immutable modular item resources.
+// Requires each requested controller exactly once; no equipment grant/store.
+bool load_modular_resource(const std::uint8_t* model,std::size_t model_size,
+ const std::vector<std::string>& controllers,const std::uint8_t* clip,
+ std::size_t clip_size,Resource&,std::string&);
 bool sample(Resource&,std::int32_t milliseconds,std::string&);
 bool sample(Resource&,const animation::Player&,std::int32_t milliseconds,std::string&);
 }

@@ -13,7 +13,9 @@ struct Bindings {
  data::ItemPowerTablesV5::Borrow powers;
  // The source caller's newly constructed Item, before AddItemInstance takes
  // ownership. This stable slot is owned by the existing Item lifetime owner.
- // Added native failures retain it, including a reached AddPower text prefix.
+ // Published before constructor callbacks; reused for a split after the first
+ // AddItem transfer. Native failures retain the actual construction/power
+ // prefix. Retire through V4's mandatory observer before actual destruction.
  std::unique_ptr<data::ItemInstanceV1>* incoming=nullptr;
 };
 enum class Stage : std::uint32_t {not_started,character,header,gold,selection,

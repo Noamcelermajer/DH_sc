@@ -86,6 +86,21 @@ bool Localization::id(std::uint32_t idvalue,const LocalizationServices& svc,std:
  return index(asr(idvalue,ps)&pm,asr(idvalue,ss)&sm,pack_,svc,out,e);
 }
 bool Localization::defaults(const LocalizationServices& svc,std::string& e){for(const char* key:{"GLOBAL_DECIMAL_SEPERATOR","GLOBAL_THOUSANDS_SEPERATOR","GLOBAL_THOUSANDS_GROUP_AT"}){std::uint32_t v;std::string out;if(!constant(svc,"StrID",key,v,e)||!id(v,svc,out,e))return false;}return true;}
+bool Localization::string_id(std::uint32_t value,const LocalizationServices& svc,std::string& out,std::string& e){
+ e.clear();if(!ready_||busy_)return fail(e,"Localization ID lookup reentry unsupported");Busy guard(busy_);return id(value,svc,out,e);
+}
+bool Localization::raw_symbol(const std::string& symbol,const LocalizationServices& svc,LocalizationResult& out,std::string& e){
+ e.clear();auto split=symbol.find('_');if(!ready_||busy_||!text_ok(symbol)||split==std::string::npos)return fail(e,"Localization symbol caller outside bounds");
+ if(!svc.debug)return fail(e,"Localization debug provider missing");Busy guard(busy_);LocalizationResult next;
+ if(!svc.debug(svc.context,"isTracingStringManager",e))return false;
+ unsigned p=pack_==-1?0:static_cast<unsigned>(pack_);
+ for(unsigned sheet=0;sheet<37&&!next.found;++sheet){if(!prefix_equal(symbol,sheets_[p][sheet].name,split))continue;
+  std::string text;if(!index(sheet,0,8,svc,text,e))return false;
+  for(unsigned i=0;i<sheets_[8][sheet].strings.size();++i){if(i&&!index(sheet,i,8,svc,text,e))return false;if(text.size()!=symbol.size()||!prefix_equal(text,symbol,text.size()))continue;
+   if(!index(sheet,i,pack_,svc,next.text,e)||!svc.debug(svc.context,"isTracingStringManager",e))return false;next.found=true;break;}
+ }
+ if(!next.found)next.text="notfound";out=std::move(next);return true;
+}
 bool Localization::native_string(const std::string& symbol,const LocalizationServices& svc,LocalizationResult& out,std::string& e){
  e.clear();auto split=symbol.find('_');if(!ready_||busy_||!text_ok(symbol)||split==std::string::npos)return fail(e,"Localization symbol caller outside bounds");
  if(!svc.debug||!svc.player_character||!svc.player_name)return fail(e,"Localization debug/player provider missing");Busy guard(busy_);LocalizationResult next;next.sets_menu_string_flag=symbol=="MENU_ERROR_NO_USERNAME"||symbol=="MENU_ERROR_NO_PASSWORD";
@@ -97,7 +112,28 @@ bool Localization::native_string(const std::string& symbol,const LocalizationSer
    if(!index(sheet,i,pack_,svc,localized,e)||!svc.debug(svc.context,"isTracingStringManager",e))return false;next.found=true;break;}
  }
  if(!next.found){next.text="notfound";out=std::move(next);return true;}
- if(!localized.empty()&&!defaults(svc,e))return false;if(!localization_plain(localized,add_space(pack_),next.text,e))return false;
+ if(!localized.empty()&&!defaults(svc,e))return false;
+ if(!svc.application_language&&!svc.application_version){if(!localization_plain(localized,add_space(pack_),next.text,e))return false;}
+ else{
+  std::string parsed;bool escape=false;
+  for(unsigned char c:localized){
+   if(!escape){if(c=='^')escape=true;else parsed+=c=='|'?'\x11':char(c);continue;}escape=false;
+   if(c=='t'){
+    std::int32_t language;std::uint32_t title;std::string value;
+    if(!svc.application_language)return fail(e,"Application title language provider missing");
+    if(!svc.application_language(svc.context,language,e))return false;
+    if(language==4)return fail(e,"Application Japanese title branch unconnected");
+    if(!constant(svc,"StrID","MENU_GAME_TITLE",title,e)||!id(title,svc,value,e))return false;
+    // GetTitleString passes strncpy's byte count 0x20; parse consumes the
+    // resulting C string. The supported cached title is shorter than 32.
+    if(value.size()>=32)return fail(e,"Application title exceeds source C-string buffer");parsed+=value;
+   }
+   else if(c=='v'){std::string value;if(!svc.application_version)return fail(e,"Application version provider missing");if(!svc.application_version(svc.context,value,e))return false;if(!text_ok(value)||value.size()>=10)return fail(e,"Application version exceeds source C-string buffer");parsed+=value;}
+   else if(std::strchr("$dfghikmps",c))return fail(e,"Localization varargs/service directive outside HUD domain");
+   else if(c=='n')parsed+='\n';else if(c=='#'||c=='*'||c=='^')parsed+=char(c);
+  }
+  next.text=utf_text(parsed,add_space(pack_));
+ }
  std::uintptr_t character=0;if(!svc.player_character(svc.context,character,e))return false;
  if(character){if(!svc.player_character(svc.context,character,e))return false;if(!character)return fail(e,"Source second player/character query became null");std::string name;if(!svc.player_name(svc.context,character,name,e)||!defaults(svc,e))return false;std::string parsed;if(!localization_player(next.text,name,add_space(pack_),parsed,e))return false;next.text=std::move(parsed);}
  out=std::move(next);return true;
