@@ -53,6 +53,9 @@ public:
  // reject explicitly; read-only queries and live cached-property/selection writes
  // remain available synchronously in effects. Partial source prefixes persist.
  bool create_item(std::int32_t,std::uint32_t,std::unique_ptr<ItemInstanceV1>&,const OwnedInventoryServicesV4&,std::string&);
+ // GEAR's direct Item calls share this owner's existing callback guard.
+ // No additional store; only SetValue's UpdateName and AddPower are accepted.
+ bool saved_item_effect(OwnedInventoryOperationV4,std::uint32_t,ItemInstanceV1*,std::int32_t,std::uint32_t,const OwnedInventoryServicesV4&,std::string&);
  bool split_item(ItemInstanceV1&,std::int32_t,std::unique_ptr<ItemInstanceV1>&,const OwnedInventoryServicesV4&,std::string&);
  // Source AddItemInstance owns input only after delivered storage/merge/delete.
  // Prefix is retained on required effect failure; caller retains unconsumed input.
@@ -72,6 +75,9 @@ public:
  const ItemTable& table()const{return tables_.items();}
  std::uintptr_t character()const noexcept{return character_;}
  std::int32_t current_equipment()const noexcept{return selected_;}void swap_equipment()noexcept{selected_=std::uint8_t(!selected_);}
+ // Exact source GEAR byte store/temporary selection. Caller must use the
+ // source 0/1 selection before indexing a weapon set; no second set mirror.
+ void project_current_equipment(std::uint8_t value)noexcept{selected_=value;}
  PropertyState* properties()const noexcept{return properties_;}
  std::int32_t gold()const noexcept{return gold_;}
  // Caller must supply genuine source field writes; these are not producers.

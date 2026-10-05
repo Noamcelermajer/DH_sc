@@ -13,6 +13,22 @@ std::int32_t signed_word(std::uint32_t bits) noexcept {
     return result;
 }
 
+bool overlaps(const void* a, std::size_t an, const void* b, std::size_t bn) {
+    const auto x = reinterpret_cast<std::uintptr_t>(a);
+    const auto y = reinterpret_cast<std::uintptr_t>(b);
+    if (an > UINTPTR_MAX - x || bn > UINTPTR_MAX - y) return true;
+    return an && bn && x < y + bn && y < x + an;
+}
+bool metadata_outputs_separate(const void* owner, std::size_t owner_size,
+                              Bytes bytes, std::size_t& consumed,
+                              std::string& error) {
+    return !overlaps(&consumed, sizeof(consumed), owner, owner_size) &&
+           !overlaps(&error, sizeof(error), owner, owner_size) &&
+           !overlaps(&consumed, sizeof(consumed), &error, sizeof(error)) &&
+           !overlaps(&consumed, sizeof(consumed), bytes.data, bytes.size) &&
+           !overlaps(&error, sizeof(error), bytes.data, bytes.size);
+}
+
 bool valid(const SavedSkillsView16V1* view) noexcept {
     return view && view->reserved == 0 &&
            (view->count == 0 || view->rows != nullptr) &&
@@ -281,6 +297,88 @@ bool PlayerSavegameV1::set_skill_level(std::uint32_t row,
         error = "unsafe saved skill index";
         return false;
     }
+    error.clear();
+    return true;
+}
+
+bool PlayerSavegameV1::load_level_name(Bytes bytes, std::size_t& consumed,
+                                     std::string& error) {
+    if (!metadata_outputs_separate(this, sizeof(*this), bytes, consumed, error)) return false;
+    consumed = 0;
+    if (bytes.size > UINT32_MAX || (!bytes.data && bytes.size)) {
+        error = "invalid LNAM section";
+        return false;
+    }
+    PlayerProfileSpan24V1 span{bytes.data, static_cast<std::uint32_t>(bytes.size), 0, 0, 0};
+    SavedSkillsLoadServices32V1 services{};
+    std::uint32_t value{};
+    auto next = [&]() {
+        if (!read_word(span, value, services)) {
+            error = "truncated LNAM section";
+            return false;
+        }
+        consumed = span.cursor;
+        return true;
+    };
+    if (!next()) return false;
+    level_name_fields_.level_id = value;
+    for (std::size_t i = 0; i < 3; ++i) {
+        if (!next()) return false;
+        level_name_fields_.word50[i] = signed_word(value);
+        if (!next()) return false;
+        level_name_fields_.word5c[i] = signed_word(value);
+        if (!next()) return false;
+        level_name_fields_.quest_wordfc[i] = signed_word(value);
+        level_name_fields_.quest_word15c[i] = signed_word(value);
+    }
+    level_name_loaded_ = true;
+    error.clear();
+    return true;
+}
+
+bool PlayerSavegameV1::load_level_entry_points(Bytes bytes, std::size_t& consumed,
+                                             std::string& error) {
+    if (!metadata_outputs_separate(this, sizeof(*this), bytes, consumed, error)) return false;
+    consumed = 0;
+    if (bytes.size > UINT32_MAX || (!bytes.data && bytes.size)) {
+        error = "invalid LEPT section";
+        return false;
+    }
+    PlayerProfileSpan24V1 span{bytes.data, static_cast<std::uint32_t>(bytes.size), 0, 0, 0};
+    SavedSkillsLoadServices32V1 services{};
+    for (auto& target : level_entry_points_) {
+        std::uint32_t value{};
+        if (!read_word(span, value, services)) {
+            error = "truncated LEPT section";
+            return false;
+        }
+        target = signed_word(value);
+        consumed = span.cursor;
+    }
+    error.clear();
+    return true;
+}
+
+bool PlayerSavegameV1::load_use_spawn_points(Bytes bytes, std::size_t& consumed,
+                                          std::string& error) {
+    if (!metadata_outputs_separate(this, sizeof(*this), bytes, consumed, error)) return false;
+    consumed = 0;
+    if (bytes.size > UINT32_MAX || (!bytes.data && bytes.size)) {
+        error = "invalid LUSP section";
+        return false;
+    }
+    PlayerProfileSpan24V1 span{bytes.data, static_cast<std::uint32_t>(bytes.size), 0, 0, 0};
+    SavedSkillsLoadServices32V1 services{};
+    for (auto& target : use_spawn_points_) {
+        const std::uint8_t* value{};
+        if (!read(span, 1, value, services)) {
+            error = "truncated LUSP section";
+            return false;
+        }
+        target = *value;
+        consumed = span.cursor;
+    }
+    use_spawn_points_loaded_ = true;
     error.clear();
     return true;
 }

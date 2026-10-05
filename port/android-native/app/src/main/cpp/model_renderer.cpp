@@ -61,6 +61,8 @@
 #include "character_ai_update_all_skills.hpp"
 #include "character_skill_state_queries.hpp"
 #include "../../../../../player-info-level/player_manager_host_level.hpp"
+#include "../../../../../player-info-level/player_locality_v1.hpp"
+#include "native_player_profile.hpp"
 #include "navigation_producers.hpp"
 #include <GLES2/gl2.h>
 #include <android/log.h>
@@ -252,28 +254,76 @@ std::vector<std::uint8_t> actor_design_bytes;
 dh2_pycst_view actor_design{};
 dh2::character_script_set_level::Application native_application{};
 dh2::data::savegame_options_v1::Owner native_saved_options;
-// Source PlayerSavegame::m_difficultyLevel has initial word0. Full profile
-// selection/loading is pending; this is separate from the Level difficulty.
+// Source PlayerSavegame::m_difficultyLevel starts at word0; metadata PDFL
+// writes this same static global. It is separate from the Level difficulty.
 std::int32_t native_save_difficulty=0;
 dh2::character_level_runtime::DesignBinding native_design_binding{};
 std::unique_ptr<dh2::native::debug_files::Backend> native_debug;
 
 struct NativeHostPlayer {
- // The source embedded fallback PlayerInfo constructor initializes +330 to 0.
+ // PlayerInfo's member constructor starts at0, then its Reset sets level -1.
+ // These are the reached query fields, not a complete PlayerInfo constructor.
  dh2::character_level_member::IntMember level_member{};
  std::uint64_t change_serial=0;
  dh2::player_manager_host_level::PlayerInfoProjection player{};
  dh2::player_manager_host_level::PlayerRegistry registry{};
+ std::uintptr_t character_660=0;
+ std::int32_t member_1a0=-1;
+ dh2::player_locality_v1::MatchingLocalFields matching_fields{};
+ dh2::player_locality_v1::Matching matching{};
+ dh2::player_locality_v1::Matching* matching_singleton=nullptr;
+ std::int32_t matching_provider=1;
+ int metadata_slot=-1;
+ std::unique_ptr<dh2::native::player_profile::Metadata> metadata;
  std::uint8_t online=0; // Explicit offline development session; no network owner.
  NativeHostPlayer() {
-  player={reinterpret_cast<std::uintptr_t>(&player),-1,&level_member};
-  registry={reinterpret_cast<std::uintptr_t>(&registry),nullptr,0,&player};
+   level_member.value=-1;
+   player={reinterpret_cast<std::uintptr_t>(&player),-1,&level_member};
+   registry={reinterpret_cast<std::uintptr_t>(&registry),nullptr,0,&player};
+   dh2::player_locality_v1::construct_matching_local_fields(matching_fields);
+   matching={reinterpret_cast<std::uintptr_t>(&matching),&matching_fields.active_c};
+   matching_singleton=&matching;
  }
  static std::int32_t read_online(void* raw,std::uint8_t* value) {
   *value=static_cast<NativeHostPlayer*>(raw)->online;return 0;
  }
  dh2::player_manager_host_level::Services services() {
-  return {this,read_online,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr};
+   return {this,read_online,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr};
+ }
+ dh2::player_locality_v1::Services locality_services() {
+   using namespace dh2::player_locality_v1;
+   Services out{};out.context=this;out.online=read_online;
+   out.acquire_matching=[](void* raw,Matching** value)->std::int32_t {
+    auto& self=*static_cast<NativeHostPlayer*>(raw);
+    const MatchingState state{&self.matching_singleton,&self.matching_provider};MatchingResult result{};
+    if(get_matching(&state,nullptr,&result)!=Status::complete||result.matching!=&self.matching)return 1;
+    *value=result.matching;return 0;
+   };
+   out.character_660=[](void* raw,PlayerInfo* selected,std::uintptr_t* value)->std::int32_t {
+    auto& self=*static_cast<NativeHostPlayer*>(raw);if(selected!=&self.player)return 1;
+    *value=self.character_660;return 0;
+   };
+   out.member_1a0=[](void* raw,PlayerInfo* selected,std::int32_t* value)->std::int32_t {
+    auto& self=*static_cast<NativeHostPlayer*>(raw);if(selected!=&self.player)return 1;
+    *value=self.member_1a0;return 0;
+   };
+   out.matching_member_id=[](void* raw,Matching* selected,std::int32_t* value)->std::int32_t {
+    auto& self=*static_cast<NativeHostPlayer*>(raw);if(selected!=&self.matching)return 1;
+    *value=local_member_id(self.matching_fields);return 0;
+   };
+   out.matching_server_member_id=[](void* raw,Matching* selected,std::int32_t* value)->std::int32_t {
+    auto& self=*static_cast<NativeHostPlayer*>(raw);if(selected!=&self.matching)return 1;
+    *value=local_server_member_id(self.matching_fields);return 0;
+   };
+   out.player_virtual_is_local=[](void* raw,PlayerInfo* selected,std::int32_t* value)->std::int32_t {
+    auto& self=*static_cast<NativeHostPlayer*>(raw);if(selected!=&self.player)return 1;
+    const auto services=self.locality_services();Result result{};
+    if(cnet_player_is_local(selected,&services,&result)!=Status::complete)return 1;
+    *value=result.value;return 0;
+   };
+   // Online/NetStruct and registration services are required when reached;
+   // the bounded offline query owner supplies none of those continuations.
+   return out;
  }
 } native_host;
 // The viewport owns the bounded Level constructor fields. Its normal-difficulty
@@ -1314,6 +1364,11 @@ Matrix camera(int width,int height){
 }
 void mod_directory(std::string directory){mod_root=std::move(directory);}
 void runtime_directory(std::string directory){runtime_root=std::move(directory);}
+std::string profile_slot(int slot){
+ if(slot < -1)return "Campaign metadata slot rejected";
+ if(native_host.metadata_slot!=slot){native_host.metadata.reset();native_host.metadata_slot=slot;}
+ return "Campaign metadata slot selected; player registration remains pending";
+}
 std::vector<std::uint8_t> read_asset(AAssetManager* assets,const std::string& name){return read(assets,name,"");}
 void reset_context(){
  // EGL has already replaced the context. Forget its old GPU names before a
@@ -2195,12 +2250,30 @@ void advance_native_actor(unsigned dt_ms){
 }
 void initialize_native_monster_scripts(AAssetManager* assets) {
  if(!actor_level_fields_ready||!source_char_ai.ready||!native_actor_ready||!native_debug)
-  throw std::runtime_error("Native monster initialization owners unavailable");
- // Bounded already-associated Player/PlayerInfo source reconciliation. The
+   throw std::runtime_error("Native monster initialization owners unavailable");
+ {
+  using namespace dh2::player_locality_v1;
+  const auto services=native_host.locality_services();Result locality{},absent{};
+  if(is_local_player(&native_host.registry,&services,prince_character.owner(),&locality)!=Status::complete||
+     is_local_player(&native_host.registry,&services,0,&absent)!=Status::complete)
+   throw std::runtime_error("Native Player locality query failed");
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player locality | route %u | registered %u | local %d | selected fallback %u | Character660 %zu | member1a0 %d | matching member %d | matching server %d | active %u | null result %d | null calls %u | source queries on bounded fields; profile/registration/NetStruct pending",
+   unsigned(locality.route),unsigned(locality.registered),locality.value,unsigned(locality.player==&native_host.player),std::size_t(native_host.character_660),native_host.member_1a0,native_host.matching_fields.member_3638,native_host.matching_fields.server_member_363c,unsigned(native_host.matching_fields.active_c),absent.value,absent.service_calls);
+ }
+ if(native_host.metadata&&native_host.metadata->receipt().loaded){
+  const auto metadata=native_host.metadata->save_identity();
+  const auto gameplay=reinterpret_cast<std::uintptr_t>(prince_combat.savegame.get());
+  if(!gameplay||metadata==gameplay||native_host.metadata->save().character()!=0||prince_combat.savegame->character()!=prince_character.owner())throw std::runtime_error("Native metadata/gameplay Save ownership differs");
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native campaign Save owners | metadata %zu | gameplay %zu | metadata slot %d | gameplay slot %d | gameplay Character %zu | distinct source roles; managed association/mask4 pending",std::size_t(metadata),std::size_t(gameplay),native_host.metadata->save().slot(),prince_combat.savegame->slot(),std::size_t(prince_combat.savegame->character()));
+ }
+ // Reconcile only the actual PlayerInfo association. The current development
+ // Prince is not registered at +660, so the source slice must skip it. The
  // native leaf setter intentionally excludes undefined ARM temporary residue
  // metadata in PlayerInfo::SetCharacterLevel; full replication is pending.
  const dh2::player_manager_host_level::ReconcileState state{&native_host.player,
-  prince_character.owner(),reinterpret_cast<std::uintptr_t>(&prince_combat.properties)};
+  native_host.character_660,native_host.character_660==prince_character.owner()?
+  reinterpret_cast<std::uintptr_t>(&prince_combat.properties):0};
+ if(native_host.character_660&&native_host.character_660!=prince_character.owner())throw std::runtime_error("Native PlayerInfo association has no property owner");
  const dh2::player_manager_host_level::ReconcileServices reconcile{nullptr,
   [](void*,std::uintptr_t identity,std::uint32_t property,std::uint32_t include_bonus,std::int32_t* output)->std::int32_t {
    if(identity!=reinterpret_cast<std::uintptr_t>(&prince_combat.properties)||property!=19||include_bonus)return 1;
@@ -2214,11 +2287,12 @@ void initialize_native_monster_scripts(AAssetManager* assets) {
    return dh2::character_level_member::set_value(player->character_level_member,&native_host.change_serial,level,&result)==dh2::character_level_member::Status::complete?0:1;
   }};
  dh2::player_manager_host_level::ReconcileResult reconciled{};
- if(dh2::player_manager_host_level::reconcile_character_level(&state,&reconcile,&reconciled)!=dh2::player_manager_host_level::ReconcileStatus::complete)
+ const auto reconcile_status=dh2::player_manager_host_level::reconcile_character_level(&state,&reconcile,&reconciled);
+ if(reconcile_status!=dh2::player_manager_host_level::ReconcileStatus::complete&&reconcile_status!=dh2::player_manager_host_level::ReconcileStatus::skipped_unbound_character)
   throw std::runtime_error("Native managed host Level reconciliation failed");
  std::int32_t host_level=0,host_difficulty=0;
  if(native_host_level(&host_level)||native_host_difficulty(&host_difficulty))throw std::runtime_error("Native host source query failed");
- __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native managed host | Level %d | difficulty %d | property reads %u | member writes %u | offline embedded PlayerInfo; full profile/network pending",host_level,host_difficulty,reconciled.property_reads,reconciled.setter_calls);
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native managed host | Level %d | difficulty %d | property reads %u | member writes %u | skipped unbound %u | canonical fallback; registration/profile-level producer pending",host_level,host_difficulty,reconciled.property_reads,reconciled.setter_calls,unsigned(reconcile_status==dh2::player_manager_host_level::ReconcileStatus::skipped_unbound_character));
  const auto common=read(assets,"ai/_commons.luac","scripts"),monster=read(assets,"ai/monster.luac","scripts");
  unsigned initialized=0;
  for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.gated_spawn&&actor.spawn_owner) {
@@ -2413,6 +2487,12 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     if(!dh2::scene::load(actor_view,rest,error))throw std::runtime_error(error);
     dh2::animation::Player candidate_idle,candidate_walk;
     if(!candidate_idle.load(idle.data(),idle.size(),rest,error)||!candidate_walk.load(walk.data(),walk.size(),rest,error))throw std::runtime_error(error);
+    if(native_host.metadata_slot>=0){
+     if(!native_host.metadata)native_host.metadata=std::make_unique<dh2::native::player_profile::Metadata>();
+     if(!native_host.metadata->load(native_host.metadata_slot,runtime_root,character_table,native_save_difficulty,error))throw std::runtime_error("Campaign metadata import failed: "+error);
+     const auto& receipt=native_host.metadata->receipt();
+     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native campaign metadata | slot %d | class %d | level %d | difficulty %d | level ID %u | sections %u | reads %u | file opens %u | Save %zu | profile %zu | source mask1 import; gameplay registration/mask4/writes pending",receipt.slot,receipt.character_class,receipt.level,receipt.difficulty,receipt.source_level_id,receipt.sections,receipt.field_reads,receipt.file_opens,std::size_t(native_host.metadata->save_identity()),std::size_t(native_host.metadata->profile_identity()));
+    }
     const auto knight=std::find(character_table.names.begin(),character_table.names.end(),"KnightPlayerBase");if(knight==character_table.names.end())throw std::runtime_error("Original default player preset missing");
     PlayerCombat fresh_player;dh2::data::reset_properties(property_rules,fresh_player.properties,&character_table.rows.at(knight-character_table.names.begin()));
     fresh_player.aggro.initialize(object_records.size()+1);

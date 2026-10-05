@@ -4,6 +4,7 @@ final class NativeBridge {
     static native String buildInfo();
     static native void modDirectory(String directory);
     static native void runtimeDirectory(String directory);
+    static native String profileSlot(int selectedSlot);
     static native byte[] readAsset(String name,android.content.res.AssetManager assets) throws java.io.IOException;
     static native String initialize();
     static native String loadTexture(byte[] encoded);

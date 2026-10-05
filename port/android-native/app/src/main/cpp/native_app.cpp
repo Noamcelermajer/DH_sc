@@ -59,6 +59,9 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_com_example_dh2_NativeBridge_readAs
     auto type=env->FindClass("java/io/IOException");if(type)env->ThrowNew(type,error.what());return nullptr;
   }
 }
+extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_profileSlot(JNIEnv* env,jclass,jint slot){
+  return result(env,model_renderer::profile_slot(slot));
+}
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_initialize(JNIEnv* env,jclass){
   program=0;texture=0;
   try{model_renderer::reset_context();}

@@ -1,23 +1,20 @@
 # Dungeon Hunter 2 — project completion checklist
 
-Updated: 2026-10-05. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-03`.
+Updated: 2026-10-06. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-03`.
 
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest published tested build:** [download the camera APK](https://github.com/Noamcelermajer/DH_sc/releases/download/native-camera-frustum-2026-10-05/crypt-source-camera-culling.apk).
-Source ref: `native-camera-frustum-2026-10-05` at `41e75b7`.
-APK: 25,219,583 bytes; SHA-256 `80ed755e81ed8ddbcd30093999c094e40cc160b98f312f8ba36f18635794fbff`.
-Matching source: [download ZIP](https://github.com/Noamcelermajer/DH_sc/releases/download/native-camera-frustum-2026-10-05/crypt-source-camera-culling-reviewed-source.zip); SHA-256 `8fcde7c2f770428cfc8d9426b94dd408c42bff791d5e38d212333a2054ec2c6b`.
+**Verified APK:** [download prerelease](https://github.com/Noamcelermajer/DH_sc/releases/download/native-profile-inventory-2026-10-06/DH2-native-profile-inventory-2026-10-06.apk).
+Release/source tag: `native-profile-inventory-2026-10-06` on this reconstruction branch.
+APK: 30,135,449 bytes; SHA-256 `6792de5a33ecb272c1af76d184117a46b955fcce7240b015d8bd2d2c904820eb`.
+[Matching build input capture](https://github.com/Noamcelermajer/DH_sc/releases/download/native-profile-inventory-2026-10-06/DH2-native-profile-inventory-source-capture-2026-10-06.zip).
 
-**Newer tested local build:** `DH2-native-backbone-2026-10-05.apk` in Downloads;
-30,076,721 bytes, SHA-256 `220b2b659a3216316feab26c83aeeada6704bfe4e0e3ca8ecdf3892dbfa1797f`.
-Both native ABIs compile from 597 actual compiler/configure inputs; the source
-capture covers 623 files. API37/16KiB death/reload/rotation retains exact CPU
-pose/playback without event replay. Terminal preview releases Player owners and
-cancels four Ghost timers before VM closure. Equipment and Kill continuation
-pass selected-host gates; their native providers remain open.
-Player skills/regen and Crypt touch/Wait/Spawn regressions also pass on this APK. [Evidence](../reports/reconstruction-2026-10-05/player-backbone/validation.json).
+Both native ABIs compile from 609 actual inputs; capture covers 635 files.
+Live API37/16KiB campaign metadata import, corruption/slot-change rejection,
+Save retention, Player death/skills/regen and Crypt regression pass. GEAR/V4
+restoration is host verified and Android compiled; native full gameplay Save,
+registration/InitPost/equipment remain open. [Evidence](../reports/reconstruction-2026-10-06/player-profile-inventory/validation.json).
 
 ## How to read this checklist
 
@@ -41,20 +38,19 @@ still require live gameplay integration. All final completion gates remain open.
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
-| Character properties, equipment and state | 17 | 5 |
+| Character properties, equipment and state | 19 | 6 |
 | Lua, skills and enemy AI | 48 | 14 |
 | Combat, death, loot and progression | 7 | 7 |
-| Quests, campaign, UI, audio and saves | 4 | 9 |
+| Quests, campaign, UI, audio and saves | 7 | 9 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **126** | **71** |
+| **Total scoped tasks** | **131** | **72** |
 
-Latest local gate: [Player backbone](../reports/reconstruction-2026-10-05/player-backbone/validation.json). CPU pose/playback retention is live. Borrowed initial equipment and ordinary Player Kill continuation are host verified and Android compiled. Native profile/locality/InitPost, inventory/AddLoot/text/Skin, Kill providers, skill activation and autonomous pursuit remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
+Latest gate: [Profile/inventory backbone](../reports/reconstruction-2026-10-06/player-profile-inventory/validation.json). Metadata import and fallback locality are live; GEAR is host verified/Android compiled. Actual registration, gameplay Save/InitPost, inventory/text/Skin, full combat/skills/AI and persistent campaign remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
-Its newer local APK passes the Crypt regression on Android 17/16 KiB; the
-published download above retains its original release identity.
+Historical reports retain their original APK identities and test scopes.
 
 ## 1. Inputs, Adam's work and research tracking
 
@@ -191,6 +187,10 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 - [x] Select borrowed Character::_InitEquipment over the sole V4 inventory and buff-aware properties: 18 original caller cases, 2,151 host checks, three class tables, 13 failure prefixes and eight guards pass; both Android ABIs compile. Genuine profile/locality/InitPost, full AddLoot and native text/Skin remain unbound.
 
+- [x] Select original Player/Matching locality query bodies: 141 ARM comparisons and selected-host gates pass; native unregistered fallback/null queries pass. Full PlayerInfo/NetStruct registration remains open.
+- [x] Select original GEAR reader over the same V4/property/presentation graph: 19 original cases across three classes, six cached items/one power, 2,495 checks and both Android ABI builds pass. Native SG_Load4/InitPost remains open.
+- [ ] Retain powered equipment split remainders through callback failure and retire presentation before item destruction.
+
 ## 6. Lua, skills and enemy AI — current implementation focus
 
 - [x] Reuse source-built float32 Lua and preserve native pointer identities without numeric narrowing.
@@ -311,6 +311,9 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Reconstruct bounded counted-kill/clear compilation and progress components with diagnostic integration.
 - [x] Decode 33 FastTravel and 51 Level catalogue rows; connect bounded source range callbacks.
 - [x] Select Adam's five-TU shared localization/item-text closure on existing data DSO; 1,322 real items/936 powers and 99,622 composition checks pass. Native language/file/Application/HUD providers remain open.
+- [x] Select original campaign filename/index and borrowed SG_Load orchestration: 96 index/1,780 load/128 filename ARM cases and 23,017 failure prefixes pass through actual game-data selection; no second Save/profile authority.
+- [x] Complete seven metadata readers on the sole Save: 128 seven-reader ARM cases and 7,043 truncation/reload prefixes pass; use real CharacterTable names and source current-difficulty global.
+- [x] Run read-only real campaign metadata import on API37/16KiB; verify corruption and live-slot rejection, retained profile/file lease, and distinct metadata/gameplay Saves across reload/rotation. Gameplay load, writes and backups remain open.
 - [ ] Complete quest conditions, automatic event dispatch, objective types, rewards and persistence.
 - [ ] Complete campaign progression, story/dialogue, unlocks and difficulty transitions.
 - [ ] Restore title/menu flow, character creation/selection, HUD, inventory, skill and quest interfaces.
@@ -347,7 +350,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 ## Immediate work order
 
-1. Bind genuine offline profile/locality/InitPost and inventory/AddLoot/text/Skin producers on the same owners; connect the selected Player Kill/event2 continuation through real providers.
+1. Bind selected-slot/controller/PlayerInfo registration and Spawn/InitAll; load the gameplay Save through SG_Load1/2/4/GEAR before grants. Finish inventory/AddLoot/text/Skin and Player Kill providers on the same owners.
 2. Connect full Player/enemy AIS frames, nonempty skill activation and autonomous acquisition/pursuit/attacks.
 3. Finish combat/death/rewards/loot/quest delivery and complete one original level.
 4. Expand factories/content/transitions, all classes, UI/audio and persistent campaign saves.

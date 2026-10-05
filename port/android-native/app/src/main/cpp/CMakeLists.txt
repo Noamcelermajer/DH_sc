@@ -11,7 +11,7 @@ add_subdirectory("${DH2_SOURCE_DIR}/port/engine-camera" "${CMAKE_CURRENT_BINARY_
 add_subdirectory("${DH2_SOURCE_DIR}/port/level-world" "${CMAKE_CURRENT_BINARY_DIR}/level-world")
 include("${DH2_SOURCE_DIR}/port/engine-ui/inventory_text_v1.cmake")
 add_library(dh2_native SHARED native_app.cpp model_renderer.cpp mod_assets.cpp ghost_ai_owner.cpp native_debug_files.cpp native_character_list.cpp native_ghost_skills.cpp native_character_stop.cpp
- native_player_skills.cpp
+ native_player_skills.cpp native_player_profile.cpp
  "${DH2_SOURCE_DIR}/port/pydata-names/names.c")
 target_compile_features(dh2_native PRIVATE cxx_std_17)
 target_compile_options(dh2_native PRIVATE -Wall -Wextra -Werror)

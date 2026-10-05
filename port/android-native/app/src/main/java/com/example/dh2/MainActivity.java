@@ -34,12 +34,14 @@ public final class MainActivity extends Activity {
     private volatile boolean pendingActorCommand;
     private volatile boolean enemyAi=true;
     private volatile int inspectionTimeMs=-1;
+    private int metadataSlot=-1;
     private volatile boolean attackDisplayPending;
     private BroadcastReceiver debugAttackReceiver;
     @Override public void onCreate(Bundle state) {
         setTheme(android.R.style.Theme_Material_NoActionBar);super.onCreate(state);
         enemyAi=state!=null?state.getBoolean("enemyAi",true):getIntent().getBooleanExtra("enemy_ai",true);
         inspectionTimeMs=state!=null?state.getInt("inspectionTimeMs",-1):getIntent().getIntExtra("time_ms",-1);
+        metadataSlot=state!=null?state.getInt("metadataSlot",-1):getIntent().getIntExtra("profile_slot",-1);
         LinearLayout layout=new LinearLayout(this);layout.setOrientation(LinearLayout.VERTICAL);
         layout.setBackgroundColor(Color.rgb(24,27,32));
         layout.setOnApplyWindowInsetsListener((view,insets)->{
@@ -95,6 +97,7 @@ public final class MainActivity extends Activity {
                 if(!mods.isDirectory()&&!mods.mkdirs())Log.e("DH2Native","Could not create mod directory");
                 NativeBridge.modDirectory(mods.getAbsolutePath());
                 NativeBridge.runtimeDirectory(getFilesDir().getAbsolutePath());
+                Log.i("DH2Native",NativeBridge.profileSlot(metadataSlot));
                 String initialization=NativeBridge.initialize();Log.i("DH2Native",initialization);
                 if(initialization==null||!initialization.startsWith("Renderer: ")){show(initialization);return;}
                 ready=true;
@@ -208,6 +211,11 @@ public final class MainActivity extends Activity {
     }
     private void show(String text){runOnUiThread(()->status.setText(text));}
     @Override protected void onNewIntent(Intent intent){
+        if(intent.hasExtra("profile_slot")&&intent.getIntExtra("profile_slot",-1)!=metadataSlot){
+            Log.i("DH2Native","Campaign metadata slot change rejected | requested "+intent.getIntExtra("profile_slot",-1)+" | active "+metadataSlot+" | relaunch required");
+            show("Relaunch the app to select another campaign import.");
+            return;
+        }
         super.onNewIntent(intent);setIntent(intent);
         if(intent.hasExtra("enemy_ai"))enemyAi=intent.getBooleanExtra("enemy_ai",true);
         if(intent.hasExtra("time_ms"))inspectionTimeMs=intent.getIntExtra("time_ms",-1);
@@ -280,5 +288,5 @@ public final class MainActivity extends Activity {
     @Override protected void onPause(){super.onPause();ready=false;movement.stop();surface.onPause();}
     @Override protected void onResume(){super.onResume();surface.onResume();}
     @Override protected void onDestroy(){if(debugAttackReceiver!=null)unregisterReceiver(debugAttackReceiver);super.onDestroy();}
-    @Override protected void onSaveInstanceState(Bundle state){super.onSaveInstanceState(state);if(assets.length>0)state.putString("asset",assets[selected]);state.putBoolean("pendingPlayerAttack",pendingActorCommand&&getIntent().getBooleanExtra("player_attack",false));state.putBoolean("enemyAi",enemyAi);state.putInt("inspectionTimeMs",inspectionTimeMs);}
+    @Override protected void onSaveInstanceState(Bundle state){super.onSaveInstanceState(state);if(assets.length>0)state.putString("asset",assets[selected]);state.putBoolean("pendingPlayerAttack",pendingActorCommand&&getIntent().getBooleanExtra("player_attack",false));state.putBoolean("enemyAi",enemyAi);state.putInt("inspectionTimeMs",inspectionTimeMs);state.putInt("metadataSlot",metadataSlot);}
 }

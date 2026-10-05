@@ -5,6 +5,8 @@ target_compile_features(dh2_game_data PUBLIC cxx_std_17)
 target_sources(dh2_game_data PRIVATE level_tables.cpp)
 target_sources(dh2_game_data PRIVATE skill_tables.cpp)
 target_sources(dh2_game_data PRIVATE player_savegame_v1.cpp)
+target_sources(dh2_game_data PRIVATE player_profile_index_v1.cpp player_save_load_owner_v1.cpp
+ player_profile_filename_v1.cpp)
 target_sources(dh2_game_data PRIVATE savegame_options_v1.cpp)
 target_sources(dh2_game_data PRIVATE item_gear_properties_v5.cpp item_power_tables_v5.cpp
  loot_power_resources_v7.cpp)

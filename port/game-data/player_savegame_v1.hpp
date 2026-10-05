@@ -59,6 +59,14 @@ struct SavedFaery4V1 {
 
 static_assert(sizeof(SavedFaery4V1) == 4);
 
+// Exact LNAM destinations. +0xfc/+0x15c are the corresponding slots inside
+// the two existing source quest logs; their complete logs remain external.
+struct SavedLevelNameFieldsV1 {
+    std::uint32_t level_id{}; // +0x38, unsigned read
+    std::array<std::int32_t, 3> word50{}, word5c{};
+    std::array<std::int32_t, 3> quest_wordfc{}, quest_word15c{};
+};
+
 // The one source-owned PlayerSavegame projection. It owns saved fields only;
 // Character properties, SkillTables, inventory and profile-file orchestration
 // remain borrowed owners at their original boundaries.
@@ -89,6 +97,9 @@ public:
     bool load_level(Bytes bytes, std::size_t& consumed, std::string& error);
     bool load_class(Bytes bytes, const std::vector<std::string>& class_names,
                     std::size_t& consumed, std::string& error);
+    bool load_level_name(Bytes, std::size_t& consumed, std::string&);
+    bool load_level_entry_points(Bytes, std::size_t& consumed, std::string&);
+    bool load_use_spawn_points(Bytes, std::size_t& consumed, std::string&);
 
     bool set_skill_level(std::uint32_t row, std::int32_t level,
                          std::string& error);
@@ -105,6 +116,8 @@ public:
                             std::string& error);
     bool load_faeries(Bytes bytes, std::size_t& consumed,
                       bool& source_count_mismatch, std::string& error);
+    // __LoadDifficulty first stores the static PlayerSavegame::m_difficultyLevel
+    // (original 0x9a6060), then reads this Save's +0x3c unlocked word.
     bool load_difficulty(Bytes bytes, void* context,
                          bool (*store_selected)(void*, std::int32_t,
                                                 std::string&),
@@ -137,6 +150,14 @@ public:
     std::int32_t class_id() const noexcept { return class_; }
     const std::string& name() const noexcept { return name_; }
     std::uintptr_t character() const noexcept { return character_; }
+    const SavedLevelNameFieldsV1& level_name_fields() const noexcept { return level_name_fields_; }
+    const std::array<std::int32_t, 3>& level_entry_points() const noexcept { return level_entry_points_; }
+    const std::array<std::uint8_t, 3>& use_spawn_points() const noexcept { return use_spawn_points_; }
+    // Original blank ctor initializes entry points, but leaves level ID and
+    // spawn bytes untouched. These flags prevent port zero storage from being
+    // represented as a loaded campaign value before its source producer.
+    bool level_name_loaded() const noexcept { return level_name_loaded_; }
+    bool use_spawn_points_loaded() const noexcept { return use_spawn_points_loaded_; }
 
 private:
     std::int32_t slot_{-1};
@@ -151,6 +172,10 @@ private:
     std::array<bool, 3> faeries_initialized_{};
     std::array<std::int32_t, 3> current_faery_{};
     std::int32_t unlocked_difficulty_{};
+    SavedLevelNameFieldsV1 level_name_fields_;
+    std::array<std::int32_t, 3> level_entry_points_{};
+    std::array<std::uint8_t, 3> use_spawn_points_{};
+    bool level_name_loaded_{}, use_spawn_points_loaded_{};
 };
 
 }  // namespace dh2::data

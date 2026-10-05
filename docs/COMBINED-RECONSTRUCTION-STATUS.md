@@ -1,13 +1,13 @@
 # Combined reconstruction status and continuation brief
 
-Updated 2026-10-05. Working branch: `reconstruction/android17-irrlicht-rebuild-2026-10-03`.
+Updated 2026-10-06. Working branch: `reconstruction/android17-irrlicht-rebuild-2026-10-03`.
 Adam reference: [`AdamCelermajer/DH_sc`](https://github.com/AdamCelermajer/DH_sc), latest reviewed `791e961b12233100b303038c961666834f4beb9d`; checkpoint `c3ae7973` and earlier baseline `45c5348e` retained.
 
 This report supersedes older documents' descriptions of the current default development build. Historical reports retain their original artifact identities and test scopes.
 
-**Latest work:** CPU scene retention preserves the existing bank, playback, clock and actual pose through development reload and Activity recreation. The live frozen dead-pose fixture retains exact playback/pose hashes without event duplicates. Terminal preview releases Player owners and cancels four Ghost timers before VM closure. Character::_InitEquipment and ordinary Player Kill/Ctrl_Kill/event2 composition pass selected-host gates and both Android ABI builds. Native profile/locality/InitPost, AddLoot/text/Skin and trophy/online providers remain required. Player skills/regen and Crypt touch/Wait/Spawn regressions also pass on this APK. [Evidence](../reports/reconstruction-2026-10-05/player-backbone/validation.json).
+**Latest work:** Adam's profile/startup research is adapted through our existing owners. Original filename/index/SG_Load orchestration and seven metadata readers are selected; actual campaign metadata import passes live on API37/16KiB, including corruption/slot-change rejection and retained distinct metadata/gameplay Saves. Source locality queries preserve the unregistered fallback. The original GEAR reader restores six actual items/one power on host across all three classes and compiles for both Android ABIs; native full SG_Load4/InitPost remains unbound. [Evidence](../reports/reconstruction-2026-10-06/player-profile-inventory/validation.json).
 
-**Latest tested local APK:** `220b2b65...`, 30,076,721 bytes; 597 actual compiler/configure inputs and 623 captured files, both native ABIs and 20 ELF64/16KiB libraries. Exact CPU pose/playback retention and terminal teardown pass on API37/16KiB. The fatal-hit test remains a controlled fixture; full combat/rewards and native inventory remain open. Local copy: `C:/Users/noamc/Downloads/DH2-native-backbone-2026-10-05.apk`. [Current evidence](../reports/reconstruction-2026-10-05/player-backbone/validation.json). The published camera release retains its own identity. [Remaining tasks](PROJECT-CHECKLIST.md).
+**Verified APK:** [download prerelease](https://github.com/Noamcelermajer/DH_sc/releases/download/native-profile-inventory-2026-10-06/DH2-native-profile-inventory-2026-10-06.apk), `6792de5a...`, 30,135,449 bytes. Both ABIs, 609 actual build inputs, 635 captured files and 20 ELF64/16KiB libraries. Player death/pose/skills/regen and Crypt touch/Wait/Spawn regressions pass on this APK. This is a development app; complete gameplay remains open. [Checklist](PROJECT-CHECKLIST.md).
 
 ## Latest Adam reconciliation
 
@@ -35,6 +35,10 @@ native-combat and loader milestones against actual code/build selections at
 | Localization/item text dependencies | Imported/selected | Five shared text TUs use existing game-data DSO; 1,322 actual items/936 power descriptions and 1,087 formatter/355 varargs replays pass. Actual native language/file/Application/HUD providers remain unbound. |
 | Player AIS initialization/death dependencies | Adapted and live | Native load/InitProcess and OnDied cleanup share the same owners. Real timers33/34, regen, source timer retirement and all13 cleanup callbacks pass. UpdateAllSkills is delivered once by InitProcess; real progression callers remain required. Full Kill/event2, positive DoT, linked-aggro producers, full AIS frame and profile/grants remain open. |
 | Native combat/NPC candidates | Audit/selective reuse | Useful target/event contracts. Upstream melee shortcuts, no-target skill receipts and unselected NPC candidates do not prove our full enemy/skill combat loop. |
+| Profile filename/index and SG_Load | Adapted/selected | 96 index and 1,780 whole-load ARM cases; 23,017 failure prefixes, 128 filename cases. Borrows the sole Save and its canonical profile; writes/backup providers remain unbound. |
+| Seven campaign metadata readers | Adapted and live | 128 seven-reader ARM cases; private real profile imports class263/level1/difficulty0 on API37/16KiB. One file lease survives reload/rotation; metadata Save remains separate from gameplay Save. |
+| Player/Matching locality queries | Adapted and live fallback | 141 ARM comparisons/zero mismatches. Canonical Character660 remains null: local=true is a fallback query result, not registration. Host-level synchronization correctly skips with zero reads/writes. |
+| Saved GEAR inventory | Adapted/selected | 19 original caller cases × three classes; 2,495 host checks, both Android ABI builds. Reuses V4 and presentation/power/text services. Native restoration and powered-split failure lifetime remain open. |
 | Separate menu and level-loader contributions | Deferred integration | Keep their research; connect actual factories, save/StartGame handoffs and quest/campaign state before calling them gameplay complete. |
 
 The newer cloud branch `6dc314db` has useful generic loader interfaces and
@@ -43,13 +47,13 @@ dictionary; adapt those fixtures through existing providers before reuse.
 Its native factories remain unbound. Our `origin/main` refresh (`1219a43a`)
 adds no gameplay source beyond the reviewed branch.
 
-Next live milestone: bind genuine offline PlayerManager/PlayerInfo/Matching
-locality and profile/SG_Load/InitPost producers, then deliver initial equipment
-through the sole inventory, full AddLoot and native text/Skin. Bind the selected
-Player Kill continuation through real locality/trophy/online services. Then
-connect skill activation and one enemy encounter with animation-driven hits,
-rewards and loot pickup. Linked aggro, autonomous enemy frames, positive-target
-skill damage and campaign loading remain open.
+Next live milestone: use the original selected-slot/controller/PlayerInfo
+registration and Spawn/InitAll chain, then restore the Character's own gameplay
+Save through SG_Load1/2/4 and actual GEAR before equipment/skill grants. Metadata
+preview alone does not perform this startup. Connect sole inventory/text/Skin,
+skill activation, enemy frames and animation-driven hits/rewards/loot pickup.
+Powered split failure retirement, quest/campaign load, backup and durable writes
+remain required.
 
 ### Rough estimate
 
@@ -106,7 +110,7 @@ Use the following concrete measures instead:
 | Engine `.text` bytes accounted for | 99.989968% | Assembly/disassembly accounting only. No source/game-completion percentage follows from it. |
 | Original plaintext scripts recovered | 219 files / 900,493 bytes | Actual cache Lua source, preserved exactly. Native service ownership and complete live execution remain incomplete. |
 | Repaired/decompiled Android Java | 288 source files | Source recovery/reconstruction of Android glue; distinguish it from independently reconstructed native gameplay. |
-| Maintained reconstruction/port code | 691 source files / 80,664 lines / 4,274,017 bytes; 884 test/tool files | Git-index inventory excludes dependencies, recovered evidence, packaged scripts/assets and unfinished drafts. Includes imported code with local changes. Source size is not game completion. |
+| Maintained reconstruction/port code | 703 source files / 81,984 lines / 4,347,837 bytes; 896 test/tool files | Git-index inventory excludes dependencies, recovered evidence, packaged scripts/assets and unfinished drafts. Includes imported code with local changes. Source size is not game completion. |
 | Adam core modules imported | 577 files / 2,929,226 bytes | Seven modules imported at a pinned commit before dependency-path adaptations; includes headers/tools/tests, not 577 gameplay implementations. |
 | Adam script runtime imported | 158 files / 1,064,065 bytes | Isolated import includes Lua dependency source; do not count all of it as reconstructed game code. |
 | Current native app bundled assets | 255 | A selected Crypt/Prince development bundle, unchanged monster scripts and seven real Skill/Faery table/constants inputs; not the complete game cache. |

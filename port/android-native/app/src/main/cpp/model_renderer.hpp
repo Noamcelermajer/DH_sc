@@ -8,6 +8,7 @@
 namespace model_renderer {
 void mod_directory(std::string);
 void runtime_directory(std::string);
+std::string profile_slot(int);
 std::vector<std::uint8_t> read_asset(AAssetManager*,const std::string&);
 void reset_context();
 void deactivate();
