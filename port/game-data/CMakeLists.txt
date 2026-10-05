@@ -11,6 +11,7 @@ target_sources(dh2_game_data PRIVATE item_gear_properties_v5.cpp item_power_tabl
 target_sources(dh2_game_data PRIVATE item_instance.cpp loot_tables_v2.cpp
  fresh_inventory_owned_v4.cpp player_gear_effects_v5.cpp)
 target_sources(dh2_game_data PRIVATE item_presentation_v5.cpp loot_power_creation_v7.cpp)
+target_sources(dh2_game_data PRIVATE player_saved_skill_slots_v1.cpp player_equipment_live_services_v1.cpp)
 set_source_files_properties(item_gear_properties_v5.cpp item_power_tables_v5.cpp
  loot_power_resources_v7.cpp item_instance.cpp loot_tables_v2.cpp
  fresh_inventory_owned_v4.cpp player_gear_effects_v5.cpp item_presentation_v5.cpp

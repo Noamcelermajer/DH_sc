@@ -32,15 +32,15 @@ still require live gameplay integration. All final completion gates remain open.
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
-| Character properties, equipment and state | 14 | 5 |
-| Lua, skills and enemy AI | 35 | 13 |
+| Character properties, equipment and state | 15 | 5 |
+| Lua, skills and enemy AI | 39 | 13 |
 | Combat, death, loot and progression | 6 | 7 |
 | Quests, campaign, UI, audio and saves | 3 | 9 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **108** | **70** |
+| **Total scoped tasks** | **113** | **70** |
 
-Latest local gate: [native player backbone](../reports/reconstruction-2026-10-05/native-player-backbone/validation.json). Both ABIs compile saved-faery/buff/skill-state/presentation/loot source. Android 17/16 KiB passes all13 authored updates, actual Celest resistance and retained instance/sheet, dictionary/MP/cooldown checks and Crypt ambush/recreation. Full skill activation, live inventory/loot and autonomous pursuit remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
+Latest local gate: [player services](../reports/reconstruction-2026-10-05/player-services/validation.json). Five new adapters are selected in both Android libraries: saved slots, progression, initial grants, equipment services and Player AIS lifecycle. Selected-host/original tests pass; their native binding remains open. APK `3a850b12...` passes Android17/16KiB all13 unchanged updates, Celest resistance and retention, dictionary/MP/cooldowns and Crypt ambush/recreation. Full skill activation, live inventory/loot and autonomous pursuit remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Latest source/build/test scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -161,7 +161,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
   Ghost AIS selection. Original name/raw-death producers remain open.
 - [x] Reconstruct the Character physics-position override and live flag adapter;
   verify 67,594 Character flag cases and 1,024 base-object cases against ARM.
-  Native Stop integration remains open.
+  General Character policy/frame binding remains open.
 - [x] Select V4 as the single source-style item/equipment graph; its live API
   borrows caller-owned properties/RNG. All 84 source sessions/1,720 steps and
   60 earlier regressions pass through that path: 676 draws, 3,584 aliases,
@@ -171,6 +171,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
   lists and 39 quantity lists. Text/debug and visual Skin providers remain
   bounded fixtures; this is not live loot or player gameplay. See the
   [selected-library host report](../reports/branch-audit-2026-10-05/adam-integrated-host.json).
+- [x] Select borrowing equipment requirements/recalculation services over the same V4 inventory and buff-aware properties; 7,451 selected-host checks and both Android ABIs pass. Review fixed retirement before item deletion. Native Skin/text/HUD and final teardown remain open.
 - [ ] Complete Character construction, all property sheet/buff/gear ownership and lifecycle phases.
 - [x] Select Adam's V5 item presentation on existing item identities/table authority; 4,031 presentation and 1,119 power-instance gold replays pass. Native text/localization remains open.
 - [ ] Connect full inventory/equipment mutation, requirements, random powers and visual updates.
@@ -198,10 +199,14 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
   Native full-return skill calls now pass; complete Value lifecycle remains open.
 - [x] Decode all 183 original Skill/Faery list/row records; compare with original ARM readers.
 - [x] Adapt Adam's player skill ownership to our source callers: each class has 16 skill/5 faery slots and 13 instances; 29 script names overall. Host/ARM gates pass; full Player AIS/FSM lifecycle remains open.
+- [x] Select saved skill-slot access on the actual current save, preserving source map0/skill-set0 semantics; selected initial-grant regressions and Android builds pass.
+- [x] Select original skill progression/slot initialization callers; prerequisite 777 ARM predicate cases and selected initial-grant 150 ARM comparisons pass. No invented free skill grants.
+- [x] Compose initial grants with the same save, inventory and live buff-aware properties; 113 normal/15 failure cases and five guards pass in the actual selected libraries. Profile/InitPost/native binding remains open.
+- [x] Compose Player AIS construction/load/InitProcess through the same Session and Coordinator; selected-host four lifecycle completions/three failure prefixes/five guards and both Android ABIs pass. Native backend and AI/DoT expiry remain open; phase7 alone is not readiness.
 - [x] Adapt Player callback membership and skill/spell cooldowns through the
   selected Lua core and borrowed timer fields; host/real-Lua gates and 545
   cooldown ARM comparisons pass. Additive VM protocols pass 145 host checks.
-  Native nonempty player dispatch remains open.
+  Full native skill activation remains open.
 - [x] Run bounded authored Ghost `LoadNInitScriptProcess(true)` through HP/MP,
   SetSkillsAndSpells, UpdateAllSkills, Post and Final in source order: 0 ordinary
   skill entries and 5 null-script faeries on the same retained VM.

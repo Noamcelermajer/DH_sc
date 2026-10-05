@@ -5,9 +5,9 @@ Adam reference: [`AdamCelermajer/DH_sc`](https://github.com/AdamCelermajer/DH_sc
 
 This report supersedes older documents' descriptions of the current default development build. Historical reports retain their original artifact identities and test scopes.
 
-**Latest work:** all 13 unchanged Knight/faery update callbacks now run through the retained native Player VM. Celest adds its real lightning-resistance buff; the same instance/sheet survives three recreations. Saved faery ID/level, buff ownership and CSSkill state projection are selected source; Adam's V5 presentation/V7 powered loot now share our existing item/property/RNG graph. Two native reload/retirement lifetime bugs were fixed. [Evidence](../reports/reconstruction-2026-10-05/native-player-backbone/validation.json).
+**Latest work:** five borrowing adapters now connect selected source callers for saved skill slots, skill progression/initial grants, equipment services and Player AIS initialization. Equipment passes 7,451 checks; initial grants pass 113 normal/15 failure cases and 150 original ARM comparisons; Player lifecycle passes four completions, three failure prefixes and five guards. Independent review fixed item retirement, diagnostic aliasing and recalculation diagnostics. These adapters are host-tested and Android-compiled; their native gameplay service binding remains open. [Evidence](../reports/reconstruction-2026-10-05/player-services/validation.json).
 
-**Latest tested local APK:** `8c0633d0...`, 28,797,184 bytes; 552 actual compiler/configure inputs, both native ABIs, 20 ELF64/16 KiB libraries, alignment/signing and 30 adapter export checks. [Player-backbone evidence](../reports/reconstruction-2026-10-05/native-player-backbone/validation.json) separates host tests, Android compilation and live gameplay. Crypt touch/Wait/Spawn and retention regressions pass. The published camera release retains its own identity. [Remaining tasks](PROJECT-CHECKLIST.md).
+**Latest tested local APK:** `3a850b12...`, 28,767,144 bytes; 562 actual compiler/configure inputs, both native ABIs, 20 ELF64/16 KiB libraries, alignment/signing and 16 new adapter export checks. All 13 unchanged Knight/faery updates, real Celest resistance, retained buff/dictionary/MP/cooldowns and Crypt touch/Wait/Spawn regressions pass. Root inspected the Prince and spawned Ghost views. Local copy: `C:/Users/noamc/Downloads/DH2-native-player-services-2026-10-05.apk`. [Current evidence](../reports/reconstruction-2026-10-05/player-services/validation.json). The published camera release retains its own identity. [Remaining tasks](PROJECT-CHECKLIST.md).
 
 ## Latest Adam reconciliation
 
@@ -26,13 +26,21 @@ native-combat and loader milestones against actual code/build selections at
 | Player skills V3 / V6 composition | Selective reuse | Preparation/session/update/use/cooldown/save callers adapted to our retained VM/Coordinator. Whole private-session transplant is incompatible with that ownership graph. |
 | Buff dependencies | Adapted and live | One buff group owner, existing property sheets and Coordinator; 40 whole-state ARM comparisons and actual Celest resistance pass. FX services and live timed-buff expiry remain open. |
 | CSSkill state callbacks/dispatch | Adapted source | Selected library, 214 ARM dispatch comparisons and Android compilation pass. Native state6/input/animation/target activation remains disconnected. |
-| Initial skill grants | Reuse existing callers | Progression/slot helpers already exist; a borrowing composition adapter is under test. Profile/InitPost producers and live inventory remain required. |
-| Equipment render owner | Adapt composition | Its private inventory/UI/visual graph cannot replace our owners wholesale. A borrowing requirements/recalc service adapter is under test. |
+| Initial skill grants | Adapted source | Existing progression/slot callers share the actual save, inventory and buff-aware property view. Selected-host/ARM and Android gates pass; real profile/InitPost producers and native inventory binding remain required. |
+| Equipment render owner | Adapted services | Reuses V4/V5 algorithms through our exact property view and real provider contracts. Requirements/pruning/Skin-before-vitals and retirement-prefix tests pass; native visual/text/HUD and whole-item lifetime binding remain open. |
+| Player AIS initialization | Adapted source | Uses our selected constructor/selection/lifecycle kernels and same Session/preparation/Coordinator. Phase7 publication precedes vitals/configure/update; failures retain that prefix. Native backend, AI/DoT expiry and AIS termination remain required. |
 | Native combat/NPC candidates | Audit/selective reuse | Useful target/event contracts. Upstream melee shortcuts, no-target skill receipts and unselected NPC candidates do not prove our full enemy/skill combat loop. |
 | Separate menu and level-loader contributions | Deferred integration | Keep their research; connect actual factories, save/StartGame handoffs and quest/campaign state before calling them gameplay complete. |
 
-Next live milestone: source profile/initial grants and skill activation on the
-same player/inventory/property graph, then an enemy encounter with genuine
+The newer cloud branch `6dc314db` has useful generic loader interfaces and
+coercion fixtures. Its Session integer-map patch overlaps our proven native
+dictionary; adapt those fixtures through existing providers before reuse.
+Its native factories remain unbound. Our `origin/main` refresh (`1219a43a`)
+adds no gameplay source beyond the reviewed branch.
+
+Next live milestone: source Player initialization, profile/initial grants and
+equipment on the same player/inventory/property graph, then skill activation
+and an enemy encounter with genuine
 animation-driven hits, death rewards and loot pickup. Autonomous enemy frames,
 positive-target skill damage and full campaign loading remain open.
 
