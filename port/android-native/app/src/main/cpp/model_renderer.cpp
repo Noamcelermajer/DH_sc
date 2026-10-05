@@ -1801,6 +1801,7 @@ void prince_timer_before(void*,dh2::character::Coordinator&,std::int32_t event,d
  // Bounded native composition forwards ScriptTimer to this same skill VM.
  // Full Player CharAI event/lifecycle routing is still a separate boundary.
  if(event==0x35&&prince_skills)prince_skills->timer(timer.id);
+ if(event==0x36&&prince_skills)prince_skills->buff_expired(timer);
  // Source Character/AI forwarding must reach the machine even when the AI
  // virtual expired callback is suppressed by the controller lock. Full
  // Prince AIS behavior is pending; its optional callback is not fabricated.

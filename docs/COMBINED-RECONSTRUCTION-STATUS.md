@@ -1,13 +1,50 @@
 # Combined reconstruction status and continuation brief
 
 Updated 2026-10-05. Working branch: `reconstruction/android17-irrlicht-rebuild-2026-10-03`.
-Adam reference: [`AdamCelermajer/DH_sc`](https://github.com/AdamCelermajer/DH_sc), reviewed checkpoint `c3ae797332a82a30a586b9156cddc25445e36a4c`; earlier baseline `45c5348e`.
+Adam reference: [`AdamCelermajer/DH_sc`](https://github.com/AdamCelermajer/DH_sc), latest reviewed `791e961b12233100b303038c961666834f4beb9d`; checkpoint `c3ae7973` and earlier baseline `45c5348e` retained.
 
 This report supersedes older documents' descriptions of the current default development build. Historical reports retain their original artifact identities and test scopes.
 
-**Latest work:** Adam's dictionary and equipped-faery element algorithms now use the retained native Player VM, source private map and sole save/catalogue. Android 17/16 KiB verifies dictionary insertion/signed writes/reload/rotation, MP checks and Crypt touch/timed spawning/recreation. Eight Knight updates complete; Celest reaches `GetCurrentEquippedFaeryLevel`. Full Player AIS/FSM, faery buffs and combat/loot remain open. [Evidence](../reports/reconstruction-2026-10-05/native-scalar-faery-element/validation.json).
+**Latest work:** all 13 unchanged Knight/faery update callbacks now run through the retained native Player VM. Celest adds its real lightning-resistance buff; the same instance/sheet survives three recreations. Saved faery ID/level, buff ownership and CSSkill state projection are selected source; Adam's V5 presentation/V7 powered loot now share our existing item/property/RNG graph. Two native reload/retirement lifetime bugs were fixed. [Evidence](../reports/reconstruction-2026-10-05/native-player-backbone/validation.json).
 
-**Latest tested local APK:** `4598e16b...`, 28,725,208 bytes; 558 frozen build inputs, both native ABIs, ELF64/16 KiB/signing and 18 adapter export checks. [Dictionary/faery-element evidence](../reports/reconstruction-2026-10-05/native-scalar-faery-element/validation.json) separates host tests, Android compilation and live gameplay. The published camera release retains its own identity. [Remaining tasks](PROJECT-CHECKLIST.md).
+**Latest tested local APK:** `8c0633d0...`, 28,797,184 bytes; 552 actual compiler/configure inputs, both native ABIs, 20 ELF64/16 KiB libraries, alignment/signing and 30 adapter export checks. [Player-backbone evidence](../reports/reconstruction-2026-10-05/native-player-backbone/validation.json) separates host tests, Android compilation and live gameplay. Crypt touch/Wait/Spawn and retention regressions pass. The published camera release retains its own identity. [Remaining tasks](PROJECT-CHECKLIST.md).
+
+## Latest Adam reconciliation
+
+Reviewed his three-session checkpoint and player/UI, item-effects, skills/loot,
+native-combat and loader milestones against actual code/build selections at
+`791e961b`, rather than treating historical receipts as our test results.
+
+| Adam system | Decision | Current result / reason |
+|---|---|---|
+| `fresh_inventory_owned_v4` | Already adapted | Selected; borrows our live properties/RNG. Native player inventory binding remains open. |
+| `player_equipment_v3` | Superseded | V4 is the sole selected inventory/equipment graph; preserve V3 research without another owner. |
+| Gear properties/power tables/gear effects V5 | Already present | Selected shared algorithms; actual visual/vitals/requirements integration remains open. |
+| `item_presentation_v5` | Imported/adapted | Existing item identities/table authority; selected host and both Android builds pass. Actual localization/formatting providers remain open. |
+| `loot_power_resources_v7` | Already present | Actual power/quantity resources already selected; no second table authority. |
+| `loot_power_creation_v7` | Imported/adapted | Shares V4's stream0 descriptor. 9,931 pinned gold replays and 363 powered V4 items pass; native death/drop/pickup/AddLoot remain disconnected. |
+| Player skills V3 / V6 composition | Selective reuse | Preparation/session/update/use/cooldown/save callers adapted to our retained VM/Coordinator. Whole private-session transplant is incompatible with that ownership graph. |
+| Buff dependencies | Adapted and live | One buff group owner, existing property sheets and Coordinator; 40 whole-state ARM comparisons and actual Celest resistance pass. FX services and live timed-buff expiry remain open. |
+| CSSkill state callbacks/dispatch | Adapted source | Selected library, 214 ARM dispatch comparisons and Android compilation pass. Native state6/input/animation/target activation remains disconnected. |
+| Initial skill grants | Reuse existing callers | Progression/slot helpers already exist; a borrowing composition adapter is under test. Profile/InitPost producers and live inventory remain required. |
+| Equipment render owner | Adapt composition | Its private inventory/UI/visual graph cannot replace our owners wholesale. A borrowing requirements/recalc service adapter is under test. |
+| Native combat/NPC candidates | Audit/selective reuse | Useful target/event contracts. Upstream melee shortcuts, no-target skill receipts and unselected NPC candidates do not prove our full enemy/skill combat loop. |
+| Separate menu and level-loader contributions | Deferred integration | Keep their research; connect actual factories, save/StartGame handoffs and quest/campaign state before calling them gameplay complete. |
+
+Next live milestone: source profile/initial grants and skill activation on the
+same player/inventory/property graph, then an enemy encounter with genuine
+animation-driven hits, death rewards and loot pickup. Autonomous enemy frames,
+positive-target skill damage and full campaign loading remain open.
+
+### Rough estimate
+
+Planning ranges for focused development with parallel agents and the available
+evidence/cache: **2–4 weeks** for a useful integrated player/enemy/skill encounter;
+**4–8 weeks** for one level with progression, death rewards, loot pickup and
+retained state; **6–12+ months** for complete campaign/UI/audio/rendering,
+durable saves, modding and ARM64 acceptance. The full-game range has low
+confidence until factories, save compatibility and remaining engine behavior
+are exercised. These are estimates, not completion percentages or deadlines.
 
 
 ## Improved project brief
@@ -70,7 +107,8 @@ The [other-branch audit](BRANCH-AUDIT-2026-10-05.md) found a separate engine
 research overlay at `e6da25b`. We selectively imported 23 evidence/tool files,
 verified 1,733 original ELF hash records and replayed the BRES corpus. This adds
 reference reach; it does not increase completed source-body or gameplay counts.
-Adam's current branch tips remain at the pinned revision already used here.
+Adam's latest `791e961b` changes are reconciled above; the old audit checkout
+remains pinned at c3 for reproducibility.
 
 | System | Our existing work | Adam's contribution now imported | Combined result / gap |
 |---|---|---|---|

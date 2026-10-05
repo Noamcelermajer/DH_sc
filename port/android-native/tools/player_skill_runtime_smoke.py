@@ -28,11 +28,13 @@ def main():
     p.add_argument('--full-update', action='store_true')
     p.add_argument('--mana-faeries', action='store_true', help='verify saved faeries and MP callbacks at an explicit unfinished update provider')
     p.add_argument('--scalar-dictionary', action='store_true', help='verify same-AIS GetInt/SetInt and nonzero dictionary retention across reload/rotation')
+    p.add_argument('--buffs', action='store_true', help='verify authored Celest resistance buff, same owned sheet/groups across reload/rotation')
     p.add_argument('--update-boundary', default='GetInt')
     p.add_argument('--completed-updates', type=int, default=8)
     a = p.parse_args()
     assert not (a.full_update or a.mana_faeries) or a.saved_skills, 'new owner checks require --saved-skills'
     assert not (a.full_update and a.mana_faeries), 'select complete updates or a bounded update checkpoint'
+    assert not a.buffs or a.full_update, 'buff retention requires complete authored updates'
     assert not a.scalar_dictionary or a.full_update or a.mana_faeries, 'scalar retention checks require the current player/save integration'
     assert 8 <= a.completed_updates < 13
     assert a.serial.startswith('emulator-'), 'emulator only'
@@ -96,6 +98,18 @@ def main():
         assert not receipts or (row[5],row[6]) == (receipts[0]['AIS'],receipts[0]['VM']), 'LuaScript dictionary owner changed'
         receipts.append({'write':write,'input':value,'observed':observed,'entries_before':before,'entries_after':after,'AIS':row[5],'VM':row[6]})
         return text
+    def buff_snapshots(text, retained=False):
+        rows=re.findall(r'Native Player buff snapshot \| phase (\S+) \| count (\d+) \| groups (\d+) \| id (-?\d+) \| instance (\S+) \| timer (-?\d+) \| strength (\d+) \| sheet ([0-9a-f]+)',text)
+        assert rows and rows[0][0]=='initial', 'authored buff was not published'
+        assert all(row[1:4]==rows[0][1:4] and row[4:]==rows[0][4:] for row in rows), 'buff instance/sheet changed during recreation'
+        assert tuple(map(int,(rows[0][1],rows[0][2],rows[0][5],rows[0][6])))==(1,1,-1,1),rows[0]
+        properties=re.findall(r'Native Player buff property \| phase initial \| name (\S+) \| index (\d+) \| buff (-?\d+) \| resolved (-?\d+)',text)
+        assert properties and any(int(row[2]) and int(row[3]) for row in properties), 'authored resistance never reached live properties'
+        if retained: assert sum(row[0]=='restore' for row in rows)>=3, 'buff retention across all recreations missing'
+        report['authored_buff']={'count':1,'groups':1,'class_id':int(rows[0][3]),'instance':rows[0][4],
+            'timer':-1,'strength':1,'sheet_fnv1a64_le_words':rows[0][7],
+            'initial_resistance_properties':[{'name':r[0],'index':int(r[1]),'buff':int(r[2]),'resolved':int(r[3])} for r in properties],
+            'retained_recreations':sum(row[0]=='restore' for row in rows),'activation_or_unlock_claim':False}
     try:
         report['api'] = int(adb('shell', 'getprop', 'ro.build.version.sdk'))
         report['page_size'] = int(adb('shell', 'getconf', 'PAGE_SIZE'))
@@ -137,6 +151,7 @@ def main():
                              'update_boundary': boundary, 'saved_skill_rows': 16 if a.saved_skills else 0,
                              'update_vm_status': 0 if a.full_update else -5, 'full_skill_update_complete': a.full_update}
         report['screenshots'] = [screenshot('player-skills-initial')]
+        if a.buffs: buff_snapshots(text)
         command('ANIMATION_TIME', '--ei', 'time_ms', '0')
         wait(lambda t: 'Animation time command applied | time 0' in t, 'freeze')
         if a.scalar_dictionary:
@@ -213,6 +228,7 @@ def main():
                 assert report['scalar_dictionary'][0]['VM'] == first_vm[1]
                 report['scalar_dictionary_retained_on_reload_and_rotation'] = True
         report['screenshots'].append(screenshot('player-skills-restored'))
+        if a.buffs: buff_snapshots(logs(),True)
         report['validation'] = 'PASS'
     except Exception as exc:
         report['error'] = str(exc)

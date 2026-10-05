@@ -9,6 +9,8 @@
 #include "character_current_spell_v1.hpp"
 #include "character_player_scalar_services_v1.hpp"
 #include "character_equipped_faery_element_v1.hpp"
+#include "character_current_equipped_faery_v1.hpp"
+#include "character_player_buffs_v1.hpp"
 #include "character_skill_cooldown_services.hpp"
 #include "character_coordinator.hpp"
 #include "native_debug_files.hpp"
@@ -36,6 +38,9 @@ struct Runtime::Impl {
  AAssetManager* assets=nullptr;
  dh2::ais_player_init_vcb::State ais{};
  dh2::data::PropertyView property_view{};
+ std::vector<dh2::data::ClassRow> class_rows;
+ std::unique_ptr<dh2::character_player_buffs_v1::Owner> buffs;
+ dh2::character_player_buffs_v1::CallbackBindings buff_callbacks{};
  std::unique_ptr<dh2::character_player_skills_preparation_v3::Owner> preparation;
  std::optional<dh2::character_player_skills_preparation_v3::Owner::TimerFieldLease> timer_fields;
  std::unique_ptr<dh2::player_skill_session_v1::Session> session;
@@ -53,6 +58,7 @@ struct Runtime::Impl {
  dh2::character_current_spell_v1::SavedBindings spell_saved{};
  dh2::character_current_spell_v1::Bindings spell_callback{};
  dh2::character_equipped_faery_element_v1::Bindings element_callback{};
+ dh2::character_current_equipped_faery_v1::Bindings equipped_callback{};
  // LuaScript+0x1c belongs to this AIS and its retained VM. It is a distinct
  // source component, not the Character property sheet or a global dictionary.
  dh2::character_player_scalar_services_v1::IntegerMap script_integers;
@@ -67,7 +73,52 @@ struct Runtime::Impl {
  bool update_blocked=false;
  std::string error;
  explicit Impl(Bindings b):bindings(std::move(b)),assets(bindings.assets){}
- ~Impl(){uses.reset();updates.reset();session.reset();timer_fields.reset();preparation.reset();}
+ ~Impl(){
+  // Prevent callbacks to retiring instances. The retained Coordinator remains
+  // the sole timer owner; unrelated Character timers are not removed here.
+  if(buffs){dh2::character_player_buffs_v1::Snapshot row{};
+   for(std::uint32_t i=0;buffs->snapshot(i,&row);++i){
+    const auto& timers=bindings.coordinator->timers();
+    if(row.timer>=0&&std::uint32_t(row.timer)<timers.count){
+     const auto& timer=timers.slots[row.timer];
+     if(timer.active&&timer.id==std::uint32_t(row.timer)&&timer.event==0x36&&timer.user_ref==row.instance)
+      bindings.coordinator->stop_timer(std::uint32_t(row.timer));
+    }
+   }
+  }
+  uses.reset();updates.reset();session.reset();
+  if(buffs){dh2::character_player_buffs_v1::Result result{};
+   if(buffs->retire(&result)!=dh2::character_player_buffs_v1::Status::complete)
+    __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Native Player buff retirement provider failed");
+  }
+  buffs.reset();timer_fields.reset();preparation.reset();
+ }
+ void refresh_properties(){
+  property_view=dh2::data::property_view(*bindings.rules,*bindings.properties);
+  if(buffs&&buffs->attach(&property_view)!=dh2::character_player_buffs_v1::Status::complete)
+   throw std::runtime_error("Native Player buff property groups lost");
+ }
+ void refresh_class_rows(){
+  // Level reload replaces the catalogue's vector backing. Keep only borrowed
+  // descriptors, and rebind them before any retained buff can recalculate.
+  class_rows.clear();class_rows.reserve(bindings.classes->rows.size());
+  for(const auto& row:bindings.classes->rows)class_rows.push_back({row.data(),std::uint32_t(row.size())});
+ }
+ void log_buffs(const char* phase){
+  refresh_properties();
+  dh2::character_player_buffs_v1::Snapshot row{};
+  for(std::uint32_t i=0;buffs->snapshot(i,&row);++i){
+   std::uint64_t hash=14695981039346656037ull;
+   for(unsigned p=0;p<224;++p){std::uint32_t word;std::memcpy(&word,&row.sheet[p],4);
+    for(unsigned byte=0;byte<4;++byte){hash^=(word>>(byte*8))&255u;hash*=1099511628211ull;}}
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player buff snapshot | phase %s | count %u | groups %u | id %d | instance %p | timer %d | strength %u | sheet %016llx | same VM/properties/Coordinator",
+    phase,buffs->count(),property_view.group_count,row.id,reinterpret_cast<void*>(row.instance),row.timer,row.strength,static_cast<unsigned long long>(hash));
+   for(std::uint32_t p=0;p<bindings.fields->size();++p)
+    if((*bindings.fields)[p].find("Resistance")!=std::string::npos)
+     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player buff property | phase %s | name %s | index %u | buff %d | resolved %d",
+      phase,(*bindings.fields)[p].c_str(),p,row.sheet[p],bindings.properties->resolved[p]);
+  }
+ }
  static auto& self(void* raw){return *static_cast<Impl*>(raw);}
  static int fail(char* message,std::size_t size,const char* name){
   if(message&&size)std::snprintf(message,size,"unresolved native Player skill provider: %s",name?name:"unknown");
@@ -80,7 +131,7 @@ struct Runtime::Impl {
  static void number(dh2_script_value& value,float n){value={};value.type=DH2_SCRIPT_NUMBER;value.number=n;}
  static std::int32_t list_count(void* raw,std::uintptr_t character,std::uint32_t kind,std::uint32_t* out){
   auto& s=self(raw);if(!out||!s.bindings.character||character!=s.bindings.character||kind>1||!s.bindings.tables)return 1;
-  s.property_view=dh2::data::property_view(*s.bindings.rules,*s.bindings.properties);
+  s.refresh_properties();
   std::int32_t selector=0;
   if(dh2_property_resolve(&s.property_view,kind?29:28,&selector))return 1;
   const auto* list=kind?s.bindings.tables->faery_list(selector):s.bindings.tables->skill_list(selector);
@@ -107,6 +158,30 @@ struct Runtime::Impl {
  static void stop_timer(void* raw,std::uintptr_t character,std::uint32_t id){
   auto& s=self(raw);
   if(character!=s.bindings.coordinator->owner()||s.bindings.coordinator->stop_timer(id)<0)throw std::runtime_error("Player skill timer stop failed");
+ }
+ static int buff_service(void* raw,dh2::data::PropertyView* view,
+               const dh2::character_player_buffs_v1::Request* q,
+               dh2::character_player_buffs_v1::Response* out){
+  auto& s=self(raw);if(!q||!out||view!=&s.property_view||q->character!=s.bindings.character)return 1;
+  using Op=dh2::character_player_buffs_v1::Operation;
+  switch(q->operation){
+   case Op::timer_start:
+    out->word=s.bindings.coordinator->start_timer(q->duration,q->repeat,q->event,q->subject);
+    return out->word< -1?1:0;
+   case Op::timer_stop:return s.bindings.coordinator->stop_timer(std::uint32_t(q->id))<0?1:0;
+   case Op::timer_time_left:return dh2_character_timer_time_left(&out->elapsed,&out->duration,&s.bindings.coordinator->timers(),std::uint32_t(q->id))==1?0:1;
+   case Op::apply_class:{
+    std::int32_t* sheet=nullptr;
+    if(!s.buffs||!s.buffs->owned_sheet(q->subject,&sheet)||sheet!=q->sheet)return 1;
+    return int(dh2_class_apply(s.class_rows.data(),std::uint32_t(s.class_rows.size()),q->id,sheet,view->resolved));
+   }
+   case Op::recalculate:return int(dh2_class_recalc_base(s.class_rows.data(),std::uint32_t(s.class_rows.size()),s.bindings.properties->base.data(),view));
+   case Op::fx_release:return q->subject?1:0;
+   // Animated-effect lifetime/render services have not been attached yet.
+   // Numeric FX requests must not silently succeed without a real owner.
+   case Op::fx_load:case Op::fx_object:case Op::fx_enable:return 1;
+  }
+  return 1;
  }
  static int resolve(void* raw,const std::string& path,dh2::player_skill_session_v1::Resource& output,std::string& error){
   auto& s=self(raw);
@@ -198,6 +273,12 @@ struct Runtime::Impl {
     return dh2_script_game_start_timer(&s.timer_bindings,a,count,out,capacity,returned,text,bytes);
    if(q.character_function==Fn::character_stop_timer)
     return dh2_script_game_stop_timer(&s.timer_bindings,a,count,out,capacity,returned,text,bytes);
+   if(q.character_function==Fn::character_create_buff)
+    return dh2::character_player_buffs_v1::create_buff(&s.buff_callbacks,a,count,out,capacity,returned,text,bytes);
+   if(q.character_function==Fn::character_remove_buff)
+    return dh2::character_player_buffs_v1::remove_buff(&s.buff_callbacks,a,count,out,capacity,returned,text,bytes);
+   if(q.character_function==Fn::character_apply_prop_class&&count>1&&a[1].type==DH2_SCRIPT_IDENTITY)
+    return dh2::character_player_buffs_v1::apply_buff(&s.buff_callbacks,a,count,out,capacity,returned,text,bytes);
    if(q.character_function==Fn::character_get_prop||q.character_function==Fn::character_set_prop||q.character_function==Fn::character_apply_prop_class||q.character_function==Fn::character_clear_props)
     return dh2::player_skill_property_services_v1::invoke(&s.property_services,q.character,q.character_function,a,count,out,capacity,returned,text,bytes);
    if(q.character_function==Fn::character_get_current_skill_info||q.character_function==Fn::character_get_skill_id_from_oid){
@@ -205,7 +286,7 @@ struct Runtime::Impl {
     if(!count)return 0;
     if(a[0].type!=DH2_SCRIPT_NUMBER)return fail(text,bytes,q.name);
     if(!integer(a[0],index)||!out||!capacity||s.bindings.savegame->character()!=q.character)return fail(text,bytes,q.name);
-    s.property_view=dh2::data::property_view(*s.bindings.rules,*s.bindings.properties);
+    s.refresh_properties();
     using namespace dh2::player_saved_skill_callbacks_v1;
     const auto value=q.character_function==Fn::character_get_current_skill_info?
      get_current_skill_info(&s.property_view,&s.bindings.tables->skills(),s.bindings.savegame.get(),q.character,index):
@@ -222,8 +303,14 @@ struct Runtime::Impl {
     s.saved_slot=s.bindings.savegame.get();
     return dh2::character_equipped_faery_element_v1::equipped_faery_element_v1(&s.element_callback,a,count,out,capacity,returned,text,bytes);
    }
+   if(q.character_function==Fn::character_get_current_equipped_faery_id||q.character_function==Fn::character_get_current_equipped_faery_level){
+    s.saved_slot=s.bindings.savegame.get();
+    return q.character_function==Fn::character_get_current_equipped_faery_id?
+     dh2::character_current_equipped_faery_v1::current_equipped_faery_id_v1(&s.equipped_callback,a,count,out,capacity,returned,text,bytes):
+     dh2::character_current_equipped_faery_v1::current_equipped_faery_level_v1(&s.equipped_callback,a,count,out,capacity,returned,text,bytes);
+   }
    if(q.character_function==Fn::character_has_mana||q.character_function==Fn::character_use_mana){
-    s.property_view=dh2::data::property_view(*s.bindings.rules,*s.bindings.properties);
+    s.refresh_properties();
     return q.character_function==Fn::character_has_mana?
      dh2::character_mana_services_v1::has_mana_callback(&s.mana_callbacks,a,count,out,capacity,returned,text,bytes):
      dh2::character_mana_services_v1::use_mana_callback(&s.mana_callbacks,a,count,out,capacity,returned,text,bytes);
@@ -254,8 +341,14 @@ struct Runtime::Impl {
   spell_saved={bindings.character,&saved_slot,bindings.current_difficulty,&bindings.properties->resolved[29],&faery_globals,&faery_services};
   spell_callback={bindings.character,dh2::character_current_spell_v1::saved_services(&spell_saved)};
   element_callback={bindings.character,dh2::character_equipped_faery_element_v1::saved_services(&spell_saved)};
+  equipped_callback={bindings.character,dh2::character_current_spell_v1::saved_services(&spell_saved)};
   cooldown={this,bindings.character,list_count,slot,unsupported_number};
   timer_bindings={this,bindings.character,start_timer,stop_timer,0};
+  refresh_properties();
+  refresh_class_rows();
+  buffs=dh2::character_player_buffs_v1::Owner::create({bindings.character,&property_view,{this,buff_service},std::uint32_t(class_rows.size()),UINT32_MAX});
+  if(!buffs)throw std::runtime_error("Native Player buff owner rejected current property graph");
+  buff_callbacks={buffs.get()};
   dh2::player_skill_session_v1::Configuration config{};
   config.character=bindings.character;config.ais=&ais;config.tables=bindings.tables;
   config.debug=&bindings.debug->globals();config.debug_services=bindings.debug->services();
@@ -266,7 +359,7 @@ struct Runtime::Impl {
   if(!session||session->bind_ais_functions(error)||session->bind_character_functions(error))throw std::runtime_error("Player skill source bindings: "+error);
   dh2::player_skill_session_v1::LoadResult common{};
   if(session->load_resolved("data/scripts/ai/_commons.luac",&common,error)||!common.source_success)throw std::runtime_error("Player skill AI commons: "+error);
-  property_view=dh2::data::property_view(*bindings.rules,*bindings.properties);
+  refresh_properties();
   const dh2::character_player_skills_preparation_v3::Inputs inputs{bindings.character,ais.ais,&property_view,0};
   preparation=dh2::character_player_skills_preparation_v3::Owner::create(bindings.tables,inputs,session->preparation_services(),error);
   if(!preparation||preparation->prepare(&prepared)!=dh2::character_ai_set_skills_and_spells::Status::complete)
@@ -284,12 +377,13 @@ struct Runtime::Impl {
  }
  void update(){
   if(update_blocked||!updates)return;
-  property_view=dh2::data::property_view(*bindings.rules,*bindings.properties);++update_attempts;
+  refresh_properties();++update_attempts;
   if(updates->update(updated,error)){
    update_blocked=true;
    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill update blocked | attempt %u | callbacks %u | VM status %d | %s | source effects retained; remaining providers pending",update_attempts,updated.callbacks,updated.last_lua_status,error.c_str());
   }else if(update_attempts==1){
-   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill update complete | attempt %u | callbacks %u | skill slots %u | faery slots %u | one VM/save/property store; full Player AIS and activation pending",update_attempts,updated.callbacks,updated.source.skill_slots,updated.source.faery_slots);
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill update complete | attempt %u | callbacks %u | skill slots %u | faery slots %u | buffs %u | groups %u | one VM/save/property store; full Player AIS and activation pending",update_attempts,updated.callbacks,updated.source.skill_slots,updated.source.faery_slots,buffs->count(),property_view.group_count);
+   log_buffs("initial");
   }
  }
  void timer(std::uint32_t id){
@@ -397,10 +491,17 @@ std::unique_ptr<Runtime> Runtime::create(Bindings b,std::string& error){
 }
 void Runtime::update(){impl_->update();}
 void Runtime::timer(std::uint32_t id){impl_->timer(id);}
+void Runtime::buff_expired(const character::Timer32& timer){
+ auto& s=*impl_;s.refresh_properties();dh2::character_player_buffs_v1::Result result{};
+ if(s.buffs->expired(&timer,&result)!=dh2::character_player_buffs_v1::Status::complete)
+  throw std::runtime_error("Native Player buff expiry provider failed");
+}
 void Runtime::restore(AAssetManager* assets,const void* ai,const void* catalogue){
  auto& s=*impl_;
  if(s.bindings.ai_lifetime.get()!=ai||s.bindings.catalogue_lifetime.get()!=catalogue)throw std::runtime_error("Retained Player skill owner differs");
  s.assets=assets;
+ s.refresh_class_rows();
+ s.log_buffs("restore");
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skills retained | VM %p | paths %zu | update attempts %u | timer callbacks %u | no preparation/OnInit replay",static_cast<void*>(s.session->vm()),s.session->loaded_path_count(),s.update_attempts,s.timer_callbacks);
 }
 }

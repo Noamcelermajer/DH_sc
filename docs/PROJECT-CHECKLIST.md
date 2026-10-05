@@ -28,19 +28,19 @@ still require live gameplay integration. All final completion gates remain open.
 
 | System | Verified tasks | Remaining tasks |
 |---|---:|---:|
-| Inputs, Adam's work and research | 10 | 3 |
+| Inputs, Adam's work and research | 11 | 3 |
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
-| Character properties, equipment and state | 13 | 5 |
-| Lua, skills and enemy AI | 32 | 13 |
-| Combat, death, loot and progression | 5 | 7 |
+| Character properties, equipment and state | 14 | 5 |
+| Lua, skills and enemy AI | 35 | 13 |
+| Combat, death, loot and progression | 6 | 7 |
 | Quests, campaign, UI, audio and saves | 3 | 9 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **102** | **70** |
+| **Total scoped tasks** | **108** | **70** |
 
-Latest local gate: [native dictionary/faery-element integration](../reports/reconstruction-2026-10-05/native-scalar-faery-element/validation.json). Both ABIs compile the selected adapters. Android 17/16 KiB verifies dictionary insertion/writes/reload/rotation, MP debit/rejection, eight Knight updates, cooldowns and Crypt ambush/recreation. Celest now reaches `GetCurrentEquippedFaeryLevel`; full activation, buffs, pursuit and loot remain open.
+Latest local gate: [native player backbone](../reports/reconstruction-2026-10-05/native-player-backbone/validation.json). Both ABIs compile saved-faery/buff/skill-state/presentation/loot source. Android 17/16 KiB passes all13 authored updates, actual Celest resistance and retained instance/sheet, dictionary/MP/cooldown checks and Crypt ambush/recreation. Full skill activation, live inventory/loot and autonomous pursuit remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Latest source/build/test scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -53,6 +53,7 @@ published download above retains its original release identity.
 - [x] Recover original symbols, assembly, decompiler exports and Android glue.
 - [x] Recover 219 original plaintext Lua scripts and preserve baseline bytes.
 - [x] Pin Adam's baseline `45c5348e` and updated main `c3ae7973`; preserve import attribution.
+- [x] Reconcile latest Adam `791e961b` code and milestone documents with our selected libraries; preserve compatible reuse and identify duplicate-owner/deferred work.
 - [x] Import Adam's seven core modules and script runtime, preserving attribution.
 - [x] Reconcile incompatible scene, world, triangle and exported-symbol interfaces
   so the imported modules can link with the existing reconstruction.
@@ -171,6 +172,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
   bounded fixtures; this is not live loot or player gameplay. See the
   [selected-library host report](../reports/branch-audit-2026-10-05/adam-integrated-host.json).
 - [ ] Complete Character construction, all property sheet/buff/gear ownership and lifecycle phases.
+- [x] Select Adam's V5 item presentation on existing item identities/table authority; 4,031 presentation and 1,119 power-instance gold replays pass. Native text/localization remains open.
 - [ ] Connect full inventory/equipment mutation, requirements, random powers and visual updates.
 - [ ] Complete player classes, skill progression, buffs/debuffs, auras and status effects in gameplay.
 - [ ] Replace remaining development inputs/facts with the original game-owned producers.
@@ -239,12 +241,15 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
   1,536 snapshots. Native fresh SkillTree rows have level0; starter grants/profile load remain open.
 - [x] Select same-VM full ReturnValues and original check/use/outer-dispatch adapters;
   host and original ARM gates pass. Full native CSSkill/input activation remains open.
-- [x] Run eight original Knight updates and both Bashdown/passive check returns on
-  Android 17/16 KiB with one shared temporary property sheet; faery providers remain incomplete.
+- [x] Run all13 original Knight/faery updates and both Bashdown/passive check returns on
+  Android 17/16 KiB with one shared temporary property sheet; full activation remains open.
 - [x] Adapt Adam's CurrentSpell caller to the sole native save/faery catalogue: 436 ARM comparisons, same-VM Lua tests and source five-row initialization; no invented selection/grant.
 - [x] Connect original HasMana/UseMana to native properties/options/Debug: 34 host cases, 26 ARM comparisons and live MP debit/rejection/reload. Full networking remains open.
 - [x] Adapt Adam's GetInt/SetInt to the retained native AIS dictionary: 440 ARM comparisons and live signed writes/insertion/reload/rotation; no second property store.
 - [x] Adapt Adam's equipped-faery element query to the sole save/catalogue: 112 caller plus 180 nested ARM comparisons, selected-library tests and native Celest execution to the next provider.
+- [x] Connect source equipped-faery ID/level wrappers to that same save/VM: 49 host checks, 130 ARM comparisons and complete native faery updates; no invented unlock/grant.
+- [x] Adapt one source buff owner to current properties/Coordinator and run actual Celest resistance live across reload/rotation. 40 whole-state ARM and 40 same-VM host updates pass; FX and live timed expiry remain open.
+- [x] Select CSSkill Focus/Blur and state6 event projection over borrowed Coordinator fields; 214 new ARM comparisons, 60 host cases and both Android ABIs pass. Native activation remains open.
 - [ ] Complete nonempty skills for all classes through full Player AIS construction,
   saved skill levels, `LuaManager::AddFile` and lifecycle ownership.
 - [ ] Connect real Arguments/ReturnValues ownership, skill update/check/use callbacks and Lua errors.
@@ -262,6 +267,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Reconstruct HandleDots/F_DotAttack and the bounded offline nonplayer F_ApplyResult caller.
 - [x] Exercise supported native health changes and prove damaged Ghost health survives recreation.
 - [x] Record earlier development encounter hits and diagnostic combat/quest evidence with their build identities.
+- [x] Select Adam's V7 powered-loot creation on V4's caller-owned RNG: 9,931 presentation/power/loot gold replays, 363 actual powered items and 369 shared draws pass. Android compilation passes; native drop/pickup/AddLoot remains open.
 - [ ] Complete all CalculateResult/ApplyResult dependencies, effects, notifications and actor ownership.
 - [ ] Connect melee/ranged/spell combat, skills, criticals, resistances and status effects in the final runtime.
 - [ ] Complete player damage/death, attacker/killer credit, resurrection and respawn.

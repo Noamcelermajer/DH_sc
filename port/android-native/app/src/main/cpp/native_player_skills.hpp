@@ -6,7 +6,7 @@
 #include <string>
 struct AAssetManager;
 struct dh2_pycst_view;
-namespace dh2::character {class Coordinator;}
+namespace dh2::character {class Coordinator;struct Timer32;}
 namespace dh2::data {class PlayerSavegameV1;}
 namespace dh2::data::savegame_options_v1 {class Owner;}
 namespace dh2::native::debug_files {class Backend;}
@@ -49,6 +49,7 @@ public:
     Runtime(const Runtime&)=delete;Runtime& operator=(const Runtime&)=delete;
     void update();
     void timer(std::uint32_t id);
+    void buff_expired(const character::Timer32&);
     void restore(AAssetManager*,const void* ai_owner,const void* catalogue_owner);
     std::string cooldown_probe(std::uint32_t delay_ms);
     std::string check_probe(std::uint32_t slot);

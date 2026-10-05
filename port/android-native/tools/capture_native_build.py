@@ -6,6 +6,7 @@ come from each ABI's actual Ninja dependency database and compile commands.
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 import subprocess
 import zipfile
@@ -72,6 +73,22 @@ def main():
                                   'repository_inputs': used}
             entries[f'compiler/{tag}-{abi}-commands.json'] = database.read_bytes()
             entries[f'compiler/{tag}-{abi}-dependencies.txt'] = deps.encode()
+            # Preserve every CMake file from the actual configure graph,
+            # including the sole Lua runtime and nested dependency libraries.
+            rerun = next(line for line in (database.parent/'build.ninja').read_text().splitlines()
+                         if line.startswith('build build.ninja: RERUN_CMAKE '))
+            for token in re.findall(r'(?:\$[^\r\n]|[^\s])+', rerun.partition('RERUN_CMAKE ')[2]):
+                decoded = re.sub(r'\$(.)', r'\1', token)
+                if not decoded.endswith('CMakeLists.txt'):
+                    continue
+                path = Path(decoded).resolve()
+                if not path.is_relative_to(REPO):
+                    continue
+                key = path.relative_to(REPO).as_posix()
+                payload = path.read_bytes()
+                assert key not in sources or sources[key] == sha(payload), 'Configure input changed during capture'
+                sources[key] = sha(payload)
+                entries['source/'+key] = payload
         for path in (project/'app/src/main').rglob('*'):
             if path.is_file() and 'assets' not in path.relative_to(project/'app/src/main').parts:
                 key = path.relative_to(project/'app/src/main').as_posix()
@@ -97,9 +114,10 @@ def main():
             sources[key] = sha(path.read_bytes())
             entries['source/'+key] = path.read_bytes()
     project = projects['packaged']
-    for name in ('build.gradle.kts', 'settings.gradle.kts', 'gradle.properties', 'gradlew', 'gradlew.bat', 'app/build.gradle.kts'):
+    for name in ('build.gradle.kts', 'settings.gradle.kts', 'gradle.properties', 'gradlew', 'gradlew.bat', 'app/build.gradle.kts', 'gradle/libs.versions.toml'):
         path = project/name
         entries['source/'+path.relative_to(REPO).as_posix()] = path.read_bytes()
+        sources[path.relative_to(REPO).as_posix()] = sha(path.read_bytes())
     manifest = {'scope': __doc__, 'validation': 'BUILD_INPUTS_CAPTURED',
                 'studio_parity_checked': bool(a.studio), 'apks': artifacts,
                 'source_sha256': sources, 'compiler_inputs': commands,
