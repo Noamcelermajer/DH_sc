@@ -1,0 +1,5 @@
+Adam c3ae797 current_spell four-call algorithm adapted to the selected VM/save/table APIs: original80B caller3b6e30 captures Character, ignores Arguments, selected(-1)→GetCharFaery→fresh selected(-1)→saved level(-1)→integer return. Existing faery selector and single PlayerSavegame are reused; providers/errors retain completed prefixes.
+
+SG(-1) uses PlayerSavegame::m_difficultyLevel9a6060 (GOT996534), freshly per read. Null save yields ID0/level-1 without difficulty access. Ctor465ae0 zeros ac/b0/b4; InitFaeries4694c8 creates5 zero state/level rows per difficulty, preserves selection/repeated rows. Load4652d8 invokes it after InitSkills. Native fresh integration needs genuine initialized backing and this live difficulty producer; no selection/grant invented.
+
+run_character_current_spell_v1_host.py --compiler <g++> --cache <cache> --original-elf <original.so> --output <ignored-build>. Audit imports the selected world DLL callback and links current game-data/sole Lua; no replacement caller TU in executable. Original80B caller, nested SG/table paths and InitFaeries replay. Dependency-body credit0, native wiring/full profile/skill activation unclaimed.

@@ -2,7 +2,8 @@
 
 The shell fixtures invoke the unchanged skill framework, not a full activation
 or combat lifecycle. Optional --saved-skills checks the integrated saved owner,
-eight Knight updates and full two-result checks; faery spell info stays pending.
+eight Knight updates and full two-result checks. --full-update additionally
+requires all13 Knight/faery callbacks, retained updates and real MP spending.
 """
 import argparse
 import hashlib
@@ -24,7 +25,14 @@ def main():
     p.add_argument('--apk', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--saved-skills', action='store_true')
+    p.add_argument('--full-update', action='store_true')
+    p.add_argument('--mana-faeries', action='store_true', help='verify saved faeries and MP callbacks at an explicit unfinished update provider')
+    p.add_argument('--update-boundary', default='GetInt')
+    p.add_argument('--completed-updates', type=int, default=8)
     a = p.parse_args()
+    assert not (a.full_update or a.mana_faeries) or a.saved_skills, 'new owner checks require --saved-skills'
+    assert not (a.full_update and a.mana_faeries), 'select complete updates or a bounded update checkpoint'
+    assert 8 <= a.completed_updates < 13
     assert a.serial.startswith('emulator-'), 'emulator only'
     out = a.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -61,7 +69,7 @@ def main():
         path = out / (name + '.png')
         path.write_bytes(raw)
         return {'file': path.name, 'sha256': hashlib.sha256(raw).hexdigest()}
-    def skill_check(slot, usable, active):
+    def skill_check(slot, usable, active, mana=6976):
         prior = len(re.findall(r'Native Player skill check probe \|', logs()))
         command('PLAYER_SKILL_CHECK', '--ei', 'skill_slot', str(slot))
         text = wait(lambda t: len(re.findall(r'Native Player skill check probe \|', t)) == prior + 1,
@@ -70,7 +78,7 @@ def main():
         assert rows, 'source skill check did not report both result vectors'
         row = rows[-1]
         assert tuple(map(int, row[1:7])) == (slot, 0, usable, active, 2, 2), row
-        assert int(row[7]) == 6976, 'HasMana/check changed the live fresh Knight MP'
+        assert int(row[7]) == mana, 'HasMana/check changed the live Knight MP'
         report.setdefault('skill_checks', []).append({'script': row[0], 'slot': slot,
             'saved_level': 0, 'usable': usable, 'active': active, 'return_counts': [2, 2],
             'MP': int(row[7]), 'SnS_Level': int(row[8]), 'temporary_mana_cost': int(row[9])})
@@ -94,19 +102,27 @@ def main():
         pid = adb('shell', 'pidof', PACKAGE)
         # Each nonnull script has DeclareSkill(name,index), then the no-args
         # DeclareSkill() reset after loading: 26 real calls for 13 instances.
-        callbacks = 8 if a.saved_skills else 0
-        boundary = 'GetCurrentSpellInfo' if a.saved_skills else 'GetCurrentSkillInfo__'
+        callbacks = 13 if a.full_update else a.completed_updates if a.mana_faeries else 8 if a.saved_skills else 0
+        boundary = None if a.full_update else a.update_boundary if a.mana_faeries else 'GetCurrentSpellInfo' if a.saved_skills else 'GetCurrentSkillInfo__'
+        update_message = ('Native Player skill update complete | attempt 1 | callbacks 13 | skill slots 16 | faery slots 5' if a.full_update else
+                          f'Native Player skill update blocked | attempt 1 | callbacks {callbacks} | VM status -5')
         text = wait(lambda t: 'Native Player skill preparation | skills 16 | faeries 5 | loaded paths 15 | declarations 26' in t and
-                    f'Native Player skill update blocked | attempt 1 | callbacks {callbacks} | VM status -5' in t and 'Native actor frame |' in t, 'real Player preparation/update boundary')
-        assert f'unresolved native Player skill provider: {boundary}' in text
+                    update_message in t and 'Native actor frame |' in t, 'real Player preparation/update boundary')
+        if boundary: assert f'unresolved native Player skill provider: {boundary}' in text
+        else:
+            assert 'Native Player skill update blocked |' not in text
+        if a.full_update or a.mana_faeries:
+            assert 'Native Player saved faeries ready | difficulty 0 | selected 0 | level 0 | rows 5 5 5' in text
+            assert text.count('Native Player saved faeries ready |') == 1
         if a.saved_skills:
             assert 'rows 16 | slot0 level 0 | source _InitSkills; starter grant/profile load pending' in text
             assert text.count('Native Player saved skills ready |') == 1
         assert text.count('Native Player skill preparation |') == 1
         report['initial'] = {'source_skill_slots': 16, 'source_faery_slots': 5, 'nonnull_instances': 13,
-                             'source_paths': 15, 'source_declaration_calls': 26, 'completed_knight_updates': callbacks,
+                             'source_paths': 15, 'source_declaration_calls': 26, 'completed_knight_updates': min(callbacks,8),
+                             'completed_faery_updates': max(0,callbacks-8),
                              'update_boundary': boundary, 'saved_skill_rows': 16 if a.saved_skills else 0,
-                             'update_vm_status': -5, 'full_skill_update_complete': False}
+                             'update_vm_status': 0 if a.full_update else -5, 'full_skill_update_complete': a.full_update}
         report['screenshots'] = [screenshot('player-skills-initial')]
         command('ANIMATION_TIME', '--ei', 'time_ms', '0')
         wait(lambda t: 'Animation time command applied | time 0' in t, 'freeze')
@@ -126,16 +142,20 @@ def main():
         if a.saved_skills: skill_check(0, 1, 0)
         command('RELOAD_WORLD')
         text = wait(lambda t: 'World reload command applied |' in t and 'Native Player skills retained |' in t, 'retained world reload')
-        assert text.count('Native Player skill preparation |') == 1 and text.count('Native Player skill update blocked |') == 1
-        first_vm = re.search(r'Native Player skills retained \| VM (\S+) \| paths 15 \| update attempts 1 \| timer callbacks 0', text)
+        expected_blocked = 0 if a.full_update else 1
+        assert text.count('Native Player skill preparation |') == 1 and text.count('Native Player skill update blocked |') == expected_blocked
+        first_vm = re.search(r'Native Player skills retained \| VM (\S+) \| paths 15 \| update attempts (\d+) \| timer callbacks 0', text)
         assert first_vm, 'VM/paths/update attempt not retained'
+        assert int(first_vm[2]) > 1 if a.full_update else int(first_vm[2]) == 1
         # Reload resumes the frame; ensure pending cooldown survives recreation.
         adb('shell', 'cmd', 'window', 'user-rotation', 'lock', '1')
         text = wait(lambda t: len(re.findall(r'Native Player skills retained \|', t)) >= 2, 'retained rotation')
-        vms = re.findall(r'Native Player skills retained \| VM (\S+) \| paths 15 \| update attempts 1', text)
-        assert vms and set(vms) == {first_vm[1]}, 'Player VM replaced on graphics restore'
-        assert text.count('Native Player skill preparation |') == 1 and text.count('Native Player skill update blocked |') == 1
-        report['restore'] = {'same_process': pid, 'same_vm': first_vm[1], 'reload_and_rotation': True, 'preparation_count': 1, 'blocked_update_attempts': 1}
+        restores = re.findall(r'Native Player skills retained \| VM (\S+) \| paths 15 \| update attempts (\d+)', text)
+        assert restores and {row[0] for row in restores} == {first_vm[1]}, 'Player VM replaced on graphics restore'
+        if a.full_update: assert int(restores[-1][1]) >= int(first_vm[2])
+        assert text.count('Native Player skill preparation |') == 1 and text.count('Native Player skill update blocked |') == expected_blocked
+        report['restore'] = {'same_process': pid, 'same_vm': first_vm[1], 'reload_and_rotation': True, 'preparation_count': 1,
+                             'blocked_update_attempts': expected_blocked, 'observed_update_attempts': [int(row[1]) for row in restores]}
         if a.saved_skills:
             assert text.count('Native Player saved skills ready |') == 1
             skill_check(0, 1, 0)
@@ -146,6 +166,28 @@ def main():
         text = wait(lambda t: re.search(r'Native Player skill timer callback \| timer \d+ \| callbacks 2 \| slot0 field18 -1', t), 'cooldown rearm/expiry')
         assert text.count('Player skill cooldown command applied | Original skill cooldown callback armed') == 2
         report['cooldown_rearm_verified'] = True
+        if a.full_update or a.mana_faeries:
+            command('ANIMATION_TIME', '--ei', 'time_ms', '0')
+            wait(lambda t: t.count('Animation time command applied | time 0') >= 2, 'freeze for MP debit')
+            def mana_debit(amount, has, used, before, after):
+                previous = len(re.findall(r'Native Player mana probe \|', logs()))
+                command('PLAYER_MANA', '--ei', 'raw_amount', str(amount))
+                t = wait(lambda t: len(re.findall(r'Native Player mana probe \|', t)) == previous + 1, 'original mana debit')
+                rows = re.findall(r'Native Player mana probe \| amount (\d+) \| has (\d+) \| used (\d+) \| MP before (-?\d+) \| MP after (-?\d+) \| exempt14f0 (\d+) \| options (\d+)', t)
+                assert tuple(map(int,rows[-1])) == (amount,has,used,before,after,0,0), rows[-1]
+                report.setdefault('mana_debits',[]).append({'amount':amount,'has':has,'used':used,'MP_before':before,'MP_after':after})
+            mana_debit(1024,1,1,6976,5952)
+            mana_debit(8000,0,0,5952,5952)
+            skill_check(0,1,0,5952)
+            mana_debit(5952,1,1,5952,0)
+            skill_check(0,0,0,0)
+            mana_debit(1,0,0,0,0)
+            command('RELOAD_WORLD')
+            text = wait(lambda t: t.count('World reload command applied |') == 2, 'retained zero MP')
+            skill_check(0,0,0,0)
+            assert text.count('Native Player skill update blocked |') == expected_blocked
+            assert text.count('Native Player saved faeries ready |') == 1
+            report['zero_MP_retained_on_reload'] = True
         report['screenshots'].append(screenshot('player-skills-restored'))
         report['validation'] = 'PASS'
     except Exception as exc:

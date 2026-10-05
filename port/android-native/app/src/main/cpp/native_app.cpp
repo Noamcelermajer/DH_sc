@@ -168,6 +168,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_debugChar
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_playerAttack(JNIEnv* env,jclass,jint target){return env->NewStringUTF(model_renderer::player_attack(target).c_str());}
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_debugPlayerSkillCooldown(JNIEnv* env,jclass,jint delay){return env->NewStringUTF(model_renderer::debug_player_skill_cooldown(std::uint32_t(delay)).c_str());}
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_debugPlayerSkillCheck(JNIEnv* env,jclass,jint slot){return env->NewStringUTF(model_renderer::debug_player_skill_check(std::uint32_t(slot)).c_str());}
+extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_debugPlayerMana(JNIEnv* env,jclass,jint amount){return env->NewStringUTF(model_renderer::debug_player_mana(std::uint32_t(amount)).c_str());}
 
 extern "C" JNIEXPORT jintArray JNICALL Java_com_example_dh2_NativeBridge_playerVitals(JNIEnv* env,jclass){auto values=model_renderer::player_vitals();auto out=env->NewIntArray(values.size());if(out)env->SetIntArrayRegion(out,0,values.size(),values.data());return out;}
 extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_enemyAi(JNIEnv*,jclass,jboolean enabled){model_renderer::set_enemy_ai(enabled);}

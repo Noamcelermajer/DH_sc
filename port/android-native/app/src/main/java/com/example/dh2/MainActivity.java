@@ -158,6 +158,11 @@ public final class MainActivity extends Activity {
                         return;
                     }
                     final int target=intent.getIntExtra("player_target_index",-1);
+                    if("com.example.dh2.DEBUG_PLAYER_MANA".equals(intent.getAction())){
+                        final int amount=intent.getIntExtra("raw_amount",0);
+                        surface.queueEvent(()->{String report=NativeBridge.debugPlayerMana(amount);Log.i("DH2Native","Player mana command applied | "+report);surface.requestRender();});
+                        return;
+                    }
                     if("com.example.dh2.DEBUG_PLAYER_SKILL_CHECK".equals(intent.getAction())){
                         final int slot=intent.getIntExtra("skill_slot",0);
                         surface.queueEvent(()->{String report=NativeBridge.debugPlayerSkillCheck(slot);Log.i("DH2Native","Player skill check command applied | "+report);surface.requestRender();});
@@ -178,6 +183,7 @@ public final class MainActivity extends Activity {
             filter.addAction("com.example.dh2.DEBUG_RELOAD_WORLD");
             filter.addAction("com.example.dh2.DEBUG_PLAYER_SKILL_COOLDOWN");
             filter.addAction("com.example.dh2.DEBUG_PLAYER_SKILL_CHECK");
+            filter.addAction("com.example.dh2.DEBUG_PLAYER_MANA");
             if(Build.VERSION.SDK_INT>=33)registerReceiver(debugAttackReceiver,filter,"android.permission.DUMP",null,Context.RECEIVER_EXPORTED);
             else registerReceiver(debugAttackReceiver,filter,"android.permission.DUMP",null);
         }

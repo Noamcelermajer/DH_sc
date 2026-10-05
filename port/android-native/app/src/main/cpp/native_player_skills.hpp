@@ -8,6 +8,7 @@ struct AAssetManager;
 struct dh2_pycst_view;
 namespace dh2::character {class Coordinator;}
 namespace dh2::data {class PlayerSavegameV1;}
+namespace dh2::data::savegame_options_v1 {class Owner;}
 namespace dh2::native::debug_files {class Backend;}
 namespace dh2::native::player_skills {
 struct Bindings {
@@ -19,6 +20,14 @@ struct Bindings {
     data::PropertyState* properties=nullptr;
     data::PropertySheet* shared_property_temp=nullptr;
     std::shared_ptr<data::PlayerSavegameV1> savegame;
+    std::uintptr_t* application_singleton=nullptr;
+    const data::savegame_options_v1::Owner* saved_options=nullptr;
+    // Existing offline session projection. Full COnline/networking remains
+    // pending; a reached online remote-object query must fail explicitly.
+    std::uintptr_t online_identity=0;
+    const std::uint8_t* online=nullptr;
+    std::uint8_t* mana_exempt_14f0=nullptr;
+    const std::int32_t* current_difficulty=nullptr;
     const data::ClassTables* classes=nullptr;
     const std::vector<std::string>* fields=nullptr;
     const dh2_pycst_view* design=nullptr;
@@ -43,6 +52,7 @@ public:
     void restore(AAssetManager*,const void* ai_owner,const void* catalogue_owner);
     std::string cooldown_probe(std::uint32_t delay_ms);
     std::string check_probe(std::uint32_t slot);
+    std::string mana_probe(std::uint32_t raw_amount);
 private:
     struct Impl;
     explicit Runtime(std::unique_ptr<Impl>);

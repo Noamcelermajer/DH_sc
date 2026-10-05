@@ -13,6 +13,7 @@
 #include "class_tables.hpp"
 #include "skill_tables.hpp"
 #include "player_savegame_v1.hpp"
+#include "savegame_options_v1.hpp"
 #include "level_tables.hpp"
 #include "level_construction_fields.hpp"
 #include "lua_script_level_queries.hpp"
@@ -128,6 +129,9 @@ struct PlayerCombat {
  int animation_table=-1,target=-1;unsigned attempts=0,received=0;
  bool pending_death=false;std::uint64_t death_target=0;
  AggroStorage aggro;
+ // Source Character constructor zeros +14f0. UseMana reads this separate
+ // exemption byte; it is unrelated to the movement type at +53c.
+ std::uint8_t mana_exempt_14f0=0;
 };
 PlayerCombat prince_combat;
 SearchObjectProjection prince_search_projection{};
@@ -234,6 +238,10 @@ std::vector<std::string> actor_character_fields;
 std::vector<std::uint8_t> actor_design_bytes;
 dh2_pycst_view actor_design{};
 dh2::character_script_set_level::Application native_application{};
+dh2::data::savegame_options_v1::Owner native_saved_options;
+// Source PlayerSavegame::m_difficultyLevel has initial word0. Full profile
+// selection/loading is pending; this is separate from the Level difficulty.
+std::int32_t native_save_difficulty=0;
 dh2::character_level_runtime::DesignBinding native_design_binding{};
 std::unique_ptr<dh2::native::debug_files::Backend> native_debug;
 
@@ -1191,6 +1199,7 @@ void initialize_native_player_skills(AAssetManager* assets,bool restore){
   std::int32_t selector=0;std::string error;
   if(dh2_property_resolve(&view,28,&selector)||!saved->initialize_skills(actor_skill_catalogue->tables->skills(),selector,error))
    throw std::runtime_error("Native Player saved-skill initialization: "+error);
+  saved->initialize_faeries();
   prince_combat.savegame=std::move(saved);
  }
  dh2::native::player_skills::Bindings b{};
@@ -1198,6 +1207,9 @@ void initialize_native_player_skills(AAssetManager* assets,bool restore){
  b.ai_lifetime=prince_source_ai;b.tables=actor_skill_catalogue->tables;b.catalogue_lifetime=actor_skill_catalogue;
  b.rules=&actor_property_rules;b.properties=&prince_combat.properties;b.classes=&actor_class_tables;b.fields=&actor_character_fields;
  b.shared_property_temp=&skill_property_temp;b.savegame=prince_combat.savegame;
+ b.application_singleton=&native_application.identity;b.saved_options=&native_saved_options;
+ b.online_identity=reinterpret_cast<std::uintptr_t>(&native_host);b.online=&native_host.online;
+ b.mana_exempt_14f0=&prince_combat.mana_exempt_14f0;b.current_difficulty=&native_save_difficulty;
  b.design=&actor_design;b.ai_constants=&actor_skill_catalogue->ai_constants;b.faery_constants=&actor_skill_catalogue->faery_constants;b.coordinator=&prince_character;b.debug=native_debug.get();
  b.assets=assets;b.read=[](AAssetManager* a,const std::string& path){return read(a,path,"");};
  std::string error;auto candidate=dh2::native::player_skills::Runtime::create(std::move(b),error);
@@ -2171,6 +2183,10 @@ std::string debug_player_skill_cooldown(std::uint32_t delay){
 std::string debug_player_skill_check(std::uint32_t slot){
  if(!world_mode||!native_actor_ready||!prince_skills)return "Player skill check probe rejected";
  return prince_skills->check_probe(slot);
+}
+std::string debug_player_mana(std::uint32_t amount){
+ if(!world_mode||!native_actor_ready||!prince_skills)return "Player mana probe rejected";
+ return prince_skills->mana_probe(amount);
 }
 
 std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetManager* assets){

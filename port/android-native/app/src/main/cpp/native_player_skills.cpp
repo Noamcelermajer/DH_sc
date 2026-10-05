@@ -4,6 +4,9 @@
 #include "player_skill_use_session_v1.hpp"
 #include "player_skill_property_services_v1.hpp"
 #include "player_savegame_v1.hpp"
+#include "savegame_options_v1.hpp"
+#include "character_mana_services_v1.hpp"
+#include "character_current_spell_v1.hpp"
 #include "character_skill_cooldown_services.hpp"
 #include "character_coordinator.hpp"
 #include "native_debug_files.hpp"
@@ -38,6 +41,15 @@ struct Runtime::Impl {
  std::unique_ptr<dh2::player_skill_use_session_v1::Runtime> uses;
  dh2::character_skill_cooldown_services::Services cooldown{};
  dh2::player_skill_property_services_v1::Bindings property_services{};
+ dh2::character_mana_services_v1::State mana_state{};
+ dh2::character_mana_services_v1::Globals mana_globals{};
+ dh2::character_mana_services_v1::Services mana_services{};
+ dh2::character_mana_services_v1::CallbackContext mana_callbacks{};
+ const dh2::data::PlayerSavegameV1* saved_slot=nullptr;
+ dh2::character_faery_selection::Globals faery_globals{};
+ dh2::character_faery_selection::Services faery_services{};
+ dh2::character_current_spell_v1::SavedBindings spell_saved{};
+ dh2::character_current_spell_v1::Bindings spell_callback{};
  dh2_script_game_bindings timer_bindings{};
  std::map<std::string,std::vector<std::uint8_t>> named_bytes;
  std::map<std::string,dh2_pynames_view> named_views;
@@ -104,6 +116,26 @@ struct Runtime::Impl {
   out->word=value.value;return 0;
  }
  static std::int32_t faery_assert(void*,dh2::character_faery_selection::Character*,const dh2::character_faery_selection::Request*){return 1;}
+ static std::int32_t mana_service(void* raw,const dh2::character_mana_services_v1::Request* q,
+                               dh2::character_mana_services_v1::Reply* out){
+  auto& s=self(raw);if(!q||!out)return 1;
+  using Operation=dh2::character_mana_services_v1::Operation;
+  if(q->operation==Operation::get_online){
+   if(!s.bindings.online||!s.bindings.online_identity)return 1;
+   out->identity=s.bindings.online_identity;out->word=*s.bindings.online;return 0;
+  }
+  // Full COnline and ObjectBase::IsRemotelyUpdated are not attached to this
+  // offline session. A reached online branch is an explicit missing provider.
+  if(q->operation==Operation::is_remotely_updated)return 1;
+  if(q->operation==Operation::application_is_saved_option_on){
+   if(!s.bindings.application_singleton||q->subject!=*s.bindings.application_singleton||!s.bindings.saved_options)return 1;
+   const dh2::data::savegame_options_v1::Application app{q->subject,s.bindings.saved_options};
+   bool on=false;
+   if(dh2::data::savegame_options_v1::is_saved_option_on(&app,q->text,&on)!=dh2::data::savegame_options_v1::Status::complete)return 1;
+   out->word=on?1u:0u;return 0;
+  }
+  return 1;
+ }
  static int native(void* raw,const dh2::player_skill_session_v1::NativeRequest& q,const dh2_script_value* a,std::uint32_t count,
           dh2_script_value* out,std::uint32_t capacity,std::uint32_t* returned,char* text,std::size_t bytes){
   auto& s=self(raw);if(!returned||!s.bindings.character||q.character!=s.bindings.character||(!a&&count))return fail(text,bytes,q.name);
@@ -168,15 +200,15 @@ struct Runtime::Impl {
     if(value.disposition!=Disposition::append_integer)return fail(text,bytes,q.name);
     number(out[0],static_cast<float>(value.integer));*returned=1;return 0;
    }
-   if(q.character_function==Fn::character_has_mana){
-    // This current app slice is offline. Source HasMana's online/player
-    // exemption is not selected; the sole Character cached MP is authoritative.
-    // Unsupported float/assertion domains remain an explicit boundary.
-    if(!count||a[0].type!=DH2_SCRIPT_NUMBER)return 0;
-    std::int32_t cost=0;
-    if(!integer(a[0],cost)||cost<0||!out||!capacity)return fail(text,bytes,q.name);
-    const auto mana=s.bindings.properties->resolved[41];
-    out[0]={};out[0].type=DH2_SCRIPT_BOOLEAN;out[0].boolean=mana>=cost;*returned=1;return 0;
+   if(q.character_function==Fn::character_get_current_spell_info){
+    s.saved_slot=s.bindings.savegame.get();
+    return dh2::character_current_spell_v1::current_spell_info_v1(&s.spell_callback,a,count,out,capacity,returned,text,bytes);
+   }
+   if(q.character_function==Fn::character_has_mana||q.character_function==Fn::character_use_mana){
+    s.property_view=dh2::data::property_view(*s.bindings.rules,*s.bindings.properties);
+    return q.character_function==Fn::character_has_mana?
+     dh2::character_mana_services_v1::has_mana_callback(&s.mana_callbacks,a,count,out,capacity,returned,text,bytes):
+     dh2::character_mana_services_v1::use_mana_callback(&s.mana_callbacks,a,count,out,capacity,returned,text,bytes);
    }
   }
   return fail(text,bytes,q.name);
@@ -194,6 +226,14 @@ struct Runtime::Impl {
   }
   ais={reinterpret_cast<std::uintptr_t>(this),0};
   property_services={bindings.character,bindings.rules,bindings.classes,bindings.properties,bindings.shared_property_temp,false};
+  mana_state={bindings.character,bindings.mana_exempt_14f0,&property_view};
+  mana_globals={bindings.application_singleton,&bindings.debug->globals(),&bindings.debug->services()};
+  mana_services={this,mana_service};mana_callbacks={&mana_state,&mana_globals,&mana_services};
+  saved_slot=bindings.savegame.get();
+  faery_globals={&bindings.tables->source_faeries(),0};
+  faery_services={this,faery_constant,faery_assert};
+  spell_saved={bindings.character,&saved_slot,bindings.current_difficulty,&bindings.properties->resolved[29],&faery_globals,&faery_services};
+  spell_callback={bindings.character,dh2::character_current_spell_v1::saved_services(&spell_saved)};
   cooldown={this,bindings.character,list_count,slot,unsupported_number};
   timer_bindings={this,bindings.character,start_timer,stop_timer,0};
   dh2::player_skill_session_v1::Configuration config{};
@@ -219,6 +259,8 @@ struct Runtime::Impl {
    preparation->slots(dh2::character_ai_set_skills_and_spells::List::skill).size(),preparation->slots(dh2::character_ai_set_skills_and_spells::List::faery).size(),session->loaded_path_count(),session->statistics().declarations,ais.flags_b8);
   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player saved skills ready | owner %p | rows %zu | slot0 level %d | source _InitSkills; starter grant/profile load pending",
    static_cast<void*>(bindings.savegame.get()),bindings.savegame->skills().size(),bindings.savegame->skill_level(0));
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player saved faeries ready | difficulty %d | selected %d | level %d | rows 5 5 5 | source constructor and _InitFaeries; same save owner",
+   *bindings.current_difficulty,bindings.savegame->current_faery(*bindings.current_difficulty),bindings.savegame->faery_level(0,*bindings.current_difficulty));
  }
  void update(){
   if(update_blocked||!updates)return;
@@ -226,6 +268,8 @@ struct Runtime::Impl {
   if(updates->update(updated,error)){
    update_blocked=true;
    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill update blocked | attempt %u | callbacks %u | VM status %d | %s | source effects retained; remaining providers pending",update_attempts,updated.callbacks,updated.last_lua_status,error.c_str());
+  }else if(update_attempts==1){
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill update complete | attempt %u | callbacks %u | skill slots %u | faery slots %u | one VM/save/property store; full Player AIS and activation pending",update_attempts,updated.callbacks,updated.source.skill_slots,updated.source.faery_slots);
   }
  }
  void timer(std::uint32_t id){
@@ -287,10 +331,27 @@ std::string Runtime::check_probe(std::uint32_t slot){
  return "Original skill check completed";
 }
 
+std::string Runtime::mana_probe(std::uint32_t amount){
+ auto& s=*impl_;
+ // This debug command traverses the same retained Player VM and original
+ // native callback wrappers. It spends real MP; it is not a skill activation.
+ if(amount>0x7fffffffu)return "Mana probe amount outside source domain";
+ dh2_script_value argument{};Impl::number(argument,static_cast<float>(amount));
+ dh2_script_first_return_v1 has{},used{};
+ const auto capture=[](void* p,const dh2_script_first_return_v1* value,char*,std::size_t){*static_cast<dh2_script_first_return_v1*>(p)=*value;return 0;};
+ const auto before=s.bindings.properties->resolved[41];
+ if(s.session->call("HasMana",&argument,1,0,capture,&has,s.error)||
+    s.session->call("UseMana",&argument,1,0,capture,&used,s.error)||
+    has.type!=DH2_SCRIPT_BOOLEAN||used.type!=DH2_SCRIPT_BOOLEAN)return "Original mana callback blocked: "+s.error;
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player mana probe | amount %u | has %u | used %u | MP before %d | MP after %d | exempt14f0 %u | options %zu | same Prince VM/properties; debug debit, not skill activation",
+  amount,has.boolean,used.boolean,before,s.bindings.properties->resolved[41],unsigned(*s.bindings.mana_exempt_14f0),s.bindings.saved_options->size());
+ return "Original mana callbacks completed";
+}
+
 Runtime::Runtime(std::unique_ptr<Impl> p):impl_(std::move(p)){}
 Runtime::~Runtime()=default;
 std::unique_ptr<Runtime> Runtime::create(Bindings b,std::string& error){
- if(!b.character||!b.ai||!b.ai_lifetime||!b.tables||!b.catalogue_lifetime||!b.rules||!b.properties||!b.shared_property_temp||!b.savegame||b.savegame->character()!=b.character||!b.savegame->skills_initialized()||!b.classes||!b.fields||!b.design||!b.ai_constants||!b.faery_constants||!b.coordinator||!b.debug||!b.assets||!b.read||b.coordinator->owner()!=b.character){error="invalid native Player skill owner";return {};}
+ if(!b.character||!b.ai||!b.ai_lifetime||!b.tables||!b.catalogue_lifetime||!b.rules||!b.properties||!b.shared_property_temp||!b.savegame||b.savegame->character()!=b.character||!b.savegame->skills_initialized()||!b.application_singleton||!*b.application_singleton||!b.saved_options||!b.online||!b.online_identity||!b.mana_exempt_14f0||!b.current_difficulty||!b.classes||!b.fields||!b.design||!b.ai_constants||!b.faery_constants||!b.coordinator||!b.debug||!b.assets||!b.read||b.coordinator->owner()!=b.character){error="invalid native Player skill owner";return {};}
  try{auto p=std::make_unique<Impl>(std::move(b));p->prepare();return std::unique_ptr<Runtime>(new Runtime(std::move(p)));}
  catch(const std::exception& e){error=e.what();return {};}
 }
