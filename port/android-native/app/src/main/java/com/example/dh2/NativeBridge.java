@@ -14,6 +14,7 @@ final class NativeBridge {
     static native String objectState(int index,String state);
     static native String spawnCharacter(String exactName);
     static native String debugCharacterHit(String exactName,int rawDamage);
+    static native String debugPlayerSkillCooldown(int delayMs);
     static native String combatTarget(int index,int target);
     static native String playerAttack(int target);
     static native int[] playerVitals();

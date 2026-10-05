@@ -33,14 +33,14 @@ still require live gameplay integration. All final completion gates remain open.
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
 | Character properties, equipment and state | 12 | 5 |
-| Lua, skills and enemy AI | 23 | 13 |
+| Lua, skills and enemy AI | 25 | 13 |
 | Combat, death, loot and progression | 5 | 7 |
 | Quests, campaign, UI, audio and saves | 3 | 9 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **92** | **70** |
+| **Total scoped tasks** | **94** | **70** |
 
-Latest local gate: [Adam reconciliation](../reports/branch-audit-2026-10-05/adam-reconciliation-validation.json). Nine reused module groups compile for both ABIs; host gates and Android 17/16 KiB Crypt ambush/recreation pass. Nine live frustum snapshots match original ARM. Native nonempty player skills, inventory and loot pickup remain open.
+Latest local gate: [native player skills](../reports/reconstruction-2026-10-05/native-player-skills/validation.json). Both ABIs compile the selected session/preparation/update adapters. Android 17/16 KiB loads the Knight's 13 original skill/faery instances; framework cooldown expiry/rearm and Crypt ambush/recreation pass. Full skill use, inventory and loot pickup remain open.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Latest source/build/test scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -194,7 +194,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
   276 original ARM comparisons, 269 host cases and 42 real Lua cases pass.
   Actual native Value/ReturnValues and skill-call integration remain open.
 - [x] Decode all 183 original Skill/Faery list/row records; compare with original ARM readers.
-- [x] Adapt Adam's player skill ownership to our source callers: each class has 16 skill/5 faery slots and 13 instances; 29 script names overall. Host/ARM gates pass; real player VM/FSM integration remains open.
+- [x] Adapt Adam's player skill ownership to our source callers: each class has 16 skill/5 faery slots and 13 instances; 29 script names overall. Host/ARM gates pass; full Player AIS/FSM lifecycle remains open.
 - [x] Adapt Player callback membership and skill/spell cooldowns through the
   selected Lua core and borrowed timer fields; host/real-Lua gates and 545
   cooldown ARM comparisons pass. Additive VM protocols pass 145 host checks.
@@ -230,8 +230,12 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [ ] Bind current-state constructor/registry/transition ownership and actual
   OnUpdate/state callbacks to the native AIS frame.
 - [ ] Supply original Character name/raw-death producers for all actor types.
-- [ ] Complete native nonempty skill loading/declaration/allocation. Integrate the
-  full `LuaManager::AddFile` path and per-VM cache into Android.
+- [x] Load, declare and allocate the Knight's 13 nonempty original skill/faery instances
+  in one retained native VM; use current properties/timers/catalogue. Reload/rotation pass.
+- [x] Dispatch the original framework Bashdown cooldown through the same native timer
+  and slot field18; expiry/rearm pass. This shell fixture does not execute full skill use.
+- [ ] Complete nonempty skills for all classes through full Player AIS construction,
+  saved skill levels, `LuaManager::AddFile` and lifecycle ownership.
 - [ ] Connect real Arguments/ReturnValues ownership, skill update/check/use callbacks and Lua errors.
 - [ ] Complete all 265 original Character bindings and every actually used game/engine service.
 - [ ] Connect native Ghost acquisition and pursuit through real frame/path/body services.

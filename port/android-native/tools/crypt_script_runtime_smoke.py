@@ -346,7 +346,7 @@ def main():
             report['native_character_list_scope'] = 'Prince and 13 live monster projections; native owned source-list nodes; full ObjectManager factory/name-map and autonomous Ghost AI remain pending'
         if args.require_native_ghost_skill_initialization:
             assert args.require_native_monster_initialization, 'skill gate also requires VM/health initialization gate'
-            catalogue = 'Native skill catalogue | skill lists 36 | skills 127 | faery lists 4 | faeries 16 | owned script strings; full skill callbacks pending'
+            catalogue = 'Native skill catalogue | skill lists 36 | skills 127 | faery lists 4 | faeries 16 | shared immutable tables; full skill callbacks pending'
             assert text.count(catalogue) >= 3 and catalogue in text[offset:], 'skill catalogue missing after recreation'
             skill_rows = re.findall(
                 r'Native Ghost skill initialization \| (\S+) \| phases (\d+) \| skills (\d+) \| faeries (\d+) \| null faeries (\d+) \| post (\d+) \| final (\d+) \| update slots (\d+) (\d+) \| updates (\d+) \| arguments (\d+) (\d+) \| Debug (\d+) (\d+) \| VCB (\d+) \| path (\S+) \| retained (\d+)', text)

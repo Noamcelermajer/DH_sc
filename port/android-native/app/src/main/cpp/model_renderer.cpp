@@ -53,6 +53,7 @@
 #include "native_debug_files.hpp"
 #include "native_character_list.hpp"
 #include "native_ghost_skills.hpp"
+#include "native_player_skills.hpp"
 #include "character_ai_update_all_skills.hpp"
 #include "character_skill_state_queries.hpp"
 #include "../../../../../player-info-level/player_manager_host_level.hpp"
@@ -142,6 +143,7 @@ struct NativeCharAIRegistry {
  bool ready=false;
  void clear(){projections.clear();queue_order.clear();by_character.clear();ready=false;}
 } source_char_ai;
+std::shared_ptr<NativeCharAIProjection> prince_source_ai;
 struct SearchWorld {
  dh2::character::aggro_search::RoomRegistry registry{};
  dh2::character::aggro_search::Room room_sentinel{};
@@ -215,8 +217,7 @@ dh2::data::PropertyRules actor_property_rules;
 dh2::data::LevelTables actor_level_tables;
 dh2::data::ClassTables actor_class_tables;
 struct NativeSkillCatalogue {
- dh2::data::SkillTables skills;
- dh2::data::FaeryTables faeries;
+ std::shared_ptr<const dh2::player_skill_tables_adapter::Tables> tables;
  std::vector<std::uint8_t> faery_constants_bytes;
  dh2_pycst_view faery_constants{};
 };
@@ -535,7 +536,7 @@ void initialize_char_ai_registry() {
    throw std::runtime_error("Duplicate native Character-to-CharAI projection");
   ++fresh;
  };
- construct(0x100000001ull,0x300000001ull,nullptr);
+ construct(0x100000001ull,0x300000001ull,&prince_source_ai);
  for(std::size_t i=0;i<world_objects.size();++i)if(world_objects[i].kind==1) {
   const auto identity=0x100000002ull+i;ObjectActor* actor=nullptr;
   for(auto& group:object_groups)for(auto& entry:group.instances)if(entry.identity==identity)actor=&entry;
@@ -746,7 +747,7 @@ struct NativeMonsterInitialization {
     s.ai->state.active_ais_1c=state->active;s.ai->state.alternate_ais_20=state->pending;
     auto view=dh2::data::property_view(actor_property_rules,s.actor().properties);
     const dh2::native::ghost_skills::Bindings bindings{&s.ai->state,&view,
-     &s.catalogue->skills,&s.catalogue->faeries,&s.script_path,0,&s.catalogue->faery_constants,
+     &s.catalogue->tables->skills(),&s.catalogue->tables->faeries(),&s.script_path,0,&s.catalogue->faery_constants,
      &native_debug->globals(),&native_debug->services(),&s,skills_init_vcb};
     if(s.skills.prepare(bindings,s.last_skills)!=dh2::native::ghost_skills::Status::complete)
      throw std::runtime_error("Native Ghost SetSkillsAndSpells failed");
@@ -1172,6 +1173,19 @@ std::vector<std::uint8_t> read(AAssetManager* assets,const std::string& name,con
   while(done<bytes.size()){const auto got=AAsset_read(a,bytes.data()+done,bytes.size()-done);if(got<=0){AAsset_close(a);throw std::runtime_error("Short asset read");}done+=got;}
   AAsset_close(a);return bytes;
 }
+std::unique_ptr<dh2::native::player_skills::Runtime> prince_skills;
+void initialize_native_player_skills(AAssetManager* assets,bool restore){
+ if(restore&&prince_skills){prince_skills->restore(assets,prince_source_ai.get(),actor_skill_catalogue.get());return;}
+ if(!prince_source_ai||!actor_skill_catalogue)throw std::runtime_error("Native Player skill owners missing");
+ dh2::native::player_skills::Bindings b{};
+ b.character=prince_source_ai->character_identity;b.ai=prince_source_ai->ai_identity;
+ b.ai_lifetime=prince_source_ai;b.tables=actor_skill_catalogue->tables;b.catalogue_lifetime=actor_skill_catalogue;
+ b.rules=&actor_property_rules;b.properties=&prince_combat.properties;b.classes=&actor_class_tables;b.fields=&actor_character_fields;
+ b.design=&actor_design;b.faery_constants=&actor_skill_catalogue->faery_constants;b.coordinator=&prince_character;b.debug=native_debug.get();
+ b.assets=assets;b.read=[](AAssetManager* a,const std::string& path){return read(a,path,"");};
+ std::string error;auto candidate=dh2::native::player_skills::Runtime::create(std::move(b),error);
+ if(!candidate)throw std::runtime_error(error);prince_skills=std::move(candidate);
+}
 GLuint upload(AAssetManager* assets,const std::string& name,std::map<std::string,GLuint>& cache,std::vector<GLuint>& owned){
   auto found=cache.find(name);if(found!=cache.end())return found->second;
   std::vector<std::uint8_t> rgba;unsigned w=1,h=1;
@@ -1235,6 +1249,7 @@ std::vector<std::uint8_t> read_asset(AAssetManager* assets,const std::string& na
 void reset_context(){native_actor_ready=false;clear_actor_world(world_mode||resume_world);search_world.clear();prince_search_projection={};prince_body={};resume_world=resume_world||world_mode;if(world_mode){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}world_mode=false;move_x=move_y=0;draws.clear();images.clear();object_groups.clear();world_objects.clear();prince_locomotion=dh2::actor::BlendedPlayback{};prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;inspected_object=-1;current_scene={};player=dh2::animation::Player{};walk_player=dh2::animation::Player{};level={};program=0;enabled=false;}
 void deactivate(){
  source_camera={};
+ prince_skills.reset();prince_source_ai.reset();source_char_ai.clear();
  // Terminal discard differs from GL recreation: clear every actor copy after
  // retiring timers and tearing down bodies, then release the owning groups.
  std::vector<std::weak_ptr<NativeMonsterInitialization>> retired;
@@ -1753,7 +1768,10 @@ void character_service(void*,dh2::character::State* state,const dh2::character::
 int prince_event(unsigned event,std::uint64_t payload){
  return prince_character.event(event,payload);
 }
-void prince_timer_before(void*,dh2::character::Coordinator&,std::int32_t event,dh2::character::Timer32&,std::uint32_t){
+void prince_timer_before(void*,dh2::character::Coordinator&,std::int32_t event,dh2::character::Timer32& timer,std::uint32_t){
+ // Bounded native composition forwards ScriptTimer to this same skill VM.
+ // Full Player CharAI event/lifecycle routing is still a separate boundary.
+ if(event==0x35&&prince_skills)prince_skills->timer(timer.id);
  // Source Character/AI forwarding must reach the machine even when the AI
  // virtual expired callback is suppressed by the controller lock. Full
  // Prince AIS behavior is pending; its optional callback is not fabricated.
@@ -1981,6 +1999,7 @@ void advance_native_actor(unsigned dt_ms){
  // step. The CharAI frame belongs between these calls; native Ghost AI is not
  // wired yet, so do not report this interim sequence as a complete update.
  if(prince_character.update_timers(dt_ms,0)!=1)throw std::runtime_error("Character timer update failed");
+ if(prince_skills)prince_skills->update();
  for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.spawn_owner){
   auto& character=actor.spawn_owner->character;
   if(character.update_timers(dt_ms,0)<0||character.update_state(dt_ms)<0)
@@ -2127,6 +2146,11 @@ std::string debug_character_hit(const std::string& name,std::uint32_t damage) {
  return "Debug Character hit name not found";
 }
 
+std::string debug_player_skill_cooldown(std::uint32_t delay){
+ if(!world_mode||!native_actor_ready||!prince_skills)return "Player skill cooldown probe rejected";
+ return prince_skills->cooldown_probe(delay);
+}
+
 std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetManager* assets){
   std::vector<Draw> environment;std::vector<GLuint> textures;
   std::vector<ObjectGroup> candidate_groups;
@@ -2135,6 +2159,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
   const auto previous_random=actor_random;
   if(restore&&!object_groups.empty()){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}
   try{
+    if(!restore){prince_skills.reset();prince_source_ai.reset();}
     auto raw=read(assets,"crypt.bdae","worlds");dh2::resources::BresView view{};
     if(dh2_bres_open(&view,raw.data(),raw.size())!=dh2::resources::BresError::ok)throw std::runtime_error("World BRES rejected");
     dh2::world::Level candidate;std::string error;if(!dh2::world::load(view,descriptor,size,candidate,error))throw std::runtime_error(error);
@@ -2144,14 +2169,17 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     const auto class_data=read(assets,"character_classes_pyarray.bin","data"),class_names=read(assets,"character_classes_pyarraynames.bin","data"),class_schema=read(assets,"character_classes_pystructnames.bin","data");dh2::data::ClassTables class_table;
     if(!dh2::data::load_classes({class_data.data(),class_data.size()},{class_names.data(),class_names.size()},{class_schema.data(),class_schema.size()},class_table,error))throw std::runtime_error(error);
     auto skill_catalogue=std::make_shared<NativeSkillCatalogue>();
+    dh2::data::SkillTables decoded_skills;dh2::data::FaeryTables decoded_faeries;
     const auto skill_data=read(assets,"skills_pyarray.bin","data"),skill_names=read(assets,"skills_pyarraynames.bin","data"),skill_schema=read(assets,"skills_pystructnames.bin","data");
     const auto faery_data=read(assets,"faeries_pyarray.bin","data"),faery_names=read(assets,"faeries_pyarraynames.bin","data"),faery_schema=read(assets,"faeries_pystructnames.bin","data");
-    if(!dh2::data::load_skill_tables({skill_data.data(),skill_data.size()},{skill_names.data(),skill_names.size()},{skill_schema.data(),skill_schema.size()},skill_catalogue->skills,error)||
-       !dh2::data::load_faery_tables({faery_data.data(),faery_data.size()},{faery_names.data(),faery_names.size()},{faery_schema.data(),faery_schema.size()},skill_catalogue->faeries,error))throw std::runtime_error(error);
+    if(!dh2::data::load_skill_tables({skill_data.data(),skill_data.size()},{skill_names.data(),skill_names.size()},{skill_schema.data(),skill_schema.size()},decoded_skills,error)||
+       !dh2::data::load_faery_tables({faery_data.data(),faery_data.size()},{faery_names.data(),faery_names.size()},{faery_schema.data(),faery_schema.size()},decoded_faeries,error))throw std::runtime_error(error);
+    skill_catalogue->tables=dh2::player_skill_tables_adapter::Tables::create(std::move(decoded_skills),std::move(decoded_faeries),error);
+    if(!skill_catalogue->tables)throw std::runtime_error(error);
     skill_catalogue->faery_constants_bytes=read(assets,"faeries_pycst.bin","data");
     if(skill_catalogue->faery_constants_bytes.size()>UINT32_MAX||
        dh2_pycst_open(&skill_catalogue->faery_constants,skill_catalogue->faery_constants_bytes.data(),std::uint32_t(skill_catalogue->faery_constants_bytes.size())))throw std::runtime_error("Original Faery constants rejected");
-    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native skill catalogue | skill lists %zu | skills %zu | faery lists %zu | faeries %zu | owned script strings; full skill callbacks pending",skill_catalogue->skills.skill_lists.size(),skill_catalogue->skills.skills.size(),skill_catalogue->faeries.faery_lists.size(),skill_catalogue->faeries.faeries.size());
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native skill catalogue | skill lists %zu | skills %zu | faery lists %zu | faeries %zu | shared immutable tables; full skill callbacks pending",skill_catalogue->tables->skills().skill_lists.size(),skill_catalogue->tables->skills().skills.size(),skill_catalogue->tables->faeries().faery_lists.size(),skill_catalogue->tables->faeries().faeries.size());
     auto design_bytes=read(assets,"design_pycst.bin","data");dh2_pycst_view design_view{};
     if(design_bytes.size()>UINT32_MAX||dh2_pycst_open(&design_view,design_bytes.data(),std::uint32_t(design_bytes.size())))throw std::runtime_error("Original design constants rejected");
     if(!native_debug) {
@@ -2315,7 +2343,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     actor_ai_classification_table={actor_ai_classification_rows.data(),std::uint32_t(actor_ai_classification_rows.size())};
     actor_level_tables=std::move(level_tables);
     actor_class_tables=std::move(class_table);actor_class_rows.clear();actor_class_rows.reserve(actor_class_tables.rows.size());
-    actor_skill_catalogue=std::move(skill_catalogue);
+    if(!restore||!actor_skill_catalogue)actor_skill_catalogue=std::move(skill_catalogue);
     for(const auto& row:actor_class_tables.rows)actor_class_rows.push_back({row.data(),std::uint32_t(row.size())});
     actor_character_fields=character_table.fields;actor_design_bytes=std::move(design_bytes);
     if(dh2_pycst_open(&actor_design,actor_design_bytes.data(),std::uint32_t(actor_design_bytes.size())))throw std::runtime_error("Retained native design owner rejected");
@@ -2348,6 +2376,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       if(native_current_level_range(&difficulty,source_ranges+2*mode,&count)||count!=2)throw std::runtime_error("Owned native Level range source callback failed");}
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Level fields | ordinal %d | hub %d | random %u | difficulty %d | file %s | source ranges %d %d / %d %d / %d %d | viewport owner; GSLevel stack pending",actor_level_fields.level_list_index_3c,actor_level_fields.hub_40,unsigned(actor_level_fields.is_random_e8),actor_level_fields.difficulty_118,actor_level_file.c_str(),source_ranges[0],source_ranges[1],source_ranges[2],source_ranges[3],source_ranges[4],source_ranges[5]);
     initialize_char_ai_registry();
+    initialize_native_player_skills(assets,restore);
     initialize_native_monster_scripts(assets);
     initialize_crypt_script(assets,restore);
     build_search_world();

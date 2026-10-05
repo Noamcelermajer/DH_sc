@@ -184,7 +184,8 @@ def main():
     assert digest(original)==ORIGINAL_SHA
     output.parent.mkdir(parents=True,exist_ok=True)
     sources=[MODULE/'player_skill_tables_adapter.cpp',MODULE/'character_player_skills_preparation_v3.cpp',
-             MODULE/'character_ai_set_skills_and_spells.cpp',MODULE/'character_ai_skill_script_constructor.cpp',MODULE/'character_faery_selection.cpp',
+             MODULE/'character_skill_cooldown_services.cpp',MODULE/'character_ai_set_skills_and_spells.cpp',
+             MODULE/'character_ai_skill_script_constructor.cpp',MODULE/'character_faery_selection.cpp',
              ROOT/'port/game-data/data.cpp',ROOT/'port/game-data/skill_tables.cpp',ROOT/'port/game-data/properties.cpp',
              ROOT/'port/game-data/class_tables.cpp',MODULE/'tests/character_player_skills_preparation_v3.cpp']
     c_source=ROOT/'port/pydata-constants/constants.c';c_header=c_source.with_suffix('.h')
@@ -201,6 +202,7 @@ def main():
         if compiled.returncode:raise RuntimeError(compiled.stdout+compiled.stderr)
     host=json.loads(subprocess.check_output([str(output),str(cache)],text=True))
     assert host['validation']=='PASS' and host['host_cases']==9 and host['guards']>=45 and host['provider_failure_cases']==120
+    assert host.get('timer_field_lease_guards',0)>=10,'retained field18 lease guards missing'
     helper=load_module(ROOT/'port/game-data/tests/run_skill_tables_host.py','actual_skill_decoders')
     py=cache/'data/pydata'
     skill=helper.parse_skills((py/'skills_pyarray.bin').read_bytes(),(py/'skills_pyarraynames.bin').read_bytes())
@@ -228,6 +230,7 @@ def main():
             'scope':'Host base/class property resolution uses maintained cached-sheet APIs. Debug/VM/AIS external effects are explicit controlled providers, not a live player Session. Cache files are read, no giant assets are copied.'}
     args.report.parent.mkdir(parents=True,exist_ok=True);args.report.write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({'validation':'PASS','host_cases':host['host_cases'],'guards':host['guards'],
+                      'timer_field_lease_guards':host['timer_field_lease_guards'],
                       'provider_failure_cases':host['provider_failure_cases'],'original_arm_cases':arm['cases'],
                       'selector_cases':arm['selector_cases'],'mismatches':0}))
 if __name__=='__main__':main()

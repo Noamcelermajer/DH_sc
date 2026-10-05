@@ -4,6 +4,7 @@
 #include <limits>
 #include <map>
 #include <stdexcept>
+#include <utility>
 
 namespace dh2::character_player_skills_preparation_v3 {
 namespace {
@@ -44,6 +45,8 @@ struct Owner::Impl {
     character_faery_selection::Globals faery_globals{};
     source::Services services{};
     bool busy=false;
+    bool prepared=false;
+    std::uint32_t active_timer_leases=0;
 
     Impl(std::shared_ptr<const player_skill_tables_adapter::Tables> t,Inputs i,Services s)
         :tables(std::move(t)),inputs(i),native(std::move(s)) {
@@ -60,6 +63,22 @@ struct Owner::Impl {
         if(l==source::List::skill)return skill_slots;
         if(l==source::List::faery)return faery_slots;
         throw std::invalid_argument("source vector list");
+    }
+    const std::vector<std::uintptr_t>& vector(source::List l) const {
+        if(l==source::List::skill)return skill_slots;
+        if(l==source::List::faery)return faery_slots;
+        throw std::invalid_argument("source vector list");
+    }
+    bool valid_vectors() const noexcept {
+        for(auto list:{source::List::skill,source::List::faery}) {
+            const auto& v=vector(list);
+            const auto& projected=list==source::List::skill?current.skills:current.faeries;
+            const auto* begin=v.capacity()?v.data():nullptr;
+            if(projected.identity!=reinterpret_cast<std::uintptr_t>(&v) || projected.begin!=begin ||
+               projected.end!=(begin?begin+v.size():nullptr) ||
+               projected.capacity!=(begin?begin+v.capacity():nullptr))return false;
+        }
+        return true;
     }
     void sync(source::List l) {
         auto& v=vector(l);auto& out=l==source::List::skill?current.skills:current.faeries;
@@ -236,8 +255,55 @@ struct Owner::Impl {
         return true;
     }
 };
-Owner::Owner(std::unique_ptr<Impl> impl):impl_(std::move(impl)){}
+Owner::Owner(std::shared_ptr<Impl> impl):impl_(std::move(impl)){}
 Owner::~Owner()=default;
+Owner::TimerFieldLease::TimerFieldLease(std::shared_ptr<Impl> impl,std::uintptr_t character) noexcept
+    :impl_(std::move(impl)),character_(character){}
+Owner::TimerFieldLease::TimerFieldLease(TimerFieldLease&& other) noexcept
+    :impl_(std::move(other.impl_)),character_(std::exchange(other.character_,0)){}
+Owner::TimerFieldLease& Owner::TimerFieldLease::operator=(TimerFieldLease&& other) noexcept {
+    if(this!=&other) {
+        release();impl_=std::move(other.impl_);
+        character_=std::exchange(other.character_,0);
+    }
+    return *this;
+}
+Owner::TimerFieldLease::~TimerFieldLease(){release();}
+void Owner::TimerFieldLease::release() noexcept {
+    if(impl_&&impl_->active_timer_leases)--impl_->active_timer_leases;
+    impl_.reset();character_=0;
+}
+bool Owner::TimerFieldLease::slot(std::uintptr_t character,source::List list,
+                                  std::uint32_t index,TimerFieldSlot& output) const noexcept {
+    if(!impl_)return false;
+    const auto& impl=*impl_;
+    if(!impl.prepared||impl.busy||character!=character_||character!=impl.inputs.character||
+       impl.current.owner!=character||!impl.valid_vectors()||
+       (list!=source::List::skill&&list!=source::List::faery))return false;
+    const auto& slots=impl.vector(list);
+    if(index>=slots.size())return false;
+    TimerFieldSlot candidate{};candidate.instance=slots[index];
+    if(candidate.instance) {
+        auto found=impl.instances.find(candidate.instance);
+        if(found==impl.instances.end()||!found->second||
+           found->second->state.identity!=candidate.instance||
+           found->second->state.character!=character||
+           found->second->state.dispatch_table!=constructor::DispatchTable::char_ai_skill_script||
+           candidate.instance>std::numeric_limits<std::uintptr_t>::max()-0x0cu||
+           found->second->arguments.identity!=candidate.instance+0x0cu)return false;
+        auto* field=&found->second->state.last_skill_id_18;Range field_range;
+        if(!range(field,sizeof(*field),alignof(std::int32_t),field_range))return false;
+        candidate.field18=field;
+    }
+    output=candidate;return true;
+}
+std::optional<Owner::TimerFieldLease> Owner::lease_timer_fields(std::uintptr_t character) noexcept {
+    if(!impl_||impl_->busy||!impl_->prepared||impl_->active_timer_leases==UINT32_MAX||
+       character==0||character!=impl_->inputs.character||impl_->current.owner!=character||
+       !impl_->valid_vectors())return std::nullopt;
+    ++impl_->active_timer_leases;
+    return TimerFieldLease(impl_,character);
+}
 std::unique_ptr<Owner> Owner::create(std::shared_ptr<const player_skill_tables_adapter::Tables> tables,
                                    const Inputs& inputs,const Services& services,std::string& error) {
     error.clear();Range p;
@@ -246,30 +312,27 @@ std::unique_ptr<Owner> Owner::create(std::shared_ptr<const player_skill_tables_a
        !valid_properties(inputs.properties) || !services.invoke || !services.faery.get_constant) {
         error="missing/invalid actor, tables, properties or required providers";return {};
     }
-    try{return std::unique_ptr<Owner>(new Owner(std::make_unique<Impl>(std::move(tables),inputs,services)));}
+    try{return std::unique_ptr<Owner>(new Owner(std::make_shared<Impl>(std::move(tables),inputs,services)));}
     catch(const std::exception& e){error=e.what();return {};}
 }
 source::Status Owner::prepare(source::Result* output) {
-    if(!impl_ || impl_->busy || !valid_properties(impl_->inputs.properties) ||
+    if(!impl_ || impl_->busy || impl_->active_timer_leases || !valid_properties(impl_->inputs.properties) ||
        !impl_->valid_output(output))return source::Status::invalid_argument;
     Range out,own;range(output,sizeof(*output),alignof(source::Result),out);
     range(this,sizeof(*this),alignof(Owner),own);
     if(overlap(out,own))return source::Status::invalid_argument;
     if(impl_->current.owner!=impl_->inputs.character)return source::Status::invalid_source_fact;
-    for(auto list:{source::List::skill,source::List::faery}) {
-        const auto& v=impl_->vector(list);const auto& p=list==source::List::skill?impl_->current.skills:impl_->current.faeries;
-        const auto* begin=v.capacity()?v.data():nullptr;
-        if(p.identity!=reinterpret_cast<std::uintptr_t>(&v) || p.begin!=begin ||
-           p.end!=(begin?begin+v.size():nullptr) || p.capacity!=(begin?begin+v.capacity():nullptr))
-            return source::Status::invalid_source_fact;
-    }
+    if(!impl_->valid_vectors())return source::Status::invalid_source_fact;
     if(impl_->current.faery_binding.globals!=&impl_->faery_globals ||
        impl_->current.faery_binding.services!=&impl_->native.faery ||
        impl_->current.faery_binding.full_width_script_names!=&impl_->tables->faery_names())
         return source::Status::invalid_source_fact;
     impl_->busy=true;
     struct End {bool& busy;~End(){busy=false;}}end{impl_->busy};
-    return source::prepare(&impl_->current,&impl_->services,output);
+    impl_->prepared=false;
+    const auto status=source::prepare(&impl_->current,&impl_->services,output);
+    impl_->prepared=status==source::Status::complete;
+    return status;
 }
 source::State& Owner::state(){return impl_->current;}
 const std::vector<std::uintptr_t>& Owner::slots(source::List list)const {

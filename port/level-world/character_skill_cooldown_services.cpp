@@ -25,8 +25,24 @@ bool initial(const dh2_script_value* a,std::uint32_t count,std::uint32_t* result
 }
 bool bind(void* p,Controls& c,Services& s){if(!range(p,sizeof(Services),alignof(Services),c.services)||overlap(c.services,c.result)||(c.have_args&&overlap(c.services,c.args))||(c.have_error&&overlap(c.services,c.error)))return false;s=*static_cast<Services*>(p);return s.character!=0;}
 bool safe_control(void* p,const Controls& c){if(!p)return true;Range r;if(!range(p,sizeof(Services),alignof(Services),r))return false;return !overlap(r,c.result)&&(!c.have_args||!overlap(r,c.args))&&(!c.have_error||!overlap(r,c.error));}
-// -1 malformed returned field: do not write diagnostics which could alias it.
-int get_slot(const Services& s,Controls& c,std::uint32_t kind,std::uint32_t index,Slot& slot){slot={};if(!s.slot||s.slot(s.context,s.character,kind,index,&slot))return 0;if(!slot.instance)return slot.timer_id_18==nullptr?1:-1;return c.field(slot.timer_id_18)?1:-1;}
+// 1 valid field, 0 source-null slot, -1 missing/failed provider, -2 malformed
+// returned field. Keep provider failures distinct from a successful null slot.
+// A malformed field may alias the diagnostic buffer, so that case must not
+// copy an error string through it.
+int get_slot(const Services& s,Controls& c,std::uint32_t kind,std::uint32_t index,Slot& slot){
+    slot={};
+    if(!s.slot)return -1;
+    Slot candidate{};
+    if(s.slot(s.context,s.character,kind,index,&candidate))return -1;
+    if(!candidate.instance){
+        if(candidate.timer_id_18)return -2;
+        slot=candidate;
+        return 0;
+    }
+    if(!c.field(candidate.timer_id_18))return -2;
+    slot=candidate;
+    return 1;
+}
 }
 int skill(void* p,const dh2_script_value* a,std::uint32_t count,dh2_script_value*,std::uint32_t,std::uint32_t* result,char* error,std::size_t size){
     Controls controls;if(!initial(a,count,result,error,size,controls))return -1;
@@ -45,8 +61,10 @@ int skill(void* p,const dh2_script_value* a,std::uint32_t count,dh2_script_value
         if(a[1].type!=0&&a[1].type!=3)return 0;
         if(!number(s,a,value))return failure(error,size,"Skill index second conversion failed");
         const auto index=signed_number(value);if(index<0)return failure(error,size,"Skill index assertion domain unsupported");
-        Slot slot{};const auto found=get_slot(s,controls,0,std::uint32_t(index),slot);if(found<0)return DH2_SCRIPT_REQUIRED_SERVICE_FAILURE;if(!found)return failure(error,size,"Skill slot unavailable");
-        if(!slot.instance)return 0;
+        Slot slot{};const auto found=get_slot(s,controls,0,std::uint32_t(index),slot);
+        if(found==-2)return DH2_SCRIPT_REQUIRED_SERVICE_FAILURE;
+        if(found<0)return failure(error,size,"Skill slot unavailable");
+        if(!found)return 0;
         std::int32_t timer=-1;
         if(a[1].type!=0){if(!number(s,a+1,value))return failure(error,size,"Skill timer number provider unavailable");timer=signed_bits(unsigned_number(value));}
         *slot.timer_id_18=timer;return 0;
@@ -60,7 +78,7 @@ int spell(void* p,const dh2_script_value* a,std::uint32_t count,dh2_script_value
         if(a[0].type!=0){if(!number(s,a,value))return failure(error,size,"Spell timer number provider unavailable");timer=signed_bits(unsigned_number(value));}
         std::uint32_t n;if(!s.list_count||s.list_count(s.context,s.character,1,&n))return failure(error,size,"Spell list unavailable");
         if(n>65536)return failure(error,size,"Spell list exceeds port bound");
-        for(std::uint32_t i=0;i<n;++i){Slot slot{};const auto found=get_slot(s,controls,1,i,slot);if(found<0)return DH2_SCRIPT_REQUIRED_SERVICE_FAILURE;if(!found)return failure(error,size,"Spell slot unavailable");if(slot.instance)*slot.timer_id_18=timer;}
+        for(std::uint32_t i=0;i<n;++i){Slot slot{};const auto found=get_slot(s,controls,1,i,slot);if(found==-2)return DH2_SCRIPT_REQUIRED_SERVICE_FAILURE;if(found<0)return failure(error,size,"Spell slot unavailable");if(found>0)*slot.timer_id_18=timer;}
         return 0;
     } catch(...){return failure(error,size,"Spell cooldown provider failed");}
 }

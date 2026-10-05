@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(dh2_native_app LANGUAGES CXX)
+project(dh2_native_app LANGUAGES C CXX)
 if(NOT EXISTS "${DH2_SOURCE_DIR}/port/engine-textures/CMakeLists.txt")
   message(FATAL_ERROR "DH2_SOURCE_DIR must point at the DH_sc source checkout")
 endif()
@@ -9,8 +9,10 @@ add_subdirectory("${DH2_SOURCE_DIR}/port/engine-animation" "${CMAKE_CURRENT_BINA
 add_subdirectory("${DH2_SOURCE_DIR}/port/engine-skinning" "${CMAKE_CURRENT_BINARY_DIR}/engine-skinning")
 add_subdirectory("${DH2_SOURCE_DIR}/port/engine-camera" "${CMAKE_CURRENT_BINARY_DIR}/engine-camera")
 add_subdirectory("${DH2_SOURCE_DIR}/port/level-world" "${CMAKE_CURRENT_BINARY_DIR}/level-world")
-add_library(dh2_native SHARED native_app.cpp model_renderer.cpp mod_assets.cpp ghost_ai_owner.cpp native_debug_files.cpp native_character_list.cpp native_ghost_skills.cpp native_character_stop.cpp)
+add_library(dh2_native SHARED native_app.cpp model_renderer.cpp mod_assets.cpp ghost_ai_owner.cpp native_debug_files.cpp native_character_list.cpp native_ghost_skills.cpp native_character_stop.cpp
+ native_player_skills.cpp
+ "${DH2_SOURCE_DIR}/port/pydata-names/names.c")
 target_compile_features(dh2_native PRIVATE cxx_std_17)
 target_compile_options(dh2_native PRIVATE -Wall -Wextra -Werror)
 target_link_options(dh2_native PRIVATE -Wl,-z,max-page-size=16384 -Wl,--no-undefined)
-target_link_libraries(dh2_native PRIVATE dh2_engine_textures dh2_engine_camera dh2_level_world android log GLESv2)
+target_link_libraries(dh2_native PRIVATE dh2_engine_textures dh2_engine_camera dh2_level_world dh2_script_runtime android log GLESv2)

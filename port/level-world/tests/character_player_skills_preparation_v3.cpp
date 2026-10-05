@@ -1,4 +1,5 @@
 #include "../character_player_skills_preparation_v3.hpp"
+#include "../character_skill_cooldown_services.hpp"
 extern "C" {
 #include "../../pydata-constants/constants.h"
 }
@@ -10,9 +11,11 @@ extern "C" {
 #include <iterator>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 namespace p=dh2::character_player_skills_preparation_v3;
 namespace k=p::source;
 namespace d=dh2::data;
+namespace cooldown=dh2::character_skill_cooldown_services;
 using Tables=dh2::player_skill_tables_adapter::Tables;
 static_assert(!std::is_copy_constructible<Tables>::value && !std::is_move_constructible<Tables>::value,"stable table owner");
 void check(bool ok,const char* why){if(!ok)throw std::runtime_error(why);}
@@ -27,6 +30,22 @@ void quote(const std::string& text) {
         else if(c<32){const char hex[]="0123456789abcdef";std::cout<<"\\u00"<<hex[c>>4]<<hex[c&15];}
         else std::cout<<char(c);
     }std::cout<<'"';
+}
+struct CooldownBridge {p::Owner* owner; p::Owner::TimerFieldLease* lease;std::uintptr_t character;};
+std::int32_t cooldown_list_count(void* raw,std::uintptr_t character,std::uint32_t kind,std::uint32_t* output) {
+    auto& bridge=*static_cast<CooldownBridge*>(raw);
+    if(!bridge.owner||!bridge.lease||character!=bridge.character||!output||kind>1)return 1;
+    const auto list=kind==0?k::List::skill:k::List::faery;
+    *output=std::uint32_t(bridge.owner->slots(list).size());return 0;
+}
+std::int32_t cooldown_slot(void* raw,std::uintptr_t character,std::uint32_t kind,
+                           std::uint32_t index,cooldown::Slot* output) {
+    auto& bridge=*static_cast<CooldownBridge*>(raw);
+    if(!bridge.lease||!output||kind>1)return 1;
+    p::Owner::TimerFieldSlot source_slot{};
+    const auto list=kind==0?k::List::skill:k::List::faery;
+    if(!bridge.lease->slot(character,list,index,source_slot))return 1;
+    *output={source_slot.instance,source_slot.field18};return 0;
 }
 struct Event {std::uint32_t op;std::string text;std::uint32_t number=0;int argc=-1;std::uintptr_t receiver=0;};
 struct Fixture {
@@ -164,7 +183,7 @@ int main(int argc,char** argv) {try {
     check(d::load_characters(bytes(cr),bytes(cn),bytes(cs),characters,error) && d::load_property_rules(characters,rules,error),error.c_str());
     auto ar=load("character_classes","_pyarray"),an=load("character_classes","_pyarraynames"),as=load("character_classes","_pystructnames");
     d::ClassTables classes;check(d::load_classes(bytes(ar),bytes(an),bytes(as),classes,error),error.c_str());
-    unsigned guards=0,selector_cases=0;
+    unsigned guards=0,selector_cases=0,timer_field_lease_guards=0;
     std::cout<<"{\"validation\":\"PASS\",\"table_counts\":["<<tables->skills().skill_lists.size()<<','<<tables->skills().skills.size()<<','
              <<tables->faeries().faery_lists.size()<<','<<tables->faeries().faeries.size()<<"],\"selectors\":[";
     bool comma=false;for(int raw:{-2147483647,-2,-1,0,1,2,3,4,35,36,127,2147483647}) {
@@ -187,6 +206,116 @@ int main(int argc,char** argv) {try {
             fixture.events.clear();fixture.queries=0;check(fixture.run()==k::Status::complete,"repeat failed");
             check(skills_before==fixture.owner->slots(k::List::skill) && faery_before==fixture.owner->slots(k::List::faery) && !fixture.queries,"repeat rebuilt instances");}
         if(comma){std::cout<<',';}comma=true;fixture.print(name,scenario);++count;
+    }
+    {
+        Fixture f(cache,tables,rules,characters,classes,"KnightPlayerBase");
+        check(!f.owner->lease_timer_fields(f.character),"timer lease available before skill preparation");
+        ++guards;++timer_field_lease_guards;
+        check(f.run()==k::Status::complete,"timer lease source preparation failed");
+        auto lease=f.owner->lease_timer_fields(f.character);
+        check(bool(lease),"prepared owner did not issue timer lease");++timer_field_lease_guards;
+        for(auto list:{k::List::skill,k::List::faery}) {
+            const auto& slots=f.owner->slots(list);bool found_live=false;
+            for(std::uint32_t i=0;i<slots.size();++i)if(slots[i]) {
+                p::Owner::TimerFieldSlot slot{};
+                check(lease->slot(f.character,list,i,slot) && slot.instance==slots[i] && slot.field18,
+                      "retained source instance did not yield its field18");
+                const auto* instance=f.owner->instance(slot.instance);
+                const auto* args=f.owner->instance_arguments(slot.instance);
+                check(instance && instance->identity==slot.instance && instance->character==f.character &&
+                      args && args->identity==slot.instance+0x0cu,
+                      "timer lease changed retained instance/Arguments identity");
+                check(*slot.field18==-1 && instance->last_skill_id_18==-1,
+                      "constructor field18 initial value changed");
+                *slot.field18=std::int32_t(0x135+std::uint32_t(list));
+                check(f.owner->instance(slot.instance)->last_skill_id_18==*slot.field18,
+                      "timer write did not reach the sole retained instance field");
+                found_live=true;++guards;timer_field_lease_guards++;break;
+            }
+            check(found_live,"actual selected player list has no retained source instance");
+            ++timer_field_lease_guards;
+        }
+        CooldownBridge cooldown_bridge{f.owner.get(),&*lease,f.character};
+        cooldown::Services cooldown_services{&cooldown_bridge,f.character,
+            cooldown_list_count,cooldown_slot,nullptr};
+        dh2_script_value skill_args[2]{};skill_args[0].type=3;skill_args[0].number=0;
+        skill_args[1].type=3;skill_args[1].number=37;
+        std::uint32_t cooldown_result=0xffffffffu;char cooldown_error[64]{};
+        check(cooldown::skill(&cooldown_services,skill_args,2,nullptr,0,&cooldown_result,
+                              cooldown_error,sizeof(cooldown_error))==0 && !cooldown_result &&
+              f.owner->instance(f.owner->slots(k::List::skill)[0])->last_skill_id_18==37,
+              "source cooldown service did not mutate retained Skill field18");++timer_field_lease_guards;
+        dh2_script_value spell_args[1]{};spell_args[0].type=3;spell_args[0].number=41;
+        cooldown_result=0xffffffffu;std::memset(cooldown_error,0,sizeof(cooldown_error));
+        check(cooldown::spell(&cooldown_services,spell_args,1,nullptr,0,&cooldown_result,
+                              cooldown_error,sizeof(cooldown_error))==0 && !cooldown_result,
+              "source cooldown service rejected retained Faery slots");
+        for(auto id:f.owner->slots(k::List::faery))if(id)
+            check(f.owner->instance(id)->last_skill_id_18==41,
+                  "source spell cooldown missed a retained Faery field");
+        ++timer_field_lease_guards;
+        const auto& skill_slots=f.owner->slots(k::List::skill);
+        auto empty=std::find(skill_slots.begin(),skill_slots.end(),std::uintptr_t(0));
+        check(empty!=skill_slots.end(),"null skill slot fixture absent");
+        p::Owner::TimerFieldSlot empty_slot{0x123456u,nullptr};
+        check(lease->slot(f.character,k::List::skill,
+                         std::uint32_t(empty-skill_slots.begin()),empty_slot) &&
+              !empty_slot.instance && !empty_slot.field18,
+              "null source slot did not return an empty field view");++timer_field_lease_guards;
+
+        p::Owner::TimerFieldSlot untouched{0x987654u,nullptr};
+        check(!lease->slot(f.character+1,k::List::skill,0,untouched) && untouched.instance==0x987654u &&
+              !untouched.field18,"foreign Character lookup wrote/returned a field");++timer_field_lease_guards;
+        check(!lease->slot(f.character,k::List::none,0,untouched) && untouched.instance==0x987654u &&
+              !untouched.field18,"invalid skill-list kind wrote/returned a field");++timer_field_lease_guards;
+        check(!lease->slot(f.character,k::List::skill,std::uint32_t(skill_slots.size()),untouched) &&
+              untouched.instance==0x987654u && !untouched.field18,
+              "out-of-range skill slot wrote/returned a field");++timer_field_lease_guards;
+        check(!f.owner->lease_timer_fields(f.character+1),"foreign Character acquired timer lease");
+        ++guards;++timer_field_lease_guards;
+
+        const auto original_owner=f.owner->state().owner;f.owner->state().owner^=0x100u;
+        check(!lease->slot(f.character,k::List::skill,0,untouched) && untouched.instance==0x987654u &&
+              !untouched.field18 && !f.owner->lease_timer_fields(f.character),
+              "mutated source owner retained timer access");
+        f.owner->state().owner=original_owner;++guards;++timer_field_lease_guards;
+
+        k::Result blocked;std::memset(&blocked,0xa5,sizeof(blocked));const auto blocked_before=blocked;
+        check(f.owner->prepare(&blocked)==k::Status::invalid_argument &&
+              !std::memcmp(&blocked,&blocked_before,sizeof(blocked)),
+              "prepare invalidated a live timer field lease");++guards;++timer_field_lease_guards;
+
+        auto second=f.owner->lease_timer_fields(f.character);
+        check(bool(second),"second scoped timer lease failed");++timer_field_lease_guards;
+        p::Owner::TimerFieldLease moved(std::move(*second));second.reset();
+        *lease=std::move(moved);
+        p::Owner::TimerFieldSlot after_move{};
+        check(lease->slot(f.character,k::List::skill,0,after_move) && after_move.field18 &&
+              after_move.instance==skill_slots[0],"moved timer lease lost its retained field");
+        ++timer_field_lease_guards;
+        lease.reset();
+        check(f.run()==k::Status::complete,"owner did not recover after timer lease ended");
+        ++guards;++timer_field_lease_guards;
+    }
+    {
+        Fixture f(cache,tables,rules,characters,classes,"KnightPlayerBase");
+        check(f.run()==k::Status::complete,"lease lifetime preparation failed");
+        auto lease=f.owner->lease_timer_fields(f.character);
+        check(bool(lease),"lease lifetime borrow unavailable");++timer_field_lease_guards;
+        const auto& slots=f.owner->slots(k::List::skill);
+        check(!slots.empty()&&slots[0],"lease lifetime retained slot absent");
+        p::Owner::TimerFieldSlot slot{};
+        check(lease->slot(f.character,k::List::skill,0,slot)&&slot.instance==slots[0]&&slot.field18,
+              "lease lifetime field unavailable");
+        auto* field=slot.field18;const auto id=slot.instance;
+        f.owner.reset();
+        p::Owner::TimerFieldSlot after_retire{};
+        check(lease->slot(f.character,k::List::skill,0,after_retire)&&
+              after_retire.instance==id&&after_retire.field18==field&&*field==-1,
+              "lease did not retain original field storage after owner wrapper retirement");
+        *field=0x2468;check(*after_retire.field18==0x2468,
+              "lease lost mutable field after owner wrapper retirement");
+        lease.reset();++timer_field_lease_guards;
     }
     {Fixture f(cache,tables,rules,characters,classes,"KnightPlayerBase");f.reenter=true;check(f.run()==k::Status::complete && f.nested==k::Status::invalid_argument,"busy reentry accepted");++guards;}
     {Fixture f(cache,tables,rules,characters,classes,"KnightPlayerBase");f.mutate_list=true;check(f.run()==k::Status::complete && f.owner->slots(k::List::skill).empty(),"fresh SkillList read lost");++guards;}
@@ -233,6 +362,7 @@ int main(int argc,char** argv) {try {
         check(!retained.expired() && f.run()==k::Status::complete,"Owner did not retain tables");f.verify();
         f.owner.reset();check(retained.expired(),"table retention leaked");++guards;}
     std::cout<<"],\"host_cases\":"<<count<<",\"selector_cases\":"<<selector_cases<<",\"guards\":"<<guards
+             <<",\"timer_field_lease_guards\":"<<timer_field_lease_guards
              <<",\"provider_failure_cases\":"<<failure_cases<<",\"lua_executed\":false,\"native_wired\":false}\n";
     return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

@@ -2,6 +2,7 @@
 #include "player_skill_tables_adapter.hpp"
 #include "../game-data/properties.hpp"
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace dh2::character_player_skills_preparation_v3 {
@@ -34,13 +35,41 @@ struct Inputs {
     std::uint32_t assert_level=0;
 };
 class Owner {
+    struct Impl;
 public:
+    struct TimerFieldSlot {
+        std::uintptr_t instance=0;
+        std::int32_t* field18=nullptr;
+    };
+    // Scoped mutable view into the sole retained CharAISkillScript field at
+    // +0x18. A lease is available only after successful preparation and pins
+    // the Owner against another prepare/reallocation until it is released.
+    // The lease also retains the original instance storage if the Owner
+    // wrapper is retired; returned field pointers remain valid through lease.
+    class TimerFieldLease {
+    public:
+        TimerFieldLease(const TimerFieldLease&)=delete;
+        TimerFieldLease& operator=(const TimerFieldLease&)=delete;
+        TimerFieldLease(TimerFieldLease&&) noexcept;
+        TimerFieldLease& operator=(TimerFieldLease&&) noexcept;
+        ~TimerFieldLease();
+        bool slot(std::uintptr_t character,source::List,std::uint32_t index,
+                  TimerFieldSlot& output) const noexcept;
+        explicit operator bool()const noexcept{return bool(impl_);}
+    private:
+        friend class Owner;
+        TimerFieldLease(std::shared_ptr<Impl>,std::uintptr_t) noexcept;
+        void release() noexcept;
+        std::shared_ptr<Impl> impl_;
+        std::uintptr_t character_=0;
+    };
     static std::unique_ptr<Owner> create(std::shared_ptr<const player_skill_tables_adapter::Tables>,
                                       const Inputs&,const Services&,std::string&);
     ~Owner();
     Owner(const Owner&)=delete;Owner& operator=(const Owner&)=delete;
     Owner(Owner&&)=delete;Owner& operator=(Owner&&)=delete;
     source::Status prepare(source::Result*);
+    std::optional<TimerFieldLease> lease_timer_fields(std::uintptr_t character) noexcept;
     // Provider may update the source owner/active-AIS/assert facts. Vector and
     // faery-binding storage are owned here and must not be replaced or freed.
     source::State& state();
@@ -48,9 +77,8 @@ public:
     const constructor::State* instance(std::uintptr_t)const;
     const Arguments* instance_arguments(std::uintptr_t)const;
 private:
-    struct Impl;
-    explicit Owner(std::unique_ptr<Impl>);
-    std::unique_ptr<Impl> impl_;
+    explicit Owner(std::shared_ptr<Impl>);
+    std::shared_ptr<Impl> impl_;
 };
 // One owning thread. Borrowed Inputs storage and all provider contexts stay
 // live through calls and Owner destruction; do not destroy Owner/reenter its

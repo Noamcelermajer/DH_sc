@@ -158,6 +158,11 @@ public final class MainActivity extends Activity {
                         return;
                     }
                     final int target=intent.getIntExtra("player_target_index",-1);
+                    if("com.example.dh2.DEBUG_PLAYER_SKILL_COOLDOWN".equals(intent.getAction())){
+                        final int delay=intent.getIntExtra("delay_ms",3500);
+                        surface.queueEvent(()->{String report=NativeBridge.debugPlayerSkillCooldown(delay);Log.i("DH2Native","Player skill cooldown command applied | "+report);surface.requestRender();});
+                        return;
+                    }
                     surface.queueEvent(()->{String report=NativeBridge.playerAttack(target);attackDisplayPending=report.equals("Attacking")||attackDisplayPending;Log.i("DH2Native","Player command applied | "+report);show(baseReport+"\n"+report);});
                 }
             };
@@ -166,6 +171,7 @@ public final class MainActivity extends Activity {
             filter.addAction("com.example.dh2.DEBUG_SPAWN_CHARACTER");
             filter.addAction("com.example.dh2.DEBUG_CHARACTER_HIT");
             filter.addAction("com.example.dh2.DEBUG_RELOAD_WORLD");
+            filter.addAction("com.example.dh2.DEBUG_PLAYER_SKILL_COOLDOWN");
             if(Build.VERSION.SDK_INT>=33)registerReceiver(debugAttackReceiver,filter,"android.permission.DUMP",null,Context.RECEIVER_EXPORTED);
             else registerReceiver(debugAttackReceiver,filter,"android.permission.DUMP",null);
         }
