@@ -1,6 +1,8 @@
 #include "../app/src/main/cpp/native_player_profile.hpp"
 #include "character_saved_class_v1.hpp"
 #include "properties.hpp"
+#include "level_tables.hpp"
+#include "world_map_tables.hpp"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -18,11 +20,12 @@ Bytes bytes(const Raw& raw){return {raw.data(),raw.size()};}
 void put(Raw& raw,std::uint32_t value){for(unsigned i=0;i<4;++i)raw.push_back(std::uint8_t(value>>(8*i)));}
 Raw words(std::initializer_list<std::uint32_t> values){Raw out;for(auto v:values)put(out,v);return out;}
 Raw text(const std::string& s){Raw out;put(out,std::uint32_t(s.size()+1));out.insert(out.end(),s.begin(),s.end());out.push_back(0);return out;}
-Raw campaign(const std::string& class_name,const Raw& prop){
- const std::vector<std::pair<std::string,Raw>> sections={
+Raw campaign(const std::string& class_name,const Raw& prop,bool include_level=true){
+ std::vector<std::pair<std::string,Raw>> sections={
   {"PNAM",text("TransportFixture")},{"PLVL",words({17})},{"PCLS",text(class_name)},
   {"PDFL",words({1,2})},{"LNAM",words({0x10002,1,2,3,4,5,6,7,8,9})},
   {"LEPT",words({4,5,6})},{"LUSP",Raw{1,0,1}},{"PROP",prop}};
+ if(!include_level)sections.erase(sections.begin()+1);
  Raw out;put(out,std::uint32_t(sections.size()));
  for(const auto& row:sections){put(out,std::uint32_t(row.second.size()));out.insert(out.end(),row.first.begin(),row.first.end());out.insert(out.end(),row.second.begin(),row.second.end());}
  return out;
@@ -43,6 +46,15 @@ int main(int argc,char** argv){try{
  profile::Metadata preview;std::int32_t difficulty=0;
  require(preview.load(0,dir,table,difficulty,error));require(preview.receipt().loaded&&preview.receipt().field_reads==7&&preview.receipt().file_opens==1);
  require(preview.save().class_id()==id&&preview.save().character()==0&&difficulty==1);
+ // Metadata follows indexed C1 defaults when the optional PLVL reader has
+ // no payload; it does not borrow the blank gameplay Save's level0.
+ write(dir/"dh2_002.savegame",campaign(*knight,prop,false));
+ profile::Metadata no_level;
+ require(no_level.load(2,dir,table,difficulty,error));
+ require(no_level.save().level()==1&&no_level.receipt().level==1);
+ require(no_level.save().class_id()==id&&no_level.save().character()==0);
+ require(no_level.load(2,dir,table,difficulty,error));
+ require(no_level.save().level()==1&&no_level.receipt().file_opens==1);
  PlayerSavegameV1 save;const std::uintptr_t character=UINT64_C(0x12345678000000a1);save.set_character(character);save.set_slot(0);
  PlayerSaveProfileV1 canonical;profile::Transport transport(save,canonical);require(transport.bind({dir,&table,&difficulty,{}},error));
  auto* live_save=&save;auto* loader=&transport.loader();std::int16_t class_cache=-1;
@@ -78,6 +90,71 @@ int main(int argc,char** argv){try{
  require(transport.loader().reached_phase()==std::uint32_t(PlayerSaveLoadOpV1::init_levels)+1&&!save.skills_initialized());
  require(!transport.loader().load(4,error));require(transport.loader().reached_phase()==std::uint32_t(PlayerSaveLoadOpV1::online)+1);
  require(!transport.bind({dir,&table,&difficulty,{lease,{}}},error));
+ // Actual table bindings advance source SG_Load2 to the missing skill provider,
+ // retaining the genuine six arrays. SG_Load4 then consumes LVLS into those
+ // same arrays and stops at the still-unbound online provider.
+ LevelTables levels;WorldMapTables world_map;
+ auto level_data=read(cache/"levels_pyarray.bin"),level_names=read(cache/"levels_pyarraynames.bin"),level_fields=read(cache/"levels_pystructnames.bin");
+ auto map_data=read(cache/"worldmap_pyarray.bin"),map_names=read(cache/"worldmap_pyarraynames.bin"),map_fields=read(cache/"worldmap_pystructnames.bin");
+ require(load_levels(bytes(level_data),bytes(level_names),bytes(level_fields),levels,error));
+ require(load_world_map(bytes(map_data),bytes(map_names),bytes(map_fields),world_map,error));
+ require(levels.levels.size()==51&&world_map.locations.size()==13);
+ require(!transport.bind({dir,&table,&difficulty,{},false,&levels,nullptr},error));
+ Raw lvls;
+ for(unsigned kind=0;kind<2;++kind)for(unsigned d=0;d<3;++d){
+  put(lvls,2);auto name=text(kind?world_map.locations.front().name:levels.levels.front().name);
+  lvls.insert(lvls.end(),name.begin(),name.end());put(lvls,kind?2u:1u);
+  name=text("UnknownModdedLevel");lvls.insert(lvls.end(),name.begin(),name.end());put(lvls,UINT32_MAX);
+ }
+ Raw level_campaign;put(level_campaign,2);put(level_campaign,std::uint32_t(lvls.size()));
+ level_campaign.insert(level_campaign.end(),{'L','V','L','S'});level_campaign.insert(level_campaign.end(),lvls.begin(),lvls.end());
+ Raw travel;for(const auto& value:{std::string("1"),std::string("100000000000000000000000000000001"),std::string("101")}){
+  auto field=text(value);travel.insert(travel.end(),field.begin(),field.end());
+ }
+ put(level_campaign,std::uint32_t(travel.size()));level_campaign.insert(level_campaign.end(),{'F','T','V','L'});
+ level_campaign.insert(level_campaign.end(),travel.begin(),travel.end());
+ write(dir/"dh2_003.savegame",level_campaign);
+ PlayerSavegameV1 saved_levels;saved_levels.set_slot(3);PlayerSaveProfileV1 level_profile;
+ profile::Transport levels_transport(saved_levels,level_profile);
+ require(levels_transport.bind({dir,&table,&difficulty,{},false,&levels,&world_map},error));
+ require(!levels_transport.loader().load(2,error));
+ require(levels_transport.loader().reached_phase()==std::uint32_t(PlayerSaveLoadOpV1::init_skills)+1);
+ require(!saved_levels.skills_initialized()&&level_profile.identity);
+ std::array<const std::int32_t*,6> arrays{};unsigned defaults=0;
+ for(unsigned d=0;d<3;++d){
+  auto* a=saved_levels.source_level_states(d);auto* b=saved_levels.source_world_map_states(d);
+  require(a->count==51&&b->count==13&&a->words&&b->words);
+  arrays[d*2]=a->words;arrays[d*2+1]=b->words;
+  for(unsigned row=0;row<a->count;++row){require(a->words[row]==levels.levels[row].level_state);++defaults;}
+  for(unsigned row=0;row<b->count;++row){require(b->words[row]==world_map.locations[row].state);++defaults;}
+ }
+ require(defaults==192);
+ require(!levels_transport.loader().load(4,error));
+ require(levels_transport.loader().reached_phase()==std::uint32_t(PlayerSaveLoadOpV1::online)+1);
+ for(unsigned d=0;d<3;++d){
+  auto* a=saved_levels.source_level_states(d);auto* b=saved_levels.source_world_map_states(d);
+  require(a->words==arrays[d*2]&&b->words==arrays[d*2+1]);
+  require(a->words[0]==1&&b->words[0]==2);
+ }
+ require(levels_transport.receipt().file_opens==1);
+ unsigned offline_queries=0;
+ // Declared host-only source-global fixture: online=false. All file/section
+ // readers still execute production code. This synthetic profile has no
+ // inventory/quest/skill payload; successful mask4 is not a gameplay proof.
+ PlayerSaveLoadServicesV1 offline_fixture{lease,[&](const PlayerSaveLoadRequestV1& q,PlayerSaveLoadResponseV1& r,std::string&){
+  require(q.save==&saved_levels&&q.operation==PlayerSaveLoadOpV1::online);++offline_queries;r.flag=false;return true;
+ }};
+ require(levels_transport.bind({dir,&table,&difficulty,offline_fixture,false,&levels,&world_map},error));
+ require(levels_transport.loader().load(4,error));require(offline_queries==2);
+ require(*saved_levels.source_fast_travel_bits(0)==std::array<std::uint32_t,2>{{1,0}});
+ require(*saved_levels.source_fast_travel_bits(1)==std::array<std::uint32_t,2>{{1,1}});
+ require(*saved_levels.source_fast_travel_bits(2)==std::array<std::uint32_t,2>{{5,0}});
+ require(levels_transport.bind({dir,&table,&difficulty,{},false,&levels,&world_map},error));
+ require(!levels_transport.loader().load(2,error));
+ require(saved_levels.source_level_states(0)->words[0]==1&&saved_levels.source_world_map_states(0)->words[0]==2);
+ require(levels_transport.bind({},error));
+ require(!levels_transport.loader().load(4,error));
+ require(levels_transport.loader().reached_phase()==std::uint32_t(PlayerSaveLoadOpV1::load_section)+1);
  // Slot -1 has the original no-file SG_Load(1) branch and fallback writeback.
  PlayerSavegameV1 blank;blank.set_character(character);PlayerSaveProfileV1 empty;profile::Transport blank_transport(blank,empty);
  auto* blank_save=&blank;auto* blank_loader=&blank_transport.loader();std::int16_t blank_cache=-1;
@@ -90,6 +167,6 @@ int main(int argc,char** argv){try{
  write(dir/"dh2_001.savegame",words({UINT32_MAX}));require(!rejected.loader().load(1,error));require(!bad_profile.identity&&bad.class_id()==-1);
  write(dir/"dh2_001.savegame",campaign(*knight,prop));require(rejected.loader().load(1,error));
  require(bad_profile.identity&&bad.class_id()==id&&rejected.receipt().file_opens==2);
- std::cout<<"{\"validation\":\"PASS\",\"checks\":"<<checks<<",\"character_class\":"<<id<<",\"saved_properties_written\":"<<stored<<",\"distinct_preview_gameplay_owners\":true,\"source_class_loader_calls\":2,\"scope\":\"selected-library host composition; native startup association and complete InitPost remain unbound\"}\n";
+ std::cout<<"{\"validation\":\"PASS\",\"checks\":"<<checks<<",\"character_class\":"<<id<<",\"saved_properties_written\":"<<stored<<",\"saved_level_defaults\":"<<defaults<<",\"same_six_saved_arrays\":true,\"distinct_preview_gameplay_owners\":true,\"source_class_loader_calls\":2,\"scope\":\"selected-library host composition; native startup association and complete InitPost remain unbound\"}\n";
  return 0;
  }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

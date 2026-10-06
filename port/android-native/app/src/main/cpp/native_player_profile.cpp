@@ -2,6 +2,11 @@
 #include "player_profile_filename_v1.hpp"
 #include "player_profile_create_v1.hpp"
 #include "data.hpp"
+#include "level_tables.hpp"
+#include "world_map_tables.hpp"
+#include "player_saved_level_states_v1.hpp"
+#include "player_saved_fast_travel_v1.hpp"
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <map>
@@ -40,6 +45,42 @@ struct Transport::Impl {
   receipt.sections=profile.campaign?std::uint32_t(profile.campaign.source_sections().size()):0;
  }
  bool continue_load(const data::PlayerSaveLoadRequestV1& q,data::PlayerSaveLoadResponseV1& response,std::string& error){
+  using Op=data::PlayerSaveLoadOpV1;
+  if(q.operation==Op::load_section&&q.section&&!std::strcmp(q.section,"FTVL")){
+   namespace travel=data::player_saved_fast_travel_v1;
+   travel::Runtime reader(&save);travel::Result result;
+   return reader.load(q.profile.campaign.payload(q.section),&result,error)==travel::Status::complete;
+  }
+  if(bindings.levels&&bindings.world_map){
+   if(q.operation==Op::init_levels){
+    data::SavedLevelStateServicesV1 tables{this,
+     [](void* raw,data::SavedStateTableV1 kind,std::uint32_t* count,std::string& e){
+      const auto& b=static_cast<Impl*>(raw)->bindings;
+      const auto size=kind==data::SavedStateTableV1::levels?b.levels->levels.size():b.world_map->locations.size();
+      if(size>65536){e="actual level-state table exceeds native bound";return false;}
+      *count=std::uint32_t(size);return true;
+     },
+     [](void* raw,data::SavedStateTableV1 kind,std::uint32_t row,std::int32_t* word,std::string& e){
+      const auto& b=static_cast<Impl*>(raw)->bindings;
+      if(kind==data::SavedStateTableV1::levels){
+       if(row<b.levels->levels.size()){*word=b.levels->levels[row].level_state;return true;}
+      }else if(data::read_world_map_default_word(*b.world_map,row,*word))return true;
+      e="actual level-state default row unavailable";return false;
+     },
+     {nullptr,[](void*,std::size_t size,int tag)->void*{return tag==0?std::malloc(size):nullptr;},
+       [](void*,void* memory){std::free(memory);}}};
+    return save.initialize_level_states(tables,error);
+   }
+   if(q.operation==Op::load_section&&q.section&&!std::strcmp(q.section,"LVLS")){
+    namespace states=data::player_saved_level_states_v1;
+    // Valid stores need no assertion global. Reached assertion branches reject
+    // explicitly until the genuine global/logger binds; no mode is invented.
+    states::TableBindings tables{bindings.levels,bindings.world_map};
+    states::Runtime reader({&save,states::table_services(tables)});
+    states::Result result;
+    return reader.load(q.profile.campaign.payload(q.section),&result,error)==states::Status::complete;
+   }
+  }
   const auto services=bindings.continuation;
   if(!services.owner||!services.invoke){error="campaign reached an unbound gameplay/quest provider";return false;}
   return services.invoke(q,response,error);
@@ -93,6 +134,7 @@ Transport::~Transport()=default;
 bool Transport::bind(TransportBindings bindings,std::string& error){
  if(impl_->active){error="cannot rebind campaign transport during delivery";return false;}
  if(bool(bindings.continuation.owner)!=bool(bindings.continuation.invoke)){error="campaign continuation lease and provider disagree";return false;}
+ if(bool(bindings.levels)!=bool(bindings.world_map)){error="campaign level and WorldMap owners must bind together";return false;}
  impl_->bindings=std::move(bindings);error.clear();return true;
 }
 bool Transport::save_all(std::string& error){
@@ -143,7 +185,11 @@ bool Metadata::load(std::int32_t slot,const std::filesystem::path& directory,con
  auto& s=*impl_;
  if(s.active||slot<0||directory.empty()){error="invalid/reentrant metadata input";return false;}
  if(s.metadata.slot()!=-1&&(s.metadata.slot()!=slot||s.directory!=directory)){error="metadata owner belongs to another selected slot/directory";return false;}
- s.metadata.set_slot(slot);s.directory=directory;s.active=true;s.receipt.loaded=false;
+ // Manage creates +680 through the indexed C1(slot,1,false), whose level
+ // default is 1. A blank Save followed by SetSlot would incorrectly retain
+ // level0 when a valid profile has no PLVL section. Repeat reads reuse C1.
+ if(s.metadata.slot()==-1&&!s.metadata.initialize_new_profile_metadata(slot,error))return false;
+ s.directory=directory;s.active=true;s.receipt.loaded=false;
  struct Guard{Impl& state;~Guard(){std::string unused;state.transport.bind({},unused);state.active=false;}}guard{s};
  if(!s.transport.bind({directory,&characters,&current_difficulty,{}},error))return false;
  if(!s.transport.loader().load(1,error)){s.receipt=s.transport.receipt();return false;}

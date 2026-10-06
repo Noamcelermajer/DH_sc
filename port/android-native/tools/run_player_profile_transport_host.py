@@ -53,13 +53,17 @@ target_link_libraries(profile_transport_audit PRIVATE dh2_level_world dh2_game_d
     reached = [Path(row['file']).resolve() for row in rows]
     required = [source, world/'character_saved_class_v1.cpp', world/'character_template_random.cpp',
                 ROOT/'port/game-data/player_savegame_v1.cpp', ROOT/'port/game-data/player_save_load_owner_v1.cpp',
-                ROOT/'port/game-data/player_profile_index_v1.cpp', ROOT/'port/random/random.c']
+                ROOT/'port/game-data/player_profile_index_v1.cpp', ROOT/'port/game-data/player_save_level_states_v1.cpp',
+                ROOT/'port/game-data/player_saved_level_states_v1.cpp', ROOT/'port/game-data/player_saved_fast_travel_v1.cpp',
+                ROOT/'port/game-data/world_map_tables.cpp', ROOT/'port/random/random.c']
     assert all(reached.count(path.resolve()) == 1 for path in required)
     inputs = actual_dependencies(build, ninja, rows) | {Path(__file__).resolve(), test}
     before = {path.relative_to(ROOT).as_posix(): sha(path) for path in sorted(inputs)}
     cache = args.cache.resolve()
     cache_hashes = {name: sha(cache/name) for name in ['character_properties_pyarray.bin',
-        'character_properties_pyarraynames.bin', 'character_properties_pystructnames.bin']}
+        'character_properties_pyarraynames.bin', 'character_properties_pystructnames.bin',
+        'levels_pyarray.bin','levels_pyarraynames.bin','levels_pystructnames.bin',
+        'worldmap_pyarray.bin','worldmap_pyarraynames.bin','worldmap_pystructnames.bin']}
     print(f'Clean rebuild and composition from {len(before)} selected project inputs', flush=True)
     logs.append(run([cmake, '--build', build, '--target', 'profile_transport_audit', '--clean-first', '--parallel', '2']))
     dsos = sorted(build.rglob('*.dll'))
@@ -90,7 +94,7 @@ target_link_libraries(profile_transport_audit PRIVATE dh2_level_world dh2_game_d
             Path(row['file']).resolve().relative_to(ROOT).as_posix() for row in rows},
         'selected_commands': commands, 'wrapper_cmake': body, 'build_stdout': logs,
         'binary_sha256': {path.relative_to(out).as_posix(): sha(path) for path in [executable, *dsos]},
-        'scope': 'Native I/O adapter + selected source Save index/mask1/class/PROP composition, distinct preview/gameplay owners, cached no-file fallback, strict missing/corrupt primary rejection, explicit unavailable gameplay providers. Does not establish source player registration, InitPost/mask2/mask4 completion or live gameplay.'}
+        'scope': 'Native I/O adapter + selected source Save index/mask1/class/PROP and InitLevelStates/LVLS/FTVL composition over actual 51-level/13-location table owners, 192 defaults and the same six arrays/bitset words. Synthetic mask4 uses a declared offline-global fixture and absent inventory/quest/skill payloads. Distinct preview/gameplay owners, cached no-file fallback, strict missing/corrupt primary rejection, explicit unavailable gameplay providers. Does not establish full native InitPost/mask2/mask4 completion or live gameplay.'}
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, indent=2)+'\n', encoding='utf-8')
     print(json.dumps({'validation': 'PASS', 'host': host, 'project_inputs': len(before)}))

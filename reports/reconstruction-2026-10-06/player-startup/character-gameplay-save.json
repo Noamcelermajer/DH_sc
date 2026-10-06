@@ -1,0 +1,371 @@
+{
+  "validation": "PASS",
+  "host": {
+    "validation": "PASS",
+    "host_cases": 33,
+    "checks": 95
+  },
+  "original_comparison": {
+    "validation": "PASS",
+    "comparisons": 46,
+    "mismatches": 0,
+    "executed_pinned_words": 40,
+    "providers": [
+      "allocate0x198/tag0",
+      "blank Save constructor",
+      "InitPost virtual1c",
+      "fresh InitFinal virtual58",
+      "whole PlayerSavegame SG_Load"
+    ],
+    "records": [
+      {
+        "operation": 0,
+        "argument": 0,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 0,
+        "argument": 0,
+        "present": 0,
+        "mutation": 1,
+        "matched": true
+      },
+      {
+        "operation": 0,
+        "argument": 0,
+        "present": 0,
+        "mutation": 2,
+        "matched": true
+      },
+      {
+        "operation": 0,
+        "argument": 0,
+        "present": 0,
+        "mutation": 3,
+        "matched": true
+      },
+      {
+        "operation": 0,
+        "argument": 0,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 0,
+        "argument": 0,
+        "present": 1,
+        "mutation": 1,
+        "matched": true
+      },
+      {
+        "operation": 0,
+        "argument": 0,
+        "present": 1,
+        "mutation": 2,
+        "matched": true
+      },
+      {
+        "operation": 0,
+        "argument": 0,
+        "present": 1,
+        "mutation": 3,
+        "matched": true
+      },
+      {
+        "operation": 1,
+        "argument": 0,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 1,
+        "argument": 0,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 1,
+        "argument": 1,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 1,
+        "argument": 1,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 1,
+        "argument": 4294967295,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 1,
+        "argument": 4294967295,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 1,
+        "argument": 2147483648,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 1,
+        "argument": 2147483648,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 1,
+        "argument": 2147483647,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 1,
+        "argument": 2147483647,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 2,
+        "argument": 0,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 2,
+        "argument": 0,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 2,
+        "argument": 1,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 2,
+        "argument": 1,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 2,
+        "argument": 4294967295,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 2,
+        "argument": 4294967295,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 2,
+        "argument": 2147483648,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 2,
+        "argument": 2147483648,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 2,
+        "argument": 2147483647,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 2,
+        "argument": 2147483647,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 3,
+        "argument": 0,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 3,
+        "argument": 0,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 3,
+        "argument": 1,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 3,
+        "argument": 1,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 3,
+        "argument": 4294967295,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 3,
+        "argument": 4294967295,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 3,
+        "argument": 2147483648,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 3,
+        "argument": 2147483648,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 3,
+        "argument": 2147483647,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 3,
+        "argument": 2147483647,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 4,
+        "argument": 0,
+        "present": 0,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 4,
+        "argument": 0,
+        "present": 0,
+        "mutation": 1,
+        "matched": true
+      },
+      {
+        "operation": 4,
+        "argument": 0,
+        "present": 0,
+        "mutation": 2,
+        "matched": true
+      },
+      {
+        "operation": 4,
+        "argument": 0,
+        "present": 0,
+        "mutation": 3,
+        "matched": true
+      },
+      {
+        "operation": 4,
+        "argument": 0,
+        "present": 1,
+        "mutation": 0,
+        "matched": true
+      },
+      {
+        "operation": 4,
+        "argument": 0,
+        "present": 1,
+        "mutation": 1,
+        "matched": true
+      },
+      {
+        "operation": 4,
+        "argument": 0,
+        "present": 1,
+        "mutation": 2,
+        "matched": true
+      },
+      {
+        "operation": 4,
+        "argument": 0,
+        "present": 1,
+        "mutation": 3,
+        "matched": true
+      }
+    ]
+  },
+  "selected_commands": [
+    {
+      "directory": "C:/Users/noamc/Documents/Codex/.checks/local-selection-selected/build",
+      "command": "C:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_level_world_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/level-world/../adam-script-runtime/lua -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/level-world -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/engine-skinning -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/engine-animation -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/scene-materials -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/adam-script-runtime -isystem C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/physics-backend/box2d-2.0.1/Include -O1 -Wall -Wextra -fno-fast-math -ffp-contract=off -o selected-world\\CMakeFiles\\dh2_level_world.dir\\character_gameplay_save_v1.cpp.obj -c C:\\Users\\noamc\\Documents\\Codex\\2026-10-02\\contineu-from-where-they-left-off\\work\\DH_sc\\port\\level-world\\character_gameplay_save_v1.cpp",
+      "file": "C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/level-world/character_gameplay_save_v1.cpp",
+      "output": "C:/Users/noamc/Documents/Codex/.checks/local-selection-selected/build/selected-world/CMakeFiles/dh2_level_world.dir/character_gameplay_save_v1.cpp.obj"
+    }
+  ],
+  "source_sha256": {
+    "port/level-world/character_gameplay_save_v1.hpp": "f75ea71121306bd89071ec56fedc4dc576cd1df8f303d21e8d5b02c2c7b30d7c",
+    "port/level-world/character_gameplay_save_v1.cpp": "16964ea5a365f11ab4a3d284b45b1fb06129192f764da8906d7e8b796794bfbf",
+    "port/level-world/tests/character_gameplay_save_v1.cpp": "0b397a5007229c3b7be2f5bcd182d262a4ff9f4ade278fe080f3e355c4b3f44e",
+    "port/level-world/tests/run_character_gameplay_save_v1.py": "6deb6ff6095ea3a514f779842a8dc6bc781b0fec6a52d519f47be1b76b5352f6",
+    "port/level-world/reference/character-gameplay-save-v1/original-functions.json": "c53fbd69c4143a435b7fe6e28d402c7055b1bd087ad54ccc650e6749070c5930"
+  },
+  "binary_sha256": {
+    "gameplay_save_host.exe": "1d748232ce2a289cbdfd7ee1cdda23a5991d1091e6cb61ed884f70bfbf0ea0ec",
+    "libdh2_script_runtime.dll": "23c02d2863a887ae4740aaab6946f6ba68e23c1c32376a17fa7022d17234e78b",
+    "libdh2_engine_animation.dll": "d0f17fa3bfbcc3a0a368861b99db1a93cc4396c351eabc33943097cce60cf173",
+    "libdh2_scene_materials.dll": "bb8a90fcfaf0b8a924e54865c326cc377591da0ce02317306f948182393f6d86",
+    "libdh2_engine_skinning.dll": "df74e140a18b7aba384a8a17b32099f6a20feced7c30160e03d79fd9522ca9fd",
+    "libdh2_game_data.dll": "03d6a96d38c88550692d57e77429ab0b5668b1ffb0069702fcc3d2b9fbadc8aa",
+    "libdh2_level_world.dll": "eff1e24f660dff55ddda065f895c02fde4086adda759eefdf3257f7a52449153"
+  },
+  "scope": "Five complete Character save/InitAll wrappers against pinned original ARM.\nAllocation, blank Save construction, InitPost/InitFinal virtuals and SG_Load\nare named providers; their bodies are not credited by this caller comparison.\nThe native SG_Load wrapper invokes its actual selected PlayerSaveLoadOwner.\n",
+  "native_wired": false
+}

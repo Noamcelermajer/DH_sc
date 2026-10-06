@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+namespace dh2::data {struct LevelTables;struct WorldMapTables;}
 namespace dh2::native::player_profile {
 struct Receipt {
  std::int32_t slot=-1,character_class=-1,level=0,difficulty=0;
@@ -22,6 +23,10 @@ struct TransportBindings {
  // construct a real empty profile; existing primaries reject. Metadata's
  // read-only import always leaves this false.
  bool create_new=false;
+ // Optional pair borrowed from the world's actual retained data owners.
+ // Reached InitLevelStates/LVLS use the same gameplay Save's six arrays.
+ const data::LevelTables* levels=nullptr;
+ const data::WorldMapTables* world_map=nullptr;
 };
 // One retained LoadOwner over a caller's existing Save and canonical +8
 // profile slot. The transport owns I/O/callback backing only. It creates no

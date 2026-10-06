@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.22)
 project(dh2_game_data LANGUAGES C CXX)
 add_library(dh2_game_data SHARED data.cpp items.cpp animation_bank.cpp animation_tables.cpp animation_selection.cpp animation_scheduler.cpp class_tables.cpp properties.cpp vitals.cpp combat.cpp combat_events.cpp combat_result.cpp health.cpp combat_application.cpp aggro.cpp ai.cpp)
 target_compile_features(dh2_game_data PUBLIC cxx_std_17)
-target_sources(dh2_game_data PRIVATE level_tables.cpp class_preview_setup.cpp player_profile_create_v1.cpp)
+target_sources(dh2_game_data PRIVATE level_tables.cpp world_map_tables.cpp class_preview_setup.cpp player_profile_create_v1.cpp)
 target_sources(dh2_game_data PRIVATE skill_tables.cpp)
-target_sources(dh2_game_data PRIVATE player_savegame_v1.cpp)
+target_sources(dh2_game_data PRIVATE player_savegame_v1.cpp player_save_level_states_v1.cpp player_saved_level_states_v1.cpp player_saved_fast_travel_v1.cpp)
 target_sources(dh2_game_data PRIVATE player_profile_index_v1.cpp player_save_load_owner_v1.cpp
  player_profile_filename_v1.cpp)
 target_sources(dh2_game_data PRIVATE savegame_options_v1.cpp)
@@ -14,6 +14,7 @@ target_sources(dh2_game_data PRIVATE item_instance.cpp loot_tables_v2.cpp
  fresh_inventory_owned_v4.cpp player_gear_effects_v5.cpp)
 target_sources(dh2_game_data PRIVATE item_presentation_v5.cpp loot_power_creation_v7.cpp)
 target_sources(dh2_game_data PRIVATE player_saved_skill_slots_v1.cpp player_equipment_live_services_v1.cpp)
+target_sources(dh2_game_data PRIVATE quest_savegame_v1.cpp)
 target_sources(dh2_game_data PRIVATE player_equipment_queries_live_v1.cpp)
 set_source_files_properties(item_gear_properties_v5.cpp item_power_tables_v5.cpp
  loot_power_resources_v7.cpp item_instance.cpp loot_tables_v2.cpp

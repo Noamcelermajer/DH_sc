@@ -125,9 +125,13 @@ target_sources(dh2_level_world PRIVATE character_level_runtime.cpp character_ini
  ../player-info-level/input_manager_v1.cpp
  ../player-info-level/netstruct_members_v1.cpp ../player-info-level/cnet_player_info_v1.cpp
   ../player-info-level/player_info_record_v1.cpp
+  ../player-info-level/player_info_activity_v1.cpp
+  ../player-info-level/player_add_character_v1.cpp
   ../player-info-level/player_offline_registration_v1.cpp
   ../player-info-level/player_offline_registry_v1.cpp
- player_saved_inventory_v1.cpp character_saved_class_v1.cpp character_template_random.cpp)
+  ../player-info-level/player_manager_friendly_v1.cpp
+  ../player-info-level/player_metadata_prepare_v1.cpp
+ player_saved_inventory_v1.cpp character_saved_class_v1.cpp character_gameplay_save_v1.cpp character_init_final_v1.cpp character_template_random.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_update_all_skills.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_set_skills_and_spells.cpp
  character_faery_selection.cpp character_ai_skill_script_constructor.cpp

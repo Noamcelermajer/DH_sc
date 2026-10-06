@@ -5,19 +5,20 @@ Updated: 2026-10-06. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Verified APK:** [menu/class/Crypt prerelease](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-06/DH2-native-menu-crypt-2026-10-06.apk).
-Release/source tag: `native-menu-crypt-2026-10-06` on this reconstruction branch.
-APK: 152,827,608 bytes; SHA-256 `1487a1e014eb3f78e9f75072b91ae7052250cf1401ee1fd576ad14790b787a6b`.
-[Matching build input capture](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-06/DH2-native-menu-crypt-source-capture-2026-10-06.zip): 1,220 compiler inputs per ABI,
-1,271 captured source/build files; ARM64 and x86_64 compile, all 22 ELF64
+**Verified APK:** [menu/class/Crypt player-startup prerelease](https://github.com/Noamcelermajer/DH_sc/releases/download/native-player-startup-2026-10-06/DH2-native-player-startup-2026-10-06.apk).
+Release/source tag: `native-player-startup-2026-10-06` on this reconstruction branch.
+APK: 154,190,373 bytes; SHA-256 `7af1cc1bf745a8634ae1f8162888b4da4c1af0945ad30910c2a7df359420083b`.
+[Matching build input capture](https://github.com/Noamcelermajer/DH_sc/releases/download/native-player-startup-2026-10-06/DH2-native-player-startup-source-capture-2026-10-06.zip): 1,254 compiler inputs per ABI,
+1,305 captured source/build files; ARM64 and x86_64 compile, all 22 ELF64
 libraries and APK ZIP entries are 16 KiB aligned.
 
 Original menu → name/class selection → real Single Player screen → Crypt runs
 for Warrior, Rogue and Mage on API37/16KiB. Original HP/MP/XP bars, occupied-slot
-restart, Back and Home/resume pass. Player death/pose/skills/regen regressions
-pass on this exact APK. Crypt uses a development continuation; full original
+restart, Back and Home/resume pass. Visible joystick delivers physical movement
+and the attack button delivers input. Death/pose and skill/buff regressions pass
+on this APK. Crypt uses a development continuation; full original
 startup, campaign saves, inventory/equipment and HUD controls remain open.
-[Evidence](../reports/reconstruction-2026-10-06/menu-crypt/validation.json).
+[Evidence](../reports/reconstruction-2026-10-06/player-startup/validation.json).
 
 ## How to read this checklist
 
@@ -41,15 +42,15 @@ still require live gameplay integration. All final completion gates remain open.
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
-| Character properties, equipment and state | 23 | 6 |
+| Character properties, equipment and state | 29 | 6 |
 | Lua, skills and enemy AI | 48 | 14 |
 | Combat, death, loot and progression | 7 | 7 |
-| Quests, campaign, UI, audio and saves | 10 | 10 |
+| Quests, campaign, UI, audio and saves | 15 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **138** | **73** |
+| **Total scoped tasks** | **149** | **73** |
 
-Latest source gate: [offline player registration](../reports/reconstruction-2026-10-06/offline-player-registration/validation.json): 440 ARM caller comparisons, 72 failure/reentry cases and 68 selected integration checks. Both Android ABIs compile with 16 KiB alignment; live Warrior menu/Crypt/restart/Back/Home passes on the new APK. Controller registration now precedes authored slot assignment to the canonical map. Character660, SG_Load2/4/InitPost, equipment/text/Skin, full combat/skills/AI and persistent campaign remain open. Earlier three-class proof: [full PlayerInfo backing](../reports/reconstruction-2026-10-06/player-info-record/validation.json). Published APK remains [Original menu/classes/Crypt](../reports/reconstruction-2026-10-06/menu-crypt/validation.json). [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
+Latest source gate: [player startup/save backbone](../reports/reconstruction-2026-10-06/player-startup/validation.json): canonical managed metadata is live; selected transport passes 522 checks with 192 actual saved defaults and one set of six arrays/fast-travel words. QuestSavegame ownership, Character save wrappers and InitFinal callers are selected and host-tested. Character660, full SG_Load2/4/InitPost, inventory/text/Skin and the complete encounter/campaign remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -198,6 +199,13 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select original GEAR reader over the same V4/property/presentation graph: 19 original cases across three classes, six cached items/one power, 2,495 checks and both Android ABI builds pass. Native SG_Load4/InitPost remains open.
 - [ ] Retain powered equipment split remainders through callback failure and retire presentation before item destruction.
 
+- [x] Select PlayerInfo activity/SetState: 3,716 ARM comparisons; offline activity and state member remain distinct.
+- [x] Select friendly-ID/player selectors: 308 ARM comparisons and 344 failure prefixes over the canonical registry.
+- [x] Select whole `_AddCharacter`: 277 ARM comparisons and 88 native failure checks; genuine spawn/InitAll providers remain unbound.
+- [x] Connect bounded normal managed metadata to registered menu players: 245 ARM comparisons, 46 composition checks and three live class flows. Class/level/name use the same Record and Save680.
+- [x] Select Character save/InitAll wrappers: 46 ARM comparisons and 95 host checks; full InitPost remains required.
+- [x] Select Character::InitFinal: 260 ARM comparisons and 803 host checks; real lighting/AI/skills/save providers remain required.
+
 ## 6. Lua, skills and enemy AI — current implementation focus
 
 - [x] Reuse source-built float32 Lua and preserve native pointer identities without numeric narrowing.
@@ -334,6 +342,12 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [ ] Support original-save import where its data format is established and compatible.
 - [ ] Verify saves after process death, cold launch, app update and interrupted writes.
 - [ ] Validate every authored/generated level and complete the full campaign playthrough.
+
+- [x] Select `_InitLevelStates`: 670 ARM comparisons and 116 native checks; retain one set of six Save arrays.
+- [x] Decode all 13 original WorldMap locations/3 lockers; compare all 16 readers and 192 real LevelList/WorldMap defaults; retain actual tables in Android.
+- [x] Select LVLS and both state setters: 404 ARM comparisons/172 guards; bind real table owners through the native transport.
+- [x] Select FTVL: 249 ARM comparisons/478 guards; same six canonical bitset words, retained early-exit/failure stores; bind native transport reader.
+- [x] Select QuestSavegame constructors/InitQuests/destructor: 220 ARM comparisons/393 guards; borrow canonical act arrays and correct blank Save defaults. Actual Quest providers remain required.
 
 ## 9. Fan modding and source delivery
 

@@ -16,6 +16,7 @@
 #include "player_savegame_v1.hpp"
 #include "savegame_options_v1.hpp"
 #include "level_tables.hpp"
+#include "world_map_tables.hpp"
 #include "level_construction_fields.hpp"
 #include "lua_script_level_queries.hpp"
 #include "properties.hpp"
@@ -68,6 +69,9 @@
 #include "character_saved_class_v1.hpp"
 #include "../../../../../player-info-level/player_local_selection_v1.hpp"
 #include "../../../../../player-info-level/player_info_record_v1.hpp"
+#include "../../../../../player-info-level/player_info_activity_v1.hpp"
+#include "../../../../../player-info-level/player_manager_friendly_v1.hpp"
+#include "../../../../../player-info-level/player_metadata_prepare_v1.hpp"
 #include "../../../../../player-info-level/player_offline_registry_v1.hpp"
 #include "navigation_producers.hpp"
 #include <GLES2/gl2.h>
@@ -256,6 +260,7 @@ dh2::data::PropertyRules actor_property_rules;
 // skill callback. ClearProps(true) seeds it from the current Character owner.
 dh2::data::PropertySheet skill_property_temp{};
 dh2::data::LevelTables actor_level_tables;
+dh2::data::WorldMapTables actor_world_map_tables;
 dh2::data::ClassTables actor_class_tables;
 struct NativeSkillCatalogue {
  std::shared_ptr<const dh2::player_skill_tables_adapter::Tables> tables;
@@ -278,12 +283,20 @@ dh2::character_level_runtime::DesignBinding native_design_binding{};
 std::unique_ptr<dh2::native::debug_files::Backend> native_debug;
 
 struct NativeHostPlayer {
+ struct MetadataEntry {
+  dh2::native::player_profile::Metadata owner;
+  dh2::player_metadata_prepare_v1::SaveRef source{owner.save_identity(),&owner.save()};
+ };
+ // Storage outlives the record factory and all registered/fallback records.
+ // Record+680 refers to the actual Save, not a separately copied receipt.
+ std::map<std::uintptr_t,std::unique_ptr<MetadataEntry>> metadata_owners;
  std::uint64_t change_serial=0;
  // One factory/counter and full stable backing for the source manager+8
  // fallback. Registered gameplay records will borrow this same factory.
  dh2::player_info_record_v1::Factory record_factory{&change_serial,
   {nullptr,[](void*,std::size_t size,int)->void* {return std::malloc(size);},
-   [](void*,void* value) {std::free(value);}}};
+   [](void*,void* value) {std::free(value);}}, {}, this,
+  [](void* raw,std::uintptr_t identity) {return static_cast<NativeHostPlayer*>(raw)->delete_metadata(identity);}};
  dh2::player_info_record_v1::Record fallback;
  dh2::character_level_member::IntMember& level_member=fallback.at(0x310)->header;
  dh2::player_manager_host_level::PlayerInfoProjection player{};
@@ -300,7 +313,15 @@ struct NativeHostPlayer {
  std::int32_t last_slot_8=-1;
  dh2::player_local_selection_v1::SavegameManager save_manager{reinterpret_cast<std::uintptr_t>(&save_manager),&last_slot_8};
  int metadata_slot=-1;
- std::unique_ptr<dh2::native::player_profile::Metadata> metadata;
+ dh2::native::player_profile::Metadata* metadata=nullptr;
+ dh2::player_info_record_v1::Record* metadata_record=nullptr;
+ const dh2::data::CharacterTable* metadata_characters=nullptr;
+ const std::filesystem::path* metadata_directory=nullptr;
+ std::int32_t* metadata_difficulty=nullptr;
+ std::string metadata_error;
+ // Explicit normal-name development domain of the extracted Manage path.
+ // Original Debug/device-name and multiplayer GameState ownership is pending.
+ std::uint8_t debug_name_11=0,game_state_name_28=0;
  std::uint8_t online=0; // Explicit offline development session; no network owner.
  NativeHostPlayer() {
    if(record_factory.construct_record(fallback)!=dh2::player_info_record_v1::Status::complete)
@@ -318,6 +339,98 @@ struct NativeHostPlayer {
  }
  dh2::player_manager_host_level::Services services() {
    return {this,read_online,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr};
+ }
+ dh2::player_info_record_v1::Status delete_metadata(std::uintptr_t identity) {
+  const auto found=metadata_owners.find(identity);
+  if(found==metadata_owners.end())return dh2::player_info_record_v1::Status::missing_provider;
+  if(metadata==&found->second->owner){metadata=nullptr;metadata_record=nullptr;}
+  metadata_owners.erase(found);return dh2::player_info_record_v1::Status::complete;
+ }
+ void select_metadata_slot(int slot) {
+  if(metadata_slot==slot)return;
+  // The development menu may replace a selected session before the complete
+  // original PlayerManager teardown is connected. Retire its real native Save
+  // through the same deleting provider before clearing the borrowed +680.
+  if(metadata_record){
+   auto* record=metadata_record;const auto identity=record->loading_info_680;
+   if(!identity||delete_metadata(identity)!=dh2::player_info_record_v1::Status::complete)
+    throw std::runtime_error("Native selected metadata retirement failed");
+   record->loading_info_680=0;
+  }else if(metadata){
+   if(delete_metadata(metadata->save_identity())!=dh2::player_info_record_v1::Status::complete)
+    throw std::runtime_error("Native preview metadata retirement failed");
+  }
+  metadata_slot=slot;
+ }
+ void load_metadata_preview(const std::filesystem::path& directory,const dh2::data::CharacterTable& characters,std::int32_t& difficulty) {
+  // Retain the existing explicit profile_slot diagnostic import. It never
+  // registers or associates a gameplay PlayerInfo; normal menu Start uses
+  // prepare_metadata below with the actual assigned canonical record.
+  if(!metadata){
+   auto entry=std::make_unique<MetadataEntry>();const auto identity=entry->source.identity;
+   const auto inserted=metadata_owners.emplace(identity,std::move(entry));
+   if(!inserted.second)throw std::runtime_error("Native preview metadata identity already owned");
+   metadata=&inserted.first->second->owner;
+  }
+  if(!metadata->load(metadata_slot,directory,characters,difficulty,metadata_error))
+   throw std::runtime_error("Campaign metadata import failed: "+metadata_error);
+ }
+ void prepare_metadata(const std::filesystem::path& directory,const dh2::data::CharacterTable& characters,std::int32_t& difficulty) {
+  using namespace dh2::player_metadata_prepare_v1;
+  auto queries=locality_services();
+  dh2::player_manager_friendly_v1::Services friendly{&queries,this,
+   [](void* raw,dh2::player_manager_host_level::PlayerInfoProjection* selected,std::int32_t* value)->int {
+    auto* record=static_cast<NativeHostPlayer*>(raw)->record_for(selected);if(!record)return 1;
+    *value=record->internal_id_670;return 0;
+   }};
+  dh2::player_manager_friendly_v1::Result count{},selected{};
+  if(dh2::player_manager_friendly_v1::get_num_players(&registry,&friendly,&count)!=dh2::player_manager_friendly_v1::Status::complete||count.value<1||
+     dh2::player_manager_friendly_v1::get_player(&registry,&friendly,0,0,&selected)!=dh2::player_manager_friendly_v1::Status::complete)
+   throw std::runtime_error("Native friendly player selection failed");
+  auto* record=record_for(selected.player);
+  if(!record||record->save_slot_664!=metadata_slot)throw std::runtime_error("Native metadata selected slot differs from actual PlayerInfo");
+  metadata_characters=&characters;metadata_directory=&directory;metadata_difficulty=&difficulty;metadata_error.clear();
+  struct Guard{NativeHostPlayer& owner;~Guard(){owner.metadata_characters=nullptr;owner.metadata_directory=nullptr;owner.metadata_difficulty=nullptr;}}guard{*this};
+  Services services{};services.context=this;
+  services.is_active=[](void* raw,Record* selected,std::int32_t* value)->int {
+   bool active=false;const dh2::player_info_activity_v1::Services query{raw,read_online};
+   if(dh2::player_info_activity_v1::player_is_active(*selected,query,&active)!=dh2::netstruct_members_v1::Status::complete)return 1;
+   *value=active;return 0;
+  };
+  services.allocate_save=[](void* raw,std::uint32_t bytes,std::uint32_t tag,std::uintptr_t* value)->int {
+   if(bytes!=0x198||tag!=0)return 1;
+   auto& owner=*static_cast<NativeHostPlayer*>(raw);auto entry=std::make_unique<MetadataEntry>();
+   *value=entry->source.identity;return owner.metadata_owners.emplace(*value,std::move(entry)).second?0:1;
+  };
+  services.construct_indexed_save=[](void* raw,std::uintptr_t identity,std::uint32_t slot,std::int32_t mask,bool skip,SaveRef** value)->int {
+   auto& owner=*static_cast<NativeHostPlayer*>(raw);const auto found=owner.metadata_owners.find(identity);
+   if(found==owner.metadata_owners.end()||mask!=1||skip||slot>INT32_MAX||!owner.metadata_characters||!owner.metadata_directory||!owner.metadata_difficulty)return 1;
+   auto& entry=*found->second;
+   if(!entry.owner.load(std::int32_t(slot),*owner.metadata_directory,*owner.metadata_characters,*owner.metadata_difficulty,owner.metadata_error))return 1;
+   *value=&entry.source;return 0;
+  };
+  services.save_by_identity=[](void* raw,std::uintptr_t identity,SaveRef** value)->int {
+   auto& owner=*static_cast<NativeHostPlayer*>(raw);const auto found=owner.metadata_owners.find(identity);
+   if(found==owner.metadata_owners.end())return 1;
+   *value=&found->second->source;return 0;
+  };
+  services.debug_name_11=[](void* raw,std::uint8_t* value)->int {*value=static_cast<NativeHostPlayer*>(raw)->debug_name_11;return 0;};
+  services.game_state_name_28=[](void* raw,std::uint8_t* value)->int {*value=static_cast<NativeHostPlayer*>(raw)->game_state_name_28;return 0;};
+  Runtime runtime(*record,services);Result result{};
+  const auto status=runtime.prepare({},&result);
+  // A later provider/setter failure retains the source +680 publication.
+  // Keep that real lease reachable for explicit selected-session retirement.
+  // No rollback or implicit retry is added to the source Prepare caller.
+  if(record->loading_info_680){
+   const auto found=metadata_owners.find(record->loading_info_680);
+   if(found==metadata_owners.end())throw std::runtime_error("Native managed metadata Save owner missing");
+   metadata=&found->second->owner;metadata_record=record;
+  }
+  if(status!=Status::complete||result.disposition!=Disposition::prepared)
+   throw std::runtime_error("Native managed metadata preparation failed: "+metadata_error);
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native managed metadata | players %d | slot %d | published680 %u | name setters %u | class setters %u | level setters %u | Save %zu | Character660 %zu | bounded normal offline Manage path; spawn/InitPost pending",
+   count.value,record->save_slot_664,result.published_save_writes,result.name_setters,result.class_setters,result.level_setters,
+   std::size_t(record->loading_info_680),std::size_t(record->character_660));
  }
  dh2::player_info_record_v1::Record* record_for(dh2::player_manager_host_level::PlayerInfoProjection* selected) {
   return registry_owner->record(selected);
@@ -1426,8 +1539,8 @@ void mod_directory(std::string directory){mod_root=std::move(directory);}
 void runtime_directory(std::string directory){runtime_root=std::move(directory);if(!native_application.identity)native_application.identity=reinterpret_cast<std::uintptr_t>(&native_application);}
 std::string profile_slot(int slot){
  if(slot < -1)return "Campaign metadata slot rejected";
- if(native_host.metadata_slot!=slot){native_host.metadata.reset();native_host.metadata_slot=slot;}
- return "Campaign metadata slot selected; player registration remains pending";
+ native_host.select_metadata_slot(slot);
+ return "Campaign metadata slot selected";
 }
 bool menu_debug_load(AAssetManager* assets,std::string& error){
  if(!native_debug){
@@ -1500,7 +1613,7 @@ std::string start_menu_game(std::int32_t slot,AAssetManager* assets){
  if(!selected_menu_save_slot(assigned,error))return error;
  if(assigned!=slot)return "Start Game selected slot differs";
  menu_gameplay_slot=assigned;
- try{const auto descriptor=read(assets,"crypt01.dwld","worlds");return load_world(descriptor.data(),descriptor.size(),assets);}
+ try{native_host.select_metadata_slot(assigned);const auto descriptor=read(assets,"crypt01.dwld","worlds");return load_world(descriptor.data(),descriptor.size(),assets);}
  catch(const std::exception& e){return std::string("Start Game failed: ")+e.what();}
 }
 std::vector<std::uint8_t> read_asset(AAssetManager* assets,const std::string& name){return read(assets,name,"");}
@@ -2434,7 +2547,7 @@ void initialize_native_monster_scripts(AAssetManager* assets) {
   throw std::runtime_error("Native managed host Level reconciliation failed");
  std::int32_t host_level=0,host_difficulty=0;
  if(native_host_level(&host_level)||native_host_difficulty(&host_difficulty))throw std::runtime_error("Native host source query failed");
- __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native managed host | Level %d | difficulty %d | property reads %u | member writes %u | skipped unbound %u | canonical record; Character/profile-level producer pending",host_level,host_difficulty,reconciled.property_reads,reconciled.setter_calls,unsigned(reconcile_status==dh2::player_manager_host_level::ReconcileStatus::skipped_unbound_character));
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native managed host | Level %d | difficulty %d | property reads %u | member writes %u | skipped unbound %u | canonical record; Character association pending",host_level,host_difficulty,reconciled.property_reads,reconciled.setter_calls,unsigned(reconcile_status==dh2::player_manager_host_level::ReconcileStatus::skipped_unbound_character));
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native full PlayerInfo | fields %u | factory %u | level %d | class %d | Character660 %zu | slot664 %d | counter %llu | canonical registered; Character association pending",
   host_record->base.network.count,unsigned(native_host.record_factory.registered()),host_record->at(0x310)->header.value,host_record->at(0x360)->header.value,
   std::size_t(host_record->character_660),host_record->save_slot_664,static_cast<unsigned long long>(native_host.change_serial));
@@ -2600,6 +2713,10 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     const auto level_records=read(assets,"levels_pyarray.bin","data"),level_names=read(assets,"levels_pyarraynames.bin","data"),level_schema=read(assets,"levels_pystructnames.bin","data");
     dh2::data::LevelTables level_tables;
     if(!dh2::data::load_levels({level_records.data(),level_records.size()},{level_names.data(),level_names.size()},{level_schema.data(),level_schema.size()},level_tables,error))throw std::runtime_error(error);
+    const auto map_records=read(assets,"worldmap_pyarray.bin","data"),map_names=read(assets,"worldmap_pyarraynames.bin","data"),map_schema=read(assets,"worldmap_pystructnames.bin","data");
+    dh2::data::WorldMapTables world_map_tables;
+    if(!dh2::data::load_world_map({map_records.data(),map_records.size()},{map_names.data(),map_names.size()},{map_schema.data(),map_schema.size()},world_map_tables,error))throw std::runtime_error(error);
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native WorldMap catalogue | locations %zu | lockers %zu | distinct from FastTravelList; gameplay Save state loader pending",world_map_tables.locations.size(),world_map_tables.lockers.size());
     const auto crypt_oid=dh2::data::find_level(level_tables,"GOTHICUS_CRYPT_01");
     if(crypt_oid<0)throw std::runtime_error("Crypt level catalogue row missing");
     const auto& crypt_declaration=level_tables.levels.at(crypt_oid);
@@ -2633,10 +2750,10 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     dh2::animation::Player candidate_idle,candidate_walk;
     if(!candidate_idle.load(idle.data(),idle.size(),rest,error)||!candidate_walk.load(walk.data(),walk.size(),rest,error))throw std::runtime_error(error);
     if(native_host.metadata_slot>=0){
-     if(!native_host.metadata)native_host.metadata=std::make_unique<dh2::native::player_profile::Metadata>();
-     if(!native_host.metadata->load(native_host.metadata_slot,runtime_root,character_table,native_save_difficulty,error))throw std::runtime_error("Campaign metadata import failed: "+error);
+     if(menu_gameplay_slot>=0)native_host.prepare_metadata(runtime_root,character_table,native_save_difficulty);
+     else native_host.load_metadata_preview(runtime_root,character_table,native_save_difficulty);
      const auto& receipt=native_host.metadata->receipt();
-     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native campaign metadata | slot %d | class %d | level %d | difficulty %d | level ID %u | sections %u | reads %u | file opens %u | Save %zu | profile %zu | source mask1 import; gameplay registration/mask4/writes pending",receipt.slot,receipt.character_class,receipt.level,receipt.difficulty,receipt.source_level_id,receipt.sections,receipt.field_reads,receipt.file_opens,std::size_t(native_host.metadata->save_identity()),std::size_t(native_host.metadata->profile_identity()));
+     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native campaign metadata | slot %d | class %d | level %d | difficulty %d | level ID %u | sections %u | reads %u | file opens %u | Save %zu | profile %zu | source mask1; spawn/InitPost/mask4/writes pending",receipt.slot,receipt.character_class,receipt.level,receipt.difficulty,receipt.source_level_id,receipt.sections,receipt.field_reads,receipt.file_opens,std::size_t(native_host.metadata->save_identity()),std::size_t(native_host.metadata->profile_identity()));
     }
     PlayerCombat fresh_player;
     fresh_player.savegame=std::make_shared<dh2::data::PlayerSavegameV1>();
@@ -2645,7 +2762,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     fresh_player.save_profile=std::make_shared<dh2::data::PlayerSaveProfileV1>();
     fresh_player.profile_characters=std::make_shared<dh2::data::CharacterTable>(character_table);
     fresh_player.save_transport=std::make_shared<dh2::native::player_profile::Transport>(*fresh_player.savegame,*fresh_player.save_profile);
-    if(!fresh_player.save_transport->bind({runtime_root,fresh_player.profile_characters.get(),&native_save_difficulty,{}},error))throw std::runtime_error(error);
+    if(!fresh_player.save_transport->bind({runtime_root,fresh_player.profile_characters.get(),&native_save_difficulty,{},false,&actor_level_tables,&actor_world_map_tables},error))throw std::runtime_error(error);
     auto* gameplay_save=fresh_player.savegame.get();auto* gameplay_loader=&fresh_player.save_transport->loader();
     struct ClassificationBacking {const dh2::data::AiTables& tables;std::vector<dh2::character_ai_classification::AiRow> rows;dh2::character_ai_classification::AiTable table;};
     ClassificationBacking classification{ai_tables,{}, {}};
@@ -2801,6 +2918,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     for(const auto& row:actor_ai_tables.rows)actor_ai_classification_rows.push_back({row.flags,row.type});
     actor_ai_classification_table={actor_ai_classification_rows.data(),std::uint32_t(actor_ai_classification_rows.size())};
     actor_level_tables=std::move(level_tables);
+    actor_world_map_tables=std::move(world_map_tables);
     actor_class_tables=std::move(class_table);actor_class_rows.clear();actor_class_rows.reserve(actor_class_tables.rows.size());
     if(!restore||!actor_skill_catalogue)actor_skill_catalogue=std::move(skill_catalogue);
     for(const auto& row:actor_class_tables.rows)actor_class_rows.push_back({row.data(),std::uint32_t(row.size())});

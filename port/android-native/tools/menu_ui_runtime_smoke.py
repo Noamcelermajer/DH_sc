@@ -4,7 +4,8 @@ API37/16KiB emulator only. Campaign profiles stay on the device: originals
 are moved into a private transaction directory before launching, synthetic
 profiles are archived there, and originals are restored in finally. No saves
 or unfiltered Logcat are pulled. Complete NativeStartGame, campaign loading,
-inventory initialization and gameplay controls remain outside this check.
+inventory initialization and full combat remain outside this check. Visible
+development joystick and attack controls are checked for delivered input.
 """
 import argparse
 import hashlib
@@ -46,7 +47,8 @@ SAFE_EVENTS = re.compile(r'(?:Surface resized to |Owned menu (?:renderer selecte
                          r'Menu game start \| slot \d+ \| Crypt \||'
                          r'Connected player HUD submitted \||'
                          r'Native Player AIS (?:initialized|retained) \||'
-                         r'Native offline registration \||Native full PlayerInfo \|)')
+                         r'Native offline registration \||Native full PlayerInfo \||Native managed metadata \||Native WorldMap catalogue \||'
+                         r'Player position [-\d.]|Player input \|)')
 FULL_PLAYER = re.compile(r'Native full PlayerInfo \| fields (\d+) \| factory (\d+) \|'
                          r' level (-?\d+) \| class (-?\d+) \| Character660 (\d+) \|'
                          r' slot664 (-?\d+) \| counter (\d+)')
@@ -54,6 +56,10 @@ ASSIGN = re.compile(r'Native menu slot assigned \| slot (\d+) \| ordinal (\d+) \
                     r' manager stores (\d+) \| player stores (\d+)')
 REGISTRATION = re.compile(r'Native offline registration \| entries (\d+) \| added (\d+) \|'
                           r' controllers (\d+) \| renumber (\d+) \| counter (\d+)')
+MANAGED_METADATA = re.compile(r'Native managed metadata \| players (\d+) \| slot (-?\d+) \|'
+                              r' published680 (\d+) \| name setters (\d+) \| class setters (\d+) \|'
+                              r' level setters (\d+) \| Save (\d+) \| Character660 (\d+)')
+WORLD_MAP = re.compile(r'Native WorldMap catalogue \| locations (\d+) \| lockers (\d+)')
 START = re.compile(r'Authored NativeStartGame request queued \| selected slot (\d+) \|'
                    r' numeric difficulty (\d+) \| requested difficulty (-?\d+)')
 CLASS = re.compile(r'Native gameplay class \| slot (\d+) \| class (\d+) \| preset (\w+)')
@@ -191,7 +197,14 @@ def verify_start(text, slot, character_class, preset, animation_table):
     records = list(FULL_PLAYER.finditer(text))
     assert records and records[-1].start() > starts[0].start(), 'Fresh full PlayerInfo receipt missing'
     record = tuple(map(int, records[-1].groups()))
-    assert record == (33, 1, -1, -1, 0, slot, 39), 'Canonical registered record/defined backing policy differs'
+    assert record == (33, 1, 1, character_class, 0, slot, 45), 'Canonical record must use the selected metadata name/class/level setters'
+    metadata = list(MANAGED_METADATA.finditer(text))
+    assert metadata and starts[0].start() < metadata[-1].start() < classes[-1].start(), 'Managed metadata preparation must precede gameplay class loading'
+    managed = tuple(map(int, metadata[-1].groups()))
+    assert managed[:6] == (1, slot, 1, 1, 1, 1) and managed[6] > 0 and managed[7] == 0, 'Actual metadata Save publication/setters differ'
+    maps = list(WORLD_MAP.finditer(text))
+    assert maps and starts[0].start() < maps[-1].start() < metadata[-1].start(), 'Selected WorldMap decoder must precede metadata preparation'
+    assert tuple(map(int, maps[-1].groups())) == (13, 3), 'Original WorldMap data differs'
     return {'slot': slot, 'class': character_class, 'preset': preset,
             'cached_property2': animation_table, 'assign_before_start': True,
             'numeric_difficulty': True, 'requested_difficulty': 0,
@@ -204,7 +217,11 @@ def verify_start(text, slot, character_class, preset, animation_table):
                                 'temporary_backing_policy': 'zero', 'role': 'local registry'},
             'offline_registration': {'entries': registration[0], 'added': registration[1],
                                      'controllers': registration[2], 'renumber': registration[3],
-                                     'before_authored_assign': True}}
+                                     'before_authored_assign': True},
+            'managed_metadata': {'Save680': managed[6], 'published_once': True,
+                                 'name_class_level_setters': list(managed[3:6]),
+                                 'Character660_pending': True},
+            'world_map': {'locations': 13, 'lockers': 3}}
 
 
 def source_hud_frames(hp, max_hp, mp, max_mp, xp, next_xp):
@@ -357,14 +374,18 @@ def main():
         reply = adb('shell', 'am', 'start', '-n', PACKAGE + '/.MainActivity')
         assert 'Starting: Intent' in reply and 'Error:' not in reply and 'Activity not started' not in reply, 'Fresh launcher start failed'
         deadline = time.monotonic() + 25
-        pid = ''
-        while not pid and time.monotonic() < deadline:
-            pid = adb('shell', 'pidof', PACKAGE, allow_failure=True)
-            if pid == old_pid:
-                pid = ''
-            if not pid:
-                time.sleep(.2)
-        assert re.fullmatch(r'\d+', pid), 'Fresh app process unavailable'
+        pid, candidate, stable = '', '', 0
+        while stable < 2 and time.monotonic() < deadline:
+            observed = adb('shell', 'pidof', PACKAGE, allow_failure=True)
+            if not re.fullmatch(r'\d+', observed) or observed == old_pid:
+                candidate, stable = '', 0
+            else:
+                stable = stable + 1 if observed == candidate else 1
+                candidate = observed
+            time.sleep(.2)
+        assert stable == 2, 'Stable fresh app process unavailable'
+        pid = candidate
+        report.setdefault('fresh_process_receipts', []).append({'pid': pid, 'stable_observations': stable})
         text = wait(lambda t: 'Original front/HUD screen submitted | screen main' in t, 'rendered original main movie')
         assert 'Original front screen loaded | screen main' in text, 'Original movie not loaded'
         wait_focus('fresh launch')
@@ -460,6 +481,33 @@ def main():
         wait(lambda t: 'Original front/HUD screen submitted | screen main' in t[offset:], 'normal Back return to menu')
         visual_ready('main')
 
+    def gameplay_controls():
+        # Operate the actual visible Android controls. This checks delivered
+        # movement and attack input, not complete combat or authored skill UI.
+        wait_focus('Crypt controls')
+        adb('shell', 'uiautomator', 'dump', '/sdcard/dh2-menu-controls-window.xml')
+        nodes = list(ET.fromstring(adb('shell', 'cat', '/sdcard/dh2-menu-controls-window.xml')).iter('node'))
+        def bounds(description):
+            node = next(n for n in nodes if n.get('content-desc') == description)
+            return tuple(map(int, re.findall(r'-?\d+', node.get('bounds'))))
+        left, top, right, bottom = bounds('Movement control')
+        cx, cy = (left+right)//2, (top+bottom)//2
+        prior = len(logs())
+        adb('shell', 'input', '-d', '0', 'swipe', str(cx), str(cy), str(cx), str(cy-(right-left)//3), '900')
+        pattern = re.compile(r'Player position (-?[\d.]+) (-?[\d.]+) (-?[\d.]+) \| moved (\d+) \| blocked (\d+)')
+        text = wait(lambda t: pattern.search(t[prior:]) is not None, 'joystick movement delivery')
+        position = pattern.findall(text[prior:])[-1]
+        assert int(position[3]) > 0, 'Visible joystick produced no physical movement'
+        left, top, right, bottom = bounds('Attack nearby enemy')
+        prior = len(logs())
+        adb('shell', 'input', '-d', '0', 'tap', str((left+right)//2), str((top+bottom)//2))
+        text = wait(lambda t: 'Player input |' in t[prior:], 'visible attack button delivery')
+        response = re.findall(r'Player input \| ([^\r\n]+)', text[prior:])[-1]
+        assert response in ('Attacking', 'Walk closer to an enemy', 'Attack is cooling down', 'Attack is already in progress'), 'Attack control rejected available player'
+        report['development_controls'] = {'physical_movement_steps': int(position[3]), 'blocked_steps': int(position[4]),
+            'position': list(map(float, position[:3])), 'attack_response': response, 'full_combat_verified': False}
+        screenshot('0-crypt-after-controls')
+
     failure = None
     try:
         report['api'] = int(adb('shell', 'getprop', 'ro.build.version.sdk'))
@@ -515,6 +563,8 @@ def main():
             screenshot('%d-start-new' % index)
             created = start(slot, character_class, preset, animation_table)
             screenshot('%d-crypt-new' % index)
+            if index == 0:
+                gameplay_controls()
             back_main()
             screenshot('%d-main-back' % index)
             # Reopen occupied after process restart, which resets Info664 and

@@ -7,7 +7,9 @@ This report supersedes older documents' descriptions of the current default deve
 
 **Latest work:** Adam v69's frontend is selected in our native app: original main menu, name/class selection, real Single Player popup and Crypt entry for all three classes. Source profile creation, canonical slot assignment and saved-class reads reuse existing owners. Original HP/MP/XP bars borrow the live 224-word sheet. Fixed GameSWF loader/builtin-table lifetime bugs, startup focus blocking and Rogue's class-property calculation. All three class flows, occupied-slot restart, Back/Home-resume and existing player death/skill regressions pass on API37/16KiB. [Evidence](../reports/reconstruction-2026-10-06/menu-crypt/validation.json).
 
-**Verified APK:** [download menu/class/Crypt prerelease](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-06/DH2-native-menu-crypt-2026-10-06.apk), `1487a1e0…`, 152,827,608 bytes. Both ABIs, 1,220 actual compiler inputs per ABI, 1,271 captured files and 22 ELF64/16KiB libraries. [Matching source capture](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-06/DH2-native-menu-crypt-source-capture-2026-10-06.zip). Full NativeStartGame, registration/InitPost/SG_Load2/4, equipment and campaign remain open. [Checklist](PROJECT-CHECKLIST.md).
+**Latest startup work:** registered menu players now retain genuine managed Save680 metadata with class/level/name setters. Character save/InitFinal and QuestSavegame callers are selected; LVLS/FTVL readers bind the same Save arrays and real WorldMap/LevelList owners. Selected transport passes 522 checks; all three classes pass menu/Crypt/restart/resume and visible movement/input on API37/16KiB. [Evidence](../reports/reconstruction-2026-10-06/player-startup/validation.json).
+
+**Verified APK:** [download menu/class/Crypt player-startup prerelease](https://github.com/Noamcelermajer/DH_sc/releases/download/native-player-startup-2026-10-06/DH2-native-player-startup-2026-10-06.apk), `7af1cc1b…`, 154,190,373 bytes. Both ABIs, 1,254 actual compiler inputs per ABI, 1,305 captured files and 22 ELF64/16KiB libraries. [Matching source capture](https://github.com/Noamcelermajer/DH_sc/releases/download/native-player-startup-2026-10-06/DH2-native-player-startup-source-capture-2026-10-06.zip). Full NativeStartGame, Character660/InitPost/SG_Load2/4, equipment and campaign remain open. [Checklist](PROJECT-CHECKLIST.md).
 
 ## Latest Adam reconciliation
 
@@ -48,8 +50,7 @@ dictionary; adapt those fixtures through existing providers before reuse.
 Its native factories remain unbound. Our `origin/main` refresh (`1219a43a`)
 adds no gameplay source beyond the reviewed branch.
 
-Next live milestone: register genuine offline PlayerInfo before authored Assign;
-then connect `_AddCharacter` → Character660 → gameplay Save → InitAll/InitPost
+Next live milestone: connect recovered `_AddCharacter` → Character660 → gameplay Save → InitAll/InitPost
 → SG_Load2/4/GEAR → equipment/grants. The existing fallback slot must not be
 copied into a newly registered record. Reuse the sole inventory, properties,
 skill VM and timer owners. Connect skill activation, enemy frames and

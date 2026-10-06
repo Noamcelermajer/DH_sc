@@ -1,6 +1,7 @@
 #pragma once
 
 #include "skill_tables.hpp"
+#include "player_save_level_states_v1.hpp"
 
 #include <array>
 #include <cstddef>
@@ -74,7 +75,12 @@ struct SavedLevelNameFieldsV1 {
 // remain borrowed owners at their original boundaries.
 class PlayerSavegameV1 {
 public:
-    PlayerSavegameV1() = default;
+    PlayerSavegameV1() {
+        // Blank source C1(0x465ae0) constructs real QuestSavegame logs at
+        // +0xb8/+0x118; each QuestSavegame C1 writes +0x44[3] to one.
+        level_name_fields_.quest_wordfc.fill(1);
+        level_name_fields_.quest_word15c.fill(1);
+    }
     PlayerSavegameV1(const PlayerSavegameV1&) = delete;
     PlayerSavegameV1& operator=(const PlayerSavegameV1&) = delete;
 
@@ -175,6 +181,9 @@ public:
     const std::string& name() const noexcept { return name_; }
     std::uintptr_t character() const noexcept { return character_; }
     const SavedLevelNameFieldsV1& level_name_fields() const noexcept { return level_name_fields_; }
+    // Sole canonical backing for embedded source QuestSavegame +0x44[3].
+    std::array<std::int32_t,3>& quest_log_b8_act_words_v1() noexcept { return level_name_fields_.quest_wordfc; }
+    std::array<std::int32_t,3>& quest_log_118_act_words_v1() noexcept { return level_name_fields_.quest_word15c; }
     const std::array<std::int32_t, 3>& level_entry_points() const noexcept { return level_entry_points_; }
     const std::array<std::uint8_t, 3>& use_spawn_points() const noexcept { return use_spawn_points_; }
     // Original blank ctor initializes entry points, but leaves level ID and
@@ -182,6 +191,28 @@ public:
     // represented as a loaded campaign value before its source producer.
     bool level_name_loaded() const noexcept { return level_name_loaded_; }
     bool use_spawn_points_loaded() const noexcept { return use_spawn_points_loaded_; }
+    // Source _InitLevelStates initializes only null +68/+74 arrays, separately
+    // in each difficulty. The second table is WorldMap, not FastTravelList.
+    bool initialize_level_states(const SavedLevelStateServicesV1&,std::string&);
+    // Original blank/indexed C1 initialize six +17c..193 bitset words to zero.
+    std::array<std::uint32_t,2>* source_fast_travel_bits(std::uint32_t difficulty) noexcept {
+        return difficulty<3?&fast_travel_bits_[difficulty]:nullptr;
+    }
+    const std::array<std::uint32_t,2>* source_fast_travel_bits(std::uint32_t difficulty) const noexcept {
+        return difficulty<3?&fast_travel_bits_[difficulty]:nullptr;
+    }
+    SavedStateArrayV1* source_level_states(std::uint32_t difficulty) noexcept {
+        return difficulty<3?&level_states_[difficulty]:nullptr;
+    }
+    SavedStateArrayV1* source_world_map_states(std::uint32_t difficulty) noexcept {
+        return difficulty<3?&world_map_states_[difficulty]:nullptr;
+    }
+    const SavedStateArrayV1* source_level_states(std::uint32_t difficulty) const noexcept {
+        return difficulty<3?&level_states_[difficulty]:nullptr;
+    }
+    const SavedStateArrayV1* source_world_map_states(std::uint32_t difficulty) const noexcept {
+        return difficulty<3?&world_map_states_[difficulty]:nullptr;
+    }
 
 private:
     std::int32_t slot_{-1};
@@ -203,6 +234,9 @@ private:
     std::uint8_t properties_byte_194_{};
     bool save_blocked_{}; // source +0xc
     std::int32_t save_mode_{}; // source +0x178, blank ctor zero
+    std::array<std::array<std::uint32_t,2>,3> fast_travel_bits_{};
+    std::array<SavedStateArrayV1,3> level_states_,world_map_states_;
+    bool level_states_busy_{};
 };
 
 }  // namespace dh2::data
