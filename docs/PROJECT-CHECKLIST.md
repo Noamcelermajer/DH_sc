@@ -7,7 +7,7 @@ gameplay/content and providing documented fan modding. **The game is unfinished.
 
 **Latest test APK:** [native menu/class/Crypt + standalone SG_Load(2)](https://github.com/Noamcelermajer/DH_sc/releases/download/native-mask2-menu-crypt-2026-10-06/DH2-native-menu-ui-mask2-api37-2026-10-06.apk).
 Release/source tag: `native-mask2-menu-crypt-2026-10-06` on this reconstruction branch.
-APK: 148,094,153 bytes; SHA-256 `7a3fc9bd7077bc10e5a8a958e2dde3dfdd8deedf2e065790a0c4c5eda72d4c`.
+APK: 148,094,153 bytes; SHA-256 `7a3fc9bd7077bc10e5a8a958e2dde3dfdd8deedf2e065790a0a0c4c5eda72d4c`.
 
 Original menu → name/class selection → Single Player → development Crypt runs
 for Warrior, Rogue and Mage on API37/16KiB. Restart, Back, Home/resume, movement
