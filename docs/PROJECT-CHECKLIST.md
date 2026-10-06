@@ -5,7 +5,7 @@ Updated: 2026-10-06. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest test APK:** [Android 17 menu, three classes and Crypt](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-06/DH2-native-menu-crypt-api37-62557f03.apk).
+**Latest test APK:** [Android 17 menu, three classes and Crypt](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-06/DH2-native-menu-crypt-api37-d4142762.apk), built from [branch commit `d4142762`](https://github.com/Noamcelermajer/DH_sc/commit/d4142762).
 APK: 151,078,873 bytes; SHA-256 `62557f036d3ee0b29de5c2376b4d2bc33de9f9df930ba528a265d8ddf4b39dad`.
 
 API37/16KiB emulator: all three class create/reopen/Back/Home-resume flows pass.
