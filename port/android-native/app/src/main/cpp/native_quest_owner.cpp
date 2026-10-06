@@ -1,8 +1,11 @@
 #include "native_quest_owner.hpp"
+#include "native_quest_cursor.hpp"
 #include "quest_instance_v1.hpp"
 #include "quest_condition_factory_v1.hpp"
 #include "quest_objective_factory_v1.hpp"
 #include "quest_reward_factory_v1.hpp"
+#include "quest_objective_payload_v1.hpp"
+#include "quest_stream_read_v1.hpp"
 #include <map>
 #include <cstring>
 #include <stdexcept>
@@ -57,6 +60,7 @@ struct Owner::Impl {
  of::Runtime objective_factory;
  rf::Runtime reward_factory;
  std::unique_ptr<logs::Runtime> log_runtime[2];
+ Cursor* active_cursor=nullptr;
  bool busy=false,closed=false;
  Impl(std::shared_ptr<data::PlayerSavegameV1> saved,data::quest_table_bindings_v1::View tables,Constants input):
   save(std::move(saved)),definitions(std::move(tables)),constants(std::move(input)),
@@ -97,6 +101,24 @@ struct Owner::Impl {
   if(found==objectives.end()||(expected&&&found->second->ref!=expected))return 1;
   of::Result r;return objective_factory.destroy(*found->second,true,&r)==of::Status::complete?0:1;
  }
+ static std::int32_t read_stream(void* raw,data::player_saved_quests_v1::StreamRef& stream,
+                                void* destination,std::uint64_t requested,std::uint64_t* returned){
+  auto& owner=*static_cast<Impl*>(raw);
+  return owner.active_cursor&&owner.active_cursor->read(stream,destination,requested,returned)?0:1;
+ }
+ std::int32_t load_objective(std::uintptr_t identity,data::player_saved_quests_v1::StreamRef* stream,
+                            const o::ObjectiveRef* expected=nullptr){
+  const auto found=objectives.find(identity);
+  if(!active_cursor||!stream||stream!=&active_cursor->stream()||found==objectives.end()||
+     (expected&&&found->second->ref!=expected))return 1;
+  namespace payload=data::quest_objective_payload_v1;
+  payload::Runtime reader(*found->second,{this,read_stream,nullptr,nullptr});
+  // On full delivery both transient residues are overwritten. A short read
+  // stops at the unbound source assertion policy before publishing scratch.
+  payload::ReaderScratch scratch(0,0);payload::Result answer;
+  if(reader.load(*stream,scratch,&answer)!=payload::Status::complete)return 1;
+  ++result.objective_payloads;return 0;
+ }
  instance::Services child_services(){
   instance::Services s;
   s.conditions={this,
@@ -106,7 +128,12 @@ struct Owner::Impl {
    [](void* raw,c::List&,c::Array* array){return retire(static_cast<Impl*>(raw)->ca,array,array->identity);},nullptr};
   s.objectives={this,
    [](void* raw,o::List&,std::uint32_t bytes,std::uint32_t tag,o::Array** out){return allocate_array(static_cast<Impl*>(raw)->oa,bytes,tag,out);},
-   [](void* raw,o::List&,const o::Definition&,std::int32_t kind,o::ObjectiveRef** out)->std::int32_t{of::Result r;auto& owner=*static_cast<Impl*>(raw);if(owner.objective_factory.create(kind,&r)!=of::Status::complete)return 1;*out=&r.record->ref;return 0;},nullptr,
+   [](void* raw,o::List&,const o::Definition&,std::int32_t kind,o::ObjectiveRef** out)->std::int32_t{of::Result r;auto& owner=*static_cast<Impl*>(raw);if(owner.objective_factory.create(kind,&r)!=of::Status::complete)return 1;*out=&r.record->ref;return 0;},
+   [](void* raw,o::List&,const o::StreamCall& call)->std::int32_t{
+    if(!call.objective||!call.virtual_call||call.function!=0x28||call.encoded_adjustment!=1||
+       call.adjusted_target!=call.objective->action.identity)return 1;
+    return static_cast<Impl*>(raw)->load_objective(call.adjusted_target,call.stream,call.objective);
+   },
    [](void* raw,o::List&,o::ObjectiveRef* ref){return static_cast<Impl*>(raw)->delete_objective(ref->action.identity,ref);},
    [](void* raw,o::List&,o::Array* array){return retire(static_cast<Impl*>(raw)->oa,array,array->identity);}};
   s.rewards={this,
@@ -118,8 +145,20 @@ struct Owner::Impl {
    [](void* raw,r::List&,r::Array* array){return retire(static_cast<Impl*>(raw)->ra,array,array->identity);},
    [](void*,r::List& list)->std::int32_t{std::string().swap(list.text_8);return 0;}};
   s.leaves={this,[](void* raw,const scalar::Request& request,scalar::Response*)->std::int32_t{
-   if(request.operation!=scalar::Operation::action_virtual||request.offset!=4)return 1;
-   return static_cast<Impl*>(raw)->delete_objective(request.target);
+   auto& owner=*static_cast<Impl*>(raw);
+   if(request.operation==scalar::Operation::action_virtual){
+    if(request.offset==4)return owner.delete_objective(request.target);
+    if(request.offset==0x28)return owner.load_objective(request.target,request.stream);
+    return 1;
+   }
+   if(request.operation==scalar::Operation::read_stream_word){
+    if(!owner.active_cursor||request.stream!=&owner.active_cursor->stream()||!request.quest||
+       request.destination!=&request.quest->state_0||!owner.resolve(&request.quest->ref))return 1;
+    namespace reader=data::quest_stream_read_v1;
+    reader::Runtime runtime(*request.stream,{raw,read_stream,nullptr,nullptr});reader::Result answer;
+    return runtime.read_quest_signed(&request.quest->state_0,&answer)==reader::Status::complete?0:1;
+   }
+   return 1;
   }};
   return s;
  }
@@ -157,6 +196,39 @@ bool Owner::initialize(std::uint32_t log,std::string& error){
  if(log>1||impl_->busy||impl_->closed){error="Native Quest owner/log unavailable";return false;}
  impl_->busy=true;struct Guard{Impl& owner;~Guard(){owner.busy=false;}}guard{*impl_};error.clear();
  return impl_->run(log,false,error);
+}
+bool Owner::load_quests(Cursor& cursor,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable during payload load";return false;}
+ impl_->busy=true;impl_->active_cursor=&cursor;
+ struct Guard{Impl& owner;~Guard(){owner.active_cursor=nullptr;owner.busy=false;}}guard{*impl_};error.clear();
+ namespace saved=data::player_saved_quests_v1;
+ saved::Services services{impl_.get(),[](void* raw,const saved::Request& request,saved::Reply& reply,std::string& failure)->std::int32_t{
+  auto& owner=*static_cast<Impl*>(raw);auto* stream=request.stream;
+  if(!owner.active_cursor||stream!=&owner.active_cursor->stream())return 1;
+  using Op=saved::Operation;
+  if(request.operation==Op::tell)return owner.active_cursor->tell(*stream,&reply.position)?0:1;
+  if(request.operation==Op::seek)return owner.active_cursor->seek(*stream,request.offset)?0:1;
+  if(request.operation==Op::read_unsigned||request.operation==Op::read_signed){
+   namespace reader=data::quest_stream_read_v1;
+   reader::Runtime runtime(*stream,{raw,Impl::read_stream,nullptr,nullptr});reader::Result answer;
+   const auto status=request.operation==Op::read_unsigned?
+    runtime.read_unsigned(static_cast<std::uint32_t*>(request.destination),&answer):
+    runtime.read_signed(static_cast<std::int32_t*>(request.destination),&answer);
+   if(status==reader::Status::complete)return 0;
+   failure="Native QEST typed reader failed at operation "+std::to_string(unsigned(answer.last_operation));return 1;
+  }
+  if(request.operation==Op::quest_data){
+   auto* value=owner.resolve(request.quest);scalar::Result answer;
+   if(!value||value->load_quest_data(*stream,request.flag,&answer)!=scalar::Status::complete){
+    failure="Native QEST Quest payload provider failed";return 1;
+   }
+   ++owner.result.quest_payloads;return 0;
+  }
+  failure="Native QEST reached unbound source assertion/logger";return 1;
+ }};
+ saved::Runtime runtime({impl_->save.get(),&impl_->save->source_quest_log_b8(),
+  &impl_->save->source_quest_log_118(),&cursor.stream(),services});saved::Result answer;
+ return runtime.load(&answer,error)==saved::Status::complete;
 }
 bool Owner::close(std::string& error){
  if(impl_->closed){error.clear();return true;}

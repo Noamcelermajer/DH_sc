@@ -48,12 +48,12 @@ still require live gameplay integration. All final completion gates remain open.
 | Character properties, equipment and state | 29 | 6 |
 | Lua, skills and enemy AI | 48 | 14 |
 | Combat, death, loot and progression | 7 | 7 |
-| Quests, campaign, UI, audio and saves | 30 | 10 |
+| Quests, campaign, UI, audio and saves | 36 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **164** | **73** |
+| **Total scoped tasks** | **170** | **73** |
 
-Latest gate: [Quest startup](../reports/reconstruction-2026-10-06/quest-startup/validation.json). Native owner passes 3,700 checks, including a failed row and valid retry; all three classes retain/retire the same Save's 384 Quests on API37/16KiB. Compile/scripts/events/rewards/QEST, Character660/InitPost/SG_Load2/4, inventory and the complete encounter remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
+Latest source gate: [Quest compilation and payloads](../reports/reconstruction-2026-10-06/quest-payload/validation.json): 8,147 new ARM comparisons; native owner restores 384 Quest/1,164 objective payloads from one borrowed cursor in synthetic host tests. Both Android ABIs compile and Warrior startup passes. Live QEST/SG_Load2, objective world/scripts/events, Character660/InitPost/inventory and the complete encounter remain open. The published APK above is the earlier three-class-tested startup checkpoint. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -366,6 +366,12 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Compose Quest Instance and actual lists on one Record: 192 real row/difficulty instances and 4,401 host checks pass.
 - [x] Bind native factory/constant ownership to both gameplay Save logs: 3,700 checks; failed row47 retains its prefix, destroys 47 published plus one unpublished Quest, and retries 384 instances.
 - [x] Verify native 384-Quest startup, same-owner Home/resume and source destructor cleanup on Back for all three classes on API37/16KiB; preserve existing emulator saves.
+- [x] Select Objective base/SavedQty payload and returned bool/int readers: 1,719 ARM comparisons/all 94 words, 846 checks/194 actual object shapes; preserve publication after return.
+- [x] Select three direct destination word readers: 2,514 ARM comparisons/all 114 words, 33 checks; retain partial state writes and original assertion boundaries.
+- [x] Select Quest/QuestLog Compile and list invalidation/compilation wrappers: 3,914 ARM comparisons/all 236 words, 21 checks; preserve already-marked recursive lookup and mandatory objective gameplay leaves.
+- [x] Implement one retained whole-campaign absolute cursor: 30 native checks and 6,561 selected QEST/Objective composition checks; no second Save or cursor.
+- [x] Bind native Owner QEST/Quest/action/list payload routes: 6,559 checks restore 384 quests/1,164 objectives, replay both logs, retain truncated prefixes and run genuine cleanup. SG_Load2 handoff/assertion policy remain open.
+- [x] Compile the new payload/Compile selection for both Android ABIs and verify Warrior startup/restart/resume/Back on API37/16KiB. Native live QEST restoration and objective execution are separate pending gates.
 
 ## 9. Fan modding and source delivery
 

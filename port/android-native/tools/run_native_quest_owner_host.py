@@ -2,8 +2,9 @@
 
 All3 factories, Quest/child constructors, assignment/ReInit and destructors are
 real selected implementations. Constants query the existing world C decoder.
-This host gate does not validate quest compilation/scripts, save payloads,
-Android compilation or live gameplay; separate receipts cover those scopes.
+With --payload, synthetic whole-campaign QEST packets use the actual native
+owner and one borrowed cursor. Whole gameplay startup, quest compilation/scripts,
+source assertion providers, Android and live saves require separate verification.
 """
 from __future__ import annotations
 import argparse,hashlib,json,os,re,shutil,subprocess,sys
@@ -15,6 +16,7 @@ def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def main():
  p=argparse.ArgumentParser(description=__doc__)
  for name in ['compiler','cache','output','library','world-library']:p.add_argument('--'+name,required=True,type=Path)
+ p.add_argument('--payload',action='store_true',help='Compose actual native QEST/payload routes on one borrowed campaign cursor')
  args=p.parse_args();out=args.output.resolve();out.mkdir(parents=True,exist_ok=True)
  library=args.library.resolve();world=args.world_library.resolve();build=next(path for path in library.parents if(path/'compile_commands.json').is_file())
  env=os.environ.copy();env['PATH']=str(args.compiler.parent)+os.pathsep+env.get('PATH','');ninja=shutil.which('ninja');assert ninja
@@ -25,17 +27,19 @@ def main():
  commands=run([ninja,'-C',build,'-t','commands','dh2_level_world']);entries=selected_entries(build,commands)
  names=['quest_savegame_v1.cpp','quest_runtime_fields_v1.cpp','quest_instance_v1.cpp',
   'quest_table_bindings_v1.cpp','quest_condition_list_v1.cpp','quest_objective_list_v1.cpp',
-  'quest_reward_list_v1.cpp','quest_condition_factory_v1.cpp','quest_objective_factory_v1.cpp','quest_reward_factory_v1.cpp']
+  'quest_reward_list_v1.cpp','quest_condition_factory_v1.cpp','quest_objective_factory_v1.cpp','quest_reward_factory_v1.cpp',
+  'quest_stream_read_v1.cpp','quest_objective_payload_v1.cpp','quest_compile_v1.cpp']
  for name in names:assert sum(Path(row['file']).resolve()==(ROOT/'port/game-data'/name).resolve() for row in entries)==1
  assert sum(Path(row['file']).resolve()==(ROOT/'port/pydata-constants/constants.c').resolve() for row in entries)==1
- source=ROOT/'port/android-native/app/src/main/cpp/native_quest_owner.cpp';test=ROOT/'port/android-native/tests/native_quest_owner.cpp'
- evidence={source,source.with_suffix('.hpp'),test,Path(__file__).resolve()}
+ source=ROOT/'port/android-native/app/src/main/cpp/native_quest_owner.cpp';test=ROOT/'port/android-native/tests'/('native_quest_owner_payload.cpp' if args.payload else 'native_quest_owner.cpp')
+ cursor=source.with_name('native_quest_cursor.cpp')
+ evidence={source,source.with_suffix('.hpp'),cursor,cursor.with_suffix('.hpp'),test,Path(__file__).resolve()}
  inputs=actual_dependencies(build,ninja,entries)|evidence
  before={path.relative_to(ROOT).as_posix():sha(path) for path in sorted(inputs)}
  dsos=sorted(library.parent.parent.rglob('*.dll'));binary_before={str(path):sha(path) for path in [library,world,*dsos]}
  cache=args.cache.resolve();files=[cache/name for name in ['v2quests_pyarray.bin','v2quests_pyarraynames.bin','v2quests_pycst.bin']];cache_before={path.name:sha(path) for path in files}
  exe=out/'host.exe'
- command=[args.compiler,'-std=c++17','-Wall','-Wextra','-Werror','-O2','-I'+str(ROOT/'port/game-data'),'-I'+str(ROOT/'port/pydata-constants'),test,source,library,world,'-o',exe]
+ command=[args.compiler,'-std=c++17','-Wall','-Wextra','-Werror','-O2','-I'+str(ROOT/'port/game-data'),'-I'+str(ROOT/'port/pydata-constants'),test,source,cursor,library,world,'-o',exe]
  run(command)
  live=env.copy();live['PATH']=os.pathsep.join([*(str(path.parent) for path in dsos),env['PATH']]);host=json.loads(run([exe,cache],live));assert host['validation']=='PASS'
  assert before=={path.relative_to(ROOT).as_posix():sha(path) for path in sorted(inputs)}
