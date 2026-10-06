@@ -5,19 +5,18 @@ Updated: 2026-10-06. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest test APK:** [native menu/class/Crypt + standalone SG_Load(2)](https://github.com/Noamcelermajer/DH_sc/releases/download/native-mask2-menu-crypt-2026-10-06/DH2-native-menu-ui-mask2-api37-2026-10-06.apk).
-Release/source tag: `native-mask2-menu-crypt-2026-10-06` on this reconstruction branch.
-APK: 148,094,153 bytes; SHA-256 `7a3fc9bd7077bc10e5a8a958e2dde3dfdd8deedf2e065790a0a0c4c5eda72d4c`.
+**Latest test APK:** [Android 17 menu, three classes and Crypt](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-06/DH2-native-menu-crypt-api37-62557f03.apk).
+APK: 151,078,873 bytes; SHA-256 `62557f036d3ee0b29de5c2376b4d2bc33de9f9df930ba528a265d8ddf4b39dad`.
 
-Original menu → name/class selection → Single Player → development Crypt runs
-for Warrior, Rogue and Mage on API37/16KiB. Restart, Back, Home/resume, movement
-input and attack-button delivery pass. Fresh setup calls the original Character
-mask-2 SaveLoad path once against the same Save/LoadOwner and embedded Quest
-fields; Home/resume retains that association. The attack response is still
-“Walk closer to an enemy”; full combat is not verified. Both Android ABIs compile,
-and all packaged native libraries meet 16 KiB alignment. Full Character InitPost,
-mask 4/GEAR, original campaign startup/saves, quest gameplay, inventory/equipment
-and the complete encounter remain open. [Current evidence](../reports/reconstruction-2026-10-06/quest-payload/live-mask2-smoke.json).
+API37/16KiB emulator: all three class create/reopen/Back/Home-resume flows pass.
+The same APK passed a bounded Crypt combat smoke: actual movement reached the
+placed skeleton; an out-of-range attack was rejected; six authored hit events
+reduced HP and closed attacks back to Idle. Enemy AI was disabled and the test
+used the debug target command through the existing attack bridge; it does not
+verify normal campaign startup, equipment damage, enemy AI, loot or progression.
+Both Android ABIs build and all packaged native libraries meet 16 KiB alignment.
+Receipts: [menu](../port/android-native/reports/menu-ui-runtime-smoke-62557f03.json),
+[combat](../port/android-native/reports/character-combat-smoke-62557f03.json).
 
 The earlier [quest-startup build and source capture](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-quest-startup-2026-10-06) remain available; its death/pose and skill/buff regression receipts apply to that earlier APK.
 
@@ -205,7 +204,8 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select friendly-ID/player selectors: 308 ARM comparisons and 344 failure prefixes over the canonical registry.
 - [x] Select whole `_AddCharacter`: 277 ARM comparisons and 88 native failure checks; genuine spawn/InitAll providers remain unbound.
 - [x] Connect bounded normal managed metadata to registered menu players: 245 ARM comparisons, 46 composition checks and three live class flows. Class/level/name use the same Record and Save680.
-- [x] Select Character save/InitAll wrappers: 46 ARM comparisons and 115 selected-host checks; exact embedded Quest owner fields/order and same-Save LoadOwner are enforced. Android wires standalone mask 2; full InitPost remains required.
+- [x] Select bounded Character::InitPost caller block through `0x3b51bc`: 4 original ARM cases/37 calls match host order, callsites, owners and arguments; failure-prefix, reentry and Android ARM64/x86_64 builds pass. Providers remain unbound.
+- [x] Select Character save/InitAll wrappers: 46 ARM comparisons and 115 selected-host checks; exact embedded Quest owner fields/order and same-Save LoadOwner are enforced. Android wires standalone mask 2; InitPost provider wiring remains required.
 - [x] Select Character::InitFinal: 260 ARM comparisons and 803 host checks; real lighting/AI/skills/save providers remain required.
 
 ## 6. Lua, skills and enemy AI — current implementation focus

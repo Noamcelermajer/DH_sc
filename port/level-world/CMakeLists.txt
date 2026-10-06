@@ -132,7 +132,8 @@ target_sources(dh2_level_world PRIVATE character_level_runtime.cpp character_ini
   ../player-info-level/player_offline_registry_v1.cpp
   ../player-info-level/player_manager_friendly_v1.cpp
   ../player-info-level/player_metadata_prepare_v1.cpp
- player_saved_inventory_v1.cpp character_saved_class_v1.cpp character_gameplay_save_v1.cpp character_init_final_v1.cpp character_template_random.cpp)
+ player_saved_inventory_v1.cpp character_saved_class_v1.cpp character_gameplay_save_v1.cpp
+ character_init_post_player_v1.cpp character_init_final_v1.cpp character_template_random.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_update_all_skills.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_set_skills_and_spells.cpp
  character_faery_selection.cpp character_ai_skill_script_constructor.cpp
@@ -153,6 +154,10 @@ target_link_libraries(dh2_level_world PUBLIC dh2_engine_skinning dh2_game_data d
 if(ANDROID)
  target_link_options(dh2_level_world PRIVATE -Wl,-z,max-page-size=16384 -Wl,--no-undefined)
 else()
+ add_executable(character_init_post_player_v1_audit
+  tests/character_init_post_player_v1.cpp character_init_post_player_v1.cpp)
+ target_compile_features(character_init_post_player_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_init_post_player_v1_audit PRIVATE -Wall -Wextra -Werror)
  add_executable(source_random_lifecycle_v1_audit tests/source_random_lifecycle_v1.cpp)
  target_link_libraries(source_random_lifecycle_v1_audit PRIVATE dh2_level_world)
  add_executable(player_skill_property_services_v1_audit tests/player_skill_property_services_v1.cpp)
