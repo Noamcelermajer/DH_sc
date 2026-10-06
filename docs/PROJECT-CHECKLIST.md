@@ -45,13 +45,13 @@ still require live gameplay integration. All final completion gates remain open.
 | World, physics, navigation and factories | 15 | 8 |
 | Character properties, equipment and state | 30 | 6 |
 | Lua, skills and enemy AI | 49 | 14 |
-| Combat, death, loot and progression | 7 | 7 |
+| Combat, death, loot and progression | 8 | 7 |
 | Quests, campaign, UI, audio and saves | 40 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **175** | **73** |
+| **Total scoped tasks** | **176** | **73** |
 
-Latest source gate: [Quest compilation and payloads](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,659 host checks with nonempty SKIL, FAES, QEST and typed PROP on one Save/PropertyState; a FAES count mismatch still reaches QEST. FAES passes 74 original-ARM differential cases. Both Android ABIs compile. API37/16KiB smoke passes menu, all three classes, Crypt, controls, restart and Home/resume (APK SHA-256 `7a3fc9bd…`). Fresh player setup calls source Character mask 2 once; resume retains its Save association. Full InitPost/mask4/GEAR, quest-world callbacks and the complete encounter remain open.
+Latest source gate: [Quest compilation and payloads](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,659 host checks with nonempty SKIL, FAES, QEST and typed PROP on one Save/PropertyState; a FAES count mismatch still reaches QEST. FAES passes 74 original-ARM differential cases. Both Android ABIs compile. Local debug APK SHA-256 `9e2c0b82…`; all 22 native libraries meet 16 KiB alignment. API37 smoke passes all three classes; final lifecycle assertions verify fresh start/Back seeds and no Home/resume reseed. Saves were restored. Full InitPost/mask4/GEAR, quest-world callbacks and the complete encounter remain open.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -310,6 +310,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 ## 7. Combat, death, loot and progression
 
 - [x] Reconstruct bounded random streams and combat calculation/script components.
+- [x] Add one selected process RNG owner with original GSInit and Level unload seed writes; original ARM pins, selected-library checks, both Android ABIs, and API 37 lifecycle smoke pass. Native player class resolver borrows it; NPC, inventory, and loot consumers remain disconnected.
 - [x] Reconstruct bounded health damage, nonplayer death and kill/clear quest-counter components.
 - [x] Reconstruct HandleDots/F_DotAttack and the bounded offline nonplayer F_ApplyResult caller.
 - [x] Exercise supported native health changes and prove damaged Ghost health survives recreation.

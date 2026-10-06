@@ -20,6 +20,7 @@ std::string start_menu_game(std::int32_t,AAssetManager*);
 std::vector<std::uint8_t> read_asset(AAssetManager*,const std::string&);
 void reset_context();
 void deactivate();
+void unload_game_to_menu();
 bool active();
 std::string load(const std::uint8_t*,std::size_t,AAssetManager*);
 std::string load_menu_background(AAssetManager*);

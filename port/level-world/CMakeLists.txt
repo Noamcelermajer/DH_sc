@@ -50,7 +50,7 @@ target_sources(dh2_level_world PRIVATE
  character_enemy_spotted.cpp monster_external_script_session.cpp
  character_ai_set_target.cpp character_ai_relations.cpp character_ai_in_combat.cpp
  character_aggro_acquisition_prefix.cpp character_ai_sight.cpp ghost_ai_session.cpp character_monster_retarget.cpp
- ../random/random.c ../lua-numeric/numeric.c)
+ source_random_lifecycle_v1.cpp ../random/random.c ../lua-numeric/numeric.c)
 
 target_sources(dh2_level_world PRIVATE character_ai_attack.cpp)
 
@@ -153,6 +153,8 @@ target_link_libraries(dh2_level_world PUBLIC dh2_engine_skinning dh2_game_data d
 if(ANDROID)
  target_link_options(dh2_level_world PRIVATE -Wl,-z,max-page-size=16384 -Wl,--no-undefined)
 else()
+ add_executable(source_random_lifecycle_v1_audit tests/source_random_lifecycle_v1.cpp)
+ target_link_libraries(source_random_lifecycle_v1_audit PRIVATE dh2_level_world)
  add_executable(player_skill_property_services_v1_audit tests/player_skill_property_services_v1.cpp)
  target_link_libraries(player_skill_property_services_v1_audit PRIVATE dh2_level_world)
  add_executable(objects_spawn_audit tests/objects_spawn.cpp)

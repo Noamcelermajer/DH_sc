@@ -8,6 +8,7 @@ final class NativeBridge {
     static native byte[] readAsset(String name,android.content.res.AssetManager assets) throws java.io.IOException;
     static native String initialize(android.content.res.AssetManager assets);
     static native String loadFrontScreen(String directory,android.content.res.AssetManager assets);
+    static native String returnToMainMenu(String directory,android.content.res.AssetManager assets);
     static native String menuTouch(float x,float y,int action);
     static native int consumeMenuLaunch();
     static native String startMenuGame(int slot,android.content.res.AssetManager assets);

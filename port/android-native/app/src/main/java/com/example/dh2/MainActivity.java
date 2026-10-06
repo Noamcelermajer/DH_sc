@@ -283,14 +283,15 @@ public final class MainActivity extends Activity {
             show(baseReport+"\n"+report);surface.requestRender();
         });
     }
-    private void loadSelected(){
+    private void loadSelected(){loadSelected(false);}
+    private void loadSelected(boolean gameplayExit){
         String name=assets[selected];
         if(name.equals(loadedAsset))return;
         runOnUiThread(()->{movement.setVisibility(name.startsWith("worlds/")?View.VISIBLE:View.GONE);vitals.setVisibility(name.startsWith("worlds/")?View.VISIBLE:View.GONE);attack.setVisibility(name.startsWith("worlds/")?View.VISIBLE:View.GONE);});
         try{
             if(name.equals("ui/original-main-menu")){
                 menuGameplaySlot=-1;
-                String report=NativeBridge.loadFrontScreen(getFilesDir().getAbsolutePath(),getAssets());
+                String report=gameplayExit?NativeBridge.returnToMainMenu(getFilesDir().getAbsolutePath(),getAssets()):NativeBridge.loadFrontScreen(getFilesDir().getAbsolutePath(),getAssets());
                 loadedAsset=name;baseReport=report;Log.i("DH2Native",report);show(report);return;
             }
             byte[] encoded=NativeBridge.readAsset(name,getAssets());
@@ -327,6 +328,9 @@ public final class MainActivity extends Activity {
         runOnUiThread(()->{frontAudio.stop();movement.setVisibility(View.VISIBLE);attack.setVisibility(View.VISIBLE);vitals.setVisibility(inspectionMode?View.VISIBLE:View.GONE);status.setVisibility(inspectionMode?View.VISIBLE:View.GONE);});
     }
     private void handleBack(){
+        if(!inspectionMode&&ready&&loadedAsset!=null&&loadedAsset.startsWith("worlds/")){
+            movement.stop();selected=0;surface.queueEvent(()->loadSelected(true));return;
+        }
         if(!inspectionMode&&ready&&!"ui/original-main-menu".equals(loadedAsset)){
             movement.stop();selected=0;surface.queueEvent(this::loadSelected);return;
         }

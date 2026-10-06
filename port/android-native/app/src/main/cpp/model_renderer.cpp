@@ -68,6 +68,7 @@
 #include "../../../../../player-info-level/player_locality_v1.hpp"
 #include "native_player_profile.hpp"
 #include "native_menu_runtime.hpp"
+#include "../../../../../../port/level-world/source_random_lifecycle_v1.hpp"
 #include "character_saved_class_v1.hpp"
 #include "character_gameplay_save_v1.hpp"
 #include "../../../../../player-info-level/player_local_selection_v1.hpp"
@@ -94,10 +95,18 @@
 #include <chrono>
 #include <cctype>
 #include <cstring>
+#include <sys/time.h>
 
 namespace model_renderer {
 namespace {
 using Matrix=std::array<float,16>;
+bool original_real_time_ms(std::uint32_t& result) noexcept {
+ timeval now{};
+ if(gettimeofday(&now,nullptr)!=0)return false;
+ const auto milliseconds=static_cast<std::uint64_t>(now.tv_sec)*1000u+
+                         static_cast<std::uint64_t>(now.tv_usec)/1000u;
+ result=static_cast<std::uint32_t>(milliseconds);return true;
+}
 struct NativeSourceCamera {
  dh2::engine_camera::frustum_runtime::Matrix matrix{};
  dh2::engine_camera::frustum_runtime::Frustum frustum{};
@@ -1721,6 +1730,18 @@ void deactivate(){
  const auto remaining=std::count_if(retired.begin(),retired.end(),[](const auto& owner){return !owner.expired();});
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native terminal world discard | Ghost references %zu | remaining %zu | groups %zu | saved actors %zu | catalogue %u",retired.size(),std::size_t(remaining),object_groups.size(),saved_actors.size(),unsigned(bool(actor_skill_catalogue)));
 }
+void unload_game_to_menu(){
+ deactivate();
+ std::uint32_t seed=0;
+ if(!original_real_time_ms(seed)){
+  __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Source Random Level::Unload clock read failed");
+  return;
+ }
+ dh2::random_lifecycle::seed_from_level_unload(seed);
+ const auto& random=dh2::random_lifecycle::process_state();
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Source Random Level::Unload | seed %u | sync %u | counters %u/%u",
+   random.seeds[0],random.seeds[1],random.counters[0],random.counters[1]);
+}
 bool active(){return enabled;}
 void set_enemy_ai(bool value){enemy_ai_enabled=value;__android_log_print(ANDROID_LOG_INFO,"DH2Native","Enemy AI configured | automatic melee %d",value);}
 void orbit(float dx,float dy,float factor){yaw+=dx;pitch=std::clamp(pitch+dy,-1.4f,1.4f);zoom=std::clamp(zoom*factor,.35f,4.f);}
@@ -2734,6 +2755,14 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
   const bool previous_frozen=frozen;
   if(restore&&!object_groups.empty()){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}
   try{
+    if(!restore){
+      std::uint32_t seed=0;
+      if(!original_real_time_ms(seed))throw std::runtime_error("Original Random clock read failed");
+      dh2::random_lifecycle::seed_from_gsinit_update(seed);
+      const auto& random=dh2::random_lifecycle::process_state();
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native","Source Random GSInit::Update | seed %u | sync %u | counters %u/%u",
+        random.seeds[0],random.seeds[1],random.counters[0],random.counters[1]);
+    }
     std::string retention_error;
     if(world_mode&&!prince_retained_pose.capture(prince_locomotion,prince_attack_clips,prince_visual,current_scene,retention_error))
       throw std::runtime_error("Player scene retention failed: "+retention_error);
@@ -2850,6 +2879,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     dh2::character_saved_class_v1::Bindings saved_class{};
     saved_class.character=prince_character.owner();saved_class.property_cache=&fresh_player.property_cache;saved_class.template_cache=&fresh_player.template_cache;
     saved_class.characters=&character_table;saved_class.current_savegame=&gameplay_save;saved_class.current_loader=&gameplay_loader;
+    saved_class.random=&dh2::random_lifecycle::process_state();
     saved_class.services={&classification,[](void* context,std::uintptr_t character,std::uint32_t* value,std::string& failure)->int {
      using namespace dh2::character_ai_classification;auto& backing=*static_cast<ClassificationBacking*>(context);
      // Native development factory supplies the original _AddCharacter name

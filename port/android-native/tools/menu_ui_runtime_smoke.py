@@ -48,8 +48,11 @@ SAFE_EVENTS = re.compile(r'(?:Surface resized to |Owned menu (?:renderer selecte
                          r'Connected player HUD submitted \||'
                          r'Native Player AIS (?:initialized|retained) \||'
                          r'Native Player Save mask2 \||'
+                         r'Source Random (?:GSInit::Update|Level::Unload) \||'
                          r'Native offline registration \||Native full PlayerInfo \||Native managed metadata \||Native WorldMap catalogue \||Native Quest (?:catalogue|startup|terminal discard) \||'
                          r'Player position [-\d.]|Player input \|)')
+SOURCE_RNG_GSINIT = re.compile(r'Source Random GSInit::Update \| seed (\d+) \| sync (\d+) \| counters (\d+)/(\d+)')
+SOURCE_RNG_UNLOAD = re.compile(r'Source Random Level::Unload \| seed (\d+) \| sync (\d+) \| counters (\d+)/(\d+)')
 FULL_PLAYER = re.compile(r'Native full PlayerInfo \| fields (\d+) \| factory (\d+) \|'
                          r' level (-?\d+) \| class (-?\d+) \| Character660 (\d+) \|'
                          r' slot664 (-?\d+) \| counter (\d+)')
@@ -497,6 +500,9 @@ def main():
         tap('single_player')
         text = wait(lambda t: ('Menu game start | slot %d | Crypt |' % slot in t[before:] and
                                HUD.search(t[before:]) is not None), 'Crypt and connected player HUD', 70)
+        fresh_seed_events = SOURCE_RNG_GSINIT.findall(text[before:])
+        assert len(fresh_seed_events) == 1 and fresh_seed_events[0][1] == '0', 'Fresh game must apply exactly one source GSInit seed and clear sync seed'
+        assert not SOURCE_RNG_UNLOAD.search(text[before:]), 'Fresh game start must not apply Level::Unload seed'
         return verify_start(text[before:], slot, character_class, preset, animation_table)
 
     def back_main():
@@ -506,6 +512,9 @@ def main():
         offset = len(logs())
         adb('shell', 'input', '-d', '0', 'keyevent', 'KEYCODE_BACK')
         text = wait(lambda t: 'Original front/HUD screen submitted | screen main' in t[offset:], 'normal Back return to menu')
+        unload_seed_events = SOURCE_RNG_UNLOAD.findall(text[offset:])
+        assert len(unload_seed_events) == 1 and unload_seed_events[0][1] == '0', 'Back-to-menu must apply exactly one source Level::Unload seed and clear sync seed'
+        assert not SOURCE_RNG_GSINIT.search(text[offset:]), 'Back-to-menu must not apply the fresh-game seed'
         assert 'Native Quest terminal discard | destroyed b8 192 | log118 192 | source log vectors empty' in text[offset:], 'Back must destroy both canonical Quest logs before returning to the menu'
         visual_ready('main')
 
@@ -622,6 +631,7 @@ def main():
             # am start brings the existing Activity forward without force-stop.
             assert 'Status: ok' in adb('shell', 'am', 'start', '-W', '-n', PACKAGE + '/.MainActivity'), 'Resume failed'
             text = wait(lambda t: HUD.search(t[before:]) is not None, 'connected HUD after Home/resume', 70)
+            assert not SOURCE_RNG_GSINIT.search(text[before:]) and not SOURCE_RNG_UNLOAD.search(text[before:]), 'Home/resume must retain the source RNG session without lifecycle reseeding'
             wait_focus('Home/resume')
             assert pid == home_pid and adb('shell', 'pidof', PACKAGE) == home_pid, 'Home/resume replaced process'
             classes = CLASS.findall(text)
@@ -672,6 +682,23 @@ def main():
                 report['cleanup_failure'] = 'App force-stop failed before profile preservation; no personal files touched.'
             failure = failure or RuntimeError('On-device campaign restoration failed')
         (out / 'menu-source-events.log').write_text('\n'.join(events) + '\n', encoding='utf-8')
+        gsinit_events = SOURCE_RNG_GSINIT.findall('\n'.join(events))
+        unload_events = SOURCE_RNG_UNLOAD.findall('\n'.join(events))
+        expected_lifecycle_events = 2 * len(selected_classes)
+        report['source_random_lifecycle'] = {
+            'GSInit_seed_events': len(gsinit_events),
+            'Level_Unload_seed_events': len(unload_events),
+            'expected_each': expected_lifecycle_events,
+            'home_resume_reseeded': False,
+            'synchronized_seed_zero': all(row[1] == '0' for row in gsinit_events + unload_events),
+        }
+        if report.get('validation') == 'PASS' and (
+                len(gsinit_events) != expected_lifecycle_events or
+                len(unload_events) != expected_lifecycle_events or
+                not report['source_random_lifecycle']['synchronized_seed_zero']):
+            report['validation'] = 'FAIL'
+            report['failure'] = {'type': 'AssertionError', 'message': 'Source RNG lifecycle event totals or synchronized seed values differ'}
+            failure = failure or RuntimeError('Source RNG lifecycle verification failed')
         report['source_events_sha256'] = hashlib.sha256((out / 'menu-source-events.log').read_bytes()).hexdigest()
         (out / 'menu-ui-runtime-smoke.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
     print(json.dumps({'validation': report['validation'], 'cases': len(report['cases']),

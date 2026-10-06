@@ -226,6 +226,14 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_loadFront
  if(!original_ui.load_front_screen(path,"main",error))return result(env,"Menu load failed: "+error);
  return result(env,"Original menu ready");
 }
+extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_returnToMainMenu(JNIEnv* env,jclass,jstring directory,jobject assets){
+ if(!directory||!assets)return result(env,"Menu launch input unavailable");
+ const char* raw=env->GetStringUTFChars(directory,nullptr);if(!raw)return nullptr;const std::string path(raw);env->ReleaseStringUTFChars(directory,raw);
+ menu_assets=AAssetManager_fromJava(env,assets);model_renderer::unload_game_to_menu();
+ std::string error;ui_frame_failed=false;
+ if(!original_ui.load_front_screen(path,"main",error))return result(env,"Menu load failed: "+error);
+ return result(env,"Original menu ready");
+}
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_menuTouch(JNIEnv* env,jclass,jfloat x,jfloat y,jint action){
  std::string error;if(!original_ui.touch(x,y,action,error))return result(env,"Menu touch failed: "+error);return result(env,"");
 }
