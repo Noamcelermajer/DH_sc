@@ -22,13 +22,16 @@ def main():
     wrapper.mkdir(parents=True, exist_ok=True)
     world = ROOT / 'port/level-world'
     source = ROOT / 'port/android-native/app/src/main/cpp/native_player_profile.cpp'
+    quest_owner = ROOT / 'port/android-native/app/src/main/cpp/native_quest_owner.cpp'
+    quest_cursor = ROOT / 'port/android-native/app/src/main/cpp/native_quest_cursor.cpp'
     test = ROOT / 'port/android-native/tests/player_profile_transport.cpp'
     body = f'''cmake_minimum_required(VERSION 3.22)
 project(profile_transport_selected LANGUAGES C CXX)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory("{world.as_posix()}" selected-world)
-add_executable(profile_transport_audit "{test.as_posix()}" "{source.as_posix()}")
+add_executable(profile_transport_audit "{test.as_posix()}" "{source.as_posix()}"
+    "{quest_owner.as_posix()}" "{quest_cursor.as_posix()}")
 target_compile_features(profile_transport_audit PRIVATE cxx_std_17)
 target_compile_options(profile_transport_audit PRIVATE -Wall -Wextra -Werror)
 target_link_libraries(profile_transport_audit PRIVATE dh2_level_world dh2_game_data)
@@ -51,7 +54,7 @@ target_link_libraries(profile_transport_audit PRIVATE dh2_level_world dh2_game_d
     commands = run([ninja, '-C', build, '-t', 'commands', 'profile_transport_audit'])
     rows = selected_entries(build, commands)
     reached = [Path(row['file']).resolve() for row in rows]
-    required = [source, world/'character_saved_class_v1.cpp', world/'character_template_random.cpp',
+    required = [source, quest_owner, quest_cursor, world/'character_saved_class_v1.cpp', world/'character_template_random.cpp',
                 ROOT/'port/game-data/player_savegame_v1.cpp', ROOT/'port/game-data/player_save_load_owner_v1.cpp',
                 ROOT/'port/game-data/player_profile_index_v1.cpp', ROOT/'port/game-data/player_save_level_states_v1.cpp',
                 ROOT/'port/game-data/player_saved_level_states_v1.cpp', ROOT/'port/game-data/player_saved_fast_travel_v1.cpp',

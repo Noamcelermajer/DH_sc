@@ -2,10 +2,11 @@
 
 All3 factories, Quest/child constructors, assignment/ReInit and destructors are
 real selected implementations. Constants query the existing world C decoder.
-With --payload, a synthetic whole-campaign QEST packet runs through the actual
-PlayerSaveLoadOwner/Transport mask-2 and mask-4 flow, using actual level/skill
-tables and the native Quest owner with one borrowed cursor. Offline Online is
-explicit test state; Android is smoke-tested, while live QEST restore remains
+With --payload, a synthetic whole-campaign profile carries nonempty SKIL, FAES
+and QEST sections through the actual PlayerSaveLoadOwner/Transport mask-2 and
+mask-4 flow. The same Save receives real SkillTables, faery state and the native
+Quest owner with one borrowed cursor. Offline Online is explicit test state;
+Android is smoke-tested, while live Character::InitPost/profile restore remains
 separate verification.
 """
 from __future__ import annotations

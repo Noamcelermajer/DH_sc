@@ -1,6 +1,6 @@
 {
   "validation": "PASS",
-  "apk_sha256": "556ebd1759bc6598fc8527c3d5760d416254930bce885de92a91ddf7cd2fe2db",
+  "apk_sha256": "c05ec5d971ed5945aab9e86392cdaef7ef55ac6b6bc991bc781b35792e3201fa",
   "serial": "emulator-5558",
   "libraries": [
     {
@@ -89,11 +89,6 @@
       "minimum_load_alignment": 16384
     },
     {
-      "path": "lib/arm64-v8a/libdh2_native.so",
-      "sha256": "2da6abdf4ff24353b25dbab0d9d7ca125b4299cabd6cd6c114735db9a4f18c42",
-      "minimum_load_alignment": 16384
-    },
-    {
       "path": "lib/x86_64/libdh2_engine_ui.so",
       "sha256": "a3e862a250818880146710faa5c72efab79299c063dc2c3ae18162000dd70000",
       "minimum_load_alignment": 16384
@@ -109,13 +104,18 @@
       "minimum_load_alignment": 16384
     },
     {
+      "path": "lib/arm64-v8a/libdh2_native.so",
+      "sha256": "e9dd801e6e01454ce90a87c58ac393d95105a5d29c0b6636f8f9e365e5c1b2a0",
+      "minimum_load_alignment": 16384
+    },
+    {
       "path": "lib/x86_64/libdh2_native.so",
-      "sha256": "8c2074097c26b73e479ccccf838ac82cde5bbdb7f79f4d4ab5cd892b3ba5717f",
+      "sha256": "f43103bd9aaafad43a92572bac30e0e1763f0dba0ad7859d541b0e8b44c878a0",
       "minimum_load_alignment": 16384
     }
   ],
   "scope": "Actual original menu/name/class/Start Single Player taps, selected source profile creation/Assign, development Crypt continuation, connected source HUD, occupied-slot reopen and Home/resume. Full NativeStartGame/campaign/SG4/InitPost/gameplay controls remain open.",
-  "private_transaction_directory": "files/.menu-ui-smoke-3a34c95c49314efeb1bfdca6ea9a1f8f",
+  "private_transaction_directory": "files/.menu-ui-smoke-4bf0667a37a54f698494c6f58f54a54c",
   "personal_saves_pulled": false,
   "cases": [
     {
@@ -161,7 +161,7 @@
           "before_authored_assign": true
         },
         "managed_metadata": {
-          "Save680": 133951533569264,
+          "Save680": 133951533720512,
           "published_once": true,
           "name_class_level_setters": [
             1,
@@ -176,7 +176,7 @@
         },
         "quest_definitions": 64,
         "quest_startup": {
-          "gameplay_Save": 133951533595784,
+          "gameplay_Save": 133951533728264,
           "Character": 4294967297,
           "log_b8": 192,
           "log_118": 192,
@@ -239,7 +239,7 @@
         },
         "quest_definitions": 64,
         "quest_startup": {
-          "gameplay_Save": 133951533716120,
+          "gameplay_Save": 133951533723848,
           "Character": 4294967297,
           "log_b8": 192,
           "log_118": 192,
@@ -270,39 +270,39 @@
     },
     {
       "file": "0-class-KnightPlayerBase.png",
-      "sha256": "7c9e18d8d33e15274815a805e1dc0fc63e48215e9db3666c83131d3f77ffbe8c"
+      "sha256": "a281f94297b690f0db387095703f0ab9f60968e5858ece5d3506cb197bd9a6d3"
     },
     {
       "file": "0-start-new.png",
-      "sha256": "e690cbe31af34e871b63935b37e4acd03f03dfa3ef54ceb486d25fb7da9988f6"
+      "sha256": "a8d1d395aae2788b6930b5f090f0fa8b3ac3f1975c4bc051a7b3991430995e1a"
     },
     {
       "file": "0-crypt-new.png",
-      "sha256": "f7212a49d61dfc21ba04fc0dcd85c668fd23993529f15c4e9325bc49e563d3b1"
+      "sha256": "2eec03a03a2d0ccffb841c9f5ec789061d8431b8178715e409fedd92b65b7e2a"
     },
     {
       "file": "0-crypt-after-controls.png",
-      "sha256": "3129044f4257bc67dfe61a44e1439ab7840354f7588310283d605005c76a4818"
+      "sha256": "958924a2b2b840b32446d323330c320921fc7e2bc20baf0ac5e6278bee883bd7"
     },
     {
       "file": "0-main-back.png",
-      "sha256": "9c98f32fc9ac698d7457db479fc97836abb5cc799e2a678c31e81ffb2bc7aeb4"
+      "sha256": "951c9527860ef6be51a897a8803235b97adf44b1b6d3cc5d7eb2d78c0ed51f0f"
     },
     {
       "file": "0-start-occupied.png",
-      "sha256": "e690cbe31af34e871b63935b37e4acd03f03dfa3ef54ceb486d25fb7da9988f6"
+      "sha256": "a8d1d395aae2788b6930b5f090f0fa8b3ac3f1975c4bc051a7b3991430995e1a"
     },
     {
       "file": "0-crypt-occupied.png",
-      "sha256": "5cc9bd31222bc3a03984ad80ba99f929f624d73bf89839e1d0b523e37a23b9dd"
+      "sha256": "6a22f1fdd772c50e8d1f662aa04910bbbcf98c84361bc699ac96b24656f5c5dc"
     },
     {
       "file": "0-crypt-resumed.png",
-      "sha256": "60834f68797cac6bebbe5b0d23481c0abb6e4379c156d0985ef05d07b842cd2d"
+      "sha256": "8f123d38151b5d5c45517eaaa229f36beae5e7af003e19776305a9d662eb5b6d"
     },
     {
       "file": "0-main-final.png",
-      "sha256": "9c98f32fc9ac698d7457db479fc97836abb5cc799e2a678c31e81ffb2bc7aeb4"
+      "sha256": "951c9527860ef6be51a897a8803235b97adf44b1b6d3cc5d7eb2d78c0ed51f0f"
     }
   ],
   "api": 37,
@@ -311,11 +311,11 @@
   "original_files_preserved": 2,
   "fresh_process_receipts": [
     {
-      "pid": "11992",
+      "pid": "27386",
       "stable_observations": 2
     },
     {
-      "pid": "13618",
+      "pid": "28929",
       "stable_observations": 2
     }
   ],
@@ -530,11 +530,11 @@
     }
   ],
   "development_controls": {
-    "physical_movement_steps": 14,
+    "physical_movement_steps": 12,
     "blocked_steps": 2,
     "position": [
-      -2242.4272,
-      1403.3232,
+      -2254.5732,
+      1390.1896,
       842.3644
     ],
     "attack_response": "Walk closer to an enemy",
@@ -543,5 +543,5 @@
   "synthetic_primary_profiles_created": 1,
   "synthetic_files_archived": 1,
   "original_files_restored_and_device_checksums_verified": true,
-  "source_events_sha256": "f23949c752cb72eea4129b6c82267a721f9dcd3617522dc31778be84a09a4e8e"
+  "source_events_sha256": "1946642c9ea5cdbed7a361344bfff4755bb8f449173656e70f16f4710794c2c1"
 }

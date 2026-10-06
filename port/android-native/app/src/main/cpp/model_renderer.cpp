@@ -2980,6 +2980,8 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
        &actor_level_tables,&actor_world_map_tables,prince_combat.quests,&native_host.online};
       gameplay_bindings.skill_tables=&actor_skill_catalogue->tables->skills();
       gameplay_bindings.skill_tree_selector=&prince_combat.properties.resolved[28];
+      gameplay_bindings.property_rules=&actor_property_rules;
+      gameplay_bindings.properties=&prince_combat.properties;
       if(!prince_combat.save_transport->bind(std::move(gameplay_bindings),error))
        throw std::runtime_error("Native Player Save provider rebind: "+error);
     }

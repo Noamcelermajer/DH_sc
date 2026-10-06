@@ -209,24 +209,63 @@
   "transport_bridge_followup": {
     "selected_host": {
       "validation": "PASS",
-      "checks": 7961,
-      "masks": [2, 4],
-      "same_save_level_skill_faery_quest_owners": true,
+      "checks": 9415,
+      "masks": [
+        2,
+        4
+      ],
+      "same_save_skill_faery_quest_owners": true,
+      "nonempty_skil": {
+        "restored_level": 7,
+        "restored_slot_maps": 2
+      },
+      "nonempty_faes": {
+        "restored_difficulties": 3,
+        "payload_bytes": 69
+      },
       "qest_quests": 384,
       "objective_payloads": 1164,
       "offline_online_flag_fixture": true,
-      "receipt": "C:/tmp/dh2-native-quest-mask2-mask4-selected/report.json"
+      "receipt": "native-owner-payload.json",
+      "faes_count_mismatch_nonfatal_before_qest": true,
+      "faes_later_difficulty_untouched": true
+    },
+    "faes_reader_differential": {
+      "validation": "PASS",
+      "original_reader": "0x4691d0",
+      "cases": 74,
+      "valid_and_mismatch_projection_parity": true,
+      "truncated_prefixes": 69,
+      "fully_consumed_fields_compared": 1011,
+      "uninitialized_storage_policy_tested": true,
+      "raw_truncation_differences_from_source_readAs": 20,
+      "receipt": "faes-reader-differential.json"
     },
     "android_apk": {
-      "sha256": "ba09e1fa1b52f491fb1fa92d7cdd6429ea4a4f5ee707571bc0569c53e92b5661",
-      "abis": ["arm64-v8a", "x86_64"],
+      "sha256": "c05ec5d971ed5945aab9e86392cdaef7ef55ac6b6bc991bc781b35792e3201fa",
+      "bytes": 154438990,
+      "abis": [
+        "arm64-v8a",
+        "x86_64"
+      ],
       "api": 37,
       "page_size": 16384,
-      "warrior_menu_restart_home_resume": true,
+      "warrior_menu_crypt_controls_restart_home_resume": true,
       "original_saves_restored": true,
-      "receipt": "C:/tmp/dh2-qest-mask2-mask4-startup-smoke/menu-ui-runtime-smoke.json"
+      "receipt": "menu-ui-runtime-smoke.json"
     },
-    "live_qest_restore": false
+    "live_faes_or_qest_profile_restore": false,
+    "property_transport": {
+      "validation": "PASS",
+      "selected_host_checks": 753,
+      "selected_project_inputs": 642,
+      "same_save_and_profile": true,
+      "borrowed_player_combat_rules_and_state": true,
+      "delivery_scoped_property_view": true,
+      "generic_fallback_bypassed": true,
+      "saved_properties_written": 26,
+      "truncated_byte194_prefix_preserved": true
+    }
   },
-  "remaining": "The tested SaveLoad masks 2 and 4 now initialize the same Save's level states, skills, faeries and quest logs, then load QEST through one native Owner/cursor. Android still lacks the actual Character::InitPost caller and gameplay Character+0x14e8 Save association; online hosting/local-hosting, populated FAES/CFEE/PROP/GEAR and source assertion/logger owners remain open. Quest compilation needs the live enemy list/cache, a shared level script manager, event registration and markers; MoveInZone+20 needs one native-width scalar/object projection. Character660/InitPost/inventory and complete player/enemy/skills/combat/loot/campaign remain unfinished."
+  "remaining": "Selected mask-2/4 transport restores nonempty SKIL, valid FAES, and QEST through one Save and Quest owner; a source FAES count mismatch safely returns and QEST still loads. Typed PROP delivery now borrows the same PlayerCombat PropertyRules/PropertyState and preserves reached writes on truncation. Both Android ABIs compile and the API37/16KiB Warrior UI smoke passes. This is still not live campaign restore: Android does not yet call Character::InitPost/SG_Load(2,4), and the gameplay Save is not published through Character+0x14e8. Hosting/CFEE providers and the real GEAR inventory/item owners are absent; quest execution still needs the shared level ScriptManager, live enemy list/cache, events and markers. The complete player/enemy/skills/combat/loot/campaign loop remains unfinished."
 }

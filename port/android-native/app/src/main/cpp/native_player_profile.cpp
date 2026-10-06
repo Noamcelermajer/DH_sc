@@ -8,6 +8,7 @@
 #include "player_saved_fast_travel_v1.hpp"
 #include "native_quest_owner.hpp"
 #include "native_quest_cursor.hpp"
+#include "properties.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -66,6 +67,21 @@ struct Transport::Impl {
   if(q.operation==Op::load_section&&q.section&&!std::strcmp(q.section,"SKIL")&&bindings.skill_tables){
    std::size_t consumed=0;
    return save.load_skills(q.profile.campaign.payload(q.section),*bindings.skill_tables,consumed,error)==0;
+  }
+  if(q.operation==Op::load_section&&q.section&&!std::strcmp(q.section,"FAES")){
+   std::size_t consumed=0;bool source_count_mismatch=false;
+   const bool loaded=save.load_faeries(q.profile.campaign.payload(q.section),consumed,
+                                       source_count_mismatch,error);
+   // The source reader returns normally after its count-mismatch boundary;
+   // retain that result without inventing a different row count or payload.
+   (void)source_count_mismatch;
+   return loaded;
+  }
+  if(q.operation==Op::load_section&&q.section&&!std::strcmp(q.section,"PROP")){
+   if(!bindings.property_rules||!bindings.properties){error="live gameplay PropertyRules/PropertyState unavailable";return false;}
+   auto view=data::property_view(*bindings.property_rules,*bindings.properties);
+   std::size_t consumed=0;
+   return save.load_properties(q.profile.campaign.payload(q.section),view,consumed,error);
   }
   if(q.operation==Op::load_section&&q.section&&!std::strcmp(q.section,"FTVL")){
    namespace travel=data::player_saved_fast_travel_v1;
@@ -160,6 +176,7 @@ Transport::~Transport()=default;
 bool Transport::bind(TransportBindings bindings,std::string& error){
  if(impl_->active){error="cannot rebind campaign transport during delivery";return false;}
  if(bool(bindings.continuation.owner)!=bool(bindings.continuation.invoke)){error="campaign continuation lease and provider disagree";return false;}
+ if(bool(bindings.property_rules)!=bool(bindings.properties)){error="gameplay PropertyRules and PropertyState must bind together";return false;}
  if(bool(bindings.levels)!=bool(bindings.world_map)){error="campaign level and WorldMap owners must bind together";return false;}
  if(bindings.quests&&!bindings.quests->owns_save(&impl_->save)){error="Quest factory owner belongs to a different gameplay Save";return false;}
  impl_->bindings=std::move(bindings);error.clear();return true;

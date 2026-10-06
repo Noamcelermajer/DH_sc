@@ -14,7 +14,8 @@ namespace saved_class=dh2::character_saved_class_v1;
 using Raw=std::vector<std::uint8_t>;
 namespace {
 unsigned checks=0;
-void require(bool value){if(!value)throw std::runtime_error("transport check "+std::to_string(checks+1));++checks;}
+void check(bool value,int line){if(!value)throw std::runtime_error("transport check "+std::to_string(checks+1)+" at line "+std::to_string(line));++checks;}
+#define require(...) check((__VA_ARGS__),__LINE__)
 Raw read(const std::filesystem::path& path){std::ifstream f(path,std::ios::binary);require(bool(f));return Raw(std::istreambuf_iterator<char>(f),{});}
 Bytes bytes(const Raw& raw){return {raw.data(),raw.size()};}
 void put(Raw& raw,std::uint32_t value){for(unsigned i=0;i<4;++i)raw.push_back(std::uint8_t(value>>(8*i)));}
@@ -71,21 +72,31 @@ int main(int argc,char** argv){try{
  // A populated source +8 profile is retained even after SG_SetSlot changes +4.
  save.set_slot(99);class_cache=-1;require(runtime.resolve(&result,error)==saved_class::Status::complete);
  require(transport.receipt().file_opens==1&&transport.receipt().field_reads==14&&save.slot()==99);
- // Execute the selected nonnull-Character PROP reader on the same live sheet.
- PropertyState state;state.saved.fill(-7);state.resolved.fill(-9);auto view=property_view(rules,state);
- unsigned prop_calls=0;auto lease=std::make_shared<int>(1);
- PlayerSaveLoadServicesV1 continuation{lease,[&](const PlayerSaveLoadRequestV1& q,PlayerSaveLoadResponseV1&,std::string& e){
-  require(q.save==&save&&q.operation==PlayerSaveLoadOpV1::load_section&&std::string(q.section)=="PROP");
-  require(q.profile.identity==canonical.identity&&q.reader_enabled&&q.writer_enabled);
-  std::string rebind_error;require(!transport.bind({},rebind_error));require(!rebind_error.empty());
-  ++prop_calls;std::size_t consumed=0;return q.save->load_properties(q.profile.campaign.payload(q.section),view,consumed,e);
+ // PROP binds the same live Save profile and PlayerCombat PropertyState.
+ // The transport builds a short-lived PropertyView only for this delivery;
+ // its generic continuation must not become a competing property owner.
+ PropertyState state;state.saved.fill(-7);state.resolved.fill(-9);
+ unsigned generic_calls=0;auto lease=std::make_shared<int>(1);
+ PlayerSaveLoadServicesV1 continuation{lease,[&](const PlayerSaveLoadRequestV1&,PlayerSaveLoadResponseV1&,std::string&){
+  ++generic_calls;return false;
  }};
- require(transport.bind({dir,&table,&difficulty,continuation},error));require(transport.loader().load(0x20,error));
- require(prop_calls==1&&save.saved_properties_byte_194()==41);
+ profile::TransportBindings property_bindings{dir,&table,&difficulty,continuation};
+ property_bindings.property_rules=&rules;property_bindings.properties=&state;
+ require(transport.bind(std::move(property_bindings),error));require(transport.loader().load(0x20,error));
+ require(generic_calls==0&&save.saved_properties_byte_194()==41);
+ require(&transport.loader().save()==&save&&canonical.identity&&canonical.campaign);
  unsigned stored=0;for(unsigned i=0;i<224;++i){const auto type=rules.types[i]==-1?16u:std::uint32_t(rules.types[i]);
   const auto expected=(type&0x20)?std::int32_t(0x40000000+i):-7;stored+=(type&0x20)!=0;
   require(state.saved[i]==expected&&state.resolved[i]==-9);
  }require(stored>0);
+ profile::TransportBindings incomplete{dir,&table,&difficulty,{}};incomplete.property_rules=&rules;
+ require(!transport.bind(std::move(incomplete),error)&&error.find("must bind together")!=std::string::npos);
+ write(dir/"dh2_005.savegame",campaign(*knight,prop));
+ PlayerSavegameV1 missing_save;missing_save.set_slot(5);missing_save.set_character(character);
+ PlayerSaveProfileV1 missing_profile;profile::Transport missing_transport(missing_save,missing_profile);
+ require(missing_transport.bind({dir,&table,&difficulty,continuation},error));
+ require(!missing_transport.loader().load(0x20,error));
+ require(error=="live gameplay PropertyRules/PropertyState unavailable"&&generic_calls==0);
  require(transport.bind({dir,&table,&difficulty,{}},error));require(!transport.loader().load(2,error));
  require(transport.loader().reached_phase()==std::uint32_t(PlayerSaveLoadOpV1::init_levels)+1&&!save.skills_initialized());
  require(!transport.loader().load(4,error));require(transport.loader().reached_phase()==std::uint32_t(PlayerSaveLoadOpV1::online)+1);
@@ -137,15 +148,12 @@ int main(int argc,char** argv){try{
   require(a->words[0]==1&&b->words[0]==2);
  }
  require(levels_transport.receipt().file_opens==1);
- unsigned offline_queries=0;
+ std::uint8_t offline_status=0;
  // Declared host-only source-global fixture: online=false. All file/section
  // readers still execute production code. This synthetic profile has no
  // inventory/quest/skill payload; successful mask4 is not a gameplay proof.
- PlayerSaveLoadServicesV1 offline_fixture{lease,[&](const PlayerSaveLoadRequestV1& q,PlayerSaveLoadResponseV1& r,std::string&){
-  require(q.save==&saved_levels&&q.operation==PlayerSaveLoadOpV1::online);++offline_queries;r.flag=false;return true;
- }};
- require(levels_transport.bind({dir,&table,&difficulty,offline_fixture,false,&levels,&world_map},error));
- require(levels_transport.loader().load(4,error));require(offline_queries==2);
+ require(levels_transport.bind({dir,&table,&difficulty,{},false,&levels,&world_map,{},&offline_status},error));
+ require(levels_transport.loader().load(4,error));
  require(*saved_levels.source_fast_travel_bits(0)==std::array<std::uint32_t,2>{{1,0}});
  require(*saved_levels.source_fast_travel_bits(1)==std::array<std::uint32_t,2>{{1,1}});
  require(*saved_levels.source_fast_travel_bits(2)==std::array<std::uint32_t,2>{{5,0}});
@@ -167,6 +175,23 @@ int main(int argc,char** argv){try{
  write(dir/"dh2_001.savegame",words({UINT32_MAX}));require(!rejected.loader().load(1,error));require(!bad_profile.identity&&bad.class_id()==-1);
  write(dir/"dh2_001.savegame",campaign(*knight,prop));require(rejected.loader().load(1,error));
  require(bad_profile.identity&&bad.class_id()==id&&rejected.receipt().file_opens==2);
+ // A failed typed PROP read keeps the words already delivered into the same
+ // saved sheet. The enclosing mask load does not roll this prefix back.
+ Raw truncated_prop;put(truncated_prop,224);for(unsigned i=0;i<224;++i)put(truncated_prop,0x50000000+i);
+ write(dir/"dh2_004.savegame",campaign(*knight,truncated_prop));
+ PlayerSavegameV1 partial_save;partial_save.set_slot(4);partial_save.set_character(character);
+ PlayerSaveProfileV1 partial_profile;profile::Transport partial_transport(partial_save,partial_profile);
+ PropertyState partial_state;partial_state.saved.fill(-11);partial_state.resolved.fill(-13);
+ profile::TransportBindings partial_bindings{dir,&table,&difficulty,{}};
+ partial_bindings.property_rules=&rules;partial_bindings.properties=&partial_state;
+ require(partial_transport.bind(std::move(partial_bindings),error));
+ require(!partial_transport.loader().load(0x20,error));
+ require(error=="truncated source PROP byte194"&&partial_profile.identity&&partial_profile.campaign);
+ require(&partial_transport.loader().save()==&partial_save&&partial_save.slot()==4&&partial_save.character()==character);
+ unsigned partial_stored=0;for(unsigned i=0;i<224;++i){const auto type=rules.types[i]==-1?16u:std::uint32_t(rules.types[i]);
+  const auto expected=(type&0x20)?std::int32_t(0x50000000+i):-11;partial_stored+=(type&0x20)!=0;
+  require(partial_state.saved[i]==expected&&partial_state.resolved[i]==-13);
+ }require(partial_stored==stored&&partial_save.saved_properties_byte_194()==0);
  std::cout<<"{\"validation\":\"PASS\",\"checks\":"<<checks<<",\"character_class\":"<<id<<",\"saved_properties_written\":"<<stored<<",\"saved_level_defaults\":"<<defaults<<",\"same_six_saved_arrays\":true,\"distinct_preview_gameplay_owners\":true,\"source_class_loader_calls\":2,\"scope\":\"selected-library host composition; native startup association and complete InitPost remain unbound\"}\n";
  return 0;
  }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

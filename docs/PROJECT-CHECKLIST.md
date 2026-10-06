@@ -45,15 +45,15 @@ still require live gameplay integration. All final completion gates remain open.
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
-| Character properties, equipment and state | 29 | 6 |
+| Character properties, equipment and state | 30 | 6 |
 | Lua, skills and enemy AI | 48 | 14 |
 | Combat, death, loot and progression | 7 | 7 |
-| Quests, campaign, UI, audio and saves | 37 | 10 |
+| Quests, campaign, UI, audio and saves | 39 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **171** | **73** |
+| **Total scoped tasks** | **173** | **73** |
 
-Latest source gate: [Quest compilation and payloads](../reports/reconstruction-2026-10-06/quest-payload/validation.json): 8,147 new ARM comparisons; selected SaveLoad masks 2 and 4 restore 384 Quests/1,164 objective payloads through the same Save/Owner/cursor (7,961 host checks). Both Android ABIs compile and Warrior menu/restart/Home-resume passes on API37/16KiB. Live QEST restore, actual Character::InitPost/Save association, objective world/scripts/events, Character660/inventory and the complete encounter remain open. The published APK above is the earlier three-class-tested startup checkpoint. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
+Latest source gate: [Quest compilation and payloads](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,415 host checks with SKIL, FAES and QEST on one Save; a FAES count mismatch still reaches QEST. Typed PROP passes 753 host checks. FAES also passes 74 original-ARM differential cases. Both Android ABIs compile; the local APK smoke passes Warrior menu/Crypt/restart/Home-resume on API37/16KiB (SHA-256 `c05ec5d9…`). Live `Character::InitPost`/Save association, GEAR ownership, quest-world callbacks, and the full encounter remain open. The published APK above remains the earlier three-class-tested startup checkpoint.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -184,6 +184,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
   bounded fixtures; this is not live loot or player gameplay. See the
   [selected-library host report](../reports/branch-audit-2026-10-05/adam-integrated-host.json).
 - [x] Select borrowing equipment requirements/recalculation services over the same V4 inventory and buff-aware properties; 7,451 selected-host checks and both Android ABIs pass. Review fixed retirement before item deletion. Native Skin/text/HUD and final teardown remain open.
+- [x] Route saved PROP into the same gameplay Save and PlayerCombat PropertyRules/PropertyState: 753 selected-host checks, 26 saved fields, no generic fallback, and reached-prefix retention on truncation. Live InitPost remains unbound.
 - [ ] Complete Character construction, all property sheet/buff/gear ownership and lifecycle phases.
 - [x] Select Adam's V5 item presentation on existing item identities/table authority; 4,031 presentation and 1,119 power-instance gold replays pass. Native text/localization remains open.
 - [x] Select borrowing weapon queries over sole V4 inventory/properties; 1,000 original cases, both equipment sets and preserved combat fields pass. Native inventory binding remains open.
@@ -371,8 +372,9 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select Quest/QuestLog Compile and list invalidation/compilation wrappers: 3,914 ARM comparisons/all 236 words, 21 checks; preserve already-marked recursive lookup and mandatory objective gameplay leaves.
 - [x] Implement one retained whole-campaign absolute cursor: 30 native checks and 6,561 selected QEST/Objective composition checks; no second Save or cursor.
 - [x] Bind native Owner QEST/Quest/action/list payload routes: 6,559 checks restore 384 quests/1,164 objectives, replay both logs, retain truncated prefixes and run genuine cleanup. SG_Load2 handoff/assertion policy remain open.
-- [x] Route SaveLoad masks 2 and 4 through the same Save/level/skill/faery/quest owners and whole-profile cursor: 7,961 selected host checks restore 384 Quests/1,164 payloads; the offline Online byte is an explicit test value.
-- [x] Compile the transport bridge for both Android ABIs and verify Warrior menu/start/restart/Back/Home-resume on API37/16KiB. Live QEST restore and original InitPost remain open.
+- [x] Route SaveLoad masks 2 and 4 through one Save/Quest owner and whole-profile cursor: 9,415 selected-host checks restore nonempty SKIL and valid FAES plus 384 Quests/1,164 payloads; a FAES count mismatch remains nonfatal and QEST continues. Offline Online is an explicit test value.
+- [x] Differential-test FAES against original `__LoadFaeries` at `0x4691d0`: 74 cases, including all 69 truncated prefixes; 1,011 fully consumed fields match, with the unsafe source short-read difference recorded.
+- [x] Compile the transport bridge for both Android ABIs and smoke-test Warrior menu/Crypt/input/restart/Back/Home-resume on API37/16KiB. This does not execute live `Character::InitPost` or restore a real campaign.
 
 ## 9. Fan modding and source delivery
 
