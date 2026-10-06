@@ -53,7 +53,7 @@ still require live gameplay integration. All final completion gates remain open.
 | Final completion gates | 0 | 9 |
 | **Total scoped tasks** | **171** | **73** |
 
-Latest source gate: [Quest compilation and payloads](../reports/reconstruction-2026-10-06/quest-payload/validation.json): 8,147 new ARM comparisons; the selected SaveLoad mask-0x10 transport restores 384 Quests/1,164 objective payloads through the same Owner/cursor (7,937 host checks). Both Android ABIs compile and Warrior menu/restart/Home-resume passes on API37/16KiB. Live QEST restore, genuine InitPost/mask-2, objective world/scripts/events, Character660/inventory and the complete encounter remain open. The published APK above is the earlier three-class-tested startup checkpoint. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
+Latest source gate: [Quest compilation and payloads](../reports/reconstruction-2026-10-06/quest-payload/validation.json): 8,147 new ARM comparisons; selected SaveLoad masks 2 and 4 restore 384 Quests/1,164 objective payloads through the same Save/Owner/cursor (7,961 host checks). Both Android ABIs compile and Warrior menu/restart/Home-resume passes on API37/16KiB. Live QEST restore, actual Character::InitPost/Save association, objective world/scripts/events, Character660/inventory and the complete encounter remain open. The published APK above is the earlier three-class-tested startup checkpoint. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -371,7 +371,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select Quest/QuestLog Compile and list invalidation/compilation wrappers: 3,914 ARM comparisons/all 236 words, 21 checks; preserve already-marked recursive lookup and mandatory objective gameplay leaves.
 - [x] Implement one retained whole-campaign absolute cursor: 30 native checks and 6,561 selected QEST/Objective composition checks; no second Save or cursor.
 - [x] Bind native Owner QEST/Quest/action/list payload routes: 6,559 checks restore 384 quests/1,164 objectives, replay both logs, retain truncated prefixes and run genuine cleanup. SG_Load2 handoff/assertion policy remain open.
-- [x] Route SaveLoad InitQuests and QEST requests through the same native Owner/whole-profile cursor: selected mask-0x10 host path passes 7,937 checks; offline Online flag is an explicit test fixture.
+- [x] Route SaveLoad masks 2 and 4 through the same Save/level/skill/faery/quest owners and whole-profile cursor: 7,961 selected host checks restore 384 Quests/1,164 payloads; the offline Online byte is an explicit test value.
 - [x] Compile the transport bridge for both Android ABIs and verify Warrior menu/start/restart/Back/Home-resume on API37/16KiB. Live QEST restore and original InitPost remain open.
 
 ## 9. Fan modding and source delivery

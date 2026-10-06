@@ -5,6 +5,10 @@
 #include "../app/src/main/cpp/native_player_profile.hpp"
 #include "../../game-data/quest_objective_factory_v1.hpp"
 #include "../../game-data/player_profile_filename_v1.hpp"
+#include "../../game-data/skill_tables.hpp"
+#include "../../game-data/level_tables.hpp"
+#include "../../game-data/world_map_tables.hpp"
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 #include <cstring>
@@ -30,13 +34,19 @@ auto file(const std::string& path){
  f.read(reinterpret_cast<char*>(bytes->data()),std::streamsize(bytes->size()));check(bool(f));return bytes;
 }
 struct Cache {
- t::View view;n::Constants constants;
+ t::View view;n::Constants constants;d::SkillTables skills;d::LevelTables levels;d::WorldMapTables world_map;
  explicit Cache(const std::string& path){
   auto packed=file(path+"/v2quests_pyarray.bin"),names=file(path+"/v2quests_pyarraynames.bin");
   t::Input input;check(!dh2_quests_open(&input.table,packed->data(),std::uint32_t(packed->size())));
   input.packed_owner=packed;input.names=names->data();input.names_size=names->size();input.names_owner=names;
   t::Owner owner;std::string error;check(owner.load(input,error));view=owner.borrow();check(view.count()==64);
   auto bytes=file(path+"/v2quests_pycst.bin");check(!dh2_pycst_open(&constants.view,bytes->data(),std::uint32_t(bytes->size())));constants.owner=bytes;
+  auto skill_data=file(path+"/skills_pyarray.bin"),skill_names=file(path+"/skills_pyarraynames.bin"),skill_schema=file(path+"/skills_pystructnames.bin");
+  check(d::load_skill_tables({skill_data->data(),skill_data->size()},{skill_names->data(),skill_names->size()},{skill_schema->data(),skill_schema->size()},skills,error));
+  auto level_data=file(path+"/levels_pyarray.bin"),level_names=file(path+"/levels_pyarraynames.bin"),level_schema=file(path+"/levels_pystructnames.bin");
+  check(d::load_levels({level_data->data(),level_data->size()},{level_names->data(),level_names->size()},{level_schema->data(),level_schema->size()},levels,error));
+  auto map_data=file(path+"/worldmap_pyarray.bin"),map_names=file(path+"/worldmap_pyarraynames.bin"),map_schema=file(path+"/worldmap_pystructnames.bin");
+  check(d::load_world_map({map_data->data(),map_data->size()},{map_names->data(),map_names->size()},{map_schema->data(),map_schema->size()},world_map,error));
  }
 };
 std::uint64_t position(n::Cursor& cursor){std::uint64_t value=0;check(cursor.tell(cursor.stream(),&value));return value;}
@@ -160,13 +170,19 @@ void transport_bridge(Cache& cache){
  {std::ofstream out(directory/d::player_profile_filename_v1(0,false,false),std::ios::binary);
   check(bool(out));out.write(reinterpret_cast<const char*>(profile_bytes.data()),std::streamsize(profile_bytes.size()));check(bool(out));}
  d::PlayerSaveProfileV1 profile;dh2::native::player_profile::Transport transport(*save,profile);std::string error;
- std::uint8_t native_host_online=0;
+ std::uint8_t native_host_online=0;std::int32_t skill_tree_selector=0;
  dh2::native::player_profile::TransportBindings bindings;bindings.directory=directory;bindings.quests=owner;bindings.online=&native_host_online;
+ bindings.levels=&cache.levels;bindings.world_map=&cache.world_map;bindings.skill_tables=&cache.skills;bindings.skill_tree_selector=&skill_tree_selector;
  context="transport bridge binding";
  if(!transport.bind(std::move(bindings),error))throw std::runtime_error("transport bridge bind: "+error);
- if(!transport.loader().load(0x10,error))throw std::runtime_error("transport bridge load: "+error);
+ if(!transport.loader().load(2,error))throw std::runtime_error("transport mask-2 load: "+error);
+ context="transport mask-2 initialization";
+ check(transport.loader().delivered_calls()==7&&save->skills_initialized());
+ check(save->skills().size()==cache.skills.skill_lists.at(0).members.size());
+ check(std::all_of(save->faeries_initialized().begin(),save->faeries_initialized().end(),[](bool value){return value;}));
+ if(!transport.loader().load(4,error))throw std::runtime_error("transport mask-4 load: "+error);
  context="transport bridge masks / QEST";
- check(transport.loader().delivered_calls()==6&&profile.identity&&profile.campaign.section("QEST"));
+ check(transport.loader().delivered_calls()==10&&profile.identity&&profile.campaign.section("QEST"));
  check(owner->owns_save(save.get())&&owner->receipt().published[0]==192&&owner->receipt().published[1]==192);
  check(owner->receipt().quest_payloads==384&&owner->receipt().objective_payloads==1164);
  for(unsigned index=0;index<2;++index)for(unsigned difficulty=0;difficulty<3;++difficulty){
@@ -180,5 +196,5 @@ void transport_bridge(Cache& cache){
 }
 int main(int argc,char** argv){try{check(argc==2);Cache cache(argv[1]);complete(cache);const auto row=truncated_quantity(cache);truncated_direct_state(cache);
  transport_bridge(cache);
- std::printf("{\"validation\":\"PASS\",\"checks\":%u,\"actual_quest_instances\":384,\"quest_payloads\":384,\"objective_payloads\":1164,\"transport_mask_10_bridge\":true,\"objects_per_difficulty\":194,\"object_payload_bytes_per_difficulty\":414,\"qest_bytes_per_difficulty\":942,\"one_replay_packet_bytes\":2826,\"absolute_start\":31,\"same_cursor_replay\":true,\"canonical_state_volatile_tails\":true,\"genuine_close_after_success_and_failure\":true,\"truncated_saved_quantity\":{\"actual_row\":%u,\"quantity_not_published\":true,\"state_and_action_done_preserved\":true,\"cursor_prefix_retained\":true,\"assertion_policy_unavailable_rejected\":true},\"truncated_direct_state_prefix\":true,\"android_compilation\":false,\"live_gameplay\":false}\n",checks,row);return 0;
+ std::printf("{\"validation\":\"PASS\",\"checks\":%u,\"actual_quest_instances\":384,\"quest_payloads\":384,\"objective_payloads\":1164,\"transport_mask_2_4_bridge\":true,\"objects_per_difficulty\":194,\"object_payload_bytes_per_difficulty\":414,\"qest_bytes_per_difficulty\":942,\"one_replay_packet_bytes\":2826,\"absolute_start\":31,\"same_cursor_replay\":true,\"canonical_state_volatile_tails\":true,\"genuine_close_after_success_and_failure\":true,\"truncated_saved_quantity\":{\"actual_row\":%u,\"quantity_not_published\":true,\"state_and_action_done_preserved\":true,\"cursor_prefix_retained\":true,\"assertion_policy_unavailable_rejected\":true},\"truncated_direct_state_prefix\":true,\"android_compilation\":false,\"live_gameplay\":false}\n",checks,row);return 0;
  }catch(const std::exception& error){std::fprintf(stderr,"%s\n",error.what());return 1;}}

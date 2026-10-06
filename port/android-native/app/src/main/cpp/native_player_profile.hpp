@@ -48,6 +48,8 @@ struct TransportBindings {
  // hosting remain separate source operations and require their own providers.
  const std::uint8_t* online=nullptr;
  const std::uint8_t* hosting_quest_flag=nullptr;
+ const data::SkillTables* skill_tables=nullptr;
+ const std::int32_t* skill_tree_selector=nullptr;
 };
 // One retained LoadOwner over a caller's existing Save and canonical +8
 // profile slot. The transport owns I/O/callback backing only. It creates no

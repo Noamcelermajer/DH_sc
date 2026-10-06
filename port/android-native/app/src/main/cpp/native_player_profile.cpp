@@ -58,6 +58,15 @@ struct Transport::Impl {
    if(!bindings.hosting_quest_flag){error="PlayerManager quest-host flag unavailable";return false;}
    response.flag=*bindings.hosting_quest_flag!=0;error.clear();return true;
   }
+  if(q.operation==Op::init_skills){
+   if(!bindings.skill_tables||!bindings.skill_tree_selector){error="live SkillTables/SkillTree providers unavailable";return false;}
+   return save.initialize_skills(*bindings.skill_tables,*bindings.skill_tree_selector,error);
+  }
+  if(q.operation==Op::init_faeries){save.initialize_faeries();error.clear();return true;}
+  if(q.operation==Op::load_section&&q.section&&!std::strcmp(q.section,"SKIL")&&bindings.skill_tables){
+   std::size_t consumed=0;
+   return save.load_skills(q.profile.campaign.payload(q.section),*bindings.skill_tables,consumed,error)==0;
+  }
   if(q.operation==Op::load_section&&q.section&&!std::strcmp(q.section,"FTVL")){
    namespace travel=data::player_saved_fast_travel_v1;
    travel::Runtime reader(&save);travel::Result result;

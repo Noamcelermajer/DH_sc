@@ -2974,6 +2974,15 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     }}else{combat_random={0xD22026u,0};combat_hits=0;}
     saved_actors.clear();
     if(!restore)prince_combat=std::move(fresh_player);
+    if(!restore){
+      dh2::native::player_profile::TransportBindings gameplay_bindings{runtime_root,
+       prince_combat.profile_characters.get(),&native_save_difficulty,{},false,
+       &actor_level_tables,&actor_world_map_tables,prince_combat.quests,&native_host.online};
+      gameplay_bindings.skill_tables=&actor_skill_catalogue->tables->skills();
+      gameplay_bindings.skill_tree_selector=&prince_combat.properties.resolved[28];
+      if(!prince_combat.save_transport->bind(std::move(gameplay_bindings),error))
+       throw std::runtime_error("Native Player Save provider rebind: "+error);
+    }
     const auto& quest_receipt=prince_combat.quests->receipt();
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Quest startup | Save %zu | Character %zu | log b8 %u | log118 %u | constants %u | retained %u | Compile and quest gameplay pending",std::size_t(prince_combat.savegame.get()),std::size_t(prince_combat.savegame->character()),quest_receipt.published[0],quest_receipt.published[1],quest_receipt.constant_queries,unsigned(restore));
     if(!restore){

@@ -209,23 +209,24 @@
   "transport_bridge_followup": {
     "selected_host": {
       "validation": "PASS",
-      "checks": 7937,
-      "mask": 16,
+      "checks": 7961,
+      "masks": [2, 4],
+      "same_save_level_skill_faery_quest_owners": true,
       "qest_quests": 384,
       "objective_payloads": 1164,
       "offline_online_flag_fixture": true,
-      "receipt": "C:/tmp/dh2-native-quest-transport-selected/report.json"
+      "receipt": "C:/tmp/dh2-native-quest-mask2-mask4-selected/report.json"
     },
     "android_apk": {
-      "sha256": "13efd06e78c8a5eef32656722529a7f83981f2ca81f52467db1cd9559edb2cf7",
+      "sha256": "ba09e1fa1b52f491fb1fa92d7cdd6429ea4a4f5ee707571bc0569c53e92b5661",
       "abis": ["arm64-v8a", "x86_64"],
       "api": 37,
       "page_size": 16384,
       "warrior_menu_restart_home_resume": true,
       "original_saves_restored": true,
-      "receipt": "C:/tmp/dh2-qest-transport-startup-smoke-final/menu-ui-runtime-smoke.json"
+      "receipt": "C:/tmp/dh2-qest-mask2-mask4-startup-smoke/menu-ui-runtime-smoke.json"
     },
     "live_qest_restore": false
   },
-  "remaining": "The tested SaveLoad mask-0x10 route now sends InitQuests and QEST to the same native Owner, but Android still lacks the real Character::InitPost/mask-2 caller and its skill/faery/online branches. Source assertion/logger owners remain open. Compile objective gameplay needs the real enemy list/cache, one shared level script manager, event registration and markers; MoveInZone+20 needs one native-width scalar/object projection. Character660/InitPost/inventory and complete player/enemy/skills/combat/loot/campaign remain unfinished."
+  "remaining": "The tested SaveLoad masks 2 and 4 now initialize the same Save's level states, skills, faeries and quest logs, then load QEST through one native Owner/cursor. Android still lacks the actual Character::InitPost caller and gameplay Character+0x14e8 Save association; online hosting/local-hosting, populated FAES/CFEE/PROP/GEAR and source assertion/logger owners remain open. Quest compilation needs the live enemy list/cache, a shared level script manager, event registration and markers; MoveInZone+20 needs one native-width scalar/object projection. Character660/InitPost/inventory and complete player/enemy/skills/combat/loot/campaign remain unfinished."
 }

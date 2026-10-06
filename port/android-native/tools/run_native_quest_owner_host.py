@@ -3,9 +3,10 @@
 All3 factories, Quest/child constructors, assignment/ReInit and destructors are
 real selected implementations. Constants query the existing world C decoder.
 With --payload, a synthetic whole-campaign QEST packet runs through the actual
-PlayerSaveLoadOwner/Transport and native Quest owner with one borrowed cursor.
-The offline Online byte is explicit test state; Android and live QEST restore
-remain separate verification.
+PlayerSaveLoadOwner/Transport mask-2 and mask-4 flow, using actual level/skill
+tables and the native Quest owner with one borrowed cursor. Offline Online is
+explicit test state; Android is smoke-tested, while live QEST restore remains
+separate verification.
 """
 from __future__ import annotations
 import argparse,hashlib,json,os,re,shutil,subprocess,sys
