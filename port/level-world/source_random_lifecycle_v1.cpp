@@ -24,10 +24,6 @@ bool inventory_next(void* context, std::int32_t bound, std::uint32_t stream,
         error = "Inventory RNG must borrow the original process state";
         return false;
     }
-    if (bound < 0 || stream > 1) {
-        error = "Inventory RNG request is outside the source stream domain";
-        return false;
-    }
     value = dh2_random_next(static_cast<dh2_random_state*>(context),
                             static_cast<std::uint32_t>(bound), stream);
     error.clear();

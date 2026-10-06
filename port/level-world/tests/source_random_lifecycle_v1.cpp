@@ -70,12 +70,12 @@ int main() {
                 "ordinary inventory draw must match and mutate only original stream zero");
     expected = streams;
     const auto expected_sync = dh2_random_next(&expected, 13, 1);
-    ok &= check(random.next(random.context, 13, 1, value, error) &&
+    ok &= check(random.next(random.context, 13, 2, value, error) &&
                     value == expected_sync && streams.seeds[0] == expected.seeds[0] &&
                     streams.counters[0] == expected.counters[0] &&
                     streams.seeds[1] == expected.seeds[1] &&
                     streams.counters[1] == expected.counters[1],
-                "synchronized loot draw must match and mutate only original stream one");
+                "any nonzero source sync word must mutate only original stream one");
     expected = streams;
     const auto expected_zero = dh2_random_next(&expected, 0, 0);
     ok &= check(random.next(random.context, 0, 0, value, error) &&
@@ -84,18 +84,21 @@ int main() {
                     streams.seeds[1] == expected.seeds[1] &&
                     streams.counters[1] == expected.counters[1],
                 "zero-bound source draw must preserve value semantics and advance counter");
+    expected = streams;
+    const auto expected_negative = dh2_random_next(&expected, UINT32_MAX, 0);
+    ok &= check(random.next(random.context, -1, 0, value, error) &&
+                    value == expected_negative && streams.seeds[0] == expected.seeds[0] &&
+                    streams.counters[0] == expected.counters[0] &&
+                    streams.seeds[1] == expected.seeds[1] &&
+                    streams.counters[1] == expected.counters[1],
+                "signed bound words must retain the source uint32 conversion");
     const auto before_invalid = streams;
     dh2_random_state unrelated{};
     ok &= check(!random.next(&unrelated, 17, 0, value, error) && streams.seeds[0] == before_invalid.seeds[0] &&
-                    streams.counters[0] == before_invalid.counters[0],
-                "a foreign state must reject without touching the process RNG");
-    ok &= check(!random.next(random.context, -1, 0, value, error) &&
-                    !random.next(random.context, 17, 2, value, error) &&
-                    streams.seeds[0] == before_invalid.seeds[0] &&
                     streams.counters[0] == before_invalid.counters[0] &&
                     streams.seeds[1] == before_invalid.seeds[1] &&
                     streams.counters[1] == before_invalid.counters[1],
-                "invalid bound/stream must reject without consuming a draw");
+                "a foreign state must reject without touching the process RNG");
 
     if (!ok) return 1;
     std::puts("source RNG lifecycle selected-library checks passed: singleton identity, GSInit/unload seeds, counter preservation, shared inventory/loot descriptor draws on both streams, invalid-call preservation");
