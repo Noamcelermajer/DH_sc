@@ -79,7 +79,8 @@ def main():
     commands = [
         [args.build / "item_presentation_v5_selected.exe", REF / "player-item-effects-v5/presentation-fixtures.bin",
          REF / "player-item-effects-v5/power-instance-fixtures.bin", args.cache],
-        [args.build / "item_loot_backbone_v7_selected.exe", REF / "loot-power-creation-v7/fixtures.bin", args.cache],
+        [args.build / "item_loot_backbone_v7_selected.exe", REF / "loot-power-creation-v7/fixtures.bin", args.cache,
+         ROOT / "port/game-data/reference/player-creation-v2/powered-addloot-v7.bin"],
     ]
     tests = [{"command": [str(x) for x in command], "result": json.loads(run(command))} for command in commands]
     assert all(test["result"]["validation"] == "PASS" for test in tests)
@@ -87,7 +88,7 @@ def main():
     assert before == after, "Source changed during the gate; rerun the frozen selection"
     report = {
         "validation": "PASS", "upstream_commit": "791e961b12233100b303038c961666834f4beb9d",
-        "scope": "Candidate through actual selected shared library. Original-derived gold replay plus actual powered item creation/valuation/storage with caller-owned live PropertyState/RNG. Text/debug are fixtures; no Android/native gameplay or full AddLoot claim.",
+        "scope": "Candidate through selected shared library. Original-derived powered AddLoot fixed-entry snapshot and RNG are compared alongside loot/power gold. Text/debug are explicit fixtures; this does not claim Android/runtime gameplay parity or full AddLoot coverage.",
         "source_before_after_equal": True, "source_sha256": before,
         "selected_library": {"path": str(library), "sha256": digest(library)},
         "selected_commands": selected, "tests": tests,

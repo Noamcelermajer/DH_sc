@@ -13,7 +13,11 @@ The same APK passed a bounded Crypt combat smoke: actual movement reached the
 placed skeleton; an out-of-range attack was rejected; six authored hit events
 reduced HP and closed attacks back to Idle. Enemy AI was disabled and the test
 used the debug target command through the existing attack bridge; it does not
-verify normal campaign startup, equipment damage, enemy AI, loot or progression.
+verify equipment damage, loot or progression. A separate live Crypt exchange
+on this build ran with enemy AI enabled: touch movement reached the skeleton,
+the AI applied seven hits, and the ordinary Attack button selected that target
+and dealt 57 damage. This confirms one hostile melee path, not full AI pursuit/FSM
+or campaign startup. [Live exchange receipt](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json).
 Both Android ABIs build and all packaged native libraries meet 16 KiB alignment.
 Receipts: [menu](../port/android-native/reports/menu-ui-runtime-smoke-62557f03.json),
 [combat](../port/android-native/reports/character-combat-smoke-62557f03.json).
@@ -42,13 +46,13 @@ still require live gameplay integration. All final completion gates remain open.
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
-| Character properties, equipment and state | 30 | 6 |
+| Character properties, equipment and state | 31 | 6 |
 | Lua, skills and enemy AI | 49 | 14 |
-| Combat, death, loot and progression | 8 | 7 |
-| Quests, campaign, UI, audio and saves | 40 | 10 |
+| Combat, death, loot and progression | 10 | 7 |
+| Quests, campaign, UI, audio and saves | 39 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **176** | **73** |
+| **Total scoped tasks** | **179** | **73** |
 
 Latest source gate: [Quest compilation and payloads](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,659 host checks with nonempty SKIL, FAES, QEST and typed PROP on one Save/PropertyState; a FAES count mismatch still reaches QEST. FAES passes 74 original-ARM differential cases. Both Android ABIs compile. Local debug APK SHA-256 `9e2c0b82…`; all 22 native libraries meet 16 KiB alignment. API37 smoke passes all three classes; final lifecycle assertions verify fresh start/Back seeds and no Home/resume reseed. Saves were restored. Full InitPost/mask4/GEAR, quest-world callbacks and the complete encounter remain open.
 
@@ -315,7 +319,9 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Reconstruct HandleDots/F_DotAttack and the bounded offline nonplayer F_ApplyResult caller.
 - [x] Exercise supported native health changes and prove damaged Ghost health survives recreation.
 - [x] Record earlier development encounter hits and diagnostic combat/quest evidence with their build identities.
+- [x] Run one live current-build Crypt exchange with automatic enemy melee and normal nearest-target player attack on API37/16KiB; 7 enemy damage events and one 57-point player hit. [Receipt](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json). Equipment-derived damage and the full AI loop remain open.
 - [x] Select Adam's V7 powered-loot creation on V4's caller-owned RNG: 9,931 presentation/power/loot gold replays, 363 actual powered items and 369 shared draws pass. Android compilation passes; native drop/pickup/AddLoot remains open.
+- [x] Compose one original-derived fixed AddLoot entry through the same V4 inventory, V7 power append and V5 value/name path: 147,822 selected-library checks, zero mismatches; original and host each produce one power, value 770 and RNG seed 1302343 after two draws. Text/debug are fixtures; native/full AddLoot remains open. [Report](../reports/branch-audit-2026-10-05/item-loot-backbone-v7-selected-host.json).
 - [ ] Complete all CalculateResult/ApplyResult dependencies, effects, notifications and actor ownership.
 - [ ] Connect melee/ranged/spell combat, skills, criticals, resistances and status effects in the final runtime.
 - [ ] Complete player damage/death, attacker/killer credit, resurrection and respawn.

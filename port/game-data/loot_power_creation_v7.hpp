@@ -28,6 +28,7 @@ public:
                  std::int32_t requested_count,std::int32_t difficulty,
                  const LootPowerServicesV7&,std::string&);
  const LootPowerResourcesV7::Borrow& resources()const noexcept{return resources_;}
+ const InventoryRandomServiceV4& random_service()const noexcept{return random_;}
 };
 // Source CalcLootItemValue: mutates value, then performs genuine UpdateName.
 // Gold uses the same supplied source RNG; other items include each actual power

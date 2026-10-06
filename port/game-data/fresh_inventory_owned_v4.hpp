@@ -2,6 +2,7 @@
 #include "loot_tables_v2.hpp"
 #include "item_instance.hpp"
 #include "properties.hpp"
+#include "loot_power_creation_v7.hpp"
 namespace dh2::data {
 struct OwnedItemSlotV4 {std::unique_ptr<ItemInstanceV1> item;std::array<std::int8_t,2> slots{{-1,-1}};};
 enum class OwnedInventoryOperationV4:std::uint32_t {
@@ -27,6 +28,17 @@ struct OwnedInventoryServicesV4 {
  // create no external per-Item state. Absence of retirement is not proof.
  bool stateless_temporaries=false;
 };
+// Optional AddLoot continuation. Values are explicit source caller inputs:
+// CalcLootItemValue bonus, AddLootItemPowers bonus/request count, and the live
+// character difficulty. Creation must borrow this inventory's same RNG and
+// power definitions must be the exact V5 snapshot used by that creation owner.
+// AddPower/debug transport reuses OwnedInventoryServicesV4; text transport is
+// supplied by the same caller-owned presentation/text service.
+struct OwnedLootEffectsV7 {
+ LootPowerCreationV7* creation{};ItemPowerTablesV5::Borrow powers;
+ ItemTextServicesV5 text;
+ std::int32_t value_bonus256{},power_bonus256{},requested_power_count{-1},difficulty{};
+};
 // New authoritative owner. One actual vector/slot/item/equipment graph serves
 // creation, equipment, split, merge and removal; no const_cast or V3 mirror.
 // It retains immutable tables and borrows the Character's live PropertyState.
@@ -37,6 +49,8 @@ class FreshInventoryOwnedV4 {
  std::array<std::array<OwnedItemSlotV4*,9>,2> equipment_{};std::uint8_t selected_{};
  std::int8_t potion_capacity_;std::int32_t gold_{},gold_limit_{INT32_MAX};bool unlimited_{},running_{};std::uint32_t callback_depth_{};
  bool mutation_allowed(std::string&)const;
+ struct LootPowerBridgeV4 {FreshInventoryOwnedV4* owner;const OwnedInventoryServicesV4* services;};
+ static bool invoke_loot_power_bridge(void*,const LootPowerRequestV7&,std::int32_t&,std::string&);
  bool deliver(const OwnedInventoryServicesV4&,OwnedInventoryOperationV4,std::uint32_t,ItemInstanceV1*,const char*,std::int32_t,std::uint32_t,OwnedInventoryResponseV4&,std::string&);
  bool debug(const OwnedInventoryServicesV4&,std::uint32_t,const char*,std::int32_t&,std::string&);
  void observe(const OwnedInventoryServicesV4&,OwnedInventoryOperationV4,std::uint32_t,ItemInstanceV1*,std::int32_t=0,std::uint32_t=0);
@@ -49,7 +63,7 @@ class FreshInventoryOwnedV4 {
  bool has_like(const ItemInstanceV1*,std::uint32_t&,bool&,std::string&)const;
  bool add_quantity(ItemInstanceV1&,std::int32_t,std::string&);
  bool lifetime_slot(RetainedItemSlotV4,const ItemInstanceV1*,std::string&)const;
- bool add_fixed_loot_impl(std::int32_t,std::unique_ptr<ItemInstanceV1>&,bool,const OwnedInventoryServicesV4&,std::string&);
+ bool add_fixed_loot_impl(std::int32_t,std::unique_ptr<ItemInstanceV1>&,bool,const OwnedInventoryServicesV4&,const OwnedLootEffectsV7*,std::string&);
  bool equip_to_slot_impl(std::uint32_t,std::uint32_t,bool,std::unique_ptr<ItemInstanceV1>&,bool,const OwnedInventoryServicesV4&,std::string&);
 public:
  // Live mode borrows the Character's one authoritative PropertyState and RNG.
@@ -60,6 +74,8 @@ public:
  FreshInventoryOwnedV4(const FreshInventoryOwnedV4&)=delete;FreshInventoryOwnedV4& operator=(const FreshInventoryOwnedV4&)=delete;
  bool add_fixed_loot(std::int32_t,const OwnedInventoryServicesV4&,std::string&);
  bool add_fixed_loot(std::int32_t,RetainedItemSlotV4,const OwnedInventoryServicesV4&,std::string&);
+ bool add_fixed_loot(std::int32_t,const OwnedInventoryServicesV4&,const OwnedLootEffectsV7&,std::string&);
+ bool add_fixed_loot(std::int32_t,RetainedItemSlotV4,const OwnedInventoryServicesV4&,const OwnedLootEffectsV7&,std::string&);
  // Source-invalid indices/negative assertions and destructive native reentry
  // reject explicitly; read-only queries and live cached-property/selection writes
  // remain available synchronously in effects. Partial source prefixes persist.
