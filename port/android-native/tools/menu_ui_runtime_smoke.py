@@ -46,6 +46,9 @@ SAFE_EVENTS = re.compile(r'(?:Surface resized to |Owned menu (?:renderer selecte
                          r'Menu game start \| slot \d+ \| Crypt \||'
                          r'Connected player HUD submitted \||'
                          r'Native Player AIS (?:initialized|retained) \|)')
+FULL_PLAYER = re.compile(r'Native full PlayerInfo \| fields (\d+) \| factory (\d+) \|'
+                         r' level (-?\d+) \| class (-?\d+) \| Character660 (\d+) \|'
+                         r' slot664 (-?\d+) \| counter (\d+)')
 ASSIGN = re.compile(r'Native menu slot assigned \| slot (\d+) \| ordinal (\d+) \|'
                     r' manager stores (\d+) \| player stores (\d+)')
 START = re.compile(r'Authored NativeStartGame request queued \| selected slot (\d+) \|'
@@ -178,12 +181,20 @@ def verify_start(text, slot, character_class, preset, animation_table):
     assert 0 < frames[0] < 100 and 0 < frames[1] < 100 and 0 <= frames[2] < 101, 'Original HUD health/mana/XP timelines invalid'
     assert frames == source_hud_frames(hp, max_hp, mp, max_mp, xp, next_xp), 'Original HUD frames differ from live source words'
     assert 'Menu game start | slot %d | Crypt |' % slot in text, 'Actual Crypt start receipt missing'
+    records = list(FULL_PLAYER.finditer(text))
+    assert records and records[-1].start() > starts[0].start(), 'Fresh full PlayerInfo receipt missing'
+    record = tuple(map(int, records[-1].groups()))
+    assert record == (33, 1, -1, -1, 0, slot, 13), 'Canonical fallback record/defined backing policy differs'
     return {'slot': slot, 'class': character_class, 'preset': preset,
             'cached_property2': animation_table, 'assign_before_start': True,
             'numeric_difficulty': True, 'requested_difficulty': 0,
             'HP': hp, 'max_HP': max_hp, 'MP': mp, 'max_MP': max_mp,
             'XP': xp, 'next_XP': next_xp, 'HUD_frames': frames,
-            'character': hud[-1].group(3)}
+            'character': hud[-1].group(3),
+            'full_PlayerInfo': {'fields': record[0], 'factory_registered': bool(record[1]),
+                                'level': record[2], 'class': record[3], 'Character660': record[4],
+                                'slot664': record[5], 'shared_counter': record[6],
+                                'temporary_backing_policy': 'zero', 'role': 'manager fallback'}}
 
 
 def source_hud_frames(hp, max_hp, mp, max_mp, xp, next_xp):
@@ -250,7 +261,10 @@ def main():
         parser.add_argument('--' + name, required=True)
     for name in ('apk', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--class-index', type=int, choices=(0, 1, 2),
+                        help='Run one class to resolve a remaining regression risk.')
     args = parser.parse_args()
+    selected_classes = tuple(row for row in CLASSES if args.class_index is None or row[0] == args.class_index)
     assert args.serial.startswith('emulator-'), 'Emulator only'
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -266,8 +280,11 @@ def main():
     preservation_attempted = False
 
     def adb(*command, allow_failure=False, binary=False):
-        result = subprocess.run([args.adb, '-s', args.serial, *command], capture_output=True,
-                                text=not binary, timeout=60)
+        try:
+            result = subprocess.run([args.adb, '-s', args.serial, *command], capture_output=True,
+                                    text=not binary, timeout=60)
+        except subprocess.TimeoutExpired:
+            raise RuntimeError('ADB timeout: ' + operation_context(command)) from None
         if result.returncode and not allow_failure:
             raise RuntimeError('ADB operation failed: ' + operation_context(command))
         return result.stdout if binary else result.stdout.strip()
@@ -317,11 +334,26 @@ def main():
         nonlocal pid, since
         if pid:
             collect_events()
+        old_pid = adb('shell', 'pidof', PACKAGE, allow_failure=True)
         adb('shell', 'am', 'force-stop', PACKAGE)
+        deadline = time.monotonic() + 25
+        while adb('shell', 'pidof', PACKAGE, allow_failure=True):
+            assert time.monotonic() < deadline, 'Old app process did not retire before fresh launch'
+            time.sleep(.2)
         since = adb('shell', "date '+%m-%d %H:%M:%S.000'")
-        reply = adb('shell', 'am', 'start', '-W', '-n', PACKAGE + '/.MainActivity')
-        assert 'Status: ok' in reply and 'Activity not started' not in reply, 'Fresh launcher start failed'
-        pid = adb('shell', 'pidof', PACKAGE)
+        # API37's synchronous Activity launch wait can hang after the app has
+        # rendered. Prove startup from a fresh PID, actual submitted movie and
+        # both window/input focus below instead of depending on that wait.
+        reply = adb('shell', 'am', 'start', '-n', PACKAGE + '/.MainActivity')
+        assert 'Starting: Intent' in reply and 'Error:' not in reply and 'Activity not started' not in reply, 'Fresh launcher start failed'
+        deadline = time.monotonic() + 25
+        pid = ''
+        while not pid and time.monotonic() < deadline:
+            pid = adb('shell', 'pidof', PACKAGE, allow_failure=True)
+            if pid == old_pid:
+                pid = ''
+            if not pid:
+                time.sleep(.2)
         assert re.fullmatch(r'\d+', pid), 'Fresh app process unavailable'
         text = wait(lambda t: 'Original front/HUD screen submitted | screen main' in t, 'rendered original main movie')
         assert 'Original front screen loaded | screen main' in text, 'Original movie not loaded'
@@ -429,10 +461,15 @@ def main():
         adb('shell', 'am', 'force-stop', PACKAGE)
         preservation_attempted = True
         report['original_files_preserved'] = int(private_script(preserve))
-        for index, character_class, animation_table, preset in CLASSES:
+        for index, character_class, animation_table, preset in selected_classes:
+            # The original menu reveals another empty slot only after a
+            # profile exists. An isolated class check uses its first empty
+            # slot; class selection and slot ordinal are separate values.
+            slot = index if args.class_index is None else 0
             launch()
             visual_ready('main')
-            select_slot(index)
+            screenshot('%d-main-initial' % index)
+            select_slot(slot)
             screenshot('%d-main-empty' % index)
             menu_after_tap('main', 'menu_EnterName')
             visual_ready('name')
@@ -461,12 +498,12 @@ def main():
             screenshot('%d-class-%s' % (index, preset))
             offset = len(logs())
             tap('class_confirm')
-            text = wait(lambda t: ('Native menu profile created | slot %d | class %d |' % (index, character_class) in t[offset:] and
+            text = wait(lambda t: ('Native menu profile created | slot %d | class %d |' % (slot, character_class) in t[offset:] and
                                    'Owned menu navigation | push menu_StartGame |' in t[offset:]), 'source profile creation and real Start movie')
             assert len(re.findall(r'Native menu profile created \|', text)) == 1, 'Profile creation replayed in fresh process'
             visual_ready('start')
             screenshot('%d-start-new' % index)
-            created = start(index, character_class, preset, animation_table)
+            created = start(slot, character_class, preset, animation_table)
             screenshot('%d-crypt-new' % index)
             back_main()
             screenshot('%d-main-back' % index)
@@ -474,12 +511,12 @@ def main():
             # proves that the real Start button supplies its assignment.
             launch()
             visual_ready('main')
-            select_slot(index)
+            select_slot(slot)
             menu_after_tap('main', 'menu_StartGame')
             visual_ready('start')
             screenshot('%d-start-occupied' % index)
             assert not re.search(r'Native menu profile created \|', logs()), 'Occupied slot was recreated'
-            reopened = start(index, character_class, preset, animation_table)
+            reopened = start(slot, character_class, preset, animation_table)
             screenshot('%d-crypt-occupied' % index)
             before = len(logs())
             home_pid = pid
@@ -500,7 +537,7 @@ def main():
             wait_focus('Home/resume')
             assert pid == home_pid and adb('shell', 'pidof', PACKAGE) == home_pid, 'Home/resume replaced process'
             classes = CLASS.findall(text)
-            assert classes[-1] == (str(index), str(character_class), preset), 'Home/resume changed class'
+            assert classes[-1] == (str(slot), str(character_class), preset), 'Home/resume changed class'
             resumed_hud = HUD.findall(text[before:])[-1]
             assert resumed_hud[2] == reopened['character'], 'Home/resume changed canonical Character'
             assert tuple(map(int, (resumed_hud[4], resumed_hud[6], resumed_hud[8]))) == (reopened['max_HP'], reopened['max_MP'], reopened['next_XP']), 'Home/resume changed cached maxima'
@@ -509,8 +546,9 @@ def main():
             screenshot('%d-main-final' % index)
             report['cases'].append({'class_index': index, 'created': created, 'occupied_after_restart': reopened,
                                     'normal_back_to_main': True, 'Home_resume_same_class_and_character': True})
-        private_script('set -eu\n' + '\n'.join('test -f files/dh2_%03d.savegame' % index for index in range(3)))
-        report['synthetic_primary_profiles_created'] = 3
+        checked_slots = [row[0] for row in selected_classes] if args.class_index is None else [0]
+        private_script('set -eu\n' + '\n'.join('test -f files/dh2_%03d.savegame' % slot for slot in checked_slots))
+        report['synthetic_primary_profiles_created'] = len(selected_classes)
         report['validation'] = 'PASS'
     except Exception as exc:
         # Exception messages are deliberately our own fixed assertions; never
@@ -521,14 +559,20 @@ def main():
         if pid:
             collect_events()
         try:
-            adb('shell', 'am', 'force-stop', PACKAGE)
             if preservation_attempted:
+                adb('shell', 'am', 'force-stop', PACKAGE)
                 report['synthetic_files_archived'] = int(private_script(restore))
                 report['original_files_restored_and_device_checksums_verified'] = True
+            else:
+                report['personal_files_touched'] = False
+                adb('shell', 'am', 'force-stop', PACKAGE, allow_failure=True)
         except Exception:
             report['validation'] = 'FAIL'
             report['original_files_restored_and_device_checksums_verified'] = False
-            report['restoration_failure'] = 'Private transaction retained on device; stop app and recover originals there before further tests.'
+            if preservation_attempted:
+                report['restoration_failure'] = 'Private transaction retained on device; stop app and recover originals there before further tests.'
+            else:
+                report['cleanup_failure'] = 'App force-stop failed before profile preservation; no personal files touched.'
             failure = failure or RuntimeError('On-device campaign restoration failed')
         (out / 'menu-source-events.log').write_text('\n'.join(events) + '\n', encoding='utf-8')
         report['source_events_sha256'] = hashlib.sha256((out / 'menu-source-events.log').read_bytes()).hexdigest()

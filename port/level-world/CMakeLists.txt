@@ -119,6 +119,7 @@ target_sources(dh2_level_world PRIVATE character_level_runtime.cpp character_ini
  ../player-info-level/player_local_selection_v1.cpp
  ../player-info-level/input_manager_v1.cpp
  ../player-info-level/netstruct_members_v1.cpp ../player-info-level/cnet_player_info_v1.cpp
+ ../player-info-level/player_info_record_v1.cpp
  player_saved_inventory_v1.cpp character_saved_class_v1.cpp character_template_random.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_update_all_skills.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_set_skills_and_spells.cpp

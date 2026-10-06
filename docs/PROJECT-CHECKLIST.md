@@ -41,15 +41,15 @@ still require live gameplay integration. All final completion gates remain open.
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
-| Character properties, equipment and state | 21 | 6 |
+| Character properties, equipment and state | 22 | 6 |
 | Lua, skills and enemy AI | 48 | 14 |
 | Combat, death, loot and progression | 7 | 7 |
 | Quests, campaign, UI, audio and saves | 10 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **136** | **73** |
+| **Total scoped tasks** | **137** | **73** |
 
-Latest source gate: [player registration foundations](../reports/reconstruction-2026-10-06/player-registration-foundations/validation.json): 535 ARM comparisons through selected host libraries; ARM64/x86_64 compile with 16 KiB alignment. Full PlayerInfo/native registration remains open. Latest live gate and released APK: [Original menu/classes/Crypt](../reports/reconstruction-2026-10-06/menu-crypt/validation.json). Controller/Character registration, SG_Load2/4/InitPost, equipment/text/Skin, full combat/skills/AI and persistent campaign remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
+Latest source gate: [full PlayerInfo backing](../reports/reconstruction-2026-10-06/player-info-record/validation.json): 150 additional ARM comparisons, 14 native ownership checks; both Android ABIs compile with 16 KiB alignment. All three classes retain menu/Crypt/restart/Back/Home behavior on API37 across two scoped runs. The record is still the manager fallback; controller/Character registration remains open. Published APK remains [Original menu/classes/Crypt](../reports/reconstruction-2026-10-06/menu-crypt/validation.json). SG_Load2/4/InitPost, equipment/text/Skin, full combat/skills/AI and persistent campaign remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -192,7 +192,8 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 - [x] Select original Player/Matching locality query bodies: 141 ARM comparisons and selected-host gates pass; native unregistered fallback/null queries pass. Full PlayerInfo/NetStruct registration remains open.
 - [x] Select original fixed Win32 input ownership and channel/stick updates: 325 ARM comparisons, 12 failure prefixes; both Android ABIs compile. Native registration/input delivery remains open.
-- [x] Select CNetPlayerInfo lifecycle and shared scalar/string/byte-array members: 72 lifecycle and 138 member ARM comparisons, six native failure/reentry checks; both Android ABIs compile. Full PlayerInfo's 25 derived members, offline map registration and live gameplay remain open.
+- [x] Select CNetPlayerInfo lifecycle and shared scalar/string/byte-array members: 72 lifecycle and 138 member ARM comparisons, six native failure/reentry checks; both Android ABIs compile. Offline map registration and live gameplay remain open.
+- [x] Select full 33-field PlayerInfo lifecycle, Reset/copy/assignment/destruction/setters and native factory backing: 150 ARM comparisons and 14 ownership checks pass through selected libraries. Both Android ABIs compile; three classes retain menu/Crypt behavior on API37/16KiB. Manager fallback only; controller/map and Character660 registration remain open.
 - [x] Select original GEAR reader over the same V4/property/presentation graph: 19 original cases across three classes, six cached items/one power, 2,495 checks and both Android ABI builds pass. Native SG_Load4/InitPost remains open.
 - [ ] Retain powered equipment split remainders through callback failure and retire presentation before item destruction.
 
@@ -359,7 +360,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 ## Immediate work order
 
-1. Finish PlayerInfo lifecycle over the verified input/CNet/member foundations, then register offline controllers before authored slot assignment; connect genuine Character660 Spawn/InitAll and gameplay Save SG_Load1/2/4/GEAR before grants. Finish inventory/AddLoot/text/Skin and Player Kill providers on the same owners.
+1. Register offline controllers over the full PlayerInfo backing before authored slot assignment; connect genuine Character660 Spawn/InitAll and gameplay Save SG_Load1/2/4/GEAR before grants. Finish inventory/AddLoot/text/Skin and Player Kill providers on the same owners.
 2. Connect full Player/enemy AIS frames, nonempty skill activation and autonomous acquisition/pursuit/attacks.
 3. Finish combat/death/rewards/loot/quest delivery and complete one original level.
 4. Expand factories/content/transitions, all classes, UI/audio and persistent campaign saves.

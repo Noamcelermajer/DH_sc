@@ -67,6 +67,7 @@
 #include "native_menu_runtime.hpp"
 #include "character_saved_class_v1.hpp"
 #include "../../../../../player-info-level/player_local_selection_v1.hpp"
+#include "../../../../../player-info-level/player_info_record_v1.hpp"
 #include "navigation_producers.hpp"
 #include <GLES2/gl2.h>
 #include <android/log.h>
@@ -74,6 +75,7 @@
 #include <array>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <map>
 #include <memory>
 #include <set>
@@ -275,25 +277,31 @@ dh2::character_level_runtime::DesignBinding native_design_binding{};
 std::unique_ptr<dh2::native::debug_files::Backend> native_debug;
 
 struct NativeHostPlayer {
- // PlayerInfo's member constructor starts at0, then its Reset sets level -1.
- // These are the reached query fields, not a complete PlayerInfo constructor.
- dh2::character_level_member::IntMember level_member{};
  std::uint64_t change_serial=0;
+ // One factory/counter and full stable backing for the source manager+8
+ // fallback. Registered gameplay records will borrow this same factory.
+ dh2::player_info_record_v1::Factory record_factory{&change_serial,
+  {nullptr,[](void*,std::size_t size,int)->void* {return std::malloc(size);},
+   [](void*,void* value) {std::free(value);}}};
+ dh2::player_info_record_v1::Record fallback;
+ dh2::character_level_member::IntMember& level_member=fallback.at(0x310)->header;
  dh2::player_manager_host_level::PlayerInfoProjection player{};
  dh2::player_manager_host_level::PlayerRegistry registry{};
- std::uintptr_t character_660=0;
- std::int32_t member_1a0=-1;
+ std::uintptr_t& character_660=fallback.character_660;
+ std::int32_t& member_1a0=fallback.at(0x180)->header.value;
  dh2::player_locality_v1::MatchingLocalFields matching_fields{};
  dh2::player_locality_v1::Matching matching{};
  dh2::player_locality_v1::Matching* matching_singleton=nullptr;
  std::int32_t matching_provider=1;
- std::int32_t save_slot_664=-1,last_slot_8=-1;
+ std::int32_t& save_slot_664=fallback.save_slot_664;
+ std::int32_t last_slot_8=-1;
  dh2::player_local_selection_v1::SavegameManager save_manager{reinterpret_cast<std::uintptr_t>(&save_manager),&last_slot_8};
  int metadata_slot=-1;
  std::unique_ptr<dh2::native::player_profile::Metadata> metadata;
  std::uint8_t online=0; // Explicit offline development session; no network owner.
  NativeHostPlayer() {
-   level_member.value=-1;
+   if(record_factory.construct_record(fallback)!=dh2::player_info_record_v1::Status::complete)
+    throw std::runtime_error("Native full PlayerInfo fallback construction failed");
    player={reinterpret_cast<std::uintptr_t>(&player),-1,&level_member};
    registry={reinterpret_cast<std::uintptr_t>(&registry),nullptr,0,&player};
    dh2::player_locality_v1::construct_matching_local_fields(matching_fields);
@@ -1420,8 +1428,8 @@ static dh2::player_local_selection_v1::Services menu_selection_services(dh2::pla
  s.application=[](void*,std::uintptr_t* out)->std::int32_t{if(!native_application.identity)return 1;*out=native_application.identity;return 0;};
  s.savegame_manager_4c=[](void* raw,std::uintptr_t app,SavegameManager** out)->std::int32_t{if(app!=native_application.identity)return 1;*out=&static_cast<NativeHostPlayer*>(raw)->save_manager;return 0;};
  s.player_manager_40=[](void* raw,std::uintptr_t app,const Registry** out)->std::int32_t{if(app!=native_application.identity)return 1;*out=&static_cast<NativeHostPlayer*>(raw)->registry;return 0;};
- s.local_controller_66c=[](void* raw,PlayerInfo* p,std::uint8_t* out)->std::int32_t{if(p!=&static_cast<NativeHostPlayer*>(raw)->player)return 1;*out=1;return 0;};
- s.internal_id_670=[](void* raw,PlayerInfo* p,std::int32_t* out)->std::int32_t{if(p!=&static_cast<NativeHostPlayer*>(raw)->player)return 1;*out=p->internal_id;return 0;};
+ s.local_controller_66c=[](void* raw,PlayerInfo* p,std::uint8_t* out)->std::int32_t{auto& self=*static_cast<NativeHostPlayer*>(raw);if(p!=&self.player)return 1;*out=self.fallback.local_66c;return 0;};
+ s.internal_id_670=[](void* raw,PlayerInfo* p,std::int32_t* out)->std::int32_t{auto& self=*static_cast<NativeHostPlayer*>(raw);if(p!=&self.player)return 1;*out=self.fallback.internal_id_670;return 0;};
  s.save_slot_664=[](void* raw,PlayerInfo* p,std::int32_t** out)->std::int32_t{auto& self=*static_cast<NativeHostPlayer*>(raw);if(p!=&self.player)return 1;*out=&self.save_slot_664;return 0;};
  return s;
 }
@@ -2369,8 +2377,8 @@ void initialize_native_monster_scripts(AAssetManager* assets) {
  }
  // Reconcile only the actual PlayerInfo association. The current development
  // Prince is not registered at +660, so the source slice must skip it. The
- // native leaf setter intentionally excludes undefined ARM temporary residue
- // metadata in PlayerInfo::SetCharacterLevel; full replication is pending.
+ // source setter uses defined zero native temporary backing; its member and
+ // counter are the full fallback record's canonical fields.
  const dh2::player_manager_host_level::ReconcileState state{&native_host.player,
   native_host.character_660,native_host.character_660==prince_character.owner()?
   reinterpret_cast<std::uintptr_t>(&prince_combat.properties):0};
@@ -2384,8 +2392,7 @@ void initialize_native_monster_scripts(AAssetManager* assets) {
   },
   [](void*,dh2::player_manager_host_level::PlayerInfoProjection* player,std::int32_t level)->std::int32_t {
    if(player!=&native_host.player)return 1;
-   dh2::character_level_member::Result result{};
-   return dh2::character_level_member::set_value(player->character_level_member,&native_host.change_serial,level,&result)==dh2::character_level_member::Status::complete?0:1;
+   return dh2::player_info_record_v1::set_character_scalar(native_host.fallback,0x310,level,0)==dh2::player_info_record_v1::Status::complete?0:1;
   }};
  dh2::player_manager_host_level::ReconcileResult reconciled{};
  const auto reconcile_status=dh2::player_manager_host_level::reconcile_character_level(&state,&reconcile,&reconciled);
@@ -2394,6 +2401,9 @@ void initialize_native_monster_scripts(AAssetManager* assets) {
  std::int32_t host_level=0,host_difficulty=0;
  if(native_host_level(&host_level)||native_host_difficulty(&host_difficulty))throw std::runtime_error("Native host source query failed");
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native managed host | Level %d | difficulty %d | property reads %u | member writes %u | skipped unbound %u | canonical fallback; registration/profile-level producer pending",host_level,host_difficulty,reconciled.property_reads,reconciled.setter_calls,unsigned(reconcile_status==dh2::player_manager_host_level::ReconcileStatus::skipped_unbound_character));
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native full PlayerInfo | fields %u | factory %u | level %d | class %d | Character660 %zu | slot664 %d | counter %llu | canonical fallback; gameplay registration pending",
+  native_host.fallback.base.network.count,unsigned(native_host.record_factory.registered()),native_host.level_member.value,native_host.fallback.at(0x360)->header.value,
+  std::size_t(native_host.character_660),native_host.save_slot_664,static_cast<unsigned long long>(native_host.change_serial));
  const auto common=read(assets,"ai/_commons.luac","scripts"),monster=read(assets,"ai/monster.luac","scripts");
  unsigned initialized=0;
  for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.gated_spawn&&actor.spawn_owner) {
