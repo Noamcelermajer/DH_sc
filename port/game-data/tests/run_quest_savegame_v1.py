@@ -164,7 +164,7 @@ def blank_save_act_words(data,words):
 def main():
     p=argparse.ArgumentParser();p.add_argument('--original',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--compiler',required=True);p.add_argument('--library',type=Path,required=True);args=p.parse_args()
     data,names,_=image(args.original);pins=json.loads(PIN.read_text());words=set();assert pins['original_sha256']==ELF_SHA
-    for pin in pins['functions']+pins['declared_callee_dependencies']+pins['blank_save_ctor_evidence']:
+    for pin in pins['functions']+pins['declared_callee_dependencies']+pins['blank_save_ctor_evidence']+pins['related_character_setter_evidence']:
         address=int(pin['elf_address'],0);symbol=names[pin['original_symbol']]
         assert (symbol['st_value'],symbol['st_size'])==(address,pin['size'])
         assert hashlib.sha256(data[address:address+pin['size']]).hexdigest()==pin['sha256']
@@ -175,13 +175,27 @@ def main():
     native=subprocess.run([str(exe),str(inputs)],capture_output=True,text=True,env=env);assert native.returncode==0,native.stderr
     actual=json.loads(native.stdout);expected=[execute(data,row,words) for row in rows]
     original_blank=blank_save_act_words(data,words);assert original_blank==actual['blank_quest_act_words']==[[1,1,1],[1,1,1]]
+    setters=[]
+    for present in [False,True]:
+        for identity in [0,1,123,0x7fffffff,0xffffffff]:
+            u=Uc(UC_ARCH_ARM,UC_MODE_ARM);u.mem_map(0,len(data));u.mem_write(0,data)
+            u.mem_map(0x10000000,0x10000);u.mem_map(STOP,0x1000)
+            character=0x10004000;put(u,character+0x14e8,SAVE if present else 0)
+            for offset in [0x10,0x114,0x174]:put(u,SAVE+offset,99)
+            def hook(machine,address,size,context):
+                if address==STOP:machine.emu_stop();return
+                assert 0x3bb754<=address<0x3bb770;words.add(address)
+            u.hook_add(UC_HOOK_CODE,hook);u.reg_write(UC_ARM_REG_R0,character);u.reg_write(UC_ARM_REG_R1,identity);u.reg_write(UC_ARM_REG_LR,STOP)
+            u.emu_start(0x3bb754,STOP+4,count=20)
+            setters.append([get(u,SAVE+offset) for offset in [0x10,0x114,0x174]])
+    assert setters==actual['set_player_projections']
     assert len(actual['results'])==len(rows)
     mismatches=[dict(index=i,input=row,expected=e,actual=n) for i,(row,e,n) in enumerate(zip(rows,expected,actual['results'])) if e!=n]
     (args.output/'comparison.json').write_text(json.dumps(dict(expected=expected,actual=actual),indent=2)+'\n')
     command_file=next(path for path in library.parents if (path/'compile_commands.json').is_file())/'compile_commands.json'
     selected=[entry for entry in json.loads(command_file.read_text()) if Path(entry['file']).name=='quest_savegame_v1.cpp'];assert len(selected)==1
     sources=['quest_savegame_v1.cpp','quest_savegame_v1.hpp','player_savegame_v1.hpp','tests/quest_savegame_v1_host.cpp','tests/run_quest_savegame_v1.py','reference/quest-savegame-v1/original-functions.json']
-    report=dict(status='PASS' if not mismatches else 'FAIL',arm_comparisons=len(rows),blank_save_act_words=original_blank,executed_pinned_words=len(words),native_failure_checks=actual['failure_checks'],mismatches=mismatches[:10],original_sha256=ELF_SHA,source_sha256={s:hashlib.sha256((MODULE/s).read_bytes()).hexdigest() for s in sources},selected_commands=selected,selected_library=str(library),selected_library_sha256=hashlib.sha256(library.read_bytes()).hexdigest(),binary_sha256={path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in [exe,*dlls]},scope=pins['scope'],native_policies=pins['native_policies'],android_compilation=False,live_gameplay=False)
+    report=dict(status='PASS' if not mismatches else 'FAIL',arm_comparisons=len(rows),set_player_store_comparisons=len(setters),blank_save_act_words=original_blank,executed_pinned_words=len(words),native_failure_checks=actual['failure_checks'],mismatches=mismatches[:10],original_sha256=ELF_SHA,source_sha256={s:hashlib.sha256((MODULE/s).read_bytes()).hexdigest() for s in sources},selected_commands=selected,selected_library=str(library),selected_library_sha256=hashlib.sha256(library.read_bytes()).hexdigest(),binary_sha256={path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in [exe,*dlls]},scope=pins['scope'],native_policies=pins['native_policies'],android_compilation=False,live_gameplay=False)
     (args.output/'report.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({k:v for k,v in report.items() if k not in ['source_sha256','binary_sha256','selected_commands','mismatches']},indent=2))
     if mismatches:print(json.dumps(mismatches[:1],indent=2))
     return bool(mismatches)

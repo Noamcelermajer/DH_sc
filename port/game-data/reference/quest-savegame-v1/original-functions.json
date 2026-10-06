@@ -82,5 +82,14 @@
       "size": 352,
       "sha256": "1d367427c0c4d624133c178718997d21444589abbd20f1d1dbb5b94399fda92e"
     }
+  ],
+  "related_character_setter_evidence": [
+    {
+      "original_symbol": "_ZN9Character12SG_SetPlayerEPS_",
+      "elf_address": "0x3bb754",
+      "size": 28,
+      "sha256": "91fbd5ef17f0799059c7d35e1d3c27f558348f8c342339be3666ba449526fb82",
+      "scope": "All seven ARM words; existing Save.set_character implements the nonnull Save+10/log5c three-store branch, fixture models Character14e8 pointer presence."
+    }
   ]
 }

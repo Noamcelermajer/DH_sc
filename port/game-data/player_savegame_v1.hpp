@@ -2,6 +2,7 @@
 
 #include "skill_tables.hpp"
 #include "player_save_level_states_v1.hpp"
+#include "quest_savegame_v1.hpp"
 
 #include <array>
 #include <cstddef>
@@ -60,8 +61,8 @@ struct SavedFaery4V1 {
 
 static_assert(sizeof(SavedFaery4V1) == 4);
 
-// Exact LNAM destinations. +0xfc/+0x15c are the corresponding slots inside
-// the two existing source quest logs; their complete logs remain external.
+// Exact LNAM destinations. +0xfc/+0x15c are the corresponding act slots inside
+// this Save's two source quest logs. Both logs borrow these canonical words.
 struct SavedLevelNameFieldsV1 {
     // Historical projection name retained for compatibility: +0x38 is the
     // raw save date, written by SG_SetSaveDate, not a LevelTable association.
@@ -84,7 +85,13 @@ public:
     PlayerSavegameV1(const PlayerSavegameV1&) = delete;
     PlayerSavegameV1& operator=(const PlayerSavegameV1&) = delete;
 
-    void set_character(std::uintptr_t identity) noexcept { character_ = identity; }
+    // Nonnull-Save stores in Character::SG_SetPlayer28B: the same Character is
+    // written to Save+10 and both embedded QuestSavegame+5c owner words.
+    void set_character(std::uintptr_t identity) noexcept {
+        character_ = identity;
+        quest_log_b8_.character_5c=identity;
+        quest_log_118_.character_5c=identity;
+    }
     void set_slot(std::int32_t slot) noexcept { slot_ = slot; }
     // Character::SG_SetPlayerClass writes the sole Save +0x34 word.
     void set_class(std::int32_t value) noexcept { class_ = value; }
@@ -184,6 +191,10 @@ public:
     // Sole canonical backing for embedded source QuestSavegame +0x44[3].
     std::array<std::int32_t,3>& quest_log_b8_act_words_v1() noexcept { return level_name_fields_.quest_wordfc; }
     std::array<std::int32_t,3>& quest_log_118_act_words_v1() noexcept { return level_name_fields_.quest_word15c; }
+    quest_savegame_v1::QuestSavegame& source_quest_log_b8() noexcept { return quest_log_b8_; }
+    quest_savegame_v1::QuestSavegame& source_quest_log_118() noexcept { return quest_log_118_; }
+    const quest_savegame_v1::QuestSavegame& source_quest_log_b8() const noexcept { return quest_log_b8_; }
+    const quest_savegame_v1::QuestSavegame& source_quest_log_118() const noexcept { return quest_log_118_; }
     const std::array<std::int32_t, 3>& level_entry_points() const noexcept { return level_entry_points_; }
     const std::array<std::uint8_t, 3>& use_spawn_points() const noexcept { return use_spawn_points_; }
     // Original blank ctor initializes entry points, but leaves level ID and
@@ -228,6 +239,11 @@ private:
     std::array<std::int32_t, 3> current_faery_{};
     std::int32_t unlocked_difficulty_{};
     SavedLevelNameFieldsV1 level_name_fields_;
+    // One vector/field owner per source embedded log. Factories retain child
+    // leases and must finish the explicit QuestSavegame destruction closure
+    // before this Save retires; C++ vector teardown does not delete QuestRefs.
+    quest_savegame_v1::QuestSavegame quest_log_b8_{level_name_fields_.quest_wordfc};
+    quest_savegame_v1::QuestSavegame quest_log_118_{level_name_fields_.quest_word15c};
     std::array<std::int32_t, 3> level_entry_points_{};
     std::array<std::uint8_t, 3> use_spawn_points_{};
     bool level_name_loaded_{}, use_spawn_points_loaded_{};

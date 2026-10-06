@@ -17,6 +17,8 @@
 #include "savegame_options_v1.hpp"
 #include "level_tables.hpp"
 #include "world_map_tables.hpp"
+#include "quest_table_bindings_v1.hpp"
+#include "native_quest_owner.hpp"
 #include "level_construction_fields.hpp"
 #include "lua_script_level_queries.hpp"
 #include "properties.hpp"
@@ -144,6 +146,7 @@ struct PlayerCombat {
  std::shared_ptr<dh2::data::PlayerSaveProfileV1> save_profile;
  std::shared_ptr<const dh2::data::CharacterTable> profile_characters;
  std::shared_ptr<dh2::native::player_profile::Transport> save_transport;
+ std::shared_ptr<dh2::native::quests::Owner> quests;
  std::int16_t property_cache=-1,template_cache=-1;
  std::int32_t character_class=-1;
  int animation_table=-1,target=-1;unsigned attempts=0,received=0;
@@ -261,6 +264,8 @@ dh2::data::PropertyRules actor_property_rules;
 dh2::data::PropertySheet skill_property_temp{};
 dh2::data::LevelTables actor_level_tables;
 dh2::data::WorldMapTables actor_world_map_tables;
+dh2::data::quest_table_bindings_v1::Owner actor_quest_tables;
+dh2::native::quests::Constants actor_quest_constants;
 dh2::data::ClassTables actor_class_tables;
 struct NativeSkillCatalogue {
  std::shared_ptr<const dh2::player_skill_tables_adapter::Tables> tables;
@@ -1644,6 +1649,16 @@ void deactivate(){
  source_camera={};
  release_class_previews();menu_background=false;class_scene=false;
   prince_skills.reset();prince_source_ai.reset();
+ if(prince_combat.quests){
+  std::string error;
+  if(!prince_combat.quests->close(error))throw std::runtime_error(error);
+  const auto receipt=prince_combat.quests->receipt();
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Quest terminal discard | destroyed b8 %u | log118 %u | source log vectors empty",receipt.destroyed[0],receipt.destroyed[1]);
+  prince_combat.quests.reset();
+ }
+ prince_combat.save_transport.reset();prince_combat.save_profile.reset();
+ prince_combat.profile_characters.reset();prince_combat.savegame.reset();
+ actor_quest_tables={};actor_quest_constants={};
  // Terminal discard differs from GL recreation: clear every actor copy after
  // retiring timers and tearing down bodies, then release the owning groups.
  std::vector<std::weak_ptr<NativeMonsterInitialization>> retired;
@@ -2717,6 +2732,22 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     dh2::data::WorldMapTables world_map_tables;
     if(!dh2::data::load_world_map({map_records.data(),map_records.size()},{map_names.data(),map_names.size()},{map_schema.data(),map_schema.size()},world_map_tables,error))throw std::runtime_error(error);
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native WorldMap catalogue | locations %zu | lockers %zu | distinct from FastTravelList; gameplay Save state loader pending",world_map_tables.locations.size(),world_map_tables.lockers.size());
+    // One immutable definition generation. Future Quest factories retain its
+    // View while they borrow row/list/stub controls; reload cannot retire them.
+    // No Quest instances, Lua import or successful empty children are created.
+    using QuestInput=dh2::data::quest_table_bindings_v1::Input;
+    auto quest_records=std::make_shared<const std::vector<std::uint8_t>>(read(assets,"v2quests_pyarray.bin","data"));
+    auto quest_names=std::make_shared<const std::vector<std::uint8_t>>(read(assets,"v2quests_pyarraynames.bin","data"));
+    QuestInput quest_input;
+    if(dh2_quests_open(&quest_input.table,quest_records->data(),std::uint32_t(quest_records->size())))throw std::runtime_error("Native original quest catalogue decode failed");
+    quest_input.packed_owner=quest_records;quest_input.names=quest_names->data();quest_input.names_size=quest_names->size();quest_input.names_owner=quest_names;
+    dh2::data::quest_table_bindings_v1::Owner quest_tables;
+    if(!quest_tables.load(quest_input,error))throw std::runtime_error(error);
+    auto quest_constants_bytes=std::make_shared<const std::vector<std::uint8_t>>(read(assets,"v2quests_pycst.bin","data"));
+    dh2::native::quests::Constants quest_constants;
+    if(dh2_pycst_open(&quest_constants.view,quest_constants_bytes->data(),std::uint32_t(quest_constants_bytes->size())))throw std::runtime_error("Native original quest constants rejected");
+    quest_constants.owner=quest_constants_bytes;
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Quest catalogue | definitions %u | immutable table and constants generation",quest_tables.borrow().count());
     const auto crypt_oid=dh2::data::find_level(level_tables,"GOTHICUS_CRYPT_01");
     if(crypt_oid<0)throw std::runtime_error("Crypt level catalogue row missing");
     const auto& crypt_declaration=level_tables.levels.at(crypt_oid);
@@ -2759,6 +2790,10 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     fresh_player.savegame=std::make_shared<dh2::data::PlayerSavegameV1>();
     fresh_player.savegame->set_character(prince_character.owner());
     fresh_player.savegame->set_slot(menu_gameplay_slot);
+    if(!restore){
+     fresh_player.quests=std::make_shared<dh2::native::quests::Owner>(fresh_player.savegame,quest_tables.borrow(),quest_constants);
+     if(!fresh_player.quests->initialize(0,error)||!fresh_player.quests->initialize(1,error))throw std::runtime_error(error);
+    }else if(!prince_combat.quests)throw std::runtime_error("Retained native quest factory owner missing");
     fresh_player.save_profile=std::make_shared<dh2::data::PlayerSaveProfileV1>();
     fresh_player.profile_characters=std::make_shared<dh2::data::CharacterTable>(character_table);
     fresh_player.save_transport=std::make_shared<dh2::native::player_profile::Transport>(*fresh_player.savegame,*fresh_player.save_profile);
@@ -2918,6 +2953,8 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     for(const auto& row:actor_ai_tables.rows)actor_ai_classification_rows.push_back({row.flags,row.type});
     actor_ai_classification_table={actor_ai_classification_rows.data(),std::uint32_t(actor_ai_classification_rows.size())};
     actor_level_tables=std::move(level_tables);
+    actor_quest_tables=std::move(quest_tables);
+    actor_quest_constants=std::move(quest_constants);
     actor_world_map_tables=std::move(world_map_tables);
     actor_class_tables=std::move(class_table);actor_class_rows.clear();actor_class_rows.reserve(actor_class_tables.rows.size());
     if(!restore||!actor_skill_catalogue)actor_skill_catalogue=std::move(skill_catalogue);
@@ -2937,6 +2974,8 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     }}else{combat_random={0xD22026u,0};combat_hits=0;}
     saved_actors.clear();
     if(!restore)prince_combat=std::move(fresh_player);
+    const auto& quest_receipt=prince_combat.quests->receipt();
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Quest startup | Save %zu | Character %zu | log b8 %u | log118 %u | constants %u | retained %u | Compile and quest gameplay pending",std::size_t(prince_combat.savegame.get()),std::size_t(prince_combat.savegame->character()),quest_receipt.published[0],quest_receipt.published[1],quest_receipt.constant_queries,unsigned(restore));
     if(!restore){
       // Only a new world/session replaces the explicit immutable bank owner.
       prince_retained_pose.clear();prince_locomotion=dh2::actor::BlendedPlayback{};

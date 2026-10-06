@@ -15,6 +15,14 @@ target_sources(dh2_game_data PRIVATE item_instance.cpp loot_tables_v2.cpp
 target_sources(dh2_game_data PRIVATE item_presentation_v5.cpp loot_power_creation_v7.cpp)
 target_sources(dh2_game_data PRIVATE player_saved_skill_slots_v1.cpp player_equipment_live_services_v1.cpp)
 target_sources(dh2_game_data PRIVATE quest_savegame_v1.cpp)
+target_sources(dh2_game_data PRIVATE quest_runtime_fields_v1.cpp player_saved_quests_v1.cpp)
+target_sources(dh2_game_data PRIVATE quest_table_bindings_v1.cpp ../quest-data/quests.c)
+
+target_sources(dh2_game_data PRIVATE quest_condition_list_v1.cpp)
+target_sources(dh2_game_data PRIVATE quest_objective_list_v1.cpp)
+target_sources(dh2_game_data PRIVATE quest_reward_list_v1.cpp quest_condition_factory_v1.cpp quest_instance_v1.cpp)
+target_sources(dh2_game_data PRIVATE quest_objective_factory_v1.cpp quest_reward_factory_v1.cpp)
+target_sources(dh2_game_data PRIVATE quest_condition_eval_v1.cpp quest_reward_execution_v1.cpp)
 target_sources(dh2_game_data PRIVATE player_equipment_queries_live_v1.cpp)
 set_source_files_properties(item_gear_properties_v5.cpp item_power_tables_v5.cpp
  loot_power_resources_v7.cpp item_instance.cpp loot_tables_v2.cpp

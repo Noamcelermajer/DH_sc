@@ -65,7 +65,10 @@ void failure_checks(){
     {dh2::data::PlayerSavegameV1 actual;
      require(actual.level_name_fields().quest_wordfc==std::array<std::int32_t,3>{{1,1,1}});
      require(actual.level_name_fields().quest_word15c==std::array<std::int32_t,3>{{1,1,1}});
-     QuestSavegame first(actual.quest_log_b8_act_words_v1()),second(actual.quest_log_118_act_words_v1());
+     auto& first=actual.source_quest_log_b8();auto& second=actual.source_quest_log_118();
+     actual.set_character(UINT64_C(0x12345678000000a1));
+     require(first.character_5c==actual.character()&&second.character_5c==actual.character());
+     actual.set_character(0);require(!first.character_5c&&!second.character_5c);
      first.word_44[1]=19;second.word_44[2]=27;
      require(actual.level_name_fields().quest_wordfc[1]==19&&actual.level_name_fields().quest_word15c[2]==27);
      Runtime a(first,{}),b(second,{});Result r;require(a.construct(&r)==Status::complete);require(b.construct(&r)==Status::complete);
@@ -109,5 +112,14 @@ int main(int argc,char** argv){try{
         comma=true;result(std::cout,f,status);
     }
     failure_checks();dh2::data::PlayerSavegameV1 actual;std::cout<<"],\"failure_checks\":"<<checks<<",\"blank_quest_act_words\":[";
-    const auto& names=actual.level_name_fields();array(std::cout,{names.quest_wordfc[0],names.quest_wordfc[1],names.quest_wordfc[2]});std::cout<<',';array(std::cout,{names.quest_word15c[0],names.quest_word15c[1],names.quest_word15c[2]});std::cout<<"]}\n";return 0;
+    const auto& names=actual.level_name_fields();array(std::cout,{names.quest_wordfc[0],names.quest_wordfc[1],names.quest_wordfc[2]});std::cout<<',';array(std::cout,{names.quest_word15c[0],names.quest_word15c[1],names.quest_word15c[2]});
+    std::cout<<"],\"set_player_projections\":[";bool separator=false;
+    for(bool present:{false,true})for(std::uintptr_t identity:{0u,1u,123u,0x7fffffffu,0xffffffffu}){
+     dh2::data::PlayerSavegameV1 saved;saved.set_character(99);
+     if(present)saved.set_character(identity);
+     if(separator)std::cout<<',';
+     separator=true;
+     array(std::cout,{static_cast<long long>(saved.character()),static_cast<long long>(saved.source_quest_log_b8().character_5c),static_cast<long long>(saved.source_quest_log_118().character_5c)});
+    }
+    std::cout<<"]}\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what();return 1;}}

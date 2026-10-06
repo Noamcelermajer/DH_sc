@@ -1,4 +1,4 @@
-"""Bundle unchanged original LevelList and WorldMap catalogues."""
+"""Bundle unchanged original LevelList, WorldMap and quest catalogues."""
 import argparse
 import hashlib
 import json
@@ -7,7 +7,9 @@ import zipfile
 
 CACHE_SHA256 = '3fdf4e4c21d45a780a7c35fb4042abde0e88e76bf75416aad1f227481560b679'
 NAMES = ('levels_pyarray.bin', 'levels_pyarraynames.bin', 'levels_pystructnames.bin',
-         'worldmap_pyarray.bin', 'worldmap_pyarraynames.bin', 'worldmap_pystructnames.bin')
+         'worldmap_pyarray.bin', 'worldmap_pyarraynames.bin', 'worldmap_pystructnames.bin',
+         'v2quests_pyarray.bin', 'v2quests_pyarraynames.bin', 'v2quests_pystructnames.bin',
+         'v2quests_pycst.bin')
 
 
 def main():

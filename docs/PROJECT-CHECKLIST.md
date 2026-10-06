@@ -5,11 +5,11 @@ Updated: 2026-10-06. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Verified APK:** [menu/class/Crypt player-startup prerelease](https://github.com/Noamcelermajer/DH_sc/releases/download/native-player-startup-2026-10-06/DH2-native-player-startup-2026-10-06.apk).
-Release/source tag: `native-player-startup-2026-10-06` on this reconstruction branch.
-APK: 154,190,373 bytes; SHA-256 `7af1cc1bf745a8634ae1f8162888b4da4c1af0945ad30910c2a7df359420083b`.
-[Matching build input capture](https://github.com/Noamcelermajer/DH_sc/releases/download/native-player-startup-2026-10-06/DH2-native-player-startup-source-capture-2026-10-06.zip): 1,254 compiler inputs per ABI,
-1,305 captured source/build files; ARM64 and x86_64 compile, all 22 ELF64
+**Verified APK:** [menu/class/Crypt quest-startup prerelease](https://github.com/Noamcelermajer/DH_sc/releases/download/native-quest-startup-2026-10-06/DH2-native-quest-startup-2026-10-06.apk).
+Release/source tag: `native-quest-startup-2026-10-06` on this reconstruction branch.
+APK: 154,420,798 bytes; SHA-256 `e431b7f6340ef943c0810391bc2219efcff9b16edbbe671973ab60b521606b2e`.
+[Matching build input capture](https://github.com/Noamcelermajer/DH_sc/releases/download/native-quest-startup-2026-10-06/DH2-native-quest-startup-source-capture-2026-10-06.zip): 1,282 compiler inputs per ABI,
+1,333 captured source/build files; ARM64 and x86_64 compile, all 22 ELF64
 libraries and APK ZIP entries are 16 KiB aligned.
 
 Original menu → name/class selection → real Single Player screen → Crypt runs
@@ -18,7 +18,10 @@ restart, Back and Home/resume pass. Visible joystick delivers physical movement
 and the attack button delivers input. Death/pose and skill/buff regressions pass
 on this APK. Crypt uses a development continuation; full original
 startup, campaign saves, inventory/equipment and HUD controls remain open.
-[Evidence](../reports/reconstruction-2026-10-06/player-startup/validation.json).
+Both gameplay Save logs now initialize 192 genuine Quest objects each from the
+original definitions/constants. Home/resume retains them; Back destroys them.
+Quest execution and persistence remain disconnected; no new quest UI is claimed.
+[Evidence](../reports/reconstruction-2026-10-06/quest-startup/validation.json).
 
 ## How to read this checklist
 
@@ -45,12 +48,12 @@ still require live gameplay integration. All final completion gates remain open.
 | Character properties, equipment and state | 29 | 6 |
 | Lua, skills and enemy AI | 48 | 14 |
 | Combat, death, loot and progression | 7 | 7 |
-| Quests, campaign, UI, audio and saves | 15 | 10 |
+| Quests, campaign, UI, audio and saves | 30 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **149** | **73** |
+| **Total scoped tasks** | **164** | **73** |
 
-Latest source gate: [player startup/save backbone](../reports/reconstruction-2026-10-06/player-startup/validation.json): canonical managed metadata is live; selected transport passes 522 checks with 192 actual saved defaults and one set of six arrays/fast-travel words. QuestSavegame ownership, Character save wrappers and InitFinal callers are selected and host-tested. Character660, full SG_Load2/4/InitPost, inventory/text/Skin and the complete encounter/campaign remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
+Latest gate: [Quest startup](../reports/reconstruction-2026-10-06/quest-startup/validation.json). Native owner passes 3,700 checks, including a failed row and valid retry; all three classes retain/retire the same Save's 384 Quests on API37/16KiB. Compile/scripts/events/rewards/QEST, Character660/InitPost/SG_Load2/4, inventory and the complete encounter remain open. [Reconciliation and estimate](COMBINED-RECONSTRUCTION-STATUS.md#latest-adam-reconciliation).
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -347,7 +350,22 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Decode all 13 original WorldMap locations/3 lockers; compare all 16 readers and 192 real LevelList/WorldMap defaults; retain actual tables in Android.
 - [x] Select LVLS and both state setters: 404 ARM comparisons/172 guards; bind real table owners through the native transport.
 - [x] Select FTVL: 249 ARM comparisons/478 guards; same six canonical bitset words, retained early-exit/failure stores; bind native transport reader.
-- [x] Select QuestSavegame constructors/InitQuests/destructor: 220 ARM comparisons/393 guards; borrow canonical act arrays and correct blank Save defaults. Actual Quest providers remain required.
+- [x] Select QuestSavegame constructors/InitQuests/destructor: 220 ARM comparisons/395 guards; borrow canonical act arrays and correct blank Save defaults.
+- [x] Share Character identity across Save and both embedded Quest logs; 10 original SetPlayer branch projections pass.
+- [x] Bind immutable actual Quest rows/lists/stubs/names: 64 original row comparisons and 49,684 native checks pass.
+- [x] Select Quest scalar construction/assignment/ReInit/load/destruction: 5,220 ARM comparisons and failure prefixes pass; gameplay leaves remain mandatory.
+- [x] Select QEST/LoadQuests/UnpackQuests/UnpackQuest over canonical log controls: 534 ARM comparisons/75 native checks; native stream/payload binding remains open.
+- [x] Select ConditionList lifecycle/assignment/evaluation callers: 326 ARM comparisons/55 native checks; real condition evaluation providers remain required.
+- [x] Select ObjectiveList lifecycle/assignment/owner/stream loops: 776 ARM comparisons/35 guards; actual payload leaves remain required.
+- [x] Select RewardList lifecycle/assignment/owner callers: 3,019 ARM comparisons/16 guards; retain source text/array failure effects.
+- [x] Select all seven Condition factories/destructors: 412 ARM comparisons/27 guards and actual 80-condition composition pass.
+- [x] Select all 13 Objective factories/destructors: 2,830 ARM comparisons/all 727 ordinary words and 3,209 checks pass.
+- [x] Select all five Reward factories/destructors: 850 ARM comparisons/15 guards and actual 222-reward composition pass.
+- [x] Select generic quest-state and current-Level condition evaluation: 1,473 ARM comparisons/225 native checks; genuine Character lookup/Compile remains required.
+- [x] Select five Reward Compile leaves and Gold/XP Give callers: 640 ARM comparisons/14 guards; Gold shares the canonical inventory, real GiveXP remains required.
+- [x] Compose Quest Instance and actual lists on one Record: 192 real row/difficulty instances and 4,401 host checks pass.
+- [x] Bind native factory/constant ownership to both gameplay Save logs: 3,700 checks; failed row47 retains its prefix, destroys 47 published plus one unpublished Quest, and retries 384 instances.
+- [x] Verify native 384-Quest startup, same-owner Home/resume and source destructor cleanup on Back for all three classes on API37/16KiB; preserve existing emulator saves.
 
 ## 9. Fan modding and source delivery
 

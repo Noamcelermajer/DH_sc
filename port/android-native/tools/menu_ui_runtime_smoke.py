@@ -47,7 +47,7 @@ SAFE_EVENTS = re.compile(r'(?:Surface resized to |Owned menu (?:renderer selecte
                          r'Menu game start \| slot \d+ \| Crypt \||'
                          r'Connected player HUD submitted \||'
                          r'Native Player AIS (?:initialized|retained) \||'
-                         r'Native offline registration \||Native full PlayerInfo \||Native managed metadata \||Native WorldMap catalogue \||'
+                         r'Native offline registration \||Native full PlayerInfo \||Native managed metadata \||Native WorldMap catalogue \||Native Quest (?:catalogue|startup|terminal discard) \||'
                          r'Player position [-\d.]|Player input \|)')
 FULL_PLAYER = re.compile(r'Native full PlayerInfo \| fields (\d+) \| factory (\d+) \|'
                          r' level (-?\d+) \| class (-?\d+) \| Character660 (\d+) \|'
@@ -60,6 +60,9 @@ MANAGED_METADATA = re.compile(r'Native managed metadata \| players (\d+) \| slot
                               r' published680 (\d+) \| name setters (\d+) \| class setters (\d+) \|'
                               r' level setters (\d+) \| Save (\d+) \| Character660 (\d+)')
 WORLD_MAP = re.compile(r'Native WorldMap catalogue \| locations (\d+) \| lockers (\d+)')
+QUEST_TABLE = re.compile(r'Native Quest catalogue \| definitions (\d+)')
+QUEST_STARTUP = re.compile(r'Native Quest startup \| Save (\d+) \| Character (\d+) \|'
+                           r' log b8 (\d+) \| log118 (\d+) \| constants (\d+) \| retained (\d+)')
 START = re.compile(r'Authored NativeStartGame request queued \| selected slot (\d+) \|'
                    r' numeric difficulty (\d+) \| requested difficulty (-?\d+)')
 CLASS = re.compile(r'Native gameplay class \| slot (\d+) \| class (\d+) \| preset (\w+)')
@@ -203,6 +206,14 @@ def verify_start(text, slot, character_class, preset, animation_table):
     managed = tuple(map(int, metadata[-1].groups()))
     assert managed[:6] == (1, slot, 1, 1, 1, 1) and managed[6] > 0 and managed[7] == 0, 'Actual metadata Save publication/setters differ'
     maps = list(WORLD_MAP.finditer(text))
+    quests = list(QUEST_TABLE.finditer(text))
+    assert quests and int(quests[-1].group(1)) == 64, 'Actual retained Quest catalogue missing'
+    quest_startup = list(QUEST_STARTUP.finditer(text))
+    assert quest_startup and classes[-1].start() < quest_startup[-1].start() < hud[-1].start(), 'Actual Quest initialization must precede HUD'
+    quest_values = tuple(map(int, quest_startup[-1].groups()))
+    assert quest_values[0] > 0 and quest_values[0] != managed[6], 'Quest logs must belong to the distinct gameplay Save'
+    assert quest_values[1] == int(hud[-1].group(3), 0), 'Quest children must use the HUD Character'
+    assert quest_values[2:] == (192, 192, 1608, 0), 'Genuine per-Save Quest startup counts differ'
     assert maps and starts[0].start() < maps[-1].start() < metadata[-1].start(), 'Selected WorldMap decoder must precede metadata preparation'
     assert tuple(map(int, maps[-1].groups())) == (13, 3), 'Original WorldMap data differs'
     return {'slot': slot, 'class': character_class, 'preset': preset,
@@ -221,7 +232,10 @@ def verify_start(text, slot, character_class, preset, animation_table):
             'managed_metadata': {'Save680': managed[6], 'published_once': True,
                                  'name_class_level_setters': list(managed[3:6]),
                                  'Character660_pending': True},
-            'world_map': {'locations': 13, 'lockers': 3}}
+            'world_map': {'locations': 13, 'lockers': 3},
+            'quest_definitions': 64,
+            'quest_startup': {'gameplay_Save': quest_values[0], 'Character': quest_values[1],
+                             'log_b8': 192, 'log_118': 192, 'constant_queries': 1608}}
 
 
 def source_hud_frames(hp, max_hp, mp, max_mp, xp, next_xp):
@@ -478,7 +492,8 @@ def main():
         wait_focus('Back from settled Crypt')
         offset = len(logs())
         adb('shell', 'input', '-d', '0', 'keyevent', 'KEYCODE_BACK')
-        wait(lambda t: 'Original front/HUD screen submitted | screen main' in t[offset:], 'normal Back return to menu')
+        text = wait(lambda t: 'Original front/HUD screen submitted | screen main' in t[offset:], 'normal Back return to menu')
+        assert 'Native Quest terminal discard | destroyed b8 192 | log118 192 | source log vectors empty' in text[offset:], 'Back must destroy both canonical Quest logs before returning to the menu'
         visual_ready('main')
 
     def gameplay_controls():
@@ -601,11 +616,14 @@ def main():
             resumed_hud = HUD.findall(text[before:])[-1]
             assert resumed_hud[2] == reopened['character'], 'Home/resume changed canonical Character'
             assert tuple(map(int, (resumed_hud[4], resumed_hud[6], resumed_hud[8]))) == (reopened['max_HP'], reopened['max_MP'], reopened['next_XP']), 'Home/resume changed cached maxima'
+            resumed_quests = QUEST_STARTUP.findall(text[before:])
+            assert resumed_quests and tuple(map(int, resumed_quests[-1])) == (reopened['quest_startup']['gameplay_Save'], reopened['quest_startup']['Character'], 192, 192, 1608, 1), 'Home/resume must retain the same Quest owner and Save'
             screenshot('%d-crypt-resumed' % index)
             back_main()
             screenshot('%d-main-final' % index)
             report['cases'].append({'class_index': index, 'created': created, 'occupied_after_restart': reopened,
-                                    'normal_back_to_main': True, 'Home_resume_same_class_and_character': True})
+                                    'normal_back_to_main': True, 'Home_resume_same_class_and_character': True,
+                                    'Home_resume_same_Quest_owner': True})
         checked_slots = [row[0] for row in selected_classes] if args.class_index is None else [0]
         private_script('set -eu\n' + '\n'.join('test -f files/dh2_%03d.savegame' % slot for slot in checked_slots))
         report['synthetic_primary_profiles_created'] = len(selected_classes)
