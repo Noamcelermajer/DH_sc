@@ -2797,7 +2797,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     fresh_player.save_profile=std::make_shared<dh2::data::PlayerSaveProfileV1>();
     fresh_player.profile_characters=std::make_shared<dh2::data::CharacterTable>(character_table);
     fresh_player.save_transport=std::make_shared<dh2::native::player_profile::Transport>(*fresh_player.savegame,*fresh_player.save_profile);
-    if(!fresh_player.save_transport->bind({runtime_root,fresh_player.profile_characters.get(),&native_save_difficulty,{},false,&actor_level_tables,&actor_world_map_tables},error))throw std::runtime_error(error);
+    if(!fresh_player.save_transport->bind({runtime_root,fresh_player.profile_characters.get(),&native_save_difficulty,{},false,&actor_level_tables,&actor_world_map_tables,fresh_player.quests,&native_host.online},error))throw std::runtime_error(error);
     auto* gameplay_save=fresh_player.savegame.get();auto* gameplay_loader=&fresh_player.save_transport->loader();
     struct ClassificationBacking {const dh2::data::AiTables& tables;std::vector<dh2::character_ai_classification::AiRow> rows;dh2::character_ai_classification::AiTable table;};
     ClassificationBacking classification{ai_tables,{}, {}};

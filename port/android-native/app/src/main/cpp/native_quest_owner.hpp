@@ -39,6 +39,7 @@ public:
  // remain unbound and fail explicitly. Compile/events/rewards stay separate.
  bool load_quests(Cursor&,std::string&);
  bool close(std::string&);
+ bool owns_save(const data::PlayerSavegameV1*) const noexcept;
  const Receipt& receipt() const noexcept;
  data::quest_runtime_fields_v1::Record* resolve(const data::quest_savegame_v1::QuestRef*) noexcept;
 };

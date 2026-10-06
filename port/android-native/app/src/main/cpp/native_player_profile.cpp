@@ -6,6 +6,8 @@
 #include "world_map_tables.hpp"
 #include "player_saved_level_states_v1.hpp"
 #include "player_saved_fast_travel_v1.hpp"
+#include "native_quest_owner.hpp"
+#include "native_quest_cursor.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -46,6 +48,16 @@ struct Transport::Impl {
  }
  bool continue_load(const data::PlayerSaveLoadRequestV1& q,data::PlayerSaveLoadResponseV1& response,std::string& error){
   using Op=data::PlayerSaveLoadOpV1;
+  if(q.operation==Op::init_quests&&bindings.quests)
+   return bindings.quests->initialize(q.argument,error);
+  if(q.operation==Op::online){
+   if(!bindings.online){error="canonical PlayerManager online byte unavailable";return false;}
+   response.flag=*bindings.online!=0;error.clear();return true;
+  }
+  if(q.operation==Op::hosting_quest_flag){
+   if(!bindings.hosting_quest_flag){error="PlayerManager quest-host flag unavailable";return false;}
+   response.flag=*bindings.hosting_quest_flag!=0;error.clear();return true;
+  }
   if(q.operation==Op::load_section&&q.section&&!std::strcmp(q.section,"FTVL")){
    namespace travel=data::player_saved_fast_travel_v1;
    travel::Runtime reader(&save);travel::Result result;
@@ -80,6 +92,11 @@ struct Transport::Impl {
     states::Result result;
     return reader.load(q.profile.campaign.payload(q.section),&result,error)==states::Status::complete;
    }
+  }
+  if(q.operation==Op::load_section&&q.section&&!std::strcmp(q.section,"QEST")&&bindings.quests){
+   if(!q.profile.campaign){error="QEST campaign snapshot unavailable";return false;}
+   quests::Cursor cursor(q.profile.campaign,"QEST");
+   return bindings.quests->load_quests(cursor,error);
   }
   const auto services=bindings.continuation;
   if(!services.owner||!services.invoke){error="campaign reached an unbound gameplay/quest provider";return false;}
@@ -135,6 +152,7 @@ bool Transport::bind(TransportBindings bindings,std::string& error){
  if(impl_->active){error="cannot rebind campaign transport during delivery";return false;}
  if(bool(bindings.continuation.owner)!=bool(bindings.continuation.invoke)){error="campaign continuation lease and provider disagree";return false;}
  if(bool(bindings.levels)!=bool(bindings.world_map)){error="campaign level and WorldMap owners must bind together";return false;}
+ if(bindings.quests&&!bindings.quests->owns_save(&impl_->save)){error="Quest factory owner belongs to a different gameplay Save";return false;}
  impl_->bindings=std::move(bindings);error.clear();return true;
 }
 bool Transport::save_all(std::string& error){

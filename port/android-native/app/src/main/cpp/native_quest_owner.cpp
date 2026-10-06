@@ -251,6 +251,7 @@ bool Owner::close(std::string& error){
  }
  impl_->closed=true;return true;
 }
+bool Owner::owns_save(const data::PlayerSavegameV1* save) const noexcept{return impl_->save.get()==save;}
 const Receipt& Owner::receipt() const noexcept{return impl_->result;}
 scalar::Record* Owner::resolve(const logs::QuestRef* ref) noexcept{auto* value=impl_->resolve(ref);return value?&value->record():nullptr;}
 }

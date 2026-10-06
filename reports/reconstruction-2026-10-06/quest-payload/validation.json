@@ -206,5 +206,26 @@
     "original_saves_restored": true,
     "QEST_load_and_objective_gameplay": false
   },
-  "remaining": "Bind native QEST into actual SG_Load2 orchestration and source assertion/logger owners. Compile objective gameplay requires real enemy list/cache, automatic scripts, registration and markers; MoveInZone+20 must support a single native-width scalar/object projection. Character660/InitPost/inventory and complete player/enemy/skills/combat/loot/campaign remain unfinished."
+  "transport_bridge_followup": {
+    "selected_host": {
+      "validation": "PASS",
+      "checks": 7937,
+      "mask": 16,
+      "qest_quests": 384,
+      "objective_payloads": 1164,
+      "offline_online_flag_fixture": true,
+      "receipt": "C:/tmp/dh2-native-quest-transport-selected/report.json"
+    },
+    "android_apk": {
+      "sha256": "13efd06e78c8a5eef32656722529a7f83981f2ca81f52467db1cd9559edb2cf7",
+      "abis": ["arm64-v8a", "x86_64"],
+      "api": 37,
+      "page_size": 16384,
+      "warrior_menu_restart_home_resume": true,
+      "original_saves_restored": true,
+      "receipt": "C:/tmp/dh2-qest-transport-startup-smoke-final/menu-ui-runtime-smoke.json"
+    },
+    "live_qest_restore": false
+  },
+  "remaining": "The tested SaveLoad mask-0x10 route now sends InitQuests and QEST to the same native Owner, but Android still lacks the real Character::InitPost/mask-2 caller and its skill/faery/online branches. Source assertion/logger owners remain open. Compile objective gameplay needs the real enemy list/cache, one shared level script manager, event registration and markers; MoveInZone+20 needs one native-width scalar/object projection. Character660/InitPost/inventory and complete player/enemy/skills/combat/loot/campaign remain unfinished."
 }

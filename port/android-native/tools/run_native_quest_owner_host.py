@@ -2,9 +2,10 @@
 
 All3 factories, Quest/child constructors, assignment/ReInit and destructors are
 real selected implementations. Constants query the existing world C decoder.
-With --payload, synthetic whole-campaign QEST packets use the actual native
-owner and one borrowed cursor. Whole gameplay startup, quest compilation/scripts,
-source assertion providers, Android and live saves require separate verification.
+With --payload, a synthetic whole-campaign QEST packet runs through the actual
+PlayerSaveLoadOwner/Transport and native Quest owner with one borrowed cursor.
+The offline Online byte is explicit test state; Android and live QEST restore
+remain separate verification.
 """
 from __future__ import annotations
 import argparse,hashlib,json,os,re,shutil,subprocess,sys
@@ -33,13 +34,15 @@ def main():
  assert sum(Path(row['file']).resolve()==(ROOT/'port/pydata-constants/constants.c').resolve() for row in entries)==1
  source=ROOT/'port/android-native/app/src/main/cpp/native_quest_owner.cpp';test=ROOT/'port/android-native/tests'/('native_quest_owner_payload.cpp' if args.payload else 'native_quest_owner.cpp')
  cursor=source.with_name('native_quest_cursor.cpp')
- evidence={source,source.with_suffix('.hpp'),cursor,cursor.with_suffix('.hpp'),test,Path(__file__).resolve()}
+ profile_source=ROOT/'port/android-native/app/src/main/cpp/native_player_profile.cpp'
+ profile_header=profile_source.with_suffix('.hpp')
+ evidence={source,source.with_suffix('.hpp'),cursor,cursor.with_suffix('.hpp'),profile_source,profile_header,test,Path(__file__).resolve()}
  inputs=actual_dependencies(build,ninja,entries)|evidence
  before={path.relative_to(ROOT).as_posix():sha(path) for path in sorted(inputs)}
  dsos=sorted(library.parent.parent.rglob('*.dll'));binary_before={str(path):sha(path) for path in [library,world,*dsos]}
  cache=args.cache.resolve();files=[cache/name for name in ['v2quests_pyarray.bin','v2quests_pyarraynames.bin','v2quests_pycst.bin']];cache_before={path.name:sha(path) for path in files}
  exe=out/'host.exe'
- command=[args.compiler,'-std=c++17','-Wall','-Wextra','-Werror','-O2','-I'+str(ROOT/'port/game-data'),'-I'+str(ROOT/'port/pydata-constants'),test,source,cursor,library,world,'-o',exe]
+ command=[args.compiler,'-std=c++17','-Wall','-Wextra','-Werror','-O2','-I'+str(ROOT/'port/game-data'),'-I'+str(ROOT/'port/pydata-constants'),test,source,cursor,profile_source,library,world,'-o',exe]
  run(command)
  live=env.copy();live['PATH']=os.pathsep.join([*(str(path.parent) for path in dsos),env['PATH']]);host=json.loads(run([exe,cache],live));assert host['validation']=='PASS'
  assert before=={path.relative_to(ROOT).as_posix():sha(path) for path in sorted(inputs)}

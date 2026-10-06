@@ -2,9 +2,13 @@
 // The packet is synthetic; all row/list/stub shapes and factories are actual.
 #include "../app/src/main/cpp/native_quest_owner.hpp"
 #include "../app/src/main/cpp/native_quest_cursor.hpp"
+#include "../app/src/main/cpp/native_player_profile.hpp"
 #include "../../game-data/quest_objective_factory_v1.hpp"
+#include "../../game-data/player_profile_filename_v1.hpp"
+#include <chrono>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <stdexcept>
@@ -16,7 +20,8 @@ namespace of=d::quest_objective_factory_v1;
 namespace {
 using Bytes=std::vector<std::uint8_t>;
 unsigned checks=0;
-void check(bool value){if(!value)throw std::runtime_error("Native Quest owner payload check "+std::to_string(checks+1));++checks;}
+const char* context="fixture setup";
+void check(bool value){if(!value)throw std::runtime_error("Native Quest owner payload check "+std::to_string(checks+1)+" at "+context);++checks;}
 void word(Bytes& bytes,std::uint32_t value){for(unsigned i=0;i<4;++i)bytes.push_back(std::uint8_t(value>>(8*i)));}
 std::int32_t signed_word(std::uint32_t value){std::int32_t result;std::memcpy(&result,&value,4);return result;}
 auto file(const std::string& path){
@@ -139,7 +144,41 @@ void truncated_direct_state(Cache& cache){
  check(accept.done_14==0x7f&&accept.quantity_20==0xcccccccc&&position(*cursor)==31+bytes.size());
  check(owner.receipt().quest_payloads==0&&owner.receipt().objective_payloads==0);close(owner,*save);
 }
+void transport_bridge(Cache& cache){
+ context="transport bridge Save/Owner";
+ auto save=std::make_shared<d::PlayerSavegameV1>();save->set_character(UINT64_C(0x12345678000000a1));save->set_slot(0);
+ auto owner=std::make_shared<n::Owner>(save,cache.view,cache.constants);
+ context="transport bridge synthetic profile";
+ Bytes qest=packet(cache),profile_bytes;word(profile_bytes,2);word(profile_bytes,11);
+ for(char c:std::string("PNAM"))profile_bytes.push_back(std::uint8_t(c));
+ for(unsigned i=0;i<11;++i)profile_bytes.push_back(std::uint8_t(0x90+i));
+ word(profile_bytes,std::uint32_t(qest.size()));for(char c:std::string("QEST"))profile_bytes.push_back(std::uint8_t(c));
+ profile_bytes.insert(profile_bytes.end(),qest.begin(),qest.end());
+ auto directory=std::filesystem::temp_directory_path()/(
+  "dh2-native-quest-transport-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+ std::filesystem::create_directories(directory);
+ {std::ofstream out(directory/d::player_profile_filename_v1(0,false,false),std::ios::binary);
+  check(bool(out));out.write(reinterpret_cast<const char*>(profile_bytes.data()),std::streamsize(profile_bytes.size()));check(bool(out));}
+ d::PlayerSaveProfileV1 profile;dh2::native::player_profile::Transport transport(*save,profile);std::string error;
+ std::uint8_t native_host_online=0;
+ dh2::native::player_profile::TransportBindings bindings;bindings.directory=directory;bindings.quests=owner;bindings.online=&native_host_online;
+ context="transport bridge binding";
+ if(!transport.bind(std::move(bindings),error))throw std::runtime_error("transport bridge bind: "+error);
+ if(!transport.loader().load(0x10,error))throw std::runtime_error("transport bridge load: "+error);
+ context="transport bridge masks / QEST";
+ check(transport.loader().delivered_calls()==6&&profile.identity&&profile.campaign.section("QEST"));
+ check(owner->owns_save(save.get())&&owner->receipt().published[0]==192&&owner->receipt().published[1]==192);
+ check(owner->receipt().quest_payloads==384&&owner->receipt().objective_payloads==1164);
+ for(unsigned index=0;index<2;++index)for(unsigned difficulty=0;difficulty<3;++difficulty){
+  auto& store=log(*save,index);check(store.quests[difficulty].size()==64);
+  check(store.word_2c[difficulty]==signed_word(0x81220000u+difficulty));
+  for(unsigned row=0;row<64;++row){auto* record=owner->resolve(store.quests[difficulty][row]);check(record&&record->state_0==state(row,difficulty));}
+ }
+ context="transport bridge close";
+ check(owner->close(error));std::filesystem::remove_all(directory);
+}
 }
 int main(int argc,char** argv){try{check(argc==2);Cache cache(argv[1]);complete(cache);const auto row=truncated_quantity(cache);truncated_direct_state(cache);
- std::printf("{\"validation\":\"PASS\",\"checks\":%u,\"actual_quest_instances\":384,\"quest_payloads\":384,\"objective_payloads\":1164,\"objects_per_difficulty\":194,\"object_payload_bytes_per_difficulty\":414,\"qest_bytes_per_difficulty\":942,\"one_replay_packet_bytes\":2826,\"absolute_start\":31,\"same_cursor_replay\":true,\"canonical_state_volatile_tails\":true,\"genuine_close_after_success_and_failure\":true,\"truncated_saved_quantity\":{\"actual_row\":%u,\"quantity_not_published\":true,\"state_and_action_done_preserved\":true,\"cursor_prefix_retained\":true,\"assertion_policy_unavailable_rejected\":true},\"truncated_direct_state_prefix\":true,\"android_compilation\":false,\"live_gameplay\":false}\n",checks,row);return 0;
+ transport_bridge(cache);
+ std::printf("{\"validation\":\"PASS\",\"checks\":%u,\"actual_quest_instances\":384,\"quest_payloads\":384,\"objective_payloads\":1164,\"transport_mask_10_bridge\":true,\"objects_per_difficulty\":194,\"object_payload_bytes_per_difficulty\":414,\"qest_bytes_per_difficulty\":942,\"one_replay_packet_bytes\":2826,\"absolute_start\":31,\"same_cursor_replay\":true,\"canonical_state_volatile_tails\":true,\"genuine_close_after_success_and_failure\":true,\"truncated_saved_quantity\":{\"actual_row\":%u,\"quantity_not_published\":true,\"state_and_action_done_preserved\":true,\"cursor_prefix_retained\":true,\"assertion_policy_unavailable_rejected\":true},\"truncated_direct_state_prefix\":true,\"android_compilation\":false,\"live_gameplay\":false}\n",checks,row);return 0;
  }catch(const std::exception& error){std::fprintf(stderr,"%s\n",error.what());return 1;}}

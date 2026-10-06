@@ -3,9 +3,11 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace dh2::data {struct LevelTables;struct WorldMapTables;}
+namespace dh2::native::quests {class Owner;}
 namespace dh2::native::player_profile {
 struct Receipt {
  std::int32_t slot=-1,character_class=-1,level=0,difficulty=0;
@@ -13,6 +15,17 @@ struct Receipt {
  bool loaded=false;
 };
 struct TransportBindings {
+ TransportBindings()=default;
+ TransportBindings(std::filesystem::path path,const data::CharacterTable* table,
+   std::int32_t* difficulty,data::PlayerSaveLoadServicesV1 services={},
+   bool create=false,const data::LevelTables* level_tables=nullptr,
+   const data::WorldMapTables* map_tables=nullptr,
+   std::shared_ptr<dh2::native::quests::Owner> quest_owner={},
+   std::uint8_t* online_status=nullptr,std::uint8_t* hosting_quest=nullptr)
+  :directory(std::move(path)),characters(table),current_difficulty(difficulty),
+   continuation(std::move(services)),create_new(create),levels(level_tables),
+   world_map(map_tables),quests(std::move(quest_owner)),online(online_status),
+   hosting_quest_flag(hosting_quest){}
  std::filesystem::path directory;
  const data::CharacterTable* characters=nullptr;
  std::int32_t* current_difficulty=nullptr;
@@ -27,6 +40,14 @@ struct TransportBindings {
  // Reached InitLevelStates/LVLS use the same gameplay Save's six arrays.
  const data::LevelTables* levels=nullptr;
  const data::WorldMapTables* world_map=nullptr;
+ // Optional owner for the actual gameplay Save's quest logs. InitQuests and
+ // QEST callbacks borrow this one owner; QEST readers retain the indexed
+ // whole-profile stream and do not allocate a second quest VM/store.
+ std::shared_ptr<dh2::native::quests::Owner> quests;
+ // Fresh reads of the canonical NativeHost session bytes. Hosting and local
+ // hosting remain separate source operations and require their own providers.
+ const std::uint8_t* online=nullptr;
+ const std::uint8_t* hosting_quest_flag=nullptr;
 };
 // One retained LoadOwner over a caller's existing Save and canonical +8
 // profile slot. The transport owns I/O/callback backing only. It creates no
