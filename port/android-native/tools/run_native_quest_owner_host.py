@@ -2,12 +2,14 @@
 
 All3 factories, Quest/child constructors, assignment/ReInit and destructors are
 real selected implementations. Constants query the existing world C decoder.
-With --payload, a synthetic whole-campaign profile carries nonempty SKIL, FAES
-and QEST sections through the actual PlayerSaveLoadOwner/Transport mask-2 and
-mask-4 flow. The same Save receives real SkillTables, faery state and the native
-Quest owner with one borrowed cursor. Offline Online is explicit test state;
-Android is smoke-tested, while live Character::InitPost/profile restore remains
-separate verification.
+With --payload, a synthetic whole-campaign profile carries nonempty SKIL, FAES,
+QEST and PROP sections through Character::load masks 2 and 4, borrowing the
+exact Save, LoadOwner and embedded Quest fields already owned by one
+PlayerProfile Transport. The same Save receives real SkillTables, faery state
+and the native Quest owner with one borrowed cursor, plus typed properties on
+the same PropertyState. Offline Online is explicit test state; Android is
+smoke-tested, while live Character::InitPost/profile restore remains separate
+verification.
 """
 from __future__ import annotations
 import argparse,hashlib,json,os,re,shutil,subprocess,sys
@@ -19,7 +21,7 @@ def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def main():
  p=argparse.ArgumentParser(description=__doc__)
  for name in ['compiler','cache','output','library','world-library']:p.add_argument('--'+name,required=True,type=Path)
- p.add_argument('--payload',action='store_true',help='Compose actual native QEST/payload routes on one borrowed campaign cursor')
+ p.add_argument('--payload',action='store_true',help='Compose Character masks 2/4 and SKIL/FAES/QEST/PROP on the Transport-owned Save')
  args=p.parse_args();out=args.output.resolve();out.mkdir(parents=True,exist_ok=True)
  library=args.library.resolve();world=args.world_library.resolve();build=next(path for path in library.parents if(path/'compile_commands.json').is_file())
  env=os.environ.copy();env['PATH']=str(args.compiler.parent)+os.pathsep+env.get('PATH','');ninja=shutil.which('ninja');assert ninja
@@ -38,7 +40,8 @@ def main():
  cursor=source.with_name('native_quest_cursor.cpp')
  profile_source=ROOT/'port/android-native/app/src/main/cpp/native_player_profile.cpp'
  profile_header=profile_source.with_suffix('.hpp')
- evidence={source,source.with_suffix('.hpp'),cursor,cursor.with_suffix('.hpp'),profile_source,profile_header,test,Path(__file__).resolve()}
+ gameplay_header=ROOT/'port/level-world/character_gameplay_save_v1.hpp'
+ evidence={source,source.with_suffix('.hpp'),cursor,cursor.with_suffix('.hpp'),profile_source,profile_header,gameplay_header,test,Path(__file__).resolve()}
  inputs=actual_dependencies(build,ninja,entries)|evidence
  before={path.relative_to(ROOT).as_posix():sha(path) for path in sorted(inputs)}
  dsos=sorted(library.parent.parent.rglob('*.dll'));binary_before={str(path):sha(path) for path in [library,world,*dsos]}

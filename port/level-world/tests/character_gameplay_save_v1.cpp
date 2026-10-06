@@ -10,14 +10,15 @@ void check(bool ok,const char* label){++checks;if(!ok)throw std::runtime_error(l
 struct Backing {
  dh2::data::PlayerSavegameV1 save;
  dh2::data::PlayerSaveProfileV1 profile;
- std::uintptr_t q174=77,q114=88;
+ std::uintptr_t& q174;
+ std::uintptr_t& q114;
  std::vector<unsigned>* trace=nullptr;
  int fail_load=0;
  dh2::data::PlayerSaveLoadOwnerV1 loader;
  SaveRef ref;
- explicit Backing(unsigned identity,std::vector<unsigned>& events):trace(&events),loader(save,profile,{std::make_shared<int>(0),[this](const auto& q,auto&,auto& error){
+ explicit Backing(unsigned identity,std::vector<unsigned>& events):q174(save.source_quest_log_118().character_5c),q114(save.source_quest_log_b8().character_5c),trace(&events),loader(save,profile,{std::make_shared<int>(0),[this](const auto& q,auto&,auto& error){
   trace->push_back(200+unsigned(q.operation));if(fail_load){error="load failure";return false;}return true;
- }}),ref{identity,&save,&loader,&q174,&q114}{}
+ }}),ref(borrow_save(identity,save,&loader)){q174=77;q114=88;}
 };
 struct Fixture {
  std::vector<unsigned> trace;
@@ -55,5 +56,27 @@ int main(int argc,char** argv){try{
  {Fixture f;f.slot=&f.b.ref;f.b.fail_load=1;Runtime runtime(f.character,f.services());Result r;std::string e;check(runtime.load(2,&r,e)==Status::failed&&r.load_calls==1&&f.trace.size()==1,"actual selected LoadOwner failure prefix");++cases;}
  {Fixture f;Runtime runtime(f.character);Result r;std::string e;check(runtime.init_all(&r,e)==Status::failed&&r.provider_calls==1,"reached missing InitPost provider");check(runtime.initialize_player_savegame(&r,e)==Status::failed&&r.provider_calls==1,"reached missing allocator");++cases;}
  {Fixture f;Runtime runtime(f.character,f.services());std::string e;check(runtime.load(0,nullptr,e)==Status::invalid_argument,"missing output");++cases;}
+ {Fixture f;f.slot=&f.b.ref;Runtime runtime(f.character,f.services());Result r;std::string e;
+  check(f.b.ref.quest_character_174==&f.b.save.source_quest_log_118().character_5c&&f.b.ref.quest_character_114==&f.b.save.source_quest_log_b8().character_5c,"exact canonical embedded aliases");
+  check(reinterpret_cast<std::uintptr_t>(f.b.ref.quest_character_174)>=reinterpret_cast<std::uintptr_t>(&f.b.save)&&reinterpret_cast<std::uintptr_t>(f.b.ref.quest_character_174)<reinterpret_cast<std::uintptr_t>(&f.b.save)+sizeof(f.b.save),"quest174 is inside actual Save");
+  check(reinterpret_cast<std::uintptr_t>(f.b.ref.quest_character_114)>=reinterpret_cast<std::uintptr_t>(&f.b.save)&&reinterpret_cast<std::uintptr_t>(f.b.ref.quest_character_114)<reinterpret_cast<std::uintptr_t>(&f.b.save)+sizeof(f.b.save),"quest114 is inside actual Save");
+  check(runtime.set_player(99,&r,e)==Status::complete&&r.stores==3&&f.b.q174==99&&f.b.save.character()==99&&f.b.q114==99,"embedded owner stores accepted");
+  check(runtime.load(0,&r,e)==Status::complete&&r.load_calls==1,"same actual Save loader accepted");++cases;
+ }
+ {Fixture f;f.b.save.set_character_only(99);check(f.b.save.character()==99&&f.b.q174==77&&f.b.q114==88,"Save-only setter does not fan out");f.b.save.set_character(101);check(f.b.q174==101&&f.b.save.character()==101&&f.b.q114==101,"convenience setter composes canonical stores");++cases;}
+ for(unsigned invalid=0;invalid<7;++invalid){Fixture f;f.slot=&f.b.ref;std::uintptr_t detached=66;
+  switch(invalid){
+   case 0:std::swap(f.b.ref.quest_character_174,f.b.ref.quest_character_114);break;
+   case 1:f.b.ref.quest_character_174=&f.a.q174;break;
+   case 2:f.b.ref.quest_character_114=&f.a.q114;break;
+   case 3:f.b.ref.quest_character_174=&f.b.q114;break;
+   case 4:f.b.ref.quest_character_114=&f.b.q174;break;
+   case 5:f.b.ref.quest_character_174=&detached;break;
+   case 6:f.b.ref.quest_character_114=&detached;break;
+  }
+  Runtime runtime(f.character,f.services());Result r;std::string e;check(runtime.set_player(99,&r,e)==Status::failed&&r.stores==0&&f.slot==&f.b.ref&&f.b.q174==77&&f.b.q114==88&&f.b.save.character()==0&&f.a.q174==77&&f.a.q114==88&&f.a.save.character()==0&&detached==66,"swapped foreign duplicate detached fields reject before mutation");++cases;
+ }
+ {Fixture f;f.slot=&f.b.ref;std::swap(f.a.ref.quest_character_174,f.a.ref.quest_character_114);Runtime runtime(f.character,f.services());f.runtime=&runtime;Result r;std::string e;check(runtime.initialize_player_savegame(&r,e)==Status::failed&&r.stores==0&&f.slot==&f.b.ref&&f.a.q174==77&&f.a.q114==88&&f.a.save.character()==0,"invalid constructed aliases reject before publication");++cases;}
+ {Fixture f;const auto accepted=borrow_save(33,f.b.save,&f.b.loader),rejected=borrow_save(44,f.b.save,&f.a.loader);check(accepted.save==&f.b.save&&accepted.loader==&f.b.loader&&accepted.quest_character_174==&f.b.q174&&accepted.quest_character_114==&f.b.q114,"borrow accepts actual same loader and fields");check(rejected.identity==0&&!rejected.save&&!rejected.loader&&!rejected.quest_character_174&&!rejected.quest_character_114&&f.a.save.character()==0&&f.b.save.character()==0,"borrow rejects foreign loader without mutation");++cases;}
  std::cout<<"{\"validation\":\"PASS\",\"host_cases\":"<<cases<<",\"checks\":"<<checks<<"}\n";return 0;
 }catch(const std::exception& x){std::cerr<<x.what()<<'\n';return 1;}}

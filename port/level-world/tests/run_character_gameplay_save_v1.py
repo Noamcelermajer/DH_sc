@@ -4,13 +4,14 @@ are named providers; their bodies are not credited by this caller comparison.
 The native SG_Load wrapper invokes its actual selected PlayerSaveLoadOwner.
 """
 from __future__ import annotations
-import argparse,hashlib,json,os,subprocess,sys
+import argparse,hashlib,json,os,re,shutil,subprocess,sys
 from pathlib import Path
 from elftools.elf.elffile import ELFFile
 from unicorn import UC_HOOK_CODE
 ROOT=Path(__file__).resolve().parents[3];MODULE=ROOT/'port/level-world'
 PIN=MODULE/'reference/character-gameplay-save-v1/original-functions.json'
 SHA='36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80'
+NATIVE_OWNER_SCOPE='Actual embedded QuestSavegame Character words; source quest174->Save10->quest114 order. Matching loader and Save-only setter checked. Swapped/foreign/duplicate/detached fields reject before stores; invalid constructed bindings reject before publication. No production Android startup or gameplay verification.'
 NAMES=['_ZN9Character24InitializePlayerSavegameEv','_ZN9Character12SG_SetPlayerEPS_','_ZN9Character10SG_SetSlotEj','_ZN9Character7SG_LoadEi','_ZN9Character7InitAllEv']
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def evidence(path):
@@ -84,13 +85,26 @@ def oracle(original,exe,env):
  return dict(validation='PASS',comparisons=len(records),mismatches=0,executed_pinned_words=len(seen),providers=['allocate0x198/tag0','blank Save constructor','InitPost virtual1c','fresh InitFinal virtual58','whole PlayerSavegame SG_Load'],records=records)
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--original-elf',required=True,type=Path);p.add_argument('--compiler',required=True);p.add_argument('--library',required=True,type=Path);p.add_argument('--output',required=True,type=Path);a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
- commands=json.loads((a.library.parent.parent/'compile_commands.json').read_text());selected=[r for r in commands if Path(r['file']).name=='character_gameplay_save_v1.cpp'];assert len(selected)==1,'new wrapper must be selected exactly once'
+ a.library=a.library.resolve();build=next(parent for parent in a.library.parents if(parent/'compile_commands.json').is_file())
+ sys.path.insert(0,str(MODULE/'tests'));from run_player_skill_cleanup_session_v1_host import selected_entries,actual_dependencies
+ env=os.environ.copy();env['PATH']=str(Path(a.compiler).parent)+os.pathsep+env.get('PATH','');ninja=shutil.which('ninja');assert ninja
+ def run(command):
+  result=subprocess.run(list(map(str,command)),cwd=ROOT,env=env,capture_output=True,text=True);assert result.returncode==0,result.stdout+'\n'+result.stderr;return result.stdout
+ commands=run([ninja,'-C',build,'-t','commands','dh2_level_world']);entries=selected_entries(build,commands)
+ selected=[r for r in entries if Path(r['file']).resolve()==(MODULE/'character_gameplay_save_v1.cpp').resolve()];assert len(selected)==1,'new wrapper must be selected exactly once'
  data_lib=next(a.library.parent.rglob('libdh2_game_data.dll.a'));exe=a.output/'gameplay_save_host.exe'
+ files=actual_dependencies(build,ninja,entries)|{MODULE/'character_gameplay_save_v1.hpp',MODULE/'character_gameplay_save_v1.cpp',MODULE/'tests/character_gameplay_save_v1.cpp',ROOT/'port/game-data/player_savegame_v1.hpp',Path(__file__).resolve(),PIN}
+ before={p.relative_to(ROOT).as_posix():sha(p) for p in sorted(files)}
+ dlls=sorted(a.library.parent.parent.rglob('*.dll'));binary_before={str(p):sha(p) for p in [a.library,data_lib,*dlls]}
  command=[a.compiler,'-std=c++17','-Wall','-Wextra','-Werror',str(MODULE/'tests/character_gameplay_save_v1.cpp'),str(a.library),str(data_lib),'-o',str(exe)]
- subprocess.run(command,check=True);env=os.environ.copy();dlls=sorted(a.library.parent.parent.rglob('*.dll'));env['PATH']=os.pathsep.join([*(str(p.parent) for p in dlls),env['PATH']])
+ run(command);env['PATH']=os.pathsep.join([*(str(p.parent) for p in dlls),env['PATH']])
  host=json.loads(subprocess.check_output([str(exe)],env=env,text=True));assert host['validation']=='PASS'
  arm=oracle(a.original_elf,exe,env)
- files=[MODULE/'character_gameplay_save_v1.hpp',MODULE/'character_gameplay_save_v1.cpp',MODULE/'tests/character_gameplay_save_v1.cpp',Path(__file__).resolve(),PIN]
- report=dict(validation='PASS',host=host,original_comparison=arm,selected_commands=selected,source_sha256={p.relative_to(ROOT).as_posix():sha(p) for p in files},binary_sha256={p.name:sha(p) for p in [exe,*dlls]},scope=__doc__,native_wired=False)
+ assert before=={p.relative_to(ROOT).as_posix():sha(p) for p in sorted(files)}
+ assert commands==run([ninja,'-C',build,'-t','commands','dh2_level_world'])
+ assert files==actual_dependencies(build,ninja,entries)|{MODULE/'character_gameplay_save_v1.hpp',MODULE/'character_gameplay_save_v1.cpp',MODULE/'tests/character_gameplay_save_v1.cpp',ROOT/'port/game-data/player_savegame_v1.hpp',Path(__file__).resolve(),PIN}
+ assert binary_before=={str(p):sha(p) for p in [a.library,data_lib,*dlls]}
+ imports=re.findall(r'DLL Name: (\S+)',run([Path(a.compiler).with_name('objdump.exe'),'-p',exe]));assert 'libdh2_game_data.dll' in imports and 'libdh2_level_world.dll' in imports
+ report=dict(validation='PASS',host=host,original_comparison=arm,selected_commands=selected,actual_selected_commands=commands,source_sha256=before,binary_sha256={**binary_before,str(exe):sha(exe)},source_before_after_equal=True,binary_before_after_equal=True,commands_before_after_equal=True,binary_imports=imports,compiler_command=command,scope=__doc__,native_owner_scope=NATIVE_OWNER_SCOPE,native_wired=False,android_compilation=False,live_gameplay=False)
  (a.output/'report.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8');print(json.dumps(dict(validation='PASS',host=host,comparisons=arm['comparisons'],executed_pinned_words=arm['executed_pinned_words'],native_wired=False)))
 if __name__=='__main__':main()

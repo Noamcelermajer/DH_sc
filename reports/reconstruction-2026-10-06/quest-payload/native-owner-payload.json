@@ -2,7 +2,14 @@
   "validation": "PASS",
   "host": {
     "validation": "PASS",
-    "checks": 9415,
+    "checks": 9659,
+    "character_gameplay_save_load_masks": [
+      2,
+      4
+    ],
+    "character_identity": 1311768464867721377,
+    "save_identity": 2541540797520,
+    "same_transport_save_loader_and_embedded_quest_owners": true,
     "actual_quest_instances": 384,
     "quest_payloads": 384,
     "objective_payloads": 1164,
@@ -11,6 +18,10 @@
     "restored_skill_level": 7,
     "restored_skill_slot_maps": 2,
     "nonempty_faes_transport": true,
+    "nonempty_prop_transport": true,
+    "prop_after_qest_same_save_and_state": true,
+    "prop_saved_property_count": 26,
+    "prop_byte_194": 41,
     "faes_count_mismatch_nonfatal_before_qest": true,
     "faes_later_difficulty_untouched": true,
     "restored_faery_difficulties": 3,
@@ -33,7 +44,7 @@
     "android_compilation": false,
     "live_gameplay": false
   },
-  "scope": "Compose native Quest startup with selected source bodies and original cache.\n\nAll3 factories, Quest/child constructors, assignment/ReInit and destructors are\nreal selected implementations. Constants query the existing world C decoder.\nWith --payload, a synthetic whole-campaign profile carries nonempty SKIL, FAES\nand QEST sections through the actual PlayerSaveLoadOwner/Transport mask-2 and\nmask-4 flow. The same Save receives real SkillTables, faery state and the native\nQuest owner with one borrowed cursor. Offline Online is explicit test state;\nAndroid is smoke-tested, while live Character::InitPost/profile restore remains\nseparate verification.\n",
+  "scope": "Compose native Quest startup with selected source bodies and original cache.\n\nAll3 factories, Quest/child constructors, assignment/ReInit and destructors are\nreal selected implementations. Constants query the existing world C decoder.\nWith --payload, a synthetic whole-campaign profile carries nonempty SKIL, FAES,\nQEST and PROP sections through Character::load masks 2 and 4, borrowing the\nexact Save, LoadOwner and embedded Quest fields already owned by one\nPlayerProfile Transport. The same Save receives real SkillTables, faery state\nand the native Quest owner with one borrowed cursor, plus typed properties on\nthe same PropertyState. Offline Online is explicit test state; Android is\nsmoke-tested, while live Character::InitPost/profile restore remains separate\nverification.\n",
   "source_before_after_equal": true,
   "commands_before_after_equal": true,
   "binary_before_after_equal": true,
@@ -98,8 +109,8 @@
     "port/android-native/app/src/main/cpp/native_quest_cursor.hpp": "bab3ad5a08a39ab8fc6e007fe369ae49c33d7f50179080313eb5853d0ab11464",
     "port/android-native/app/src/main/cpp/native_quest_owner.cpp": "541bde2ec079f6be783584b0a2e572dc00b48561f6f339ec3d0984c00520de8c",
     "port/android-native/app/src/main/cpp/native_quest_owner.hpp": "a07788c882f37962b4b1cda0416c4af9fec7e49fd76fb0b05bc83359096079df",
-    "port/android-native/tests/native_quest_owner_payload.cpp": "939a6f769315025ee0973a41347fd3ae9a51015b01bb7ac41c45881687b132a9",
-    "port/android-native/tools/run_native_quest_owner_host.py": "7a08b73bd354f5aac1453849dfd63d39e34ce005484c1e79187b46c93f1d120b",
+    "port/android-native/tests/native_quest_owner_payload.cpp": "0aee9f3328fdaff4716a56b9b650158399869223e95d603b507dc32d7181b93a",
+    "port/android-native/tools/run_native_quest_owner_host.py": "0886c5b6d1e8d1e8802f203f989feefbec492c76376e5f9043895a8b4b4271ca",
     "port/asset-payloads/payloads.cpp": "f921d16550af1133a8c7fb264c0132381ff7f3643c56fbdc3a13512ff478742b",
     "port/asset-payloads/payloads.hpp": "fdceff59143442d61cec4a587bfc4dd13318a2592fac19d3bf0e15902680fa09",
     "port/engine-animation/angle_interpreter.cpp": "5b509d60a4d0800742b14f67a979df6a24c9dc194f5be1016ae60ee20c692787",
@@ -196,7 +207,7 @@
     "port/game-data/player_saved_skill_slots_v1.cpp": "77f3682f9b8f675d7901126938437b67ec990b5f59238c4429a88da5417e63e8",
     "port/game-data/player_saved_skill_slots_v1.hpp": "4ce996da152ff134ed745afbdafe488c574382fedea66c5da5e5cc55b596f321",
     "port/game-data/player_savegame_v1.cpp": "fc8881c5379ed9d6bab38bd2b20ec7ae7c11e2e92bcc4d681f04ac0443df74c2",
-    "port/game-data/player_savegame_v1.hpp": "75e057ae9896d2019fae4b3461e1199ae48e7ba7f338fb6352fc55246e6d76c8",
+    "port/game-data/player_savegame_v1.hpp": "77063bf03a9db57e004c43f8f61cf85258235e80f996a60dc95d6b64a47727c2",
     "port/game-data/properties.cpp": "efa0bb41855d20f638f7cabe4c250a16997c041f748bf532c11d39f6bac23fb5",
     "port/game-data/properties.hpp": "6a4219c2745c4301899f8a5c282c054822f2d317bf51f8644c38a101c5adf21d",
     "port/game-data/quest_compile_v1.cpp": "328ae87ea3ca39876a9bc7d78374185e5bc6fbc00a1f8342e0a7236ac9439a5e",
@@ -369,8 +380,8 @@
     "port/level-world/character_factory.hpp": "f8aefdcc79cb403f988668c276b49af88fb990bd82d24c0b6cc05be1c0fb539e",
     "port/level-world/character_faery_selection.cpp": "3eefe1e3dc4312363cf4dec1fca4fd31af5f8b5cb8c97c4cabf733f220bb7764",
     "port/level-world/character_faery_selection.hpp": "351ca88b792c1eacdc5f0358b4b1245c96d1c4937ce4c97efc1949368d23a27d",
-    "port/level-world/character_gameplay_save_v1.cpp": "16964ea5a365f11ab4a3d284b45b1fb06129192f764da8906d7e8b796794bfbf",
-    "port/level-world/character_gameplay_save_v1.hpp": "f75ea71121306bd89071ec56fedc4dc576cd1df8f303d21e8d5b02c2c7b30d7c",
+    "port/level-world/character_gameplay_save_v1.cpp": "cf639aa9008c914a8baf58790eee21a1397f65a8be9ccd9f93f5a02526456e88",
+    "port/level-world/character_gameplay_save_v1.hpp": "b997507c1a5acf36d1b5056659c31831a05ab89a9fb8f4f5776f9829cd0f5ea0",
     "port/level-world/character_init_final_v1.cpp": "366214a93fe59cf95c038d0576bac42cd669fd94aa3aec25124ad85977c5e4dd",
     "port/level-world/character_init_final_v1.hpp": "64c8ffd81543734ba8a6cd9f4c8ecd78c1b2ab344f8587c1ca5c7d7529ef18a0",
     "port/level-world/character_init_hp_mp.cpp": "48bc25a9e04a0182797499544057d70f1283ec951dfcf0f14fecc47c054cdb9e",
@@ -682,13 +693,13 @@
     "port/zone-contact-runtime/zone_geometry.hpp": "3ee48e006a36fc06971a23305068ffab1bb1b7502c25922723a8ddd208e6230b"
   },
   "binary_sha256": {
-    "C:\\Users\\noamc\\Documents\\Codex\\.checks\\local-selection-selected\\build\\selected-world\\game-data\\libdh2_game_data.dll": "1247a68e1d554efa24affe9a865d25ff48cf05dd2b4aaed23577bf4710cde528",
-    "C:\\Users\\noamc\\Documents\\Codex\\.checks\\local-selection-selected\\build\\selected-world\\libdh2_level_world.dll": "7449226dda23e17ed74114f6ab8b6f2e021764ca908d63663247b1c0564daaf5",
+    "C:\\Users\\noamc\\Documents\\Codex\\.checks\\local-selection-selected\\build\\selected-world\\game-data\\libdh2_game_data.dll": "640945b961ad71948df374da37534a744f4479bab270e27ce6107b9f82c95413",
+    "C:\\Users\\noamc\\Documents\\Codex\\.checks\\local-selection-selected\\build\\selected-world\\libdh2_level_world.dll": "928279fb35885d3e87a7ae0b48716397615ba2879f0f1ab3125b1c9a567eca6c",
     "C:\\Users\\noamc\\Documents\\Codex\\.checks\\local-selection-selected\\build\\selected-world\\adam-script-runtime\\libdh2_script_runtime.dll": "23c02d2863a887ae4740aaab6946f6ba68e23c1c32376a17fa7022d17234e78b",
     "C:\\Users\\noamc\\Documents\\Codex\\.checks\\local-selection-selected\\build\\selected-world\\engine-skinning\\engine-animation\\libdh2_engine_animation.dll": "d0f17fa3bfbcc3a0a368861b99db1a93cc4396c351eabc33943097cce60cf173",
     "C:\\Users\\noamc\\Documents\\Codex\\.checks\\local-selection-selected\\build\\selected-world\\engine-skinning\\engine-animation\\scene-materials\\libdh2_scene_materials.dll": "bb8a90fcfaf0b8a924e54865c326cc377591da0ce02317306f948182393f6d86",
     "C:\\Users\\noamc\\Documents\\Codex\\.checks\\local-selection-selected\\build\\selected-world\\engine-skinning\\libdh2_engine_skinning.dll": "df74e140a18b7aba384a8a17b32099f6a20feced7c30160e03d79fd9522ca9fd",
-    "C:\\tmp\\dh2-native-mask2-mask4-skil-faes-mismatch-root\\host.exe": "f04b0494a72fcce4d3fb85e3f6afac6a85bf9bc852cd8ed7db0891a12d74ee69"
+    "C:\\tmp\\dh2-native-mask2-mask4-final-root\\host.exe": "4658ea50247243ce9690131e9ff4cb472a2ddef889e36eb6439d1d703810b8bc"
   },
   "cache_sha256": {
     "v2quests_pyarray.bin": "cbbde6ad8aef5f69ed913da5b62b4246a9c8584219c03256c3a2f8de8e8a1b36",
@@ -729,7 +740,7 @@
     "C:\\Users\\noamc\\Documents\\Codex\\.checks\\local-selection-selected\\build\\selected-world\\game-data\\libdh2_game_data.dll",
     "C:\\Users\\noamc\\Documents\\Codex\\.checks\\local-selection-selected\\build\\selected-world\\libdh2_level_world.dll",
     "-o",
-    "C:\\tmp\\dh2-native-mask2-mask4-skil-faes-mismatch-root\\host.exe"
+    "C:\\tmp\\dh2-native-mask2-mask4-final-root\\host.exe"
   ],
   "android_compilation": false,
   "live_gameplay": false

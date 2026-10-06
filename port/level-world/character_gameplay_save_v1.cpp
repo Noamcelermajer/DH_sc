@@ -14,7 +14,13 @@ bool separate_save(const SaveRef& s,Range out){Range r,v;if(!range(&s,r)||!range
  return true;
 }
 bool valid_save(const SaveRef* s){Range r,v;return range(s,r)&&s->identity&&range(s->save,v)&&!overlap(r,v);}
-bool valid_player_stores(const SaveRef& s){Range r,v,a,b;return range(&s,r)&&range(s.save,v)&&range(s.quest_character_174,a)&&range(s.quest_character_114,b)&&!overlap(r,v)&&!overlap(r,a)&&!overlap(r,b)&&!overlap(v,a)&&!overlap(v,b)&&!overlap(a,b);}
+bool valid_player_stores(const SaveRef& s){
+ Range r,v,a,b;
+ return range(&s,r)&&range(s.save,v)&&range(s.quest_character_174,a)&&range(s.quest_character_114,b)&&
+  !overlap(r,v)&&!overlap(r,a)&&!overlap(r,b)&&!overlap(a,b)&&
+  s.quest_character_174==&s.save->source_quest_log_118().character_5c&&
+  s.quest_character_114==&s.save->source_quest_log_b8().character_5c;
+}
 std::int32_t signed_word(std::uint32_t v){std::int32_t out;std::memcpy(&out,&v,4);return out;}
 }
 Runtime::Runtime(Character c,Services s):character_(c),services_(s){if(!valid(c))throw std::invalid_argument("Actual Character and canonical Save slot required");}
@@ -35,7 +41,7 @@ Status Runtime::execute(unsigned operation,std::uintptr_t argument,Result* out,s
   out->captured_save=save?save->identity:0;if(!save)return true;
   if(!valid_save(save)||!valid_player_stores(*save)||!separate_save(*save,r)||!separate_save(*save,e)){error="Actual Save and both quest Character fields required";return false;}
   out->stage=Stage::quest_174;*save->quest_character_174=player;++out->stores;
-  out->stage=Stage::save_10;save->save->set_character(player);++out->stores;
+  out->stage=Stage::save_10;save->save->set_character_only(player);++out->stores;
   out->stage=Stage::quest_114;*save->quest_character_114=player;++out->stores;return true;
  };
  try{
@@ -45,7 +51,7 @@ Status Runtime::execute(unsigned operation,std::uintptr_t argument,Result* out,s
    if(!valid_save(allocated)||!separate_save(*allocated,r)||!separate_save(*allocated,e))return fail("Save allocation did not return actual stable backing");
    out->captured_save=allocated->identity;out->stage=Stage::construct;SaveRef* response=allocated;request={Operation::construct_blank_save,character_.identity,allocated,0,0,0};
    if(!provider(request,response))return fail("Blank Save constructor provider failed");
-   if(!valid_save(allocated)||!separate_save(*allocated,r)||!separate_save(*allocated,e))return fail("Save constructor changed its captured backing");
+   if(!valid_save(allocated)||!valid_player_stores(*allocated)||!separate_save(*allocated,r)||!separate_save(*allocated,e))return fail("Save constructor changed its captured backing");
    out->stage=Stage::publish;*character_.current_save_14e8=allocated;++out->stores;
    if(!player_stores(*character_.current_save_14e8,character_.identity))return fail("SG_SetPlayer provider boundary failed");
   }else if(operation==1){if(!player_stores(*character_.current_save_14e8,argument))return fail("SG_SetPlayer provider boundary failed");

@@ -85,12 +85,15 @@ public:
     PlayerSavegameV1(const PlayerSavegameV1&) = delete;
     PlayerSavegameV1& operator=(const PlayerSavegameV1&) = delete;
 
-    // Nonnull-Save stores in Character::SG_SetPlayer28B: the same Character is
-    // written to Save+10 and both embedded QuestSavegame+5c owner words.
+    // The sole Save+10 store. Recovered callers separately perform their
+    // reached embedded QuestSavegame stores in original instruction order.
+    void set_character_only(std::uintptr_t identity) noexcept { character_ = identity; }
+    // Convenience composition of Character::SG_SetPlayer28B's exact nonnull
+    // stores: embedded quest+174, Save+10, then embedded quest+114.
     void set_character(std::uintptr_t identity) noexcept {
-        character_ = identity;
-        quest_log_b8_.character_5c=identity;
         quest_log_118_.character_5c=identity;
+        set_character_only(identity);
+        quest_log_b8_.character_5c=identity;
     }
     void set_slot(std::int32_t slot) noexcept { slot_ = slot; }
     // Character::SG_SetPlayerClass writes the sole Save +0x34 word.

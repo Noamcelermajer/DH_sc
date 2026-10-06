@@ -11,6 +11,15 @@ struct SaveRef {
  std::uintptr_t* quest_character_174=nullptr;
  std::uintptr_t* quest_character_114=nullptr;
 };
+// Project the actual embedded owner words; never bind detached shadow fields.
+// A supplied loader must borrow this same Save. Rejected bindings return an
+// invalid empty ref without mutating either owner.
+inline SaveRef borrow_save(std::uintptr_t identity,data::PlayerSavegameV1& save,
+                           data::PlayerSaveLoadOwnerV1* loader=nullptr) noexcept {
+ if(!identity||(loader&&&loader->save()!=&save))return {};
+ return {identity,&save,loader,&save.source_quest_log_118().character_5c,
+         &save.source_quest_log_b8().character_5c};
+}
 struct Character {
  std::uintptr_t identity=0;
  SaveRef** current_save_14e8=nullptr;
@@ -51,6 +60,9 @@ public:
 // Whole Character InitializePlayerSavegame52B, SG_SetPlayer28B, SG_SetSlot20B,
 // SG_Load20B and InitAll40B. Initialize delivers allocation, blank constructor,
 // publishes +14e8, then stores quest+174, Save+10, quest+114 in source order.
+// Those Quest Character borrows must equal this Save's embedded +118/+b8 log
+// fields respectively. Other fields inside the Save, swapped logs and foreign
+// fields are invalid projections, even if their storage is otherwise writable.
 // InitAll dispatches InitPost at vtable+1c then freshly reread InitFinal at
 // vtable+58 on captured this. There is no separate Character::Init call.
 // SG_Load null guard creates no Save; nonnull delegates the exact mask to its

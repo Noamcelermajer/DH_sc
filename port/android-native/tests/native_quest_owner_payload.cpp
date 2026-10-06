@@ -3,11 +3,13 @@
 #include "../app/src/main/cpp/native_quest_owner.hpp"
 #include "../app/src/main/cpp/native_quest_cursor.hpp"
 #include "../app/src/main/cpp/native_player_profile.hpp"
+#include "../../level-world/character_gameplay_save_v1.hpp"
 #include "../../game-data/quest_objective_factory_v1.hpp"
 #include "../../game-data/player_profile_filename_v1.hpp"
 #include "../../game-data/skill_tables.hpp"
 #include "../../game-data/level_tables.hpp"
 #include "../../game-data/world_map_tables.hpp"
+#include "../../game-data/properties.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
@@ -24,6 +26,10 @@ namespace of=d::quest_objective_factory_v1;
 namespace {
 using Bytes=std::vector<std::uint8_t>;
 unsigned checks=0;
+unsigned prop_saved_count=0;
+std::uint64_t gameplay_character_identity=0,gameplay_save_identity=0;
+std::int32_t gameplay_mask2=-1,gameplay_mask4=-1;
+bool gameplay_same_owner=false;
 const char* context="fixture setup";
 void check(bool value){if(!value)throw std::runtime_error("Native Quest owner payload check "+std::to_string(checks+1)+" at "+context);++checks;}
 void word(Bytes& bytes,std::uint32_t value){for(unsigned i=0;i<4;++i)bytes.push_back(std::uint8_t(value>>(8*i)));}
@@ -35,6 +41,7 @@ auto file(const std::string& path){
 }
 struct Cache {
  t::View view;n::Constants constants;d::SkillTables skills;d::LevelTables levels;d::WorldMapTables world_map;
+ d::CharacterTable characters;d::PropertyRules property_rules;
  explicit Cache(const std::string& path){
   auto packed=file(path+"/v2quests_pyarray.bin"),names=file(path+"/v2quests_pyarraynames.bin");
   t::Input input;check(!dh2_quests_open(&input.table,packed->data(),std::uint32_t(packed->size())));
@@ -47,6 +54,9 @@ struct Cache {
   check(d::load_levels({level_data->data(),level_data->size()},{level_names->data(),level_names->size()},{level_schema->data(),level_schema->size()},levels,error));
   auto map_data=file(path+"/worldmap_pyarray.bin"),map_names=file(path+"/worldmap_pyarraynames.bin"),map_schema=file(path+"/worldmap_pystructnames.bin");
   check(d::load_world_map({map_data->data(),map_data->size()},{map_names->data(),map_names->size()},{map_schema->data(),map_schema->size()},world_map,error));
+  auto character_data=file(path+"/character_properties_pyarray.bin"),character_names=file(path+"/character_properties_pyarraynames.bin"),character_schema=file(path+"/character_properties_pystructnames.bin");
+  check(d::load_characters({character_data->data(),character_data->size()},{character_names->data(),character_names->size()},{character_schema->data(),character_schema->size()},characters,error));
+  check(d::load_property_rules(characters,property_rules,error));
  }
 };
 std::uint64_t position(n::Cursor& cursor){std::uint64_t value=0;check(cursor.tell(cursor.stream(),&value));return value;}
@@ -176,14 +186,15 @@ void transport_bridge(Cache& cache){
    faes.push_back(std::uint8_t(0x40+difficulty*5+row));
   }
  }
- Bytes qest=packet(cache),profile_bytes;word(profile_bytes,4);
+ Bytes qest=packet(cache),prop;word(prop,224);for(unsigned i=0;i<224;++i)word(prop,0x40000000u+i);prop.push_back(41);
+ Bytes profile_bytes;word(profile_bytes,5);
  const auto append_section=[&](const char* tag,const Bytes& payload){
   word(profile_bytes,std::uint32_t(payload.size()));
   for(unsigned i=0;i<4;++i)profile_bytes.push_back(std::uint8_t(tag[i]));
   profile_bytes.insert(profile_bytes.end(),payload.begin(),payload.end());
  };
  Bytes name(11);for(unsigned i=0;i<name.size();++i)name[i]=std::uint8_t(0x90+i);
- append_section("PNAM",name);append_section("SKIL",skil);append_section("FAES",faes);append_section("QEST",qest);
+ append_section("PNAM",name);append_section("SKIL",skil);append_section("FAES",faes);append_section("QEST",qest);append_section("PROP",prop);
  auto directory=std::filesystem::temp_directory_path()/(
   "dh2-native-quest-transport-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
  std::filesystem::create_directories(directory);
@@ -191,17 +202,38 @@ void transport_bridge(Cache& cache){
   check(bool(out));out.write(reinterpret_cast<const char*>(profile_bytes.data()),std::streamsize(profile_bytes.size()));check(bool(out));}
  d::PlayerSaveProfileV1 profile;dh2::native::player_profile::Transport transport(*save,profile);std::string error;
  std::uint8_t native_host_online=0;std::int32_t skill_tree_selector=0;
+ d::PropertyState property_state;property_state.saved.fill(-7);property_state.resolved.fill(-9);
  dh2::native::player_profile::TransportBindings bindings;bindings.directory=directory;bindings.quests=owner;bindings.online=&native_host_online;
  bindings.levels=&cache.levels;bindings.world_map=&cache.world_map;bindings.skill_tables=&cache.skills;bindings.skill_tree_selector=&skill_tree_selector;
+ bindings.property_rules=&cache.property_rules;bindings.properties=&property_state;
  context="transport bridge binding";
  if(!transport.bind(std::move(bindings),error))throw std::runtime_error("transport bridge bind: "+error);
- if(!transport.loader().load(2,error))throw std::runtime_error("transport mask-2 load: "+error);
+ namespace gameplay=dh2::character_gameplay_save_v1;
+ auto gameplay_save=gameplay::borrow_save(reinterpret_cast<std::uintptr_t>(save.get()),*save,&transport.loader());
+ check(gameplay_save.identity==reinterpret_cast<std::uintptr_t>(save.get())&&gameplay_save.save==save.get()&&gameplay_save.loader==&transport.loader());
+ check(gameplay_save.quest_character_174==&save->source_quest_log_118().character_5c&&gameplay_save.quest_character_114==&save->source_quest_log_b8().character_5c);
+ gameplay::SaveRef* current_save=&gameplay_save;gameplay::Character character{save->character(),&current_save};
+ gameplay::Runtime character_runtime(character);gameplay::Result mask2_result;
+ if(character_runtime.load(2,&mask2_result,error)!=gameplay::Status::complete)throw std::runtime_error("Character SG_Load mask-2: "+error);
+ check(mask2_result.stage==gameplay::Stage::complete&&mask2_result.captured_character==character.identity);
+ check(mask2_result.captured_save==gameplay_save.identity&&mask2_result.mask==2&&mask2_result.load_calls==1);
+ check(gameplay_save.loader==&transport.loader()&&&gameplay_save.loader->save()==gameplay_save.save&&owner->owns_save(gameplay_save.save));
  context="transport mask-2 initialization";
  check(transport.loader().delivered_calls()==7&&save->skills_initialized());
  check(save->skills().size()==cache.skills.skill_lists.at(0).members.size());
  check(save->skill_id(0)==skill_id&&save->skill_level(0)==0);
  check(std::all_of(save->faeries_initialized().begin(),save->faeries_initialized().end(),[](bool value){return value;}));
- if(!transport.loader().load(4,error))throw std::runtime_error("transport mask-4 load: "+error);
+ gameplay::Result mask4_result;
+ if(character_runtime.load(4,&mask4_result,error)!=gameplay::Status::complete)throw std::runtime_error("Character SG_Load mask-4: "+error);
+ check(mask4_result.stage==gameplay::Stage::complete&&mask4_result.captured_character==mask2_result.captured_character);
+ check(mask4_result.captured_save==mask2_result.captured_save&&mask4_result.mask==4&&mask4_result.load_calls==1);
+ gameplay_character_identity=mask2_result.captured_character;gameplay_save_identity=mask2_result.captured_save;
+ gameplay_mask2=mask2_result.mask;gameplay_mask4=mask4_result.mask;
+ gameplay_same_owner=gameplay_save.save==save.get()&&gameplay_save.loader==&transport.loader()&&
+  &gameplay_save.loader->save()==save.get()&&owner->owns_save(save.get())&&
+  gameplay_save.quest_character_174==&save->source_quest_log_118().character_5c&&
+  gameplay_save.quest_character_114==&save->source_quest_log_b8().character_5c;
+ check(gameplay_same_owner);
  context="transport bridge masks / QEST";
  check(transport.loader().delivered_calls()==10);
  check(profile.identity&&profile.campaign.section("QEST"));
@@ -209,6 +241,8 @@ void transport_bridge(Cache& cache){
  check(save->skill_slots()[0].size()==1&&save->skill_slots()[0].at(0)==0);
  check(save->skill_slots()[1].size()==1&&save->skill_slots()[1].at(3)==0);
  check(profile.campaign.section("FAES")&&profile.campaign.payload("FAES").size==69);
+ check(profile.campaign.section("QEST")&&profile.campaign.section("PROP"));
+ check(profile.campaign.section("QEST")->offset<profile.campaign.section("PROP")->offset);
  for(unsigned difficulty=0;difficulty<3;++difficulty){
   check(save->current_faery(difficulty)==signed_word(0xfffffff0u+difficulty));
   for(unsigned row=0;row<5;++row){
@@ -218,6 +252,14 @@ void transport_bridge(Cache& cache){
  }
  check(owner->owns_save(save.get())&&owner->receipt().published[0]==192&&owner->receipt().published[1]==192);
  check(owner->receipt().quest_payloads==384&&owner->receipt().objective_payloads==1164);
+ check(save->saved_properties_byte_194()==41);
+ unsigned stored_properties=0;
+ for(unsigned i=0;i<224;++i){const auto type=cache.property_rules.types[i]==-1?16u:std::uint32_t(cache.property_rules.types[i]);
+  const auto expected=(type&0x20)?std::int32_t(0x40000000u+i):-7;stored_properties+=(type&0x20)!=0;
+  check(property_state.saved[i]==expected&&property_state.resolved[i]==-9);
+ }
+ check(stored_properties>0);
+ prop_saved_count=stored_properties;
  for(unsigned index=0;index<2;++index)for(unsigned difficulty=0;difficulty<3;++difficulty){
   auto& store=log(*save,index);check(store.quests[difficulty].size()==64);
   check(store.word_2c[difficulty]==signed_word(0x81220000u+difficulty));
@@ -285,5 +327,5 @@ void transport_bridge_faes_count_mismatch(Cache& cache){
 }
 int main(int argc,char** argv){try{check(argc==2);Cache cache(argv[1]);complete(cache);const auto row=truncated_quantity(cache);truncated_direct_state(cache);
  transport_bridge(cache);transport_bridge_faes_count_mismatch(cache);
- std::printf("{\"validation\":\"PASS\",\"checks\":%u,\"actual_quest_instances\":384,\"quest_payloads\":384,\"objective_payloads\":1164,\"transport_mask_2_4_bridge\":true,\"nonempty_skil_transport\":true,\"restored_skill_level\":7,\"restored_skill_slot_maps\":2,\"nonempty_faes_transport\":true,\"faes_count_mismatch_nonfatal_before_qest\":true,\"faes_later_difficulty_untouched\":true,\"restored_faery_difficulties\":3,\"objects_per_difficulty\":194,\"object_payload_bytes_per_difficulty\":414,\"qest_bytes_per_difficulty\":942,\"one_replay_packet_bytes\":2826,\"absolute_start\":31,\"same_cursor_replay\":true,\"canonical_state_volatile_tails\":true,\"genuine_close_after_success_and_failure\":true,\"truncated_saved_quantity\":{\"actual_row\":%u,\"quantity_not_published\":true,\"state_and_action_done_preserved\":true,\"cursor_prefix_retained\":true,\"assertion_policy_unavailable_rejected\":true},\"truncated_direct_state_prefix\":true,\"android_compilation\":false,\"live_gameplay\":false}\n",checks,row);return 0;
+ std::printf("{\"validation\":\"PASS\",\"checks\":%u,\"character_gameplay_save_load_masks\":[%d,%d],\"character_identity\":%llu,\"save_identity\":%llu,\"same_transport_save_loader_and_embedded_quest_owners\":%s,\"actual_quest_instances\":384,\"quest_payloads\":384,\"objective_payloads\":1164,\"transport_mask_2_4_bridge\":true,\"nonempty_skil_transport\":true,\"restored_skill_level\":7,\"restored_skill_slot_maps\":2,\"nonempty_faes_transport\":true,\"nonempty_prop_transport\":true,\"prop_after_qest_same_save_and_state\":true,\"prop_saved_property_count\":%u,\"prop_byte_194\":41,\"faes_count_mismatch_nonfatal_before_qest\":true,\"faes_later_difficulty_untouched\":true,\"restored_faery_difficulties\":3,\"objects_per_difficulty\":194,\"object_payload_bytes_per_difficulty\":414,\"qest_bytes_per_difficulty\":942,\"one_replay_packet_bytes\":2826,\"absolute_start\":31,\"same_cursor_replay\":true,\"canonical_state_volatile_tails\":true,\"genuine_close_after_success_and_failure\":true,\"truncated_saved_quantity\":{\"actual_row\":%u,\"quantity_not_published\":true,\"state_and_action_done_preserved\":true,\"cursor_prefix_retained\":true,\"assertion_policy_unavailable_rejected\":true},\"truncated_direct_state_prefix\":true,\"android_compilation\":false,\"live_gameplay\":false}\n",checks,gameplay_mask2,gameplay_mask4,static_cast<unsigned long long>(gameplay_character_identity),static_cast<unsigned long long>(gameplay_save_identity),gameplay_same_owner?"true":"false",prop_saved_count,row);return 0;
  }catch(const std::exception& error){std::fprintf(stderr,"%s\n",error.what());return 1;}}

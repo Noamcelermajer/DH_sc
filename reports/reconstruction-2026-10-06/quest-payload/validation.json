@@ -209,7 +209,7 @@
   "transport_bridge_followup": {
     "selected_host": {
       "validation": "PASS",
-      "checks": 9415,
+      "checks": 9659,
       "masks": [
         2,
         4
@@ -228,7 +228,18 @@
       "offline_online_flag_fixture": true,
       "receipt": "native-owner-payload.json",
       "faes_count_mismatch_nonfatal_before_qest": true,
-      "faes_later_difficulty_untouched": true
+      "faes_later_difficulty_untouched": true,
+      "nonempty_prop": {
+        "saved_fields": 26,
+        "saved_property_byte_194": 41,
+        "after_qest_on_same_save_and_state": true
+      },
+      "same_save_skill_faery_quest_property_owners": true,
+      "same_transport_save_loader_and_embedded_quest_owners": true,
+      "character_gameplay_save_masks": [
+        2,
+        4
+      ]
     },
     "faes_reader_differential": {
       "validation": "PASS",
@@ -242,8 +253,8 @@
       "receipt": "faes-reader-differential.json"
     },
     "android_apk": {
-      "sha256": "c05ec5d971ed5945aab9e86392cdaef7ef55ac6b6bc991bc781b35792e3201fa",
-      "bytes": 154438990,
+      "sha256": "7a3fc9bd7077bc10e5a8a958e2dde3dfdd8deedf2e065790a0a0c4c5eda72d4c",
+      "bytes": 148094153,
       "abis": [
         "arm64-v8a",
         "x86_64"
@@ -252,7 +263,11 @@
       "page_size": 16384,
       "warrior_menu_crypt_controls_restart_home_resume": true,
       "original_saves_restored": true,
-      "receipt": "menu-ui-runtime-smoke.json"
+      "receipt": "live-mask2-smoke.json",
+      "all_three_classes_menu_crypt_controls_restart_home_resume": true,
+      "source_save_mask2_single_fresh_call": true,
+      "same_character_save_loader_and_embedded_quest_owners": true,
+      "home_resume_retains_association_without_replay": true
     },
     "live_faes_or_qest_profile_restore": false,
     "property_transport": {
@@ -265,6 +280,21 @@
       "generic_fallback_bypassed": true,
       "saved_properties_written": 26,
       "truncated_byte194_prefix_preserved": true
+    },
+    "standalone_mask2_android": {
+      "validation": "PASS",
+      "fresh_setup_calls": 1,
+      "same_character_save_loader_embedded_quest_owners": true,
+      "home_resume_same_association_without_replay": true,
+      "classes_tested": [
+        "Warrior",
+        "Rogue",
+        "Mage"
+      ],
+      "api": 37,
+      "page_size": 16384,
+      "real_campaign_restore": false,
+      "receipt": "live-mask2-smoke.json"
     }
   },
   "remaining": "Selected mask-2/4 transport restores nonempty SKIL, valid FAES, and QEST through one Save and Quest owner; a source FAES count mismatch safely returns and QEST still loads. Typed PROP delivery now borrows the same PlayerCombat PropertyRules/PropertyState and preserves reached writes on truncation. Both Android ABIs compile and the API37/16KiB Warrior UI smoke passes. This is still not live campaign restore: Android does not yet call Character::InitPost/SG_Load(2,4), and the gameplay Save is not published through Character+0x14e8. Hosting/CFEE providers and the real GEAR inventory/item owners are absent; quest execution still needs the shared level ScriptManager, live enemy list/cache, events and markers. The complete player/enemy/skills/combat/loot/campaign loop remains unfinished."

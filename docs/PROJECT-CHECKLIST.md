@@ -5,23 +5,21 @@ Updated: 2026-10-06. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Verified APK:** [menu/class/Crypt quest-startup prerelease](https://github.com/Noamcelermajer/DH_sc/releases/download/native-quest-startup-2026-10-06/DH2-native-quest-startup-2026-10-06.apk).
-Release/source tag: `native-quest-startup-2026-10-06` on this reconstruction branch.
-APK: 154,420,798 bytes; SHA-256 `e431b7f6340ef943c0810391bc2219efcff9b16edbbe671973ab60b521606b2e`.
-[Matching build input capture](https://github.com/Noamcelermajer/DH_sc/releases/download/native-quest-startup-2026-10-06/DH2-native-quest-startup-source-capture-2026-10-06.zip): 1,282 compiler inputs per ABI,
-1,333 captured source/build files; ARM64 and x86_64 compile, all 22 ELF64
-libraries and APK ZIP entries are 16 KiB aligned.
+**Latest test APK:** [native menu/class/Crypt + standalone SG_Load(2)](https://github.com/Noamcelermajer/DH_sc/releases/download/native-mask2-menu-crypt-2026-10-06/DH2-native-menu-ui-mask2-api37-2026-10-06.apk).
+Release/source tag: `native-mask2-menu-crypt-2026-10-06` on this reconstruction branch.
+APK: 148,094,153 bytes; SHA-256 `7a3fc9bd7077bc10e5a8a958e2dde3dfdd8deedf2e065790a0c4c5eda72d4c`.
 
-Original menu → name/class selection → real Single Player screen → Crypt runs
-for Warrior, Rogue and Mage on API37/16KiB. Original HP/MP/XP bars, occupied-slot
-restart, Back and Home/resume pass. Visible joystick delivers physical movement
-and the attack button delivers input. Death/pose and skill/buff regressions pass
-on this APK. Crypt uses a development continuation; full original
-startup, campaign saves, inventory/equipment and HUD controls remain open.
-Both gameplay Save logs now initialize 192 genuine Quest objects each from the
-original definitions/constants. Home/resume retains them; Back destroys them.
-Quest execution and persistence remain disconnected; no new quest UI is claimed.
-[Evidence](../reports/reconstruction-2026-10-06/quest-startup/validation.json).
+Original menu → name/class selection → Single Player → development Crypt runs
+for Warrior, Rogue and Mage on API37/16KiB. Restart, Back, Home/resume, movement
+input and attack-button delivery pass. Fresh setup calls the original Character
+mask-2 SaveLoad path once against the same Save/LoadOwner and embedded Quest
+fields; Home/resume retains that association. The attack response is still
+“Walk closer to an enemy”; full combat is not verified. Both Android ABIs compile,
+and all packaged native libraries meet 16 KiB alignment. Full Character InitPost,
+mask 4/GEAR, original campaign startup/saves, quest gameplay, inventory/equipment
+and the complete encounter remain open. [Current evidence](../reports/reconstruction-2026-10-06/quest-payload/live-mask2-smoke.json).
+
+The earlier [quest-startup build and source capture](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-quest-startup-2026-10-06) remain available; its death/pose and skill/buff regression receipts apply to that earlier APK.
 
 ## How to read this checklist
 
@@ -48,12 +46,12 @@ still require live gameplay integration. All final completion gates remain open.
 | Character properties, equipment and state | 30 | 6 |
 | Lua, skills and enemy AI | 48 | 14 |
 | Combat, death, loot and progression | 7 | 7 |
-| Quests, campaign, UI, audio and saves | 39 | 10 |
+| Quests, campaign, UI, audio and saves | 40 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **173** | **73** |
+| **Total scoped tasks** | **174** | **73** |
 
-Latest source gate: [Quest compilation and payloads](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,415 host checks with SKIL, FAES and QEST on one Save; a FAES count mismatch still reaches QEST. Typed PROP passes 753 host checks. FAES also passes 74 original-ARM differential cases. Both Android ABIs compile; the local APK smoke passes Warrior menu/Crypt/restart/Home-resume on API37/16KiB (SHA-256 `c05ec5d9…`). Live `Character::InitPost`/Save association, GEAR ownership, quest-world callbacks, and the full encounter remain open. The published APK above remains the earlier three-class-tested startup checkpoint.
+Latest source gate: [Quest compilation and payloads](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,659 host checks with nonempty SKIL, FAES, QEST and typed PROP on one Save/PropertyState; a FAES count mismatch still reaches QEST. FAES passes 74 original-ARM differential cases. Both Android ABIs compile. API37/16KiB smoke passes menu, all three classes, Crypt, controls, restart and Home/resume (APK SHA-256 `7a3fc9bd…`). Fresh player setup calls source Character mask 2 once; resume retains its Save association. Full InitPost/mask4/GEAR, quest-world callbacks and the complete encounter remain open.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -200,14 +198,14 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select CNetPlayerInfo lifecycle and shared scalar/string/byte-array members: 72 lifecycle and 138 member ARM comparisons, six native failure/reentry checks; both Android ABIs compile. Offline map registration and live gameplay remain open.
 - [x] Select full 33-field PlayerInfo lifecycle, Reset/copy/assignment/destruction/setters and native factory backing: 150 ARM comparisons and 14 ownership checks pass through selected libraries. Both Android ABIs compile; three classes retain menu/Crypt behavior on API37/16KiB. Manager fallback only; controller/map and Character660 registration remain open.
 - [x] Select offline membership/AddPlayer/renumber/controller callers over full stable records and the sole input owner: 440 ARM comparisons, 72 failure/reentry cases and 68 integration checks pass. Native controller0 registers before authored Assign; live Warrior create/reopen/Crypt/Back/Home passes on API37/16KiB. Joining/network and Character660 remain open.
-- [x] Select original GEAR reader over the same V4/property/presentation graph: 19 original cases across three classes, six cached items/one power, 2,495 checks and both Android ABI builds pass. Native SG_Load4/InitPost remains open.
+- [x] Select original GEAR reader over the same V4/property/presentation graph: 19 original cases across three classes, six cached items/one power, 2,495 checks and both Android ABI builds pass. Six original power-table assets are now bundled/hash-gated on Android; runtime consumption, native SG_Load4 and InitPost remain open.
 - [ ] Retain powered equipment split remainders through callback failure and retire presentation before item destruction.
 
 - [x] Select PlayerInfo activity/SetState: 3,716 ARM comparisons; offline activity and state member remain distinct.
 - [x] Select friendly-ID/player selectors: 308 ARM comparisons and 344 failure prefixes over the canonical registry.
 - [x] Select whole `_AddCharacter`: 277 ARM comparisons and 88 native failure checks; genuine spawn/InitAll providers remain unbound.
 - [x] Connect bounded normal managed metadata to registered menu players: 245 ARM comparisons, 46 composition checks and three live class flows. Class/level/name use the same Record and Save680.
-- [x] Select Character save/InitAll wrappers: 46 ARM comparisons and 95 host checks; full InitPost remains required.
+- [x] Select Character save/InitAll wrappers: 46 ARM comparisons and 115 selected-host checks; exact embedded Quest owner fields/order and same-Save LoadOwner are enforced. Android wires standalone mask 2; full InitPost remains required.
 - [x] Select Character::InitFinal: 260 ARM comparisons and 803 host checks; real lighting/AI/skills/save providers remain required.
 
 ## 6. Lua, skills and enemy AI — current implementation focus
@@ -372,9 +370,10 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select Quest/QuestLog Compile and list invalidation/compilation wrappers: 3,914 ARM comparisons/all 236 words, 21 checks; preserve already-marked recursive lookup and mandatory objective gameplay leaves.
 - [x] Implement one retained whole-campaign absolute cursor: 30 native checks and 6,561 selected QEST/Objective composition checks; no second Save or cursor.
 - [x] Bind native Owner QEST/Quest/action/list payload routes: 6,559 checks restore 384 quests/1,164 objectives, replay both logs, retain truncated prefixes and run genuine cleanup. SG_Load2 handoff/assertion policy remain open.
-- [x] Route SaveLoad masks 2 and 4 through one Save/Quest owner and whole-profile cursor: 9,415 selected-host checks restore nonempty SKIL and valid FAES plus 384 Quests/1,164 payloads; a FAES count mismatch remains nonfatal and QEST continues. Offline Online is an explicit test value.
+- [x] Route SaveLoad masks 2 and 4 through one Save/Quest owner and whole-profile cursor: 9,659 selected-host checks restore nonempty SKIL/FAES/PROP plus 384 Quests/1,164 payloads on the same Save; a FAES count mismatch remains nonfatal and QEST continues. Offline Online is an explicit test value.
 - [x] Differential-test FAES against original `__LoadFaeries` at `0x4691d0`: 74 cases, including all 69 truncated prefixes; 1,011 fully consumed fields match, with the unsafe source short-read difference recorded.
-- [x] Compile the transport bridge for both Android ABIs and smoke-test Warrior menu/Crypt/input/restart/Back/Home-resume on API37/16KiB. This does not execute live `Character::InitPost` or restore a real campaign.
+- [x] Compile the transport bridge for both Android ABIs and smoke-test menu/class selection, Crypt/input/restart/Back/Home-resume for all three classes on API37/16KiB. This does not execute live `Character::InitPost` or restore a real campaign.
+- [x] Wire fresh Android player setup to the source Character Save association and `SG_Load(2)` exactly once. API37 smoke verifies the same Character/Save/LoadOwner/embedded Quest owners and no mask-2 replay on Home/resume; InitPost interstitial, mask 4 and real campaign restore remain open.
 
 ## 9. Fan modding and source delivery
 

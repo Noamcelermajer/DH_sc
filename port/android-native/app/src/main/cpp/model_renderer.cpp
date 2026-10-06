@@ -69,6 +69,7 @@
 #include "native_player_profile.hpp"
 #include "native_menu_runtime.hpp"
 #include "character_saved_class_v1.hpp"
+#include "character_gameplay_save_v1.hpp"
 #include "../../../../../player-info-level/player_local_selection_v1.hpp"
 #include "../../../../../player-info-level/player_info_record_v1.hpp"
 #include "../../../../../player-info-level/player_info_activity_v1.hpp"
@@ -140,6 +141,48 @@ std::uint64_t snapshot_checksum(const dh2::data::PropertySheet& sheet){
 }
 std::vector<ObjectGroup> object_groups;
 std::vector<ObjectActor> saved_actors;
+// Stable borrowed projection of the source Character +0x14e8 association.
+// The Save and its LoadOwner remain owned by PlayerCombat; this object owns
+// only the SaveRef slot that Character::SG_Load dereferences.
+struct NativePlayerSaveAssociation {
+ dh2::character_gameplay_save_v1::SaveRef save_ref{};
+ dh2::character_gameplay_save_v1::SaveRef* save_14e8=nullptr;
+ std::unique_ptr<dh2::character_gameplay_save_v1::Runtime> runtime;
+ std::uintptr_t character_identity=0,save_identity=0,loader_identity=0;
+ unsigned mask2_calls=0;
+ bool mask2_loaded=false;
+
+ bool bind(std::uintptr_t character,dh2::data::PlayerSavegameV1& save,
+           dh2::data::PlayerSaveLoadOwnerV1& loader,std::string& error){
+  if(runtime){error="Player Save association is already bound";return false;}
+  character_identity=character;save_identity=reinterpret_cast<std::uintptr_t>(&save);
+  loader_identity=reinterpret_cast<std::uintptr_t>(&loader);
+  save_ref=dh2::character_gameplay_save_v1::borrow_save(save_identity,save,&loader);
+  if(!character_identity||!save_ref.identity||save_ref.save!=&save||save_ref.loader!=&loader){
+   error="Player Save association does not borrow the canonical Save and LoadOwner";return false;
+  }
+  save_14e8=&save_ref;
+  try{
+   runtime=std::make_unique<dh2::character_gameplay_save_v1::Runtime>(
+       dh2::character_gameplay_save_v1::Character{character_identity,&save_14e8});
+  }catch(const std::exception& exception){error=exception.what();return false;}
+  error.clear();return true;
+ }
+ bool same_owners(std::uintptr_t character,const dh2::data::PlayerSavegameV1& save,
+                  const dh2::data::PlayerSaveLoadOwnerV1& loader)const noexcept{
+  return runtime&&character_identity==character&&save_identity==reinterpret_cast<std::uintptr_t>(&save)&&
+         loader_identity==reinterpret_cast<std::uintptr_t>(&loader)&&save_ref.save==&save&&
+         save_ref.loader==&loader&&save_14e8==&save_ref;
+ }
+ bool load_mask2_once(std::string& error){
+  if(!runtime||mask2_calls){error="source SG_Load(2) association is missing or already called";return false;}
+  ++mask2_calls;dh2::character_gameplay_save_v1::Result result{};
+  if(runtime->load(2,&result,error)!=dh2::character_gameplay_save_v1::Status::complete)return false;
+  if(result.captured_character!=character_identity||result.captured_save!=save_identity||
+     result.mask!=2||result.load_calls!=1){error="source SG_Load(2) used a different Character, Save, or mask";return false;}
+  mask2_loaded=true;error.clear();return true;
+ }
+};
 struct PlayerCombat {
  dh2::data::PropertyState properties;dh2::data::CombatActorState life;
  std::shared_ptr<dh2::data::PlayerSavegameV1> savegame;
@@ -147,6 +190,7 @@ struct PlayerCombat {
  std::shared_ptr<const dh2::data::CharacterTable> profile_characters;
  std::shared_ptr<dh2::native::player_profile::Transport> save_transport;
  std::shared_ptr<dh2::native::quests::Owner> quests;
+ std::shared_ptr<NativePlayerSaveAssociation> source_save_association;
  std::int16_t property_cache=-1,template_cache=-1;
  std::int32_t character_class=-1;
  int animation_table=-1,target=-1;unsigned attempts=0,received=0;
@@ -1648,6 +1692,7 @@ void reset_context(){
 void deactivate(){
  source_camera={};
  release_class_previews();menu_background=false;class_scene=false;
+ prince_combat.source_save_association.reset(); // Drop borrowed +14e8/Save/LoadOwner before their owners.
   prince_skills.reset();prince_source_ai.reset();
  if(prince_combat.quests){
   std::string error;
@@ -2792,7 +2837,6 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     fresh_player.savegame->set_slot(menu_gameplay_slot);
     if(!restore){
      fresh_player.quests=std::make_shared<dh2::native::quests::Owner>(fresh_player.savegame,quest_tables.borrow(),quest_constants);
-     if(!fresh_player.quests->initialize(0,error)||!fresh_player.quests->initialize(1,error))throw std::runtime_error(error);
     }else if(!prince_combat.quests)throw std::runtime_error("Retained native quest factory owner missing");
     fresh_player.save_profile=std::make_shared<dh2::data::PlayerSaveProfileV1>();
     fresh_player.profile_characters=std::make_shared<dh2::data::CharacterTable>(character_table);
@@ -2984,7 +3028,34 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       gameplay_bindings.properties=&prince_combat.properties;
       if(!prince_combat.save_transport->bind(std::move(gameplay_bindings),error))
        throw std::runtime_error("Native Player Save provider rebind: "+error);
+      auto association=std::make_shared<NativePlayerSaveAssociation>();
+      if(!association->bind(prince_character.owner(),*prince_combat.savegame,
+                            prince_combat.save_transport->loader(),error))
+       throw std::runtime_error("Native Player Save association: "+error);
+      if(!association->load_mask2_once(error))
+       throw std::runtime_error("Native Player source SG_Load(2): "+error);
+      prince_combat.source_save_association=std::move(association);
+    }else{
+      const auto& association=prince_combat.source_save_association;
+      if(!association||!association->same_owners(prince_character.owner(),
+          *prince_combat.savegame,prince_combat.save_transport->loader())||
+         association->mask2_calls!=1||!association->mask2_loaded)
+       throw std::runtime_error("Retained Player Save association/mask2 state differs");
     }
+    const auto& source_save_association=*prince_combat.source_save_association;
+    if(prince_combat.savegame->character()!=prince_character.owner()||
+       prince_combat.savegame->source_quest_log_118().character_5c!=prince_character.owner()||
+       prince_combat.savegame->source_quest_log_b8().character_5c!=prince_character.owner()||
+       source_save_association.mask2_calls!=1||!source_save_association.mask2_loaded)
+     throw std::runtime_error("Native Player mask2 Save/embedded Quest identities differ");
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+     "Native Player Save mask2 | Character %zu | Save %zu | loader %zu | Quest118 %zu | QuestB8 %zu | calls %u | retained %u | standalone SG_Load(2); InitPost interstitial/mask4/GEAR pending",
+     std::size_t(source_save_association.character_identity),
+     std::size_t(source_save_association.save_identity),
+     std::size_t(source_save_association.loader_identity),
+     std::size_t(prince_combat.savegame->source_quest_log_118().character_5c),
+     std::size_t(prince_combat.savegame->source_quest_log_b8().character_5c),
+     source_save_association.mask2_calls,unsigned(restore));
     const auto& quest_receipt=prince_combat.quests->receipt();
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Quest startup | Save %zu | Character %zu | log b8 %u | log118 %u | constants %u | retained %u | Compile and quest gameplay pending",std::size_t(prince_combat.savegame.get()),std::size_t(prince_combat.savegame->character()),quest_receipt.published[0],quest_receipt.published[1],quest_receipt.constant_queries,unsigned(restore));
     if(!restore){

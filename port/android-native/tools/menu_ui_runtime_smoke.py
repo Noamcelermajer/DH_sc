@@ -47,6 +47,7 @@ SAFE_EVENTS = re.compile(r'(?:Surface resized to |Owned menu (?:renderer selecte
                          r'Menu game start \| slot \d+ \| Crypt \||'
                          r'Connected player HUD submitted \||'
                          r'Native Player AIS (?:initialized|retained) \||'
+                         r'Native Player Save mask2 \||'
                          r'Native offline registration \||Native full PlayerInfo \||Native managed metadata \||Native WorldMap catalogue \||Native Quest (?:catalogue|startup|terminal discard) \||'
                          r'Player position [-\d.]|Player input \|)')
 FULL_PLAYER = re.compile(r'Native full PlayerInfo \| fields (\d+) \| factory (\d+) \|'
@@ -63,6 +64,9 @@ WORLD_MAP = re.compile(r'Native WorldMap catalogue \| locations (\d+) \| lockers
 QUEST_TABLE = re.compile(r'Native Quest catalogue \| definitions (\d+)')
 QUEST_STARTUP = re.compile(r'Native Quest startup \| Save (\d+) \| Character (\d+) \|'
                            r' log b8 (\d+) \| log118 (\d+) \| constants (\d+) \| retained (\d+)')
+PLAYER_SAVE_MASK2 = re.compile(r'Native Player Save mask2 \| Character (\d+) \| Save (\d+) \|'
+                               r' loader (\d+) \| Quest118 (\d+) \| QuestB8 (\d+) \|'
+                               r' calls (\d+) \| retained (\d+) \|')
 START = re.compile(r'Authored NativeStartGame request queued \| selected slot (\d+) \|'
                    r' numeric difficulty (\d+) \| requested difficulty (-?\d+)')
 CLASS = re.compile(r'Native gameplay class \| slot (\d+) \| class (\d+) \| preset (\w+)')
@@ -214,6 +218,12 @@ def verify_start(text, slot, character_class, preset, animation_table):
     assert quest_values[0] > 0 and quest_values[0] != managed[6], 'Quest logs must belong to the distinct gameplay Save'
     assert quest_values[1] == int(hud[-1].group(3), 0), 'Quest children must use the HUD Character'
     assert quest_values[2:] == (192, 192, 1608, 0), 'Genuine per-Save Quest startup counts differ'
+    mask2_receipts = list(PLAYER_SAVE_MASK2.finditer(text))
+    assert len(mask2_receipts) == 1 and classes[-1].start() < mask2_receipts[-1].start() < quest_startup[-1].start(), 'Exactly one Character SG_Load(2) receipt must precede native Quest startup'
+    mask2_values = tuple(map(int, mask2_receipts[-1].groups()))
+    character_identity = int(hud[-1].group(3), 0)
+    assert mask2_values == (character_identity, quest_values[0], mask2_values[2], character_identity,
+                            character_identity, 1, 0) and mask2_values[2] > 0, 'SG_Load(2) must use the same Character, Save and both embedded Quest owners'
     assert maps and starts[0].start() < maps[-1].start() < metadata[-1].start(), 'Selected WorldMap decoder must precede metadata preparation'
     assert tuple(map(int, maps[-1].groups())) == (13, 3), 'Original WorldMap data differs'
     return {'slot': slot, 'class': character_class, 'preset': preset,
@@ -235,7 +245,10 @@ def verify_start(text, slot, character_class, preset, animation_table):
             'world_map': {'locations': 13, 'lockers': 3},
             'quest_definitions': 64,
             'quest_startup': {'gameplay_Save': quest_values[0], 'Character': quest_values[1],
-                             'log_b8': 192, 'log_118': 192, 'constant_queries': 1608}}
+                             'log_b8': 192, 'log_118': 192, 'constant_queries': 1608},
+            'source_save_mask2': {'character': mask2_values[0], 'save': mask2_values[1],
+                                  'loader': mask2_values[2], 'embedded_quest_owners_match': True,
+                                  'calls': mask2_values[5], 'retained': mask2_values[6]}}
 
 
 def source_hud_frames(hp, max_hp, mp, max_mp, xp, next_xp):
@@ -618,12 +631,18 @@ def main():
             assert tuple(map(int, (resumed_hud[4], resumed_hud[6], resumed_hud[8]))) == (reopened['max_HP'], reopened['max_MP'], reopened['next_XP']), 'Home/resume changed cached maxima'
             resumed_quests = QUEST_STARTUP.findall(text[before:])
             assert resumed_quests and tuple(map(int, resumed_quests[-1])) == (reopened['quest_startup']['gameplay_Save'], reopened['quest_startup']['Character'], 192, 192, 1608, 1), 'Home/resume must retain the same Quest owner and Save'
+            resumed_mask2 = PLAYER_SAVE_MASK2.findall(text[before:])
+            assert len(resumed_mask2) == 1 and tuple(map(int, resumed_mask2[-1])) == (
+                reopened['source_save_mask2']['character'], reopened['source_save_mask2']['save'],
+                reopened['source_save_mask2']['loader'], reopened['source_save_mask2']['character'],
+                reopened['source_save_mask2']['character'], 1, 1), 'Home/resume must retain the source Save association without replaying SG_Load(2)'
             screenshot('%d-crypt-resumed' % index)
             back_main()
             screenshot('%d-main-final' % index)
             report['cases'].append({'class_index': index, 'created': created, 'occupied_after_restart': reopened,
                                     'normal_back_to_main': True, 'Home_resume_same_class_and_character': True,
-                                    'Home_resume_same_Quest_owner': True})
+                                    'Home_resume_same_Quest_owner': True,
+                                    'Home_resume_same_Player_Save_association_without_mask2_replay': True})
         checked_slots = [row[0] for row in selected_classes] if args.class_index is None else [0]
         private_script('set -eu\n' + '\n'.join('test -f files/dh2_%03d.savegame' % slot for slot in checked_slots))
         report['synthetic_primary_profiles_created'] = len(selected_classes)
