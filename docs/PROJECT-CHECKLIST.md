@@ -44,12 +44,12 @@ still require live gameplay integration. All final completion gates remain open.
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 15 | 8 |
 | Character properties, equipment and state | 30 | 6 |
-| Lua, skills and enemy AI | 48 | 14 |
+| Lua, skills and enemy AI | 49 | 14 |
 | Combat, death, loot and progression | 7 | 7 |
 | Quests, campaign, UI, audio and saves | 40 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **174** | **73** |
+| **Total scoped tasks** | **175** | **73** |
 
 Latest source gate: [Quest compilation and payloads](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,659 host checks with nonempty SKIL, FAES, QEST and typed PROP on one Save/PropertyState; a FAES count mismatch still reaches QEST. FAES passes 74 original-ARM differential cases. Both Android ABIs compile. API37/16KiB smoke passes menu, all three classes, Crypt, controls, restart and Home/resume (APK SHA-256 `7a3fc9bd…`). Fresh player setup calls source Character mask 2 once; resume retains its Save association. Full InitPost/mask4/GEAR, quest-world callbacks and the complete encounter remain open.
 
@@ -239,6 +239,9 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
   selected Lua core and borrowed timer fields; host/real-Lua gates and 545
   cooldown ARM comparisons pass. Additive VM protocols pass 145 host checks.
   Full native skill activation remains open.
+- [x] Select bounded CharAI Begin/End/Use skill-command kernel in
+  `dh2_level_world`: 16 ARM comparisons, 13 source cases, four failure prefixes,
+  two guards and shared-Player-VM passive checks pass. Player activation remains open.
 - [x] Run bounded authored Ghost `LoadNInitScriptProcess(true)` through HP/MP,
   SetSkillsAndSpells, UpdateAllSkills, Post and Final in source order: 0 ordinary
   skill entries and 5 null-script faeries on the same retained VM.

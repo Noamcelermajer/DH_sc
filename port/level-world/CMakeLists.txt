@@ -97,7 +97,8 @@ target_sources(dh2_level_world PRIVATE player_skill_tables_adapter.cpp
  player_skill_session_v1.cpp player_skill_update_session_v1.cpp
  character_ai_skill_script_check.cpp script_value_boolean.cpp
  script_value_boolean_lua.cpp player_skill_use_session_v1.cpp
- player_skill_property_services_v1.cpp character_ai_skill_dispatch_v1.cpp)
+ player_skill_property_services_v1.cpp character_ai_skill_dispatch_v1.cpp
+ character_ai_skill_commands_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_mana_services_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_current_spell_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_player_scalar_services_v1.cpp
