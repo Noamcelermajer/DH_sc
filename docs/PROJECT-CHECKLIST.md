@@ -310,7 +310,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 ## 7. Combat, death, loot and progression
 
 - [x] Reconstruct bounded random streams and combat calculation/script components.
-- [x] Add one selected process RNG owner with original GSInit and Level unload seed writes; original ARM pins, selected-library checks, both Android ABIs, and API 37 lifecycle smoke pass. Native player class resolver borrows it; NPC, inventory, and loot consumers remain disconnected.
+- [x] Add one process RNG owner with original GSInit/Level unload writes and a borrowed service for V4 inventory/V7 loot. Selected-library checks, both Android ABIs, and API 37 menu/Crypt smoke pass; live inventory/loot and NPC consumers remain open.
 - [x] Reconstruct bounded health damage, nonplayer death and kill/clear quest-counter components.
 - [x] Reconstruct HandleDots/F_DotAttack and the bounded offline nonplayer F_ApplyResult caller.
 - [x] Exercise supported native health changes and prove damaged Ghost health survives recreation.

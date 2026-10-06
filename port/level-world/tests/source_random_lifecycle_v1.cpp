@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <string>
 
 namespace {
 
@@ -52,7 +53,51 @@ int main() {
                     streams.counters[0] == UINT32_MAX && streams.counters[1] == 0x76543210U,
                  "maximum timer seed must be accepted without counter changes");
 
+    // V4 inventory and V7 powered-loot APIs share this borrowed descriptor.
+    // Each service draw advances the corresponding original stream once.
+    const auto random = dh2::random_lifecycle::inventory_random_service();
+    ok &= check(random.context == &streams && random.next != nullptr,
+                "inventory/loot adapter must borrow the singleton process RNG");
+    std::string error;
+    std::int32_t value = -1;
+    auto expected = streams;
+    const auto expected_ordinary = dh2_random_next(&expected, 97, 0);
+    ok &= check(random.next(random.context, 97, 0, value, error) &&
+                    value == expected_ordinary && streams.seeds[0] == expected.seeds[0] &&
+                    streams.counters[0] == expected.counters[0] &&
+                    streams.seeds[1] == expected.seeds[1] &&
+                    streams.counters[1] == expected.counters[1],
+                "ordinary inventory draw must match and mutate only original stream zero");
+    expected = streams;
+    const auto expected_sync = dh2_random_next(&expected, 13, 1);
+    ok &= check(random.next(random.context, 13, 1, value, error) &&
+                    value == expected_sync && streams.seeds[0] == expected.seeds[0] &&
+                    streams.counters[0] == expected.counters[0] &&
+                    streams.seeds[1] == expected.seeds[1] &&
+                    streams.counters[1] == expected.counters[1],
+                "synchronized loot draw must match and mutate only original stream one");
+    expected = streams;
+    const auto expected_zero = dh2_random_next(&expected, 0, 0);
+    ok &= check(random.next(random.context, 0, 0, value, error) &&
+                    value == expected_zero && streams.seeds[0] == expected.seeds[0] &&
+                    streams.counters[0] == expected.counters[0] &&
+                    streams.seeds[1] == expected.seeds[1] &&
+                    streams.counters[1] == expected.counters[1],
+                "zero-bound source draw must preserve value semantics and advance counter");
+    const auto before_invalid = streams;
+    dh2_random_state unrelated{};
+    ok &= check(!random.next(&unrelated, 17, 0, value, error) && streams.seeds[0] == before_invalid.seeds[0] &&
+                    streams.counters[0] == before_invalid.counters[0],
+                "a foreign state must reject without touching the process RNG");
+    ok &= check(!random.next(random.context, -1, 0, value, error) &&
+                    !random.next(random.context, 17, 2, value, error) &&
+                    streams.seeds[0] == before_invalid.seeds[0] &&
+                    streams.counters[0] == before_invalid.counters[0] &&
+                    streams.seeds[1] == before_invalid.seeds[1] &&
+                    streams.counters[1] == before_invalid.counters[1],
+                "invalid bound/stream must reject without consuming a draw");
+
     if (!ok) return 1;
-    std::puts("source RNG lifecycle selected-library checks passed: singleton identity, GSInit and unload seeds, counter preservation, uint32 boundaries");
+    std::puts("source RNG lifecycle selected-library checks passed: singleton identity, GSInit/unload seeds, counter preservation, shared inventory/loot descriptor draws on both streams, invalid-call preservation");
     return 0;
 }
