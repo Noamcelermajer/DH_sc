@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.22)
 project(dh2_level_world LANGUAGES C CXX)
+if(CMAKE_HOST_WIN32)
+ # Permit hashed object paths in deeply nested Android build directories.
+ # A smaller limit can make CMake give up hashing and emit the full source path.
+ set(CMAKE_OBJECT_PATH_MAX 260)
+endif()
 if(NOT TARGET dh2_script_runtime)
  add_subdirectory(../adam-script-runtime "${CMAKE_CURRENT_BINARY_DIR}/adam-script-runtime")
 endif()
@@ -119,7 +124,9 @@ target_sources(dh2_level_world PRIVATE character_level_runtime.cpp character_ini
  ../player-info-level/player_local_selection_v1.cpp
  ../player-info-level/input_manager_v1.cpp
  ../player-info-level/netstruct_members_v1.cpp ../player-info-level/cnet_player_info_v1.cpp
- ../player-info-level/player_info_record_v1.cpp
+  ../player-info-level/player_info_record_v1.cpp
+  ../player-info-level/player_offline_registration_v1.cpp
+  ../player-info-level/player_offline_registry_v1.cpp
  player_saved_inventory_v1.cpp character_saved_class_v1.cpp character_template_random.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_update_all_skills.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_set_skills_and_spells.cpp

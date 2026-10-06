@@ -45,12 +45,15 @@ SAFE_EVENTS = re.compile(r'(?:Surface resized to |Owned menu (?:renderer selecte
                          r'Native gameplay (?:class|property cache) \||'
                          r'Menu game start \| slot \d+ \| Crypt \||'
                          r'Connected player HUD submitted \||'
-                         r'Native Player AIS (?:initialized|retained) \|)')
+                         r'Native Player AIS (?:initialized|retained) \||'
+                         r'Native offline registration \||Native full PlayerInfo \|)')
 FULL_PLAYER = re.compile(r'Native full PlayerInfo \| fields (\d+) \| factory (\d+) \|'
                          r' level (-?\d+) \| class (-?\d+) \| Character660 (\d+) \|'
                          r' slot664 (-?\d+) \| counter (\d+)')
 ASSIGN = re.compile(r'Native menu slot assigned \| slot (\d+) \| ordinal (\d+) \|'
                     r' manager stores (\d+) \| player stores (\d+)')
+REGISTRATION = re.compile(r'Native offline registration \| entries (\d+) \| added (\d+) \|'
+                          r' controllers (\d+) \| renumber (\d+) \| counter (\d+)')
 START = re.compile(r'Authored NativeStartGame request queued \| selected slot (\d+) \|'
                    r' numeric difficulty (\d+) \| requested difficulty (-?\d+)')
 CLASS = re.compile(r'Native gameplay class \| slot (\d+) \| class (\d+) \| preset (\w+)')
@@ -167,6 +170,10 @@ def verify_start(text, slot, character_class, preset, animation_table):
     assert len(starts) == 1 and tuple(map(int, starts[0].groups())) == (slot, 1, 0), 'Expected one authored Normal Start request'
     assignments = [m for m in ASSIGN.finditer(text) if m.start() < starts[0].start()]
     assert assignments and tuple(map(int, assignments[-1].groups())) == (slot, 0, 1, 1), 'Canonical source Assign must precede NativeStart'
+    registrations = [m for m in REGISTRATION.finditer(text) if m.start() < assignments[-1].start()]
+    assert registrations, 'Source controller registration must precede authored slot assignment'
+    registration = tuple(map(int, registrations[-1].groups()))
+    assert registration[0] == 1 and registration[2] == 4 and registration[4] == 39, 'Canonical offline map/input/shared counter differs'
     classes = list(CLASS.finditer(text))
     assert classes and classes[-1].start() > starts[0].start(), 'Fresh gameplay class receipt missing'
     assert classes[-1].groups() == (str(slot), str(character_class), preset), 'Gameplay class differs from selected class'
@@ -184,7 +191,7 @@ def verify_start(text, slot, character_class, preset, animation_table):
     records = list(FULL_PLAYER.finditer(text))
     assert records and records[-1].start() > starts[0].start(), 'Fresh full PlayerInfo receipt missing'
     record = tuple(map(int, records[-1].groups()))
-    assert record == (33, 1, -1, -1, 0, slot, 13), 'Canonical fallback record/defined backing policy differs'
+    assert record == (33, 1, -1, -1, 0, slot, 39), 'Canonical registered record/defined backing policy differs'
     return {'slot': slot, 'class': character_class, 'preset': preset,
             'cached_property2': animation_table, 'assign_before_start': True,
             'numeric_difficulty': True, 'requested_difficulty': 0,
@@ -194,7 +201,10 @@ def verify_start(text, slot, character_class, preset, animation_table):
             'full_PlayerInfo': {'fields': record[0], 'factory_registered': bool(record[1]),
                                 'level': record[2], 'class': record[3], 'Character660': record[4],
                                 'slot664': record[5], 'shared_counter': record[6],
-                                'temporary_backing_policy': 'zero', 'role': 'manager fallback'}}
+                                'temporary_backing_policy': 'zero', 'role': 'local registry'},
+            'offline_registration': {'entries': registration[0], 'added': registration[1],
+                                     'controllers': registration[2], 'renumber': registration[3],
+                                     'before_authored_assign': True}}
 
 
 def source_hud_frames(hp, max_hp, mp, max_mp, xp, next_xp):
