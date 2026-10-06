@@ -15,6 +15,12 @@ void set_changed(IntMember* member, std::uint64_t* serial) {
 
 }  // namespace
 
+Status mark_changed(IntMember* member, std::uint64_t* serial) {
+    if (!member || !serial) return Status::invalid_argument;
+    set_changed(member, serial);
+    return Status::complete;
+}
+
 Status set_value(IntMember* member, std::uint64_t* serial,
                  std::int32_t value, Result* result) {
     if (!member || !serial || !result) return Status::invalid_argument;

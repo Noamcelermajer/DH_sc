@@ -48,6 +48,10 @@ struct Result {
 Status set_value(IntMember*, std::uint64_t* global_change_serial,
                  std::int32_t value, Result*);
 
+// Shared NetStructMember::SetChanged leaf for all concrete member kinds.
+// Only the common prefix through +0x1c is changed; the value is untouched.
+Status mark_changed(IntMember*, std::uint64_t* global_change_serial);
+
 // Bounded PlayerInfo::SetCharacterLevel wrapper. The original ARM body reads
 // a stack word at [SP+0x20] before writing its temporary's +0x20 value. That
 // word is not initialized in the function body; callers/tests must supply the
