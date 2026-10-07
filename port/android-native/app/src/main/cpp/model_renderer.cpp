@@ -172,8 +172,8 @@ struct NativePlayerSaveAssociation {
  dh2::character_gameplay_save_v1::SaveRef* save_14e8=nullptr;
  std::unique_ptr<dh2::character_gameplay_save_v1::Runtime> runtime;
  std::uintptr_t character_identity=0,save_identity=0,loader_identity=0;
- unsigned mask2_calls=0;
- bool mask2_loaded=false;
+ unsigned mask2_calls=0,mask4_calls=0;
+ bool mask2_loaded=false,mask4_loaded=false;
 
  bool bind(std::uintptr_t character,dh2::data::PlayerSavegameV1& save,
            dh2::data::PlayerSaveLoadOwnerV1& loader,std::string& error){
@@ -204,6 +204,14 @@ struct NativePlayerSaveAssociation {
   if(result.captured_character!=character_identity||result.captured_save!=save_identity||
      result.mask!=2||result.load_calls!=1){error="source SG_Load(2) used a different Character, Save, or mask";return false;}
   mask2_loaded=true;error.clear();return true;
+ }
+ bool load_mask4_once(std::string& error){
+  if(!runtime||!mask2_loaded||mask4_calls){error="source SG_Load(4) requires the initialized Save association and one earlier SG_Load(2)";return false;}
+  ++mask4_calls;dh2::character_gameplay_save_v1::Result result{};
+  if(runtime->load(4,&result,error)!=dh2::character_gameplay_save_v1::Status::complete)return false;
+  if(result.captured_character!=character_identity||result.captured_save!=save_identity||
+     result.mask!=4||result.load_calls!=1){error="source SG_Load(4) used a different Character, Save, or mask";return false;}
+  mask4_loaded=true;error.clear();return true;
  }
 };
 struct PlayerCombat {
@@ -3177,9 +3185,11 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
           {power_bytes[2].data(),power_bytes[2].size()},error))
       throw std::runtime_error("Native ItemPower resources rejected: "+error);
      const auto loot_borrow=fresh_player.inventory_loot_tables->borrow();
-     const auto quantity_offset=loot_borrow.consumed();
-     if(quantity_offset>loot_records.size())
-      throw std::runtime_error("Native NumProbArray offset exceeds original LootTable cache");
+     dh2::data::Bytes quantities{};
+     if(!dh2::data::select_source_quantity_array_v7(
+          {loot_records.data(),loot_records.size()},
+          {loot_names.data(),loot_names.size()},loot_borrow.consumed(),quantities,error))
+      throw std::runtime_error("Native NumProbArray resources rejected: "+error);
      dh2::data::LootPowerInputsV7 power_input{
       {power_bytes[0].data(),power_bytes[0].size()},
       {power_bytes[1].data(),power_bytes[1].size()},
@@ -3187,7 +3197,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       {power_bytes[3].data(),power_bytes[3].size()},
       {power_bytes[4].data(),power_bytes[4].size()},
       {power_bytes[5].data(),power_bytes[5].size()},
-      {loot_records.data()+quantity_offset,loot_records.size()-quantity_offset},
+      quantities,
       {loot_names.data(),loot_names.size()},{loot_schema.data(),loot_schema.size()}};
      fresh_player.loot_power_resources=std::make_shared<dh2::data::LootPowerResourcesV7>();
      if(!fresh_player.loot_power_resources->load(power_input,
@@ -3512,28 +3522,32 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
        throw std::runtime_error("Native Player Save association: "+error);
       if(!association->load_mask2_once(error))
        throw std::runtime_error("Native Player source SG_Load(2): "+error);
+      if(!association->load_mask4_once(error))
+       throw std::runtime_error("Native Player source SG_Load(4): "+error);
       prince_combat.source_save_association=std::move(association);
     }else{
       const auto& association=prince_combat.source_save_association;
       if(!association||!association->same_owners(prince_character.owner(),
           *prince_combat.savegame,prince_combat.save_transport->loader())||
-         association->mask2_calls!=1||!association->mask2_loaded)
-       throw std::runtime_error("Retained Player Save association/mask2 state differs");
+         association->mask2_calls!=1||!association->mask2_loaded||
+         association->mask4_calls!=1||!association->mask4_loaded)
+       throw std::runtime_error("Retained Player Save association/mask2/mask4 state differs");
     }
     const auto& source_save_association=*prince_combat.source_save_association;
     if(prince_combat.savegame->character()!=prince_character.owner()||
        prince_combat.savegame->source_quest_log_118().character_5c!=prince_character.owner()||
        prince_combat.savegame->source_quest_log_b8().character_5c!=prince_character.owner()||
-       source_save_association.mask2_calls!=1||!source_save_association.mask2_loaded)
-     throw std::runtime_error("Native Player mask2 Save/embedded Quest identities differ");
+       source_save_association.mask2_calls!=1||!source_save_association.mask2_loaded||
+       source_save_association.mask4_calls!=1||!source_save_association.mask4_loaded)
+     throw std::runtime_error("Native Player mask2/mask4 Save/embedded Quest identities differ");
     __android_log_print(ANDROID_LOG_INFO,"DH2Native",
-     "Native Player Save mask2 | Character %zu | Save %zu | loader %zu | Quest118 %zu | QuestB8 %zu | calls %u | retained %u | standalone SG_Load(2); InitPost interstitial/mask4/GEAR pending",
+     "Native Player Save masks 2+4 | Character %zu | Save %zu | loader %zu | Quest118 %zu | QuestB8 %zu | calls %u/%u | retained %u | section reads and writer registrations; InitPost effects/GEAR writer/persistence pending",
      std::size_t(source_save_association.character_identity),
      std::size_t(source_save_association.save_identity),
      std::size_t(source_save_association.loader_identity),
      std::size_t(prince_combat.savegame->source_quest_log_118().character_5c),
      std::size_t(prince_combat.savegame->source_quest_log_b8().character_5c),
-     source_save_association.mask2_calls,unsigned(restore));
+     source_save_association.mask2_calls,source_save_association.mask4_calls,unsigned(restore));
     const auto& quest_receipt=prince_combat.quests->receipt();
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Quest startup | Save %zu | Character %zu | log b8 %u | log118 %u | constants %u | retained %u | Compile and quest gameplay pending",std::size_t(prince_combat.savegame.get()),std::size_t(prince_combat.savegame->character()),quest_receipt.published[0],quest_receipt.published[1],quest_receipt.constant_queries,unsigned(restore));
     if(!restore){

@@ -1,4 +1,5 @@
 #include "../loot_power_resources_v7.hpp"
+#include "../loot_tables_v2.hpp"
 #include <array>
 #include <fstream>
 #include <iostream>
@@ -17,8 +18,15 @@ int main(int argc,char** argv){try{
  // Original 0x4b9bf4 reader identified this exact NumProb section; the runner
  // pins canonical cache hashes before this fixture projection is accepted.
  ck(raw[6].size()==284104,"Unexpected loot cache size");
- LootPowerInputsV7 input{span(raw[0]),span(raw[1]),span(raw[2]),span(raw[3]),span(raw[4]),span(raw[5]),{raw[6].data()+283108,996},span(raw[7]),span(raw[8])};
- ItemPowerTablesV5 powers;std::string error;
+ std::string error;
+ Bytes quantities{};
+ // The selected LootTable reader ends at 282872; the final NumProbArray is
+ // preceded by another array. Select the last source read by its exact layout.
+ LootTablesV2 loot_owner;ck(loot_owner.load(span(raw[6]),span(raw[7]),span(raw[8]),error),error);
+ ck(select_source_quantity_array_v7(span(raw[6]),span(raw[7]),loot_owner.borrow().consumed(),quantities,error),error);
+ ck(quantities.data==raw[6].data()+283108&&quantities.size==996,"Final NumProbArray boundary differs from canonical source cache");
+ LootPowerInputsV7 input{span(raw[0]),span(raw[1]),span(raw[2]),span(raw[3]),span(raw[4]),span(raw[5]),quantities,span(raw[7]),span(raw[8])};
+ ItemPowerTablesV5 powers;
  ck(powers.load(input.powers,input.power_names,input.power_schema,error),error);
  auto authority=powers.borrow();LootPowerResourcesV7 resources;
  ck(resources.load(input,authority,error),error);auto pinned=resources.borrow();

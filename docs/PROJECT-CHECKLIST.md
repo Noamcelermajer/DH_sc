@@ -5,7 +5,7 @@ Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (151,020,120 bytes, SHA-256 `7880FA33019EEDB340C77CCC94EDB3C2FCDCE1826EF37B2BBAEFDE8F9EA41332`). API 37 ARM64/x86_64 build passes; signature verification, 16 KiB ZIP alignment and all 22 ELF64 libraries' 16 KiB PT_LOAD alignment pass. No emulator or live gameplay test was run. On this long Windows checkout, build with `-Pdh2SourceRoot=<short mapped checkout>`.
+**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,096,080 bytes, SHA-256 `F2060DFC22BCB2B6227CA087F91F48B9A39551DC6164125145620EB8FDE7DC64`). API 37 ARM64/x86_64 build, debug signature, 16 KiB ZIP alignment, and packaged ELF alignment pass. API 37 x86_64/16 KiB smoke passes one Knight through original menu taps followed by the development Crypt continuation, re-open and Home-resume; `SG_Load(2)` and `SG_Load(4)` each ran once. Movement input moved the Player; attack returned “Walk closer to an enemy,” so combat was not tested. This does not exercise source `_AddCharacter`/`NativeStartGame`, live `Character::InitPost`, or existing profile section payloads. On this long Windows checkout, build with `-Pdh2SourceRoot=<short mapped checkout>`.
 
 **Latest published APK:** [Android 17 equipment-restore and guarded-loot checkpoint](https://github.com/Noamcelermajer/DH_sc/releases/download/native-equipment-loot-2026-10-07/app-debug.apk), tag `native-equipment-loot-2026-10-07`. Its equipment mutation/UI, weapon visuals, full Kill rewards, skills and live pickup remain open.
 
@@ -47,7 +47,7 @@ Prior verified source gate: [Loot composition and world-pickup host report](../r
 
 Current branch projects the supported Player melee kill edge through dead/HP-zero and active-Player-killer guards into V4 DropLoot staging → original ItemAudioVisual/BDAE draw + Box2D sensor → deferred MoveOn pickup. It does not yet run complete Character::Kill. IDA confirms AudioVisualID is ItemRecord word 21 (`ItemObject::InitAgain` reads `ItemInstance::GetItem()+84`); the earlier word-24 lookup was a blocker and is corrected. Failed one-shot loot continuations retain the killer identity across world-update retries; partial V4 suffix items are removed by item identity before another roll. ARM64/x86_64 Android build and package checks pass. Live loot/pickup remains unverified.
 
-Historical [quest compilation and payload gate](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,659 host checks with nonempty SKIL, FAES, QEST and typed PROP on one Save/PropertyState; a FAES count mismatch still reaches QEST. FAES passes 74 original-ARM differential cases. Full InitPost/mask4/GEAR and quest-world callbacks remain open.
+Historical [quest compilation and payload gate](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,659 host checks with nonempty SKIL, FAES, QEST and typed PROP on one Save/PropertyState; a FAES count mismatch still reaches QEST. FAES passes 74 original-ARM differential cases. The current smoke invokes `SG_Load(4)` on a new metadata-only profile; it restores no section payload. Full InitPost, existing-profile payload restoration (including GEAR), and quest-world callbacks remain open.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -203,7 +203,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select full 33-field PlayerInfo lifecycle, Reset/copy/assignment/destruction/setters and native factory backing: 150 ARM comparisons and 14 ownership checks pass through selected libraries. Both Android ABIs compile; three classes retain menu/Crypt behavior on API37/16KiB. Controller/map and source-backed Character660 registration remain open.
 - [x] Bind reconstructed `NativePlayerCharacterOwnerV1` to registered PlayerInfo `Character660` and the same Save/properties through menu → Crypt → HUD → Home/resume; 12 host checks, both Android ABIs, and API37/Android17 x86_64/16-KiB smoke pass. [Smoke report](../port/android-native/reports/native-character-owner-api37-2026-10-06.json). Source `_AddCharacter` parity and inventory attachment remain open.
 - [x] Select offline membership/AddPlayer/renumber/controller callers over full stable records and the sole input owner: 440 ARM comparisons, 72 failure/reentry cases and 68 integration checks pass. Native controller0 registers before authored Assign; live Warrior create/reopen/Crypt/Back/Home passes on API37/16KiB. Joining/network and source-backed Character660 remain open.
-- [x] Select original GEAR reader over the same V4/property/presentation graph: 19 original cases across three classes, six cached items/one power, 2,495 checks and both Android ABI builds pass. Six original power-table assets are now bundled/hash-gated on Android; runtime consumption, native SG_Load4 and InitPost remain open.
+- [x] Select original GEAR reader over the same V4/property/presentation graph: 19 original cases across three classes, six cached items/one power, 2,495 checks and both Android ABI builds pass. Six original power-table assets are bundled/hash-gated. Mask 4 now runs on the gameplay Save, but existing GEAR payload loading and the full InitPost path remain open.
 - [ ] Retain powered equipment split remainders through callback failure and retire presentation before item destruction.
 
 - [x] Select PlayerInfo activity/SetState: 3,716 ARM comparisons; offline activity and state member remain distinct.
@@ -211,7 +211,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select whole `_AddCharacter`: 277 ARM comparisons and 88 native failure checks; genuine spawn/InitAll providers remain unbound.
 - [x] Connect bounded normal managed metadata to registered menu players: 245 ARM comparisons, 46 composition checks and three live class flows. Class/level/name use the same Record and Save680.
 - [x] Select bounded Character::InitPost caller block through `0x3b51bc`: 4 original ARM cases/37 calls match host order, callsites, owners and arguments; failure-prefix, reentry and Android ARM64/x86_64 builds pass. Providers remain unbound.
-- [x] Select Character save/InitAll wrappers: 46 ARM comparisons and 115 selected-host checks; exact embedded Quest owner fields/order and same-Save LoadOwner are enforced. Android wires standalone mask 2; InitPost provider wiring remains required.
+- [x] Select Character save/InitAll wrappers: 46 ARM comparisons and 115 selected-host checks; exact embedded Quest owner fields/order and same-Save LoadOwner are enforced. Android now calls mask 2 then mask 4 once on the same retained Character/Save/loader. API 37 smoke verifies identity and no replay on Home/resume with a metadata-only profile; full InitPost and real existing-profile sections remain open.
 - [x] Select Character::InitFinal: 260 ARM comparisons and 803 host checks; real lighting/AI/skills/save providers remain required.
 
 ## 6. Lua, skills and enemy AI — current implementation focus
@@ -339,7 +339,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select the `_GiveXP` callee kernel over the canonical Save/PropertyView: focused audit verifies source XP arithmetic/gates, normal-constant lookup order and missing-key zero, fresh difficulty/Level reads, conditional `a3` lookup, and post-LevelUp XP/MaxXP reread/clamp.
 - [x] Select host `Character::DistributeXP`: focused audit covers two roster passes, level scaling, kill-centered radius/self bypass, cooperative share and fixed-point grants. Android binding remains open.
 - [ ] Connect `DistributeXP` and `_GiveXP` to the same live Player registry, PropertyView and Save; the current Android roster has one Player. Do not enable threshold-crossing awards until LevelUp/SG_Save is complete.
-- [ ] Implement the LevelUp transaction and normal offline `SG_Save`: class/property recalc, HP/MP, existing-profile `saveAll` plus volatile quest log, HUD/scripts/VFX/trophies and overage XP. Current Android saving only writes explicitly created profiles.
+- [ ] Implement the LevelUp transaction and normal offline `SG_Save`: class/property recalc, HP/MP, existing-profile `saveAll` writers and durable persistence, HUD/scripts/VFX/trophies and overage XP. `_SaveVolatileQuestsLog` is online-only; current Android saving only writes explicitly created profiles.
 - [ ] Register live quest objectives with the Level EventManager and dispatch KillX/Clear/template callbacks in source order. IDA confirms `RaiseAsync` enters synchronous `Raise` in this binary.
 - [ ] Complete outer event2/`OnDied`/`AI_SetDead` on the same actor with real group, active-AIS, timer, FSM and aggro owners; general enemy Character/CharAI/AIS runtime remains open.
 - [ ] Complete all CalculateResult/ApplyResult dependencies, effects, notifications and actor ownership.
@@ -370,7 +370,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [ ] Restore title/menu flow, character creation/selection, HUD, inventory, skill and quest interfaces.
 - [ ] Complete touch controls, input mapping, orientation/window/lifecycle behavior for the final app.
 - [ ] Connect music, sound, voice, visual effects and their original timing/lifetimes.
-- [ ] Reconstruct complete campaign/profile save serialization, load ownership and version handling.
+- [ ] Complete campaign/profile save serialization, load ownership and version handling. Selected host-tested writers now cover CFEE/FAES/FTVL, SKIL, PROP and LVLS over the canonical Save/property/level state; QEST/GEAR writer integration and existing-profile Transport/saveAll persistence remain open.
 - [ ] Support original-save import where its data format is established and compatible.
 - [ ] Verify saves after process death, cold launch, app update and interrupted writes.
 - [ ] Validate every authored/generated level and complete the full campaign playthrough.
@@ -403,7 +403,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Route SaveLoad masks 2 and 4 through one Save/Quest owner and whole-profile cursor: 9,659 selected-host checks restore nonempty SKIL/FAES/PROP plus 384 Quests/1,164 payloads on the same Save; a FAES count mismatch remains nonfatal and QEST continues. Offline Online is an explicit test value.
 - [x] Differential-test FAES against original `__LoadFaeries` at `0x4691d0`: 74 cases, including all 69 truncated prefixes; 1,011 fully consumed fields match, with the unsafe source short-read difference recorded.
 - [x] Compile the transport bridge for both Android ABIs and smoke-test menu/class selection, Crypt/input/restart/Back/Home-resume for all three classes on API37/16KiB. This does not execute live `Character::InitPost` or restore a real campaign.
-- [x] Wire fresh Android player setup to the source Character Save association and `SG_Load(2)` exactly once. API37 smoke verifies the same Character/Save/LoadOwner/embedded Quest owners and no mask-2 replay on Home/resume; InitPost interstitial, mask 4 and real campaign restore remain open.
+- [x] Wire fresh Android player setup to the source Character Save association and `SG_Load(2)` then `SG_Load(4)` exactly once each. API 37/16 KiB smoke verifies the same Character/Save/LoadOwner/embedded Quest owners and no mask replay on Home/resume. Test data contains metadata only; full InitPost interstitial and real campaign section restore remain open.
 
 ## 9. Fan modding and source delivery
 
