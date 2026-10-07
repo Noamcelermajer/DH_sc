@@ -13,6 +13,13 @@ struct Transform{Point position{};Point rotation_degrees{};Point scale{1,1,1};};
 struct EntryPoint{std::int32_t id=-1;unsigned room=0;std::string name;Transform local;Transform world;};
 struct SpawnSelection{EntryPoint source;Point position{};Point rotation_degrees{};bool floor_snapped=false;};
 bool load(const resources::BresView&,const std::uint8_t* descriptor,std::size_t,Level&,std::string&);
+// Build the bounded static Module layout from the original Level .mlx and
+// selected SpawnPoint sidecar. This replaces the generated DWLD module table
+// at runtime; conditional/rotated/scaled modules remain unsupported.
+bool compile_source_layout(const std::uint8_t* mlx,std::size_t mlx_size,
+                           const std::uint8_t* spawnpoints,std::size_t spawn_size,
+                           std::int32_t entrypoint_id,
+                           std::vector<std::uint8_t>& descriptor,std::string& error);
 // SPWN v1 currently covers Crypt's two active, unique MGP entrypoints only.
 // Selection mirrors the ID lookup and floor snap in Level::_LoadPlayer, but
 // live-object activation and manager iteration/order semantics are not yet

@@ -124,7 +124,7 @@ Historical reports retain their original APK identities and test scopes.
 
 - [x] Load the original authored eight-room Crypt layout into the native app.
 - [x] Parse both current Crypt MGP SpawnPoints into SPWN; fresh Android start selects ID 0 and floor-snaps, while resume preserves saved pose. Host checks and both ABI builds pass; active-object ordering remains open.
-- [x] Compile cache-backed LevelList row 41 into a bounded static SWAMP DWLD/BDAE/SPWN bundle, preserving 34 source render assets; selected-library host load verifies 9 rooms, 16 floors, 377 visuals, material bindings, entrypoint floor snap, and five DACT Monsters across three models. General MLX/object factories remain open.
+- [x] Import SWAMP LevelList row 41's original `.mlx` at runtime to rebuild its translation-only DWLD module table; retain the BRES/SPWN/DACT checkpoint owners. The source-built descriptor matches the prior bundle, and the host audit verifies 9 rooms, 16 floors, 377 visuals, materials, floor-snapped entrypoints and five DACT Monsters across three models. Android API37 ARM64/x86_64 build includes this path; MGP/MVP parsing and object factories remain open.
 - [x] Verify the selected-library DACT/world actor regression resolves the five source-authored SWAMP Monsters and model dictionary entries.
 - [ ] Start the current SWAMP APK on Android and verify actor load, placement and animation in gameplay; no live run has been made.
 - [x] Parse source `floortypes` with IDA-confirmed duplicate/key/quote behavior, apply native type masks, and make default floor snapping skip void/wall in source order; unknown tags such as `sand` add no mask.

@@ -22,20 +22,28 @@ void require(bool condition, const char* message) {
 }
 
 int main(int argc, char** argv) {
-    if (argc != 6) {
-        std::cerr << "usage: swamp_static_world_audit swamp.bdae 001_swamp.dwld 001_swamp.spwn 001_swamp.dact asset-data-dir\n";
+    if (argc != 7) {
+        std::cerr << "usage: swamp_static_world_audit swamp.bdae 001_swamp.dwld 001_swamp.spwn 001_swamp.dact 001_swamp.mlx asset-data-dir\n";
         return 2;
     }
     try {
         const auto bres_bytes = read(argv[1]);
         const auto descriptor = read(argv[2]);
         const auto spawn_bytes = read(argv[3]);
+        const auto source_mlx = read(argv[5]);
+        std::vector<std::uint8_t> source_descriptor;
+        std::string error;
+        const bool source_layout_ok = dh2::world::compile_source_layout(
+                source_mlx.data(), source_mlx.size(), spawn_bytes.data(),
+                spawn_bytes.size(), 0, source_descriptor, error);
+        require(source_layout_ok, error.c_str());
+        require(source_descriptor == descriptor,
+                "runtime source MLX import differs from the checked-in DWLD checkpoint");
         dh2::resources::BresView bres{};
         require(dh2_bres_open(&bres, bres_bytes.data(), bres_bytes.size()) ==
                 dh2::resources::BresError::ok, "SWAMP BRES rejected");
 
         dh2::world::Level level;
-        std::string error;
         require(dh2::world::load(bres, descriptor.data(), descriptor.size(), level, error),
                 error.c_str());
         require(level.rooms == 9 && level.scene.instances.size() > 100 &&
@@ -77,7 +85,7 @@ int main(int argc, char** argv) {
                 "SWAMP entrypoint zero did not resolve to source floor");
 
         const auto dact_bytes = read(argv[4]);
-        const std::string data_root = argv[5];
+        const std::string data_root = argv[6];
         const auto character_records = read((data_root + "/character_properties_pyarray.bin").c_str());
         const auto character_names = read((data_root + "/character_properties_pyarraynames.bin").c_str());
         const auto character_fields = read((data_root + "/character_properties_pystructnames.bin").c_str());

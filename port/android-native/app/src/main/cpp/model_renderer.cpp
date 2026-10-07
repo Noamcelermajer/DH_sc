@@ -3163,11 +3163,26 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     if(world_mode&&!prince_retained_pose.capture(prince_locomotion,prince_attack_clips,prince_visual,current_scene,retention_error))
       throw std::runtime_error("Player scene retention failed: "+retention_error);
     if(!restore){prince_skills.reset();prince_source_ai.reset();}
+    std::vector<std::uint8_t> source_layout_bytes,source_spawn_bytes;
+    const std::uint8_t* selected_descriptor=descriptor;std::size_t selected_descriptor_size=size;
+    if(source_static_level){
+      std::string source_layout_error;
+      const auto mlx=read(assets,"data/scene/001_swamp.mlx","original-cache");
+      source_spawn_bytes=read(assets,level_assets.spawns,"worlds");
+      const auto entrypoint=active_native_start_plan?active_native_start_plan->entry_point:0;
+      if(!dh2::world::compile_source_layout(mlx.data(),mlx.size(),source_spawn_bytes.data(),
+          source_spawn_bytes.size(),entrypoint,source_layout_bytes,source_layout_error))
+        throw std::runtime_error("Original source MLX layout rejected: "+source_layout_error);
+      selected_descriptor=source_layout_bytes.data();selected_descriptor_size=source_layout_bytes.size();
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native source Level MLX imported | row %d | %s | modules %u | selected entrypoint %d | existing Level/Module parser reused; character/module factories remain separate",
+        level_assets.row,level_assets.level_file.c_str(),selected_descriptor_size>=12?unsigned(selected_descriptor[8]|(unsigned(selected_descriptor[9])<<8)|(unsigned(selected_descriptor[10])<<16)|(unsigned(selected_descriptor[11])<<24)):0,entrypoint);
+    }
     auto raw=read(assets,level_assets.bres,source_static_level?"original-cache":"worlds");dh2::resources::BresView view{};
     if(dh2_bres_open(&view,raw.data(),raw.size())!=dh2::resources::BresError::ok)throw std::runtime_error("World BRES rejected");
-    dh2::world::Level candidate;std::string error;if(!dh2::world::load(view,descriptor,size,candidate,error))throw std::runtime_error(error);
+    dh2::world::Level candidate;std::string error;if(!dh2::world::load(view,selected_descriptor,selected_descriptor_size,candidate,error))throw std::runtime_error(error);
     if(!restore){
-      const auto spawn_bytes=read(assets,level_assets.spawns,"worlds");std::vector<dh2::world::EntryPoint> entrypoints;
+      if(source_spawn_bytes.empty())source_spawn_bytes=read(assets,level_assets.spawns,"worlds");
+      const auto& spawn_bytes=source_spawn_bytes;std::vector<dh2::world::EntryPoint> entrypoints;
       if(!dh2::world::load_entrypoints(spawn_bytes.data(),spawn_bytes.size(),candidate.rooms,entrypoints,error))throw std::runtime_error(error);
       dh2::world::SpawnSelection start;
       const auto entrypoint=active_native_start_plan?active_native_start_plan->entry_point:0;
