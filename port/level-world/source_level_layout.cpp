@@ -63,4 +63,38 @@ bool compile_source_layout(const std::uint8_t* mlx, std::size_t mlx_size,
     error.clear();
     return true;
 }
+
+bool compile_source_spawnpoints(const std::uint8_t* mlx, std::size_t mlx_size,
+                               const SourceMgpView* mgps, std::size_t mgp_count,
+                               std::vector<std::uint8_t>& spawnpoints, std::string& error) {
+    spawnpoints.clear();
+    error.clear();
+    if (!mgps || !mgp_count || mgp_count > 256) {
+        error = "Original source MGP list is empty or exceeds the runtime limit";
+        return false;
+    }
+    std::vector<dh2_world_source_mgp> source_mgps;
+    source_mgps.reserve(mgp_count);
+    for (std::size_t i = 0; i < mgp_count; ++i) {
+        if (!mgps[i].source_path || !mgps[i].data || !mgps[i].size) {
+            error = "Original source MGP list contains an incomplete input";
+            return false;
+        }
+        source_mgps.push_back({mgps[i].source_path, mgps[i].data, mgps[i].size});
+    }
+
+    constexpr std::size_t max_size = 16 + 3 * 144;
+    std::vector<std::uint8_t> result(max_size);
+    std::size_t result_size = 0;
+    char message[160]{};
+    if (!dh2_world_compile_static_spawnpoints(mlx, mlx_size, "SWAMP",
+            "data/scene/001_swamp.mlx", source_mgps.data(), source_mgps.size(),
+            result.data(), result.size(), &result_size, message, sizeof(message))) {
+        error = message[0] ? message : "Original source MGP import failed";
+        return false;
+    }
+    result.resize(result_size);
+    spawnpoints = std::move(result);
+    return true;
+}
 }

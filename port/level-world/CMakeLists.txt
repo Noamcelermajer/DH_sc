@@ -159,6 +159,10 @@ target_link_libraries(dh2_level_world PUBLIC dh2_engine_skinning dh2_game_data d
 if(ANDROID)
  target_link_options(dh2_level_world PRIVATE -Wl,-z,max-page-size=16384 -Wl,--no-undefined)
 else()
+ add_executable(source_spawnpoints_adapter_audit
+  tests/source_spawnpoints_adapter.cpp ../world-data/world.cpp ../world-data/source_layout_adapter.cpp)
+ target_compile_features(source_spawnpoints_adapter_audit PRIVATE cxx_std_17)
+ target_compile_options(source_spawnpoints_adapter_audit PRIVATE -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
  add_executable(character_init_post_player_v1_audit
   tests/character_init_post_player_v1.cpp character_init_post_player_v1.cpp)
  target_compile_features(character_init_post_player_v1_audit PRIVATE cxx_std_17)

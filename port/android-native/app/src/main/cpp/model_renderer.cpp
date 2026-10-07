@@ -3168,14 +3168,35 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     if(source_static_level){
       std::string source_layout_error;
       const auto mlx=read(assets,"data/scene/001_swamp.mlx","original-cache");
-      source_spawn_bytes=read(assets,level_assets.spawns,"worlds");
+      static constexpr std::array<const char*,9> source_mgp_paths={
+        "data/3d/modules/swamp/mgp/obj_4of4_brdwalk_sw_00.mgp",
+        "data/3d/modules/swamp/mgp/obj_3of4_brdwalk_sw_00.mgp",
+        "data/3d/modules/swamp/mgp/obj_1of4_brdwalk_nse_00.mgp",
+        "data/3d/modules/swamp/mgp/corner_ruin_ws_00.mgp",
+        "data/3d/modules/swamp/mgp/merchantcamp_ruins_swe_00.mgp",
+        "data/3d/modules/swamp/mgp/corner_brdwalk_se_00.mgp",
+        "data/3d/modules/swamp/mgp/deadend_brdwalk_w_00.mgp",
+        "data/3d/modules/swamp/mgp/bossroom_ruins_ns_.mgp",
+        "data/3d/modules/swamp/mgp/obj_2of4_brdwalk_sw_00.mgp"};
+      std::vector<std::vector<std::uint8_t>> source_mgp_bytes;
+      std::vector<dh2::world::SourceMgpView> source_mgps;
+      source_mgp_bytes.reserve(source_mgp_paths.size());
+      source_mgps.reserve(source_mgp_paths.size());
+      for(const auto* path:source_mgp_paths){
+        source_mgp_bytes.push_back(read(assets,path,"original-cache"));
+        const auto& bytes=source_mgp_bytes.back();
+        source_mgps.push_back({path,bytes.data(),bytes.size()});
+      }
+      if(!dh2::world::compile_source_spawnpoints(mlx.data(),mlx.size(),source_mgps.data(),
+          source_mgps.size(),source_spawn_bytes,source_layout_error))
+        throw std::runtime_error("Original source MGP SpawnPoint import rejected: "+source_layout_error);
       const auto entrypoint=active_native_start_plan?active_native_start_plan->entry_point:0;
       if(!dh2::world::compile_source_layout(mlx.data(),mlx.size(),source_spawn_bytes.data(),
           source_spawn_bytes.size(),entrypoint,source_layout_bytes,source_layout_error))
         throw std::runtime_error("Original source MLX layout rejected: "+source_layout_error);
       selected_descriptor=source_layout_bytes.data();selected_descriptor_size=source_layout_bytes.size();
-      __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native source Level MLX imported | row %d | %s | modules %u | selected entrypoint %d | existing Level/Module parser reused; character/module factories remain separate",
-        level_assets.row,level_assets.level_file.c_str(),selected_descriptor_size>=12?unsigned(selected_descriptor[8]|(unsigned(selected_descriptor[9])<<8)|(unsigned(selected_descriptor[10])<<16)|(unsigned(selected_descriptor[11])<<24)):0,entrypoint);
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native source MLX/MGP imported | row %d | %s | modules %u | supported SpawnPoints %u | selected entrypoint %d | source object factories remain separate",
+        level_assets.row,level_assets.level_file.c_str(),selected_descriptor_size>=12?unsigned(selected_descriptor[8]|(unsigned(selected_descriptor[9])<<8)|(unsigned(selected_descriptor[10])<<16)|(unsigned(selected_descriptor[11])<<24)):0,unsigned(source_spawn_bytes.size()>=16?(source_spawn_bytes.size()-16)/144:0),entrypoint);
     }
     auto raw=read(assets,level_assets.bres,source_static_level?"original-cache":"worlds");dh2::resources::BresView view{};
     if(dh2_bres_open(&view,raw.data(),raw.size())!=dh2::resources::BresError::ok)throw std::runtime_error("World BRES rejected");
