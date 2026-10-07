@@ -5,6 +5,7 @@
 #include "textures.hpp"
 #include "animation.hpp"
 #include "skinning.hpp"
+#include "modular_skin_catalog.hpp"
 #include "world.hpp"
 #include "objects.hpp"
 #include "animation_tables.hpp"
@@ -149,6 +150,7 @@ struct ObjectActor:dh2::objects::Record {
  dh2::animation::EventCursor event_cursor;unsigned animation_events=0;
  dh2::data::CombatActorState combat_state;int combat_target=-1;bool pending_death=false;
  bool loot_dropped=false,loot_retry_pending=false;unsigned loot_retry_delay_frames=0;
+ std::uint64_t loot_killer_identity=0;
  std::vector<dh2::data::ItemInstanceV1*> loot_rollback_items;
  AggroStorage aggro;std::uint64_t identity=0;unsigned target_alive=0,target_sight=0;bool target_seeking=false,ai_attack=false;
  SearchObjectProjection search_projection{};
@@ -832,7 +834,7 @@ std::map<std::string,unsigned> itemdrop_roots;
 bool itemdrops_ready=false;
 void destroy_native_world_item_bodies();
 void clear_native_world_item_resources();
-bool drop_actor_loot(ObjectActor&,std::string&);
+bool drop_actor_loot(ObjectActor&,std::uint64_t killer_identity,std::string&);
 bool ensure_native_world_items(std::string&);
 void update_native_world_items_after_step();
 void BodyOwner::collision(void* raw,dh2::physical::ContactEvent event,void* other,
@@ -1948,7 +1950,8 @@ void set_time(int milliseconds){
   if(milliseconds<0){epoch=std::chrono::steady_clock::now()-std::chrono::milliseconds(sampled_ms-player.start);frozen=false;}
   else{sampled_ms=std::clamp(milliseconds,player.start,player.end);frozen=true;}
 }
-static std::string load_scene(const std::uint8_t* bytes,std::size_t size,AAssetManager* assets,bool preserve_level_session){
+static std::string load_scene(const std::uint8_t* bytes,std::size_t size,AAssetManager* assets,bool preserve_level_session,
+                              const dh2::data::FreshInventoryOwnedV4* equipment=nullptr){
   std::vector<Draw> candidate;std::vector<GLuint> textures;
   try{
     if(!assets)throw std::runtime_error("Asset manager unavailable");
@@ -1963,12 +1966,45 @@ static std::string load_scene(const std::uint8_t* bytes,std::size_t size,AAssetM
       const char* visual_class="warrior";const char* idle_class="knight";
       if(preserve_level_session&&requested_player_class==325){visual_class="rogue";idle_class="rogue";}
       else if(preserve_level_session&&requested_player_class==290){visual_class="mage";idle_class="mage";}
-      const auto module_suffix=std::string("_default_")+visual_class+"-mesh-skin";
-      for(unsigned i=0;i<dh2_bres_library_count(&view,dh2::resources::Library::controller);++i){
-        dh2::skinning::Skin skin;if(!dh2::skinning::load(view,i,scene,skin,error))throw std::runtime_error(error);
-        if(skin.id.find(module_suffix)==std::string::npos)continue;
+      dh2::skinning::ModularSkinCatalog catalog;
+      if(!dh2::skinning::load_modular_skin_catalog(bytes,size,catalog,error))
+        throw std::runtime_error("Prince modular catalog: "+error);
+      struct BodySlot {const char* category;std::uint32_t slot;};
+      static constexpr BodySlot body_slots[]={{"MC_Feet",3},{"MC_Hands",4},
+                                               {"MC_Head",8},{"MC_Torso",0}};
+      std::vector<const dh2::skinning::ModularSkinModule*> selected;
+      selected.reserve(sizeof(body_slots)/sizeof(body_slots[0]));
+      for(const auto& body:body_slots){
+        const dh2::skinning::ModularSkinModule* module=nullptr;bool placeholder=false;
+        if(equipment){
+          const auto* slot=equipment->equipment()[0][body.slot];
+          if(slot&&!slot->item)throw std::runtime_error("Equipped body slot has no canonical ItemInstance");
+          const auto* item=slot?dh2::data::item(equipment->table(),slot->item->id):nullptr;
+          if(slot&&!item)throw std::runtime_error("Equipped body item is absent from the canonical ItemTable");
+          if(!dh2::skinning::resolve_modular_skin(catalog,body.category,
+              item?item->name:std::string{},slot!=nullptr,module,placeholder,error))
+            throw std::runtime_error("Canonical equipped skin: "+error);
+        }else{
+          const auto name=std::string(body.category)+"_default_"+visual_class;
+          module=dh2::skinning::find_modular_skin(catalog,body.category,name);
+          if(!module)throw std::runtime_error("Class starter skin is absent from Prince modular catalog: "+name);
+        }
+        if(!module)throw std::runtime_error("Prince modular selection returned no controller");
+        selected.push_back(module);
+        __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+          "Prince body skin selected | category %s | module %s | controller %u | V4 %u | placeholder %u",
+          body.category,module->item_name.c_str(),module->controller_index,unsigned(equipment!=nullptr),unsigned(placeholder));
+      }
+      std::sort(selected.begin(),selected.end(),[](const auto* a,const auto* b){
+        return a->controller_index<b->controller_index;
+      });
+      for(const auto* module:selected){
+        dh2::skinning::Skin skin;
+        if(!dh2::skinning::load(view,module->controller_index,scene,skin,error))throw std::runtime_error(error);
+        if(skin.id!=module->controller)throw std::runtime_error("Prince modular catalog/controller identity differs");
         dh2::assets::Mesh mesh{};dh2_mesh_open(&mesh,&view,skin.geometry);
-        dh2::scene::Instance instance{prince->id,node,skin.geometry,prince->world,{}};instance.controller=i;
+        dh2::scene::Instance instance{prince->id,node,skin.geometry,prince->world,{}};
+        instance.controller=static_cast<std::int32_t>(module->controller_index);
         for(unsigned j=0;j<mesh.primitives;++j){dh2::assets::Primitive primitive{};dh2_mesh_primitive(&mesh,j,&primitive);
           auto material=std::find_if(scene.materials.begin(),scene.materials.end(),[&](const dh2::scene::Material& m){return m.id==primitive.material;});
           if(material==scene.materials.end())throw std::runtime_error("Unresolved equipment material");instance.materials.push_back(material-scene.materials.begin());}
@@ -2319,9 +2355,10 @@ void player_authored_event(const dh2::animation::TriggeredEvent& event,int clip)
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Prince combat hit | target %s | attempt %u | result %d %d %d %d %d %d %u %u %d %d | HP %d %d | dead %u | combo %u | RNG %u %u | statuses %u",target->name.c_str(),prince_combat.attempts,result.amount,result.dot_element,result.dot_duration,result.dot_amount,result.hp_leech,result.mp_leech,result.outcomes,result.mask,result.weapon_category,result.element,applied.health.before,applied.health.after,target->combat_state.dead,prince_combat.life.combo_hits,combat_random.seed,combat_random.calls,applied.status_requests);
  if(applied.health.kill_requested){
   target->pending_death=true;
+  target->loot_killer_identity=prince_character.identity();
   target->loot_retry_pending=true;target->loot_retry_delay_frames=0;
   std::string loot_error;
-  if(drop_actor_loot(*target,loot_error))target->loot_retry_pending=false;
+  if(drop_actor_loot(*target,target->loot_killer_identity,loot_error))target->loot_retry_pending=false;
   else{
    target->loot_retry_delay_frames=30;
    __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Source death loot continuation failed | %s | %s",target->name.c_str(),loot_error.c_str());
@@ -3348,7 +3385,8 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
         glGenBuffers(1,&d.indices);glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,d.indices);glBufferData(GL_ELEMENT_ARRAY_BUFFER,indices.size()*2,indices.data(),GL_STATIC_DRAW);check("World buffer upload");
       }
     }
-    const auto actor_report=load_scene(prince.data(),prince.size(),assets,true);
+    const auto actor_report=load_scene(prince.data(),prince.size(),assets,true,
+      restore?prince_combat.inventory.get():nullptr);
     if(actor_report.find("Model load failed:")==0)throw std::runtime_error(actor_report);
     environment.insert(environment.end(),std::make_move_iterator(draws.begin()),std::make_move_iterator(draws.end()));draws=std::move(environment);
     images.insert(images.end(),textures.begin(),textures.end());textures.clear();
@@ -3778,7 +3816,7 @@ bool source_drop_position(const ObjectActor& victim,std::array<float,3>& out,
       center[2]+direction[2]*forward};
  error.clear();return true;
 }
-bool drop_actor_loot(ObjectActor& victim,std::string& error) {
+bool drop_actor_loot(ObjectActor& victim,std::uint64_t killer_identity,std::string& error) {
  if(victim.loot_dropped){error.clear();return true;}
  auto& rollback_items=victim.loot_rollback_items;
  auto cleanup_rollback_items=[&](){
@@ -3808,6 +3846,21 @@ bool drop_actor_loot(ObjectActor& victim,std::string& error) {
  if(!cleanup_rollback_items())return false;
  if(!world_mode){error="Native world is not active for death loot";return false;}
  if(!actor_level_fields_ready){error="Native Level loot fields are not ready";return false;}
+ // IDA's Character::Kill reaches DropLoot(victim,killer) only after its
+ // IsDead/HP-zero prefix. This Android slice currently supports the live
+ // Prince as killer; keep that identity attached to the episode so retries
+ // cannot silently turn into a victim-only loot callback.
+ if(victim.kind!=1||!victim.identity||!victim.combat_state.dead||
+    victim.properties.resolved[36]!=0){
+  error="Source DropLoot requires a dead Character with zero cached HP";return false;
+ }
+ if(!killer_identity||killer_identity!=prince_character.identity()||
+    victim.identity==killer_identity||prince_combat.life.dead){
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+   "Source DropLootTable skipped | %s | unsupported/non-live player killer | killer %llu",
+   victim.name.c_str(),static_cast<unsigned long long>(killer_identity));
+  victim.loot_dropped=true;error.clear();return true;
+ }
  if(actor_level_kill_loot_gate!=0||prince_combat.life.dead||victim.loot_table_id<0){
   victim.loot_dropped=true;error.clear();return true;
  }
@@ -3899,8 +3952,9 @@ bool drop_actor_loot(ObjectActor& victim,std::string& error) {
   return false;
  }
  __android_log_print(ANDROID_LOG_INFO,"DH2Native",
-  "Source enemy death loot staged | %s | Loot %d | items %zu | ClassID %d | InfiniteLootDrops %u | V4 owner, itemdrops BDAE and MoveOn sensor",
-  victim.name.c_str(),victim.loot_table_id,staged.item_count,prince_combat.player_class_id,
+  "Source enemy death loot staged | %s | Loot %d | items %zu | killer %llu | ClassID %d | InfiniteLootDrops %u | guarded Player Kill episode; V4 owner and MoveOn sensor",
+  victim.name.c_str(),victim.loot_table_id,staged.item_count,
+  static_cast<unsigned long long>(killer_identity),prince_combat.player_class_id,
   unsigned(selection.infinite_loot_drops));
  victim.loot_dropped=true;error.clear();return true;
 }
@@ -3908,7 +3962,7 @@ void update_native_world_items_after_step() {
  for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.loot_retry_pending){
   if(actor.loot_retry_delay_frames){--actor.loot_retry_delay_frames;continue;}
   std::string error;
-  if(drop_actor_loot(actor,error)){actor.loot_retry_pending=false;actor.loot_retry_delay_frames=0;}
+  if(drop_actor_loot(actor,actor.loot_killer_identity,error)){actor.loot_retry_pending=false;actor.loot_retry_delay_frames=0;}
   else actor.loot_retry_delay_frames=30;
  }
  if(!prince_combat.inventory)return;
