@@ -55,6 +55,8 @@ struct OwnerFixture final : Fixture {
     std::uintptr_t highest_subject = 0, resolve_subject = 0;
     unsigned clear_calls = 0, sync_calls = 0;
 
+    static std::int32_t different_stop(void*,std::uintptr_t) { return 0; }
+    static std::int32_t different_attack(void*,std::uintptr_t,std::uintptr_t) { return 0; }
     static OwnerFixture& from(void* raw) { return *static_cast<OwnerFixture*>(raw); }
 
     explicit OwnerFixture(std::uintptr_t base) : Fixture(base) {
@@ -568,6 +570,14 @@ void run_pending_owner(const std::string& commons, const std::string& monster) {
     mismatched.script.path_state=&other_path;
     require(f.owner.bind_staged(mismatched,vm,error)==native::ghost_ai::Status::invalid_argument && !f.owner.ready(),
             "native frame owner accepted different pending callback backing");
+    auto mismatched_stop=bindings;
+    mismatched_stop.script.script_queries.stop=OwnerFixture::different_stop;
+    require(f.owner.bind_staged(mismatched_stop,vm,error)==native::ghost_ai::Status::invalid_argument && !f.owner.ready(),
+            "native frame owner accepted a different Stop service table");
+    auto mismatched_attack=bindings;
+    mismatched_attack.script.script_queries.attack=OwnerFixture::different_attack;
+    require(f.owner.bind_staged(mismatched_attack,vm,error)==native::ghost_ai::Status::invalid_argument && !f.owner.ready(),
+            "native frame owner accepted a different Attack service table");
     require(f.owner.bind_staged(bindings,vm,error)==native::ghost_ai::Status::complete &&
                 f.owner.ready() && vm.uses_services(services),
             "native frame owner duplicated or rejected the published pending VM");

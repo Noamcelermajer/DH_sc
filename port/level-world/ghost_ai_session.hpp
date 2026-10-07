@@ -39,6 +39,8 @@ struct ScriptQueries {
     std::int32_t (*get_host_player_difficulty)(void*, std::int32_t*) = nullptr;
     std::int32_t (*get_current_level_range)(void*, const float*, std::int32_t[2], std::uint32_t*) = nullptr;
     std::int32_t (*set_level)(void*, std::uintptr_t, float) = nullptr;
+    std::int32_t (*stop)(void*, std::uintptr_t owner) = nullptr;
+    std::int32_t (*attack)(void*, std::uintptr_t owner, std::uintptr_t target) = nullptr;
 };
 
 // Stable actor-owned composition inputs. Every pointed-to state projection and
@@ -177,6 +179,6 @@ private:
     std::shared_ptr<Impl> impl_;
 };
 
-static_assert(sizeof(ScriptQueries) == 112);
+static_assert(sizeof(ScriptQueries) == 128);
 
 }  // namespace dh2::ghost_ai_session

@@ -42,7 +42,8 @@ bool same_script_projection(const ghost_ai_session::Bindings& a,
         x.get_state==y.get_state && x.has_path==y.has_path && x.get_py_oid==y.get_py_oid &&
         x.get_position==y.get_position && x.get_host_player_level==y.get_host_player_level &&
         x.get_host_player_difficulty==y.get_host_player_difficulty &&
-        x.get_current_level_range==y.get_current_level_range && x.set_level==y.set_level;
+        x.get_current_level_range==y.get_current_level_range && x.set_level==y.set_level &&
+        x.stop==y.stop && x.attack==y.attack;
 }
 }  // namespace
 

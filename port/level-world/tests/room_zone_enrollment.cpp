@@ -9,8 +9,8 @@ using namespace dh2::room_zone_enrollment;
 
 struct Fixture {
     float min_x, min_y, max_x, max_y, x, y;
-    std::uint8_t in_room, in_zone, zoning_enabled, zone_update_enabled;
-    Address old_room, physical;
+    std::uint8_t in_room, in_zone, zoning_enabled, visible;
+    Address old_room, visual;
     std::uint32_t zonable_first, zonable_second;
     unsigned mutation, zonable_calls;
     int fail_operation;
@@ -50,8 +50,8 @@ int main(int argc, char** argv) {
     f.in_room=static_cast<std::uint8_t>(std::strtoul(argv[9],nullptr,0));
     f.in_zone=static_cast<std::uint8_t>(std::strtoul(argv[10],nullptr,0));
     f.zoning_enabled=static_cast<std::uint8_t>(std::strtoul(argv[11],nullptr,0));
-    f.zone_update_enabled=static_cast<std::uint8_t>(std::strtoul(argv[12],nullptr,0));
-    f.physical=static_cast<Address>(std::strtoull(argv[13],nullptr,0));
+    f.visible=static_cast<std::uint8_t>(std::strtoul(argv[12],nullptr,0));
+    f.visual=static_cast<Address>(std::strtoull(argv[13],nullptr,0));
     f.zonable_first=static_cast<std::uint32_t>(std::strtoul(argv[14],nullptr,0));
     f.zonable_second=static_cast<std::uint32_t>(std::strtoul(argv[15],nullptr,0));
     const auto mutate=static_cast<unsigned>(std::strtoul(argv[16],nullptr,0));
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     constexpr Address object_id=0x02110000, room_id=0x02220000;
     RoomZone zone{room_id,{&f.min_x,&f.min_y,&f.max_x,&f.max_y}};
     GameObject object{object_id,&f.x,&f.y,&f.old_room,&f.in_room,&f.in_zone,
-                      &f.zoning_enabled,&f.physical,&f.zone_update_enabled};
+                      &f.zoning_enabled,&f.visual,&f.visible};
     Services services{&f,&invoke}; Result result{};
     const auto status = adding ? add_initial_object(&zone,&object,&services,&result)
         : (entering ? zone_entered(&object,&services,&result)

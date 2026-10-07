@@ -26,6 +26,8 @@ const char* callback_name(Event event) {
         case Event::init_post: return "OnInitPost";
         case Event::init_final: return "OnInitFinal";
         case Event::update: return "OnUpdate";
+        case Event::died: return "OnDied";
+        case Event::target_in_melee_range: return "OnTargetInMeleeRange";
     }
     return nullptr;
 }
@@ -45,7 +47,8 @@ function GetTarget()
     if identity == nil then return nil end
     return {_this = identity}
 end
-function __dh2_monster_external_enemy(callback_name, identity)
+function __dh2_monster_external_object(callback_name, identity)
+    if identity == nil then return _G[callback_name](nil) end
     return _G[callback_name]({_this = identity})
 end
 )lua";
@@ -57,9 +60,10 @@ struct Session::Impl {
                      target_get, state_get, path_exists, target_set, face, move,
                      to_fixed, mul_fixed, div_fixed, alias_add, alias_push, alias_pop,
                      bit_not, bit_xor, bit_and, bit_or, py_oid, position,
-                     host_level, host_difficulty, level_range, level_set, unsupported };
+                     host_level, host_difficulty, level_range, level_set, stop,
+                     attack, unsupported };
     struct Binding { Impl* session; Operation operation; const char* name; };
-    static constexpr std::size_t max_bindings = 45;
+    static constexpr std::size_t max_bindings = 47;
     Services services;
     dh2_script_vm* vm = nullptr;
     dh2_script_aliases* aliases = nullptr;
@@ -144,6 +148,29 @@ struct Session::Impl {
                 if (!callback || callback(services.context, services.owner,
                                            arguments[0].identity) != 0)
                     return reject(error, error_capacity, "monster actor action failed or unsupported");
+                return 0;
+            }
+            if (binding.operation == stop) {
+                // Character::_Stop ignores Lua arguments and dispatches the
+                // controller command. Keep that call boundary explicit.
+                if (!services.stop || services.stop(services.context, services.owner) != 0)
+                    return reject(error, error_capacity, "monster Stop failed or unsupported");
+                return 0;
+            }
+            if (binding.operation == attack) {
+                // Character::_Attack accepts only object userdata when an
+                // explicit target argument is present; nonobjects are a no-op.
+                // Its no-argument overload reads a hidden ReturnValues target
+                // that this facade does not project, so never fake success.
+                if (count == 0)
+                    return reject(error, error_capacity, "monster Attack without explicit target unsupported");
+                if (!identity(arguments[0])) return 0;
+                if (!arguments[0].identity)
+                    return reject(error, error_capacity, "monster Attack target identity missing");
+                if (arguments[0].type == 7) ++binding.session->object_table_arguments;
+                if (!services.attack || services.attack(services.context, services.owner,
+                                                         arguments[0].identity) != 0)
+                    return reject(error, error_capacity, "monster Attack failed or unsupported");
                 return 0;
             }
             if (binding.operation == level_set) {
@@ -350,7 +377,8 @@ struct Session::Impl {
             bind_extra("GetTarget", target_get) && bind_extra("GetState", state_get) &&
             bind_extra("HasPath", path_exists) && bind_extra("SetTarget", target_set) &&
             bind_extra("HeadTo", face) && bind_extra("MoveTo", move) &&
-            bind_extra("GetPosition", position) && bind_extra("SetLevel", level_set);
+            bind_extra("GetPosition", position) && bind_extra("SetLevel", level_set) &&
+            bind_extra("Stop", stop) && bind_extra("Attack", attack);
     }
 
     bool bind_functions() {
@@ -567,15 +595,22 @@ Status Session::dispatch(Event event, std::uintptr_t enemy, std::string& error) 
     if (!ready()) { error = "monster session not ready"; return Status::not_ready; }
     BusyScope scope(busy_);
     int status = 0;
-    if (event == Event::enemy_spotted) {
+    if (event == Event::enemy_spotted || event == Event::died) {
+        // Both source AIS callbacks receive one GameObject userdata. OnDied's
+        // argument is the killer passed to AISExternal::OnDied(GameObject*).
         const char* resolved = dh2_script_alias_resolve(impl_->aliases, requested);
         dh2_script_value arguments[2]{};
         arguments[0].type = DH2_SCRIPT_STRING;
         arguments[0].text = resolved;
         arguments[0].text_bytes = std::strlen(resolved);
-        arguments[1].type = DH2_SCRIPT_IDENTITY;
-        arguments[1].identity = enemy;
-        status = dh2_script_vm_call_discard_source(impl_->vm, "__dh2_monster_external_enemy", arguments, 2);
+        if (event == Event::died && enemy == 0) {
+            // Value::_pushOnStack maps null tag-7 UserData to one Lua nil.
+            arguments[1].type = DH2_SCRIPT_NIL;
+        } else {
+            arguments[1].type = DH2_SCRIPT_IDENTITY;
+            arguments[1].identity = enemy;
+        }
+        status = dh2_script_vm_call_discard_source(impl_->vm, "__dh2_monster_external_object", arguments, 2);
     } else {
         status = dh2_script_alias_call_discard_source(impl_->vm, impl_->aliases, requested, nullptr, 0);
     }
@@ -676,7 +711,8 @@ bool Session::uses_services(const Services& services) const noexcept {
         own.get_py_oid == services.get_py_oid && own.get_position == services.get_position &&
         own.get_host_player_level == services.get_host_player_level &&
         own.get_host_player_difficulty == services.get_host_player_difficulty &&
-        own.get_current_level_range == services.get_current_level_range && own.set_level == services.set_level;
+        own.get_current_level_range == services.get_current_level_range && own.set_level == services.set_level &&
+        own.stop == services.stop && own.attack == services.attack;
 }
 const char* Session::source_alias(Event event) const noexcept {
     const char* requested = callback_name(event);

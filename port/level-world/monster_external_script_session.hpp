@@ -50,6 +50,14 @@ struct Services {
     std::int32_t (*get_current_level_range)(void*, const float* numeric_argument,
                                           std::int32_t values[2], std::uint32_t* count) = nullptr;
     std::int32_t (*set_level)(void*, std::uintptr_t owner, float raw_fixed_level) = nullptr;
+    // Optional adapters for the original Character::_Stop and Character::_Attack
+    // Lua methods. Attack receives the opaque GameObject identity (which can be
+    // null) only after the source userdata type check; its provider must enter
+    // the native controller/FSM path and must not apply a hit directly. The
+    // separate no-argument Attack path needs the source ReturnValues target and
+    // fails closed until that provider is modeled.
+    std::int32_t (*stop)(void*, std::uintptr_t owner) = nullptr;
+    std::int32_t (*attack)(void*, std::uintptr_t owner, std::uintptr_t target) = nullptr;
 };
 
 enum class Event : std::uint32_t {
@@ -59,6 +67,10 @@ enum class Event : std::uint32_t {
     init_post = 3,
     init_final = 4,
     update = 5,
+    died = 6,
+    // Character event 17 enters AISExternal::OnTargetInMeleeRange; that Lua
+    // callback is called with zero arguments.
+    target_in_melee_range = 7,
 };
 
 // Logical retained source AIS+0xb4 projection, not an ARM overlay. The current
@@ -161,6 +173,9 @@ public:
     Status bind_character_functions(std::string& error);
     Status load_common(Source commons, std::string& error);
     Status load_external(Source external, std::string& error);
+    // AISExternal::OnDied passes one Lua argument: a GameObject userdata table
+    // for a nonnull killer, or nil for null. `enemy` carries that identity for
+    // Event::died. Event 2's FSM payload remains a separate later dispatch.
     Status dispatch(Event event, std::uintptr_t enemy, std::string& error);
     // Reuse the independent complete20B source CallState wrappers. Each call reads the
     // current pointer once, skips only an actual null projection, otherwise

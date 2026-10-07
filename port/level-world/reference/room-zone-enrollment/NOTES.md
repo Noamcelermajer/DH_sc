@@ -2,8 +2,8 @@
 
 This module reconstructs the source-side `RoomZone::AddInitialObject` decision
 and ordered mutations, plus `GameObject::ZoneEntered` / `ZoneExited` state
-leaves. It is source-backed diagnostic code; it is not wired into an Android
-build or a live world session yet.
+leaves. It is selected into the Android library and host-tested, but no live
+world session owns or calls it yet.
 
 ## Original behavior established
 
@@ -22,13 +22,14 @@ audit does not assert that the second component is rendered-world Y or Z.
   skips removal even if `+0x2f4` is non-null. The code then assigns `+0x2f4`,
   sets `+0x2ef`, runs the `ZoneEntered` source leaf, and appends to the target
   zone's circular object list.
-- `ZoneEntered` writes `+0x2f0 = 1` first. It calls the zone update manager
-  only when `+0x2ee`, `+0x2d8`, and `+0x80` are all set/non-null. It then calls
-  virtual `IsZonable` and the vtable `+0x3c` state callback. `ZoneExited`
-  writes `+0x2f0 = 0`; its update-manager gate requires `+0x2ee` and `+0x2d8`
-  but not `+0x80`. The state callback receives the fresh `+0x2f0` value when
-  the object is zonable and zoning is enabled; otherwise it receives raw `1`.
-  This preserves the different entry and exit gates.
+- `ZoneEntered` writes `+0x2f0 = 1` first. It calls
+  `VisualObject::SyncVisibility` with the pointer at `GameObject+0x2d8` only
+  when `+0x2ee`, that pointer, and the visible byte `+0x80` are all set. It
+  then calls virtual `IsZonable` and the vtable `+0x3c` `setUpdating` callback.
+  `ZoneExited` writes `+0x2f0 = 0`; its visibility-sync gate requires `+0x2ee`
+  and `+0x2d8` but not `+0x80`. The callback receives the fresh `+0x2f0` value
+  when the object is zonable and zoning is enabled; otherwise it receives raw
+  `1`. This preserves the distinct entry and exit gates.
 
 The constructor defaults observed elsewhere (`+0x2ee = 1`, `+0x2f0 = 0`,
 `+0x2f4 = null`) do not establish zone membership. Runtime enrollment is a
@@ -41,14 +42,15 @@ bounds from an explicit provider; it must not manufacture an in-zone flag.
 ## Implementation boundary
 
 `room_zone_enrollment.cpp` uses borrowed field projections and callbacks for
-virtual eligibility, old-zone removal, update-manager notification, state
-callback, and target-list insertion. It preserves the original operation
+virtual eligibility, old-zone removal, `VisualObject::SyncVisibility`, the
+`setUpdating` callback, and target-list insertion. It preserves the original operation
 order and reads fields at the points where the original body uses them. The
 source trace-only debug-switch/logging calls are omitted. `RemoveObject` and
 `AddObject` were executed in the ARM oracle with the list allocator boundary
 instrumented; the portable callback remains the adapter boundary for owning
-list storage. This is not a reconstruction of the whole RoomZone manager,
-physical-object update service, or room/AABB producer.
+list storage. `SyncVisibility` and the virtual callback are intercepted
+boundaries; their full VisualObject/owner effects and the RoomZone list owner
+are not reconstructed here.
 
 Callbacks may mutate the borrowed fields; later steps use those live values.
 On provider failure the portable adapter returns `service_failed` and keeps
@@ -73,7 +75,7 @@ compares ordered callbacks, return acceptance, and the projected state with
 the C++ kernel. Current result: 22 original ARM cases, zero mismatches, plus
 five host-only provider-failure cases. Cases include equality, four outside
 edges, NaN, zero/nonzero IsZonable results, the two distinct `+0x2ef` paths,
-mutated owner/position/bounds, and update-manager entry/exit gates. The report
+mutated owner/position/bounds, and visibility-sync entry/exit gates. The report
 records source and original-function hashes in `build/room-zone-enrollment-host-final/validation.json`.
 
 The comparison proves this bounded call sequence against the pinned ELF; it

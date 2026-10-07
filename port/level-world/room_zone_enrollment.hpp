@@ -23,7 +23,7 @@ struct RoomZone {
 
 // Field pointers address live source-backed fields: room_zone is +0x2f4,
 // in_room_list is +0x2ef, in_zone is +0x2f0, zoning_enabled is +0x2ee,
-// physical_object is +0x2d8, and zone_update_enabled is +0x80.
+// visual_object is +0x2d8, and visible is +0x80.
 struct GameObject {
     Address identity;
     const float* world_x;
@@ -32,15 +32,15 @@ struct GameObject {
     std::uint8_t* in_room_list;
     std::uint8_t* in_zone;
     const std::uint8_t* zoning_enabled;
-    const Address* physical_object;
-    const std::uint8_t* zone_update_enabled;
+    const Address* visual_object;
+    const std::uint8_t* visible;
 };
 
 enum class Operation : std::uint32_t {
     is_zonable,
     remove_from_room,
     append_to_room,
-    update_zone_manager,
+    sync_visibility,
     zone_state_callback
 };
 
@@ -48,7 +48,7 @@ struct Request {
     Operation operation;
     Address object;
     Address room_zone;
-    // PhysicalObject* for update_zone_manager; otherwise zero.
+    // VisualObject* for sync_visibility; otherwise zero.
     Address auxiliary;
     // For zone_state_callback this is the raw argument passed to the source
     // vtable slot at +0x3c. Other operations leave it zero.

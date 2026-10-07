@@ -5,8 +5,8 @@ bool valid(const RoomZone* zone, const GameObject* object, const Services* servi
     return zone && zone->identity && zone->bounds.min_x && zone->bounds.min_y &&
         zone->bounds.max_x && zone->bounds.max_y && object && object->identity &&
         object->world_x && object->world_y && object->room_zone && object->in_room_list &&
-        object->in_zone && object->zoning_enabled && object->physical_object &&
-        object->zone_update_enabled && services && services->invoke && out;
+        object->in_zone && object->zoning_enabled && object->visual_object &&
+        object->visible && services && services->invoke && out;
 }
 
 Status call(const Services& services, Result& out, Operation operation,
@@ -33,18 +33,18 @@ Status change_zone(GameObject* object, const Services* services, Result* out, bo
     // Bounds validation is intentionally unnecessary for the source leaf, but
     // shared projections still require stable callback/field owners.
     if (!object || !object->identity || !object->room_zone || !object->in_room_list ||
-        !object->in_zone || !object->zoning_enabled || !object->physical_object ||
-        !object->zone_update_enabled || !services || !services->invoke || !out)
+        !object->in_zone || !object->zoning_enabled || !object->visual_object ||
+        !object->visible || !services || !services->invoke || !out)
         return Status::invalid_argument;
     *object->in_zone = entering ? 1 : 0;
 
-    // ZoneEntered checks +2ee, +2d8, then +0x80. ZoneExited checks only
-    // +2ee and +2d8 before the manager notification.
-    if (*object->zoning_enabled && *object->physical_object &&
-        (!entering || *object->zone_update_enabled)) {
-        const auto status = call(*services, *out, Operation::update_zone_manager,
+    // Both leaves may synchronize a VisualObject. Entry additionally gates
+    // that call on the GameObject's current +0x80 visibility byte.
+    if (*object->zoning_enabled && *object->visual_object &&
+        (!entering || *object->visible)) {
+        const auto status = call(*services, *out, Operation::sync_visibility,
                                  object->identity, *object->room_zone,
-                                 *object->physical_object, 0);
+                                 *object->visual_object, 0);
         if (status != Status::complete) { finish(*out, *object); return status; }
     }
 

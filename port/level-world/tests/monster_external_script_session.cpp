@@ -41,7 +41,8 @@ struct Fixture {
     bool store_other_target = false;
     Status reenter_dispatch{}, reenter_reset{}, reenter_initialize{};
     std::uintptr_t last_face = 0, last_move = 0;
-    unsigned property_reads = 0, faces = 0, moves = 0;
+    std::uintptr_t last_attack = 0;
+    unsigned property_reads = 0, faces = 0, moves = 0, stops = 0, attacks = 0;
 };
 
 Fixture& actor(void* raw, std::uintptr_t identity) {
@@ -128,9 +129,25 @@ std::int32_t move_to(void* raw, std::uintptr_t identity, std::uintptr_t target) 
     ++fixture.moves;
     return 0;
 }
+std::int32_t actor_stop(void* raw, std::uintptr_t identity) {
+    auto& fixture = actor(raw, identity);
+    fixture.trace.emplace_back("Stop");
+    ++fixture.stops;
+    return 0;
+}
+std::int32_t actor_attack(void* raw, std::uintptr_t identity, std::uintptr_t target) {
+    auto& fixture = actor(raw, identity);
+    fixture.trace.emplace_back("Attack");
+    fixture.last_attack = target;
+    ++fixture.attacks;
+    return 0;
+}
 Services bind(Fixture& fixture) {
-    return {&fixture, owner, structure, property, constant, has_target, get_target,
-            get_state, has_path, set_target, head_to, move_to};
+    Services services{&fixture, owner, structure, property, constant, has_target, get_target,
+                      get_state, has_path, set_target, head_to, move_to};
+    services.stop = actor_stop;
+    services.attack = actor_attack;
+    return services;
 }
 void initialized(Session& session, Fixture& fixture, Source commons, Source monster) {
     fixture.session = &session;
@@ -165,8 +182,144 @@ int main(int argc, char** argv) {
         require(session.ready() && session.statistics().lua_memory_used > 0, "owned Lua state absent");
         require(std::string(session.source_alias(Event::enemy_spotted)) == "monster_OnEnemySpotted" &&
                     std::string(session.source_alias(Event::target_out_of_range)) == "monster_OnTargetOutOfRange" &&
+                    std::string(session.source_alias(Event::died)) == "monster_OnDied" &&
                     session.source_alias(static_cast<Event>(999)) == nullptr,
                 "original VFTable aliases must remain owned and visible");
+        ++cases;
+
+        const auto callbacks_before_death = session.statistics().completed_callbacks;
+        require(session.dispatch(Event::died, enemy, error) == Status::complete &&
+                    session.ready() &&
+                    session.statistics().completed_callbacks == callbacks_before_death + 1 &&
+                    session.statistics().failed_callbacks == 0,
+                "source OnDied must execute on the existing VM");
+        fixture.trace.clear();
+        const std::string death_arity_script = monster_bytes + R"lua(
+function NativeOnDiedArity(...)
+    assert(select('#', ...) == 1, 'OnDied killer argument missing or duplicated')
+    local killer = (...)
+    assert(type(killer) == 'table' and type(killer._this) == 'userdata',
+           'OnDied killer is not a GameObject userdata table')
+    assert(killer._this == GetTarget()._this, 'OnDied killer identity changed')
+end
+AddToVFTable('OnDied', 'NativeOnDiedArity')
+)lua";
+        Session death_arity; Fixture death_arity_fixture;
+        death_arity_fixture.target = enemy;
+        initialized(death_arity, death_arity_fixture, commons, source(death_arity_script));
+        require(death_arity.dispatch(Event::died, enemy, error) == Status::complete &&
+                    death_arity.ready() &&
+                    std::string(death_arity.source_alias(Event::died)) == "NativeOnDiedArity" &&
+                    death_arity.statistics().completed_callbacks == 1,
+                "event2 must pass its exact killer as one source userdata");
+        ++cases;
+
+        const std::string null_death_script = monster_bytes + R"lua(
+function NativeNullOnDied(...)
+    assert(select('#', ...) == 1, 'null OnDied killer argument missing')
+    assert((...) == nil, 'null source killer must become Lua nil')
+end
+AddToVFTable('OnDied', 'NativeNullOnDied')
+)lua";
+        Session null_death; Fixture null_death_fixture;
+        initialized(null_death, null_death_fixture, commons, source(null_death_script));
+        require(null_death.dispatch(Event::died, 0, error) == Status::complete &&
+                    null_death.ready() && null_death.statistics().completed_callbacks == 1,
+                "null source killer must be one Lua nil argument");
+        ++cases;
+
+        Session melee_range; Fixture melee_range_fixture;
+        melee_range_fixture.target = enemy;
+        initialized(melee_range, melee_range_fixture, commons, monster);
+        require(std::string(melee_range.source_alias(Event::target_in_melee_range)) ==
+                    "monster_OnTargetInMeleeRange" &&
+                    melee_range.dispatch(Event::target_in_melee_range, 0, error) == Status::complete &&
+                    melee_range.ready() && melee_range_fixture.stops == 1 &&
+                    melee_range_fixture.attacks == 1 && melee_range_fixture.last_attack == enemy,
+                "source event 17 must execute OnTargetInMeleeRange on the same VM");
+        trace(melee_range_fixture, {"Stop", "GetTarget", "Attack"});
+        ++cases;
+
+        const std::string attack_script = monster_bytes + R"lua(
+function NativeAttackContract(...)
+    assert(select('#', ...) == 1, 'OnDied killer argument missing or duplicated')
+    local killer = (...)
+    assert(type(killer) == 'table' and type(killer._this) == 'userdata',
+           'OnDied killer is not a GameObject userdata table')
+    Stop()
+    local function attack_with_one_target(...)
+        assert(select('#', ...) == 1, 'Attack target arity changed')
+        Attack(...)
+    end
+    attack_with_one_target(GetTarget())
+    Attack(false)
+end
+AddToVFTable('OnDied', 'NativeAttackContract')
+)lua";
+        Session attack_session; Fixture attack_fixture;
+        attack_fixture.target = enemy;
+        initialized(attack_session, attack_fixture, commons, source(attack_script));
+        auto different_attack_services = bind(attack_fixture);
+        different_attack_services.attack = nullptr;
+        require(attack_session.dispatch(Event::died, enemy, error) == Status::complete &&
+                    attack_session.ready() && attack_fixture.stops == 1 &&
+                    attack_fixture.attacks == 1 && attack_fixture.last_attack == enemy &&
+                    attack_session.statistics().projected_object_table_arguments == 1 &&
+                    !attack_session.uses_services(different_attack_services),
+                "OnDied killer and Attack target must preserve source arity and identity");
+        trace(attack_fixture, {"Stop", "GetTarget", "Attack"});
+        ++cases;
+
+        Session missing_attack; Fixture missing_attack_fixture;
+        missing_attack_fixture.target = enemy;
+        missing_attack_fixture.session = &missing_attack;
+        missing_attack_fixture.commons = commons;
+        missing_attack_fixture.monster = source(attack_script);
+        auto missing_attack_services = bind(missing_attack_fixture);
+        missing_attack_services.attack = nullptr;
+        require(missing_attack.initialize(commons, source(attack_script), missing_attack_services, error) ==
+                    Status::complete,
+                "missing-attack regression session failed to initialize");
+        missing_attack_fixture.trace.clear();
+        require(missing_attack.dispatch(Event::died, enemy, error) == Status::script_error &&
+                    missing_attack_fixture.stops == 1 && missing_attack_fixture.attacks == 0 &&
+                    !missing_attack.ready(),
+                "missing valid-target Attack provider must fail closed after Stop");
+        trace(missing_attack_fixture, {"Stop", "GetTarget"});
+        ++cases;
+
+        const std::string implicit_attack_script = monster_bytes + R"lua(
+function NativeImplicitAttack(...)
+    assert(select('#', ...) == 1, 'OnDied killer argument missing or duplicated')
+    Stop()
+    Attack()
+end
+AddToVFTable('OnDied', 'NativeImplicitAttack')
+)lua";
+        Session implicit_attack; Fixture implicit_attack_fixture;
+        initialized(implicit_attack, implicit_attack_fixture, commons, source(implicit_attack_script));
+        require(implicit_attack.dispatch(Event::died, enemy, error) == Status::script_error &&
+                    implicit_attack_fixture.stops == 1 && implicit_attack_fixture.attacks == 0 &&
+                    !implicit_attack.ready(),
+                "unmodeled ReturnValues target for no-argument Attack must fail closed");
+        trace(implicit_attack_fixture, {"Stop"});
+        ++cases;
+
+        const std::string null_identity_attack_script = monster_bytes + R"lua(
+function NativeNullIdentityAttack(...)
+    assert(select('#', ...) == 1, 'OnDied killer argument missing or duplicated')
+    Stop()
+    Attack({})
+end
+AddToVFTable('OnDied', 'NativeNullIdentityAttack')
+)lua";
+        Session null_identity_attack; Fixture null_identity_fixture;
+        initialized(null_identity_attack, null_identity_fixture, commons, source(null_identity_attack_script));
+        require(null_identity_attack.dispatch(Event::died, enemy, error) == Status::script_error &&
+                    null_identity_fixture.stops == 1 && null_identity_fixture.attacks == 0 &&
+                    !null_identity_attack.ready(),
+                "type-7 userdata with null identity must not report a successful Attack");
+        trace(null_identity_fixture, {"Stop"});
         ++cases;
 
         fixture.store_other_target = true;
@@ -465,6 +618,8 @@ AddToVFTable('OnInitPost', 'NativePostProof')
                     "\"source_libraries_and_35_bindings\":true,\"unsupported_globals_fail_closed\":true,"
                     "\"numeric_result_arity\":true,\"unknown_callbacks_rejected\":true,"
                     "\"same_vm_post_final_callbacks\":true,\"post_discarded_return_updates_final_alias\":true,"
+                    "\"death_callback_same_vm\":true,\"death_killer_identity_and_nil\":true,"
+                    "\"stop_attack_callbacks\":true,"
                     "\"native_wired\":false,\"mismatches\":0}\n", cases);
         return 0;
     } catch (const std::exception& error) {

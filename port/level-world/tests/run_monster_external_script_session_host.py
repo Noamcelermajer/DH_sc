@@ -80,7 +80,7 @@ def main() -> int:
     if result.returncode:
         return result.returncode
     host = json.loads(result.stdout)
-    assert host["monster_external_session_cases"] == 32 and host["mismatches"] == 0, host
+    assert host["monster_external_session_cases"] == 39 and host["mismatches"] == 0, host
     for key in ("unchanged_original_scripts_executed", "spotted_callback_order", "idle_path_short_circuit",
                 "fresh_target_after_path_query", "opaque_64bit_identity_tables", "service_lifetime_and_reentry",
                 "failure_preserves_prior_effects", "unknown_callbacks_rejected"):
@@ -91,6 +91,9 @@ def main() -> int:
         assert host[key] is True, (key, host)
     assert host["numeric_result_arity"] is True, host
     assert host["same_vm_post_final_callbacks"] is True and host["post_discarded_return_updates_final_alias"] is True
+    assert host["death_callback_same_vm"] is True
+    assert host["death_killer_identity_and_nil"] is True
+    assert host["stop_attack_callbacks"] is True
     assert host["native_wired"] is False
     dependencies = c_sources + cpp_sources + [MODULE / "monster_external_script_session.hpp",
         MODULE / "ais_external_init_callbacks.hpp",
@@ -104,7 +107,7 @@ def main() -> int:
         "unchanged_script_sha256": {p.relative_to(ROOT).as_posix(): digest(p) for p in (commons, monster)},
         "executable_sha256": digest(output), "dependency_warnings": warnings,
         "native_wired": False, "whole_original_vm_parity": False,
-        "scope": "Original monster Lua callbacks through borrowed typed services and identity-only tables, plus original commons post/final on the same VM and explicit fan callback discarded-return/alias mutation proof; source skills/full lifecycle and live autonomous actor services remain pending"}
+        "scope": "Original monster Lua callbacks on one VM; OnDied always receives one killer argument (identity table when nonnull, nil when null), while Stop and explicit Attack preserve service order and target identity; missing providers and the unmodeled no-argument ReturnValues target fail closed; source skills/full lifecycle and live autonomous actor services remain pending"}
     report = args.report.resolve()
     report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf8")

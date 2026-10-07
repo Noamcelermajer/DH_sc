@@ -5,7 +5,7 @@ Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,832,147 bytes, SHA-256 `E9207AD769200E52CC9CB6B3FFBD911A90E5B1C72EC9111108F4179D41B95CAB`). API 37 ARM64/x86_64 build; v2 debug signature verifies. It imports SWAMP MLX, nine MGPs and nine MVPs for layout, entrypoints, five source-monster rows and ten static Decor instances. Focused host audits pass; live SWAMP rendering/gameplay is unverified. Source BRES, remaining object records, Character lifecycle/AI and full campaign remain open. Build with `-Pdh2SourceRoot=<short mapped checkout>`.
+**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,833,403 bytes, SHA-256 `FF27D0F5EB51337BC1BF83CAB677C92AAE5CDC4BE907A0CC95871D7CEF239E5C`). API 37 ARM64/x86_64 build; v2 debug signature verifies. It imports SWAMP MLX, nine MGPs and nine MVPs for layout, entrypoints, five source-monster rows and ten static Decor instances. Focused host audits pass; live SWAMP rendering/gameplay is unverified. Source BRES, remaining object records, Character lifecycle/AI and full campaign remain open. Build with `-Pdh2SourceRoot=<short mapped checkout>`.
 
 **Latest published APK:** [Native SWAMP static Decor checkpoint — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-swamp-source-decors-2026-10-07) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-swamp-source-decors-2026-10-07/Dungeon-Hunter-2-native-swamp-decors-api37-debug.apk)). This debug prerelease includes ten source-selected static Decor instances; live SWAMP rendering/gameplay is not verified.
 
@@ -273,17 +273,33 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Reconstruct the bounded Character::Update lazy-script/concurrent-AI map
   slice; verify 18 ARM cases, all 127 reached instructions, 15 guards and
   partial effects. Preserve full-width AIS identity. Native shared-map binding remains open.
-- [ ] Complete the surrounding `Character::Update` scheduler/eligibility gates,
-  native shared concurrent-AI map and frame ownership; native world setup
-  directly invokes the bounded Ghost lifecycle. See the [checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
+- [ ] Complete `Character::Update` scheduler/eligibility gates, the shared
+  180 ms `CharAI::IncUpdateQueue`/`Application::GetDt` owner and frame ownership;
+  native world setup currently invokes only the bounded Ghost lifecycle. See
+  the [checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
 - [x] Trace original Ghost pursuit in IDA: Level/Character frame order,
   unchanged `monster` callbacks, PathTo/FindPath, the `+0x1450` home point,
   and event-40 body attachment. POMonster-specific constructor/pin policy and
   the ordinary movement/body owner remain open.
+- [x] Map source event 17 to zero-argument `OnTargetInMeleeRange` and replay
+  the unchanged `monster` Lua `Stop(); Attack(GetTarget())` branch in the
+  retained session. Android frame dispatch and controller providers remain open.
+- [ ] Wire controller `Stop`/`Attack` with live movement bytes and source
+  attack-state selection (`AttackStatic` when available), then route named
+  animation markers through `OnAttack`/`F_MeleeAttack` exactly once.
 - [x] Reconstruct ObjectBase culling/remote predicates (2,256 ARM cases) and compose CanUpdate (126 nested ARM cases, 63 guards).
 - [ ] Bind CanUpdate to actual scene/culling, visibility, player/online and
   respawn owners, and invoke it in the native Character frame.
-- [ ] Connect source zonability, room enrollment, InZone and object ownership.
+- [x] IDA-confirm RoomZone event leaves: `ZoneEntered/ZoneExited` call
+  `VisualObject::SyncVisibility` (`0x4713d0`) via `+0x2d8`, then
+  `ObjectBase::setUpdating` (`0x33dcf0`) via vtable `+0x3c`; adapter names and
+  fields corrected; 22 original ARM cases pass with zero mismatches.
+- [ ] Connect authentic `Module::InitPost` root bounds → `RoomZone` creation →
+  `InitObjectList`/`AddInitialObject`, then source zonability, InZone and object
+  ownership. Start from the packaged 8-module `x07_crypt_backup.mlx` matching
+  `crypt01.dwld`; room-7 DACT rows 78/79 already own the native Ghost VM path.
+  `SetPosition(center,true)` must update absolute bounds from relative bounds
+  before enrollment. The existing kernels have no live owner.
 - [ ] Bind current-state constructor/registry/transition ownership and actual
   OnUpdate/state callbacks to the native AIS frame.
 - [ ] Supply original Character name/raw-death producers for all actor types.
@@ -344,6 +360,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Carry active Player killer identity through loot retries and require the source dead/HP-zero Kill prefix before V4 DropLootTable staging; the Android API 37 ARM64/x86_64 build passes. The event4 Android bridge is built; live behavior remains unverified. XP, quests and outer event2 remain open.
 - [x] Select the Player event4/credit kernel over the existing dispatcher and PropertyView: focused host audit passes callback→target clear→properties 23/24 order, FSM fallback, single-Player scope and retry suppression.
 - [x] Bind the kernel to the supported Android Player melee death edge exactly once after the initial DropLoot attempt, including deferred/failed loot staging; reuse the retained CharAI/AIS/VM and canonical target/property owners. Focused host audit and API37 ARM64/x86_64 APK build pass; live gameplay remains unverified.
+- [x] Add same-VM `Event::died` → `OnDied(killer)` forwarding: nonnull killer is userdata table, null killer is Lua nil. Focused session test passes 39 cases; Android providers and event-2 routing remain open. `Stop()` and explicit `Attack(target)` adapters are optional; no-argument `Attack()` fails closed because its hidden `ReturnValues+0x408` target is not projected.
 - [x] Select the `_GiveXP` callee kernel over the canonical Save/PropertyView: focused audit verifies source XP arithmetic/gates, normal-constant lookup order and missing-key zero, fresh difficulty/Level reads, conditional `a3` lookup, and post-LevelUp XP/MaxXP reread/clamp.
 - [x] Select host `Character::DistributeXP`: focused audit covers two roster passes, level scaling, kill-centered radius/self bypass, cooperative share and fixed-point grants. Android binding remains open.
 - [ ] Connect `DistributeXP` and `_GiveXP` to the same live Player registry, PropertyView and Save; the current Android roster has one Player. Do not enable threshold-crossing awards until LevelUp/SG_Save is complete.
@@ -442,7 +459,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 ## Immediate work order
 
 1. Start the current APK once and confirm the ten imported SWAMP Decor instances render at their source placements; the build and resource audits pass, but runtime rendering is not yet verified.
-2. Complete one live Crypt Ghost event-9 pursuit using its existing VM, shared target, and path/root-motion owner; wire event 17 to `Stop(); Attack(GetTarget());`. Then enable one Ghost lethal hit → existing loot staging → event 2/`OnDied` on that same VM; event 4 XP/quest credit and the rest of Character lifecycle remain after this slice.
+2. Recover live Crypt Module/ObjectManager/RoomZone ownership and bounds, enroll actors through the existing source adapters, then connect the shared 180 ms CharAI queue and one `ghost_ai_owner` frame to the existing VM/path owner. Current renderer skips gated Ghost frames; `NativeCharAIRegistry` is registration history only. Then connect source event 17 to the mapped callback, bind controller `Stop`/`Attack`, and route named animation hit events to `OnAttack`; the same-VM `OnDied(killer)` adapter is host-tested, but Android lethal hit → loot → event 2 remains open.
 3. Import the remaining source MGP/MVP records and conditions through bounded source adapters, then connect the full object factory/lifecycle path.
 4. Apply canonical Save spawn-clear/save-before-load effects and connect the typed request to source `Application::LoadLevel`/`GSLevel`; run Player Character InitPost with real profile/level, Skin lifetime and AddLoot providers.
 5. Connect skills, existing-profile save writers and LevelUp; finish campaign content/UI/audio/saves/mod examples, play an original level to its exit, then run clean and physical ARM64 release validation.

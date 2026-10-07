@@ -915,6 +915,11 @@ struct SpawnOwner {
  std::vector<std::vector<dh2::objects::Vertex>> render_vertices;
  dh2::character::PathToState40 path_to{};
  dh2::character::PathToServices16 path_services{};
+ // Stable offline ObjectBase fields used by Character::IsRemotelyUpdated.
+ // ObjectBase C1/C2 establish +0x110=-1 and +0x118=0; online mutation is
+ // deliberately unsupported by this native actor owner.
+ dh2::object_update_culling::Object remote_object{};
+ dh2::character::CharacterControlServices16 control_services{};
  dh2::physical::CharacterOwnerBounds owner_bounds{};
  float visual_scale[3]{1,1,1};
  int sampled_clip=-1;
@@ -922,8 +927,13 @@ struct SpawnOwner {
  unsigned body_creations=0;
  unsigned idle_updates=0;
  bool source_enabled=true,source_visible=true;
- explicit SpawnOwner(std::uint64_t id):character(id){body_owner.native=&body;}
+ explicit SpawnOwner(std::uint64_t id):character(id) {
+  body_owner.native=&body;
+  remote_object={std::uintptr_t(id),UINT32_MAX,0,0,{0,0}};
+ }
  static void service(void*,dh2::character::State*,const dh2::character::Request*);
+ static int controller_service(void*,const dh2::character::CharacterControlRequest32*,
+                               dh2::character::CharacterControlResponse16*);
  void initialize_runtime(const ObjectGroup&,const dh2::physical::CharacterOwnerBounds&,
                          const float* scale);
  void register_runtime_object();
@@ -932,7 +942,11 @@ struct SpawnOwner {
  int request_path(const float* target);
  static int find_path(void*,const dh2::character::PathToRequest32*,std::uint32_t*);
  void bind(ObjectActor& owner,int table) {
+  if(!owner.identity||remote_object.identity!=owner.identity||
+     remote_object.remote_word_110!=UINT32_MAX||remote_object.remote_byte_118!=0)
+   throw std::runtime_error("Ghost offline ObjectBase remote projection differs");
   actor=&owner;animation_table=table;
+  control_services={this,controller_service};
   character.bind({this,[](void* raw){return static_cast<SpawnOwner*>(raw)->facts;},
    {this,service},nullptr,nullptr,[](void* raw){return static_cast<SpawnOwner*>(raw)->spawn;}});
  }
@@ -1381,6 +1395,26 @@ void SpawnOwner::service(void* context,dh2::character::State* state,const dh2::c
   break;
  default:throw std::runtime_error("Spawn source service is not bound");
  }
+}
+int SpawnOwner::controller_service(void* context,
+        const dh2::character::CharacterControlRequest32* request,
+        dh2::character::CharacterControlResponse16* response) {
+ using namespace dh2::character;
+ if(!context||!request||!response)return -1;
+ auto& owner=*static_cast<SpawnOwner*>(context);
+ *response={};
+ // This is the exact native offline constructor projection. Network packet
+ // loading and online Character::Update can change these source fields, so
+ // refuse the query if this app ever exposes an online owner.
+ if(!owner.actor||request->service!=control_is_remotely_updated||
+    request->argument||request->reserved||request->subject!=owner.actor->identity||
+    owner.remote_object.identity!=owner.actor->identity||native_host.online!=0)
+  return -1;
+ dh2::object_update_culling::RemoteResult remote{};
+ if(dh2::object_update_culling::is_remotely_updated(&owner.remote_object,&remote)!=
+    dh2::object_update_culling::Status::complete)return -1;
+ response->word=remote.raw;
+ return 1;
 }
 void SpawnOwner::initialize_runtime(const ObjectGroup& group,
         const dh2::physical::CharacterOwnerBounds& bounds,const float* scale) {

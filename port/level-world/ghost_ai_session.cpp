@@ -94,6 +94,8 @@ struct ActorSession::Impl : std::enable_shared_from_this<ActorSession::Impl> {
         script_bound.get_host_player_difficulty = script_host_difficulty;
         script_bound.get_current_level_range = script_level_range;
         script_bound.set_level = script_level_set;
+        script_bound.stop = script_source.stop ? script_stop : nullptr;
+        script_bound.attack = script_source.attack ? script_attack : nullptr;
     }
 
     monster_external_script::Session* active_script() noexcept { return script_vm; }
@@ -423,6 +425,16 @@ struct ActorSession::Impl : std::enable_shared_from_this<ActorSession::Impl> {
     static std::int32_t script_level_set(void* raw,std::uintptr_t owner_id,float value) {
         auto& s=*static_cast<Impl*>(raw); if(!s.live()||owner_id!=s.owner||!s.script_source.set_level)return 1;
         try {return s.script_source.set_level(s.script_source.context,owner_id,value)||!s.live()?1:0;}
+        catch(...){return 1;}
+    }
+    static std::int32_t script_stop(void* raw,std::uintptr_t owner_id) {
+        auto& s=*static_cast<Impl*>(raw); if(!s.live()||owner_id!=s.owner||!s.script_source.stop)return 1;
+        try {return s.script_source.stop(s.script_source.context,owner_id)||!s.live()?1:0;}
+        catch(...){return 1;}
+    }
+    static std::int32_t script_attack(void* raw,std::uintptr_t owner_id,std::uintptr_t target) {
+        auto& s=*static_cast<Impl*>(raw); if(!s.live()||owner_id!=s.owner||!s.script_source.attack)return 1;
+        try {return s.script_source.attack(s.script_source.context,owner_id,target)||!s.live()?1:0;}
         catch(...){return 1;}
     }
     static std::int32_t script_get_target(void* raw,std::uintptr_t owner_id,std::uintptr_t* output) {

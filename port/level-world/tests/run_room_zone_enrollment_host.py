@@ -12,7 +12,7 @@ EXIT='_ZN10GameObject10ZoneExitedEv'
 IS_ZONABLE=0
 REMOVE=1
 APPEND=2
-UPDATE=3
+SYNC_VISIBILITY=3
 STATE=4
 OBJ=0x02110000
 ZONE=0x02220000
@@ -48,7 +48,7 @@ class RoomCpu:
         self.string_dtor=c.symbols['_ZNSsD1Ev']
         self.remove=c.symbols['_ZN8RoomZone12RemoveObjectEP10GameObject']
         self.add_object=c.symbols['_ZN8RoomZone9AddObjectEP10GameObject']
-        self.manager=0x4713d0
+        self.sync_visibility=0x4713d0
         self.alloc_node=0x39670c
         self.free_node=0x708f00
         c.uc.hook_add(UC_HOOK_CODE, self.hook)
@@ -76,8 +76,8 @@ class RoomCpu:
             self.records.append([REMOVE,c.reg(1),c.reg(0),0,0]); return
         if address==self.add_object:
             self.records.append([APPEND,c.reg(1),c.reg(0),0,0]); return
-        if address==self.manager:
-            self.records.append([UPDATE,OBJ,self.read32(OBJ+0x2f4),c.reg(0),0])
+        if address==self.sync_visibility:
+            self.records.append([SYNC_VISIBILITY,OBJ,self.read32(OBJ+0x2f4),c.reg(0),0])
             uc.reg_write(c.pc,uc.reg_read(c.lr)); return
         if address==STATE_STUB:
             obj=c.reg(0); self.records.append([STATE,obj,self.read32(obj+0x2f4),0,c.reg(1)])
@@ -107,8 +107,8 @@ class RoomCpu:
         room=fixture['old_room']
         self.write32(OBJ+0x2f4,room)
         uc=c.uc; uc.mem_write(OBJ+0x2ef,bytes([fixture['in_room']&255])); uc.mem_write(OBJ+0x2f0,bytes([fixture['in_zone']&255]))
-        uc.mem_write(OBJ+0x2ee,bytes([fixture['zoning']&255])); uc.mem_write(OBJ+0x80,bytes([fixture['zone_update']&255]))
-        self.write32(OBJ+0x2d8,fixture['physical'])
+        uc.mem_write(OBJ+0x2ee,bytes([fixture['zoning']&255])); uc.mem_write(OBJ+0x80,bytes([fixture['visible']&255]))
+        self.write32(OBJ+0x2d8,fixture['visual'])
         # Old/target room membership node, when the source requests removal.
         if room:
             node=OLD_NODE; sentinel=room+0x394
@@ -128,7 +128,7 @@ def cases():
     def f(name,**kw):
         x={'name':name,'mode':'add','x':0.0,'y':0.0,'min_x':0.0,'min_y':0.0,
            'max_x':0.0,'max_y':0.0,'old_room':0,'in_room':0,'in_zone':0,
-           'zoning':0,'zone_update':0,'physical':0,'zonable_first':1,
+           'zoning':0,'visible':0,'visual':0,'zonable_first':1,
            'zonable_second':1,'mutation':0,'fail':-1}
         x.update(kw); return x
     return [
@@ -144,12 +144,12 @@ def cases():
       f('fresh_position_after_virtual',x=1.5,min_x=-1,max_x=3,mutation=1),
       f('fresh_bound_after_virtual',x=1,min_x=-1,max_x=3,mutation=2),
       f('fresh_pointer_after_virtual',old_room=OLD_ZONE,mutation=5),
-        f('entered_schedules_and_pins',mode='enter',zoning=1,physical=0x02700000,zone_update=1),
-        f('entered_without_update_flag',mode='enter',zoning=1,physical=0x02700000,zone_update=0),
-        f('exited_updates_without_active_flag',mode='exit',zoning=1,physical=0x02700000,zone_update=0,in_zone=1),
-        f('exited_disabled_uses_fallback_true',mode='exit',zoning=0,physical=0x02700000,in_zone=1),
-        f('entry_fresh_flags_fallback',mode='enter',zoning=1,physical=0x02700000,zone_update=1,mutation=3),
-        f('entry_fresh_in_zone_zero',mode='enter',zoning=1,physical=0x02700000,zone_update=1,mutation=4),
+        f('entered_syncs_visible_object',mode='enter',zoning=1,visual=0x02700000,visible=1),
+        f('entered_visible_flag_off',mode='enter',zoning=1,visual=0x02700000,visible=0),
+        f('exited_syncs_even_when_not_visible',mode='exit',zoning=1,visual=0x02700000,visible=0,in_zone=1),
+        f('exited_disabled_uses_fallback_true',mode='exit',zoning=0,visual=0x02700000,in_zone=1),
+        f('entry_fresh_flags_fallback',mode='enter',zoning=1,visual=0x02700000,visible=1,mutation=3),
+        f('entry_fresh_in_zone_zero',mode='enter',zoning=1,visual=0x02700000,visible=1,mutation=4),
     ]
 
 def json_safe(value):
@@ -171,7 +171,7 @@ def main():
     from elftools.elf.elffile import ELFFile
     old=RoomCpu(args.original_elf); rows=[]
     for case in cases():
-        cli=[str(exe),case['mode'],*(str(case[k]) for k in ('x','y','min_x','min_y','max_x','max_y','old_room','in_room','in_zone','zoning','zone_update','physical','zonable_first','zonable_second','mutation','fail'))]
+        cli=[str(exe),case['mode'],*(str(case[k]) for k in ('x','y','min_x','min_y','max_x','max_y','old_room','in_room','in_zone','zoning','visible','visual','zonable_first','zonable_second','mutation','fail'))]
         host=json.loads(subprocess.run(cli,capture_output=True,text=True,check=True).stdout)
         orig=old.run(case)
         accept=orig['result']!=0 if case['mode']=='add' else False
@@ -194,13 +194,13 @@ def main():
     failures=[
       ('fail_first_eligibility',cases()[0],IS_ZONABLE,0,0,0,1),
       ('fail_old_room_removal',next(c for c in cases() if c['name']=='remove_prior_room'),REMOVE,OLD_ZONE,1,1,2),
-      ('fail_zone_manager_after_enter_write',next(c for c in cases() if c['name']=='entered_schedules_and_pins'),UPDATE,0,0,1,1),
+        ('fail_visibility_sync_after_enter_write',next(c for c in cases() if c['name']=='entered_syncs_visible_object'),SYNC_VISIBILITY,0,0,1,1),
       ('fail_state_callback_after_enter_write',next(c for c in cases() if c['name']=='all_edges_equal'),STATE,ZONE,1,1,3),
       ('fail_append_after_enrollment_writes',next(c for c in cases() if c['name']=='all_edges_equal'),APPEND,ZONE,1,1,4),
     ]
     for name, base, fail_op, wanted_room, wanted_in_room, wanted_in_zone, expected_calls in failures:
         case=dict(base); case['name']=name; case['fail']=fail_op
-        cli=[str(exe),case['mode'],*(str(case[k]) for k in ('x','y','min_x','min_y','max_x','max_y','old_room','in_room','in_zone','zoning','zone_update','physical','zonable_first','zonable_second','mutation','fail'))]
+        cli=[str(exe),case['mode'],*(str(case[k]) for k in ('x','y','min_x','min_y','max_x','max_y','old_room','in_room','in_zone','zoning','visible','visual','zonable_first','zonable_second','mutation','fail'))]
         host=json.loads(subprocess.run(cli,capture_output=True,text=True,check=True).stdout)
         assert host['status']==3,(name,host)
         assert host['room']==wanted_room and host['in_room']==wanted_in_room and host['in_zone']==wanted_in_zone,(name,host)
@@ -216,7 +216,7 @@ def main():
             function_records.append({'original_symbol':name,'elf_address':hex(int(s['st_value'])),'size':int(s['st_size']),'sha256':hashlib.sha256(raw).hexdigest()})
     report={'validation':'PASS','original_arm_cases':len(rows),'mismatches':0,'original_sha256':ORIGINAL_SHA,
       'functions':function_records,'source_sha256':{str(p.relative_to(ROOT)).replace('\\','/'):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources+[Path(__file__).resolve()]},
-      'scope':'RoomZone::AddInitialObject membership decision and ordered mutation/list-owner callbacks, plus GameObject ZoneEntered/ZoneExited raw-byte and vtable callback leaves. Spatial values are source-plane XY. Zone AABB production, debug logging, and owner/list storage implementation remain explicit providers.',
+      'scope':'RoomZone::AddInitialObject membership decision and ordered mutation/list-owner callbacks, plus GameObject ZoneEntered/ZoneExited raw-byte, VisualObject::SyncVisibility, and setUpdating callback leaves. Spatial values are source-plane XY. Zone AABB production, debug logging, and owner/list storage implementation remain explicit providers.',
       'cases':rows,'host_failure_cases':failure_cases}
     (out/'validation.json').write_text(json.dumps(report,indent=2,allow_nan=False)+'\n',encoding='utf-8')
     print(json.dumps({k:report[k] for k in ('validation','original_arm_cases','mismatches')}))
