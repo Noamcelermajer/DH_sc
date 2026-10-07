@@ -7,6 +7,7 @@
 #include <vector>
 
 namespace dh2::data {struct LevelTables;struct WorldMapTables;}
+namespace dh2::data {struct CharacterTable;}
 namespace dh2::data {struct PropertyRules;struct PropertyState;}
 namespace dh2::native::quests {class Owner;}
 namespace dh2::native::player_profile {
@@ -76,6 +77,11 @@ public:
  // followed by explicit atomic durable native new-file persistence. Normal
  // import/gameplay transports reject writes until their writer closure binds.
  bool save_all(std::string&);
+ // Synchronous adapter for a loaded mask-1 temporary Save: retain the same
+ // Save/index, refresh registered metadata sections and preserve the prior
+ // primary as .bak before replacing it. Source Savegame's async job queue is
+ // not modeled by this adapter.
+ bool save_existing_metadata(std::string&);
  data::PlayerSaveLoadOwnerV1& loader() noexcept;
  const Receipt& receipt()const noexcept;
 };
@@ -88,6 +94,15 @@ public:
  Metadata();~Metadata();
  Metadata(const Metadata&)=delete;Metadata& operator=(const Metadata&)=delete;
  bool load(std::int32_t selected_slot,const std::filesystem::path& directory,
+           const data::CharacterTable&,std::int32_t& source_current_difficulty,
+           std::string&);
+ // NativeStartGame's optional first SG_Save, reached when the authored
+ // callback receives a numeric difficulty argument.
+ bool save_numeric_request(const data::CharacterTable&,
+           std::int32_t& source_current_difficulty,std::string&);
+ // Source NativeStartGame's second SG_Save: clear selected LUSP in this same
+ // temporary Save, update its canonical +8 profile index and persist it.
+ bool clear_spawn_point_and_save(std::size_t difficulty,
            const data::CharacterTable&,std::int32_t& source_current_difficulty,
            std::string&);
  const Receipt& receipt()const noexcept;

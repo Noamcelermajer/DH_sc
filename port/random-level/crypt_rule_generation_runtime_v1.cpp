@@ -65,25 +65,9 @@ Result execute_one_step(const CryptRuleExecutionFrameV1& child_rule,
     child_rule.path_runtime->begin_step(opposite_direction);
   }
 
-  const void* block = nullptr;
-  switch (callbacks.resolve_block(callbacks.context, assignment.elem, &block)) {
-    case CryptRuleBlockLookupStatusV1::missing:
-      return make_result(Status::failed);
-    case CryptRuleBlockLookupStatusV1::unsupported:
-      return make_result(Status::unsupported);
-    case CryptRuleBlockLookupStatusV1::error:
-      return make_result(Status::callback_error);
-    case CryptRuleBlockLookupStatusV1::found:
-      if (!block) return make_result(Status::callback_error);
-      break;
-    default:
-      return make_result(Status::callback_error);
-  }
-
   std::vector<SourceRuleExitCandidateV1> candidates;
   const auto candidates_status = callbacks.candidate_exits(
-      callbacks.context, child_rule, block, assignment.source_exit_index,
-      candidates);
+      callbacks.context, child_rule, assignment.source_exit_index, candidates);
   if (candidates_status != CryptRuleCallbackStatusV1::ready) {
     return make_result(callback_status(candidates_status));
   }
@@ -95,23 +79,43 @@ Result execute_one_step(const CryptRuleExecutionFrameV1& child_rule,
   }
   if (candidates.empty()) return make_result(Status::failed);
 
-  std::vector<CryptDirectionKeyV1> module_directions;
-  if (child_rule.path_runtime) {
-    const auto directions_status = callbacks.module_exit_directions(
-        callbacks.context, block, module_directions);
-    if (directions_status != CryptRuleCallbackStatusV1::ready) {
-      return make_result(callback_status(directions_status));
-    }
-    if (module_directions.empty()) return make_result(Status::unsupported);
-  }
-
   Result result = make_result(Status::failed);
   for (const auto& candidate : candidates) {
     ++result.one_step_candidates_tried;
-    if (child_rule.path_runtime &&
-        !child_rule.path_runtime->candidate_direction_allows_spawn(
-            module_directions, opposite_direction)) {
-      continue;
+
+    // OneStep's derived FilterExits returns candidate (Exit*, ListElem) pairs.
+    // Resolve the tuple for this candidate only; different candidates can
+    // refer to MGXs with different exits, which Path::Impl inspects separately.
+    const void* block = nullptr;
+    switch (callbacks.resolve_block(callbacks.context, candidate,
+                                    &block)) {
+      case CryptRuleBlockLookupStatusV1::missing:
+        // The native candidate contains a concrete Exit/Block pair. If the
+        // adapter cannot resolve that source tuple, continuing would invent a
+        // candidate order or successful fallback that the source cannot take.
+        return make_result(Status::malformed_record);
+      case CryptRuleBlockLookupStatusV1::unsupported:
+        return make_result(Status::unsupported);
+      case CryptRuleBlockLookupStatusV1::error:
+        return make_result(Status::callback_error);
+      case CryptRuleBlockLookupStatusV1::found:
+        if (!block) return make_result(Status::callback_error);
+        break;
+      default:
+        return make_result(Status::callback_error);
+    }
+
+    std::vector<CryptDirectionKeyV1> module_directions;
+    if (child_rule.path_runtime) {
+      const auto directions_status = callbacks.module_exit_directions(
+          callbacks.context, block, module_directions);
+      if (directions_status != CryptRuleCallbackStatusV1::ready) {
+        return make_result(callback_status(directions_status));
+      }
+      if (!child_rule.path_runtime->candidate_direction_allows_spawn(
+              module_directions, opposite_direction)) {
+        continue;
+      }
     }
 
     CryptRuleSpawnedTileV1 spawned;
@@ -205,6 +209,9 @@ CryptRuleGenerationResultV1 execute_crypt_rule_step_v1(
   if (exits_status != CryptRuleCallbackStatusV1::ready) {
     return make_result(callback_status(exits_status));
   }
+  // Rule::Impl::Step creates (exit, ListElem()) pairs from raw tile exits. Any
+  // candidate-facing tuple belongs to the child's derived FilterExits later.
+  for (auto& exit : exits) exit.elem = SourceListElemV1{};
   if (frame.incoming_exit_index) {
     exits.erase(std::remove_if(exits.begin(), exits.end(), [&](const auto& exit) {
                   return exit.source_exit_index ==
@@ -265,6 +272,9 @@ CryptRuleGenerationResultV1 execute_crypt_rule_step_v1(
           }
           child.tile = frame.tile;
           child.incoming_exit_index = frame.incoming_exit_index;
+          // Step constructs each open-exit pair with ListElem() before
+          // assigning the pair to the child Rule::Impl.
+          child.assigned_elem = assignment.elem;
           row_children.push_back(child);
           break;
         default:

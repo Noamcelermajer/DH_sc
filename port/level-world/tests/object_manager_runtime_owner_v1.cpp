@@ -92,6 +92,44 @@ void canonical_views() {
     assert(value->zoning_view().visual_2d8 == nullptr);
 }
 
+void borrowed_actor_fields_remain_canonical() {
+    Owner owner;
+    float actor_x = 1.0f;
+    float actor_y = 2.0f;
+    Address actor_zone = 0;
+    Address actor_visual = 0x901;
+    std::uint8_t actor_in_room = 0;
+    std::uint8_t actor_zoning_enabled = 1;
+    std::uint8_t actor_in_zone = 0;
+    std::uint8_t actor_visible = 1;
+
+    auto source = object(0x900);
+    source.bind_live_fields({&actor_x, &actor_y, &actor_zone, &actor_in_room,
+                             &actor_zoning_enabled, &actor_in_zone,
+                             &actor_visual, &actor_visible});
+    GameObject* stored = nullptr;
+    assert(owner.add_object(3, source, &stored) == Status::ok && stored);
+
+    // The map entry is a stable ordered projection, not a copied position or
+    // membership owner. Both views must continue to address the actor fields.
+    actor_x = -8.5f;
+    actor_y = 14.25f;
+    auto enrollment = stored->enrollment_view();
+    assert(enrollment.world_x == &actor_x && *enrollment.world_x == -8.5f);
+    assert(enrollment.world_y == &actor_y && *enrollment.world_y == 14.25f);
+    assert(enrollment.room_zone == &actor_zone);
+    assert(enrollment.in_room_list == &actor_in_room);
+    assert(enrollment.in_zone == &actor_in_zone);
+    *enrollment.room_zone = 0x902;
+    *enrollment.in_room_list = 1;
+    *enrollment.in_zone = 1;
+    assert(actor_zone == 0x902 && actor_in_room == 1 && actor_in_zone == 1);
+
+    const auto zoning = stored->zoning_view();
+    assert(zoning.room_zone_2f4 == actor_zone && zoning.in_zone_2f0 == 1);
+    assert(zoning.visual_2d8 && zoning.visual_2d8->identity == actor_visual);
+}
+
 void no_room_list_and_player_path() {
     Owner owner;
     GameObject* regular = nullptr;
@@ -125,11 +163,80 @@ void no_room_list_and_player_path() {
     assert(owner.find_by_identity(player->identity) == player);
 }
 
+void active_room_list_source_duplicate_and_delete() {
+    Owner owner;
+    bool added = false;
+    constexpr Address room_zone = 0x7000;
+    assert(owner.add_room_object(room_zone, &added) == Status::ok && added);
+    assert(owner.room_object_count() == 1);
+
+    // AddRoomObjects' duplicate assertion does not prevent its list insertion.
+    assert(owner.add_room_object(room_zone, &added) == Status::ok && added);
+    assert(owner.room_object_count() == 2);
+    Address identity = 0;
+    assert(owner.room_object_at(0, &identity) && identity == room_zone);
+    assert(owner.room_object_at(1, &identity) && identity == room_zone);
+
+    bool removed = false;
+    assert(owner.remove_room_object(room_zone, &removed) == Status::ok && removed);
+    assert(owner.room_object_count() == 0);
+    assert(owner.remove_room_object(room_zone, &removed) == Status::ok && !removed);
+}
+
+void native_flush_reset_retires_only_the_manager_projection() {
+    Owner owner;
+    GameObject* player = nullptr;
+    GameObject* monster = nullptr;
+    assert(owner.add_object(3, object(0x3003), &player) == Status::ok);
+    assert(owner.add_object(4, object(0x4004), &monster) == Status::ok);
+
+    // Actor transform fields remain owned outside this map. Flush removes the
+    // source-key and manager-list projection without writing into borrowed live
+    // actor state or requiring another ObjectManager instance.
+    float actor_x = 91.0f;
+    player->bind_live_fields({&actor_x, nullptr, nullptr, nullptr, nullptr,
+                              nullptr, nullptr, nullptr});
+    bool added = false;
+    assert(owner.register_player_no_room(player->identity, &added) == Status::ok && added);
+    assert(owner.add_no_room_object(monster->identity, &added) == Status::ok && added);
+    assert(owner.add_room_object(0x7000, &added) == Status::ok && added);
+    assert(owner.add_room_object(0x7000, &added) == Status::ok && added);
+    owner.add_visible_room_zone();
+    owner.add_visible_room_zone();
+
+    assert(owner.object_count() == 2);
+    assert(owner.no_room_count() == 2);
+    assert(owner.room_object_count() == 2);
+    assert(owner.visible_room_zone_count() == 2);
+    owner.reset_after_native_flush();
+
+    assert(owner.object_count() == 0);
+    assert(owner.no_room_count() == 0);
+    assert(owner.room_object_count() == 0);
+    assert(owner.visible_room_zone_count() == 0);
+    assert(owner.find_by_source_handle(3) == nullptr);
+    assert(owner.find_by_source_handle(4) == nullptr);
+    Address identity = 0;
+    assert(!owner.no_room_at(0, &identity));
+    assert(!owner.room_object_at(0, &identity));
+    assert(actor_x == 91.0f);
+
+    // Teardown is safe when repeated and the owner can represent a later
+    // source lifecycle after external actors have been retired.
+    owner.reset_after_native_flush();
+    GameObject* next_level = nullptr;
+    assert(owner.add_object(3, object(0x5005), &next_level) == Status::ok);
+    assert(next_level && next_level->identity == 0x5005);
+}
+
 } // namespace
 
 int main() {
     ordered_map_and_stable_identity();
     canonical_views();
+    borrowed_actor_fields_remain_canonical();
     no_room_list_and_player_path();
-    std::cout << "ObjectManager runtime owner v1 host checks passed\n";
+    active_room_list_source_duplicate_and_delete();
+    native_flush_reset_retires_only_the_manager_projection();
+    std::cout << "ObjectManager runtime owner v1 host checks passed: ordered registration, manager lists, bounded post-Flush reset\n";
 }

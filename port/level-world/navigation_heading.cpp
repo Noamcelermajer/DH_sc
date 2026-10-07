@@ -1,4 +1,5 @@
 #include "navigation_heading.hpp"
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 namespace {
@@ -35,5 +36,20 @@ extern "C" int dh2_nav_set_heading(dh2::navigation::HeadingState* state,const fl
  const float length=add(add(mul(direction[0],direction[0]),mul(direction[1],direction[1])),0);
  if(!std::isfinite(length))return 1;
  dh2::navigation::set_heading_unchecked(*state,direction,rotate);
+ return 0;
+}
+extern "C" int dh2_nav_rotate_input_for_camera(float* direction,const float* camera_look_at){
+ if(!finite3(direction)||!finite3(camera_look_at))return 1;
+ const float x=direction[0],y=direction[1],z=direction[2];
+ const float cx=camera_look_at[0],cy=camera_look_at[1],cz=camera_look_at[2];
+ const float length=std::hypot(std::hypot(cx,cy),cz);
+ if(!std::isfinite(length)||length<=0.f)return 1;
+ // Native Update uses Point3D::angle(Vec3f_J, lookAtVec), then rotateXY.
+ // Vec3f_J is the +Y basis; its dot with the camera target is cy.
+ const float cosine=std::clamp(cy/length,-1.f,1.f);
+ const float angle=std::acos(cosine),c=std::cos(angle),s=std::sin(angle);
+ const float rotated_x=x*c-y*s,rotated_y=x*s+y*c;
+ if(!std::isfinite(rotated_x)||!std::isfinite(rotated_y))return 1;
+ direction[0]=rotated_x;direction[1]=rotated_y;direction[2]=z;
  return 0;
 }

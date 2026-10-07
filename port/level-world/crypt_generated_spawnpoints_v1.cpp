@@ -149,6 +149,7 @@ bool append_identity_level(const SourceLevel& original, std::string& xml) {
 }
 
 bool build_records(const SourceLevel& placements, const SourceLevel& objects,
+                   const std::int32_t* selected_entrypoint_id,
                    std::vector<SpawnRecord>& records, std::string& error) {
     for (std::uint32_t i = 0; i < objects.entity_count; ++i) {
         const auto& object = objects.entities[i];
@@ -156,6 +157,14 @@ bool build_records(const SourceLevel& placements, const SourceLevel& objects,
         if (object.module_index >= placements.module_count) {
             set_error(error, "SpawnPoint has no corresponding generated Module");
             return false;
+        }
+        SpawnRecord record;
+        if (!parse_id(dh2_world_field(&object, "entrypointID"), record.id)) {
+            set_error(error, "SpawnPoint entrypointID is missing or malformed");
+            return false;
+        }
+        if (selected_entrypoint_id && record.id != *selected_entrypoint_id) {
+            continue;
         }
         if (nonempty(dh2_world_field(&object, "activate_cond")) ||
             nonempty(dh2_world_field(&object, "deactivate_cond"))) {
@@ -165,17 +174,6 @@ bool build_records(const SourceLevel& placements, const SourceLevel& objects,
         if (nonempty(dh2_world_field(&object, "script"))) {
             set_error(error, "SPWN v1 cannot preserve SpawnPoint scripts");
             return false;
-        }
-        SpawnRecord record;
-        if (!parse_id(dh2_world_field(&object, "entrypointID"), record.id)) {
-            set_error(error, "SpawnPoint entrypointID is missing or malformed");
-            return false;
-        }
-        for (const auto& prior : records) {
-            if (prior.id == record.id) {
-                set_error(error, "SPWN v1 runtime reader rejects duplicate entrypoint IDs");
-                return false;
-            }
         }
         if (!object.name || !*object.name || std::strlen(object.name) >= 64) {
             set_error(error, "SpawnPoint name does not fit SPWN v1");
@@ -205,7 +203,20 @@ bool build_records(const SourceLevel& placements, const SourceLevel& objects,
             record.transforms[12 + axis] = object.local.rotation_degrees[axis];
             record.transforms[15 + axis] = object.local.scale[axis];
         }
-        records.push_back(std::move(record));
+        const auto prior = std::find_if(records.begin(), records.end(),
+            [&](const SpawnRecord& value) { return value.id == record.id; });
+        if (prior != records.end()) {
+            if (!selected_entrypoint_id) {
+                set_error(error, "SPWN v1 runtime reader rejects duplicate entrypoint IDs");
+                return false;
+            }
+            // Level::_LoadPlayer applies every matching point in source order.
+            // With unsupported scripts/conditions rejected above, the final
+            // player transform is the last matching source record.
+            *prior = std::move(record);
+        } else {
+            records.push_back(std::move(record));
+        }
         if (records.size() > max_spawnpoints) {
             set_error(error, "SpawnPoint count exceeds the SPWN v1 runtime limit");
             return false;
@@ -220,10 +231,11 @@ bool build_records(const SourceLevel& placements, const SourceLevel& objects,
 
 } // namespace
 
-bool compile_generated_spawnpoints_v1(
+static bool compile_generated_spawnpoints_impl_v1(
     const std::uint8_t* level_xml, std::size_t level_size,
     const char* level_name, const char* level_source_path,
     const GeneratedMgpView* mgps, std::size_t mgp_count,
+    const std::int32_t* selected_entrypoint_id,
     std::vector<std::uint8_t>& output, std::string& error) {
     output.clear();
     error.clear();
@@ -281,7 +293,8 @@ bool compile_generated_spawnpoints_v1(
     }
 
     std::vector<SpawnRecord> records;
-    if (!build_records(placements.value, objects.value, records, error)) return false;
+    if (!build_records(placements.value, objects.value, selected_entrypoint_id,
+                       records, error)) return false;
     std::vector<std::uint8_t> serialized(header_size + records.size() * record_size, 0);
     std::memcpy(serialized.data(), "SPWN", 4);
     write_u32(serialized.data() + 4, 1);
@@ -297,6 +310,27 @@ bool compile_generated_spawnpoints_v1(
     }
     output = std::move(serialized);
     return true;
+}
+
+bool compile_generated_spawnpoints_v1(
+    const std::uint8_t* level_xml, std::size_t level_size,
+    const char* level_name, const char* level_source_path,
+    const GeneratedMgpView* mgps, std::size_t mgp_count,
+    std::vector<std::uint8_t>& output, std::string& error) {
+    return compile_generated_spawnpoints_impl_v1(
+        level_xml, level_size, level_name, level_source_path, mgps, mgp_count,
+        nullptr, output, error);
+}
+
+bool compile_generated_spawnpoint_v1(
+    const std::uint8_t* level_xml, std::size_t level_size,
+    const char* level_name, const char* level_source_path,
+    const GeneratedMgpView* mgps, std::size_t mgp_count,
+    std::int32_t selected_entrypoint_id,
+    std::vector<std::uint8_t>& output, std::string& error) {
+    return compile_generated_spawnpoints_impl_v1(
+        level_xml, level_size, level_name, level_source_path, mgps, mgp_count,
+        &selected_entrypoint_id, output, error);
 }
 
 } // namespace dh2::world

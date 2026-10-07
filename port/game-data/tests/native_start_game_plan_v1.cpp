@@ -64,8 +64,19 @@ int main(int argc, char** argv) {
         require(plan.difficulty_before_request == 1 && plan.difficulty_for_level == 2 &&
                 plan.requested_difficulty_for_load == 2 && plan.level_row == 23 &&
                 plan.entry_point == 7 && plan.load_spawn_flag == 1 &&
-                plan.save_after_numeric_request && plan.saved_spawn_flag_row_to_clear == 2,
+                plan.save_after_numeric_request && plan.saved_spawn_flag_row_to_clear == 2 &&
+                plan.seed == 0 && plan.synchronized_seed == 0,
                 "unlocked numeric difficulty resolution changed");
+
+        const auto saved_seed = resolve_application_load_seed_v1(303, false, 909);
+        require(saved_seed.ordinary_seed == 303 && saved_seed.synchronized_seed == 303,
+                "Application::LoadLevel did not select saved seed for both Random channels");
+        const auto zero_seed = resolve_application_load_seed_v1(0, false, 909);
+        require(zero_seed.ordinary_seed == 909 && zero_seed.synchronized_seed == 909,
+                "zero saved seed did not select timer fallback for both Random channels");
+        const auto debug_seed = resolve_application_load_seed_v1(303, true, 909);
+        require(debug_seed.ordinary_seed == 909 && debug_seed.synchronized_seed == 909,
+                "DontUsePlayerSeed did not force timer fallback for both Random channels");
 
         save.unlocked_difficulty = 0;
         require(resolve_native_start_game_plan_v1(levels, save, request, plan, error), error.c_str());

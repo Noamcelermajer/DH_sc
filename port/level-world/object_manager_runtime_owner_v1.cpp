@@ -7,28 +7,52 @@
 namespace dh2::object_manager_runtime_owner_v1 {
 
 dh2::game_object_zoning_visibility::GameObject GameObject::zoning_view() noexcept {
-    visual_view_.identity = visual_object_2d8;
+    auto* room_zone = live_fields.room_zone_2f4
+        ? live_fields.room_zone_2f4 : &room_zone_2f4;
+    auto* zoning_enabled = live_fields.zoning_enabled_2ee
+        ? live_fields.zoning_enabled_2ee : &zoning_enabled_2ee;
+    auto* in_zone = live_fields.in_zone_2f0
+        ? live_fields.in_zone_2f0 : &in_zone_2f0;
+    auto* visible = live_fields.visible_80
+        ? live_fields.visible_80 : &visible_80;
+    auto* visual_object = live_fields.visual_object_2d8
+        ? live_fields.visual_object_2d8 : &visual_object_2d8;
+    visual_view_.identity = *visual_object;
     visual_view_.owner_identity = identity;
     return {identity,
             is_zonable_target_c4,
             set_updating_target_3c,
-            room_zone_2f4,
-            visual_object_2d8 ? &visual_view_ : nullptr,
-            zoning_enabled_2ee,
-            in_zone_2f0,
-            visible_80};
+            *room_zone,
+            *visual_object ? &visual_view_ : nullptr,
+            *zoning_enabled,
+            *in_zone,
+            *visible};
 }
 
 dh2::room_zone_enrollment::GameObject GameObject::enrollment_view() noexcept {
+    auto* world_x_field = live_fields.world_x ? live_fields.world_x : &this->world_x;
+    auto* world_y_field = live_fields.world_y ? live_fields.world_y : &this->world_y;
+    auto* room_zone = live_fields.room_zone_2f4
+        ? live_fields.room_zone_2f4 : &room_zone_2f4;
+    auto* in_room_list = live_fields.in_room_list_2ef
+        ? live_fields.in_room_list_2ef : &in_room_list_2ef;
+    auto* in_zone = live_fields.in_zone_2f0
+        ? live_fields.in_zone_2f0 : &in_zone_2f0;
+    auto* zoning_enabled = live_fields.zoning_enabled_2ee
+        ? live_fields.zoning_enabled_2ee : &zoning_enabled_2ee;
+    auto* visual_object = live_fields.visual_object_2d8
+        ? live_fields.visual_object_2d8 : &visual_object_2d8;
+    auto* visible = live_fields.visible_80
+        ? live_fields.visible_80 : &visible_80;
     return {identity,
-            &world_x,
-            &world_y,
-            &room_zone_2f4,
-            &in_room_list_2ef,
-            &in_zone_2f0,
-            &zoning_enabled_2ee,
-            &visual_object_2d8,
-            &visible_80};
+            world_x_field,
+            world_y_field,
+            room_zone,
+            in_room_list,
+            in_zone,
+            zoning_enabled,
+            visual_object,
+            visible};
 }
 
 Status Owner::add_object(SourceHandle source_handle, const GameObject& object,
@@ -160,12 +184,60 @@ Status Owner::remove_no_room_object(Address identity, bool* removed) noexcept {
     return Status::ok;
 }
 
+Status Owner::add_room_object(Address identity, bool* added) noexcept {
+    if (added == nullptr || identity == 0) return Status::invalid_argument;
+    *added = false;
+    // Source AddRoomObjects asserts on an existing identity in debug builds,
+    // but still allocates and tail-inserts the new node after the assertion.
+    try {
+        room_objects_.push_back(identity);
+    } catch (const std::bad_alloc&) {
+        return Status::allocation_failed;
+    } catch (...) {
+        return Status::allocation_failed;
+    }
+    *added = true;
+    return Status::ok;
+}
+
+Status Owner::remove_room_object(Address identity, bool* removed) noexcept {
+    if (removed == nullptr || identity == 0) return Status::invalid_argument;
+    *removed = false;
+    for (auto found = room_objects_.begin(); found != room_objects_.end();) {
+        if (*found == identity) {
+            found = room_objects_.erase(found);
+            *removed = true;
+        } else {
+            ++found;
+        }
+    }
+    return Status::ok;
+}
+
+bool Owner::room_object_at(std::size_t index, Address* identity) const noexcept {
+    if (identity == nullptr || index >= room_objects_.size()) return false;
+    auto found = room_objects_.begin();
+    std::advance(found, static_cast<std::ptrdiff_t>(index));
+    *identity = *found;
+    return true;
+}
+
 bool Owner::no_room_at(std::size_t index, Address* identity) const noexcept {
     if (identity == nullptr || index >= no_room_objects_.size()) return false;
     auto found = no_room_objects_.begin();
     std::advance(found, static_cast<std::ptrdiff_t>(index));
     *identity = *found;
     return true;
+}
+
+void Owner::reset_after_native_flush() noexcept {
+    // Drop only this port-owned projection once another owner has completed
+    // the source destruction phase. This does not reproduce the other
+    // ObjectManager collections or native destructor side effects.
+    objects_.clear();
+    no_room_objects_.clear();
+    room_objects_.clear();
+    visible_room_zone_count_ = 0;
 }
 
 } // namespace dh2::object_manager_runtime_owner_v1

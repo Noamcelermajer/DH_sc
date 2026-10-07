@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <limits>
 #include <new>
 #include <utility>
@@ -21,6 +22,9 @@ struct Owner::Zone {
     float absolute_minimum[3]{};
     float absolute_maximum[3]{};
     std::uint8_t optional_visual_enabled = 0;
+    // RoomZone's constructor initializes +0x389 active and +0x388 dirty.
+    std::uint8_t active_389 = 1;
+    std::uint8_t dirty_388 = 1;
     ObjectListState object_list_state = ObjectListState::not_started;
     std::vector<Address> members;
 
@@ -145,6 +149,12 @@ struct BusyReset {
     bool& value;
     ~BusyReset() { value = false; }
 };
+
+float binary32(std::uint32_t word) noexcept {
+    float value = 0.0f;
+    std::memcpy(&value, &word, sizeof(value));
+    return value;
+}
 
 } // namespace
 
@@ -308,6 +318,125 @@ Status Owner::initialize_object_lists(
     return Status::complete;
 }
 
+Status Owner::update_frustum(const std::uint32_t planes[6][4],
+                             const float* player_position,
+                             const UpdateServices* services,
+                             UpdateResult* report) noexcept {
+    if (!report) return Status::invalid_argument;
+    *report = {};
+    report->failed_module_index = no_module;
+    if (operation_in_progress_ || !planes || zones_.empty() ||
+        !services || !services->invoke)
+        return operation_in_progress_ ? Status::reentrant_operation
+                                      : Status::invalid_argument;
+
+    operation_in_progress_ = true;
+    const BusyReset reset{operation_in_progress_};
+    const auto invoke_transition = [&](Zone& zone, TransitionOperation operation,
+                                       Address actor, std::uint32_t* value) {
+        const TransitionRequest request{operation, zone.module_index,
+                                        zone.identity, actor};
+        std::int32_t callback_status = 1;
+        try { callback_status = services->invoke(services->context, &request, value); }
+        catch (...) { callback_status = 1; }
+        if (callback_status != 0) {
+            report->failed_module_index = zone.module_index;
+            report->failed_operation = operation;
+            return Status::transition_failed;
+        }
+        return Status::complete;
+    };
+    const auto run_transition = [&](Zone& zone, bool entering) {
+        const auto actor_operation = entering
+            ? TransitionOperation::zone_entered : TransitionOperation::zone_exited;
+        for (const Address actor : zone.members) {
+            const auto status = invoke_transition(zone, actor_operation, actor, nullptr);
+            if (status != Status::complete) return status;
+        }
+        const auto room_operation = entering
+            ? TransitionOperation::add_room_object
+            : TransitionOperation::remove_room_object;
+        return invoke_transition(zone, room_operation, 0, nullptr);
+    };
+    for (auto& owner : zones_) {
+        Zone& zone = *owner;
+        ++report->zones_tested;
+        bool outside = false;
+        for (unsigned plane_index = 0; plane_index != 6; ++plane_index) {
+            const auto* plane = planes[plane_index];
+            const float nx = binary32(plane[0]);
+            const float ny = binary32(plane[1]);
+            const float nz = binary32(plane[2]);
+            const float x = nx >= 0.0f ? zone.absolute_minimum[0]
+                                       : zone.absolute_maximum[0];
+            const float y = ny >= 0.0f ? zone.absolute_minimum[1]
+                                       : zone.absolute_maximum[1];
+            const float z = nz >= 0.0f ? zone.absolute_minimum[2]
+                                       : zone.absolute_maximum[2];
+            // Volatile stores preserve the source's multiply/add order and
+            // prevent the compiler from contracting this test into FMAs.
+            volatile float x_term = nx * x;
+            volatile float y_term = ny * y;
+            volatile float xy = x_term + y_term;
+            volatile float z_term = nz * z;
+            volatile float xyz = xy + z_term;
+            volatile float distance = xyz + binary32(plane[3]);
+            ++report->planes_tested;
+            if (distance > 0.0f) {
+                outside = true;
+                break;
+            }
+        }
+
+        if (outside) {
+            if (zone.active_389 || zone.dirty_388) {
+                const auto status = run_transition(zone, false);
+                if (status != Status::complete) return status;
+                zone.active_389 = 0;
+                ++report->zones_deactivated;
+            }
+            zone.active_389 = 0;
+        } else {
+            ++report->zones_visible;
+            if (!zone.active_389 || zone.dirty_388) {
+                const auto status = run_transition(zone, true);
+                if (status != Status::complete) return status;
+                zone.active_389 = 1;
+                ++report->zones_activated;
+            }
+            std::uint32_t visited = 0;
+            auto status = invoke_transition(zone,
+                TransitionOperation::query_module_visited, 0, &visited);
+            if (status != Status::complete) return status;
+            if (visited > 0xffu) {
+                report->failed_module_index = zone.module_index;
+                report->failed_operation = TransitionOperation::query_module_visited;
+                return Status::transition_failed;
+            }
+            if (!visited && player_position &&
+                zone.absolute_minimum[0] <= player_position[0] &&
+                player_position[0] <= zone.absolute_maximum[0] &&
+                zone.absolute_minimum[1] <= player_position[1] &&
+                player_position[1] <= zone.absolute_maximum[1]) {
+                status = invoke_transition(zone,
+                    TransitionOperation::set_module_visited, 0, nullptr);
+                if (status != Status::complete) return status;
+                ++report->zones_visited;
+            }
+        }
+        zone.dirty_388 = 0;
+    }
+    return Status::complete;
+}
+
+Status Owner::mark_dirty(std::uint32_t module_index) noexcept {
+    if (operation_in_progress_) return Status::reentrant_operation;
+    Zone* zone = find_module(module_index);
+    if (!zone) return Status::module_not_found;
+    zone->dirty_388 = 1;
+    return Status::complete;
+}
+
 Status Owner::forget_source_unlinked_actor(std::uint32_t module_index,
                                            Address actor) noexcept {
     if (operation_in_progress_) return Status::reentrant_operation;
@@ -337,7 +466,8 @@ bool Owner::zone_at(std::size_t index, ZoneView* view) const noexcept {
     *view = {zone.module_index, zone.identity, zone.module_name.c_str(),
              zone.position, zone.dimensions, zone.relative_minimum,
              zone.relative_maximum, zone.absolute_minimum, zone.absolute_maximum,
-             zone.members.empty() ? nullptr : zone.members.data(), zone.members.size()};
+             zone.members.empty() ? nullptr : zone.members.data(), zone.members.size(),
+             zone.active_389, zone.dirty_388};
     return true;
 }
 
@@ -354,6 +484,7 @@ const char* status_name(Status status) noexcept {
     case Status::actor_not_tracked: return "actor_not_tracked";
     case Status::reentrant_operation: return "reentrant_operation";
     case Status::allocation_failure: return "allocation_failure";
+    case Status::transition_failed: return "transition_failed";
     }
     return "unknown";
 }

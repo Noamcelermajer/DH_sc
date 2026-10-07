@@ -20,6 +20,11 @@ struct CryptRuleExecutionFrameV1 {
   const void* tile = nullptr;
   std::optional<std::size_t> incoming_exit_index;
   std::size_t child_rule_count = 0;
+  // Rule::Impl::Step copies the ListElem paired with the assigned open exit
+  // onto the child rule before calling its OneStep. Those pairs are created
+  // with ListElem() in Step, so this is normally the default empty element;
+  // derived filters may inspect it while enumerating their own candidates.
+  SourceListElemV1 assigned_elem;
   // Non-null only for Path::Impl. The pointed-to state belongs to this rule
   // instance and is initialized by create_child_rule, including RNG draws.
   CryptPathRuntimeV1* path_runtime = nullptr;
@@ -74,17 +79,22 @@ struct CryptRuleGenerationCallbacksV1 {
       std::size_t child_rule_index, RandomGeneratorV1& random,
       CryptRuleExecutionFrameV1& child) = nullptr;
 
-  // Resolve the ListElem assigned to this open exit. The implementation should
-  // use the source's exact (name, gameplay, visual) block lookup semantics.
+  // Resolve one complete candidate tuple after the child derived-rule callback
+  // has enumerated it. The implementation should use its ListElem's exact
+  // (name, gameplay, visual) lookup semantics and may also use the paired exit
+  // metadata to identify the source block/MGX.
   CryptRuleBlockLookupStatusV1 (*resolve_block)(
-      void* context, const SourceListElemV1& elem, const void** block) = nullptr;
+      void* context, const SourceRuleExitCandidateV1& candidate,
+      const void** block) = nullptr;
 
-  // Return derived-rule-filtered exits of the resolved candidate block in
-  // source order. The executor then applies Rule::Impl::FilterExits' `_start`
+  // Return the child rule's derived-filtered (Exit*, ListElem) candidates in
+  // source order. Enumeration is against the current parent tile/rule; each
+  // candidate's own ListElem is resolved separately before Path checks or
+  // TrySpawn. The executor then applies Rule::Impl::FilterExits' `_start`
   // removal and random shuffle.
   CryptRuleCallbackStatusV1 (*candidate_exits)(
       void* context, const CryptRuleExecutionFrameV1& child,
-      const void* block, std::size_t anchor_exit_index,
+      std::size_t anchor_exit_index,
       std::vector<SourceRuleExitCandidateV1>& exits) = nullptr;
 
   // Path::Impl obtains the opposite direction for the anchor exit before its

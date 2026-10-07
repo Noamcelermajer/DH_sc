@@ -41,6 +41,8 @@ struct Entry {
     std::uint32_t geometry_instances;
     std::uint32_t draw_buffers;
     std::uint32_t ignored_non_geometry_instances;
+    // Live Module+0x3fc projection. Save/deserialize wiring is separate work.
+    std::uint8_t visited = 0;
 };
 
 // Owns copied module identities and bounds for one loaded source catalogue.

@@ -140,6 +140,10 @@ public:
     bool load_level_name(Bytes, std::size_t& consumed, std::string&);
     bool load_level_entry_points(Bytes, std::size_t& consumed, std::string&);
     bool load_use_spawn_points(Bytes, std::size_t& consumed, std::string&);
+    // NativeStartGame clears the selected LUSP byte after copying its old
+    // value to Application::LoadLevel arguments. Only a loaded indexed Save
+    // can receive that source mutation.
+    bool clear_use_spawn_point(std::size_t difficulty, std::string& error);
 
     bool set_skill_level(std::uint32_t row, std::int32_t level,
                          std::string& error);

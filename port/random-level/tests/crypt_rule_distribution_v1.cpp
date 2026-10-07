@@ -141,5 +141,3 @@ int main() {
             << " status=" << (ok ? "PASS" : "FAIL") << '\n';
   return ok ? 0 : 1;
 }
-
-\n

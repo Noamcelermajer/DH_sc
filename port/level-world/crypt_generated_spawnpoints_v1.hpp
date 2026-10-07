@@ -31,4 +31,16 @@ bool compile_generated_spawnpoints_v1(
     const GeneratedMgpView* mgps, std::size_t mgp_count,
     std::vector<std::uint8_t>& output, std::string& error);
 
+// Compile only the selected entrypoint used by the current level load. The
+// source Level::_LoadPlayer loop applies every active SpawnPoint with this ID
+// in ObjectManager order, so the final transform comes from the last matching
+// module/MGP record. Selected points with conditions or scripts still fail
+// closed because this projection does not run those source callbacks.
+bool compile_generated_spawnpoint_v1(
+    const std::uint8_t* level_xml, std::size_t level_size,
+    const char* level_name, const char* level_source_path,
+    const GeneratedMgpView* mgps, std::size_t mgp_count,
+    std::int32_t selected_entrypoint_id,
+    std::vector<std::uint8_t>& output, std::string& error);
+
 } // namespace dh2::world

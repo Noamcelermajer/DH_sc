@@ -22,7 +22,7 @@ bool assign_menu_save_slot(std::int32_t slot,std::int32_t ordinal,std::string&);
 bool selected_menu_save_slot(std::int32_t&,std::string&);
 bool select_menu_preview_slot(std::int32_t,bool,std::string&);
 bool request_menu_start(bool,std::int32_t,std::int32_t&,std::string&);
-std::string start_menu_game(std::int32_t,AAssetManager*);
+std::string start_menu_game(std::int32_t,AAssetManager*,std::int32_t debug_level_row=-1);
 std::vector<std::uint8_t> read_asset(AAssetManager*,const std::string&);
 void reset_context();
 void deactivate();

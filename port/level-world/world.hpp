@@ -25,7 +25,10 @@ struct SourceMvpDecor{
  Transform world;
 };
 struct SpawnSelection{EntryPoint source;Point position{};Point rotation_degrees{};bool floor_snapped=false;};
-bool load(const resources::BresView&,const std::uint8_t* descriptor,std::size_t,Level&,std::string&);
+// Generated worlds with an authoritative SPWN sidecar may defer descriptor
+// spawn-floor validation until the selected source entrypoint is loaded.
+bool load(const resources::BresView&,const std::uint8_t* descriptor,std::size_t,
+          Level&,std::string&,bool validate_descriptor_spawn=true);
 // Build the bounded static Module layout from the original Level .mlx and
 // selected SpawnPoint sidecar. This replaces the generated DWLD module table
 // at runtime; conditional/rotated/scaled modules remain unsupported.

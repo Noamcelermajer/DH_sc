@@ -47,9 +47,23 @@ struct NativeStartGamePlanV1 {
     std::int32_t saved_spawn_flag_row_to_clear = -1;
     bool resume = false;
     bool remotely_triggered = false;
+    // Raw NativeStartGame arguments to Application::LoadLevel; the menu path
+    // passes zero for both. Application's later local seed choice is separate.
     std::uint32_t seed = 0;
     std::uint32_t synchronized_seed = 0;
 };
+
+// Application::LoadLevel's local path selects the campaign seed after
+// NativeStartGame. Both Random channels receive it; Level::_LoadProcess chooses
+// the channel consumed by the current mode. Remote-triggered loads are separate.
+struct NativeApplicationLoadSeedV1 {
+    std::uint32_t ordinary_seed = 0;
+    std::uint32_t synchronized_seed = 0;
+};
+
+NativeApplicationLoadSeedV1 resolve_application_load_seed_v1(
+    std::uint32_t saved_seed, bool dont_use_player_seed,
+    std::uint32_t real_time_seed) noexcept;
 
 // Resolve the bounded offline/host/client argument selection recovered from
 // NativeStartGame (0x43e0d0) before Application::LoadLevel (0x32bdc8).

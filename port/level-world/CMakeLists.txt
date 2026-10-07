@@ -19,7 +19,7 @@ if(NOT TARGET dh2_box2d_201)
 endif()
 add_library(dh2_level_world SHARED world.cpp objects.cpp navigation.cpp navigation_search.cpp navigation_world.cpp navigation_path.cpp navigation_motion.cpp navigation_objects.cpp navigation_avoidance.cpp navigation_producers.cpp navigation_heading.cpp navigation_controller.cpp physical_controls.cpp body_transform.cpp subobjects_update.cpp controller_physical.cpp character_body_config.cpp collision.cpp octree.cpp selector.cpp floor_source.cpp floors.cpp)
 target_sources(dh2_level_world PRIVATE ../floor-types/floor_types.cpp)
-target_sources(dh2_level_world PRIVATE source_level_layout.cpp ../world-data/world.cpp ../world-data/source_layout_adapter.cpp)
+target_sources(dh2_level_world PRIVATE source_level_layout.cpp source_handle_ledger_v1.cpp ../world-data/world.cpp ../world-data/source_layout_adapter.cpp)
 if(TARGET dh2_scene_materials)
  # The Android renderer uses the source Module root path to build real
  # per-module Crypt bounds. Keep the portable kernels in the shared world
@@ -55,8 +55,9 @@ target_sources(dh2_level_world PRIVATE character_ai_frame.cpp)
 # candidate ownership and full AIS lifecycle must still be connected by the
 # owning game runtime. Reuse this target's existing Adam Lua core exactly once.
 # The portable Crypt generation, serialization, DACT and SpawnPoint kernels
-# below are likewise ABI-selected; NativeStartGame still uses the fixed layout
-# until its module asset/object activation path is connected.
+# below are selected into this ABI. NativeStartGame now generates row-23 DWLD,
+# SPWN and supported direct-Monster DACT; source Module/RoomZone activation
+# and the remaining ObjectManager lifecycle are still open.
 target_sources(dh2_level_world PRIVATE
  character_aggro_delay.cpp character_ai_turn.cpp
  character_aggro_target_search.cpp character_aggro_candidate_events.cpp
@@ -64,9 +65,13 @@ target_sources(dh2_level_world PRIVATE
  character_ai_set_target.cpp character_ai_relations.cpp character_ai_in_combat.cpp
  character_aggro_acquisition_prefix.cpp character_ai_sight.cpp ghost_ai_session.cpp character_monster_retarget.cpp
  source_random_lifecycle_v1.cpp crypt_room_zone_owner_v1.cpp
- object_manager_runtime_owner_v1.cpp crypt_room_zone_manager_bridge_v1.cpp
- crypt_generated_spawnpoints_v1.cpp
+ object_manager_runtime_owner_v1.cpp object_manager_init_post_v1.cpp
+ crypt_room_zone_manager_bridge_v1.cpp
+ crypt_generated_spawnpoints_v1.cpp crypt_generated_source_dact_v1.cpp
+ crypt_generated_mvp_v1.cpp
  ../random-level/native_rule_plan_v1.cpp
+ ../random-level/crypt_module_catalog_v1.cpp
+ ../random-level/crypt_level_generator_v1.cpp
  ../random-level/crypt_mgx_connectivity_v1.cpp
  ../random-level/crypt_mgx_placement_v1.cpp
  ../random-level/crypt_candidate_selection_v1.cpp
@@ -184,6 +189,26 @@ target_link_libraries(dh2_level_world PUBLIC dh2_engine_skinning dh2_game_data d
 if(ANDROID)
  target_link_options(dh2_level_world PRIVATE -Wl,-z,max-page-size=16384 -Wl,--no-undefined)
 else()
+ if(NOT TARGET dh2_random_level)
+  add_subdirectory(../random-level "${CMAKE_CURRENT_BINARY_DIR}/random-level")
+ endif()
+ add_executable(source_handle_ledger_v1_audit
+  tests/source_handle_ledger_v1.cpp source_handle_ledger_v1.cpp
+  crypt_generated_source_dact_v1.cpp crypt_generated_mvp_v1.cpp
+  ../random-level/crypt_generated_dact_v1.cpp
+  ../world-data/world.cpp ../game-data/data.cpp)
+ target_link_libraries(source_handle_ledger_v1_audit PRIVATE dh2_random_level dh2_game_data)
+ target_compile_features(source_handle_ledger_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(source_handle_ledger_v1_audit PRIVATE -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+ add_executable(object_manager_runtime_owner_v1_audit
+  tests/object_manager_runtime_owner_v1.cpp object_manager_runtime_owner_v1.cpp)
+ target_compile_features(object_manager_runtime_owner_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(object_manager_runtime_owner_v1_audit PRIVATE -UNDEBUG -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+ add_executable(object_manager_init_post_v1_audit
+  tests/object_manager_init_post_v1.cpp object_manager_init_post_v1.cpp
+  object_manager_runtime_owner_v1.cpp)
+ target_compile_features(object_manager_init_post_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(object_manager_init_post_v1_audit PRIVATE -UNDEBUG -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
  add_executable(source_spawnpoints_adapter_audit
   tests/source_spawnpoints_adapter.cpp ../world-data/world.cpp ../world-data/source_layout_adapter.cpp)
  target_link_libraries(source_spawnpoints_adapter_audit PRIVATE dh2_game_data)

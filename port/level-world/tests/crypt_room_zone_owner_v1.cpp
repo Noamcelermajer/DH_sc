@@ -1,7 +1,9 @@
 #include "../crypt_room_zone_owner_v1.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -36,6 +38,32 @@ std::int32_t enrollment_call(void* context,
     *value = request->operation == dh2::room_zone_enrollment::Operation::is_zonable
         ? (request->object == fixture.non_zonable_actor ? 0 : fixture.zonable) : 0;
     return 0;
+}
+
+struct TransitionFixture {
+    std::vector<TransitionRequest> calls;
+    std::vector<std::uint32_t> visited_modules;
+};
+
+std::int32_t transition_call(void* context, const TransitionRequest* request,
+                             std::uint32_t* value) {
+    auto& fixture = *static_cast<TransitionFixture*>(context);
+    fixture.calls.push_back(*request);
+    if (request->operation == TransitionOperation::query_module_visited) {
+        if (!value) return 1;
+        *value = std::find(fixture.visited_modules.begin(),
+                           fixture.visited_modules.end(), request->module_index) !=
+                         fixture.visited_modules.end() ? 1u : 0u;
+    } else if (request->operation == TransitionOperation::set_module_visited) {
+        fixture.visited_modules.push_back(request->module_index);
+    }
+    return 0;
+}
+
+std::uint32_t float_word(float value) {
+    std::uint32_t word = 0;
+    std::memcpy(&word, &value, sizeof(word));
+    return word;
 }
 
 dh2::crypt_module_bounds_registry_v1::Entry entry(
@@ -210,6 +238,82 @@ void ordered_object_list_scan() {
     assert(fixture.calls.size() == prior_call_count);
 }
 
+void frustum_activation_and_transitions() {
+    auto source = crypt_bounds();
+    PositionFixture positions{};
+    const dh2::module_room_zone_bounds::Services position_services{
+        &positions, &set_position};
+    Owner owner;
+    ActivationResult activation{};
+    assert(owner.activate(source, &position_services, &activation) == Status::complete);
+
+    ZoneView first{};
+    assert(owner.zone_at(0, &first));
+    Address actor_room = 0;
+    std::uint8_t in_room_list = 0, in_zone = 0, zoning = 1, visible = 1;
+    const float x = 0.5f, y = 0.0f;
+    const Address visual = 0;
+    dh2::room_zone_enrollment::GameObject actor{
+        0xabcdu, &x, &y, &actor_room, &in_room_list, &in_zone,
+        &zoning, &visual, &visible};
+    EnrollmentFixture enrollment_fixture{};
+    const dh2::room_zone_enrollment::Services enrollment_services{
+        &enrollment_fixture, &enrollment_call};
+    EnrollmentResult enrollment{};
+    assert(owner.add_initial_object(17, &actor, &enrollment_services, &enrollment) ==
+           Status::complete);
+    assert(enrollment.enrollment.accepted);
+
+    TransitionFixture transitions{};
+    const UpdateServices update_services{&transitions, &transition_call};
+    std::uint32_t planes[6][4]{}; // zero distance is inside in the source test
+    const float player_position[3]{2.0f, 2.0f, 3.0f}; // inclusive XY boundary
+    UpdateResult update{};
+    assert(owner.update_frustum(planes, player_position, &update_services, &update) ==
+           Status::complete);
+    assert(update.zones_tested == 2 && update.zones_visible == 2);
+    assert(update.zones_activated == 2 && update.zones_deactivated == 0);
+    assert(update.zones_visited == 1);
+    assert(transitions.calls.size() == 6);
+    assert(transitions.calls[0].operation == TransitionOperation::zone_entered);
+    assert(transitions.calls[0].actor == actor.identity);
+    assert(transitions.calls[1].operation == TransitionOperation::add_room_object);
+    assert(transitions.calls[2].operation == TransitionOperation::query_module_visited);
+    assert(transitions.calls[3].operation == TransitionOperation::set_module_visited);
+    assert(transitions.calls[4].operation == TransitionOperation::add_room_object);
+    assert(transitions.calls[5].operation == TransitionOperation::query_module_visited);
+    assert(transitions.visited_modules.size() == 1 &&
+           transitions.visited_modules[0] == 17);
+
+    transitions.calls.clear();
+    assert(owner.mark_dirty(17) == Status::complete);
+    assert(owner.update_frustum(planes, player_position, &update_services, &update) ==
+           Status::complete);
+    assert(update.zones_visible == 2 && update.zones_activated == 1 &&
+           update.zones_deactivated == 0);
+    assert(transitions.calls.size() == 4);
+    assert(transitions.calls[0].operation == TransitionOperation::zone_entered);
+    assert(transitions.calls[0].actor == actor.identity);
+    assert(transitions.calls[1].operation == TransitionOperation::add_room_object);
+    assert(transitions.calls[1].module_index == 17);
+    assert(transitions.calls[2].operation == TransitionOperation::query_module_visited);
+    assert(transitions.calls[3].operation == TransitionOperation::query_module_visited);
+
+    transitions.calls.clear();
+    planes[0][3] = float_word(3.0f); // positive support-vertex distance is outside
+    assert(owner.update_frustum(planes, player_position, &update_services, &update) ==
+           Status::complete);
+    assert(update.zones_visible == 0 && update.zones_deactivated == 2);
+    assert(transitions.calls.size() == 3);
+    assert(transitions.calls[0].operation == TransitionOperation::zone_exited);
+    assert(transitions.calls[0].actor == actor.identity);
+    assert(transitions.calls[1].operation == TransitionOperation::remove_room_object);
+    assert(transitions.calls[2].operation == TransitionOperation::remove_room_object);
+    assert(owner.clear() == Status::members_present);
+    assert(owner.forget_source_unlinked_actor(17, actor.identity) == Status::complete);
+    assert(owner.clear() == Status::complete);
+}
+
 void failed_activation_is_transactional() {
     auto initial = crypt_bounds();
     initial.modules.resize(1);
@@ -241,6 +345,7 @@ int main() {
     activation_and_bounds();
     membership_and_lifetime();
     ordered_object_list_scan();
+    frustum_activation_and_transitions();
     failed_activation_is_transactional();
-    std::cout << "crypt_room_zone_owner_v1: PASS (stable zones, source ordering, membership, lifetime guard)\n";
+    std::cout << "crypt_room_zone_owner_v1: PASS (stable zones, source ordering, membership, frustum transitions, lifetime guard)\n";
 }

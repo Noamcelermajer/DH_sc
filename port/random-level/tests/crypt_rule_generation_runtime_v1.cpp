@@ -35,6 +35,9 @@ struct Mock {
   Block root_block{"root", {}, {}, {}};
   Block module_block{"module", {}, {}, {}};
   Block end_block{"end", {}, {}, {}};
+  Block next_block{"next", {}, {}, {}};
+  Block bad_path_block{"bad", {}, {}, {}};
+  Block good_path_block{"good", {}, {}, {}};
   Rule root_rule{100, {}, nullptr};
   Rule fail_rule{0, {}, nullptr};
   Rule success_rule{1, {}, nullptr};
@@ -44,6 +47,10 @@ struct Mock {
   std::vector<int> destroyed;
   std::vector<int> unspawned;
   std::vector<int> neighbor_rollbacks;
+  std::vector<std::string> path_direction_blocks;
+  std::vector<std::string> spawned_blocks;
+  bool child_assignments_are_default = true;
+  CryptDirectionKeyV1 opposite_direction = 7;
   CryptRuleGenerationCallbacksV1* execution_callbacks = nullptr;
   CryptRuleGenerationResultV1 generation_result;
   std::uint32_t rng_state_after = 0;
@@ -84,38 +91,51 @@ CryptRuleChildCreateStatusV1 create_child(
 }
 
 CryptRuleBlockLookupStatusV1 resolve_block(void* context,
-                                           const SourceListElemV1& elem,
+                                           const SourceRuleExitCandidateV1& source_candidate,
                                            const void** block) {
   auto& mock = *static_cast<Mock*>(context);
-  if (elem.name == mock.module_block.name) {
-    *block = &mock.module_block;
-    return CryptRuleBlockLookupStatusV1::found;
-  }
-  if (elem.name == mock.end_block.name) {
-    *block = &mock.end_block;
-    return CryptRuleBlockLookupStatusV1::found;
+  const auto& elem = source_candidate.elem;
+  const std::vector<const Block*> blocks = {
+      &mock.module_block, &mock.end_block, &mock.next_block,
+      &mock.bad_path_block, &mock.good_path_block};
+  for (const Block* candidate : blocks) {
+    if (elem.name == candidate->name && elem.gameplay.empty() &&
+        elem.visual.empty()) {
+      *block = candidate;
+      return CryptRuleBlockLookupStatusV1::found;
+    }
   }
   return CryptRuleBlockLookupStatusV1::missing;
 }
 
 CryptRuleCallbackStatusV1 candidate_exits(
-    void*, const CryptRuleExecutionFrameV1&, const void* block,
+    void* context, const CryptRuleExecutionFrameV1& child,
     std::size_t, std::vector<SourceRuleExitCandidateV1>& exits) {
-  exits = static_cast<const Block*>(block)->one_step_candidates;
+  auto& mock = *static_cast<Mock*>(context);
+  if (!child.assigned_elem.name.empty() ||
+      !child.assigned_elem.gameplay.empty() ||
+      !child.assigned_elem.visual.empty() || child.assigned_elem.chances != 100) {
+    mock.child_assignments_are_default = false;
+  }
+  const auto* tile = static_cast<const Tile*>(child.tile);
+  exits = tile->block->one_step_candidates;
   return CryptRuleCallbackStatusV1::ready;
 }
 
 CryptRuleCallbackStatusV1 opposite_anchor_direction(
-    void*, const CryptRuleExecutionFrameV1&, std::size_t,
+    void* context, const CryptRuleExecutionFrameV1&, std::size_t,
     CryptDirectionKeyV1& opposite_direction) {
-  opposite_direction = 7;
+  opposite_direction = static_cast<Mock*>(context)->opposite_direction;
   return CryptRuleCallbackStatusV1::ready;
 }
 
 CryptRuleCallbackStatusV1 module_exit_directions(
-    void*, const void* block,
+    void* context, const void* block,
     std::vector<CryptDirectionKeyV1>& directions) {
-  directions = static_cast<const Block*>(block)->directions;
+  auto& mock = *static_cast<Mock*>(context);
+  const auto* candidate = static_cast<const Block*>(block);
+  mock.path_direction_blocks.push_back(candidate->name);
+  directions = candidate->directions;
   return CryptRuleCallbackStatusV1::ready;
 }
 
@@ -127,6 +147,7 @@ CryptRuleSpawnStatusV1 try_spawn(
   auto tile = std::make_unique<Tile>();
   tile->id = static_cast<int>(mock.tiles.size() + 1);
   tile->block = static_cast<const Block*>(block);
+  mock.spawned_blocks.push_back(tile->block->name);
   if (!mock.map.try_place(tile.get(), 1, 0, 1, 1)) {
     return CryptRuleSpawnStatusV1::rejected;
   }
@@ -216,6 +237,8 @@ int main() {
   Mock mock;
 
   mock.root_block.step_exits = {make_exit(0, "module")};
+  mock.root_block.one_step_candidates = {
+      make_exit(9, "forbidden_start_room"), make_exit(0, "module")};
   mock.module_block.step_exits = {make_exit(0, "module"),
                                   make_exit(1, "end")};
   mock.module_block.one_step_candidates = {
@@ -285,10 +308,12 @@ int main() {
                    mock.neighbor_rollbacks[1] == 0,
                "row cleanup follows reverse destruction and removes neighbors",
                checks);
-  ok &= expect(mock.generation_result.one_step_candidates_tried == 2 &&
+  ok &= expect(mock.generation_result.one_step_candidates_tried == 3 &&
                    mock.generation_result.spawned_tiles == 2,
-               "common _start filtering skips the forbidden candidate",
+               "derived candidates are filtered before per-candidate spawn",
                checks);
+  ok &= expect(mock.child_assignments_are_default,
+               "Step assigns default ListElems to child rules", checks);
   ok &= expect(mock.map.peek(0, 0) == mock.tiles[0].get() &&
                    mock.map.peek(1, 0) == mock.tiles.back().get(),
                "failed placement is removed and successful MGX cells remain",
@@ -302,11 +327,16 @@ int main() {
 
   Mock path_mock;
   path_mock.root_block.step_exits = {make_exit(0, "module")};
-  path_mock.module_block.one_step_candidates = {make_exit(0, "next")};
-  path_mock.module_block.directions = {1};
+  path_mock.root_block.one_step_candidates = {make_exit(0, "bad"),
+                                               make_exit(0, "good")};
+  path_mock.bad_path_block.directions = {7, 8};
+  path_mock.good_path_block.directions = {8, 9};
+  path_mock.good_path_block.step_exits = {make_exit(0, "good_out")};
+  path_mock.opposite_direction = 8;
   CryptPathRuntimeV1 path_state;
-  path_state.chosen_length = 1;
-  path_state.dont_go_back = false;
+  path_state.chosen_length = 4;
+  path_state.current_step = 1;
+  path_state.direction = 7;
   Rule path_rule{3, {}, &path_state};
   path_mock.root_rule.children = {&path_rule};
   auto path_root = std::make_unique<Tile>();
@@ -323,15 +353,70 @@ int main() {
   path_root_frame.rule = &path_mock.root_rule;
   path_root_frame.tile = path_root_handle;
   path_root_frame.child_rule_count = 1;
-  RandomGeneratorV1 path_random(7);
+  // Account for Step's exit/row shuffles, then select a seed that visits the
+  // MGX containing the saved direction first. It must be rejected before the
+  // second candidate's distinct MGX is accepted.
+  std::uint32_t path_seed = 0;
+  for (;; ++path_seed) {
+    auto catalog = enumerate_source_rule_distributions_v1(1, 1);
+    RandomGeneratorV1 probe(path_seed);
+    const auto prepared = prepare_source_rule_step_candidates_v1(
+        {make_exit(0, "module")}, 1, catalog, probe);
+    if (prepared.status != SourceRuleStepCandidateStatusV1::ready) return 2;
+    auto candidates = path_mock.root_block.one_step_candidates;
+    if (!filter_and_shuffle_rule_impl_exits_v1(candidates, probe)) return 2;
+    if (candidates.size() == 2 && candidates.front().elem.name == "bad") break;
+    if (path_seed == UINT32_MAX) return 2;
+  }
+  RandomGeneratorV1 path_random(path_seed);
   const auto path_result = execute_crypt_rule_step_v1(
       path_root_frame, path_callbacks, path_random);
   ok &= expect(path_result.status == CryptRuleGenerationStatusV1::success &&
-                   path_state.current_step == 0 && path_state.direction ==
-                       kCryptNoDirectionV1,
-               "PathRuntime accepts a one-exit terminal without recursing",
+                   path_state.current_step == 2 && path_state.direction == 7,
+               "Path checks each candidate MGX and recurses after a valid one",
                checks);
-  ok &= expect(path_mock.map.peek(1, 0) != nullptr,
+  ok &= expect(path_mock.path_direction_blocks ==
+                   std::vector<std::string>({"bad", "good"}) &&
+                   path_mock.spawned_blocks == std::vector<std::string>({"good"}),
+               "Path rejects the first MGX's saved-direction exit and checks the next",
+               checks);
+  ok &= expect(path_mock.map.peek(1, 0) != nullptr &&
+                   static_cast<const Tile*>(path_mock.map.peek(1, 0))->block ==
+                       &path_mock.good_path_block,
+               "candidate-specific Path placement leaves the accepted MGX in occupancy",
+               checks);
+
+  Mock terminal_mock;
+  terminal_mock.root_block.step_exits = {make_exit(0, "module")};
+  terminal_mock.root_block.one_step_candidates = {make_exit(0, "module")};
+  terminal_mock.module_block.directions = {1};
+  CryptPathRuntimeV1 terminal_state;
+  terminal_state.chosen_length = 1;
+  terminal_state.dont_go_back = false;
+  Rule terminal_rule{4, {}, &terminal_state};
+  terminal_mock.root_rule.children = {&terminal_rule};
+  auto terminal_root = std::make_unique<Tile>();
+  terminal_root->id = 0;
+  terminal_root->block = &terminal_mock.root_block;
+  const Tile* terminal_root_handle = terminal_root.get();
+  terminal_mock.tiles.push_back(std::move(terminal_root));
+  ok &= expect(terminal_mock.map.try_place(terminal_root_handle, 0, 0, 1, 1),
+               "terminal Path fixture reserves its root tile", checks);
+  CryptRuleGenerationCallbacksV1 terminal_callbacks = callbacks;
+  terminal_callbacks.context = &terminal_mock;
+  terminal_mock.execution_callbacks = &terminal_callbacks;
+  CryptRuleExecutionFrameV1 terminal_root_frame;
+  terminal_root_frame.rule = &terminal_mock.root_rule;
+  terminal_root_frame.tile = terminal_root_handle;
+  terminal_root_frame.child_rule_count = 1;
+  RandomGeneratorV1 terminal_random(7);
+  const auto terminal_result = execute_crypt_rule_step_v1(
+      terminal_root_frame, terminal_callbacks, terminal_random);
+  ok &= expect(terminal_result.status == CryptRuleGenerationStatusV1::success &&
+                   terminal_state.current_step == 0 &&
+                   terminal_state.direction == kCryptNoDirectionV1,
+               "Path one-exit module terminates without recursing", checks);
+  ok &= expect(terminal_mock.map.peek(1, 0) != nullptr,
                "terminal Path placement remains in MGX occupancy", checks);
 
   if (!ok) return 1;

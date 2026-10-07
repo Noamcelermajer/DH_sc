@@ -56,6 +56,37 @@ int main(int argc,char** argv){try{
  require(no_level.save().class_id()==id&&no_level.save().character()==0);
  require(no_level.load(2,dir,table,difficulty,error));
  require(no_level.save().level()==1&&no_level.receipt().file_opens==1);
+ // NativeStartGame's optional numeric SG_Save and mandatory LUSP SG_Save
+ // reuse this same loaded Save/+8 index and retain each prior primary as .bak.
+ const auto start_dir=dir/"native-start-save";std::filesystem::create_directories(start_dir);
+ const auto start_primary=start_dir/"dh2_006.savegame";
+ const auto start_original=campaign(*knight,prop);write(start_primary,start_original);
+ profile::Metadata start_save;
+ require(start_save.load(6,start_dir,table,difficulty,error));
+ const auto start_save_id=start_save.save_identity(),start_profile_id=start_save.profile_identity();
+ require(start_save.save().use_spawn_points()==std::array<std::uint8_t,3>{{1,0,1}});
+ difficulty=2;
+ const auto numeric_saved=start_save.save_numeric_request(table,difficulty,error);
+ if(!numeric_saved)std::cerr<<"NativeStartGame numeric save: "<<error<<'\n';
+ require(numeric_saved);
+ require(start_save.save_identity()==start_save_id&&start_save.profile_identity()==start_profile_id);
+ const auto after_numeric_save=read(start_primary);
+ require(read(start_primary.string()+".bak")==start_original);
+ const auto start_saved=start_save.clear_spawn_point_and_save(2,table,difficulty,error);
+ if(!start_saved)std::cerr<<"NativeStartGame save: "<<error<<'\n';
+ require(start_saved);
+ require(start_save.save_identity()==start_save_id&&start_save.profile_identity()==start_profile_id);
+ require(start_save.save().use_spawn_points()==std::array<std::uint8_t,3>{{1,0,0}});
+ require(read(start_primary.string()+".bak")==after_numeric_save);
+ PlayerProfileIndexV1 start_index;const auto start_updated=read(start_primary);
+ require(start_index.load(bytes(start_updated),error));
+ const auto updated_spawn=start_index.borrow().payload("LUSP");
+ require(updated_spawn.size==3&&updated_spawn.data[0]==1&&updated_spawn.data[1]==0&&updated_spawn.data[2]==0);
+ const auto kept_properties=start_index.borrow().payload("PROP");
+ require(kept_properties.size==prop.size()&&std::equal(prop.begin(),prop.end(),kept_properties.data));
+ profile::Metadata start_reload;
+ require(start_reload.load(6,start_dir,table,difficulty,error));
+ require(start_reload.save().use_spawn_points()==std::array<std::uint8_t,3>{{1,0,0}});
  PlayerSavegameV1 save;const std::uintptr_t character=UINT64_C(0x12345678000000a1);save.set_character(character);save.set_slot(0);
  PlayerSaveProfileV1 canonical;profile::Transport transport(save,canonical);require(transport.bind({dir,&table,&difficulty,{}},error));
  auto* live_save=&save;auto* loader=&transport.loader();std::int16_t class_cache=-1;

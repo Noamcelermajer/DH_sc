@@ -1,4 +1,4 @@
-"""Tap the original menu/name/class/Start movie into the development Crypt.
+"""Tap the original menu/name/class/Start movie into SWAMP or debug Crypt.
 
 API37/16KiB emulator only. Campaign profiles stay on the device: originals
 are moved into a private transaction directory before launching, synthetic
@@ -42,9 +42,9 @@ SAFE_EVENTS = re.compile(r'(?:Surface resized to |Owned menu (?:renderer selecte
                          r'Original class (?:selection updated|scene connected|scene animation) \||'
                          r'Original front(?: screen loaded|/HUD screen submitted) \||'
                          r'Native menu (?:profile created|slot assigned|preview selection) \||'
-                         r'Authored NativeStartGame request queued \||Development Crypt start requested \||'
+                         r'Authored NativeStartGame request queued \||'
                          r'Native gameplay (?:class|property cache) \||'
-                         r'Menu game start \| slot \d+ \| Crypt \||'
+                         r'Menu game start \| slot \d+ \| SWAMP \||'
                          r'Connected player HUD submitted \||'
                           r'Native Player AIS (?:initialized|retained) \||'
                           r'Native Player Save masks 2\+4 \||Native Character owner bound \||'
@@ -172,7 +172,7 @@ def operation_context(command):
 
 
 def button_rectangle(stage, bounds, surface):
-    if stage == 'crypt':
+    if stage == 'gameplay':
         x0, y0, _, _ = bounds
         width, height = surface
         cx, cy = x0 + width * .91, y0 + height * .87
@@ -186,7 +186,7 @@ def button_rectangle(stage, bounds, surface):
             round(cx + w * 35 / 480), round(cy + h * 14 / 320))
 
 
-def verify_start(text, slot, character_class, preset, animation_table):
+def verify_start(text, slot, character_class, preset, animation_table, debug_level_row=None):
     """Require a fresh actual assignment immediately before this launch."""
     starts = list(START.finditer(text))
     assert len(starts) == 1 and tuple(map(int, starts[0].groups())) == (slot, 1, 0), 'Expected one authored Normal Start request'
@@ -210,7 +210,13 @@ def verify_start(text, slot, character_class, preset, animation_table):
     assert tuple(map(int, caches[-1][2:])) == (max_hp, max_mp), 'Live HUD maxima differ from class property cache'
     assert 0 < frames[0] < 100 and 0 < frames[1] < 100 and 0 <= frames[2] < 101, 'Original HUD health/mana/XP timelines invalid'
     assert frames == source_hud_frames(hp, max_hp, mp, max_mp, xp, next_xp), 'Original HUD frames differ from live source words'
-    assert 'Menu game start | slot %d | Crypt |' % slot in text, 'Actual Crypt start receipt missing'
+    if debug_level_row == 23:
+        assert 'Transient debug LevelList override | row 23 | campaign save unchanged' in text, 'Transient Crypt override missing'
+        assert 'NativeStartGame plan | slot %d | row 23 | GOTHICUS_CRYPT_01 | source file 007_crypt_01.rule.xml' % slot in text, 'Source Crypt row 23 plan missing'
+        assert 'Menu game start | slot %d | Crypt |' % slot in text, 'Actual generated Crypt start receipt missing'
+    else:
+        assert 'NativeStartGame plan | slot %d | row 41 | SWAMP | source file 001_swamp.mlx' % slot in text, 'Source-default row 41 plan missing'
+        assert 'Menu game start | slot %d | SWAMP |' % slot in text, 'Actual source-default SWAMP start receipt missing'
     records = list(FULL_PLAYER.finditer(text))
     assert records and records[-1].start() > starts[0].start(), 'Fresh full PlayerInfo receipt missing'
     record = tuple(map(int, records[-1].groups()))
@@ -347,6 +353,8 @@ def main():
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--class-index', type=int, choices=(0, 1, 2),
                         help='Run one class to resolve a remaining regression risk.')
+    parser.add_argument('--debug-level-row', type=int, choices=(23,),
+                        help='Launch generated Crypt row 23 without changing campaign level rows.')
     args = parser.parse_args()
     selected_classes = tuple(row for row in CLASSES if args.class_index is None or row[0] == args.class_index)
     assert args.serial.startswith('emulator-'), 'Emulator only'
@@ -356,7 +364,11 @@ def main():
     preserve, restore = preservation_scripts(transaction)
     report = {'validation': 'FAIL', 'apk_sha256': hashlib.sha256(args.apk.read_bytes()).hexdigest(),
               'serial': args.serial, 'libraries': inspect_apk(args.apk),
-              'scope': 'Actual original menu/name/class/Start Single Player taps, selected source profile creation/Assign, development Crypt continuation, native Character owner publication with an empty canonical V4 inventory over real LootTable resources, mask 4 section requests on the metadata-only profile, connected source HUD, occupied-slot reopen and Home/resume. Source _AddCharacter parity, mask-4 payload restoration, GEAR inventory contents, full NativeStartGame/campaign/InitPost/gameplay controls remain open.',
+              'scope': ('Actual original menu/name/class/Start taps, source profile creation/Assign, ' +
+                        ('transient row 23 generated Crypt' if args.debug_level_row == 23 else 'source-default row 41 SWAMP') +
+                        ' continuation, native Character owner, connected HUD, occupied-slot reopen and Home/resume. ' +
+                        'Source _AddCharacter parity, mask-4 payload restoration, GEAR contents, full campaign/InitPost and combat remain open.'),
+              'debug_level_row': args.debug_level_row,
               'private_transaction_directory': 'files/' + transaction,
               'personal_saves_pulled': False, 'cases': [], 'screenshots': []}
     events, pid, since, last_text = [], '', '', ''
@@ -428,7 +440,10 @@ def main():
         # API37's synchronous Activity launch wait can hang after the app has
         # rendered. Prove startup from a fresh PID, actual submitted movie and
         # both window/input focus below instead of depending on that wait.
-        reply = adb('shell', 'am', 'start', '-n', PACKAGE + '/.MainActivity')
+        command = ['shell', 'am', 'start', '-n', PACKAGE + '/.MainActivity']
+        if args.debug_level_row is not None:
+            command += ['--ei', 'debug_level_row', str(args.debug_level_row)]
+        reply = adb(*command)
         assert 'Starting: Intent' in reply and 'Error:' not in reply and 'Activity not started' not in reply, 'Fresh launcher start failed'
         deadline = time.monotonic() + 25
         pid, candidate, stable = '', '', 0
@@ -474,7 +489,7 @@ def main():
         return raw, Image.open(io.BytesIO(raw)).convert('RGB')
 
     def visual_ready(stage):
-        # Wait for the next actual button to settle. In Crypt this is the
+        # Wait for the next actual button to settle. In gameplay this is the
         # opaque Android Attack overlay, so Android's resume animation must
         # settle too. Never send a timed input burst while it is changing.
         bounds, surface = viewport()
@@ -525,17 +540,21 @@ def main():
     def start(slot, character_class, preset, animation_table):
         before = len(logs())
         tap('single_player')
-        text = wait(lambda t: ('Menu game start | slot %d | Crypt |' % slot in t[before:] and
-                               HUD.search(t[before:]) is not None), 'Crypt and connected player HUD', 70)
+        row = args.debug_level_row or 41
+        name, source_file, report_name = (("GOTHICUS_CRYPT_01", "007_crypt_01.rule.xml", "Crypt")
+                                          if row == 23 else ("SWAMP", "001_swamp.mlx", "SWAMP"))
+        text = wait(lambda t: ('NativeStartGame plan | slot %d | row %d | %s | source file %s' % (slot, row, name, source_file) in t[before:] and
+                               'Menu game start | slot %d | %s |' % (slot, report_name) in t[before:] and
+                               HUD.search(t[before:]) is not None), 'source-default SWAMP and connected player HUD', 70)
         fresh_seed_events = SOURCE_RNG_GSINIT.findall(text[before:])
         assert len(fresh_seed_events) == 1 and fresh_seed_events[0][1] == '0', 'Fresh game must apply exactly one source GSInit seed and clear sync seed'
         assert not SOURCE_RNG_UNLOAD.search(text[before:]), 'Fresh game start must not apply Level::Unload seed'
-        return verify_start(text[before:], slot, character_class, preset, animation_table)
+        return verify_start(text[before:], slot, character_class, preset, animation_table, args.debug_level_row)
 
     def back_main():
-        wait_focus('Back from Crypt')
-        visual_ready('crypt')
-        wait_focus('Back from settled Crypt')
+        wait_focus('Back from gameplay')
+        visual_ready('gameplay')
+        wait_focus('Back from settled gameplay')
         offset = len(logs())
         adb('shell', 'input', '-d', '0', 'keyevent', 'KEYCODE_BACK')
         text = wait(lambda t: 'Original front/HUD screen submitted | screen main' in t[offset:], 'normal Back return to menu')
@@ -548,7 +567,7 @@ def main():
     def gameplay_controls():
         # Operate the actual visible Android controls. This checks delivered
         # movement and attack input, not complete combat or authored skill UI.
-        wait_focus('Crypt controls')
+        wait_focus('Gameplay controls')
         adb('shell', 'uiautomator', 'dump', '/sdcard/dh2-menu-controls-window.xml')
         nodes = list(ET.fromstring(adb('shell', 'cat', '/sdcard/dh2-menu-controls-window.xml')).iter('node'))
         def bounds(description):
@@ -568,9 +587,9 @@ def main():
         text = wait(lambda t: 'Player input |' in t[prior:], 'visible attack button delivery')
         response = re.findall(r'Player input \| ([^\r\n]+)', text[prior:])[-1]
         assert response in ('Attacking', 'Walk closer to an enemy', 'Attack is cooling down', 'Attack is already in progress'), 'Attack control rejected available player'
-        report['development_controls'] = {'physical_movement_steps': int(position[3]), 'blocked_steps': int(position[4]),
+        report['gameplay_controls'] = {'physical_movement_steps': int(position[3]), 'blocked_steps': int(position[4]),
             'position': list(map(float, position[:3])), 'attack_response': response, 'full_combat_verified': False}
-        screenshot('0-crypt-after-controls')
+        screenshot('0-gameplay-after-controls')
 
     failure = None
     try:
@@ -626,7 +645,7 @@ def main():
             visual_ready('start')
             screenshot('%d-start-new' % index)
             created = start(slot, character_class, preset, animation_table)
-            screenshot('%d-crypt-new' % index)
+            screenshot('%d-gameplay-new' % index)
             if index == 0:
                 gameplay_controls()
             back_main()
@@ -641,9 +660,9 @@ def main():
             screenshot('%d-start-occupied' % index)
             assert not re.search(r'Native menu profile created \|', logs()), 'Occupied slot was recreated'
             reopened = start(slot, character_class, preset, animation_table)
-            screenshot('%d-crypt-occupied' % index)
+            screenshot('%d-gameplay-occupied' % index)
             home_pid = pid
-            wait_focus('Home from Crypt')
+            wait_focus('Home from gameplay')
             adb('shell', 'input', '-d', '0', 'keyevent', 'KEYCODE_HOME')
             deadline = time.monotonic() + 15
             while True:
@@ -675,7 +694,7 @@ def main():
                 reopened['source_save_masks_2_4']['character'], 1, 1, 1,
                 reopened['source_save_masks_2_4']['profile_identity'],
                 reopened['source_save_masks_2_4']['mask4_transport_requests']), 'Home/resume must retain the source Save association without replaying SG_Load(2) or SG_Load(4)'
-            screenshot('%d-crypt-resumed' % index)
+            screenshot('%d-gameplay-resumed' % index)
             back_main()
             screenshot('%d-main-final' % index)
             report['cases'].append({'class_index': index, 'created': created, 'occupied_after_restart': reopened,

@@ -33,6 +33,25 @@ struct GameObject {
     std::uint8_t visible_80{1};
     std::uint8_t no_room_member_2f8{};
 
+    // Optional borrowed live fields. When supplied, zoning/enrollment views
+    // use these pointers instead of the value snapshot above. This lets a
+    // renderer-owned actor remain the single position/membership owner while
+    // the ObjectManager map preserves source key order and identity.
+    struct LiveFields {
+        float* world_x{};
+        float* world_y{};
+        Address* room_zone_2f4{};
+        std::uint8_t* in_room_list_2ef{};
+        std::uint8_t* zoning_enabled_2ee{};
+        std::uint8_t* in_zone_2f0{};
+        Address* visual_object_2d8{};
+        std::uint8_t* visible_80{};
+    } live_fields{};
+
+    void bind_live_fields(const LiveFields& fields) noexcept {
+        live_fields = fields;
+    }
+
     dh2::game_object_zoning_visibility::GameObject zoning_view() noexcept;
     dh2::room_zone_enrollment::GameObject enrollment_view() noexcept;
 
@@ -94,6 +113,29 @@ public:
     Status register_player_no_room(Address identity, bool* added) noexcept;
     Status remove_no_room_object(Address identity, bool* removed) noexcept;
 
+    // RoomZone::Activate/DeActivate manage ObjectManager's independent active
+    // room-object list (+0x80); this does not change RoomZone member lists.
+    // Source AddRoomObjects asserts on duplicates, then still appends; its
+    // DelRoomObjects counterpart removes every matching node.
+    Status add_room_object(Address identity, bool* added) noexcept;
+    Status remove_room_object(Address identity, bool* removed) noexcept;
+    bool room_object_at(std::size_t index, Address* identity) const noexcept;
+    std::size_t room_object_count() const noexcept { return room_objects_.size(); }
+
+    // Clear this bounded projection after the native ObjectManager::Flush
+    // owner has retired native objects. This does not perform source virtual
+    // destructors, Character-list pointer updates, queues/index cleanup, or
+    // orphan-render flushing. The flat active-room adapter also does not model
+    // the native +0x80 registry of list-group pointers or its +0x88 re-register
+    // behavior. Borrowed actor fields remain externally owned.
+    void reset_after_native_flush() noexcept;
+
+    void reset_visible_room_zone_count() noexcept { visible_room_zone_count_ = 0; }
+    void add_visible_room_zone() noexcept { ++visible_room_zone_count_; }
+    std::uint32_t visible_room_zone_count() const noexcept {
+        return visible_room_zone_count_;
+    }
+
     std::size_t object_count() const noexcept { return objects_.size(); }
     std::size_t no_room_count() const noexcept { return no_room_objects_.size(); }
     bool no_room_at(std::size_t index, Address* identity) const noexcept;
@@ -104,6 +146,8 @@ private:
     // Source AddNoRoomObject tail-inserts a GameObject*; RemoveNoRoomObject
     // removes the first equal pointer. Keep that list order independently.
     std::list<Address> no_room_objects_;
+    std::list<Address> room_objects_;
+    std::uint32_t visible_room_zone_count_{};
 };
 
 } // namespace dh2::object_manager_runtime_owner_v1

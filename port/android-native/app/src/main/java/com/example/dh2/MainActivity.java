@@ -36,6 +36,7 @@ public final class MainActivity extends Activity {
     private volatile int inspectionTimeMs=-1;
     private int metadataSlot=-1;
     private boolean inspectionMode;
+    private int debugLevelRow=-1;
     private FrontAudio frontAudio;
     private int menuGameplaySlot=-1;
     private volatile boolean attackDisplayPending;
@@ -46,6 +47,10 @@ public final class MainActivity extends Activity {
         enemyAi=state!=null?state.getBoolean("enemyAi",true):getIntent().getBooleanExtra("enemy_ai",true);
         inspectionTimeMs=state!=null?state.getInt("inspectionTimeMs",-1):getIntent().getIntExtra("time_ms",-1);
         menuGameplaySlot=state!=null?state.getInt("menuGameplaySlot",-1):-1;
+        boolean debugBuild=(getApplicationInfo().flags&ApplicationInfo.FLAG_DEBUGGABLE)!=0;
+        debugLevelRow=debugBuild?getIntent().getIntExtra("debug_level_row",-1):-1;
+        if(debugLevelRow!=-1&&debugLevelRow!=23){Log.w("DH2Native","Ignoring unsupported debug LevelList row "+debugLevelRow);debugLevelRow=-1;}
+        if(debugLevelRow==23)Log.i("DH2Native","Debug LevelList row override armed | row 23 | profile save unchanged");
         inspectionMode=getIntent().hasExtra("world")||getIntent().hasExtra("model")||getIntent().hasExtra("texture");
         if(!inspectionMode){setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION|View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);}
         if(Build.VERSION.SDK_INT>=33)getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,this::handleBack);
@@ -140,7 +145,7 @@ public final class MainActivity extends Activity {
                     gl.glClearColor(.08f,.09f,.11f,1);gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
                     if(pendingSurfaceLoad){pendingSurfaceLoad=false;surface.post(()->surface.queueEvent(()->{
                         if(menuGameplaySlot>=0&&assets[selected].startsWith("worlds/")){
-                            String start=NativeBridge.startMenuGame(menuGameplaySlot,getAssets());
+                            String start=startMenuGame(menuGameplaySlot);
                             if(isPlayableStart(start))acceptGameStart(menuGameplaySlot,start);
                             else{
                                 // A fresh process has no retained canonical PlayerInfo.
@@ -152,8 +157,8 @@ public final class MainActivity extends Activity {
                         else if(assets.length>0)loadSelected();else show("No bundled asset fixtures");
                     }));}return;
                 }
-                NativeBridge.draw();String audio=NativeBridge.consumeMenuAudio(),effect=NativeBridge.consumeMenuSound();if(!audio.isEmpty())runOnUiThread(()->frontAudio.control(audio));if(!effect.isEmpty())runOnUiThread(()->frontAudio.effect(effect));int startSlot=NativeBridge.consumeMenuLaunch();if(startSlot>=0){String start=NativeBridge.startMenuGame(startSlot,getAssets());acceptGameStart(startSlot,start);}long now=android.os.SystemClock.uptimeMillis();if(now-lastVitals>=200&&loadedAsset!=null&&loadedAsset.startsWith("worlds/")){lastVitals=now;int[] values=NativeBridge.playerVitals();if(attackDisplayPending&&values[6]!=5){attackDisplayPending=false;show(baseReport+"\n"+(values[4]!=0?"Defeated":"Attack finished."));}runOnUiThread(()->{vitals.setText(String.format(java.util.Locale.ROOT,"HP %.1f / %.1f   MP %.1f / %.1f%s",values[0]/256f,values[1]/256f,values[2]/256f,values[3]/256f,values[4]!=0?"   Defeated":""));vitals.setTextColor(values[4]!=0||values[5]==0?Color.rgb(255,150,150):Color.WHITE);});}}
-        });
+                NativeBridge.draw();String audio=NativeBridge.consumeMenuAudio(),effect=NativeBridge.consumeMenuSound();if(!audio.isEmpty())runOnUiThread(()->frontAudio.control(audio));if(!effect.isEmpty())runOnUiThread(()->frontAudio.effect(effect));int startSlot=NativeBridge.consumeMenuLaunch();if(startSlot>=0){String start=startMenuGame(startSlot);acceptGameStart(startSlot,start);}long now=android.os.SystemClock.uptimeMillis();if(now-lastVitals>=200&&loadedAsset!=null&&loadedAsset.startsWith("worlds/")){lastVitals=now;int[] values=NativeBridge.playerVitals();if(attackDisplayPending&&values[6]!=5){attackDisplayPending=false;show(baseReport+"\n"+(values[4]!=0?"Defeated":"Attack finished."));}runOnUiThread(()->{vitals.setText(String.format(java.util.Locale.ROOT,"HP %.1f / %.1f   MP %.1f / %.1f%s",values[0]/256f,values[1]/256f,values[2]/256f,values[3]/256f,values[4]!=0?"   Defeated":""));vitals.setTextColor(values[4]!=0||values[5]==0?Color.rgb(255,150,150):Color.WHITE);});}}
+    });
         surface.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         FrameLayout viewport=new FrameLayout(this);viewport.addView(surface,new FrameLayout.LayoutParams(-1,-1));
         vitals=new TextView(this);vitals.setContentDescription("Player health and mana");vitals.setTextSize(14);vitals.setTextColor(Color.WHITE);vitals.setPadding(12,8,12,8);vitals.setBackgroundColor(Color.argb(160,15,20,25));vitals.setVisibility(View.GONE);viewport.addView(vitals,new FrameLayout.LayoutParams(-2,-2,Gravity.TOP|Gravity.LEFT));
@@ -258,6 +263,7 @@ public final class MainActivity extends Activity {
         }
     }
     private void show(String text){runOnUiThread(()->status.setText(text));}
+    private String startMenuGame(int slot){return NativeBridge.startMenuGame(slot,getAssets(),debugLevelRow);}
     @Override protected void onNewIntent(Intent intent){
         if(intent.hasExtra("profile_slot")&&intent.getIntExtra("profile_slot",-1)!=metadataSlot){
             Log.i("DH2Native","Campaign metadata slot change rejected | requested "+intent.getIntExtra("profile_slot",-1)+" | active "+metadataSlot+" | relaunch required");
@@ -265,6 +271,11 @@ public final class MainActivity extends Activity {
             return;
         }
         super.onNewIntent(intent);setIntent(intent);
+        if(intent.hasExtra("debug_level_row")&&(getApplicationInfo().flags&ApplicationInfo.FLAG_DEBUGGABLE)!=0){
+            int requestedRow=intent.getIntExtra("debug_level_row",-1);
+            if(requestedRow==-1||requestedRow==23){debugLevelRow=requestedRow;if(requestedRow==23)Log.i("DH2Native","Debug LevelList row override armed | row 23 | profile save unchanged");}
+            else Log.w("DH2Native","Ignoring unsupported debug LevelList row "+requestedRow);
+        }
         if(intent.hasExtra("enemy_ai"))enemyAi=intent.getBooleanExtra("enemy_ai",true);
         if(intent.hasExtra("time_ms"))inspectionTimeMs=intent.getIntExtra("time_ms",-1);
         pendingActorCommand=true;

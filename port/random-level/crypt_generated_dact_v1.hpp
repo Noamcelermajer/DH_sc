@@ -28,7 +28,14 @@ enum class CryptGeneratedDactSkipReasonV1 : std::uint32_t {
   non_character,
   known_factory_template,
   conditional_object,
-  scripted_object
+  scripted_object,
+  object_manager_duplicate
+};
+
+struct CryptGeneratedDactRetainedSourceV1 {
+  std::uint32_t module_index = 0;
+  std::uint32_t source_record = 0;
+  std::string name;
 };
 
 struct CryptGeneratedDactSourceV1 {
@@ -76,6 +83,8 @@ CryptGeneratedDactStatusV1 crypt_compile_generated_dact_v1(
     const data::CharacterTable& characters,
     const data::Dictionary& models,
     CryptGeneratedDactV1& output,
-    CryptGeneratedDactDiagnosticV1* diagnostic = nullptr) noexcept;
+    CryptGeneratedDactDiagnosticV1* diagnostic = nullptr,
+    const std::vector<CryptGeneratedDactRetainedSourceV1>* retained_sources =
+        nullptr) noexcept;
 
 }  // namespace dh2::random_level

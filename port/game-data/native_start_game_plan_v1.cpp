@@ -10,6 +10,14 @@ bool valid_difficulty(std::int32_t value) noexcept {
 }
 }  // namespace
 
+NativeApplicationLoadSeedV1 resolve_application_load_seed_v1(
+    std::uint32_t saved_seed, bool dont_use_player_seed,
+    std::uint32_t real_time_seed) noexcept {
+    const auto selected = saved_seed != 0 && !dont_use_player_seed
+        ? saved_seed : real_time_seed;
+    return {selected, selected};
+}
+
 bool resolve_native_start_game_plan_v1(const LevelTables& levels,
     const NativeStartGameSaveViewV1& save, const NativeStartGameRequestV1& request,
     NativeStartGamePlanV1& output, std::string& error) {

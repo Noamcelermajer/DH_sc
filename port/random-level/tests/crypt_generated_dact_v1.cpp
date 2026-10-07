@@ -235,7 +235,7 @@ int main(int argc, char** argv) {
 
     random_level::CryptGeneratedDactV1 generated;
     random_level::CryptGeneratedDactDiagnosticV1 diagnostic{};
-    const auto status = random_level::crypt_compile_generated_dact_v1(
+    auto status = random_level::crypt_compile_generated_dact_v1(
         source, characters, models, generated, &diagnostic);
     require(status == random_level::CryptGeneratedDactStatusV1::ok,
             diagnostic.message);
@@ -255,6 +255,29 @@ int main(int argc, char** argv) {
                 word(generated.bytes.data() + 4) == 2 &&
                 word(generated.bytes.data() + 8) == 13,
             "Generated DACT v2 header/size rejected");
+
+    std::vector<random_level::CryptGeneratedDactRetainedSourceV1> retained;
+    for (std::uint32_t i = 0; i < source.entity_count; ++i) {
+      const auto& object = source.entities[i];
+      if (object.kind != world::RecordKind::mgp || !object.gametype ||
+          std::strcmp(object.gametype, "Character") != 0) continue;
+      if (object.module_index == 3 && object.source_record == 3) continue;
+      retained.push_back({object.module_index, object.source_record, object.name});
+    }
+    random_level::CryptGeneratedDactV1 retained_projection;
+    status = random_level::crypt_compile_generated_dact_v1(
+        source, characters, models, retained_projection, &diagnostic, &retained);
+    require(status == random_level::CryptGeneratedDactStatusV1::ok &&
+                retained_projection.source_order.size() == 12 &&
+                word(retained_projection.bytes.data() + 8) == 12 &&
+                has_skip(retained_projection, 3, 3,
+                    random_level::CryptGeneratedDactSkipReasonV1::object_manager_duplicate),
+            "ObjectManager-discarded Character remained in generated DACT");
+    require(std::none_of(retained_projection.source_order.begin(),
+                retained_projection.source_order.end(), [](const auto& row) {
+                  return row.module_index == 3 && row.source_record == 3;
+                }),
+            "Discarded Monster provenance remained in DACT order");
 
     constexpr std::array<std::pair<unsigned, unsigned>, 13> expected_source = {{
         {0, 4}, {0, 5}, {0, 9}, {0, 10}, {0, 11}, {0, 12},
@@ -289,7 +312,7 @@ int main(int argc, char** argv) {
 
     test_fail_closed(source, characters, models);
     dh2_world_free(&source);
-    std::cout << "generated Crypt DACT actor subset: 13/82 source MGP objects, byte-exact with fixed DACT; "
+    std::cout << "generated Crypt DACT actor subset: 13/82 source MGP objects, byte-exact with fixed DACT; source-retained filtering and "
                  "50 non-Character, 17 factory-template and 2 conditional rows deferred; guards pass\n";
     return 0;
   } catch (const std::exception& exception) {

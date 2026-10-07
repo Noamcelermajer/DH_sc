@@ -81,9 +81,17 @@ struct RuleNodeV1 {
   std::vector<RuleNodeV1> children;
 };
 
+struct CryptRulePropertyV1 {
+  std::string name;
+  std::string value;
+};
+
 struct CryptRuleDocumentV1 {
   std::string target;
   std::string folder;
+  // Root attributes other than target/folder that may override declared
+  // LevelConfig properties. Native PropertyMap ignores undeclared attributes.
+  std::vector<CryptRulePropertyV1> root_property_overrides;
   std::vector<CryptListV1> lists;
   RuleNodeV1 root;
 };

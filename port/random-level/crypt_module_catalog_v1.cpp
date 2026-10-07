@@ -20,6 +20,7 @@ constexpr std::size_t kMaxXmlAttributes = 64;
 
 struct ExactDirectory {
   std::map<std::string, std::filesystem::path> files;
+  std::map<std::string, std::string> memory_files;
   std::string error;
 };
 
@@ -82,6 +83,19 @@ ExactDirectory index_exact_directory(const std::filesystem::path& directory) {
   return result;
 }
 
+ExactDirectory index_memory_directory(
+    const std::map<std::string, std::string>& files) {
+  ExactDirectory result;
+  result.memory_files = files;
+  return result;
+}
+
+bool has_asset_file(const ExactDirectory& directory, std::string_view filename) {
+  const std::string key(filename);
+  return directory.files.find(key) != directory.files.end() ||
+         directory.memory_files.find(key) != directory.memory_files.end();
+}
+
 bool read_bounded_file(const std::filesystem::path& path,
                        std::uintmax_t max_bytes, std::string& output,
                        std::uintmax_t& file_size, std::string& error) {
@@ -114,6 +128,33 @@ bool read_bounded_file(const std::filesystem::path& path,
   return true;
 }
 
+bool read_bounded_asset(const ExactDirectory& directory,
+                        std::string_view filename,
+                        std::uintmax_t max_bytes, std::string& output,
+                        std::uintmax_t& file_size, std::string& error) {
+  const std::string key(filename);
+  if (const auto memory = directory.memory_files.find(key);
+      memory != directory.memory_files.end()) {
+    file_size = memory->second.size();
+    if (file_size == 0) {
+      error = "file is empty: " + key;
+      return false;
+    }
+    if (file_size > max_bytes) {
+      error = "file exceeds parser bound: " + key;
+      return false;
+    }
+    output = memory->second;
+    return true;
+  }
+  const auto file = directory.files.find(key);
+  if (file == directory.files.end()) {
+    error = "missing exact-case asset: " + key;
+    return false;
+  }
+  return read_bounded_file(file->second, max_bytes, output, file_size, error);
+}
+
 bool validate_binary_asset(const ExactDirectory& directory,
                            const std::filesystem::path& configured_directory,
                            std::string_view filename, std::string_view extension,
@@ -122,24 +163,18 @@ bool validate_binary_asset(const ExactDirectory& directory,
     issue = "unsafe or malformed asset filename: " + std::string(filename);
     return false;
   }
-  const auto it = directory.files.find(std::string(filename));
-  if (it == directory.files.end()) {
+  const std::string key(filename);
+  if (directory.files.find(key) == directory.files.end() &&
+      directory.memory_files.find(key) == directory.memory_files.end()) {
     issue = "missing exact-case asset: " + configured_directory.string() + "/" +
             std::string(filename);
     return false;
   }
-  std::error_code error;
-  size = std::filesystem::file_size(it->second, error);
-  if (error) {
-    issue = "cannot read asset size: " + std::string(filename);
-    return false;
-  }
-  if (size == 0) {
-    issue = "asset is empty: " + std::string(filename);
-    return false;
-  }
-  if (size > kMaxModuleAssetBytes) {
-    issue = "asset exceeds size bound: " + std::string(filename);
+  std::string contents;
+  std::string error;
+  if (!read_bounded_asset(directory, filename, kMaxModuleAssetBytes,
+                          contents, size, error)) {
+    issue = "cannot use asset " + std::string(filename) + ": " + error;
     return false;
   }
   return true;
@@ -278,8 +313,18 @@ class MvxTagScanner {
   std::string error_;
 };
 
-bool extract_mvx_scene_root(std::string_view xml, std::string& xrefobject,
-                            std::string& dae, std::string& error) {
+struct MvxSceneRootV1 {
+  std::string object_name;
+  std::string xrefmax;
+  std::string fog_color;
+  std::string is_solid;
+  std::string scale;
+  std::string xrefobject;
+  std::string dae;
+};
+
+bool extract_mvx_scene_root(std::string_view xml, MvxSceneRootV1& scene,
+                            std::string& error) {
   MvxTagScanner scanner(xml);
   XmlTag tag;
   bool end = false;
@@ -323,8 +368,18 @@ bool extract_mvx_scene_root(std::string_view xml, std::string& xrefobject,
       error = "MVX Decor root is missing xrefobject or dae";
       return false;
     }
-    xrefobject = xref->second;
-    dae = dae_attribute->second;
+    scene.xrefobject = xref->second;
+    scene.dae = dae_attribute->second;
+    const auto copy_optional = [&tag](std::string_view name,
+                                      std::string& output) {
+      const auto found = tag.attributes.find(std::string(name));
+      if (found != tag.attributes.end()) output = found->second;
+    };
+    copy_optional("name", scene.object_name);
+    copy_optional("xrefmax", scene.xrefmax);
+    copy_optional("fog_color", scene.fog_color);
+    copy_optional("is_solid", scene.is_solid);
+    copy_optional("scale", scene.scale);
   }
   if (decor_count != 1) {
     error = "MVX must contain exactly one Decor scene root; found " +
@@ -338,22 +393,15 @@ bool extract_mvx_scene_root(std::string_view xml, std::string& xrefobject,
   return true;
 }
 
-std::set<std::string> read_mgx_list(const CryptModuleAssetPathsV1& paths,
-                                   std::size_t& entry_count,
-                                   std::vector<std::string>& issues) {
+std::set<std::string> parse_mgx_list(std::string_view contents,
+                                    std::size_t& entry_count,
+                                    std::vector<std::string>& issues) {
   std::set<std::string> entries;
-  std::string contents;
-  std::uintmax_t size = 0;
-  std::string error;
-  if (!read_bounded_file(paths.mgx_list_file, kMaxListBytes, contents, size, error)) {
-    issues.push_back("mgxlist: " + error);
-    return entries;
-  }
   std::size_t cursor = 0;
   while (cursor <= contents.size()) {
     const auto end = contents.find('\n', cursor);
-    auto line = std::string_view(contents).substr(
-        cursor, end == std::string::npos ? contents.size() - cursor : end - cursor);
+    auto line = contents.substr(
+        cursor, end == std::string_view::npos ? contents.size() - cursor : end - cursor);
     while (!line.empty() && is_space(line.front())) line.remove_prefix(1);
     while (!line.empty() && is_space(line.back())) line.remove_suffix(1);
     if (!line.empty()) {
@@ -372,6 +420,33 @@ std::set<std::string> read_mgx_list(const CryptModuleAssetPathsV1& paths,
   }
   entry_count = entries.size();
   return entries;
+}
+
+std::set<std::string> read_mgx_list(const CryptModuleAssetPathsV1& paths,
+                                   std::size_t& entry_count,
+                                   std::vector<std::string>& issues) {
+  std::string contents;
+  std::uintmax_t size = 0;
+  std::string error;
+  if (!read_bounded_file(paths.mgx_list_file, kMaxListBytes, contents, size, error)) {
+    issues.push_back("mgxlist: " + error);
+    return {};
+  }
+  return parse_mgx_list(contents, entry_count, issues);
+}
+
+std::set<std::string> parse_mgx_list_bytes(
+    std::string_view contents, std::size_t& entry_count,
+    std::vector<std::string>& issues) {
+  if (contents.empty()) {
+    issues.push_back("mgxlist: file is empty");
+    return {};
+  }
+  if (contents.size() > kMaxListBytes) {
+    issues.push_back("mgxlist: file exceeds parser bound");
+    return {};
+  }
+  return parse_mgx_list(contents, entry_count, issues);
 }
 
 void add_issue(CryptModuleAssetV1& asset, std::string issue) {
@@ -400,14 +475,13 @@ CryptModuleAssetV1 audit_asset(
     asset.mgx_listed = true;
     if (!mgx_directory.error.empty()) {
       add_issue(asset, "MGX directory: " + mgx_directory.error);
-    } else if (const auto found = mgx_directory.files.find(mgx_filename);
-               found == mgx_directory.files.end()) {
+    } else if (!has_asset_file(mgx_directory, mgx_filename)) {
       add_issue(asset, "mgxlist entry has no exact-case file: " + mgx_filename);
     } else {
       std::string contents;
       std::string file_error;
-      if (!read_bounded_file(found->second, kMaxXmlBytes, contents,
-                             asset.mgx_size, file_error)) {
+      if (!read_bounded_asset(mgx_directory, mgx_filename, kMaxXmlBytes,
+                              contents, asset.mgx_size, file_error)) {
         add_issue(asset, "MGX " + file_error);
       } else {
         const auto parsed = parse_crypt_mgx_v1(key.name, contents);
@@ -438,14 +512,13 @@ CryptModuleAssetV1 audit_asset(
     add_issue(asset, "unsafe MVX module name: " + key.name);
   } else if (!mvx_directory.error.empty()) {
     add_issue(asset, "MVX directory: " + mvx_directory.error);
-  } else if (const auto found = mvx_directory.files.find(mvx_filename);
-             found == mvx_directory.files.end()) {
+  } else if (!has_asset_file(mvx_directory, mvx_filename)) {
     add_issue(asset, "missing exact-case scene definition: " + mvx_filename);
   } else {
     std::string contents;
     std::string file_error;
-    if (!read_bounded_file(found->second, kMaxXmlBytes, contents,
-                           asset.mvx_size, file_error)) {
+    if (!read_bounded_asset(mvx_directory, mvx_filename, kMaxXmlBytes,
+                            contents, asset.mvx_size, file_error)) {
       add_issue(asset, "MVX " + file_error);
     } else {
       const auto geometry = parse_crypt_mgx_v1(key.name, contents);
@@ -455,11 +528,18 @@ CryptModuleAssetV1 audit_asset(
         asset.mvx_file_valid = true;
         asset.mvx_module = geometry.module;
         std::string scene_error;
-        if (!extract_mvx_scene_root(contents, asset.xrefobject, asset.dae,
-                                    scene_error)) {
+        MvxSceneRootV1 scene;
+        if (!extract_mvx_scene_root(contents, scene, scene_error)) {
           add_issue(asset, "MVX scene root invalid for " + mvx_filename + ": " + scene_error);
         } else {
           asset.mvx_scene_root_valid = true;
+          asset.scene_object_name = std::move(scene.object_name);
+          asset.xrefmax = std::move(scene.xrefmax);
+          asset.fog_color = std::move(scene.fog_color);
+          asset.is_solid = std::move(scene.is_solid);
+          asset.scale = std::move(scene.scale);
+          asset.xrefobject = std::move(scene.xrefobject);
+          asset.dae = std::move(scene.dae);
           if (!geometry.module.has_grid_geometry) {
             add_issue(asset, "MVX root has no complete module/grid geometry: " + mvx_filename);
           } else if (asset.mgx_file_valid) {
@@ -530,6 +610,45 @@ CryptModuleCatalogueV1 build_crypt_module_catalogue_v1(
 
       if (catalogue.assets_by_exact_key.find(candidate.key) == catalogue.assets_by_exact_key.end()) {
         auto asset = audit_asset(candidate.key, paths, mgx_list,
+                                 mgx_directory, mgp_directory,
+                                 mvp_directory, mvx_directory);
+        catalogue.assets_by_exact_key.emplace(candidate.key, std::move(asset));
+      }
+    }
+  }
+  return catalogue;
+}
+
+CryptModuleCatalogueV1 build_crypt_module_catalogue_from_bytes_v1(
+    const CryptRuleDocumentV1& rules,
+    const CryptModuleAssetBytesV1& assets) {
+  CryptModuleCatalogueV1 catalogue;
+  const CryptModuleAssetPathsV1 asset_labels{
+      "assets/original-cache/data/3d/modules/crypt/mgx",
+      "assets/worlds",
+      "assets/worlds",
+      "assets/original-cache/data/3d/modules/crypt/mvx",
+      "assets/original-cache/data/3d/modules/crypt/mgx/mgxlist.txt"};
+  const auto mgx_list = parse_mgx_list_bytes(
+      assets.mgx_list, catalogue.mgx_list_entry_count,
+      catalogue.catalogue_issues);
+  const auto mgx_directory = index_memory_directory(assets.mgx);
+  const auto mgp_directory = index_memory_directory(assets.mgp);
+  const auto mvp_directory = index_memory_directory(assets.mvp);
+  const auto mvx_directory = index_memory_directory(assets.mvx);
+
+  for (const auto& list : rules.lists) {
+    for (std::size_t index = 0; index < list.entries.size(); ++index) {
+      const auto& entry = list.entries[index];
+      CryptRuleAssetCandidateV1 candidate;
+      candidate.list_name = list.name;
+      candidate.list_index = index;
+      candidate.key = {entry.name, entry.gameplay, entry.visual};
+      catalogue.rule_candidates.push_back(candidate);
+
+      if (catalogue.assets_by_exact_key.find(candidate.key) ==
+          catalogue.assets_by_exact_key.end()) {
+        auto asset = audit_asset(candidate.key, asset_labels, mgx_list,
                                  mgx_directory, mgp_directory,
                                  mvp_directory, mvx_directory);
         catalogue.assets_by_exact_key.emplace(candidate.key, std::move(asset));

@@ -186,7 +186,8 @@ CryptGeneratedDactStatusV1 crypt_compile_generated_dact_v1(
     const data::CharacterTable& characters,
     const data::Dictionary& models,
     CryptGeneratedDactV1& output,
-    CryptGeneratedDactDiagnosticV1* diagnostic) noexcept {
+    CryptGeneratedDactDiagnosticV1* diagnostic,
+    const std::vector<CryptGeneratedDactRetainedSourceV1>* retained_sources) noexcept {
   output = {};
   if (diagnostic) *diagnostic = {};
   if (!source.modules || !source.module_count ||
@@ -228,6 +229,22 @@ CryptGeneratedDactStatusV1 crypt_compile_generated_dact_v1(
       saw_mgp = true;
       last_module = module_index;
       ++next_source_record[module_index];
+
+      if (retained_sources && object.gametype &&
+          std::strcmp(object.gametype, "Character") == 0) {
+        const auto retained = std::find_if(retained_sources->begin(),
+            retained_sources->end(), [&](const auto& value) {
+              return value.module_index == module_index &&
+                  value.source_record == object.source_record &&
+                  value.name == (object.name ? object.name : "");
+            });
+        if (retained == retained_sources->end()) {
+          skipped.push_back({module_index, object.source_record,
+              CryptGeneratedDactSkipReasonV1::object_manager_duplicate,
+              object.name ? object.name : ""});
+          continue;
+        }
+      }
 
       if (!object.gametype || std::strcmp(object.gametype, "Character")) {
         skipped.push_back({module_index, object.source_record,

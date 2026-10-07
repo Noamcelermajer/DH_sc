@@ -13,7 +13,8 @@ void triangles(const resources::BresView& view,const scene::Instance& instance,u
  for(const auto& raw:record.triangles){Triangle triangle{};triangle.room=room;std::copy(raw.points[0],raw.points[0]+3,triangle.a.begin());std::copy(raw.points[1],raw.points[1]+3,triangle.b.begin());std::copy(raw.points[2],raw.points[2]+3,triangle.c.begin());level.floor.push_back(triangle);}
 }
 }
-bool load(const resources::BresView& view,const std::uint8_t* descriptor,std::size_t size,Level& out,std::string& error){
+bool load(const resources::BresView& view,const std::uint8_t* descriptor,std::size_t size,
+          Level& out,std::string& error,bool validate_descriptor_spawn){
  out={};error.clear();try{
   if(!descriptor||size<24||std::memcmp(descriptor,"DWLD",4)||word(descriptor+4)!=1)throw std::runtime_error("World descriptor rejected");
   const auto count=word(descriptor+8);if(!count||count>512||size!=24+std::uint64_t(count)*128)throw std::runtime_error("World room table rejected");
@@ -43,11 +44,13 @@ bool load(const resources::BresView& view,const std::uint8_t* descriptor,std::si
   if(level.floor.empty()||level.scene.instances.empty())throw std::runtime_error("World has no floor or visual geometry");
   if(!floors::build_graph(*level.native_floor,error))throw std::runtime_error(error);
   if(!floors::post_load(*level.native_floor,error))throw std::runtime_error(error);
-  float ground=0;const bool found=height(level,level.spawn,ground);
-  if(!found||std::abs(ground-level.spawn[2])>100){Point low{INFINITY,INFINITY,INFINITY},high{-INFINITY,-INFINITY,-INFINITY};
-   for(const auto& t:level.floor)if(t.room==0)for(const auto& p:{t.a,t.b,t.c})for(unsigned i=0;i<3;++i){low[i]=std::min(low[i],p[i]);high[i]=std::max(high[i],p[i]);}
-   throw std::runtime_error("Spawn floor mismatch: found="+std::to_string(found)+" height="+std::to_string(ground)+" first room bounds="+std::to_string(low[0])+","+std::to_string(low[1])+","+std::to_string(low[2])+".."+std::to_string(high[0])+","+std::to_string(high[1])+","+std::to_string(high[2]));}
-  level.spawn[2]=ground;
+  if(validate_descriptor_spawn){
+   float ground=0;const bool found=height(level,level.spawn,ground);
+   if(!found||std::abs(ground-level.spawn[2])>100){Point low{INFINITY,INFINITY,INFINITY},high{-INFINITY,-INFINITY,-INFINITY};
+    for(const auto& t:level.floor)if(t.room==0)for(const auto& p:{t.a,t.b,t.c})for(unsigned i=0;i<3;++i){low[i]=std::min(low[i],p[i]);high[i]=std::max(high[i],p[i]);}
+    throw std::runtime_error("Spawn floor mismatch: found="+std::to_string(found)+" height="+std::to_string(ground)+" first room bounds="+std::to_string(low[0])+","+std::to_string(low[1])+","+std::to_string(low[2])+".."+std::to_string(high[0])+","+std::to_string(high[1])+","+std::to_string(high[2]));}
+   level.spawn[2]=ground;
+  }
   out=std::move(level);return true;
  }catch(const std::exception& e){error=e.what();return false;}
 }

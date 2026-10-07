@@ -8,6 +8,8 @@
 
 namespace dh2::random_level {
 
+struct CryptRuleDocumentV1;
+
 // One already-placed tile, in native recursive preorder. Paths are full
 // cache-relative paths (dae, mgp, and mvp respectively). The catalogue root
 // is the raw xrefobject value; DWLD serialization appends "-node".
@@ -40,9 +42,12 @@ struct CryptGeneratedSpawnV1 {
 };
 
 struct CryptGeneratedLayoutOptionsV1 {
-  // The original property-map values may be supplied here when known. The
-  // serializer always emits the required type/name/transform/gametype fields.
-  std::string_view level_config_name = "_prim_LevelConfig";
+  // When supplied, declared LevelConfig overrides from the <rules> root are
+  // applied after the source defaults, as RandomGenerator::LoadRuleFile does.
+  const CryptRuleDocumentV1* rule_document = nullptr;
+  // Direct caller properties apply last. The serializer supplies source
+  // LevelConfig defaults; name is a convenient fallback override.
+  std::string_view level_config_name = "level_config";
   const CryptGeneratedXmlAttributeV1* level_config_properties = nullptr;
   std::size_t level_config_property_count = 0;
   // Null means the caller has not selected a SpawnPoint. DWLD v1 has no
@@ -83,9 +88,9 @@ struct CryptGeneratedLayoutDiagnosticV1 {
 // cannot encode it.
 //
 // The XML preserves the generator-owned MVX fields listed above when supplied.
-// Its LevelConfig is a minimal loader-compatible property record; callers may
-// pass recovered generator properties through level_config_properties. This
-// function serializes data only: it does not choose a SpawnPoint, resolve
+// Its LevelConfig contains only source property-map fields, using declared
+// defaults plus rule-root overrides. This function serializes data only: it
+// does not choose a SpawnPoint, resolve
 // assets, execute generator recursion, or activate a level.
 //
 // On failure, output is unchanged. On success, diagnostic is cleared. The

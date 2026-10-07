@@ -254,10 +254,24 @@ Error annotate(Object& o, const char* path, std::uint32_t module, RecordKind kin
     o.name = dh2_world_field(&o, "name"); o.gametype = dh2_world_field(&o, "gametype");
     if (!o.name || !*o.name || !o.gametype || !*o.gametype)
         return fail(d, Error::missing_field, "Object needs name and gametype", bytes, o.source_begin);
-    if (!vector(dh2_world_field(&o, "position"), o.local.position) ||
-        !vector(dh2_world_field(&o, "rotation"), o.local.rotation_degrees) ||
-        !vector(dh2_world_field(&o, "scale"), o.local.scale))
+    const bool level_config = !std::strcmp(o.gametype, "LevelConfig");
+    const auto* position = dh2_world_field(&o, "position");
+    const auto* rotation = dh2_world_field(&o, "rotation");
+    const auto* scale = dh2_world_field(&o, "scale");
+    const bool transforms_valid = level_config
+        ? ((!position || vector(position, o.local.position)) &&
+           (!rotation || vector(rotation, o.local.rotation_degrees)) &&
+           (!scale || vector(scale, o.local.scale)))
+        : (vector(position, o.local.position) &&
+           vector(rotation, o.local.rotation_degrees) &&
+           vector(scale, o.local.scale));
+    if (!transforms_valid)
         return fail(d, Error::number, "Object transform must contain three finite decimal values", bytes, o.source_begin);
+    if (level_config && !scale) {
+        o.local.scale[0] = 1.0f;
+        o.local.scale[1] = 1.0f;
+        o.local.scale[2] = 1.0f;
+    }
     for (unsigned i = 0; i < 3; ++i) {
         o.world_position[i] = o.local.position[i] + (origin ? origin[i] : 0);
         if (!std::isfinite(o.world_position[i]))

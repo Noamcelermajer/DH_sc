@@ -11,7 +11,7 @@ final class NativeBridge {
     static native String returnToMainMenu(String directory,android.content.res.AssetManager assets);
     static native String menuTouch(float x,float y,int action);
     static native int consumeMenuLaunch();
-    static native String startMenuGame(int slot,android.content.res.AssetManager assets);
+    static native String startMenuGame(int slot,android.content.res.AssetManager assets,int debugLevelRow);
     static native String consumeMenuAudio();
     static native String consumeMenuSound();
     static native String loadTexture(byte[] encoded);

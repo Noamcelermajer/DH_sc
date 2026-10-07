@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iterator>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -77,6 +78,20 @@ int main(int argc, char** argv) {
   const auto& document = *parsed.document;
   ok &= check(document.target == "iphone", "Crypt rules target");
   ok &= check(document.folder == "data/3d/modules/crypt", "Crypt module folder");
+  const auto root_override = [&document](std::string_view name) -> std::string_view {
+    for (const auto& property : document.root_property_overrides)
+      if (property.name == name) return property.value;
+    return {};
+  };
+  ok &= check(root_override("ambientColor") == "0.5,0.5,0.5" &&
+                  root_override("camera_znear") == "900" &&
+                  root_override("camera_zfar") == "5000" &&
+                  root_override("music") == "CryptOneAmbientMusic" &&
+                  root_override("fixed_light_set") ==
+                      "data/3D/Light/crypt_es1_1.lightset_xml",
+              "rules-root LevelConfig overrides survive parsing");
+  ok &= check(root_override("target").empty() && root_override("folder").empty(),
+              "generator target/folder are kept outside the property override set");
   ok &= check(document.lists.size() == 6, "all six Crypt candidate lists parsed");
   const auto* objective_rooms = find_list_v1(document, "objective_rooms");
   const auto* path_list = find_list_v1(document, "path");

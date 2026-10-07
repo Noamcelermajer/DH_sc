@@ -242,10 +242,10 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_menuTouch
  std::string error;if(!original_ui.touch(x,y,action,error))return result(env,"Menu touch failed: "+error);return result(env,"");
 }
 extern "C" JNIEXPORT jint JNICALL Java_com_example_dh2_NativeBridge_consumeMenuLaunch(JNIEnv*,jclass){std::int32_t slot=-1;return original_ui.consume_launch_request(slot)?slot:-1;}
-extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_startMenuGame(JNIEnv* env,jclass,jint slot,jobject assets){
+extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_startMenuGame(JNIEnv* env,jclass,jint slot,jobject assets,jint debugLevelRow){
  if(!assets||slot<0)return result(env,"Start Game input unavailable");
  original_ui.deactivate();ui_frame_failed=false;report_model_frame=true;
- const auto startup=model_renderer::start_menu_game(slot,AAssetManager_fromJava(env,assets));
+ const auto startup=model_renderer::start_menu_game(slot,AAssetManager_fromJava(env,assets),debugLevelRow);
  if(startup.find("Crypt |") == 0||startup.find("SWAMP |") == 0){
   std::string error;if(!original_ui.attach_player(menu_directory,error))__android_log_print(ANDROID_LOG_ERROR,tag,"Player HUD attach failed: %s",error.c_str());
  }

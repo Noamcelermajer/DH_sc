@@ -36,7 +36,7 @@ android {
         externalNativeBuild {
             cmake {
                 arguments += "-DDH2_SOURCE_DIR=${dh2SourceRoot.invariantSeparatorsPath}"
-                arguments += "-DCMAKE_OBJECT_PATH_MAX=200"
+                arguments += "-DCMAKE_OBJECT_PATH_MAX=260"
             }
         }
     }

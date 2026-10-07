@@ -454,6 +454,17 @@ bool PlayerSavegameV1::load_use_spawn_points(Bytes bytes, std::size_t& consumed,
     return true;
 }
 
+bool PlayerSavegameV1::clear_use_spawn_point(std::size_t difficulty,
+                                             std::string& error) {
+    if (difficulty >= use_spawn_points_.size() || !use_spawn_points_loaded_) {
+        error = "NativeStartGame requires a loaded LUSP row";
+        return false;
+    }
+    use_spawn_points_[difficulty] = 0;
+    error.clear();
+    return true;
+}
+
 bool PlayerSavegameV1::set_skill_in_slot(
     std::int32_t slot, std::uint32_t row,
     const SavedSkillUpdateServicesV1& services, std::string& error) {

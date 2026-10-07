@@ -202,7 +202,17 @@ int main(int argc, char** argv) {
         "conditional SpawnPoint was treated as unconditional");
 
     auto duplicate = mgp_bytes;
-    duplicate.front().insert(duplicate.front().rfind("</Module>"), source_spawn);
+    auto later_spawn = source_spawn;
+    const auto position_field = later_spawn.find("position=\"");
+    require(position_field != std::string::npos,
+        "cannot find duplicate SpawnPoint position field");
+    const auto position_value = position_field + std::strlen("position=\"");
+    const auto position_end = later_spawn.find('"', position_value);
+    require(position_end != std::string::npos,
+        "cannot terminate duplicate SpawnPoint position field");
+    later_spawn.replace(position_value, position_end - position_value,
+        "123.0,456.0,7.0");
+    duplicate.front().insert(duplicate.front().rfind("</Module>"), later_spawn);
     auto duplicate_views = views;
     duplicate_views.front().data = reinterpret_cast<const std::uint8_t*>(duplicate.front().data());
     duplicate_views.front().size = duplicate.front().size();
@@ -213,9 +223,19 @@ int main(int argc, char** argv) {
         error.find("duplicate entrypoint IDs") != std::string::npos,
         "duplicate SpawnPoint identity was accepted");
 
+    require(dh2::world::compile_generated_spawnpoint_v1(
+        reinterpret_cast<const std::uint8_t*>(level.data()), level.size(),
+        "GOTHICUS_CRYPT_01", level_source_path, duplicate_views.data(),
+        duplicate_views.size(), 0, repeated, error), error.c_str());
+    require(repeated.size() == 16 + 144 && read_i32(repeated.data() + 16) == 0,
+        "selected SpawnPoint compiler did not filter to the requested ID");
+    const auto selected_x = read_float(repeated.data() + 16 + 72 + 9 * 4);
+    require(close(selected_x, 123.0f + expected.modules[0].record.local.position[0]),
+        "selected duplicate SpawnPoint did not preserve source last-match order");
+
     std::cout << "Crypt generated SpawnPoint v1: " << expected.module_count
         << " source Modules, 2 authored entrypoints, order/transforms verified; "
-        << "conditions and duplicate IDs fail closed\n";
+        << "selected duplicate IDs use the last source transform; other conditions fail closed\n";
     dh2_world_free(&expected);
     return 0;
 }

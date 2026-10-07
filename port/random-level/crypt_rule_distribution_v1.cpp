@@ -135,5 +135,3 @@ bool shuffle_source_rule_distributions_v1(RuleDistributionCatalogV1& catalog,
 }
 
 }  // namespace dh2::random_level
-
-\n

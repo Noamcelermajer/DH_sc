@@ -1,4 +1,5 @@
 #include "../crypt_generated_layout_v1.hpp"
+#include "../native_rule_plan_v1.hpp"
 #include "../../world-data/world.hpp"
 
 #include <cmath>
@@ -88,6 +89,15 @@ void test_source_xml_and_dwld_order() {
             output.source_level_xml.find("name=\"_prim_LevelConfig\"") != std::string::npos &&
             output.source_level_xml.find("gametype=\"LevelConfig\"") != std::string::npos,
         "XML starts with a source-loader LevelConfig GameObject");
+  const auto config_record_end = output.source_level_xml.find("/>");
+  const std::string_view config_record(output.source_level_xml.data(),
+      config_record_end == std::string::npos ? 0 : config_record_end);
+  check(config_record_end != std::string::npos &&
+            config_record.find(" type=\"") == std::string_view::npos &&
+            config_record.find(" position=\"") == std::string_view::npos &&
+            config_record.find(" rotation=\"") == std::string_view::npos &&
+            config_record.find(" scale=\"") == std::string_view::npos,
+        "LevelConfig output contains only source PropertyMap fields");
   check(output.source_level_xml.find("name=\"crypt&amp;entrance_0\"") != std::string::npos &&
             output.source_level_xml.find("gametype=\"Module\"") != std::string::npos &&
             output.source_level_xml.find("name=\"crypt_hall_1\"") != std::string::npos,
@@ -150,6 +160,55 @@ void test_source_xml_and_dwld_order() {
             read_f32_le(with_spawn.dwld_v1.data() + 16) == -456.0f &&
             read_f32_le(with_spawn.dwld_v1.data() + 20) == 7.25f,
         "caller-selected spawn is written only when provided explicitly");
+}
+
+void test_level_config_defaults_and_rule_overrides() {
+  auto placed = module("crypt_entrance", "_module_crypt_entrance", 0, 0, 0.0f);
+  CryptRuleDocumentV1 document;
+  document.root_property_overrides = {
+      {"ambientColor", "0.5,0.5,0.5"},
+      {"camera_znear", "900"},
+      {"camera_zfar", "5000"},
+      {"music", "CryptOneAmbientMusic"},
+      {"fixed_light_set", "data/3D/Light/crypt_es1_1.lightset_xml"},
+      {"undeclaredLevelConfigProperty", "must-not-be-emitted"},
+      {"name", "crypt_rules_config"},
+  };
+  CryptGeneratedLayoutOptionsV1 options;
+  options.rule_document = &document;
+  CryptGeneratedLayoutV1 output;
+  CryptGeneratedLayoutDiagnosticV1 diagnostic{};
+
+  check(crypt_serialize_generated_layout_v1(&placed, 1, options, output,
+                                            &diagnostic) ==
+            CryptGeneratedLayoutStatusV1::ok,
+        "rule-root LevelConfig properties serialize");
+  check(output.source_level_xml.find("name=\"crypt_rules_config\"") !=
+            std::string::npos &&
+            output.source_level_xml.find("camera_znear=\"900\"") !=
+                std::string::npos &&
+            output.source_level_xml.find("camera_zfar=\"5000\"") !=
+                std::string::npos &&
+            output.source_level_xml.find("ambientColor=\"0.5,0.5,0.5\"") !=
+                std::string::npos &&
+            output.source_level_xml.find("music=\"CryptOneAmbientMusic\"") !=
+                std::string::npos &&
+            output.source_level_xml.find(
+                "fixed_light_set=\"data/3D/Light/crypt_es1_1.lightset_xml\"") !=
+                std::string::npos,
+        "Crypt rules override native LevelConfig defaults");
+  check(output.source_level_xml.find("camera_animset=\"Default\"") !=
+            std::string::npos &&
+            output.source_level_xml.find("fog_start=\"1\"") !=
+                std::string::npos &&
+            output.source_level_xml.find("static=\"false\"") !=
+                std::string::npos &&
+            output.source_level_xml.find("rim_light_file=\"char_rim_light.tga\"") !=
+                std::string::npos,
+        "unmodified LevelConfig/ObjectBase fields use IDA defaults");
+  check(output.source_level_xml.find("undeclaredLevelConfigProperty") ==
+            std::string::npos,
+        "undeclared root XML fields are ignored like native PropertyMap");
 }
 
 void test_rejections_are_transactional() {
@@ -219,6 +278,7 @@ void test_rejections_are_transactional() {
 
 int main() {
   test_source_xml_and_dwld_order();
+  test_level_config_defaults_and_rule_overrides();
   test_rejections_are_transactional();
   std::cout << checks - failures << '/' << checks
             << " generated layout checks passed\n";

@@ -16,6 +16,13 @@
 #include <cstdio>
 #ifdef _WIN32
 #include <io.h>
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
 #else
 #include <unistd.h>
 #endif
@@ -27,6 +34,41 @@ bool metadata_tag(const char* tag){
  for(const char* name:{"PNAM","PLVL","PCLS","PDFL","LNAM","LEPT","LUSP"})
   if(!std::strcmp(tag,name))return true;
  return false;
+}
+bool read_profile_file(const std::filesystem::path& path,
+                       std::vector<std::uint8_t>& bytes,std::string& error){
+ std::ifstream file(path,std::ios::binary|std::ios::ate);
+ if(!file){error="existing campaign primary unavailable";return false;}
+ const auto size=file.tellg();
+ if(size<4||size>32*1024*1024){error="existing campaign size outside native span";return false;}
+ bytes.resize(static_cast<std::size_t>(size));file.seekg(0);
+ if(!file.read(reinterpret_cast<char*>(bytes.data()),std::streamsize(bytes.size()))){error="existing campaign read failed";return false;}
+ return true;
+}
+bool write_synced_file(const std::filesystem::path& path,
+                       const std::vector<std::uint8_t>& bytes,std::string& error){
+ auto* file=std::fopen(path.string().c_str(),"wb");
+ if(!file){error="campaign output open failed";return false;}
+ bool okay=std::fwrite(bytes.data(),1,bytes.size(),file)==bytes.size()&&std::fflush(file)==0;
+#ifdef _WIN32
+ if(okay)okay=::_commit(::_fileno(file))==0;
+#else
+ if(okay)okay=::fsync(::fileno(file))==0;
+#endif
+ if(std::fclose(file))okay=false;
+ if(!okay)error="campaign output write/flush failed";
+ return okay;
+}
+bool replace_file(const std::filesystem::path& from,
+                  const std::filesystem::path& to,std::string& error){
+#ifdef _WIN32
+ if(::MoveFileExW(from.c_str(),to.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH))return true;
+ error="campaign output replace failed";return false;
+#else
+ std::error_code ec;std::filesystem::rename(from,to,ec);
+ if(!ec)return true;
+ error="campaign output replace failed: "+ec.message();return false;
+#endif
 }
 }
 struct Transport::Impl {
@@ -212,6 +254,60 @@ bool Transport::save_all(std::string& error){
   std::filesystem::rename(temporary,target);error.clear();return true;
  }catch(...){if(error.empty())error="new campaign persistence adapter threw";return false;}
 }
+bool Transport::save_existing_metadata(std::string& error){
+ auto& s=*impl_;
+ if(s.active||s.bindings.create_new||s.bindings.directory.empty()||!s.bindings.characters||
+    !s.bindings.current_difficulty||!s.input||s.save.slot()<0||
+    s.profile.identity!=reinterpret_cast<std::uintptr_t>(s.input.get())||
+    s.profile.owner.get()!=s.input.get()||!s.profile.campaign){
+  error="loaded existing metadata Save/index and persistence binding required";return false;
+ }
+ s.active=true;struct Guard{Impl& state;~Guard(){state.refresh();state.active=false;}}guard{s};
+ try{
+  std::vector<std::string> writers;
+  for(const auto& pair:s.input->callbacks){
+   if(pair.second.save!=&s.save){error="registered writer Save differs";return false;}
+   if(pair.second.writer){if(!metadata_tag(pair.first.c_str())){error="mask-1 metadata writer set required";return false;}writers.push_back(pair.first);}
+  }
+  if(writers.size()!=7||s.input->callbacks.size()!=7){error="mask-1 indexed Save must register exactly seven metadata writers";return false;}
+  const auto target=s.bindings.directory/data::player_profile_filename_v1(std::uint32_t(s.save.slot()),false,false);
+  std::vector<std::uint8_t> previous;
+  if(!read_profile_file(target,previous,error))return false;
+  {
+   const auto prior=s.input->index.borrow();
+   if(!prior||previous!=prior.bytes()){error="campaign primary changed since its canonical index was loaded";return false;}
+  }
+  std::vector<std::uint8_t> next;
+  if(!data::serialize_player_metadata_profile_v1(s.profile.campaign,writers,s.save,
+       *s.bindings.characters,s.bindings.current_difficulty,next,error))return false;
+
+  // Savegame::saveAll refreshes the same +8 index before it submits its
+  // storage job. Preserve that ordering and identity when updating this
+  // synchronous native adapter.
+  s.profile.campaign={};
+  if(!s.input->index.load({next.data(),next.size()},error)){
+   s.profile.campaign=s.input->index.borrow();return false;
+  }
+  s.profile.campaign=s.input->index.borrow();
+
+  const auto backup=std::filesystem::path(target.string()+".bak");
+  const auto backup_temp=std::filesystem::path(backup.string()+".saving");
+  const auto primary_temp=std::filesystem::path(target.string()+".saving");
+  if(!write_synced_file(backup_temp,previous,error)){
+   std::error_code ignored;std::filesystem::remove(backup_temp,ignored);return false;
+  }
+  if(!replace_file(backup_temp,backup,error)){
+   std::error_code ignored;std::filesystem::remove(backup_temp,ignored);return false;
+  }
+  if(!write_synced_file(primary_temp,next,error)){
+   std::error_code ignored;std::filesystem::remove(primary_temp,ignored);return false;
+  }
+  if(!replace_file(primary_temp,target,error)){
+   std::error_code ignored;std::filesystem::remove(primary_temp,ignored);return false;
+  }
+  error.clear();return true;
+ }catch(...){if(error.empty())error="existing campaign save adapter threw";return false;}
+}
 data::PlayerSaveLoadOwnerV1& Transport::loader()noexcept{return *loader_;}
 const Receipt& Transport::receipt()const noexcept{impl_->refresh();return impl_->receipt;}
 
@@ -241,6 +337,29 @@ bool Metadata::load(std::int32_t slot,const std::filesystem::path& directory,con
  if(!s.metadata.level_name_loaded()||!s.metadata.use_spawn_points_loaded()){error="campaign metadata omitted required initialized fields";return false;}
  s.receipt.loaded=true;
  return true;
+}
+bool Metadata::save_numeric_request(const data::CharacterTable& characters,
+ std::int32_t& current_difficulty,std::string& error){
+ auto& s=*impl_;
+ if(s.active||!s.receipt.loaded||s.metadata.slot()<0||s.directory.empty()){
+  error="loaded NativeStartGame temporary Save required";return false;
+ }
+ s.active=true;
+ struct Guard{Impl& state;~Guard(){std::string ignored;state.transport.bind({},ignored);state.active=false;}}guard{s};
+ if(!s.transport.bind({s.directory,&characters,&current_difficulty,{},false},error))return false;
+ return s.transport.save_existing_metadata(error);
+}
+bool Metadata::clear_spawn_point_and_save(std::size_t difficulty,
+ const data::CharacterTable& characters,std::int32_t& current_difficulty,std::string& error){
+ auto& s=*impl_;
+ if(s.active||!s.receipt.loaded||s.metadata.slot()<0||s.directory.empty()){
+  error="loaded NativeStartGame temporary Save required";return false;
+ }
+ s.active=true;
+ struct Guard{Impl& state;~Guard(){std::string ignored;state.transport.bind({},ignored);state.active=false;}}guard{s};
+ if(!s.transport.bind({s.directory,&characters,&current_difficulty,{},false},error))return false;
+ if(!s.metadata.clear_use_spawn_point(difficulty,error))return false;
+ return s.transport.save_existing_metadata(error);
 }
 const Receipt& Metadata::receipt()const noexcept{return impl_->receipt;}
 const data::PlayerSavegameV1& Metadata::save()const noexcept{return impl_->metadata;}

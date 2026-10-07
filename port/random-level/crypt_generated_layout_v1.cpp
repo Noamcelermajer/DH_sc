@@ -1,5 +1,7 @@
 #include "crypt_generated_layout_v1.hpp"
 
+#include "native_rule_plan_v1.hpp"
+
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -200,12 +202,94 @@ bool write_f32_le(std::uint8_t* output, float value) {
   return true;
 }
 
-bool reserved_config_name(std::string_view name) {
-  constexpr std::string_view reserved[] = {
-      "type", "name", "position", "rotation", "scale", "gametype"};
-  for (const auto field : reserved)
-    if (name == field) return true;
-  return false;
+struct ConfigPropertyDefault {
+  std::string_view name;
+  std::string_view value;
+  bool emit_default = true;
+};
+
+// Values recovered from LevelConfig::DeclareProperties (0x3f4b9c) and its
+// ObjectBase property declarations (0x33f014). Name/gametype are emitted with
+// the required identity fields below. `static` uses the object's existing
+// member value, so it is only emitted when an explicit source override exists.
+constexpr ConfigPropertyDefault kConfigDefaults[] = {
+    {"activate_cond", ""},
+    {"ambiant_music", ""},
+    {"ambientColor", "255.000000,255.000000,255.000000"},
+    {"camera_animset", "Default"},
+    {"camera_file", ""},
+    {"camera_name", ""},
+    {"camera_zfar", "10000"},
+    {"camera_znear", "600"},
+    {"clear_color", "0.000000,0.000000,0.000000"},
+    {"combat_music", ""},
+    {"combat_music_enabled", "true"},
+    {"deactivate_cond", ""},
+    {"dfog_blend_dist", "100.000000"},
+    {"dfog_change_min_dist", "200.000000"},
+    {"dfog_colors", ""},
+    {"fix_index_buffer_size", "655360"},
+    {"fix_quantize", "false"},
+    {"fix_vertex_buffer_size", "5242880"},
+    {"fixed_light_set", ""},
+    {"fog_color", "255.000000,255.000000,255.000000"},
+    {"fog_direction_mask", "0.000000,0.000000,1.000000"},
+    {"fog_end", "0"},
+    {"fog_start", "1"},
+    {"gametype", "LevelConfig"},
+    {"isGlobal", "false"},
+    {"isUnderlay", "false"},
+    {"is_demo_only", "false"},
+    {"is_tutorial_only", "false"},
+    {"light_set", ""},
+    {"min_difficulty", ""},
+    {"mp_script", ""},
+    {"music", ""},
+    {"name", "level_config"},
+    {"prog_index_buffer_size", "655360"},
+    {"prog_quantize", "false"},
+    {"prog_vertex_buffer_size", "5242880"},
+    {"rim_light_file", "char_rim_light.tga"},
+    {"roomname", ""},
+    {"safezone_music", ""},
+    {"scriptFile", ""},
+    {"shadow_color", "0.000000,0.000000,0.000000"},
+    {"shadow_opacity", "0.000000"},
+    {"skybox", ""},
+    {"static", "false"},
+    {"sun_position", "-1000000.000000,-1000000.000000,-1000000.000000"},
+    {"visible", "true"},
+};
+
+std::string_view find_override(const CryptGeneratedLayoutOptionsV1& options,
+                               std::string_view name,
+                               bool& found) {
+  if (options.level_config_properties) {
+    for (std::size_t i = 0; i < options.level_config_property_count; ++i) {
+      if (options.level_config_properties[i].name == name) {
+        found = true;
+        return options.level_config_properties[i].value;
+      }
+    }
+  }
+  if (options.rule_document) {
+    for (const auto& property : options.rule_document->root_property_overrides) {
+      if (property.name == name) {
+        found = true;
+        return property.value;
+      }
+    }
+  }
+  found = false;
+  return {};
+}
+
+std::string_view config_identity(const CryptGeneratedLayoutOptionsV1& options,
+                                 std::string_view name,
+                                 std::string_view fallback) {
+  bool found = false;
+  const auto value = find_override(options, name, found);
+  return found ? value : fallback;
 }
 
 bool in_runtime_range(float value) {
@@ -282,12 +366,23 @@ bool append_config_properties(std::string& xml,
     return false;
   for (std::size_t i = 0; i < options.level_config_property_count; ++i) {
     const auto& property = options.level_config_properties[i];
-    if (!valid_attribute_name(property.name) || reserved_config_name(property.name) ||
+    if (!valid_attribute_name(property.name) ||
         property.value.size() > kMaxAttributeBytes || !valid_xml_text(property.value))
       return false;
     for (std::size_t j = 0; j < i; ++j)
       if (options.level_config_properties[j].name == property.name) return false;
-    if (!append_attribute(xml, property.name, property.value)) return false;
+  }
+
+  for (const auto& property : kConfigDefaults) {
+    bool found = false;
+    auto value = find_override(options, property.name, found);
+    if (!found && property.name == "name") {
+      value = options.level_config_name;
+      found = true;
+    }
+    if (!found && !property.emit_default) continue;
+    if (!append_attribute(xml, property.name, found ? value : property.value))
+      return false;
   }
   return true;
 }
@@ -303,13 +398,17 @@ CryptGeneratedLayoutStatusV1 crypt_serialize_generated_layout_v1(
   if (!modules || !module_count || module_count > kMaxModules)
     return reject(diagnostic, module_count > kMaxModules ? Status::limit : Status::argument,
                   "Generated module list is empty or exceeds the source/runtime limit");
-  if (options.level_config_name.empty() ||
-      options.level_config_name.size() > kMaxAttributeBytes ||
-      !valid_xml_text(options.level_config_name) ||
-      options.level_config_property_count > 122 ||
+  if (options.level_config_property_count > 122 ||
       (options.level_config_property_count && !options.level_config_properties))
     return reject(diagnostic, Status::argument,
                   "LevelConfig identity or property list is invalid");
+  const auto config_name = config_identity(options, "name", options.level_config_name);
+  const auto config_gametype = config_identity(options, "gametype", "LevelConfig");
+  if (config_name.empty() || config_name.size() > kMaxAttributeBytes ||
+      config_gametype.empty() || config_gametype.size() > kMaxAttributeBytes ||
+      !valid_xml_text(config_name) || !valid_xml_text(config_gametype))
+    return reject(diagnostic, Status::argument,
+                  "LevelConfig name/gametype override is invalid");
   if (options.spawn) {
     for (float coordinate : options.spawn->position)
       if (!in_runtime_range(coordinate))
@@ -343,12 +442,6 @@ CryptGeneratedLayoutStatusV1 crypt_serialize_generated_layout_v1(
     if (!append_bounded(xml, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Level>\n"))
       return reject(diagnostic, Status::limit, "Generated level XML exceeds 8 MiB");
     if (!append_bounded(xml, "  <GameObject") ||
-        !append_attribute(xml, "type", "level") ||
-        !append_attribute(xml, "name", options.level_config_name) ||
-        !append_attribute(xml, "position", "0.000000,0.000000,0.000000") ||
-        !append_attribute(xml, "scale", "1.000000,1.000000,1.000000") ||
-        !append_attribute(xml, "rotation", "0.000000,0.000000,0.000000") ||
-        !append_attribute(xml, "gametype", "LevelConfig") ||
         !append_config_properties(xml, options) ||
         !append_bounded(xml, "/>\n"))
       return reject(diagnostic, Status::invalid_text,

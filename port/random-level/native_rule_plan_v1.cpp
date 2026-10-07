@@ -419,6 +419,11 @@ ParseResultV1 parse_crypt_rule_v1(std::string_view xml) {
   if (!target || !folder) return {std::nullopt, "Crypt rules require target and folder"};
   document.target = *target;
   document.folder = *folder;
+  for (const auto& root_attribute : root_xml.attributes) {
+    if (root_attribute.first == "target" || root_attribute.first == "folder") continue;
+    document.root_property_overrides.push_back(
+        {root_attribute.first, root_attribute.second});
+  }
 
   bool found_root = false;
   for (const auto& child : root_xml.children) {

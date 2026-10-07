@@ -25,7 +25,8 @@ enum class Status : std::uint32_t {
     members_present,
     actor_not_tracked,
     reentrant_operation,
-    allocation_failure
+    allocation_failure,
+    transition_failed
 };
 
 struct ActivationResult {
@@ -49,6 +50,8 @@ struct ZoneView {
     const float* absolute_maximum;
     const Address* members;
     std::size_t member_count;
+    std::uint8_t active_389;
+    std::uint8_t dirty_388;
 };
 
 struct EnrollmentResult {
@@ -62,6 +65,41 @@ struct ObjectListResult {
     std::uint32_t successful_add_calls;
     std::uint32_t failed_module_index;
     std::uint32_t failed_object_index;
+};
+
+enum class TransitionOperation : std::uint8_t {
+    zone_entered,
+    zone_exited,
+    add_room_object,
+    remove_room_object,
+    query_module_visited,
+    set_module_visited
+};
+
+struct TransitionRequest {
+    TransitionOperation operation;
+    std::uint32_t module_index;
+    Address room_zone;
+    Address actor;
+};
+
+using TransitionCallback = std::int32_t (*)(void*, const TransitionRequest*,
+                                             std::uint32_t* value);
+
+struct UpdateServices {
+    void* context;
+    TransitionCallback invoke;
+};
+
+struct UpdateResult {
+    std::uint32_t zones_tested;
+    std::uint32_t planes_tested;
+    std::uint32_t zones_visible;
+    std::uint32_t zones_activated;
+    std::uint32_t zones_deactivated;
+    std::uint32_t zones_visited;
+    std::uint32_t failed_module_index;
+    TransitionOperation failed_operation;
 };
 
 // Owns stable host-side zone projections for one active Crypt bounds registry.
@@ -99,6 +137,17 @@ public:
                                    std::size_t object_count,
                                    const room_zone_enrollment::Services*,
                                    ObjectListResult*) noexcept;
+
+    // Mirrors RoomZone::Update's six-plane negative-vertex test and ordered
+    // Activate/DeActivate callbacks. The plane words are [a,b,c,d] binary32;
+    // Module visited bytes are queried and written through the transition
+    // service; the RoomZone owner does not become a second visited-state store.
+    Status update_frustum(const std::uint32_t planes[6][4],
+                          const float* player_position,
+                          const UpdateServices*, UpdateResult*) noexcept;
+
+    // Source RoomZone::Update sets +0x388 when a zone needs reevaluation.
+    Status mark_dirty(std::uint32_t module_index) noexcept;
 
     // Lifecycle notification only: call after source RoomZone::RemoveObject
     // has unlinked this actor (or after the actor has been destroyed). It does

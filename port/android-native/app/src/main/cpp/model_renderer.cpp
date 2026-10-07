@@ -8,7 +8,15 @@
 #include "modular_skin_catalog.hpp"
 #include "world.hpp"
 #include "../../../../../../port/level-world/crypt_module_bounds_registry_v1.hpp"
+#include "../../../../../../port/level-world/crypt_room_zone_owner_v1.hpp"
+#include "../../../../../../port/level-world/crypt_room_zone_manager_bridge_v1.hpp"
+#include "../../../../../../port/level-world/object_manager_runtime_owner_v1.hpp"
 #include "../../../../../../port/level-world/crypt_generated_spawnpoints_v1.hpp"
+#include "../../../../../../port/level-world/crypt_generated_source_dact_v1.hpp"
+#include "../../../../../../port/level-world/crypt_generated_mvp_v1.hpp"
+#include "../../../../../../port/level-world/source_handle_ledger_v1.hpp"
+#include "../../../../../../port/random-level/crypt_module_catalog_v1.hpp"
+#include "../../../../../../port/random-level/crypt_level_generator_v1.hpp"
 #include "objects.hpp"
 #include "animation_tables.hpp"
 #include "animation_scheduler.hpp"
@@ -70,6 +78,7 @@
 #include "native_debug_files.hpp"
 #include "native_character_list.hpp"
 #include "native_ghost_skills.hpp"
+#include "native_ghost_script_queries.hpp"
 #include "native_player_skills.hpp"
 #include "object_update_culling.hpp"
 #include "character_ai_update_all_skills.hpp"
@@ -108,6 +117,7 @@
 #include <chrono>
 #include <cctype>
 #include <cstring>
+#include <string_view>
 #include <sys/time.h>
 
 namespace model_renderer {
@@ -161,20 +171,63 @@ struct ObjectActor:dh2::objects::Record {
  std::shared_ptr<SpawnOwner> spawn_owner;
  std::shared_ptr<NativeCharAIProjection> native_ai;
  std::string source_root_node_id;
+ std::string source_visual_path;
+ bool packaged_actor_asset=false;
  std::uint32_t source_module_index=std::numeric_limits<std::uint32_t>::max();
  std::uint32_t source_record=std::numeric_limits<std::uint32_t>::max();
+ std::int32_t source_handle=-1;
  unsigned visual_root=std::numeric_limits<unsigned>::max();
+ // Live source GameObject zoning fields for the bounded Crypt actor adapter.
+ // The RoomZone identity is an opaque port token, never a native pointer.
+ std::uintptr_t room_zone_2f4=0;
+ std::uintptr_t visual_object_2d8=0;
+ std::uint8_t in_room_list_2ef=0,zoning_enabled_2ee=1,in_zone_2f0=0,visible_80=1;
+ bool source_room_zone_managed=false,source_updates_enabled=false,renderer_visible=true;
  ObjectActor(const dh2::objects::Record& r):Record(r){}
 };
 struct ObjectGroup{dh2::objects::Resource resource;std::vector<Draw> draws;std::vector<ObjectActor> instances;std::map<int,dh2::animation::Player> clips;int animation_table=-1;};
+struct MvpRenderInstance {
+ std::uint32_t module_index=0,source_record=0;
+ std::int32_t source_handle=-1;
+ std::string name,xrefobject,dae_path,source_path;
+ std::array<float,3> position{},rotation_degrees{},scale{1,1,1};
+ bool packaged_actor_asset=false;
+};
 bool item_node_below(const dh2::objects::Resource&,unsigned,unsigned);
 std::uint64_t snapshot_checksum(const dh2::data::PropertySheet& sheet){
  std::uint64_t result=14695981039346656037ull;for(auto value:sheet)for(unsigned i=0;i<4;++i){result^=(std::uint32_t(value)>>(8*i))&255;result*=1099511628211ull;}return result;
 }
 std::vector<ObjectGroup> object_groups;
-// Owned source-backup module bounds for the current development Crypt layout.
-// This is not a RoomZone/ObjectManager or actor-membership owner.
+// Owned source module-root bounds for the active Crypt layout. This prepares
+// the source RoomZone boundary but is not itself a RoomZone or membership owner.
 dh2::crypt_module_bounds_registry_v1::Owner active_crypt_module_bounds;
+struct NativeCryptRoomRuntime {
+ using Manager=dh2::object_manager_runtime_owner_v1::Owner;
+ using ZoneOwner=dh2::crypt_room_zone_owner_v1::Owner;
+ using Address=std::uintptr_t;
+ Manager manager;
+ ZoneOwner zones;
+ dh2::crypt_module_bounds_registry_v1::Owner* module_owner=nullptr;
+ std::unordered_map<Address,ObjectActor*> actors;
+ std::vector<ObjectActor*> actor_records;
+ std::vector<dh2::object_manager_runtime_owner_v1::SourceHandle> source_handles;
+ Address player_identity=0;
+ std::uint32_t enrolled_characters=0;
+
+ bool initialize(dh2::crypt_module_bounds_registry_v1::Owner&,
+                 const std::vector<ObjectActor*>&,Address,
+                 const dh2::world::source_handle_ledger_v1::Ledger*,
+                 std::string&);
+ bool clear() noexcept;
+ static std::int32_t initialize_zone_position(void*,
+     const dh2::module_room_zone_bounds::Request*);
+ static std::int32_t enroll_service(void*,
+     const dh2::room_zone_enrollment::Request*,std::uint32_t*);
+ static std::int32_t transition_service(void*,
+     const dh2::crypt_room_zone_owner_v1::TransitionRequest*,std::uint32_t*);
+ bool update_frustum(const std::array<float,3>& player_position);
+};
+std::unique_ptr<NativeCryptRoomRuntime> active_crypt_room_runtime;
 std::vector<ObjectActor> saved_actors;
 // Stable borrowed projection of the source Character +0x14e8 association.
 // The Save and its LoadOwner remain owned by PlayerCombat; this object owns
@@ -277,7 +330,18 @@ struct PendingMenuStart {std::int32_t slot=-1;bool has_numeric_difficulty=false;
 struct RuntimeLevelAssets {
  std::int32_t row=-1;std::string name="GOTHICUS_CRYPT_01",level_file="007_crypt_01.rule.xml";
  std::string descriptor="crypt01.dwld",bres="crypt.bdae",spawns="crypt01.spwn",objects="crypt01.dact";
+ // Application::LoadLevel's chosen local seed is distinct from Random's
+ // process-global GSInit state and seeds a fresh RandomGenerator per level.
+ std::uint32_t source_load_seed=0,source_load_synchronized_seed=0;
  bool development_layout=true;
+ bool generated_crypt_layout=false;
+ std::string generated_crypt_source_xml;
+ std::vector<dh2::random_level::CryptGeneratedModuleSummaryV1> generated_crypt_modules;
+ std::shared_ptr<dh2::world::source_handle_ledger_v1::Ledger>
+     generated_crypt_handle_ledger;
+ std::shared_ptr<dh2::random_level::CryptRuleDocumentV1> crypt_rules;
+ std::shared_ptr<dh2::random_level::CryptModuleAssetBytesV1> crypt_asset_bytes;
+ std::shared_ptr<dh2::random_level::CryptModuleCatalogueV1> crypt_catalogue;
 };
 struct GeneratedWorldPayload {
  std::vector<std::uint8_t> dwld_v1;
@@ -375,6 +439,261 @@ std::uint32_t native_actor_zonability(ObjectActor& actor) {
   throw std::runtime_error("Native source Character zonability failed");
  return result.zonable;
 }
+
+std::int32_t NativeCryptRoomRuntime::initialize_zone_position(
+        void*,const dh2::module_room_zone_bounds::Request* request) {
+ if(!request||request->operation!=dh2::module_room_zone_bounds::Operation::set_position||
+    !request->room_zone||!request->update_position)return 1;
+ // The selected native renderer has no native Zone allocation. The portable
+ // RoomZone owner applies the verified SetPosition/AABB field composition.
+ return 0;
+}
+
+std::int32_t NativeCryptRoomRuntime::enroll_service(
+        void* context,const dh2::room_zone_enrollment::Request* request,
+        std::uint32_t* value) {
+ auto* self=static_cast<NativeCryptRoomRuntime*>(context);
+ if(!self||!request||!value)return 1;
+ if(request->object==self->player_identity&&
+    request->operation==dh2::room_zone_enrollment::Operation::is_zonable) {
+  *value=0; // Character::IsZonable rejects Player before reading position.
+  return 0;
+ }
+ const auto found=self->actors.find(request->object);
+ if(found==self->actors.end()||!found->second)return 1;
+ auto& actor=*found->second;
+ switch(request->operation) {
+ case dh2::room_zone_enrollment::Operation::is_zonable:
+  try {*value=native_actor_zonability(actor);return 0;}catch(...){return 1;}
+ case dh2::room_zone_enrollment::Operation::remove_from_room:
+ case dh2::room_zone_enrollment::Operation::append_to_room:
+  // The RoomZone owner wraps this callback and commits the member-node change
+  // only after it succeeds, preserving the source callback/list order.
+  return request->room_zone?0:1;
+ case dh2::room_zone_enrollment::Operation::sync_visibility:
+  if(request->auxiliary!=actor.visual_object_2d8)return 1;
+  try {
+   const bool zonable=native_actor_zonability(actor);
+   actor.renderer_visible=actor.visible_80!=0&&
+       !(zonable&&actor.zoning_enabled_2ee&&actor.in_zone_2f0==0);
+  } catch(...) { return 1; }
+  return 0;
+ case dh2::room_zone_enrollment::Operation::zone_state_callback:
+  actor.source_updates_enabled=request->value!=0;
+  return 0;
+ }
+ return 1;
+}
+
+std::int32_t NativeCryptRoomRuntime::transition_service(
+        void* context,const dh2::crypt_room_zone_owner_v1::TransitionRequest* request,
+        std::uint32_t* value) {
+ auto* self=static_cast<NativeCryptRoomRuntime*>(context);
+ if(!self||!request||!request->room_zone)return 1;
+ using Operation=dh2::crypt_room_zone_owner_v1::TransitionOperation;
+ if(request->operation==Operation::query_module_visited||
+    request->operation==Operation::set_module_visited) {
+  if(!self->module_owner)return 1;
+  auto found=std::find_if(self->module_owner->modules.begin(),
+      self->module_owner->modules.end(),[&](const auto& module){
+       return module.module_index==request->module_index;
+      });
+  if(found==self->module_owner->modules.end())return 1;
+  if(request->operation==Operation::query_module_visited) {
+   if(!value)return 1;
+   *value=found->visited;return 0;
+  }
+  found->visited=1;return 0;
+ }
+ if(request->operation==Operation::zone_entered||
+    request->operation==Operation::zone_exited) {
+  const auto found=self->manager.find_by_identity(request->actor);
+  if(!found)return 1;
+  auto object=found->enrollment_view();
+  const dh2::room_zone_enrollment::Services services{
+      self,&NativeCryptRoomRuntime::enroll_service};
+  dh2::room_zone_enrollment::Result result{};
+  const auto status=request->operation==Operation::zone_entered
+      ?dh2::room_zone_enrollment::zone_entered(&object,&services,&result)
+      :dh2::room_zone_enrollment::zone_exited(&object,&services,&result);
+  return status==dh2::room_zone_enrollment::Status::complete?0:1;
+ }
+ if(request->actor)return 1;
+ bool changed=false;
+ if(request->operation==Operation::add_room_object) {
+  return self->manager.add_room_object(request->room_zone,&changed)==
+             dh2::object_manager_runtime_owner_v1::Status::ok&&changed?0:1;
+ }
+ if(request->operation==Operation::remove_room_object) {
+  return self->manager.remove_room_object(request->room_zone,&changed)==
+             dh2::object_manager_runtime_owner_v1::Status::ok?0:1;
+ }
+ return 1;
+}
+
+bool NativeCryptRoomRuntime::update_frustum(
+        const std::array<float,3>& player_position) {
+ std::uint32_t planes[6][4]{};
+ for(unsigned plane=0;plane<6;++plane)
+  for(unsigned component=0;component<4;++component)
+   planes[plane][component]=source_camera.frustum.planes[plane][component];
+ const dh2::crypt_room_zone_owner_v1::UpdateServices services{
+     this,&NativeCryptRoomRuntime::transition_service};
+ dh2::crypt_room_zone_owner_v1::UpdateResult result{};
+ const auto status=zones.update_frustum(planes,player_position.data(),&services,&result);
+ if(status!=dh2::crypt_room_zone_owner_v1::Status::complete) {
+  __android_log_print(ANDROID_LOG_ERROR,"DH2Native",
+      "Crypt RoomZone frustum update failed | status %s | module %u | operation %u",
+      dh2::crypt_room_zone_owner_v1::status_name(status),result.failed_module_index,
+      unsigned(result.failed_operation));
+  return false;
+ }
+ manager.reset_visible_room_zone_count();
+ for(std::uint32_t i=0;i<result.zones_visible;++i)manager.add_visible_room_zone();
+ return true;
+}
+
+bool NativeCryptRoomRuntime::initialize(
+        dh2::crypt_module_bounds_registry_v1::Owner& module_bounds,
+        const std::vector<ObjectActor*>& ordered_actors,Address player,
+        const dh2::world::source_handle_ledger_v1::Ledger* source_ledger,
+        std::string& error) {
+ error.clear();
+ if(module_bounds.modules.empty()||!player||!source_ledger||
+    source_ledger->entries.empty()||source_ledger->first_source_handle!=4||
+    source_ledger->initial_top_level_handle_offset!=
+        1+module_bounds.modules.size()) {
+  error="Crypt RoomZone inputs are incomplete";return false;
+ }
+ try {
+  module_owner=&module_bounds;
+  player_identity=player;
+  actors.reserve(ordered_actors.size());
+  actor_records.reserve(ordered_actors.size());
+  source_handles.reserve(ordered_actors.size()+1);
+  for(auto* actor:ordered_actors) {
+   if(!actor||actor->kind!=1||actor->identity==player_identity)continue;
+   if(!actor->identity||actors.find(actor->identity)!=actors.end()) {
+    error="Crypt RoomZone actor identity is invalid or duplicated";
+    clear();return false;
+   }
+   if(actor->source_handle<0||actor->source_module_index>=module_bounds.modules.size()||
+      actor->source_record==std::numeric_limits<std::uint32_t>::max()) {
+    error="Crypt RoomZone actor lacks retained ObjectManager source provenance";
+    clear();return false;
+   }
+   actor_records.push_back(actor);
+   actor->room_zone_2f4=0;actor->in_room_list_2ef=0;
+   actor->zoning_enabled_2ee=1;actor->in_zone_2f0=0;actor->visible_80=1;
+   actor->visual_object_2d8=actor->identity; // opaque renderer adapter token
+   actor->source_room_zone_managed=true;actor->source_updates_enabled=false;
+   actor->renderer_visible=true;
+   dh2::object_manager_runtime_owner_v1::GameObject projection{};
+   projection.identity=actor->identity;
+   projection.world_x=actor->position[0];projection.world_y=actor->position[1];
+   projection.zoning_enabled_2ee=actor->zoning_enabled_2ee;
+   projection.visible_80=actor->visible_80;
+   projection.visual_object_2d8=actor->visual_object_2d8;
+   projection.bind_live_fields({&actor->position[0],&actor->position[1],
+       &actor->room_zone_2f4,&actor->in_room_list_2ef,&actor->zoning_enabled_2ee,
+       &actor->in_zone_2f0,&actor->visual_object_2d8,&actor->visible_80});
+   dh2::object_manager_runtime_owner_v1::GameObject* stored=nullptr;
+   const auto add_status=manager.add_object(actor->source_handle,projection,&stored);
+   if(add_status!=dh2::object_manager_runtime_owner_v1::Status::ok||!stored) {
+    error="Crypt ObjectManager actor projection failed";clear();return false;
+   }
+   source_handles.push_back(actor->source_handle);
+   actors.emplace(actor->identity,actor);
+  }
+
+  // PlayerManager keeps the player in ObjectManager's +0x60 map and the
+  // distinct +0x88 no-room list. RoomZone's Character override rejects it.
+  // MenuCharacterSelect::Show creates the preview Player as handle 3 after
+  // the MainMenu flush and its LightPoint/AnimatedDecor allocations. The
+  // same ObjectManager survives the traced Start Game path into Level::Load.
+  constexpr auto player_handle=
+      dh2::object_manager_runtime_owner_v1::SourceHandle{3};
+  dh2::object_manager_runtime_owner_v1::GameObject player_projection{};
+  player_projection.identity=player_identity;
+  dh2::object_manager_runtime_owner_v1::GameObject* stored_player=nullptr;
+  if(manager.add_object(player_handle,player_projection,&stored_player)!=
+       dh2::object_manager_runtime_owner_v1::Status::ok||!stored_player) {
+   error="Crypt ObjectManager player projection failed";clear();return false;
+  }
+  source_handles.push_back(player_handle);
+  bool player_added=false;
+  if(manager.register_player_no_room(player_identity,&player_added)!=
+       dh2::object_manager_runtime_owner_v1::Status::ok||!player_added) {
+   error="Crypt Player no-room registration failed";clear();return false;
+  }
+
+  const dh2::module_room_zone_bounds::Services position_services{
+      this,&NativeCryptRoomRuntime::initialize_zone_position};
+  const dh2::room_zone_enrollment::Services enrollment_services{
+      this,&NativeCryptRoomRuntime::enroll_service};
+  dh2::crypt_room_zone_manager_bridge_v1::Result result{};
+  const auto status=dh2::crypt_room_zone_manager_bridge_v1::initialize_object_lists(
+      module_bounds,zones,manager,&position_services,&enrollment_services,&result);
+  if(status!=dh2::crypt_room_zone_manager_bridge_v1::Status::complete) {
+   error="Crypt RoomZone ObjectManager enrollment failed: ";
+   error+=dh2::crypt_room_zone_manager_bridge_v1::status_name(status);
+   clear();return false;
+  }
+  for(const auto& item:actors)if(item.second&&item.second->in_room_list_2ef)
+   ++enrolled_characters;
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+      "Crypt RoomZone initial enrollment | modules %zu | materialized Characters %zu | enrolled %u | player no-room %u | deferred MGP objects absent",
+      zones.zone_count(),actors.size(),enrolled_characters,unsigned(player_added));
+  return true;
+ } catch(const std::exception& exception) {
+  error=std::string("Crypt RoomZone runtime failed: ")+exception.what();
+ } catch(...) {
+  error="Crypt RoomZone runtime failed";
+ }
+ clear();
+ return false;
+}
+
+bool NativeCryptRoomRuntime::clear() noexcept {
+ for(std::size_t index=0;index<zones.zone_count();++index) {
+  dh2::crypt_room_zone_owner_v1::ZoneView zone{};
+  while(zones.zone_at(index,&zone)&&zone.member_count) {
+   const auto identity=zone.members[0];
+   const auto status=zones.forget_source_unlinked_actor(zone.module_index,identity);
+   if(status!=dh2::crypt_room_zone_owner_v1::Status::complete)return false;
+   const auto actor=actors.find(identity);
+   if(actor!=actors.end()&&actor->second) {
+    actor->second->room_zone_2f4=0;actor->second->in_room_list_2ef=0;
+    actor->second->in_zone_2f0=0;actor->second->source_updates_enabled=false;
+   }
+  }
+  if(zones.zone_at(index,&zone)) {
+   bool removed=false;
+   if(manager.remove_room_object(zone.identity,&removed)!=
+       dh2::object_manager_runtime_owner_v1::Status::ok)return false;
+  }
+ }
+ if(zones.clear()!=dh2::crypt_room_zone_owner_v1::Status::complete)return false;
+ for(auto* actor:actor_records)if(actor) {
+  actor->source_room_zone_managed=false;
+  actor->room_zone_2f4=0;actor->in_room_list_2ef=0;
+  actor->in_zone_2f0=0;actor->source_updates_enabled=false;
+  actor->renderer_visible=true;
+ }
+ bool removed=false;
+ if(player_identity) {
+  if(manager.remove_no_room_object(player_identity,&removed)!=
+       dh2::object_manager_runtime_owner_v1::Status::ok)return false;
+ }
+ for(const auto handle:source_handles) {
+  if(manager.remove_object(handle,&removed)!=
+       dh2::object_manager_runtime_owner_v1::Status::ok)return false;
+ }
+ actors.clear();actor_records.clear();source_handles.clear();player_identity=0;
+ enrolled_characters=0;module_owner=nullptr;
+ return true;
+}
+
 std::map<int,dh2::animation::Player> prince_attack_clips;
 dh2::data::AnimationBank prince_animation_bank;
 dh2::data::PropertyRules actor_property_rules;
@@ -795,6 +1114,11 @@ bool enabled=false;float center[3]{},radius=1,yaw=-1.57f,pitch=.35f,zoom=1;
 dh2::scene::Scene current_scene;dh2::animation::Player player;
 dh2::animation::Player walk_player;dh2::world::Level level;dh2::world::Point actor_position{};
 bool world_mode=false,walking=false,resume_world=false;float move_x=0,move_y=0,heading=0;
+void rotate_touch_heading_to_camera(float direction[3]){
+ // The renderer camera targets `center`, matching CameraBase's source look-at
+ // vector producer. Keep the tested Point3D angle/rotateXY port as the one owner.
+ (void)dh2_nav_rotate_input_for_camera(direction,center);
+}
 dh2::character::crypt_scripts::SpawnSession crypt_spawn_script;
 dh2_crypt_spawn_trigger::State crypt_trigger_state{};
 dh2_zone_contact::Vec3 crypt_trigger_position{},crypt_trigger_scale{};
@@ -1144,12 +1468,24 @@ struct NativeMonsterInitialization {
  static std::int32_t get_target(void* raw,std::uintptr_t id,std::uintptr_t* output) {
   auto& s=self(raw);if(!s.subject(id)||!output)return 1;*output=s.ai->state.target_40;return 0;
  }
- // These unused OnInit dependencies reject until genuine actor AI services bind.
- static std::int32_t unbound_state(void*,std::uintptr_t,std::int32_t*) {return 1;}
- static std::int32_t unbound_path(void*,std::uintptr_t,std::uint32_t*) {return 1;}
+ static std::int32_t get_state(void* raw,std::uintptr_t id,std::int32_t* output) {
+  if(!raw)return 1;
+  auto& s=self(raw);if(!s.subject(id)||s.owner->character.owner()!=id)return 1;
+  const dh2::native::ghost_script_queries::Binding binding{
+   s.owner->character.owner(),&s.owner->character.state.current,&s.owner->runtime.path.count};
+  return std::int32_t(dh2::native::ghost_script_queries::get_state(&binding,id,output));
+ }
+ static std::int32_t has_path(void* raw,std::uintptr_t id,std::uint32_t* output) {
+  if(!raw)return 1;
+  auto& s=self(raw);if(!s.subject(id)||s.owner->character.owner()!=id)return 1;
+  const dh2::native::ghost_script_queries::Binding binding{
+   s.owner->character.owner(),&s.owner->character.state.current,&s.owner->runtime.path.count};
+  return std::int32_t(dh2::native::ghost_script_queries::has_path(&binding,id,output));
+ }
+ // Script movement commands remain unbound until genuine actor AI services bind.
  static std::int32_t unbound_command(void*,std::uintptr_t,std::uintptr_t) {return 1;}
  dh2::monster_external_script::Services script_services() {
-  return {this,ai->character_identity,structure,property,constant,has_target,get_target,unbound_state,unbound_path,
+  return {this,ai->character_identity,structure,property,constant,has_target,get_target,get_state,has_path,
    unbound_command,unbound_command,unbound_command,oid,position,host_level,difficulty,range,set_level};
  }
  static std::int32_t construct_service(void* raw,dh2::ais_external_initialization::State* state,const dh2::ais_external_initialization::Request* request) {
@@ -1301,7 +1637,15 @@ struct NativeMonsterInitialization {
    }
    case script_timer_start: {
     const auto timer=s.owner->character.start_timer(request->argument0,-1,request->argument1,0);
-    if(timer<0)throw std::runtime_error("Native AI timer allocation failed");reply->word=std::uint32_t(timer);++s.timers_started;break;
+    if(timer<0)throw std::runtime_error("Native AI timer allocation failed");
+    // CharAI::OnInit stores the returned Character timer IDs in CharAI+0x10
+    // (AI_Tick / event 0x33) and +0x14 (DoT_Tick / event 0x34). AI_SetDead
+    // stops these exact fields before it clears them, so keep this projection
+    // on the same timer owner as ScriptLifecycleState64 and SpawnOwner.
+    if(request->argument1==0x33)s.ai->state.word_10=std::uint32_t(timer);
+    else if(request->argument1==0x34)s.ai->state.word_14=std::uint32_t(timer);
+    else throw std::runtime_error("Native AI timer event has no CharAI field mapping");
+    reply->word=std::uint32_t(timer);++s.timers_started;break;
    }
    case script_ais_init:
    case script_ais_init_post:
@@ -1338,6 +1682,10 @@ struct NativeMonsterInitialization {
      init_phases!=std::vector<unsigned>({1,2,3,4,5})||skills.skill_scripts().size()!=0||skills.faery_scripts().size()!=5||
      last_skill_update.skill_slots!=0||last_skill_update.faery_slots!=5||last_skill_update.script_updates!=0)
    throw std::runtime_error("Native Ghost ordered load/init publication failed");
+  if(lifecycle.timer33<0||lifecycle.timer34<0||
+     ai->state.word_10!=std::uint32_t(lifecycle.timer33)||
+     ai->state.word_14!=std::uint32_t(lifecycle.timer34))
+   throw std::runtime_error("Native Ghost CharAI timer fields do not reference the source timer owner");
   ai->state.active_ais_1c=lifecycle.active;ai->state.alternate_ais_20=lifecycle.pending;
   // The source timers were allocated in their original OnInit order. The
   // native port pauses them until their actual AI/DoT expiry providers bind;
@@ -1559,11 +1907,10 @@ void sync_search_projection(ObjectActor& actor) {
  object.forward[0]=std::cos(angle);object.forward[1]=std::sin(angle);object.forward[2]=0.f;
  object.visible=actor.spawn_owner?std::uint8_t(actor.spawn_owner->source_visible):1;
  object.has_target_position=1;
- // GameObject constructors write +0x2ee=1 and +0x2f0=0. RoomZone enrollment
- // or InitSpawned later owns +0x2f0; this projection remains at the proven
- // constructor value until that producer is bound. These are distinct from
- // Character visibility.
- object.character_2ee=1;object.character_2f0=0;
+ // Preserve the actor's canonical source zoning bytes. +0x2ef/+0x2f4 are
+ // initial RoomZone membership; +0x2f0 is the separate active/update state.
+ object.character_2ee=actor.zoning_enabled_2ee;
+ object.character_2f0=actor.in_zone_2f0;
  projection.is_character=actor.kind==1;
  if(actor.kind==1) {
   projection.character.identity=actor.identity;
@@ -1590,6 +1937,38 @@ void sync_prince_search_projection() {
  projection.character.source_word_1314=prince_combat.properties.resolved[199];
 }
 
+std::vector<ObjectActor*> ordered_world_actors() {
+ std::vector<ObjectActor*> actors(world_objects.size(),nullptr);
+ for(auto& group:object_groups)for(auto& actor:group.instances) {
+  if(actor.identity<0x100000002ull)continue;
+  const auto index=std::size_t(actor.identity-0x100000002ull);
+  if(index>=actors.size()||actors[index])
+   throw std::runtime_error("Native actor identity order differs from the DACT records");
+  actors[index]=&actor;
+ }
+ return actors;
+}
+
+void initialize_active_crypt_room_zones() {
+ if(active_crypt_module_bounds.modules.empty())return;
+ auto ordered=ordered_world_actors();
+ std::vector<ObjectActor*> direct_characters;
+ direct_characters.reserve(ordered.size());
+ for(std::size_t i=0;i<ordered.size();++i) {
+  if(!ordered[i]||world_objects[i].room>=level.rooms)
+   throw std::runtime_error("Crypt RoomZone DACT order differs from the loaded world");
+  if(ordered[i]->kind==1)direct_characters.push_back(ordered[i]);
+ }
+ auto candidate=std::make_unique<NativeCryptRoomRuntime>();
+ std::string error;
+ if(!candidate->initialize(active_crypt_module_bounds,direct_characters,
+                           prince_character.identity(),
+                           active_level_assets.generated_crypt_handle_ledger.get(),
+                           error))
+  throw std::runtime_error(error.empty()?"Crypt RoomZone initialization failed":error);
+ active_crypt_room_runtime=std::move(candidate);
+}
+
 void build_search_world() {
  search_world.clear();
  native_characters.clear();
@@ -1606,7 +1985,7 @@ void build_search_world() {
  search_world.room_sentinel={search_world.rooms.empty()?&search_world.room_sentinel:
                              &search_world.rooms.front(),nullptr};
  search_world.registry={&search_world.room_sentinel};
- std::vector<ObjectActor*> actors(world_objects.size(),nullptr);
+ auto actors=ordered_world_actors();
  // A distinct owned flat Character list supplies the actual aggro iterator
  // shape. This native enrollment follows created Character projections;
  // complete ObjectManager name/map/factory registration remains separate.
@@ -1615,12 +1994,6 @@ void build_search_world() {
  if(native_characters.enroll_after_add(&prince_search_projection.character,false,&appended)!=
       dh2::native::character_list::Owner::Status::ok || !appended)
   throw std::runtime_error("Native player Character-list enrollment failed");
- for(auto& group:object_groups)for(auto& actor:group.instances) {
-  if(actor.identity<0x100000002ull)continue;
-  const auto index=std::size_t(actor.identity-0x100000002ull);
-  if(index>=actors.size()||actors[index])throw std::runtime_error("Character search actor identity differs");
-  actors[index]=&actor;
- }
  for(std::size_t i=0;i<world_objects.size();++i) {
   const auto& record=world_objects[i];
   if(record.room>=level.rooms||!actors[i])throw std::runtime_error("Character search room membership differs");
@@ -1892,36 +2265,261 @@ bool select_menu_preview_slot(std::int32_t slot,bool force,std::string& error){
  error.clear();return true;
 }
 namespace {
-bool compile_packaged_crypt_spawnpoints(AAssetManager* assets,
-    const std::vector<std::uint8_t>& source_level,
-    std::vector<std::uint8_t>& output,std::string& error){
- try{
- struct Input {const char* source_path;const char* asset_name;};
- static constexpr std::array<Input,8> inputs={{
-  {"data/iphone/3d/modules/crypt/mgp/crypt_cemetery_entrance_01.mgp","crypt_cemetery_entrance_01.mgp"},
-  {"data/iphone/3d/modules/crypt/mgp/crypt_straight_ns_01.mgp","crypt_straight_ns_01.mgp"},
-  {"data/iphone/3d/modules/crypt/mgp/crypt_corner_sw_02.mgp","crypt_corner_sw_02.mgp"},
-  {"data/iphone/3d/modules/crypt/mgp/crypt_corner_ne_02.mgp","crypt_corner_ne_02.mgp"},
-  {"data/iphone/3d/modules/crypt/mgp/crypt_t_sew_01.mgp","crypt_t_sew_01.mgp"},
-  {"data/iphone/3d/modules/crypt/mgp/crypt_deadend_e_01.mgp","crypt_deadend_e_01.mgp"},
-  {"data/iphone/3d/modules/crypt/mgp/crypt_corner_nw_02.mgp","crypt_corner_nw_02.mgp"},
-  {"data/iphone/3d/modules/crypt/mgp/crypt_straight_c_ns_01.mgp","crypt_straight_c_ns_01.mgp"}}};
- std::vector<std::vector<std::uint8_t>> storage;storage.reserve(inputs.size());
- std::vector<dh2::world::GeneratedMgpView> views;views.reserve(inputs.size());
- for(const auto& input:inputs){
-  storage.push_back(read(assets,input.asset_name,"worlds"));
-  const auto& bytes=storage.back();
-  views.push_back({input.source_path,bytes.data(),bytes.size()});
+bool crypt_safe_asset_basename(std::string_view value,std::string_view extension){
+ if(value.size()<=extension.size()||value.substr(value.size()-extension.size())!=extension||
+    value.find("..")!=std::string_view::npos)return false;
+ const auto stem=value.substr(0,value.size()-extension.size());
+ if(stem.empty()||stem.find('.')!=std::string_view::npos)return false;
+ for(const auto ch:value){
+  const bool allowed=(ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||
+      (ch>='0'&&ch<='9')||ch=='_'||ch=='-'||ch=='.';
+  if(!allowed)return false;
  }
- if(!dh2::world::compile_generated_spawnpoints_v1(source_level.data(),source_level.size(),
-      "GOTHICUS_CRYPT_01","data/scene/x07_crypt_backup.mlx",views.data(),views.size(),output,error))
-  return false;
  return true;
- }catch(const std::exception& e){output.clear();error=e.what();return false;}
+}
+
+bool crypt_safe_asset_directory(std::string_view value){
+ if(value.empty()||value.front()=='/'||value.back()=='/'||
+    value.find("..")!=std::string_view::npos||value.find('\\')!=std::string_view::npos)
+  return false;
+ bool previous_slash=false;
+ for(const auto ch:value){
+  const bool slash=ch=='/';
+  const bool allowed=slash||(ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||
+      (ch>='0'&&ch<='9')||ch=='_'||ch=='-';
+  if(!allowed||(slash&&previous_slash))return false;
+  previous_slash=slash;
+ }
+ return true;
+}
+
+bool load_crypt_rule_assets(AAssetManager* assets,
+    std::shared_ptr<dh2::random_level::CryptRuleDocumentV1>& rules,
+    std::shared_ptr<dh2::random_level::CryptModuleAssetBytesV1>& source_bytes,
+    std::shared_ptr<dh2::random_level::CryptModuleCatalogueV1>& catalogue,
+    std::string& error){
+ using namespace dh2::random_level;
+ try{
+  const auto rule_bytes=read(assets,"007_crypt_01.rule.xml","worlds");
+  const std::string_view rule_xml(reinterpret_cast<const char*>(rule_bytes.data()),rule_bytes.size());
+  const auto parsed=parse_crypt_rule_v1(rule_xml);
+  if(!parsed){error="Crypt rule parse failed: "+parsed.error;return false;}
+  if(!crypt_safe_asset_directory(parsed.document->folder)){
+   error="Crypt rule has an unsafe source module folder";return false;
+  }
+  const std::string module_root=parsed.document->folder+"/";
+  auto bytes=std::make_shared<CryptModuleAssetBytesV1>();
+  const auto read_source=[&](const std::string& relative,std::string& output)->bool{
+   const auto value=read(assets,relative,"original-cache");
+   if(value.empty()){error="Crypt source asset is empty: "+relative;return false;}
+   output.assign(reinterpret_cast<const char*>(value.data()),value.size());
+   return true;
+  };
+  if(!read_source(module_root+"mgx/mgxlist.txt",bytes->mgx_list))return false;
+  std::set<std::string> module_names,gameplay_names,visual_names;
+  for(std::size_t cursor=0;cursor<=bytes->mgx_list.size();){
+   const auto end=bytes->mgx_list.find('\n',cursor);
+   auto line=std::string_view(bytes->mgx_list).substr(
+       cursor,end==std::string::npos?bytes->mgx_list.size()-cursor:end-cursor);
+   while(!line.empty()&&std::isspace(static_cast<unsigned char>(line.front())))line.remove_prefix(1);
+   while(!line.empty()&&std::isspace(static_cast<unsigned char>(line.back())))line.remove_suffix(1);
+   if(!line.empty()){
+    if(!crypt_safe_asset_basename(line,".mgx")){
+     error="Crypt mgxlist contains an unsafe module filename";return false;
+    }
+    std::string name(line.substr(0,line.size()-4));module_names.insert(std::move(name));
+   }
+   if(end==std::string::npos)break;
+   cursor=end+1;
+  }
+  for(const auto& list:parsed.document->lists){
+   for(const auto& entry:list.entries){
+    if(!crypt_safe_asset_basename(entry.name+".mgx",".mgx")||
+       !crypt_safe_asset_basename(entry.gameplay,".mgp")||
+       !crypt_safe_asset_basename(entry.visual,".mvp")){
+     error="Crypt rule contains an unsafe gameplay or visual filename";return false;
+    }
+    module_names.insert(entry.name);
+    gameplay_names.insert(entry.gameplay);
+    visual_names.insert(entry.visual);
+   }
+  }
+  const auto read_module_files=[&](const std::set<std::string>& names,
+      const char* directory,const char* extension,
+      std::map<std::string,std::string>& output)->bool{
+   for(const auto& name:names){
+    const std::string suffix(extension);
+    const bool has_suffix=name.size()>=suffix.size()&&
+        name.compare(name.size()-suffix.size(),suffix.size(),suffix)==0;
+    const auto filename=has_suffix?name:name+suffix;
+    std::string contents;
+    if(!read_source(module_root+directory+"/"+filename,contents))return false;
+    output.emplace(filename,std::move(contents));
+   }
+   return true;
+  };
+  if(!read_module_files(module_names,"mgx",".mgx",bytes->mgx)||
+     !read_module_files(module_names,"mvx",".mvx",bytes->mvx)||
+     !read_module_files(gameplay_names,"mgp",".mgp",bytes->mgp)||
+     !read_module_files(visual_names,"mvp",".mvp",bytes->mvp))return false;
+
+  auto checked=std::make_shared<CryptModuleCatalogueV1>(
+      build_crypt_module_catalogue_from_bytes_v1(*parsed.document,*bytes));
+  if(!checked->catalogue_issues.empty()||checked->unresolved_candidate_count()!=0){
+   error="Crypt source asset catalogue is incomplete";
+   for(const auto& issue:checked->catalogue_issues)error+="; "+issue;
+   for(const auto& [key,asset]:checked->assets_by_exact_key){
+    for(const auto& issue:asset.issues)error+="; "+key.name+": "+issue;
+   }
+   return false;
+  }
+  auto owned_rules=std::make_shared<CryptRuleDocumentV1>(*parsed.document);
+  rules=std::move(owned_rules);source_bytes=std::move(bytes);catalogue=std::move(checked);
+  error.clear();return true;
+ }catch(const std::exception& exception){
+  error=std::string("Crypt source asset loading failed: ")+exception.what();return false;
+ }
+}
+
+bool build_generated_crypt_mgp_views(
+    const RuntimeLevelAssets& runtime,
+    std::vector<dh2::world::GeneratedMgpView>& views,
+    std::vector<std::string>& source_paths,std::string& error){
+ views.clear();source_paths.clear();
+ if(!runtime.crypt_rules||!runtime.crypt_asset_bytes||
+    runtime.generated_crypt_modules.empty()){
+  error="Generated Crypt module inputs are unavailable";return false;
+ }
+ try{
+  views.reserve(runtime.generated_crypt_modules.size());
+  source_paths.reserve(runtime.generated_crypt_modules.size());
+  for(const auto& module:runtime.generated_crypt_modules){
+   const auto found=runtime.crypt_asset_bytes->mgp.find(module.gameplay);
+   if(found==runtime.crypt_asset_bytes->mgp.end()||found->second.empty()){
+    error="Generated Crypt MGP is missing: "+module.gameplay;return false;
+   }
+   source_paths.push_back(runtime.crypt_rules->folder+"/mgp/"+module.gameplay);
+   const auto& bytes=found->second;
+   views.push_back({source_paths.back().c_str(),
+       reinterpret_cast<const std::uint8_t*>(bytes.data()),bytes.size()});
+  }
+  error.clear();return true;
+ }catch(const std::exception& exception){
+  views.clear();source_paths.clear();error=exception.what();return false;
+ }
+}
+
+bool build_generated_crypt_mvp_views(
+    const RuntimeLevelAssets& runtime,
+    std::vector<dh2::world::GeneratedCryptMvpFileV1>& views,
+    std::vector<std::string>& source_paths,std::string& error){
+ views.clear();source_paths.clear();
+ if(!runtime.crypt_rules||!runtime.crypt_asset_bytes||
+    runtime.generated_crypt_modules.empty()){
+  error="Generated Crypt visual inputs are unavailable";return false;
+ }
+ try{
+  views.reserve(runtime.generated_crypt_modules.size());
+  source_paths.reserve(runtime.generated_crypt_modules.size());
+  for(const auto& module:runtime.generated_crypt_modules){
+   const auto found=runtime.crypt_asset_bytes->mvp.find(module.visual);
+   if(found==runtime.crypt_asset_bytes->mvp.end()||found->second.empty()){
+    error="Generated Crypt MVP is missing: "+module.visual;return false;
+   }
+   source_paths.push_back(runtime.crypt_rules->folder+"/mvp/"+module.visual);
+   const auto& bytes=found->second;
+   views.push_back({source_paths.back().c_str(),
+       reinterpret_cast<const std::uint8_t*>(bytes.data()),bytes.size()});
+  }
+  error.clear();return true;
+ }catch(const std::exception& exception){
+  views.clear();source_paths.clear();error=exception.what();return false;
+ }
+}
+
+bool build_generated_crypt_handle_ledger(
+    RuntimeLevelAssets& runtime,std::string& error){
+ using namespace dh2::world;
+ using namespace dh2::world::source_handle_ledger_v1;
+ if(!runtime.crypt_rules||!runtime.crypt_asset_bytes||
+    runtime.generated_crypt_modules.empty()||
+    runtime.generated_crypt_source_xml.empty()){
+  error="Generated Crypt ObjectManager inputs are unavailable";return false;
+ }
+ try{
+  struct AssetRef {
+   std::uint32_t module_index;
+   ModuleFileKind kind;
+   const std::string* bytes;
+  };
+  std::vector<std::string> paths;
+  std::vector<AssetRef> refs;
+  paths.reserve(runtime.generated_crypt_modules.size()*2);
+  refs.reserve(runtime.generated_crypt_modules.size()*2);
+  for(std::size_t index=0;index<runtime.generated_crypt_modules.size();++index){
+   const auto& module=runtime.generated_crypt_modules[index];
+   const auto mgp=runtime.crypt_asset_bytes->mgp.find(module.gameplay);
+   const auto mvp=runtime.crypt_asset_bytes->mvp.find(module.visual);
+   if(mgp==runtime.crypt_asset_bytes->mgp.end()||mgp->second.empty()||
+      mvp==runtime.crypt_asset_bytes->mvp.end()||mvp->second.empty()){
+    error="Generated Crypt ObjectManager file is missing: "+module.gameplay+
+          " / "+module.visual;return false;
+   }
+   const auto module_index=static_cast<std::uint32_t>(index);
+   paths.push_back(runtime.crypt_rules->folder+"/mgp/"+module.gameplay);
+   refs.push_back({module_index,ModuleFileKind::mgp,&mgp->second});
+   paths.push_back(runtime.crypt_rules->folder+"/mvp/"+module.visual);
+   refs.push_back({module_index,ModuleFileKind::mvp,&mvp->second});
+  }
+  std::vector<OrderedModuleFile> files;
+  files.reserve(refs.size());
+  for(std::size_t index=0;index<refs.size();++index){
+   const auto& ref=refs[index];const auto& path=paths[index];
+   files.push_back({ref.module_index,ref.kind,path.c_str(),
+       reinterpret_cast<const std::uint8_t*>(ref.bytes->data()),
+       ref.bytes->size()});
+  }
+  auto ledger=std::make_shared<Ledger>();
+  // IDA: the normal character-select path flushes the source manager, then
+  // spawns LightPoint, AnimatedDecor and Player (handles 1-3) before LoadFile.
+  // The generated LevelConfig therefore starts at handle 4; every later root
+  // record follows in XML order.
+  constexpr std::uint32_t first_source_handle=4;
+  const auto root_offset=static_cast<std::uint32_t>(
+      1+runtime.generated_crypt_modules.size());
+  const auto& xml=runtime.generated_crypt_source_xml;
+  const auto status=source_handle_ledger_v1::build(
+      reinterpret_cast<const std::uint8_t*>(xml.data()),xml.size(),
+      runtime.name.c_str(),"data/scene/generated_crypt.mlx",
+      files.data(),files.size(),first_source_handle,root_offset,*ledger,error);
+  if(status!=source_handle_ledger_v1::Status::ok){
+   error="Generated Crypt ObjectManager order rejected: "+error;return false;
+  }
+  runtime.generated_crypt_handle_ledger=std::move(ledger);
+  error.clear();return true;
+ }catch(const std::exception& exception){
+  error=std::string("Generated Crypt ObjectManager ledger failed: ")+exception.what();
+  return false;
+ }
+}
+
+bool compile_generated_crypt_spawnpoint(
+    const RuntimeLevelAssets& runtime,std::int32_t entrypoint,
+    std::vector<std::uint8_t>& output,std::string& error){
+ output.clear();
+ std::vector<dh2::world::GeneratedMgpView> views;
+ std::vector<std::string> source_paths;
+ if(!build_generated_crypt_mgp_views(runtime,views,source_paths,error))return false;
+ const auto& xml=runtime.generated_crypt_source_xml;
+ if(xml.empty()){error="Generated Crypt Level XML is empty";return false;}
+ return dh2::world::compile_generated_spawnpoint_v1(
+     reinterpret_cast<const std::uint8_t*>(xml.data()),xml.size(),
+     "GOTHICUS_CRYPT_01","data/scene/generated_crypt.mlx",
+     views.data(),views.size(),entrypoint,output,error);
 }
 
 bool prepare_native_menu_start(std::int32_t slot,const PendingMenuStart& menu,
-    AAssetManager* assets,dh2::data::NativeStartGamePlanV1& plan,
+    AAssetManager* assets,std::int32_t debug_level_row,dh2::data::NativeStartGamePlanV1& plan,
     RuntimeLevelAssets& runtime,GeneratedWorldPayload& payload,std::string& error){
  auto character_data=read(assets,"character_properties_pyarray.bin","data");
  auto character_names=read(assets,"character_properties_pyarraynames.bin","data");
@@ -1958,6 +2556,11 @@ bool prepare_native_menu_start(std::int32_t slot,const PendingMenuStart& menu,
  save.level_rows=source_save.level_name_fields().word50;
  save.entry_points=source_save.level_entry_points();
  save.use_spawn_points=source_save.use_spawn_points();
+ if(debug_level_row!=-1){
+  if(debug_level_row!=23){error="Only source Crypt row 23 is available as a debug launch override";return false;}
+  for(auto& row:save.level_rows)row=debug_level_row;
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Transient debug LevelList override | row %d | campaign save unchanged",debug_level_row);
+ }
  dh2::data::NativeStartGameRequestV1 request;
  request.current_difficulty=native_save_difficulty;
  request.has_numeric_difficulty=menu.has_numeric_difficulty;
@@ -1966,33 +2569,85 @@ bool prepare_native_menu_start(std::int32_t slot,const PendingMenuStart& menu,
  request.initial_level_row=initial_level_row;
  if(!dh2::data::resolve_native_start_game_plan_v1(levels,save,request,plan,error))return false;
  if(!plan.should_launch){error="NativeStartGame source state rejected the launch";return false;}
+ if(plan.save_after_numeric_request){
+  // NativeStartGame updates the process difficulty only when the requested
+  // row is unlocked, but reaches this first SG_Save for every numeric input.
+  native_save_difficulty=plan.difficulty_for_level;
+  if(!temporary_save.save_numeric_request(characters,native_save_difficulty,error))return false;
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+    "NativeStartGame numeric SG_Save | slot %d | difficulty %d | same temporary Save/index",
+    slot,native_save_difficulty);
+ }
+ const auto saved_seed=static_cast<std::uint32_t>(
+     source_save.level_name_fields().word5c[std::size_t(plan.difficulty_for_level)]);
+ bool dont_use_player_seed=false;
+ if(saved_seed!=0){
+  if(!menu_debug_load(assets,error))return false;
+  std::uint8_t value=0;
+  if(native_debug->runtime().get_switch("DontUsePlayerSeed",native_debug->globals(),
+       native_debug->services(),value)!=dh2::debug_switches::Status::complete){
+   error="Source DontUsePlayerSeed query failed";return false;
+  }
+  dont_use_player_seed=value!=0;
+ }
+ std::uint32_t real_time_seed=0;
+ if(saved_seed==0||dont_use_player_seed){
+  if(!original_real_time_ms(real_time_seed)){
+   error="Original Application::LoadLevel seed clock read failed";return false;
+  }
+ }
+ const auto application_seed=dh2::data::resolve_application_load_seed_v1(
+     saved_seed,dont_use_player_seed,real_time_seed);
+ if(plan.clear_saved_spawn_flag_before_load){
+  if(plan.saved_spawn_flag_row_to_clear<0||plan.saved_spawn_flag_row_to_clear>=3){
+   error="NativeStartGame selected LUSP row is outside the three source difficulties";return false;
+  }
+  if(!temporary_save.clear_spawn_point_and_save(
+       std::size_t(plan.saved_spawn_flag_row_to_clear),characters,
+       native_save_difficulty,error))return false;
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+    "NativeStartGame cleared LUSP and SG_Save | slot %d | row %d | offline load spawn %u | same temporary Save/index",
+    slot,plan.saved_spawn_flag_row_to_clear,unsigned(plan.load_spawn_flag));
+ }
  runtime={};runtime.row=plan.level_row;runtime.name=plan.level_name;runtime.level_file=plan.level_file;
+ runtime.source_load_seed=application_seed.ordinary_seed;
+ runtime.source_load_synchronized_seed=application_seed.synchronized_seed;
  if(plan.level_row==41&&plan.level_name=="SWAMP"&&plan.level_file=="001_swamp.mlx"){
   runtime.descriptor="001_swamp.dwld";runtime.bres="data/3d/modules/swamp/swamp.bdae";
   runtime.spawns="001_swamp.spwn";runtime.objects="001_swamp.dact";runtime.development_layout=false;
   payload.dwld_v1=read(assets,runtime.descriptor,"worlds");
  }else if(plan.level_row==23&&plan.level_name=="GOTHICUS_CRYPT_01"&&
           plan.level_file=="007_crypt_01.rule.xml"){
-  // Keep the existing play-tested room arrangement while the IDA-derived
-  // procedural generator is still being implemented. This is explicitly a
-  // development layout; it is not the source-generated campaign Crypt.
- runtime.descriptor="crypt01.dwld";runtime.bres="crypt.bdae";
- runtime.spawns="crypt01.spwn";runtime.objects="crypt01.dact";
-  runtime.development_layout=true;payload.dwld_v1=read(assets,runtime.descriptor,"worlds");
-  // Rebuild the current authored Crypt SPWN from its packaged source MLX/MGPs.
-  // Keep the existing campaign sidecar authoritative unless the generated
-  // bytes match it exactly; no procedural layout or gameplay change is made.
-  try{
-   const auto source_level=read(assets,"x07_crypt_backup.mlx","worlds");
-   std::vector<std::uint8_t> generated_spawns;std::string spawn_error;
-   if(compile_packaged_crypt_spawnpoints(assets,source_level,generated_spawns,spawn_error)){
-    const auto packaged_spawns=read(assets,runtime.spawns,"worlds");
-    if(generated_spawns==packaged_spawns)payload.spwn_v1=std::move(generated_spawns);
-    else __android_log_print(ANDROID_LOG_WARN,"DH2Native","Crypt SPWN regeneration differs from packaged fixture; using packaged sidecar");
-   }else __android_log_print(ANDROID_LOG_WARN,"DH2Native","Crypt SPWN regeneration unavailable; using packaged sidecar | %s",spawn_error.c_str());
-  }catch(const std::exception& e){
-   __android_log_print(ANDROID_LOG_WARN,"DH2Native","Crypt SPWN regeneration input unavailable; using packaged sidecar | %s",e.what());
+  runtime.descriptor="generated-crypt.dwld";runtime.bres="crypt.bdae";
+  runtime.spawns="generated-crypt.spwn";runtime.objects="generated-crypt.dact";
+  if(!load_crypt_rule_assets(assets,runtime.crypt_rules,
+      runtime.crypt_asset_bytes,runtime.crypt_catalogue,error))return false;
+  auto generated=dh2::random_level::generate_crypt_level_v1(
+      *runtime.crypt_rules,*runtime.crypt_catalogue,runtime.source_load_seed);
+  if(generated.status!=dh2::random_level::CryptLevelGeneratorStatusV1::success){
+   error="Source Crypt generation failed: "+generated.message;return false;
   }
+  runtime.generated_crypt_layout=true;runtime.development_layout=false;
+  runtime.generated_crypt_source_xml=std::move(generated.layout.source_level_xml);
+  runtime.generated_crypt_modules=std::move(generated.modules);
+  if(!build_generated_crypt_handle_ledger(runtime,error)){
+   error="Generated Crypt ObjectManager ledger failed: "+error;return false;
+  }
+  payload.dwld_v1=std::move(generated.layout.dwld_v1);
+  if(!compile_generated_crypt_spawnpoint(runtime,plan.entry_point,
+       payload.spwn_v1,error)){
+   error="Generated Crypt SpawnPoint compile failed: "+error;return false;
+  }
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+    "Source Crypt generated | seed %u | modules %zu | Step rows %zu | candidates %zu | rollbacks %zu | spawn entrypoint %d | rule entries %zu | exact tuples %zu | MGX/MVX %zu/%zu | MGP/MVP %zu/%zu",
+    runtime.source_load_seed,runtime.generated_crypt_modules.size(),
+    generated.generation_result.rows_tried,
+    generated.generation_result.one_step_candidates_tried,
+    generated.generation_result.row_rollbacks,plan.entry_point,
+    runtime.crypt_catalogue->rule_candidates.size(),
+    runtime.crypt_catalogue->assets_by_exact_key.size(),
+    runtime.crypt_asset_bytes->mgx.size(),runtime.crypt_asset_bytes->mvx.size(),
+    runtime.crypt_asset_bytes->mgp.size(),runtime.crypt_asset_bytes->mvp.size());
  }else{
   error="Selected LevelList row has no native source loader yet: row "+
       std::to_string(plan.level_row)+" ("+plan.level_name+" / "+plan.level_file+")";return false;
@@ -2011,7 +2666,7 @@ bool request_menu_start(bool numeric,std::int32_t requested,std::int32_t& slot,s
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Authored NativeStartGame request accepted | slot %d | numeric %d | requested difficulty %d | source LevelList resolution pending",slot,numeric,requested);
  return true;
 }
-std::string start_menu_game(std::int32_t slot,AAssetManager* assets){
+std::string start_menu_game(std::int32_t slot,AAssetManager* assets,std::int32_t debug_level_row){
  std::string error;std::int32_t assigned=-1;
  if(!selected_menu_save_slot(assigned,error))return error;
  if(assigned!=slot)return "Start Game selected slot differs";
@@ -2021,14 +2676,16 @@ std::string start_menu_game(std::int32_t slot,AAssetManager* assets){
       ?pending_menu_start:PendingMenuStart{assigned,false,0,true};
   dh2::data::NativeStartGamePlanV1 plan;RuntimeLevelAssets runtime;
   GeneratedWorldPayload payload;
-  if(!prepare_native_menu_start(assigned,request,assets,plan,runtime,payload,error))
+  if(!prepare_native_menu_start(assigned,request,assets,debug_level_row,plan,runtime,payload,error))
    return "Start Game failed: "+error;
   pending_menu_start={};active_native_start_plan=plan;active_level_assets=std::move(runtime);
   menu_gameplay_slot=assigned;
-  __android_log_print(ANDROID_LOG_INFO,"DH2Native","NativeStartGame plan | slot %d | row %d | %s | source file %s | entry %d | spawn %u | current difficulty %d | raw load difficulty %d | clear+save-before-load effect still pending | layout %s",
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","NativeStartGame plan | slot %d | row %d | %s | source file %s | entry %d | spawn %u | raw seed args %u/%u | resolved local seed %u/%u | current difficulty %d | raw load difficulty %d | metadata SG_Save effects complete before native world load | layout %s",
    plan.slot,plan.level_row,plan.level_name.c_str(),plan.level_file.c_str(),plan.entry_point,
-   unsigned(plan.load_spawn_flag),plan.difficulty_for_level,plan.requested_difficulty_for_load,
-   active_level_assets.development_layout?"development":"source-authored-static");
+   unsigned(plan.load_spawn_flag),plan.seed,plan.synchronized_seed,active_level_assets.source_load_seed,
+   active_level_assets.source_load_synchronized_seed,plan.difficulty_for_level,plan.requested_difficulty_for_load,
+   active_level_assets.generated_crypt_layout?"source-generated":
+    active_level_assets.development_layout?"development":"source-authored-static");
   const auto result=load_world(payload.dwld_v1.data(),payload.dwld_v1.size(),assets,
       payload.spwn_v1.empty()?nullptr:payload.spwn_v1.data(),payload.spwn_v1.size());
   if(result.rfind("World load failed:",0)==0){deactivate();menu_gameplay_slot=-1;active_native_start_plan.reset();active_level_assets=RuntimeLevelAssets{};}
@@ -2051,9 +2708,20 @@ void reset_context(){
   if(!prince_retained_pose.capture(prince_locomotion,prince_attack_clips,prince_visual,current_scene,error))
    throw std::runtime_error("Player scene retention failed: "+error);
   saved_actors.clear();
-  for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);
- }
- native_actor_ready=false;clear_actor_world(retain);search_world.clear();prince_search_projection={};prince_body={};
+  for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1){
+   auto saved=actor;saved.room_zone_2f4=0;saved.visual_object_2d8=0;
+   saved.in_room_list_2ef=0;saved.zoning_enabled_2ee=1;saved.in_zone_2f0=0;
+   saved.visible_80=1;saved.source_room_zone_managed=false;
+   saved.source_updates_enabled=false;saved.renderer_visible=true;
+   saved_actors.push_back(std::move(saved));
+  }
+}
+if(active_crypt_room_runtime){
+ if(!active_crypt_room_runtime->clear())
+  throw std::runtime_error("Crypt RoomZone owner retirement failed during EGL reset");
+ active_crypt_room_runtime.reset();
+}
+native_actor_ready=false;clear_actor_world(retain);search_world.clear();prince_search_projection={};prince_body={};
  resume_world=retain;world_mode=false;move_x=move_y=0;draws.clear();images.clear();object_groups.clear();world_objects.clear();
  if(!retain){
   prince_retained_pose.clear();prince_locomotion=dh2::actor::BlendedPlayback{};
@@ -2064,6 +2732,11 @@ void reset_context(){
 void deactivate(){
  source_camera={};
  release_class_previews();menu_background=false;class_scene=false;
+ if(active_crypt_room_runtime){
+  if(!active_crypt_room_runtime->clear())
+   __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Crypt RoomZone owner retirement failed");
+  active_crypt_room_runtime.reset();
+ }
  std::string player_owner_error;
  if(!prince_character.unbind_session(player_owner_error))
   __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Native player Character retirement failed: %s",player_owner_error.c_str());
@@ -2445,6 +3118,7 @@ dh2::data::AiRangeResult actor_player_range(const ObjectActor& actor){
  const dh2::data::AiRangeRequest request{{actor.position[0],actor.position[1],actor.position[2]},{actor_position[0],actor_position[1],actor_position[2]},npc->melee_radius,prince->melee_radius,npc->view_radius};dh2_ai_range(&result,&request);return result;
 }
 void update_enemy(ObjectActor& actor,int table){
+ if(actor.source_room_zone_managed&&!actor.source_updates_enabled)return;
  if(actor.gated_spawn)return; // Full actor-owned AI/FSM integration is pending.
  if(!enemy_ai_enabled||frozen||actor.combat_state.dead)return;
  const auto* props=native_actor_ai_props(actor);if(!native_character_classification(actor,dh2::character_ai_classification::Query::monster)||props->script!="monster")return;
@@ -2963,7 +3637,11 @@ void initialize_native_actor(AAssetManager* assets,bool restore){
  prince_flags=prince_state.flags;prince_move_type=prince_state.move_type;
  for(const auto& group:object_groups){
   if(group.instances.empty()||group.instances.front().kind!=2)continue;
-  auto model=read(assets,group.instances.front().model,"actors");dh2::resources::BresView decor_view{};
+  const auto& decor=group.instances.front();
+  const auto separator=decor.model.find_last_of("/\\");
+  const auto model_name=decor.packaged_actor_asset
+    ?decor.model.substr(separator==std::string::npos?0:separator+1):decor.model;
+  auto model=read(assets,model_name,"actors");dh2::resources::BresView decor_view{};
   if(dh2_bres_open(&decor_view,model.data(),model.size())!=dh2::resources::BresError::ok)throw std::runtime_error("Decor collision model rejected");
   dh2::physical::DecorSceneMarker marker;
   if(!dh2::physical::decor_scene_marker(decor_view,marker,error))throw std::runtime_error(error);
@@ -3012,6 +3690,11 @@ void advance_native_actor(unsigned dt_ms){
  // original update once; an unconditional renderer-frame call recreated
  // buffs and repeated callbacks. Full CharAI/AIS frame providers stay open.
  for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.spawn_owner){
+  // ObjectManager::Update only dispatches zonable Characters after the
+  // RoomZone callback has enabled their source +0x3c update membership.
+  // Keep their timer/FSM clocks behind that same active-room gate; the player
+  // uses the separate no-room update path and is handled above.
+  if(actor.source_room_zone_managed&&!actor.source_updates_enabled)continue;
   auto& character=actor.spawn_owner->character;
   if(character.update_timers(dt_ms,0)<0||character.update_state(dt_ms)<0)
    throw std::runtime_error("Gated Character timer/state update failed");
@@ -3022,7 +3705,7 @@ void advance_native_actor(unsigned dt_ms){
  const bool was_heading=prince_state.heading_active!=0;
  if(!prince_state.controller_locked){
   if(input_active){
-   const float input[3]{move_x,move_y,0};
+   float input[3]{move_x,move_y,0};rotate_touch_heading_to_camera(input);
    if(dh2_nav_set_heading(&prince_runtime.controller.heading,input,1))throw std::runtime_error("Native input heading rejected");
    prince_runtime.rotation.heading_angle=prince_runtime.controller.heading.angle;
    for(unsigned i=0;i<3;++i)prince_runtime.subobjects.destination[i]=prince_runtime.subobjects.position[i]+input[i]*1000.f;
@@ -3271,6 +3954,13 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       throw std::runtime_error("Player scene retention failed: "+retention_error);
     if(!restore){prince_skills.reset();prince_source_ai.reset();}
     std::vector<std::uint8_t> source_mlx_bytes,source_layout_bytes,source_spawn_bytes;
+    std::vector<dh2::world::GeneratedMgpView> generated_crypt_mgps;
+    std::vector<std::string> generated_crypt_mgp_paths;
+    std::vector<dh2::world::GeneratedCryptMvpFileV1> generated_crypt_mvps;
+    std::vector<std::string> generated_crypt_mvp_paths;
+    std::vector<dh2::world::GeneratedCryptAnimatedDecorV1>
+        generated_crypt_animated_decors;
+    std::size_t generated_crypt_deferred_mvp_count=0;
     if(generated_spawnpoints||generated_spawnpoints_size){
       if(!generated_spawnpoints||!generated_spawnpoints_size||
          generated_spawnpoints_size>16+512*144)
@@ -3283,8 +3973,19 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     std::vector<std::vector<std::uint8_t>> source_mvp_bytes;
     std::vector<dh2::world::SourceMvpView> source_mvps;
     std::vector<dh2::world::SourceMvpDecor> source_mvp_decors;
+    std::vector<MvpRenderInstance> mvp_render_instances;
     const std::uint8_t* selected_descriptor=descriptor;std::size_t selected_descriptor_size=size;
-    if(source_static_level){
+    if(level_assets.generated_crypt_layout){
+      const auto& xml=level_assets.generated_crypt_source_xml;
+      source_mlx_bytes.assign(xml.begin(),xml.end());
+      std::string generated_mgp_error;
+      if(!build_generated_crypt_mgp_views(level_assets,generated_crypt_mgps,
+           generated_crypt_mgp_paths,generated_mgp_error))
+        throw std::runtime_error("Generated Crypt MGP inputs rejected: "+generated_mgp_error);
+      if(!build_generated_crypt_mvp_views(level_assets,generated_crypt_mvps,
+           generated_crypt_mvp_paths,generated_mgp_error))
+        throw std::runtime_error("Generated Crypt MVP inputs rejected: "+generated_mgp_error);
+    }else if(source_static_level){
       std::string source_layout_error;
       source_mlx_bytes=read(assets,"data/scene/001_swamp.mlx","original-cache");
       static constexpr std::array<const char*,9> source_mgp_paths={
@@ -3334,19 +4035,45 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     }
     auto raw=read(assets,level_assets.bres,source_static_level?"original-cache":"worlds");dh2::resources::BresView view{};
     if(dh2_bres_open(&view,raw.data(),raw.size())!=dh2::resources::BresError::ok)throw std::runtime_error("World BRES rejected");
-    dh2::world::Level candidate;std::string error;if(!dh2::world::load(view,selected_descriptor,selected_descriptor_size,candidate,error))throw std::runtime_error(error);
-    if(level_assets.name=="GOTHICUS_CRYPT_01"&&level_assets.development_layout){
-     const auto source_mlx=read(assets,"x07_crypt_backup.mlx","worlds");
+    dh2::world::Level candidate;std::string error;
+    const bool validate_descriptor_spawn=!level_assets.generated_crypt_layout||source_spawn_bytes.empty();
+    if(!dh2::world::load(view,selected_descriptor,selected_descriptor_size,candidate,error,validate_descriptor_spawn))throw std::runtime_error(error);
+    if(level_assets.name=="GOTHICUS_CRYPT_01"&&
+       (level_assets.generated_crypt_layout||level_assets.development_layout)){
+     std::vector<std::uint8_t> backup_mlx;
+     const auto* source_mlx=&source_mlx_bytes;
+     if(!level_assets.generated_crypt_layout){
+      backup_mlx=read(assets,"x07_crypt_backup.mlx","worlds");
+      source_mlx=&backup_mlx;
+     }
+     const char* source_path=level_assets.generated_crypt_layout
+       ?"data/scene/generated_crypt.mlx":"worlds/x07_crypt_backup.mlx";
      dh2::crypt_module_bounds_registry_v1::Result bounds_result{};
      const auto bounds_status=dh2::crypt_module_bounds_registry_v1::build_from_assets(
-       "GOTHICUS_CRYPT_01","worlds/x07_crypt_backup.mlx",
-       source_mlx.data(),source_mlx.size(),raw.data(),raw.size(),
+       "GOTHICUS_CRYPT_01",source_path,
+       source_mlx->data(),source_mlx->size(),raw.data(),raw.size(),
        &candidate_crypt_module_bounds,&bounds_result);
      if(bounds_status!=dh2::crypt_module_bounds_registry_v1::Status::complete||
-        bounds_result.module_count!=8||candidate.rooms!=bounds_result.module_count)
-      throw std::runtime_error("Crypt source module bounds differ from the active eight-room development layout");
+        candidate.rooms!=bounds_result.module_count)
+      throw std::runtime_error("Crypt source module bounds differ from active DWLD room order");
+     if(level_assets.generated_crypt_layout){
+      if(bounds_result.module_count!=level_assets.generated_crypt_modules.size())
+       throw std::runtime_error("Generated Crypt module bounds differ from generated module count");
+      for(std::size_t i=0;i<candidate_crypt_module_bounds.modules.size();++i){
+       const auto& bounded=candidate_crypt_module_bounds.modules[i];
+       const auto& generated=level_assets.generated_crypt_modules[i];
+       const auto expected_name=generated.block_name+"_"+std::to_string(i);
+       const auto expected_root=generated.xrefobject+"-node";
+       if(bounded.module_index!=i||bounded.module_name!=expected_name||
+          bounded.root_id!=expected_root)
+        throw std::runtime_error("Generated Crypt Module identity/order differs from DWLD");
+      }
+     }else if(bounds_result.module_count!=8){
+      throw std::runtime_error("Crypt backup bounds differ from the eight-room development layout");
+     }
      __android_log_print(ANDROID_LOG_INFO,"DH2Native",
-       "Crypt backup MLX module bounds ready | modules %u | scene nodes %llu | geometry %llu | draw buffers %llu | RoomZone/ObjectManager and actor membership remain disconnected",
+       "%s Crypt module bounds ready | modules %u | scene nodes %llu | geometry %llu | draw buffers %llu | actor/RoomZone binding pending",
+       level_assets.generated_crypt_layout?"Generated":"Backup",
        bounds_result.module_count,
        static_cast<unsigned long long>(bounds_result.scene_nodes),
        static_cast<unsigned long long>(bounds_result.geometry_instances),
@@ -3452,9 +4179,26 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     if(!dh2::data::load_dictionary({clip_names.data(),clip_names.size()},{clip_values.data(),clip_values.size()},clip_table,error)||!dh2::data::load_animation_tables({animation_data.data(),animation_data.size()},{animation_names.data(),animation_names.size()},{animation_fields.data(),animation_fields.size()},clip_table,animation_tables,error))throw std::runtime_error(error);
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Animation tables ready | sequences %zu | characters %zu | clip paths %zu | bytes %zu",animation_tables.sequences.size(),animation_tables.characters.size(),clip_table.values.size(),animation_tables.data_consumed);
     std::vector<dh2::objects::Record> object_records;
+    std::vector<dh2::world::GeneratedCryptActorHandleV1>
+        generated_crypt_actor_sources;
     if(!level_assets.objects.empty()){
      std::vector<std::uint8_t> source_object_bytes;
-     if(source_static_level){
+     if(level_assets.generated_crypt_layout){
+      std::size_t actor_count=0,deferred_count=0;
+      if(!level_assets.generated_crypt_handle_ledger)
+       throw std::runtime_error("Generated Crypt source handle ledger is unavailable");
+      if(!dh2::world::compile_generated_crypt_dact_v1(
+          source_mlx_bytes.data(),source_mlx_bytes.size(),
+          "GOTHICUS_CRYPT_01","data/scene/generated_crypt.mlx",
+          generated_crypt_mgps.data(),generated_crypt_mgps.size(),
+          character_table,model_table,*level_assets.generated_crypt_handle_ledger,
+          generated_crypt_actor_sources,source_object_bytes,actor_count,
+          deferred_count,error))
+       throw std::runtime_error("Generated Crypt MGP actor import rejected: "+error);
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+       "Generated Crypt MGP actors imported | DACT bytes %zu | source-owned direct Monsters %zu | source/deferred records %zu | duplicate manager candidates omitted",
+       source_object_bytes.size(),actor_count,deferred_count);
+     }else if(source_static_level){
       if(!dh2::world::compile_source_dact(source_mlx_bytes.data(),source_mlx_bytes.size(),source_mgps.data(),source_mgps.size(),character_table,model_table,source_object_bytes,error))
        throw std::runtime_error("Original source MGP actor import rejected: "+error);
       __android_log_print(ANDROID_LOG_INFO,"DH2Native","Source MGP direct actors imported | DACT bytes %zu | supported records 5 | scripted/conditional actors deferred",source_object_bytes.size());
@@ -3465,6 +4209,46 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
      if(!dh2::world::compile_source_mvp(source_mlx_bytes.data(),source_mlx_bytes.size(),source_mvps.data(),source_mvps.size(),source_mvp_decors,error))
       throw std::runtime_error("Original source MVP decor import rejected: "+error);
      __android_log_print(ANDROID_LOG_INFO,"DH2Native","Source MVP static decor imported | records %zu | shared prop_swamp_corpses.bdae | conditional/animated objects deferred",source_mvp_decors.size());
+     for(const auto& decor:source_mvp_decors){
+      MvpRenderInstance instance{};instance.module_index=decor.module_index;
+      instance.source_record=decor.source_record;instance.name=decor.name;
+      instance.xrefobject=decor.xrefobject;instance.dae_path=decor.dae_path;
+      instance.source_path=decor.source_path;
+      for(unsigned axis=0;axis<3;++axis){
+       instance.position[axis]=decor.world.position[axis];
+       instance.rotation_degrees[axis]=decor.world.rotation_degrees[axis];
+       instance.scale[axis]=decor.world.scale[axis];
+      }
+      mvp_render_instances.push_back(std::move(instance));
+     }
+    }
+    if(level_assets.generated_crypt_layout){
+     if(!level_assets.generated_crypt_handle_ledger)
+      throw std::runtime_error("Generated Crypt source handle ledger is unavailable");
+     if(!dh2::world::compile_generated_crypt_animated_decor_v1(
+          source_mlx_bytes.data(),source_mlx_bytes.size(),
+          "GOTHICUS_CRYPT_01","data/scene/generated_crypt.mlx",
+          generated_crypt_mvps.data(),generated_crypt_mvps.size(),
+          *level_assets.generated_crypt_handle_ledger,
+          generated_crypt_animated_decors,generated_crypt_deferred_mvp_count,
+          error))
+      throw std::runtime_error("Generated Crypt MVP import rejected: "+error);
+     for(const auto& decor:generated_crypt_animated_decors){
+      MvpRenderInstance instance{};instance.module_index=decor.module_index;
+      instance.source_record=decor.source_record;
+      instance.source_handle=decor.source_handle;instance.name=decor.name;
+      instance.xrefobject=decor.xrefobject;instance.dae_path=decor.dae_path;
+      instance.source_path=decor.source_path;instance.packaged_actor_asset=true;
+      for(unsigned axis=0;axis<3;++axis){
+       instance.position[axis]=decor.world_transform[axis];
+       instance.rotation_degrees[axis]=decor.world_transform[3+axis];
+       instance.scale[axis]=decor.world_transform[6+axis];
+      }
+      mvp_render_instances.push_back(std::move(instance));
+     }
+     __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+       "Generated Crypt MVP AnimatedDecor imported | retained %zu | duplicate/conditional/scripted candidates deferred %zu | idle rest pose",
+       generated_crypt_animated_decors.size(),generated_crypt_deferred_mvp_count);
     }
     auto prince=read(assets,"prince_modular.bdae","models"),idle=read(assets,"prince_idle_shield.bdae","animations"),walk=read(assets,"prince_walk_1hand.bdae","animations");
     dh2::resources::BresView actor_view{};dh2_bres_open(&actor_view,prince.data(),prince.size());dh2::scene::Scene rest;
@@ -3627,12 +4411,25 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     }
     if(!program)create_program();std::map<std::string,GLuint> cache;unsigned triangles=0;
     for(const auto& object:object_records){
+      const auto dact_index=static_cast<std::size_t>(
+          &object-object_records.data());
       int animation_table=-1;if(object.kind==1){const auto* id=dh2::data::property(character_table,object.character,"AnimTable");if(!id)throw std::runtime_error("Monster animation table property missing");animation_table=*id;}
       auto found=std::find_if(candidate_groups.begin(),candidate_groups.end(),[&](const ObjectGroup& group){return group.instances.front().model==object.model&&group.animation_table==animation_table;});
       auto start_actor=[&](ObjectGroup& group){
         group.instances.emplace_back(object);auto& actor=group.instances.back();
         actor.identity=0x100000002ull+(&object-object_records.data());
         if(object.kind!=1)return;
+        if(level_assets.generated_crypt_layout){
+          if(dact_index>=generated_crypt_actor_sources.size())
+            throw std::runtime_error("Generated Crypt DACT actor provenance is truncated");
+          const auto& source=generated_crypt_actor_sources[dact_index];
+          if(source.dact_record!=dact_index||source.name!=object.name||
+             source.source_handle<0)
+            throw std::runtime_error("Generated Crypt DACT actor provenance differs from source handle ledger");
+          actor.source_module_index=source.module_index;
+          actor.source_record=source.source_record;
+          actor.source_handle=source.source_handle;
+        }
         actor.aggro.initialize(object_records.size()+1);
         const auto character=std::find(character_table.names.begin(),character_table.names.end(),object.character);const auto* class_id=dh2::data::property(character_table,object.character,"ClassID");const auto* loot_table_id=dh2::data::property(character_table,object.character,"Loot");
         if(character==character_table.names.end()||!class_id)throw std::runtime_error("Original monster class link absent");
@@ -3694,11 +4491,11 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       }
       __android_log_print(ANDROID_LOG_INFO,"DH2Native","Object resource %s | primitives %zu | tracks %u | unbound %u | unsupported %u | removed helpers %u",object.model.c_str(),group.draws.size(),group.resource.animation.track_count(),group.resource.animation.unbound,group.resource.animation.skipped,group.resource.removed_helpers);
     }
-    for(const auto& decor:source_mvp_decors){
-      dh2::objects::Record record{};record.kind=2;record.room=decor.module_index;
-      record.name=decor.name;record.model=decor.dae_path;
-      record.position=decor.world.position;record.rotation_degrees=decor.world.rotation_degrees;
-      record.scale=decor.world.scale;
+    for(const auto& mvp:mvp_render_instances){
+      dh2::objects::Record record{};record.kind=2;record.room=mvp.module_index;
+      record.name=mvp.name;record.model=mvp.dae_path;
+      record.position=mvp.position;record.rotation_degrees=mvp.rotation_degrees;
+      record.scale=mvp.scale;
       const float half=3.14159265358979323846f/360.f;
       const float x=record.rotation_degrees[0]*half,y=record.rotation_degrees[1]*half,z=record.rotation_degrees[2]*half;
       const float sx=std::sin(x),cx=std::cos(x),sy=std::sin(y),cy=std::cos(y),sz=std::sin(z),cz=std::cos(z);
@@ -3712,9 +4509,14 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       if(found==candidate_groups.end()){
         candidate_groups.emplace_back();found=std::prev(candidate_groups.end());
         found->animation_table=-1;
-        const auto model=read(assets,record.model,"original-cache");
+        const auto separator=record.model.find_last_of("/\\");
+        const auto resource_name=mvp.packaged_actor_asset
+          ?record.model.substr(separator==std::string::npos?0:separator+1)
+          :record.model;
+        const auto model=read(assets,resource_name,
+            mvp.packaged_actor_asset?"actors":"original-cache");
         if(!dh2::objects::load_resource(model.data(),model.size(),nullptr,0,found->resource,error))
-          throw std::runtime_error("Original source MVP BDAE rejected: "+error);
+          throw std::runtime_error("Source MVP BDAE rejected: "+error);
         for(const auto& primitive:found->resource.primitives){
           Draw draw;draw.node=primitive.node;draw.material=found->resource.scene.materials.at(primitive.material);
           draw.skin=primitive.skin;draw.cpu_vertices=primitive.vertices;draw.rest_positions=primitive.rest_positions;
@@ -3729,7 +4531,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
         }
       }
 
-      const auto root_id=decor.xrefobject+"-node";
+      const auto root_id=mvp.xrefobject+"-node";
       const auto root_matches=std::count_if(found->resource.scene.graph.begin(),found->resource.scene.graph.end(),
         [&](const auto& node){return node.id==root_id;});
       if(root_matches!=1)throw std::runtime_error("Source MVP xrefobject root is absent or ambiguous: "+root_id);
@@ -3740,7 +4542,9 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
           [&](const auto& primitive){return item_node_below(found->resource,primitive.node,root_index);}))
         throw std::runtime_error("Source MVP xrefobject root has no renderable primitive: "+root_id);
       ObjectActor instance(record);instance.identity=0;instance.source_root_node_id=root_id;
-      instance.source_module_index=decor.module_index;instance.source_record=decor.source_record;
+      instance.source_module_index=mvp.module_index;instance.source_record=mvp.source_record;
+      instance.source_handle=mvp.source_handle;instance.source_visual_path=mvp.dae_path;
+      instance.packaged_actor_asset=mvp.packaged_actor_asset;
       instance.visual_root=root_index;found->instances.push_back(std::move(instance));
     }
      auto itemdrops_bytes=read(assets,"itemdrops.bdae","actors");
@@ -3816,6 +4620,13 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     itemdrops_resource=std::move(candidate_itemdrops);
     itemdrops_draws=std::move(candidate_itemdrop_draws);
     itemdrop_roots=std::move(candidate_itemdrop_roots);itemdrops_ready=true;
+    // This runtime borrows ObjectActor fields. Retire it while the old groups
+    // still own those actors, before publishing their replacements.
+    if(active_crypt_room_runtime){
+      if(!active_crypt_room_runtime->clear())
+        throw std::runtime_error("Crypt RoomZone owner retirement failed before world replacement");
+      active_crypt_room_runtime.reset();
+    }
     object_groups=std::move(candidate_groups);world_objects=std::move(object_records);unsigned monsters=0,decors=0,object_triangles=0,object_draws=0;
     if(!restore){actor_animation_tables=std::move(animation_tables);actor_clip_table=std::move(clip_table);}
     actor_random=restore?previous_random:animation_random;actor_property_rules=property_rules;actor_ai_tables=std::move(ai_tables);
@@ -3949,6 +4760,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     world_mode=true;resume_world=false;walking=false;move_x=move_y=0;heading=restore?previous_heading:source_spawn_heading;movement_steps=blocked_steps=0;
     radius=350;yaw=-1.57f;pitch=.75f;zoom=1;object_epoch=epoch=last_frame=std::chrono::steady_clock::now();sampled_ms=0;frozen=restore?previous_frozen:false;
     initialize_native_actor(assets,restore);
+    initialize_active_crypt_room_zones();
     if(!ensure_native_world_items(error))throw std::runtime_error("World item runtime restore failed: "+error);
     actor_level_fields=candidate_level_fields;actor_level_file=candidate_level_file;actor_level_fields_ready=true;
     actor_level_kill_loot_gate=0; // Both source Level constructors initialize +0x150 to zero; no setter is currently bound.
@@ -3959,7 +4771,12 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     initialize_char_ai_registry();
     initialize_native_player_skills(assets,restore);
     initialize_native_monster_scripts(assets);
-    if(level_assets.name=="GOTHICUS_CRYPT_01")initialize_crypt_script(assets,restore);
+    if(level_assets.name=="GOTHICUS_CRYPT_01"){
+      if(level_assets.generated_crypt_layout){
+       crypt_spawn_script.clear();crypt_trigger_state={};
+       __android_log_print(ANDROID_LOG_INFO,"DH2Native","Generated Crypt source TriggerZone objects deferred | development GhostAmbush01 descriptor not applied");
+      }else initialize_crypt_script(assets,restore);
+    }
     build_search_world();
     const char* display_level=level_assets.name=="GOTHICUS_CRYPT_01"?"Crypt":level_assets.name.c_str();
     char report[256];std::snprintf(report,sizeof(report),"%s | %u rooms | %u monsters | %u scenery objects\n%u triangles. Drag the movement control to walk.",display_level,level.rooms,monsters,decors,triangles+586+object_triangles);
@@ -4478,6 +5295,9 @@ void draw(int width,int height){
   }
   if(class_scene&&animation_failed)throw std::runtime_error("Class scene animation sampling failed");
   const auto projection=class_scene?class_camera(width,height):menu_background?menu_camera():camera(width,height);glUseProgram(program);
+  if(world_mode&&active_crypt_room_runtime&&
+     !active_crypt_room_runtime->update_frustum(actor_position))
+    throw std::runtime_error("Source RoomZone frustum transition failed");
   glUniform1i(glGetUniformLocation(program,"diffuse"),0);glUniform1i(glGetUniformLocation(program,"alpha_map"),1);
   glEnable(GL_DEPTH_TEST);glDepthFunc(GL_LEQUAL);glEnable(GL_BLEND);
   glEnableVertexAttribArray(position);glEnableVertexAttribArray(texcoord);glEnableVertexAttribArray(color);
@@ -4546,6 +5366,23 @@ void draw(int width,int height){
       for(const auto& instance:group.instances)render_actor(instance,nullptr);
     }else for(auto& actor:group.instances){
       if(actor.spawn_owner&&!actor.spawn_owner->source_visible)continue;
+      if(actor.source_room_zone_managed&&!actor.renderer_visible)continue;
+      if(actor.source_room_zone_managed&&!actor.source_updates_enabled){
+        // ObjectManager's source +0x3c callback removes an inactive Character
+        // from updates; retain its last authored pose. RoomZone planes currently
+        // come from the development orbit camera.
+        if(actor.spawn_owner){render_actor(actor,actor.spawn_owner.get());}
+        else{
+          const auto& clip=group.clips.at(actor.scheduler.clip().anim);
+          const int ms=frozen?std::clamp(sampled_ms,clip.start,clip.end):
+            clip.start+int(std::clamp(actor.cursor,0.,double(clip.end-clip.start)));
+          if(!dh2::objects::sample(group.resource,clip,ms,error)){
+            __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Inactive Character pose failed: %s",error.c_str());enabled=false;return;
+          }
+          render_actor(actor,nullptr);
+        }
+        continue;
+      }
       update_enemy(actor,group.animation_table);
       if(actor.pending_death){
         auto* sequence=dh2::data::animation_state(actor_animation_tables,group.animation_table,"Died");
