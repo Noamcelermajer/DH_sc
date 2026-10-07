@@ -149,7 +149,7 @@ struct ObjectActor:dh2::objects::Record {
  dh2::data::PropertyState properties;
  dh2::animation::EventCursor event_cursor;unsigned animation_events=0;
  dh2::data::CombatActorState combat_state;int combat_target=-1;bool pending_death=false;
- bool loot_dropped=false,loot_retry_pending=false;unsigned loot_retry_delay_frames=0;
+ bool loot_dropped=false,loot_retry_pending=false,kill_credit_attempted=false;unsigned loot_retry_delay_frames=0;
  std::uint64_t loot_killer_identity=0;
  std::vector<dh2::data::ItemInstanceV1*> loot_rollback_items;
  AggroStorage aggro;std::uint64_t identity=0;unsigned target_alive=0,target_sight=0;bool target_seeking=false,ai_attack=false;
@@ -2310,6 +2310,15 @@ ObjectActor* player_target(int index){
  for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.kind==1&&actor.room==record.room&&actor.name==record.name&&!actor.combat_state.dead)return &actor;
  return nullptr;
 }
+int clear_kill_selection_projection(void* raw,std::uintptr_t victim){
+ auto* actor=static_cast<ObjectActor*>(raw);
+ if(!actor||actor->identity!=victim)return 1;
+ const int selected=prince_combat.target;
+ if(selected>=0&&std::size_t(selected)<world_objects.size()&&
+    std::uint64_t(selected)+0x100000002ull==victim)
+  prince_combat.target=-1;
+ return 0;
+}
 bool player_reach(const ObjectActor& target){
  return actor_player_range(target).melee;
 }
@@ -2362,6 +2371,33 @@ void player_authored_event(const dh2::animation::TriggeredEvent& event,int clip)
   else{
    target->loot_retry_delay_frames=30;
    __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Source death loot continuation failed | %s | %s",target->name.c_str(),loot_error.c_str());
+  }
+  // Character::Kill continues after this first DropLoot attempt regardless
+  // of staging success. This one-shot flag is per victim; loot retries below
+  // never replay RaiseEvent(4), target clearing, or Player property credit.
+  if(!target->kill_credit_attempted){
+   target->kill_credit_attempted=true;
+   dh2::data::AggroTable outgoing{
+    target->aggro.outgoing.empty()?nullptr:target->aggro.outgoing.data(),
+    target->aggro.out_count,std::uint32_t(target->aggro.outgoing.size())};
+   dh2::player_enemy_kill_credit_v1::Result credit_result{};
+   std::string credit_error;
+   const auto credit_status=prince_skills?
+    prince_skills->credit_enemy_kill(target->identity,prince_character.identity(),0,
+     outgoing,prince_controller_forced,controller_global_blocked,target,
+     clear_kill_selection_projection,&credit_result,credit_error):
+    dh2::player_enemy_kill_credit_v1::Status::invalid_argument;
+   if(credit_status==dh2::player_enemy_kill_credit_v1::Status::complete){
+    __android_log_print(credit_result.event4_status||credit_result.target_projection_status?ANDROID_LOG_WARN:ANDROID_LOG_INFO,
+     "DH2Native","Character::Kill Player credit | victim %s | event4 reached %u status %d | direct target clear %u | selection projection %d | props23 %u props24 %u | controller forced %u | kill force 0 | same Player AIS/VM/Coordinator/PropertyView",
+     target->name.c_str(),credit_result.event4_reached,credit_result.event4_status,
+     credit_result.target_cleared,credit_result.target_projection_status,
+     credit_result.property23_added,credit_result.property24_added,prince_controller_forced);
+   }else{
+    __android_log_print(credit_status==dh2::player_enemy_kill_credit_v1::Status::ineligible_aggro?ANDROID_LOG_INFO:ANDROID_LOG_ERROR,
+     "DH2Native","Character::Kill Player credit not completed | victim %s | status %u | aggro recipients %u | %s | one-shot; loot retries will not replay it",
+     target->name.c_str(),unsigned(credit_status),outgoing.count,credit_error.c_str());
+   }
   }
  }
  if(applied.status_requests)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Combat status services pending | %s | requests %u",target->name.c_str(),applied.status_requests);

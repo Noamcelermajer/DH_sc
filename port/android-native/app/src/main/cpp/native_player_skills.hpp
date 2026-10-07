@@ -2,6 +2,7 @@
 #include "properties.hpp"
 #include "player_skill_tables_adapter.hpp"
 #include "player_ai_death_v1.hpp"
+#include "player_enemy_kill_credit_v1.hpp"
 #include <memory>
 #include <vector>
 #include <string>
@@ -70,6 +71,15 @@ public:
     // Source CharAI::OnDied only. Character::Kill/rewards/event2 caller is a
     // separate integration boundary; this retains the same AIS and VM.
     void died(std::uintptr_t killer);
+    // One reached Character::Kill episode, after its initial DropLoot attempt.
+    // Reuses the live CharAI, Player AIS/Session, Coordinator, source target,
+    // and PropertyView. Renderer callback only projects the direct target write.
+    player_enemy_kill_credit_v1::Status credit_enemy_kill(
+        std::uintptr_t victim,std::uintptr_t killer,std::uint32_t kill_force,
+        const data::AggroTable& victim_outgoing,std::uint32_t controller_forced,
+        std::uint32_t global_blocked,void* renderer_context,
+        int (*clear_renderer_selection)(void*,std::uintptr_t),
+        player_enemy_kill_credit_v1::Result*,std::string& error);
     void state_service(std::uint32_t service);
     void timer(std::uint32_t id);
     void buff_expired(const character::Timer32&);

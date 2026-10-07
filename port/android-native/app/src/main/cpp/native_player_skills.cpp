@@ -204,6 +204,41 @@ struct Runtime::Impl {
   }
  }
  static auto& self(void* raw){return *static_cast<Impl*>(raw);}
+ static int discard_kill_return(void*,const dh2_script_first_return_v1*,char*,std::size_t){return 0;}
+ static int kill_credit_backend(void* raw,dh2::character::AIEventState64* state,
+          const dh2::character::AIEventRequest40* request,std::uint32_t* value){
+  auto& s=self(raw);
+  if(!state||!state->owner||!request||!value||!s.initialized||!s.session||
+     !s.bindings.source_ai||!s.bindings.coordinator)return 1;
+  const auto& owner=*state->owner;
+  if(state->ai!=s.bindings.ai||state->active!=s.bindings.source_ai->active_ais_1c||
+     owner.owner!=s.bindings.character||owner.controller!=s.bindings.controller||
+     owner.state_machine!=reinterpret_cast<std::uintptr_t>(&s.bindings.coordinator->state)||
+     owner.properties!=reinterpret_cast<std::uintptr_t>(s.bindings.properties)||
+     request->event!=4||!request->payload)return 1;
+  if(request->service==dh2::character::ai_event_state_event){
+   if(request->operation||request->subject!=reinterpret_cast<std::uintptr_t>(&s.bindings.coordinator->state)||request->callee)return 1;
+   return s.bindings.coordinator->event(4,request->payload)<0?1:0;
+  }
+  if(request->service!=dh2::character::ai_event_ais_virtual||request->operation!=0xb0||
+     request->subject!=s.ais.ais||request->callee!=dh2::player_enemy_kill_credit_v1::ais_player_on_kill_identity||
+     !state->active||state->active!=s.ais.ais)return 1;
+  // AISPlayer::OnKill uses its initialization-time VCB bit before calling
+  // LuaScript::Call. An absent bit is the original no-op, not a missing hook.
+  if(!(s.ais.flags_b8&0x400u))return 0;
+  dh2_script_value argument{};argument.type=DH2_SCRIPT_IDENTITY;argument.identity=request->payload;
+  std::string call_error;
+  const int status=s.session->call("OnKill",&argument,1,0,discard_kill_return,nullptr,call_error);
+  if(status<0){
+   __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Native Player AIS OnKill provider failed | victim %zu | status %d | %s | Character::Kill continuation remains source ordered",
+    std::size_t(request->payload),status,call_error.c_str());
+   return 1;
+  }
+  if(status>0)
+   __android_log_print(ANDROID_LOG_WARN,"DH2Native","Native Player AIS OnKill Lua returned ordinary error | victim %zu | status %d | %s | source void caller ignores return",
+    std::size_t(request->payload),status,call_error.c_str());
+  return 0;
+ }
  static int target_service(void* raw,const dh2::character::set_target::Request* q,dh2::character::set_target::Response* r){
   auto& s=self(raw);using namespace dh2::character::set_target;
   if(!q||!r||q->ai_identity!=s.bindings.ai)return 1;
@@ -738,6 +773,50 @@ void Runtime::died(std::uintptr_t killer){
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player source death complete | state %d | payload null | target %zu | last target %zu | timer stops %u | timer33 %u | timer34 %u | outgoing %u | incoming %u | skill %u | faery %u | buffs %u | groups %u | VM %p | AIS %p | update attempts %u | HP %d | same retained owners; Character Kill continuation pending",
   s.bindings.coordinator->state.current,std::size_t(s.bindings.source_ai->target_40),std::size_t(s.bindings.source_ai->last_target_44),s.died_result.timer_stops,s.bindings.source_ai->word_10,s.bindings.source_ai->word_14,s.died_result.outgoing_completed,s.died_result.incoming_completed,s.died_result.skill_completed,s.died_result.spell_completed,s.buffs->count(),s.property_view.group_count,static_cast<void*>(s.session->vm()),reinterpret_cast<void*>(s.ais.ais),s.update_attempts,s.bindings.properties->resolved[36]);
  s.log_ai_timers("dead");
+}
+player_enemy_kill_credit_v1::Status Runtime::credit_enemy_kill(
+ std::uintptr_t victim,std::uintptr_t killer,std::uint32_t kill_force,
+ const data::AggroTable& victim_outgoing,std::uint32_t controller_forced,
+ std::uint32_t global_blocked,void* renderer_context,
+ int (*clear_renderer_selection)(void*,std::uintptr_t),
+ player_enemy_kill_credit_v1::Result* output,std::string& error){
+ namespace credit=player_enemy_kill_credit_v1;
+ auto& s=*impl_;
+ if(!output||!victim){error="Invalid reached Player Character::Kill inputs";return credit::Status::invalid_argument;}
+ if(!killer||kill_force)return credit::Status::ineligible_kill;
+ if(!s.initialized||!s.session||!s.bindings.source_ai||!s.bindings.coordinator||
+    !s.bindings.properties||!s.bindings.rules||!s.bindings.source_ai->identity||
+    !s.bindings.coordinator->bound()||s.bindings.coordinator->owner()!=s.bindings.character){
+  error="Native Player Kill credit owners are unavailable";return credit::Status::invalid_argument;
+ }
+ const auto active=s.bindings.source_ai->active_ais_1c;
+ if(active&&active!=s.ais.ais){error="Native Player active AIS differs from its retained Session";return credit::Status::invalid_argument;}
+ try{s.refresh_properties();}
+ catch(const std::exception& exception){error=exception.what();return credit::Status::invalid_argument;}
+ credit::Bindings bindings{};
+ bindings.character=s.bindings.character;
+ bindings.char_ai=s.bindings.source_ai->identity;
+ bindings.active_ais=active;
+ bindings.controller=s.bindings.controller;
+ bindings.state_machine=reinterpret_cast<std::uintptr_t>(&s.bindings.coordinator->state);
+ bindings.property_owner=reinterpret_cast<std::uintptr_t>(s.bindings.properties);
+ // This is the controller's force bit from RaiseAIEvent. It remains distinct
+ // from Character::Kill's force argument passed separately below.
+ bindings.forced=controller_forced;
+ bindings.locked=s.bindings.coordinator->state.controller_locked;
+ bindings.paused=s.bindings.source_ai->paused_18;
+ bindings.global_blocked=global_blocked;
+ bindings.victim_outgoing=&victim_outgoing;
+ bindings.properties=&s.property_view;
+ bindings.current_target=&s.bindings.source_ai->target_40;
+ bindings.target_context=renderer_context;
+ bindings.clear_matching_target=clear_renderer_selection;
+ const std::uint32_t state_event_bit=1u<<character::ai_event_state_event;
+ const std::uint32_t ais_virtual_bit=1u<<character::ai_event_ais_virtual;
+ bindings.backend={&s,Impl::kill_credit_backend,
+  state_event_bit|(active?ais_virtual_bit:0u),0};
+ credit::Runtime episode(bindings);
+ return episode.after_loot_attempt(victim,killer,kill_force,output,error);
 }
 void Runtime::timer(std::uint32_t id){impl_->timer(id);}
 void Runtime::buff_expired(const character::Timer32& timer){

@@ -134,7 +134,8 @@ target_sources(dh2_level_world PRIVATE character_level_runtime.cpp character_ini
   ../player-info-level/player_metadata_prepare_v1.cpp
  player_saved_inventory_v1.cpp character_saved_class_v1.cpp character_gameplay_save_v1.cpp
  character_init_post_player_v1.cpp character_init_final_v1.cpp character_template_random.cpp)
-target_sources(dh2_level_world PRIVATE character_ai_update_all_skills.cpp)
+target_sources(dh2_level_world PRIVATE character_ai_update_all_skills.cpp
+ character_ai_update_skills.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_set_skills_and_spells.cpp
  character_faery_selection.cpp character_ai_skill_script_constructor.cpp
  character_skill_state_queries.cpp)
@@ -146,7 +147,9 @@ target_sources(dh2_level_world PRIVATE ais_external_init_callbacks.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_pause_update.cpp)
 
 target_sources(dh2_level_world PRIVATE ais_default_collision_persist.cpp)
-target_sources(dh2_level_world PRIVATE character_ai_events.cpp)
+target_sources(dh2_level_world PRIVATE character_ai_events.cpp player_enemy_kill_credit_v1.cpp
+ character_give_xp_v1.cpp)
+target_sources(dh2_level_world PRIVATE character_distribute_xp_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_attack_geometry.cpp)
 target_include_directories(dh2_level_world PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_compile_options(dh2_level_world PRIVATE -Wall -Wextra -fno-fast-math -ffp-contract=off)
@@ -174,12 +177,20 @@ else()
  target_link_libraries(character_attack_geometry_audit PRIVATE dh2_level_world)
  add_executable(character_ai_events_audit tests/character_ai_events.cpp)
  target_link_libraries(character_ai_events_audit PRIVATE dh2_level_world ${CMAKE_DL_LIBS})
+ add_executable(player_enemy_kill_credit_v1_audit tests/player_enemy_kill_credit_v1.cpp)
+ target_link_libraries(player_enemy_kill_credit_v1_audit PRIVATE dh2_level_world)
+ add_executable(character_give_xp_v1_audit tests/character_give_xp_v1.cpp)
+ target_link_libraries(character_give_xp_v1_audit PRIVATE dh2_level_world)
+ add_executable(character_distribute_xp_v1_audit tests/character_distribute_xp_v1.cpp)
+ target_link_libraries(character_distribute_xp_v1_audit PRIVATE dh2_level_world)
  add_executable(character_script_timers_audit tests/character_script_timers.cpp)
  target_link_libraries(character_script_timers_audit PRIVATE dh2_level_world dh2_script_runtime)
  add_executable(character_controller_commands_audit tests/character_controller_commands.cpp)
  target_link_libraries(character_controller_commands_audit PRIVATE dh2_level_world)
  add_executable(character_ai_update_audit tests/character_ai_update.cpp)
  target_link_libraries(character_ai_update_audit PRIVATE dh2_level_world)
+ add_executable(character_ai_update_skills_audit tests/character_ai_update_skills.cpp)
+ target_link_libraries(character_ai_update_skills_audit PRIVATE dh2_level_world)
  add_executable(character_ai_state_audit tests/character_ai_state.cpp)
  target_link_libraries(character_ai_state_audit PRIVATE dh2_level_world)
  add_executable(character_ai_attack_audit tests/character_ai_attack.cpp)

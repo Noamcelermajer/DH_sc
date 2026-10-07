@@ -5,9 +5,9 @@ Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest build checkpoint APK:** [Android 17 equipment-restore and guarded-loot checkpoint](https://github.com/Noamcelermajer/DH_sc/releases/download/native-equipment-loot-2026-10-07/app-debug.apk). Source tag: `native-equipment-loot-2026-10-07` on this reconstruction branch.
-APK: 150,904,624 bytes; SHA-256 `1AED2857721F40A0CDC996442F13598E3DC6A9259A616E77B306186115DF1A64`.
-API 37 ARM64/x86_64 build, APK signature and 16 KiB ZIP alignment pass. This adds restore-time V4 body-equipment draw selection and a killer-bound dead/HP-zero loot guard on top of the combat/class checkpoint. No emulator or gameplay test was run; equipment mutation/UI, weapon visuals, full Kill rewards, skills and live pickup remain open. On this long Windows checkout, build with `-Pdh2SourceRoot=<short mapped checkout>`; Gradle sets CMake's object-path cap to 200.
+**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (151,020,120 bytes, SHA-256 `7880FA33019EEDB340C77CCC94EDB3C2FCDCE1826EF37B2BBAEFDE8F9EA41332`). API 37 ARM64/x86_64 build passes; signature verification, 16 KiB ZIP alignment and all 22 ELF64 libraries' 16 KiB PT_LOAD alignment pass. No emulator or live gameplay test was run. On this long Windows checkout, build with `-Pdh2SourceRoot=<short mapped checkout>`.
+
+**Latest published APK:** [Android 17 equipment-restore and guarded-loot checkpoint](https://github.com/Noamcelermajer/DH_sc/releases/download/native-equipment-loot-2026-10-07/app-debug.apk), tag `native-equipment-loot-2026-10-07`. Its equipment mutation/UI, weapon visuals, full Kill rewards, skills and live pickup remain open.
 
 Prior live evidence applies to the previous APK from [commit `d4142762`](https://github.com/Noamcelermajer/DH_sc/commit/d4142762): API37/16KiB emulator tests passed all three class create/reopen/Back/Home-resume flows. A bounded Crypt smoke verified six player hit events with enemy AI disabled. A separate live exchange verified touch movement, seven enemy hits, and a 57-damage ordinary player attack. Neither run tested loot or progression. [Live exchange](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json), [menu](../port/android-native/reports/menu-ui-runtime-smoke-62557f03.json), [combat](../port/android-native/reports/character-combat-smoke-62557f03.json).
 
@@ -37,11 +37,11 @@ still require live gameplay integration. All final completion gates remain open.
 | World, physics, navigation and factories | 16 | 8 |
 | Character properties, equipment and state | 32 | 6 |
 | Lua, skills and enemy AI | 49 | 14 |
-| Combat, death, loot and progression | 16 | 8 |
+| Combat, death, loot and progression | 18 | 8 |
 | Quests, campaign, UI, audio and saves | 39 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **188** | **74** |
+| **Total scoped tasks** | **190** | **74** |
 
 Prior verified source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. Its `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`.
 
@@ -185,7 +185,8 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Resolve restored V4 torso/feet/hands/head slots 0/3/4/8 into the existing Prince draw batches and pose graph; fresh entry keeps class defaults. Combined Android ARM64/x86_64 compile passes; no visual test.
 - [ ] Add mutation-time equipment redraw against the same draw/pose owner; then check equip/unequip. No second scene or pose owner.
 - [x] Route saved PROP into the same gameplay Save and PlayerCombat PropertyRules/PropertyState: 753 selected-host checks, 26 saved fields, no generic fallback, and reached-prefix retention on truncation. Live InitPost remains unbound.
-- [ ] Bind Character InitPost before InitScriptProcess: source GEAR/property order, map-0 slot-0→skill-row-0 setup, and conditional IncSkill through the same Save/V4/PropertyState; implement real pre-init CharAI callbacks and design limits.
+- [x] Select `CharAI::UpdateSkills` (`0x3d8a04`) against the existing Save map, live FSM gates, difficulty and borrowed vector/script callbacks; five focused host cases pass. This source kernel is selected but has no live Android InitPost call site.
+- [ ] Bind Character InitPost before InitScriptProcess: preserve SG_Load/GEAR/property order, map-0 slot-0→skill-row-0 setup, conditional IncSkill and pre-init CharAI callbacks through the same Save/V4/PropertyState; current Android Player setup still eagerly runs Load then InitProcess.
 - [ ] Complete Character construction, all property sheet/buff/gear ownership and lifecycle phases.
 - [x] Select Adam's V5 item presentation on existing item identities/table authority; 4,031 presentation and 1,119 power-instance gold replays pass. Native text/localization remains open.
 - [x] Select borrowing weapon queries over sole V4 inventory/properties; 1,000 original cases, both equipment sets and preserved combat fields pass. Native inventory binding remains open.
@@ -332,9 +333,15 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Feed player melee and actor stance/ranged facts from the canonical V4 inventory. IDA `F_MeleeAttack` confirms slots 1/2 and item word 37; `HasRangedWeapon` uses word 22 types 4/5. API37 ARM64/x86_64 build/package passes. Inventory UI/equip mutations and gameplay remain open.
 - [ ] Live-test the guarded kill → BDAE model/sensor → deferred MoveOn pickup path. The build is available; gameplay and pickup are not verified.
 - [x] Align the three current direct melee directions with positive-amount `AI_AddAggro` before `HitFor` through the existing reciprocal aggro tables; `combat_application_order_audit` passes nonlethal, lethal, no-hit and rejected cases.
-- [x] Carry active Player killer identity through loot retries and require the source dead/HP-zero Kill prefix before V4 DropLootTable staging; the Android API 37 ARM64/x86_64 build passes. Event4, XP, quests and outer event2 remain open.
-- [ ] For the supported Player aggro entry, dispatch event4 through the existing dispatcher, deliver Player AIS `OnKill` when present, and update properties 23/24 in the same Save/PropertyState.
-- [ ] Complete general enemy `Character::Kill`: aggro-gated XP/stat updates, asynchronous kill/clear quest callbacks, then outer event2/`OnDied`/FSM on the same actor. Enemy Character/CharAI/AIS/FSM, PlayerManager, PlayerStatManager and EventManager owners remain open; do not fabricate them.
+- [x] Carry active Player killer identity through loot retries and require the source dead/HP-zero Kill prefix before V4 DropLootTable staging; the Android API 37 ARM64/x86_64 build passes. The event4 Android bridge is built; live behavior remains unverified. XP, quests and outer event2 remain open.
+- [x] Select the Player event4/credit kernel over the existing dispatcher and PropertyView: focused host audit passes callback→target clear→properties 23/24 order, FSM fallback, single-Player scope and retry suppression.
+- [x] Bind the kernel to the supported Android Player melee death edge exactly once after the initial DropLoot attempt, including deferred/failed loot staging; reuse the retained CharAI/AIS/VM and canonical target/property owners. Focused host audit and API37 ARM64/x86_64 APK build pass; live gameplay remains unverified.
+- [x] Select the `_GiveXP` callee kernel over the canonical Save/PropertyView: focused audit verifies source XP arithmetic/gates, normal-constant lookup order and missing-key zero, fresh difficulty/Level reads, conditional `a3` lookup, and post-LevelUp XP/MaxXP reread/clamp.
+- [x] Select host `Character::DistributeXP`: focused audit covers two roster passes, level scaling, kill-centered radius/self bypass, cooperative share and fixed-point grants. Android binding remains open.
+- [ ] Connect `DistributeXP` and `_GiveXP` to the same live Player registry, PropertyView and Save; the current Android roster has one Player. Do not enable threshold-crossing awards until LevelUp/SG_Save is complete.
+- [ ] Implement the LevelUp transaction and normal offline `SG_Save`: class/property recalc, HP/MP, existing-profile `saveAll` plus volatile quest log, HUD/scripts/VFX/trophies and overage XP. Current Android saving only writes explicitly created profiles.
+- [ ] Register live quest objectives with the Level EventManager and dispatch KillX/Clear/template callbacks in source order. IDA confirms `RaiseAsync` enters synchronous `Raise` in this binary.
+- [ ] Complete outer event2/`OnDied`/`AI_SetDead` on the same actor with real group, active-AIS, timer, FSM and aggro owners; general enemy Character/CharAI/AIS runtime remains open.
 - [ ] Complete all CalculateResult/ApplyResult dependencies, effects, notifications and actor ownership.
 - [ ] Connect melee/ranged/spell combat, skills, criticals, resistances and status effects in the final runtime.
 - [ ] Complete player damage/death, attacker/killer credit, resurrection and respawn.
@@ -424,11 +431,11 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 ## Immediate work order
 
-1. Connect genuine Character660 Spawn/InitAll and gameplay Save SG_Load1/2/4/GEAR before grants over the registered full PlayerInfo records. Finish inventory/AddLoot/text/Skin and Player Kill providers on the same owners.
-2. Connect full Player/enemy AIS frames, nonempty skill activation and autonomous acquisition/pursuit/attacks.
-3. Finish combat/death/rewards/loot/quest delivery and complete one original level.
-4. Expand factories/content/transitions, all classes, UI/audio and persistent campaign saves.
-5. Complete campaign coverage, mod examples, clean builds and physical ARM64 release tests.
+1. Add the real Character InitPost phase to the current Android Player owner; connect the selected pre-init `UpdateSkills` kernel at its source call site.
+2. Bind the normal existing-profile save writers and complete LevelUp before enabling XP awards that can cross a threshold; then live-verify event4 and connect objectives/outer event2 in source order.
+3. Connect per-enemy Character/CharAI/AIS owners to the Level frame and implement autonomous acquisition, pursuit, combat and death.
+4. Finish campaign progression, factories/content, UI/audio, saves and mod examples; play an original level through its exit.
+5. Complete campaign coverage, clean builds and physical ARM64 release tests.
 
 Update the relevant checkboxes only after their stated verification passes. Keep
 the detailed artifact-specific proof in checkpoint documents and reports.
