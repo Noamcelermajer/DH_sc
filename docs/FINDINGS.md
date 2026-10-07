@@ -12,6 +12,8 @@ IDA callback trace (database `7dc3edad`): `_UpdateAggro` (`0x3cf3f0`) raises eve
 
 At melee range, `_UpdateTarget` raises event 17 → `AISExternal::OnTargetInMeleeRange` (`0x3dcd94`) invokes Lua with no arguments. `monster.luac` derives `SKILLTREE_ID` from the CharacterProperties `SkillTree` field; cached rows 35 (`Crypt_Ghost`) and 37 (`Crypt_Ghost_RE`) both store `-1`. IDA confirms `FromFixed` returns signed `-1` first, so `IsHavingSkillTree()` is false and the callback is exactly `Stop(); Attack(GetTarget());`—no random skill branch. Stop/Attack services and event-17 dispatch remain unconnected.
 
+Death/loot trace: Crypt Ghost row 35 uses AI row 68, Script `monster`, view radius 1500, melee radius 120 and Loot ID 22 (`Castle1_Basic_Loot`). `HitFor` (`0x3a8bc4`) reaches `Ctrl_Kill`/`Character::Kill`; Kill attempts guarded loot (`ItemObject::DropLootTable`, `0x3ecba0`; inventory `AddLoot`, `0x40407c`), then event 4/credit, and finally event 2 to `AISExternal::OnDied`. Android already stages loot for supported ungated enemies, but player targeting rejects `gated_spawn` Ghosts and no event 2 reaches their existing Lua VM. The next death slice is one Ghost's lethal hit → existing loot staging → event 2 on the same VM; XP, quests and broader kill ordering remain open.
+
 Published checkpoint before this build: [release page](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-swamp-source-mgp-2026-10-07), [direct APK](https://github.com/Noamcelermajer/DH_sc/releases/download/native-swamp-source-mgp-2026-10-07/Dungeon-Hunter-2-native-swamp-source-mgp-api37-debug.apk).
 
 
