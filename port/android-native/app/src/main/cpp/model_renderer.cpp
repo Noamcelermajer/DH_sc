@@ -2280,7 +2280,7 @@ std::string player_attack(int supplied_target){
  const int accepted=prince_event(0xc354,defender->identity);
  if(accepted<0)return "Player attack state request failed";
  if(!accepted)return "Attack is cooling down";
- __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player attack selected | target %d | %s | root %d | clip %d | supplied unarmed equipment | native state %d",target,defender->name.c_str(),prince_state.current_animation,prince_locomotion.current_clip(),prince_state.current);
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player attack selected | target %d | %s | root %d | clip %d | canonical V4 equipment | native state %d",target,defender->name.c_str(),prince_state.current_animation,prince_locomotion.current_clip(),prince_state.current);
  return "Attacking";
 }
 std::array<int,7> player_vitals(){return {prince_combat.properties.resolved[36],prince_combat.properties.resolved[38],prince_combat.properties.resolved[41],prince_combat.properties.resolved[43],int(prince_combat.life.dead),int(prince_combat.life.low_health_armed),prince_state.current};}
@@ -2336,9 +2336,19 @@ unsigned actor_virtual_service(void*,unsigned event,float* payload){
 }
 dh2::character::Facts prince_facts(){
  dh2::character::Facts facts{};facts.is_player=1;facts.stance_mask=210;
- // The current development player has no inventory weapon items. Supply the
- // same empty-equip-set predicate results, then execute the original getter.
- const dh2::character::StanceFacts16 equipment{dh2::character::stance_is_player,5,{0,0}};
+ if(!prince_combat.inventory)throw std::runtime_error("Player actor facts have no canonical V4 inventory");
+ const auto properties=dh2::data::property_view(actor_property_rules,prince_combat.properties);
+ dh2::data::PlayerEquipmentQueriesLiveV1 equipment_queries(*prince_combat.inventory,properties);
+ dh2::data::EquipmentWeaponFacts12V1 weapon_facts{};std::string equipment_error;
+ if(!equipment_queries.facts(weapon_facts,equipment_error))
+  throw std::runtime_error("Player actor equipment query failed: "+equipment_error);
+ std::uint32_t predicates=dh2::character::stance_is_player;
+ if(weapon_facts.flags&dh2::data::weapon_staff)predicates|=dh2::character::stance_has_staff;
+ if(weapon_facts.flags&dh2::data::weapon_bow)predicates|=dh2::character::stance_has_bow;
+ if(weapon_facts.flags&dh2::data::weapon_dual)predicates|=dh2::character::stance_dual_wielding;
+ if(weapon_facts.flags&dh2::data::weapon_two_effective)predicates|=dh2::character::stance_has_two_hander;
+ if(weapon_facts.flags&dh2::data::weapon_main)predicates|=dh2::character::stance_has_main_hand;
+ const dh2::character::StanceFacts16 equipment{predicates,5,{0,0}};
  if(dh2_character_anim_stance(&facts.stance,&equipment)!=1)throw std::runtime_error("Character stance producer failed");
  if(auto* target=player_target(prince_combat.target))facts.target=target->identity;
  std::copy(prince_runtime.controller.heading.direction,prince_runtime.controller.heading.direction+3,facts.heading);
@@ -2350,7 +2360,8 @@ dh2::character::Facts prince_facts(){
  facts.idle=sequence("Idle");facts.walk=sequence("Walk");facts.run=sequence("Run");facts.attack_static=sequence("AttackStatic");facts.attack_moving=sequence("Attack");facts.death=sequence("Died");
  if(const auto* ai=dh2::data::ai_props(actor_ai_tables,prince_combat.properties.resolved[1]))facts.attack_delay=std::uint32_t(ai->attack_delay);
  facts.is_at_destination=dh2_nav_is_at_destination(&prince_runtime.controller,&prince_runtime.path)==1;
- facts.following_path=prince_runtime.path.count!=0;facts.has_ranged_weapon=0;
+ facts.following_path=prince_runtime.path.count!=0;
+ facts.has_ranged_weapon=std::uint32_t(weapon_facts.flags&dh2::data::weapon_ranged)!=0;
  return facts;
 }
 void refresh_prince_facts(){prince_character.refresh_facts();}

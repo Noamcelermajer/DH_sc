@@ -6,7 +6,7 @@ bool overlaps(const void* a,std::size_t an,const void* b,std::size_t bn){const a
 int equipment_weapon_facts_v1(EquipmentWeaponFacts12V1* out,const ItemRecord164* main,const ItemRecord164* off,std::int32_t flag) noexcept {
  if(!aligned(out,sizeof(*out))||(main&&!aligned(main,sizeof(*main)))||(off&&!aligned(off,sizeof(*off)))||overlaps(out,sizeof(*out),main,sizeof(*main))||overlaps(out,sizeof(*out),off,sizeof(*off)))return -1;
  EquipmentWeaponFacts12V1 q;
- if(main){q.main_category=main->words[37];q.flags|=weapon_main;if(q.main_category==4)q.flags|=weapon_bow;if(q.main_category==5)q.flags|=weapon_staff;if(main->words[26]==-4){q.flags|=weapon_two_raw;const auto type=std::uint32_t(main->words[22]);if(type-4<=1||flag==0)q.flags|=weapon_two_effective;}}
+ if(main){q.main_category=main->words[37];q.flags|=weapon_main;if(q.main_category==4)q.flags|=weapon_bow;if(q.main_category==5)q.flags|=weapon_staff;const auto type=std::uint32_t(main->words[22]);if(type==4||type==5)q.flags|=weapon_ranged;if(main->words[26]==-4){q.flags|=weapon_two_raw;if(type-4<=1||flag==0)q.flags|=weapon_two_effective;}}
  if(off){q.off_category=off->words[37];q.flags|=off->words[22]==6?weapon_shield:weapon_dual;}
  *out=q;return 0;
 }

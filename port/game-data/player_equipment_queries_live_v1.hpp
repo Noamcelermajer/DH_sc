@@ -9,11 +9,12 @@ struct EquipmentWeaponFacts12V1 {
 };
 enum EquipmentWeaponFlagV1:std::uint32_t {
  weapon_main=1,weapon_bow=2,weapon_staff=4,weapon_dual=8,
- weapon_shield=16,weapon_two_raw=32,weapon_two_effective=64
+ weapon_shield=16,weapon_two_raw=32,weapon_two_effective=64,weapon_ranged=128
 };
 static_assert(sizeof(EquipmentWeaponFacts12V1)==12);
-// Exact original HasMainHand/HasBow/HasStaff/DualWielding/HasShield and
-// HasTwoHander(true/false), from Adam791's frozen original-gold projection.
+// Exact original HasMainHand/HasBow/HasStaff/HasRangedWeapon,
+// DualWielding/HasShield and HasTwoHander(true/false), from the frozen
+// original-gold projection.
 // Null records are genuine unequipped slots. Invalid/aliased outputs reject
 // before writes; categories are actual word37, never inferred from Item names.
 int equipment_weapon_facts_v1(EquipmentWeaponFacts12V1*,const ItemRecord164*,
