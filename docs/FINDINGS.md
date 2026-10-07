@@ -2,7 +2,7 @@
 
 ## Current Android checkpoint - 2026-10-07
 
-The current branch builds with `:app:assembleDebug` for ARM64 and x86_64 at API 37. Latest local APK: `port/android-native/app/build/outputs/apk/debug/app-debug.apk`, 154,743,451 bytes, SHA-256 `9aca951578f4c2ef28adfa8b789d848b77f1c3693d897faff2f0d7dfd45ba730`; it includes five source-authored SWAMP Monster DACT records and their assets. Debug signing verifies. The selected-library host audit verifies nine rooms, 16 floors, 377 visuals, materials, entrypoint floor snap, and all five actors across three models. No live SWAMP start was tested on Android; the menu/Crypt smoke is from an earlier APK. Full source startup, campaign gameplay, source save writes and persistence remain open.
+The current branch builds with `:app:assembleDebug` for ARM64 and x86_64 at API 37. Latest local APK: `port/android-native/app/build/outputs/apk/debug/app-debug.apk`, 154,743,451 bytes, SHA-256 `9aca951578f4c2ef28adfa8b789d848b77f1c3693d897faff2f0d7dfd45ba730`; [checkpoint release](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-swamp-monsters-2026-10-07). It includes five source-authored SWAMP Monster DACT records and their assets. Debug signing verifies. The selected-library host audit verifies nine rooms, 16 floors, 377 visuals, materials, entrypoint floor snap, and all five actors across three models. No live SWAMP start was tested on Android; the menu/Crypt smoke is from an earlier APK. Full source startup, campaign gameplay, source save writes and persistence remain open.
 
 
 ## Inputs and identities

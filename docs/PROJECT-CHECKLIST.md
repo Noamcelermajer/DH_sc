@@ -7,7 +7,7 @@ gameplay/content and providing documented fan modding. **The game is unfinished.
 
 **Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,743,451 bytes, SHA-256 `9aca951578f4c2ef28adfa8b789d848b77f1c3693d897faff2f0d7dfd45ba730`). API 37 ARM64/x86_64 build; debug signature verifies. It includes five source-authored SWAMP DACT Monster records and their model/animation assets. The selected-library host audit verifies nine rooms, 16 floors, 377 visuals, source materials, entrypoint floor snap, and all five actors across three models. No live SWAMP start was run; earlier menu/Crypt smoke evidence applies only to its preceding APK. Full source startup/gameplay remains open. Build with `-Pdh2SourceRoot=<short mapped checkout>`.
 
-**Latest published APK:** [Static SWAMP loader checkpoint — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-swamp-static-2026-10-07) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-swamp-static-2026-10-07/Dungeon-Hunter-2-native-swamp-static-android17-debug.apk)). This is a prerelease; SWAMP passed the selected-library host loader test but was not started in Android gameplay.
+**Latest published APK:** [Native SWAMP actor checkpoint — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-swamp-monsters-2026-10-07) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-swamp-monsters-2026-10-07/Dungeon-Hunter-2-native-swamp-actors-api37-debug.apk)). This is a debug prerelease; host tests cover the static world and five actors, with no live SWAMP gameplay run.
 
 Prior live evidence applies to the previous APK from [commit `d4142762`](https://github.com/Noamcelermajer/DH_sc/commit/d4142762): API37/16KiB emulator tests passed all three class create/reopen/Back/Home-resume flows. A bounded Crypt smoke verified six player hit events with enemy AI disabled. A separate live exchange verified touch movement, seven enemy hits, and a 57-damage ordinary player attack. Neither run tested loot or progression. [Live exchange](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json), [menu](../port/android-native/reports/menu-ui-runtime-smoke-62557f03.json), [combat](../port/android-native/reports/character-combat-smoke-62557f03.json).
 
@@ -41,7 +41,7 @@ still require live gameplay integration. All final completion gates remain open.
 | Quests, campaign, UI, audio and saves | 40 | 11 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **192** | **77** |
+| **Total scoped tasks** | **192** | **76** |
 
 Prior verified source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. Its `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`.
 
