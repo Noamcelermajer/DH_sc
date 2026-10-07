@@ -5,9 +5,9 @@ Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest test APK:** [Android 17 menu and Crypt checkpoint](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-07/DH2-native-menu-crypt-api37-2026-10-07.apk).
-APK: 154,585,761 bytes; SHA-256 `A01BED5649F34BF827A84D74EF8B274BB7DD1DE002709AAA6B6EF38AB73A28C4`.
-The Android 37 debug build compiles for ARM64 and x86_64 and packages the menu/UI and Crypt spawn data. This new APK has build and package checks only; it has not had a live gameplay run yet.
+**Latest build checkpoint APK:** [Android 17 item-world runtime](https://github.com/Noamcelermajer/DH_sc/releases/download/native-item-world-2026-10-07/app-debug.apk).
+APK: 147,440,960 bytes; SHA-256 `2AEFAB44D32EEC9D88F05C1CC072CEB4C45DA63283D6F145B336084BAB3A8972`.
+Android target SDK 37 build passed for ARM64 and x86_64; APK signature and 16 KiB ZIP alignment pass. It includes the menu/UI, Crypt and new item-drop runtime. This APK has build/package checks only; it has not had a live gameplay run.
 
 Prior live evidence applies to the previous APK from [commit `d4142762`](https://github.com/Noamcelermajer/DH_sc/commit/d4142762): API37/16KiB emulator tests passed all three class create/reopen/Back/Home-resume flows. A bounded Crypt smoke verified six player hit events with enemy AI disabled. A separate live exchange verified touch movement, seven enemy hits, and a 57-damage ordinary player attack. Neither run tested loot or progression. [Live exchange](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json), [menu](../port/android-native/reports/menu-ui-runtime-smoke-62557f03.json), [combat](../port/android-native/reports/character-combat-smoke-62557f03.json).
 
@@ -37,15 +37,15 @@ still require live gameplay integration. All final completion gates remain open.
 | World, physics, navigation and factories | 16 | 8 |
 | Character properties, equipment and state | 32 | 6 |
 | Lua, skills and enemy AI | 49 | 14 |
-| Combat, death, loot and progression | 13 | 7 |
+| Combat, death, loot and progression | 14 | 8 |
 | Quests, campaign, UI, audio and saves | 39 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **185** | **74** |
+| **Total scoped tasks** | **186** | **74** |
 
 Prior verified source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. Its `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`.
 
-Current branch adds the source Kill/DropLoot → V4 staged item → original ItemAudioVisual/BDAE draw + Box2D sensor → deferred MoveOn pickup path. IDA confirms AudioVisualID is ItemRecord word 21 (`ItemObject::InitAgain` reads `ItemInstance::GetItem()+84`); the earlier word-24 lookup was a blocker and is corrected. Host asset/parser checks pass, but this branch's Android compile and live loot/pickup are still pending; the prior APK above does not contain these changes.
+Current branch adds the source Kill/DropLoot → V4 staged item → original ItemAudioVisual/BDAE draw + Box2D sensor → deferred MoveOn pickup path. IDA confirms AudioVisualID is ItemRecord word 21 (`ItemObject::InitAgain` reads `ItemInstance::GetItem()+84`); the earlier word-24 lookup was a blocker and is corrected. Host asset/parser checks and the ARM64/x86_64 Android build pass. Live loot/pickup remains unverified.
 
 Historical [quest compilation and payload gate](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,659 host checks with nonempty SKIL, FAES, QEST and typed PROP on one Save/PropertyState; a FAES count mismatch still reaches QEST. FAES passes 74 original-ARM differential cases. Full InitPost/mask4/GEAR and quest-world callbacks remain open.
 
@@ -321,7 +321,8 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Reconstruct loot-entry percentage classification, class-weighted probability and weighted selection; 320 original ARM32 vs Android ARM64 comparisons, 204 raw-entry checks and exact RNG states pass ([differential](../reports/reconstruction-2026-10-06/loot-entry-selection-v1-arm32-arm64.json), [host](../reports/reconstruction-2026-10-06/loot-entry-selection-v1-host.json)). Recursive AddLootItems and live drops remain open.
 - [x] Add V4-owned world-drop staging outside player inventory and pickup handoff. Original LootTable row 124 (`Gold_01`, Type 13) matches the selected host item/value/RNG; pickup credits its value to wallet gold and retires the staged item ([receipt](../reports/reconstruction-2026-10-07/loot-world-gold-host.json)). Ordinary item pickup preserves ItemInstance identity.
 - [x] Retain V5/V7 loot-power and presentation owners in Android PlayerCombat, borrow the existing process RNG/V4 inventory, and retain each actor's raw `Loot` ID.
-- [ ] Compile and live-test the new Android death-to-item path: guarded alive-to-dead hook, ItemRecord word-21 visual lookup, original BDAE model, sensor and deferred MoveOn pickup. Source is implemented; the branch compile and gameplay test remain pending.
+- [x] Compile the new Android death-to-item path for ARM64 and x86_64, including original assets and ItemRecord word-21 visual lookup. `:app:assembleDebug`, APK signature and 16 KiB ZIP alignment pass; APK is attached to the [item-world release](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-item-world-2026-10-07).
+- [ ] Live-test the guarded kill → BDAE model/sensor → deferred MoveOn pickup path. The build is available; gameplay and pickup are not verified.
 - [ ] Complete all CalculateResult/ApplyResult dependencies, effects, notifications and actor ownership.
 - [ ] Connect melee/ranged/spell combat, skills, criticals, resistances and status effects in the final runtime.
 - [ ] Complete player damage/death, attacker/killer credit, resurrection and respawn.
