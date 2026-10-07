@@ -5,9 +5,9 @@ Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest build checkpoint APK:** [Android 17 death-loot retry](https://github.com/Noamcelermajer/DH_sc/releases/download/native-item-world-retry-2026-10-07/app-debug.apk).
-APK: 150,725,208 bytes; SHA-256 `C0E9A64ED0D6D530C1C52FC5EBEEE510210715389C9C7BDA71EC3923BC739B7B`.
-Android target SDK 37 build passed for ARM64 and x86_64 at code commit `1b5bca4`; APK signature and 16 KiB ZIP alignment pass. It includes the menu/UI, Crypt and item-drop retry path. This APK has build/package checks only; live loot and pickup remain unverified.
+**Latest build checkpoint APK:** [Android 17 equipment-driven actor facts](https://github.com/Noamcelermajer/DH_sc/releases/download/native-equipment-stance-2026-10-07/app-debug.apk).
+APK: 153,913,584 bytes; SHA-256 `5773CB5DC6BBE7F66AF85BEB94F0C0DB198227B9E6A1609D6ECE43F332830F87`.
+Android target SDK 37 build passed for ARM64 and x86_64 at code commit `d0f62da0`; APK signature and 16 KiB ZIP alignment pass. Player damage, stance and ranged queries read the canonical V4 inventory. This checkpoint has build/package checks only; equipment mutation/UI, equipped attacks, loot and pickup remain unverified.
 
 Prior live evidence applies to the previous APK from [commit `d4142762`](https://github.com/Noamcelermajer/DH_sc/commit/d4142762): API37/16KiB emulator tests passed all three class create/reopen/Back/Home-resume flows. A bounded Crypt smoke verified six player hit events with enemy AI disabled. A separate live exchange verified touch movement, seven enemy hits, and a 57-damage ordinary player attack. Neither run tested loot or progression. [Live exchange](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json), [menu](../port/android-native/reports/menu-ui-runtime-smoke-62557f03.json), [combat](../port/android-native/reports/character-combat-smoke-62557f03.json).
 
@@ -37,11 +37,11 @@ still require live gameplay integration. All final completion gates remain open.
 | World, physics, navigation and factories | 16 | 8 |
 | Character properties, equipment and state | 32 | 6 |
 | Lua, skills and enemy AI | 49 | 14 |
-| Combat, death, loot and progression | 15 | 8 |
+| Combat, death, loot and progression | 16 | 8 |
 | Quests, campaign, UI, audio and saves | 39 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **187** | **74** |
+| **Total scoped tasks** | **188** | **74** |
 
 Prior verified source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. Its `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`.
 
@@ -323,6 +323,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Retain V5/V7 loot-power and presentation owners in Android PlayerCombat, borrow the existing process RNG/V4 inventory, and retain each actor's raw `Loot` ID.
 - [x] Compile the new Android death-to-item path for ARM64 and x86_64, including original assets and ItemRecord word-21 visual lookup. `:app:assembleDebug`, APK signature and 16 KiB ZIP alignment pass; APK is attached to the [item-world release](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-item-world-2026-10-07).
 - [x] Retry failed one-shot death-loot continuations from the world update; retire partial V4 staging by retained item identity before rerolling. Compile both Android ABIs; no live loot claim.
+- [x] Feed player melee and actor stance/ranged facts from the canonical V4 inventory. IDA `F_MeleeAttack` confirms slots 1/2 and item word 37; `HasRangedWeapon` uses word 22 types 4/5. API37 ARM64/x86_64 build/package passes. Inventory UI/equip mutations and gameplay remain open.
 - [ ] Live-test the guarded kill → BDAE model/sensor → deferred MoveOn pickup path. The build is available; gameplay and pickup are not verified.
 - [ ] Complete all CalculateResult/ApplyResult dependencies, effects, notifications and actor ownership.
 - [ ] Connect melee/ranged/spell combat, skills, criticals, resistances and status effects in the final runtime.
