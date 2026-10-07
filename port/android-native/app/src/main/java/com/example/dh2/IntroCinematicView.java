@@ -28,6 +28,7 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
     private boolean prepared;
     private boolean paused;
     private boolean finished;
+    private int resumePositionMs;
 
     IntroCinematicView(Context context, Runnable onFinished) {
         this(context, null, onFinished);
@@ -44,7 +45,12 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
     }
 
     void startPlayback() {
+        startPlayback(0);
+    }
+
+    void startPlayback(int positionMs) {
         requested = true;
+        resumePositionMs = Math.max(0, positionMs);
         startIfReady();
     }
 
@@ -84,6 +90,17 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
 
     boolean isPending() { return !finished; }
 
+    int currentPositionMs() {
+        if (player != null && prepared && !finished) {
+            try {
+                return Math.max(0, player.getCurrentPosition());
+            } catch (IllegalStateException ignored) {
+                // Use the last retained seek position while the decoder changes state.
+            }
+        }
+        return resumePositionMs;
+    }
+
     private void startIfReady() {
         if (!requested || finished || player != null || !isAvailable()) return;
         try {
@@ -108,6 +125,14 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
                 videoWidth = mp.getVideoWidth();
                 videoHeight = mp.getVideoHeight();
                 fitVideo();
+                if (resumePositionMs > 0) {
+                    try {
+                        mp.seekTo(resumePositionMs);
+                        resumePositionMs = 0;
+                    } catch (IllegalStateException e) {
+                        Log.w(TAG, "Could not restore opening movie position", e);
+                    }
+                }
                 if (!paused) {
                     try {
                         mp.start();
@@ -147,6 +172,15 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
         setTransform(transform);
     }
 
+    @Override protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
+        super.onSizeChanged(width, height, oldWidth, oldHeight);
+        // A window resize can change the TextureView without recreating its
+        // SurfaceTexture. Refit here as well as on texture/video callbacks so
+        // rotation, cutout policy, and resizable-window changes keep the movie
+        // centered at its source aspect ratio.
+        fitVideo();
+    }
+
     private void finish() {
         if (finished) return;
         finished = true;
@@ -156,6 +190,13 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
 
     private void releasePlayer() {
         MediaPlayer old = player;
+        if (!finished && old != null && prepared) {
+            try {
+                resumePositionMs = Math.max(0, old.getCurrentPosition());
+            } catch (IllegalStateException ignored) {
+                // Keep the most recently saved position during decoder teardown.
+            }
+        }
         player = null;
         prepared = false;
         if (old != null) {

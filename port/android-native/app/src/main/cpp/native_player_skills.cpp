@@ -15,6 +15,8 @@
 #include "character_equipped_faery_element_v1.hpp"
 #include "character_current_equipped_faery_v1.hpp"
 #include "character_player_buffs_v1.hpp"
+#include "player_skill_progression_v1.hpp"
+#include "fresh_inventory_owned_v4.hpp"
 #include "character_skill_cooldown_services.hpp"
 #include "character_coordinator.hpp"
 #include "player_ais_lifecycle_v1.hpp"
@@ -620,13 +622,97 @@ struct Runtime::Impl {
   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill update complete | attempt %u | callbacks %u | skill slots %u | faery slots %u | buffs %u | groups %u | one VM/save/property store; source InitProcess complete, activation pending",update_attempts,updated.callbacks,updated.source.skill_slots,updated.source.faery_slots,buffs->count(),property_view.group_count);
   log_buffs("initial");
  }
- void update(){
-  if(!initialized||update_blocked||!updates)return;
-  refresh_properties();++update_attempts;
+ bool update_after_saved_skill_slot_write(std::string& output_error){
+  if(!initialized||update_blocked||!updates){output_error="Native Player UpdateSkills owner is unavailable or blocked";return false;}
+  try{refresh_properties();}
+  catch(const std::exception& e){output_error=e.what();return false;}
+  ++update_attempts;
   if(updates->update(updated,error)){
    update_blocked=true;
    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill update blocked | attempt %u | callbacks %u | VM status %d | %s | source effects retained; remaining providers pending",update_attempts,updated.callbacks,updated.last_lua_status,error.c_str());
+   output_error=error;return false;
   }
+  output_error.clear();return true;
+ }
+ struct TrainContext {Impl* owner;dh2::data::FreshInventoryOwnedV4* inventory;};
+ static int train_current_save(void* raw,std::uintptr_t character,dh2::data::PlayerSavegameV1** output){
+  auto& context=*static_cast<TrainContext*>(raw);auto& owner=*context.owner;
+  if(!output||character!=owner.bindings.character||!owner.bindings.savegame||
+     owner.bindings.savegame->character()!=character)return 1;
+  *output=owner.bindings.savegame.get();return 0;
+ }
+ static int train_service(void* raw,const dh2::player_skill_progression_v1::Request* request,
+                          dh2::player_skill_progression_v1::Response* response){
+  if(!raw||!request||!response)return 1;
+  auto& context=*static_cast<TrainContext*>(raw);auto& owner=*context.owner;*response={};
+  if(request->character!=owner.bindings.character||!owner.bindings.savegame||
+     owner.bindings.savegame->character()!=request->character)return 1;
+  using Operation=dh2::player_skill_progression_v1::Operation;
+  switch(request->operation){
+   case Operation::skill_limit:{
+    static constexpr const char* keys[]={"MaxSkillLevelBNormal","MaxSkillLevelCHard","MaxSkillLevelDVeryHard"};
+    const auto difficulty=request->arguments[0];if(difficulty<0||difficulty>2||!owner.bindings.design)return 1;
+    dh2_pycst_result value{};const auto* key=keys[difficulty];
+    if(dh2_pycst_get(owner.bindings.design,"CharacterDesign",15,key,
+                     std::uint32_t(std::strlen(key)),&value))return 1;
+    // PyDataConstants::getConstant returns zero for a missing entry.
+    response->word=value.found?std::uint32_t(value.value):0u;return 0;
+   }
+   case Operation::unlocked_difficulty:
+    if(request->savegame&&request->savegame!=owner.bindings.savegame.get())return 1;
+    response->word=std::uint32_t(owner.bindings.savegame->unlocked_difficulty());return 0;
+   case Operation::add_property:{
+    if(request->arguments[0]!=157||request->arguments[1]!=-1||dh2_property_validate(&owner.property_view))return 1;
+    const std::uint32_t bits=std::uint32_t(request->arguments[1])<<8;std::int32_t fixed{};
+    std::memcpy(&fixed,&bits,sizeof(fixed));
+    return dh2_property_add(&owner.property_view,request->arguments[0],fixed)?1:0;
+   }
+   case Operation::update_all_skills:{
+    std::string error;return owner.update_after_saved_skill_slot_write(error)?0:1;
+   }
+   case Operation::recalculate_properties:
+    if(request->arguments[0]!=1||!owner.bindings.classes||owner.class_rows.empty()||
+       dh2_property_validate(&owner.property_view))return 1;
+    return int(dh2_class_recalc_base(owner.class_rows.data(),std::uint32_t(owner.class_rows.size()),
+                                    owner.bindings.properties->base.data(),&owner.property_view));
+   case Operation::set_potion_capacity:
+    if(!context.inventory||context.inventory->character()!=request->character||
+       context.inventory->properties()!=owner.bindings.properties)return 1;
+    context.inventory->project_potion_capacity(std::int8_t(std::uint8_t(request->arguments[0])));return 0;
+   case Operation::debug_load:
+    if(!owner.bindings.debug||owner.bindings.debug->runtime().load(owner.bindings.debug->globals(),
+        owner.bindings.debug->services())!=dh2::debug_switches::Status::complete)return 1;
+    return 0;
+   case Operation::debug_query:{
+    if(!owner.bindings.debug)return 1;std::uint8_t ignored=0;
+    return owner.bindings.debug->runtime().get_switch("isTracingChar_Stats",owner.bindings.debug->globals(),
+        owner.bindings.debug->services(),ignored)==dh2::debug_switches::Status::complete?0:1;
+   }
+   default:return 1;
+  }
+ }
+ bool train_skill(std::uint32_t skill_index,bool test_only,dh2::data::FreshInventoryOwnedV4& inventory,
+                  std::uint32_t& source_return,std::string& output_error){
+  source_return=0;output_error.clear();
+  if(!initialized||update_blocked||!bindings.savegame||!bindings.tables||!bindings.design||!bindings.debug||
+     !bindings.properties||!bindings.classes||inventory.character()!=bindings.character||
+     inventory.properties()!=bindings.properties){output_error="Native skill training requires the active Save, Player update, design/debug and canonical V4 owners";return false;}
+  try{refresh_properties();refresh_class_rows();}
+  catch(const std::exception& e){output_error=e.what();return false;}
+  TrainContext context{this,&inventory};
+  const dh2::player_skill_progression_v1::Services services{&context,train_current_save,train_service};
+  dh2::player_skill_progression_v1::Result result{};
+  const auto status=dh2::player_skill_progression_v1::increment_skill(&property_view,
+      &bindings.tables->skills(),bindings.character,skill_index,test_only,&services,&result);
+  if(status!=dh2::player_skill_progression_v1::Status::complete){
+   output_error="Source Character::IncSkill provider failed at operation "+std::to_string(result.last_operation);
+   return false;
+  }
+  source_return=result.source_return;return true;
+ }
+ void update(){
+  if(!initialized||update_blocked||!updates)return;
+  std::string ignored;update_after_saved_skill_slot_write(ignored);
  }
  void timer(std::uint32_t id){
   dh2_script_value argument{};std::int32_t signed_id;std::memcpy(&signed_id,&id,4);
@@ -757,6 +843,13 @@ std::unique_ptr<Runtime> Runtime::create(Bindings b,std::string& error){
 }
 bool Runtime::initialized()const noexcept{return impl_->initialized;}
 void Runtime::update(){impl_->update();}
+bool Runtime::update_after_saved_skill_slot_write(std::string& error){
+ return impl_->update_after_saved_skill_slot_write(error);
+}
+bool Runtime::train_skill(std::uint32_t skill_index,bool test_only,data::FreshInventoryOwnedV4& inventory,
+                          std::uint32_t& source_return,std::string& error){
+ return impl_->train_skill(skill_index,test_only,inventory,source_return,error);
+}
 void Runtime::state_service(std::uint32_t service){
  auto& s=*impl_;if(!s.focus_services)throw std::runtime_error("Native Character cleanup owner unavailable");
  s.refresh_properties();dh2::character_dead_focus_services_v1::Result result{};

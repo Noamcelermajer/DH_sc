@@ -12,6 +12,7 @@ namespace dh2::character {class Coordinator;struct Timer32;}
 namespace dh2::character_ai_initialization {struct State;}
 namespace dh2::object_update_culling {struct Object;}
 namespace dh2::data {class PlayerSavegameV1;struct AiProps;}
+namespace dh2::data {class FreshInventoryOwnedV4;}
 namespace dh2::data {struct AiTables;struct AnimationTables;}
 namespace dh2::data::savegame_options_v1 {class Owner;}
 namespace dh2::native::debug_files {class Backend;}
@@ -68,6 +69,15 @@ public:
     ~Runtime();
     Runtime(const Runtime&)=delete;Runtime& operator=(const Runtime&)=delete;
     void update();
+    // Character::SG_SetSkillInSlot mutates the canonical Save map, then calls
+    // CharAI::UpdateSkills. This invokes that tail through the retained Player
+    // VM/update owner and reports failure to the synchronous UI action.
+    bool update_after_saved_skill_slot_write(std::string& error);
+    // Source Character::IncSkill over the same retained Save, skill VM,
+    // property/buff view and caller-supplied canonical V4 inventory.
+    bool train_skill(std::uint32_t skill_index,bool test_only,
+                     data::FreshInventoryOwnedV4&,std::uint32_t& source_return,
+                     std::string& error);
     // Source CharAI::OnDied only. Character::Kill/rewards/event2 caller is a
     // separate integration boundary; this retains the same AIS and VM.
     void died(std::uintptr_t killer);

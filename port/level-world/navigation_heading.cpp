@@ -45,6 +45,9 @@ extern "C" int dh2_nav_rotate_input_for_camera(float* direction,const float* cam
  const float length=std::hypot(std::hypot(cx,cy),cz);
  if(!std::isfinite(length)||length<=0.f)return 1;
  // Native Update uses Point3D::angle(Vec3f_J, lookAtVec), then rotateXY.
+ // Point3D::angle is acos(dot/(|a||b|)), so it loses the X
+ // half-plane sign. Keep that source behavior; unrestricted orbit yaw can
+ // therefore mirror forward input on the far side of the camera orbit.
  // Vec3f_J is the +Y basis; its dot with the camera target is cy.
  const float cosine=std::clamp(cy/length,-1.f,1.f);
  const float angle=std::acos(cosine),c=std::cos(angle),s=std::sin(angle);

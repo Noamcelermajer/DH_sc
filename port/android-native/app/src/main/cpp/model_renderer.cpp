@@ -30,6 +30,7 @@
 #include "loot_power_resources_v7.hpp"
 #include "fresh_inventory_owned_v4.hpp"
 #include "player_savegame_v1.hpp"
+#include "player_saved_skill_slots_v1.hpp"
 #include "savegame_options_v1.hpp"
 #include "level_tables.hpp"
 #include "world_map_tables.hpp"
@@ -1116,12 +1117,6 @@ bool enabled=false;float center[3]{},radius=1,yaw=-1.57f,pitch=.35f,zoom=1;
 dh2::scene::Scene current_scene;dh2::animation::Player player;
 dh2::animation::Player walk_player;dh2::world::Level level;dh2::world::Point actor_position{};
 bool world_mode=false,walking=false,resume_world=false;float move_x=0,move_y=0,heading=0;
-void rotate_touch_heading_to_camera(float direction[3]){
- // Movement follows the camera's horizontal look direction. `center` is the
- // camera's world-space focal point, not a direction vector; using it here
- // rotated input around the level origin and made controls change by location.
- (void)dh2::native::camera_input_v1::rotate_ground_input(direction,yaw);
-}
 dh2::character::crypt_scripts::SpawnSession crypt_spawn_script;
 dh2_crypt_spawn_trigger::State crypt_trigger_state{};
 dh2_zone_contact::Vec3 crypt_trigger_position{},crypt_trigger_scale{};
@@ -3284,6 +3279,18 @@ bool ui_player_skill_points(std::uintptr_t identity,std::int32_t& points,std::st
  points=raw>=0?raw/256:-static_cast<std::int32_t>((-std::int64_t(raw)+255)/256);
  error.clear();return true;
 }
+bool ui_player_train_skill(std::uintptr_t identity,std::uint32_t skill_index,bool test_only,
+                           std::uint32_t& source_return,std::int32_t& points,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.inventory||!prince_skills||!prince_skills->initialized()||
+    !prince_combat.savegame||!prince_combat.savegame->skills_initialized()){
+  error="Skill training requires the active Save, Player UpdateSkills owner and canonical V4 inventory";return false;
+ }
+ if(!prince_skills->train_skill(skill_index,test_only,*prince_combat.inventory,source_return,error))return false;
+ const auto raw=prince_combat.properties.resolved[157];
+ points=raw>=0?raw/256:-static_cast<std::int32_t>((-std::int64_t(raw)+255)/256);
+ error.clear();return true;
+}
 bool ui_player_skill(std::uintptr_t identity,std::uint32_t index,UiSkillReadV1& out,std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
  if(identity!=current||!prince_combat.savegame->skills_initialized()||!actor_skill_catalogue||!actor_skill_catalogue->tables){
@@ -3308,6 +3315,52 @@ bool ui_player_skill(std::uintptr_t identity,std::uint32_t index,UiSkillReadV1& 
  value.name_text=row.skill_name;value.description_text=row.skill_description;
  value.current_text=row.skill_curr_level;value.next_text=row.skill_next_level;
  value.assignable=row.skill_assignable;value.icon=row.skill_icon;out=std::move(value);error.clear();return true;
+}
+bool ui_player_equip_skill(std::uintptr_t identity,std::int32_t slot,std::int32_t skill_index,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.savegame||!prince_combat.inventory||
+    !actor_skill_catalogue||!actor_skill_catalogue->tables||!prince_skills||
+    !prince_skills->initialized()||!prince_combat.savegame->skills_initialized()){
+  error="Skill assignment requires the active Character, initialized Save, V4 inventory and Player UpdateSkills owner";return false;
+ }
+ if(slot<0||slot>=3||skill_index<0){error="Skill assignment slot or skill index is outside the source UI domain";return false;}
+ const auto& tables=actor_skill_catalogue->tables->skills();
+ auto selector=prince_combat.properties.resolved[28];
+ if(selector<0||std::size_t(selector)>=tables.skill_lists.size())selector=3;
+ if(std::size_t(selector)>=tables.skill_lists.size()||
+    std::size_t(skill_index)>=tables.skill_lists[std::size_t(selector)].members.size()||
+    std::size_t(skill_index)>=prince_combat.savegame->skills().size()){
+  error="Character::IsSkillEquippable index is outside the active SkillTree and Save rows";return false;
+ }
+ const auto row_id=tables.skill_lists[std::size_t(selector)].members[std::size_t(skill_index)];
+ if(row_id<0||std::size_t(row_id)>=tables.skills.size()||
+    prince_combat.savegame->skills()[std::size_t(skill_index)].id!=row_id){
+  error="Active SkillTree row does not match the canonical Save skill row";return false;
+ }
+ const auto& row=tables.skills[std::size_t(row_id)];
+ const auto raw_level=prince_combat.properties.resolved[19];
+ const auto character_level=raw_level>=0?raw_level/256:
+  -static_cast<std::int32_t>((-std::int64_t(raw_level)+255)/256);
+ // Character::IsSkillEquippable: IsSkillAvailable (level gate), authored
+ // Skill+0x48 != -1 (SkillAssignable), then SG_GetSkillLevel(index) > 0.
+ if(character_level<row.level||!row.skill_assignable||
+    prince_combat.savegame->skill_level(std::uint32_t(skill_index))<=0){
+  error="Character::IsSkillEquippable rejected this skill";return false;
+ }
+ struct UpdateContext {std::uintptr_t character;dh2::native::player_skills::Runtime* skills;};
+ UpdateContext update{current,prince_skills.get()};
+ const dh2::data::SavedSkillUpdateServicesV1 services{&update,
+  [](void* raw,std::uintptr_t character,std::string& callback_error)->bool{
+   const auto& context=*static_cast<UpdateContext*>(raw);
+   if(character!=context.character||!context.skills||!context.skills->initialized()){
+    callback_error="Character::UpdateSkills owner differs from the active Player";return false;
+   }
+   return context.skills->update_after_saved_skill_slot_write(callback_error);
+  }};
+ dh2::player_saved_skill_slots_v1::BoundSlotsV1 saved_slots(*prince_combat.savegame,*prince_combat.inventory);
+ if(saved_slots.set_skill_in_slot(slot,std::uint32_t(skill_index),services,error)!=
+    dh2::player_saved_skill_slots_v1::Status::ok)return false;
+ error.clear();return true;
 }
 bool ui_player_active_faery(std::uintptr_t identity,std::int32_t& id,std::int32_t& level,std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
@@ -3341,6 +3394,45 @@ bool ui_player_inventory_gold(std::uintptr_t identity,std::int32_t& gold,std::st
  if(identity!=current||!prince_combat.inventory){error="Gameplay inventory gold read requires the active V4 inventory";return false;}
  gold=prince_combat.inventory->gold();error.clear();return true;
 }
+namespace {
+// Ported from Adam's character_menu_item_equippable_v1, which models
+// ItemInstance::IsEquippableBy. The live native host is explicitly offline;
+// online/remote ownership remains unsupported rather than guessed here.
+bool inventory_item_equippable_by_player(const dh2::data::ItemRecord164& item,
+                                         bool& result,std::string& error){
+ if(native_host.online){error="ItemInstance::IsEquippableBy online/remote query is unavailable in this offline host";return false;}
+ const auto* actors=prince_combat.profile_characters.get();
+ const auto saved_class=prince_combat.character_class;
+ if(!actors||saved_class<0||std::size_t(saved_class)>=actors->names.size()||
+    std::size_t(saved_class)>=actors->rows.size()){
+  error="ItemInstance::IsEquippableBy requires the active saved class row";return false;
+ }
+ auto required_class=saved_class;
+ const auto class_requirement=item.words[34];
+ if(class_requirement>=1&&class_requirement<=9){
+  static constexpr const char* names[]={"KnightPlayerBase","KnightPlayerBase_Berserker",
+   "KnightPlayerBase_Paladin","RoguePlayerBase","RoguePlayerBase_Assassin",
+   "RoguePlayerBase_Archer","MagePlayerBase","MagePlayerBase_Necromancer",
+   "MagePlayerBase_Illusionist"};
+  const auto at=std::find(actors->names.begin(),actors->names.end(),names[class_requirement-1]);
+  if(at==actors->names.end()){
+   error="ItemInstance::IsEquippableBy class requirement is absent from the active cache";return false;
+  }
+  required_class=std::int32_t(at-actors->names.begin());
+ }
+ const auto fixed=[](std::int32_t value){
+  const auto bits=std::uint32_t(value)<<8;std::int32_t result;std::memcpy(&result,&bits,sizeof(result));return result;
+ };
+ if(prince_combat.properties.resolved[19]<fixed(item.words[29])){result=false;error.clear();return true;}
+ for(unsigned i=0;i<4;++i){
+  const auto a=std::uint32_t(prince_combat.properties.resolved[149+i]);
+  const auto b=std::uint32_t(prince_combat.properties.resolved[153+i]);
+  const auto sum=a+b;std::int32_t attribute;std::memcpy(&attribute,&sum,sizeof(attribute));
+  if(attribute<fixed(item.words[30+i])){result=false;error.clear();return true;}
+ }
+ result=saved_class==required_class;error.clear();return true;
+}
+}
 bool ui_player_inventory_slot(std::uintptr_t identity,std::int32_t requested,std::vector<UiInventoryItemReadV1>& out,std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
  if(identity!=current||!prince_combat.inventory){error="Gameplay inventory list requires the active V4 inventory";return false;}
@@ -3362,6 +3454,8 @@ bool ui_player_inventory_slot(std::uintptr_t identity,std::int32_t requested,std
   UiInventoryItemReadV1 value;value.id=slot->item->id;value.index=std::int32_t(index);
   value.quantity=slot->item->signed_quantity();value.slot=item_slot;
   value.name=slot->item->name.empty()?definition->name:slot->item->name;value.equipped=equipped;
+  value.equippable=requested==9;
+  if(requested!=9&&!inventory_item_equippable_by_player(definition->record,value.equippable,error))return false;
   const auto set=std::size_t(prince_combat.inventory->current_equipment());
   const auto& equipment=prince_combat.inventory->equipment();
   const auto paired=requested==1?2:requested==2?1:requested==5?6:requested==6?5:-1;
@@ -3392,9 +3486,7 @@ bool ui_player_inventory_item_details(std::uintptr_t identity,std::int32_t reque
  value.stats=instance.description;value.requirements=instance.requirements;
  value.icon=definition->icon_name;
  value.stackable=(static_cast<std::uint32_t>(definition->record.words[7])&0xffu)!=0;
- // IsEquippableBy uses the Character's class and resolved requirements. Keep
- // the control inactive until that exact source predicate is bound.
- value.equippable=false;
+ if(!inventory_item_equippable_by_player(definition->record,value.equippable,error))return false;
  if(!instance.powers.empty()){
   const auto* powers=prince_combat.item_presentation->powers(instance);
   if(!powers||powers->size()!=instance.powers.size()){
@@ -3932,11 +4024,15 @@ void advance_native_actor(unsigned dt_ms){
  }
  // Development touch input supplies the original controller facts. State
  // predicates/focus/blur decide eligibility, policy and authored animation.
- const bool input_active=std::hypot(move_x,move_y)>.08f;
+ // v2GamepadController::Update applies its radial deadzone/response curve and
+ // camera-relative angle before Character::Move. Keep this at the same per
+ // actor-update point; the adapter reports the conditioned activity state.
+ float input[3]{move_x,move_y,0};bool input_active=false;
+ if(dh2::native::camera_input_v1::map_touch_ground_input(input,yaw,pitch,world_mode,&input_active))
+  throw std::runtime_error("Native camera-relative touch input rejected");
  const bool was_heading=prince_state.heading_active!=0;
  if(!prince_state.controller_locked){
   if(input_active){
-   float input[3]{move_x,move_y,0};rotate_touch_heading_to_camera(input);
    if(dh2_nav_set_heading(&prince_runtime.controller.heading,input,1))throw std::runtime_error("Native input heading rejected");
    prince_runtime.rotation.heading_angle=prince_runtime.controller.heading.angle;
    for(unsigned i=0;i<3;++i)prince_runtime.subobjects.destination[i]=prince_runtime.subobjects.position[i]+input[i]*1000.f;

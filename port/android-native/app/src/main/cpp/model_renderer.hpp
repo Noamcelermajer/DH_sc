@@ -70,7 +70,7 @@ struct UiSkillReadV1 {
 };
 struct UiInventoryItemReadV1 {
  std::int32_t id{-1},index{-1},quantity{},slot{-1};std::string name;
- bool equipped{},equipped_other_hand{};
+ bool equippable{},equipped{},equipped_other_hand{};
 };
 struct UiEquippedItemReadV1 {
  std::int32_t id{-1},index{-1},power_count{};std::string name;
@@ -83,6 +83,8 @@ struct UiItemDetailsReadV1 {
 bool ui_player_skill_slots(std::uintptr_t,std::array<std::int32_t,3>&,std::string&);
 bool ui_player_skill_points(std::uintptr_t,std::int32_t&,std::string&);
 bool ui_player_skill(std::uintptr_t,std::uint32_t,UiSkillReadV1&,std::string&);
+bool ui_player_train_skill(std::uintptr_t,std::uint32_t,bool,std::uint32_t&,std::int32_t&,std::string&);
+bool ui_player_equip_skill(std::uintptr_t,std::int32_t slot,std::int32_t skill_index,std::string&);
 bool ui_player_active_faery(std::uintptr_t,std::int32_t&,std::int32_t&,std::string&);
 bool ui_player_faery_unlocked(std::uintptr_t,std::uint32_t,bool&,std::string&);
 bool ui_player_inventory_gold(std::uintptr_t,std::int32_t&,std::string&);

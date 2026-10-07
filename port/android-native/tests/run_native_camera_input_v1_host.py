@@ -35,7 +35,7 @@ def main() -> int:
     ran = subprocess.run([str(output)], cwd=ROOT, capture_output=True, text=True)
     if ran.returncode:
         raise RuntimeError(ran.stdout + ran.stderr)
-    print("PASS: camera-relative movement adapter host checks (11 assertions)")
+    print(ran.stdout.strip() or "PASS: source gamepad-to-touch camera mapping")
     return 0
 
 

@@ -666,6 +666,36 @@ struct OriginalUiSession::Impl {
             if(fn.result)fn.result->set_double(points);
             return true;
         }
+        if(!std::strcmp(name,"NativeSkillsTrainSkill")){
+            if((fn.nargs!=2&&fn.nargs!=3)||!fn.arg(0).is_number()||!fn.arg(1).is_number()||
+               (fn.nargs==3&&!fn.arg(2).is_undefined()&&!fn.arg(2).is_bool())){
+                error="NativeSkillsTrainSkill requires [skillIndex, playerIndex, optionalTestOnly]";return false;
+            }
+            const auto raw_index=fn.arg(0).to_int();
+            if(raw_index<0){error="NativeSkillsTrainSkill skill index is outside the source UI domain";return false;}
+            const bool test_only=fn.nargs==3&&fn.arg(2).is_bool()&&fn.arg(2).to_bool();
+            std::uintptr_t identity=0;if(!local_character(fn.arg(1).to_int(),false,identity))return false;
+            if(!identity){error="NativeSkillsTrainSkill requires the attached local Player Character";return false;}
+            std::uint32_t source_return=0;std::int32_t points=0;
+            if(!model_renderer::ui_player_train_skill(identity,std::uint32_t(raw_index),test_only,
+                                                       source_return,points,error))return false;
+            if(fn.result){
+                if(test_only)fn.result->set_bool(source_return!=0);
+                else fn.result->set_double(points);
+            }
+            return true;
+        }
+        if(!std::strcmp(name,"NativeEquipSkill")){
+            if(fn.nargs!=3||!fn.arg(0).is_number()||!fn.arg(1).is_number()||!fn.arg(2).is_number()){
+                error="NativeEquipSkill requires [slotIndex, skillIndex, playerIndex]";return false;
+            }
+            const auto slot=fn.arg(0).to_int(),skill=fn.arg(1).to_int();
+            std::uintptr_t identity=0;if(!local_character(fn.arg(2).to_int(),false,identity))return false;
+            if(!identity){error="NativeEquipSkill requires the attached local Player Character";return false;}
+            // Source returns undefined. The canonical Save setter preserves
+            // map mutation before its same-owner UpdateSkills tail on failure.
+            return model_renderer::ui_player_equip_skill(identity,slot,skill,error);
+        }
         if(!std::strcmp(name,"NativeGetPlayerStats")){
             if(fn.nargs!=2||!fn.arg(0).is_object()||!fn.arg(1).is_number())return true;
             auto* object=fn.arg(0).to_object();if(!object){error="Player stats callback requires a live ActionScript object";return false;}
@@ -770,9 +800,7 @@ struct OriginalUiSession::Impl {
                 const auto quantity=raw_slot==9?std::to_string(item.quantity):std::string(" ");
                 if(!value->set_member("ItemName",gameswf::as_value(item.name.c_str()))||
                    !value->set_member("ItemIndex",gameswf::as_value(item.index))||
-                   // The full IsEquippableBy class/property predicate is not
-                   // connected, so this control remains visibly inactive.
-                   !value->set_member("ItemEquippable",gameswf::as_value(raw_slot==9))||
+                   !value->set_member("ItemEquippable",gameswf::as_value(item.equippable))||
                    !value->set_member("ItemEquipped",gameswf::as_value(item.equipped))||
                    !value->set_member("ItemEquippedOtherHand",gameswf::as_value(item.equipped_other_hand))||
                    !value->set_member("ItemQuantity",gameswf::as_value(quantity.c_str()))){
@@ -1200,7 +1228,7 @@ struct OriginalUiSession::Impl {
         if(front_screen=="main")for(const auto* action:{"NativeGetSaveSlotDetails","NativeCreateSaveSlot","NativeAssignSaveSlotToPlayer","NativeSetSaveSlotIDToMainMenu","NativeStartGame"})services.native_actions.emplace_back(action);
         if(front_screen=="main"||live_player)services.native_actions.emplace_back("NativeGetParsedString");
         if(live_player)for(const auto* action:{"NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
-            "NativeSkillsGetSkillPointsLeft","NativeGetPlayerStats","NativeHUDGetActiveFaery","NativeHUDGetIsFaeryUnlocked",
+            "NativeSkillsGetSkillPointsLeft","NativeSkillsTrainSkill","NativeEquipSkill","NativeGetPlayerStats","NativeHUDGetActiveFaery","NativeHUDGetIsFaeryUnlocked",
             "NativeInvGetItemsListForSlot","NativeInvGetItemDetails","NativeInvGetEquipedItem",
             "NativeInvGetHasOffHandWeapon","NativeInvGetHasTwoHandedWeapon","NativeInvGetPlayerGold",
             "NativeGetNumPotions","NativeGetStringNumPotions"})services.native_actions.emplace_back(action);
