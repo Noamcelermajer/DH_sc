@@ -65,6 +65,21 @@ int Coordinator::event(std::uint32_t event_id, std::uint64_t payload) {
         bindings_.spawn_facts) return spawn_event(event_id);
     auto facts = bindings_.facts(bindings_.context);
     Scope scope(*this, facts, event_id);
+    const bool selected_skill_state=state.current==3||state.current==4||
+        state.current==5||state.current==6;
+    if(state.current==6||(event_id==0xc355&&selected_skill_state)){
+        auto* projection=bindings_.skill_projection;
+        if(!projection||projection->machine!=&state)return -1;
+        character_skill_state_dispatch_v1::Result result{};
+        const auto status=character_skill_state_dispatch_v1::event(&state,event_id,
+            event_id==0x28?reinterpret_cast<const char*>(static_cast<std::uintptr_t>(payload)):nullptr,
+            &result);
+        if(status!=character_skill_state_dispatch_v1::Status::complete)return -1;
+        if(result.next<0)return 0;
+        const auto services=state_services();
+        return dh2_character_skill_state_transition(&state,&facts,projection,
+            result.next,static_cast<std::int32_t>(event_id),payload,&services);
+    }
     const auto services = state_services();
     return dh2_character_state_event(&state, &facts, event_id, payload, &services);
 }
@@ -75,6 +90,12 @@ int Coordinator::transition(std::int32_t next, std::int32_t event_id,
     auto facts = bindings_.facts(bindings_.context);
     Scope scope(*this, facts, static_cast<std::uint32_t>(event_id));
     const auto services = state_services();
+    if(state.current==6||next==6){
+        auto* projection=bindings_.skill_projection;
+        if(!projection||projection->machine!=&state)return -1;
+        return dh2_character_skill_state_transition(&state,&facts,projection,next,
+            event_id,payload,&services);
+    }
     return dh2_character_state_transition(&state, &facts, next, event_id,
                                           payload, &services);
 }
@@ -87,6 +108,15 @@ int Coordinator::update_state(std::uint32_t dt_ms) {
         const int result = dh2_character_spawn_update(&state, &spawn);
         if (result == 0) state.elapsed_ms += dt_ms;
         return result;
+    }
+    if(state.current==6){
+        if(!bindings_.skill_projection||bindings_.skill_projection->machine!=&state)
+            return -1;
+        character_skill_state_dispatch_v1::Result result{};
+        if(character_skill_state_dispatch_v1::update(&state,&result)!=
+           character_skill_state_dispatch_v1::Status::complete)return -1;
+        state.elapsed_ms+=dt_ms;
+        return 1;
     }
     auto facts = bindings_.facts(bindings_.context);
     Scope scope(*this, facts, event_cause_);

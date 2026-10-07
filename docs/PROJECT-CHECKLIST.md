@@ -38,10 +38,10 @@ still require live gameplay integration. All final completion gates remain open.
 | Character properties, equipment and state | 32 | 6 |
 | Lua, skills and enemy AI | 49 | 14 |
 | Combat, death, loot and progression | 13 | 7 |
-| Quests, campaign, UI, audio and saves | 39 | 10 |
+| Quests, campaign, UI, audio and saves | 40 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **185** | **73** |
+| **Total scoped tasks** | **186** | **73** |
 
 Latest source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`. The source-backed Kill/DropLoot → visible ItemManager object → pickup path remains open.
 
@@ -121,7 +121,7 @@ Historical reports retain their original APK identities and test scopes.
 ## 4. World, physics, navigation and object factories
 
 - [x] Load the original authored eight-room Crypt layout into the native app.
-- [x] Parse both current Crypt MGP SpawnPoints into SPWN; fresh Android start selects ID 0 and floor-snaps, while resume preserves saved pose. Host checks and both ABI builds pass; active-object ordering remains open.
+- [x] Parse both Crypt MGP SpawnPoints into SPWN; the custom development loader selects ID 0 and floor-snaps. Host checks and both ABI builds pass; this is separate from profile LEPT/LUSP and native `Level::_LoadPlayer`, and the current APK has no live gameplay run.
 - [x] Resolve 97 of its 166 object records: 84 scenery objects and 13 monsters.
 - [x] Reconstruct bounded navigation graph/search/path/smoothing/avoidance and floor producers.
 - [x] Connect a real owned player body, root motion, physics and navigation in development runtimes.
@@ -337,13 +337,14 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select Adam's five-TU shared localization/item-text closure on existing data DSO; 1,322 real items/936 powers and 99,622 composition checks pass. Native language/file/Application/HUD providers remain open.
 - [x] Select original campaign filename/index and borrowed SG_Load orchestration: 96 index/1,780 load/128 filename ARM cases and 23,017 failure prefixes pass through actual game-data selection; no second Save/profile authority.
 - [x] Complete seven metadata readers on the sole Save: 128 seven-reader ARM cases and 7,043 truncation/reload prefixes pass; use real CharacterTable names and source current-difficulty global.
+- [x] Reconstruct indexed fresh-profile metadata in selected host libraries: nine source-equivalent persisted profiles, 18 original caller cases and 11 provider-failure/mutation cases; fresh `LNAM` stores date plus three `(41, seed, act=1)` tuples, `LEPT=[0,0,0]`, and `LUSP=[1,1,1]`. This is host verification, not current-APK gameplay.
 - [x] Run read-only real campaign metadata import on API37/16KiB; verify corruption and live-slot rejection, retained profile/file lease, and distinct metadata/gameplay Saves across reload/rotation. Gameplay load, writes and backups remain open.
 - [ ] Complete quest conditions, automatic event dispatch, objective types, rewards and persistence.
 - [ ] Complete campaign progression, story/dialogue, unlocks and difficulty transitions.
 - [x] Reuse Adam v69's original menu, name/class selection and real Single Player screen; create and reopen Warrior/Rogue/Mage profiles into development Crypt on API37/16KiB.
 - [x] Render original HP/MP/XP timelines from the retained live player property sheet for all three classes, after the single world update/render.
 - [x] Verify menu/world Back, occupied-slot cold restart and Home/resume through actual UI input; preserve and restore existing emulator saves.
-- [ ] Complete original NativeStartGame/Application.LoadLevel, difficulty/location/quest handoff and full gameplay startup.
+- [ ] Connect original `NativeStartGame` → `Application::LoadLevel` → `GSLevel::LoadLevel` and staged `Level::_LoadProcess` (through `0x26`), including `.mlx` step-7 XML, authored Module/MGP/MVP order, ObjectManager factories and the `LEPT`/`LUSP` to active SpawnPoint handoff. The current menu→custom Crypt loader bypasses this source path.
 - [ ] Restore title/menu flow, character creation/selection, HUD, inventory, skill and quest interfaces.
 - [ ] Complete touch controls, input mapping, orientation/window/lifecycle behavior for the final app.
 - [ ] Connect music, sound, voice, visual effects and their original timing/lifetimes.

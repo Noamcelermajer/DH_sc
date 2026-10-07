@@ -1,4 +1,5 @@
 #include "character_coordinator.hpp"
+#include "character_skill_state_dispatch_v1.hpp"
 
 #include <cstdio>
 #include <stdexcept>
@@ -9,6 +10,8 @@ namespace {
 void check(bool value, const char* message) {
     if (!value) throw std::runtime_error(message);
 }
+namespace Frozen=dh2::character_skill_fsm_callbacks_v1;
+namespace Dispatch=dh2::character_skill_state_dispatch_v1;
 struct Fixture {
     Coordinator character{0x100000001ull, 1};
     Facts facts{};
@@ -93,6 +96,55 @@ struct Fixture {
               "state gate was not cleared after expiry hook forwarding");
         fixture.timer_order.push_back(2);
         if (fixture.test_growth_inside_expiry) owner.stop_timer(timer.id);
+    }
+};
+
+struct SkillFixture {
+    Coordinator character{0x200000001ull,1};
+    Facts facts{};
+    std::vector<Frozen::Operation> skill_operations;
+    std::vector<std::int32_t> previous_states;
+    std::uint8_t heading=0,moving=0;
+    std::uintptr_t physical=0;
+    Frozen::Character skill_character{};
+    Frozen::State callback_state{};
+    Frozen::Globals globals{};
+    Frozen::Services callback_services{};
+    Dispatch::Projection projection{};
+
+    SkillFixture(){
+        facts.is_player=1;facts.idle=11;facts.walk=22;facts.run=33;
+        facts.attack_static=44;facts.attack_moving=55;
+        facts.walk_threshold=.45f;facts.run_threshold=.85f;facts.walk_speed=1.3f;
+        facts.heading[0]=.5f;
+        skill_character={0x201,0x202,0x203,0x204,0x205,
+            &character.state.flags,&character.state.attack_gate,&heading,&moving,&physical};
+        callback_state={&skill_character};globals={0x206};
+        callback_services={this,skill_service};
+        projection={&character.state,&callback_state,&globals,&callback_services};
+        CoordinatorBindings bindings{};
+        bindings.context=this;bindings.facts=read_facts;
+        bindings.services={this,state_service};bindings.skill_projection=&projection;
+        character.bind(bindings);
+    }
+    static Facts read_facts(void* context){return static_cast<SkillFixture*>(context)->facts;}
+    static void state_service(void* context,State* state,const Request* request){
+        auto& fixture=*static_cast<SkillFixture*>(context);
+        check(state==&fixture.character.state,"skill Coordinator state owner differs");
+        if(request->service==set_animation)state->current_animation=request->argument[0];
+        if(request->service==raise_event&&request->argument[0]==0x1d)
+            fixture.previous_states.push_back(request->argument[1]);
+    }
+    static std::int32_t skill_service(void* context,Frozen::State*,
+        const Frozen::Request* request,Frozen::Response* response){
+        auto& fixture=*static_cast<SkillFixture*>(context);
+        fixture.skill_operations.push_back(request->operation);
+        if(request->operation==Frozen::Operation::string_construct)
+            response->identity=0x207;
+        // This fixture is a non-monster for the CSSkill classification query;
+        // the frozen source caller returns normally without changing flags.
+        if(request->operation==Frozen::Operation::is_monster)response->word=0;
+        return 0;
     }
 };
 }
@@ -207,11 +259,50 @@ int main() {
               spawning.character.state.current_animation==11,
               "finite Spawn completion did not enter source Idle");
 
+        SkillFixture skills;
+        check(skills.character.transition(3)==1,"skill fixture Idle setup failed");
+        skills.character.state.elapsed_ms=123;
+        check(skills.character.event(0xc355)==1&&skills.character.state.current==6&&
+              skills.character.state.elapsed_ms==0&&
+              !skills.skill_operations.empty()&&
+              skills.skill_operations.front()==Frozen::Operation::debug_load,
+              "C355 did not enter CSSkill through the same Coordinator");
+        check(skills.character.update_state(17)==1&&
+              skills.character.state.current==6&&skills.character.state.elapsed_ms==17,
+              "CSSkill update did not preserve Coordinator elapsed ownership");
+        check(skills.character.event(0x28,reinterpret_cast<std::uintptr_t>("is_stoppable"))==0&&
+              (skills.character.state.flags&0x8000u),
+              "CSSkill OnEvent28 source string flag was not applied");
+        const auto operation_count=skills.skill_operations.size();
+        check(skills.character.event(0xc351)==1&&skills.character.state.current==4&&
+              skills.character.state.elapsed_ms==0&&
+              skills.skill_operations.size()>operation_count&&
+              skills.skill_operations[operation_count]==Frozen::Operation::debug_load&&
+              skills.character.state.current_animation==22&&
+              skills.previous_states==std::vector<std::int32_t>({-1,3,6}),
+              "CSSkill blur/registered exit did not transition through Coordinator");
+        skills.character.state.elapsed_ms=71;
+        const auto reenter_skill=skills.character.event(0xc355);
+        const auto close_skill=skills.character.event(0x22);
+        check(reenter_skill==1&&skills.character.state.current==3&&
+              close_skill==1&&skills.character.state.current==3&&
+              skills.character.state.elapsed_ms==0&&
+              skills.character.state.current_animation==11&&
+              skills.previous_states==std::vector<std::int32_t>({-1,3,6,4,6}),
+              "CSSkill playback close event0x22 did not return to Idle");
+
+        Fixture no_skill_projection;
+        no_skill_projection.character.state.current=3;
+        check(no_skill_projection.character.event(0xc355)==-1&&
+              no_skill_projection.character.state.current==3,
+              "C355 without CSSkill callback ownership mutated state");
+
         std::printf("{\"source_state_move_idle\":true,\"synchronous_reentry\":true,"
                     "\"facts_refresh\":true,\"captured_expiry_event\":true,"
                     "\"expiry_hook_before_state\":true,\"script_blocking_and_pause\":true,"
                     "\"spawn_timer_and_named_event\":true,"
-                    "\"safe_growth\":true,\"exception_borrow_cleanup\":true}\n");
+                    "\"safe_growth\":true,\"exception_borrow_cleanup\":true,"
+                    "\"csskill_c355_focus_blur_event_and_transition\":true}\n");
         return 0;
     } catch (const std::exception& error) {
         std::fprintf(stderr, "character coordinator: %s\n", error.what());

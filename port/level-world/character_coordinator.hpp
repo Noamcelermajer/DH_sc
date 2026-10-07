@@ -2,6 +2,7 @@
 
 #include "character_state.hpp"
 #include "character_timers.hpp"
+#include "character_skill_state_dispatch_v1.hpp"
 #include <vector>
 
 namespace dh2::character {
@@ -31,6 +32,9 @@ struct CoordinatorBindings {
     // and stops before machine forwarding and the after observer.
     TimerRouting (*route_timer_event)(void*, Coordinator&, std::int32_t,
                                       Timer32&, std::uint32_t gate_before) = nullptr;
+    // Optional CSSkill projection. Its machine must be this Coordinator's
+    // State; all callback graph storage remains host-owned and borrowed.
+    character_skill_state_dispatch_v1::Projection* skill_projection = nullptr;
 };
 
 class Coordinator {
@@ -68,6 +72,8 @@ public:
     // before the state kernel reads its borrowed Facts again. Nested scopes
     // restore the outer facts/event cause, including when a callback throws.
     void refresh_facts();
+    // In CSSkill state6, event0x28 payload is the source NUL-terminated label
+    // pointer; other events retain their ordinary opaque payload semantics.
     int event(std::uint32_t event, std::uint64_t payload = 0);
     int transition(std::int32_t next, std::int32_t event = 0,
                    std::uint64_t payload = 0);
