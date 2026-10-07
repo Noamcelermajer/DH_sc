@@ -91,6 +91,8 @@ bool ui_player_inventory_gold(std::uintptr_t,std::int32_t&,std::string&);
 bool ui_player_inventory_slot(std::uintptr_t,std::int32_t,std::vector<UiInventoryItemReadV1>&,std::string&);
 bool ui_player_inventory_item_details(std::uintptr_t,std::int32_t,UiItemDetailsReadV1&,std::string&);
 bool ui_player_equipped_item(std::uintptr_t,std::int32_t,UiEquippedItemReadV1&,bool&,std::string&);
+bool ui_player_equip_item(std::uintptr_t,std::int32_t item_index,std::int32_t equipment_slot,std::string&);
+bool ui_player_unequip_item(std::uintptr_t,std::int32_t equipment_slot,std::string&);
 bool ui_player_weapon_flags(std::uintptr_t,bool&,bool&,std::string&);
 bool ui_player_potions(std::uintptr_t,std::int32_t&,std::int32_t&,std::string&);
 struct LootStagingResultV1 {std::size_t first_world_item{},item_count{};};

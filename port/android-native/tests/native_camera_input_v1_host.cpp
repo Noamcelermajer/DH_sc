@@ -80,6 +80,28 @@ int main() {
           near(camera_relative[1],std::cos(pitch)/3.0f),
           "camera-relative stick mapping uses full pitch-aware look vector after radial curve");
 
+    // HeadTowards is a heading-only source command. It must not replace the
+    // caller-owned route destination while publishing the new visual angle.
+    dh2::navigation::HeadingState heading{{0,0,0},0.25f,0,0};
+    float movement_angle=heading.angle;
+    float destination[3]{120,240,360};
+    float direct[3]{0.5f,0.5f,0};
+    const float destination_before[3]{destination[0],destination[1],destination[2]};
+    check(dh2::native::camera_input_v1::apply_head_towards(
+              &heading,&movement_angle,direct)==0&&heading.active&&
+          near(heading.direction[0],direct[0])&&near(heading.direction[1],direct[1])&&
+          near(movement_angle,heading.angle)&&
+          std::memcmp(destination,destination_before,sizeof(destination))==0,
+          "HeadTowards updates heading without taking ownership of path destination");
+    const float stopped_angle=heading.angle;
+    float stopped[3]{};
+    check(dh2::native::camera_input_v1::apply_head_towards(
+              &heading,&movement_angle,stopped)==0&&!heading.active&&
+          heading.direction[0]==0&&heading.direction[1]==0&&
+          movement_angle==stopped_angle&&
+          std::memcmp(destination,destination_before,sizeof(destination))==0,
+          "zero HeadTowards clears movement while retaining heading angle and destination");
+
     float unchanged[3]{0.2f, -0.7f, 0.3f};
     const float before[3]{unchanged[0], unchanged[1], unchanged[2]};
     check(dh2::native::camera_input_v1::rotate_ground_input(

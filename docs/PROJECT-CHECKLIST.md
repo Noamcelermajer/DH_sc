@@ -5,9 +5,9 @@ Updated: 2026-10-08. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,524,841 bytes, SHA-256 `0818D9267D26AD75D21E1BE320B9A92F524BF51EA8FE57FFAF6CC3849F52AAB1`). Gradle built API 37/target 37 for ARM64/x86_64; APK signature and 16 KiB ZIP/ELF alignment pass. Focused melee/loot host tests pass. This exact APK has not been live-tested. Original camera, decor/triggers, autonomous AI and complete level lifecycle remain open.
+**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (159,838,348 bytes, SHA-256 `87AFEC2DCB9EAF1C784BC3F369CD620F4245B5CDFA34F3F3389E2319EB06925B`). API 37/target 37 build passes for ARM64/x86_64; v2 signature and 16 KiB ZIP alignment pass. API 37 x86_64 smoke reached cinematic → 3:2 menu → Single Player → Crypt HUD; a joystick swipe moved the Player. Equipment clicks and full campaign remain unverified.
 
-**Latest published APK:** [Native combat and quest-tail checkpoint — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-combat-quest-tail-api37-2026-10-08) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-combat-quest-tail-api37-2026-10-08/Dungeon-Hunter-2-native-combat-loot-api37-debug.apk)). Debug prerelease; the release notes state that this exact APK has not been live-tested and loot quest-tail providers remain disconnected.
+**Latest published APK:** [Native UI, equipment and Crypt camera checkpoint — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-ui-equipment-crypt-api37-2026-10-08) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-ui-equipment-crypt-api37-2026-10-08/Dungeon-Hunter-2-native-ui-equipment-crypt-api37-debug.apk)). Debug prerelease; full Inventory/Talent/Faery flows and live equip clicks remain incomplete.
 
 Prior live evidence applies to the previous APK from [commit `d4142762`](https://github.com/Noamcelermajer/DH_sc/commit/d4142762): API37/16KiB emulator tests passed all three class create/reopen/Back/Home-resume flows. A bounded Crypt smoke verified six player hit events with enemy AI disabled. A separate live exchange verified touch movement, seven enemy hits, and a 57-damage ordinary player attack. Neither run tested loot or progression. [Live exchange](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json), [menu](../port/android-native/reports/menu-ui-runtime-smoke-62557f03.json), [combat](../port/android-native/reports/character-combat-smoke-62557f03.json).
 
@@ -38,10 +38,10 @@ still require live gameplay integration. All final completion gates remain open.
 | Character properties, equipment and state | 36 | 8 |
 | Lua, skills and enemy AI | 53 | 15 |
 | Combat, death, loot and progression | 24 | 12 |
-| Quests, campaign, UI, audio and saves | 43 | 11 |
+| Quests, campaign, UI, audio and saves | 46 | 11 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **224** | **83** |
+| **Total scoped tasks** | **227** | **83** |
 
 Prior verified source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. Its `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`.
 
@@ -407,6 +407,9 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Reuse Adam v69's original menu, name/class selection and real Single Player screen; the previous API37/16 KiB build tested Warrior/Rogue/Mage profiles into the development Crypt.
 - [x] Render original HP/MP/XP timelines from the retained live player property sheet for all three classes, after the single world update/render.
 - [x] Verify menu/world Back, occupied-slot cold restart and Home/resume through actual UI input; preserve and restore existing emulator saves.
+- [x] Fit original front SWFs to the centered 3:2 stage and share that rectangle for hit testing; API37 smoke reached the cinematic, menu, Single Player and Crypt HUD at 1280×720.
+- [x] Render live Player equipment through Adam's V6 visual owner over the existing V4 inventory; connect equip/unequip SWF callbacks through the source equipment service. Host gate: 7,383 checks; live equip clicks remain untested.
+- [x] Add the exact-Crypt source-framed camera fallback and remove the artificial movement destination; 13 camera and 26 input checks pass, and API37 joystick movement changed Player position. Authored camera animation/zoom remains open.
 - [x] Resolve the IDA `NativeStartGame` plan against the 51-row table and carry Android menu requests through it: 27 host assertions pass; row 41 selects static SWAMP and row 23 selects source-generated Crypt. The API 37 live row-23 run uses a debug-only transient override; campaign save remains unchanged.
 - [x] Apply NativeStartGame numeric and selected-LUSP `SG_Save` effects to the same metadata Save/index; host audit passes 773 checks, API 37 ARM64/x86_64 build and 16 KiB menu/start/movement/reopen smoke pass. No reachable enemy in this smoke; combat remains unverified.
 - [x] Add the bounded GEAR payload writer to the selected `dh2_level_world` library; source field order/encodings and 95-byte fixture pass 293 host checks, including all 95 output truncation prefixes. The original ARM writer is mapped; this test does not execute it.

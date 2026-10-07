@@ -24,6 +24,7 @@ extern "C" {
 #include "swf_menu_save_slots.hpp"
 #include "menu_save_slot_projection_v1.hpp"
 #include "campaign_profile_files_v1.hpp"
+#include "original_menu_viewport_v1.hpp"
 #include "data.hpp"
 #include "hud_text_format_v1.hpp"
 #include "item_text_varargs_v5.hpp"
@@ -149,8 +150,7 @@ struct OriginalUiSession::Impl {
     std::unique_ptr<ui::SwfMovie> character_menu_movie;
     std::unique_ptr<ui::PlayerStatusHud> status;
     std::array<std::int32_t,4> front_rectangle()const{
-        const int w=std::min(driver_width,driver_height*3/2),h=std::min(driver_height,driver_width*2/3);
-        return {(driver_width-w)/2,(driver_height-h)/2,w,h};
+        return ui::original_menu_viewport_v1::fit(driver_width,driver_height);
     }
     static bool input_accepts(void*,ui::SwfEvent48&,bool& accepted,std::string&){
         // MenuBase::CanHandleEvent, 0x41f3fc, returns true.
@@ -787,6 +787,24 @@ struct OriginalUiSession::Impl {
             if(fn.result)fn.result->set_as_object(object);
             return true;
         }
+        if(!std::strcmp(name,"NativeInvEquipItem")){
+            if(fn.nargs!=3||!fn.arg(0).is_number()||!fn.arg(1).is_number()||!fn.arg(2).is_number()){
+                error="NativeInvEquipItem requires [inventoryItemIndex, equipmentSlot, playerIndex]";return false;
+            }
+            const auto item_index=fn.arg(0).to_int(),slot=fn.arg(1).to_int();
+            std::uintptr_t identity=0;if(!local_character(fn.arg(2).to_int(),false,identity))return false;
+            if(!identity){error="NativeInvEquipItem requires the attached local Player Character";return false;}
+            return model_renderer::ui_player_equip_item(identity,item_index,slot,error);
+        }
+        if(!std::strcmp(name,"NativeInvUnequipItem")){
+            if(fn.nargs!=2||!fn.arg(0).is_number()||!fn.arg(1).is_number()){
+                error="NativeInvUnequipItem requires [equipmentSlot, playerIndex]";return false;
+            }
+            const auto slot=fn.arg(0).to_int();std::uintptr_t identity=0;
+            if(!local_character(fn.arg(1).to_int(),false,identity))return false;
+            if(!identity){error="NativeInvUnequipItem requires the attached local Player Character";return false;}
+            return model_renderer::ui_player_unequip_item(identity,slot,error);
+        }
         if(!std::strcmp(name,"NativeInvGetItemsListForSlot")){
             if(fn.nargs!=3||!fn.arg(0).is_number()||!fn.arg(1).is_object()||!fn.arg(2).is_number())return true;
             auto* array=gameswf::cast_to<gameswf::as_array>(fn.arg(1).to_object());if(!array)return true;
@@ -1229,7 +1247,7 @@ struct OriginalUiSession::Impl {
         if(front_screen=="main"||live_player)services.native_actions.emplace_back("NativeGetParsedString");
         if(live_player)for(const auto* action:{"NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
             "NativeSkillsGetSkillPointsLeft","NativeSkillsTrainSkill","NativeEquipSkill","NativeGetPlayerStats","NativeHUDGetActiveFaery","NativeHUDGetIsFaeryUnlocked",
-            "NativeInvGetItemsListForSlot","NativeInvGetItemDetails","NativeInvGetEquipedItem",
+            "NativeInvEquipItem","NativeInvUnequipItem","NativeInvGetItemsListForSlot","NativeInvGetItemDetails","NativeInvGetEquipedItem",
             "NativeInvGetHasOffHandWeapon","NativeInvGetHasTwoHandedWeapon","NativeInvGetPlayerGold",
             "NativeGetNumPotions","NativeGetStringNumPotions"})services.native_actions.emplace_back(action);
         if(front_screen=="main")for(const auto* action:{"NativeGetOptionParameters","NativeSetOptions","NativeLoadSettings","NativeSaveSettings","NativeEnterOptionMenu","NativeRefreshHudManager","NativeChangeRolloverInputBehavior","NativeIsJapaneseVersion","NativeIsKorean"})services.native_actions.emplace_back(action);
@@ -1602,20 +1620,27 @@ bool OriginalUiSession::render(int width,int height,std::string& error) {
         if(class_preview&&!model_renderer::select_class_scene(impl_->class_index,impl_->last_menu_dt,error))return false;
         try{if(!class_preview)model_renderer::draw_menu_background(width,height);}
         catch(const std::exception& failure){error=failure.what();return false;}
-        if(!impl_->movie->display_clip("_root.menu_bg",
-            (width-std::min(width,height*3/2))/2,(height-std::min(height,width*2/3))/2,
-            std::min(width,height*3/2),std::min(height,width*2/3),error))return false;
+        const auto rectangle=impl_->front_rectangle();
+        if(!impl_->movie->display_clip("_root.menu_bg",rectangle[0],rectangle[1],
+            rectangle[2],rectangle[3],error))return false;
     }
     auto* display_movie=impl_->front_screen=="main"?impl_->active_menu_movie():impl_->movie.get();
-    if(!(front?display_movie->display_clip(path,
-        (width-std::min(width,height*3/2))/2,(height-std::min(height,width*2/3))/2,
-        std::min(width,height*3/2),std::min(height,width*2/3),error):impl_->movie->display_source_clip(path,error))){
+    const auto rectangle=front?impl_->front_rectangle():std::array<std::int32_t,4>{};
+    if(!(front?display_movie->display_clip(path,rectangle[0],rectangle[1],
+        rectangle[2],rectangle[3],error):impl_->movie->display_source_clip(path,error))){
         const auto failure=error;std::string cleanup;impl_->reset_failed(cleanup);
         error=failure+(cleanup.empty()?"":"; cleanup: "+cleanup);return false;
     }
     if(impl_->report_frame){
         if(impl_->front_screen=="main"&&!impl_->movie->action_script(impl_.get(),Impl::probe_main_background,error))return false;
-        __android_log_print(ANDROID_LOG_INFO,tag,"Original front/HUD screen submitted | screen %s",impl_->front_screen.empty()?"health":impl_->front_screen.c_str());
+        if(front){
+            const auto rectangle=impl_->front_rectangle();
+            __android_log_print(ANDROID_LOG_INFO,tag,
+                "Original front screen submitted | screen %s | source stage 480x320 | display/input rect %d %d %d %d",
+                impl_->front_screen.c_str(),rectangle[0],rectangle[1],rectangle[2],rectangle[3]);
+        }else{
+            __android_log_print(ANDROID_LOG_INFO,tag,"Original HUD screen submitted | source viewport %d %d",width,height);
+        }
         __android_log_print(ANDROID_LOG_INFO,tag,"Original health panel submitted | viewport %d %d | strips %u | lines %u | masks %u | font uploads %u | bitmaps %u | strings %u | core diagnostics %u | authored HUD and gameplay menu input connected",width,height,impl_->strips,impl_->lines,impl_->masks,impl_->glyph_uploads,impl_->bitmap_uploads,impl_->string_calls,impl_->core_errors);
         impl_->report_frame=false;
     }

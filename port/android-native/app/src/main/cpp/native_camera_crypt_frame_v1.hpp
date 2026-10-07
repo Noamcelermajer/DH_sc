@@ -1,0 +1,113 @@
+#pragma once
+
+#include <array>
+#include <cmath>
+#include <string_view>
+
+namespace dh2::native::crypt_camera_frame_v1 {
+
+using Vec3 = std::array<float, 3>;
+using Matrix = std::array<float, 16>;
+
+// The only live source-camera frame receipt currently available is Adam's
+// API-37 Crypt checkpoint from x07_crypt_backup.mlx. Keep this camera profile
+// behind the exact Crypt level identity; never use it for SWAMP or another
+// level. The dynamic authored camera animation/anchor providers are not yet
+// connected, so this is a source-framed fallback, not full CameraLevel parity.
+inline constexpr std::string_view kLevelName = "GOTHICUS_CRYPT_01";
+inline constexpr std::string_view kLevelFile = "007_crypt_01.rule.xml";
+inline constexpr Vec3 kEyeFromTarget{1380.0f, -1380.0f, 2450.0f};
+inline constexpr float kVerticalFovRadians = 0.429630011f;
+inline constexpr float kNearPlane = 900.0f;
+inline constexpr float kFarPlane = 5000.0f;
+inline constexpr float kInputYawRadians = -0.7853981633974483f;
+inline float input_pitch_radians() noexcept {
+    const float horizontal = std::hypot(kEyeFromTarget[0], kEyeFromTarget[1]);
+    return std::atan2(kEyeFromTarget[2], horizontal);
+}
+
+inline bool verified_crypt_route(std::string_view level_name,
+                                 std::string_view level_file) noexcept {
+    return level_name == kLevelName && level_file == kLevelFile;
+}
+
+struct Frame {
+    Vec3 eye{};
+    Vec3 target{};
+    Matrix view_projection{};
+    float aspect{};
+    float input_yaw{};
+    float input_pitch{};
+};
+
+inline Vec3 add(Vec3 a, Vec3 b) noexcept {
+    return {a[0] + b[0], a[1] + b[1], a[2] + b[2]};
+}
+inline Vec3 subtract(Vec3 a, Vec3 b) noexcept {
+    return {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
+}
+inline float dot(Vec3 a, Vec3 b) noexcept {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+inline Vec3 cross(Vec3 a, Vec3 b) noexcept {
+    return {a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0]};
+}
+inline bool normalize(Vec3& v) noexcept {
+    const float n2 = dot(v, v);
+    if (!(n2 > 0.0f) || !std::isfinite(n2)) return false;
+    const float inverse = 1.0f / std::sqrt(n2);
+    for (float& component : v) component *= inverse;
+    return std::isfinite(v[0]) && std::isfinite(v[1]) && std::isfinite(v[2]);
+}
+inline Matrix multiply(const Matrix& a, const Matrix& b) noexcept {
+    Matrix result{};
+    for (int column = 0; column < 4; ++column)
+        for (int row = 0; row < 4; ++row)
+            for (int k = 0; k < 4; ++k)
+                result[column * 4 + row] += a[k * 4 + row] * b[column * 4 + k];
+    return result;
+}
+
+// Build the GLES projection from the one source-observed Crypt camera pose.
+// Aspect follows the current surface as an explicit modern display policy.
+inline bool build(std::string_view level_name, std::string_view level_file,
+                  Vec3 target, int width, int height, Frame* out) noexcept {
+    if (!out || !verified_crypt_route(level_name, level_file) || width <= 1 || height <= 1)
+        return false;
+    for (float value : target) if (!std::isfinite(value)) return false;
+
+    Frame frame{};
+    frame.target = target;
+    frame.eye = add(target, kEyeFromTarget);
+    frame.aspect = static_cast<float>(width) / static_cast<float>(height);
+    frame.input_yaw = kInputYawRadians;
+    frame.input_pitch = input_pitch_radians();
+
+    Vec3 forward = subtract(frame.target, frame.eye);
+    if (!normalize(forward)) return false;
+    Vec3 right = cross(forward, {0.0f, 0.0f, 1.0f});
+    if (!normalize(right)) return false;
+    const Vec3 up = cross(right, forward);
+    const Matrix view{
+        right[0], up[0], -forward[0], 0.0f,
+        right[1], up[1], -forward[1], 0.0f,
+        right[2], up[2], -forward[2], 0.0f,
+        -dot(right, frame.eye), -dot(up, frame.eye), dot(forward, frame.eye), 1.0f};
+
+    const float tangent = std::tan(kVerticalFovRadians * 0.5f);
+    if (!(tangent > 0.0f) || !std::isfinite(tangent)) return false;
+    const float near_plane = kNearPlane, far_plane = kFarPlane;
+    const Matrix projection{
+        1.0f / (tangent * frame.aspect), 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f / tangent, 0.0f, 0.0f,
+        0.0f, 0.0f, -(far_plane + near_plane) / (far_plane - near_plane), -1.0f,
+        0.0f, 0.0f, -(2.0f * far_plane * near_plane) / (far_plane - near_plane), 0.0f};
+    frame.view_projection = multiply(projection, view);
+    for (float value : frame.view_projection) if (!std::isfinite(value)) return false;
+    *out = frame;
+    return true;
+}
+
+} // namespace dh2::native::crypt_camera_frame_v1

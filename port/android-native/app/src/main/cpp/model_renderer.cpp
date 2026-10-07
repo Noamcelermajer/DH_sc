@@ -6,6 +6,7 @@
 #include "animation.hpp"
 #include "skinning.hpp"
 #include "modular_skin_catalog.hpp"
+#include "visual_skin_owner_v6.hpp"
 #include "world.hpp"
 #include "../../../../../../port/level-world/crypt_module_bounds_registry_v1.hpp"
 #include "../../../../../../port/level-world/crypt_room_zone_owner_v1.hpp"
@@ -44,6 +45,7 @@
 #include "combat_result.hpp"
 #include "melee_pipeline.hpp"
 #include "../../../../../game-data/player_equipment_queries_live_v1.hpp"
+#include "../../../../../game-data/player_equipment_live_services_v1.hpp"
 #include "health.hpp"
 #include "combat_application.hpp"
 #include "ai.hpp"
@@ -53,6 +55,7 @@
 #include "navigation_producers.hpp"
 #include "navigation_heading.hpp"
 #include "native_camera_input_v1.hpp"
+#include "native_camera_crypt_frame_v1.hpp"
 #include "actor_runtime.hpp"
 #include "actor_blended_playback.hpp"
 #include "actor_scene_retention_v1.hpp"
@@ -149,6 +152,9 @@ struct Draw{GLuint vertices=0,indices=0,diffuse=0,alpha=0;GLsizei count=0;unsign
  dh2::skinning::Skin skin;std::vector<Vertex> cpu_vertices;std::vector<std::array<float,3>> rest_positions;
  bool environment=false;Matrix placement{};};
 std::vector<Draw> draws;std::vector<GLuint> images;GLuint program=0;
+struct PlayerEquipmentNativeV1;
+std::unique_ptr<PlayerEquipmentNativeV1> player_equipment_native;
+std::vector<Draw> equipment_draws;std::vector<GLuint> equipment_images;
 struct AggroStorage {
  std::vector<dh2::data::AggroEntry> outgoing,incoming;unsigned out_count=0,in_count=0;
  void initialize(unsigned capacity){outgoing.resize(capacity);incoming.resize(capacity);out_count=in_count=0;}
@@ -1117,6 +1123,10 @@ bool enabled=false;float center[3]{},radius=1,yaw=-1.57f,pitch=.35f,zoom=1;
 dh2::scene::Scene current_scene;dh2::animation::Player player;
 dh2::animation::Player walk_player;dh2::world::Level level;dh2::world::Point actor_position{};
 bool world_mode=false,walking=false,resume_world=false;float move_x=0,move_y=0,heading=0;
+bool verified_crypt_camera_route() noexcept {
+ return world_mode&&dh2::native::crypt_camera_frame_v1::verified_crypt_route(
+     active_level_assets.name,active_level_assets.level_file);
+}
 dh2::character::crypt_scripts::SpawnSession crypt_spawn_script;
 dh2_crypt_spawn_trigger::State crypt_trigger_state{};
 dh2_zone_contact::Vec3 crypt_trigger_position{},crypt_trigger_scale{};
@@ -2155,6 +2165,236 @@ GLuint upload(AAssetManager* assets,const std::string& name,std::map<std::string
   glPixelStorei(GL_UNPACK_ALIGNMENT,1);glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,w,h,0,GL_RGBA,GL_UNSIGNED_BYTE,rgba.data());check("Model texture upload");
   cache[name]=t;return t;
 }
+struct PlayerEquipmentNativeV1 {
+ struct PartIdentity {
+  std::shared_ptr<const void> retention;
+  const dh2::skinning::VisualGeometryV6* geometry{};
+  const std::vector<dh2::scene::Material>* material_table{};
+  const std::vector<std::uint32_t>* materials{};
+  std::int32_t category{-1},module{-1},weapon_slot{};
+  std::uint64_t pose_revision{};
+ };
+ AAssetManager* assets{};
+ dh2::skinning::VisualSkinResourcesV6 resources;
+ std::unique_ptr<dh2::skinning::VisualSkinOwnerV6> visual;
+ dh2::data::PropertyView properties{};
+ std::uintptr_t visual_identity{};
+ NativeLootAdapterV1 inventory_adapter{};
+ dh2::data::EquipmentLiveHooksV1 hooks{};
+ std::unique_ptr<dh2::data::PlayerEquipmentLiveServicesV1> services;
+ std::vector<PartIdentity> parts;
+ std::vector<std::size_t> draw_part;
+
+ static dh2::skinning::VisualAssetResultV6 read_weapon(
+     void* raw,const char* uri,std::vector<std::uint8_t>& bytes,std::string& error){
+  auto& self=*static_cast<PlayerEquipmentNativeV1*>(raw);
+  if(!self.assets||!uri){error="Live equipment asset request is incomplete";return dh2::skinning::VisualAssetResultV6::failed;}
+  try{bytes=read(self.assets,uri,"actors");error.clear();return dh2::skinning::VisualAssetResultV6::found;}
+  catch(const std::exception& x){
+   const std::string message=x.what();
+   if(message.rfind("Bundled asset missing: actors/",0)==0){error.clear();return dh2::skinning::VisualAssetResultV6::missing;}
+   error=message;return dh2::skinning::VisualAssetResultV6::failed;
+  }
+ }
+ static bool validate_binding(void* raw,dh2::data::FreshInventoryOwnedV4& inventory,
+     dh2::data::PropertyView& view,std::string& error){
+  auto& self=*static_cast<PlayerEquipmentNativeV1*>(raw);
+  if(!world_mode||&inventory!=prince_combat.inventory.get()||
+     &view!=&self.properties||!self.visual||
+     self.visual_identity!=self.visual->identity()){
+   error="Equipment action is detached from the live Player, Scene, or V6 renderer";return false;
+  }
+  const std::vector<dh2::skinning::VisualDrawViewV32>* views{};
+  if(!self.visual->draw_views(views,error)||!views)return false;
+  error.clear();return true;
+ }
+ static bool world_query(void* raw,dh2::data::EquipmentWorldQueryV1 query,
+     std::uintptr_t character,std::uintptr_t& identity,std::int32_t& value,
+     std::string& error){
+  auto& self=*static_cast<PlayerEquipmentNativeV1*>(raw);identity=0;value=0;
+  if(!prince_combat.inventory||character!=prince_combat.inventory->character()){
+   error="Equipment world query crossed the canonical Player Character";return false;
+  }
+  using Q=dh2::data::EquipmentWorldQueryV1;
+  switch(query){
+   case Q::online:value=native_host.online?1:0;error.clear();return true;
+   case Q::remotely_updated:
+    if(native_host.online){error="Remote equipment ownership is not implemented by the offline host";return false;}
+    value=0;error.clear();return true;
+   case Q::current_player:{
+    dh2::data::OwnedInventoryResponseV4 response{};
+    const dh2::data::OwnedInventoryRequestV4 request{
+      dh2::data::OwnedInventoryOperationV4::current_player,0x31f594,nullptr,nullptr,0,0};
+    if(!NativeLootAdapterV1::invoke_inventory(&self.inventory_adapter,*prince_combat.inventory,
+                                               request,response,error))return false;
+    identity=response.identity;error.clear();return true;
+   }
+   case Q::current_difficulty:{
+    dh2::data::OwnedInventoryResponseV4 response{};
+    const dh2::data::OwnedInventoryRequestV4 request{
+      dh2::data::OwnedInventoryOperationV4::current_player,0x31f594,nullptr,nullptr,1,0};
+    if(!NativeLootAdapterV1::invoke_inventory(&self.inventory_adapter,*prince_combat.inventory,
+                                               request,response,error))return false;
+    value=response.value;error.clear();return true;
+   }
+   case Q::player_count:{
+    dh2::data::OwnedInventoryResponseV4 response{};
+    const dh2::data::OwnedInventoryRequestV4 request{
+      dh2::data::OwnedInventoryOperationV4::player_count,0x4043a8,nullptr,nullptr,0,0};
+    if(!NativeLootAdapterV1::invoke_inventory(&self.inventory_adapter,*prince_combat.inventory,
+                                               request,response,error))return false;
+    value=response.value;error.clear();return true;
+   }
+   case Q::online_player_record:
+    error="Online PlayerInfo record lookup is outside the offline equipment owner";return false;
+  }
+  error="Unknown source equipment world query";return false;
+ }
+ static bool debug_gear(void* raw,dh2::data::FreshInventoryOwnedV4& inventory,
+     const dh2::data::GearSkinRequestV5& request,std::int32_t& result,
+     std::string& error){
+  auto& self=*static_cast<PlayerEquipmentNativeV1*>(raw);
+  if(&inventory!=prince_combat.inventory.get()){
+   error="V6 gear Debug callback used a different V4 inventory";return false;
+  }
+  using G=dh2::data::GearSkinOperationV5;using O=dh2::data::OwnedInventoryOperationV4;
+  O operation;
+  if(request.operation==G::debug_load)operation=O::debug_load;
+  else if(request.operation==G::debug_query)operation=O::debug_query;
+  else{error="V6 gear Debug adapter received a non-Debug operation";return false;}
+  dh2::data::OwnedInventoryResponseV4 response{};
+  const dh2::data::OwnedInventoryRequestV4 native_request{
+      operation,request.operation==G::debug_load?0x337888u:0x337a88u,
+      nullptr,request.name,0,0};
+  if(!NativeLootAdapterV1::invoke_inventory(&self.inventory_adapter,inventory,
+                                             native_request,response,error))return false;
+  result=response.value;error.clear();return true;
+ }
+ bool initialize(AAssetManager* manager,const std::vector<std::uint8_t>& bres,
+                 std::string& error){
+  assets=manager;
+  if(!assets||!prince_combat.inventory||!prince_combat.item_power_tables||
+     !prince_combat.item_presentation||actor_class_rows.empty()){
+   error="Equipment owner requires the canonical V4, V5 presentation/power tables, and class rows";return false;
+  }
+  inventory_adapter={prince_combat.item_text,prince_combat.item_presentation.get()};
+  if(!resources.load(bres,error))return false;
+  visual=std::make_unique<dh2::skinning::VisualSkinOwnerV6>(resources.borrow(),current_scene,
+      dh2::skinning::VisualAssetServicesV6{this,read_weapon});
+  if(!visual->initialize(error))return false;
+  visual_identity=visual->identity();
+  properties=dh2::data::property_view(actor_property_rules,prince_combat.properties);
+  hooks.context=this;hooks.validate_binding=validate_binding;
+  hooks.world={this,world_query};hooks.visual=&visual_identity;
+  hooks.skin=visual->gear_services({this,debug_gear});
+  hooks.required=inventory_adapter.inventory_services();
+  services=std::make_unique<dh2::data::PlayerEquipmentLiveServicesV1>(
+      *prince_combat.inventory,properties,actor_class_rows.data(),
+      std::uint32_t(actor_class_rows.size()),prince_combat.item_power_tables->borrow(),hooks);
+  if(!services->refresh(false,error))return false;
+  error.clear();return true;
+ }
+ bool sync_draws(const std::vector<dh2::skinning::VisualDrawViewV32>& views){
+  bool rebuild=views.size()!=parts.size();
+  for(std::size_t i=0;i<views.size();++i){const auto& part=views[i];
+   if(!part.positions||!part.retention||!part.geometry||!part.material_table||!part.materials||
+      part.positions->size()!=part.geometry->positions.size()||part.positions->empty())
+    throw std::runtime_error("V6 equipment draw snapshot backing is incomplete");
+   if(!rebuild){const auto& old=parts[i];rebuild=part.geometry!=old.geometry||
+      part.material_table!=old.material_table||part.materials!=old.materials||
+      part.category!=old.category||part.module!=old.module||part.weapon_slot!=old.weapon_slot;}
+  }
+  if(rebuild){
+   std::vector<Draw> next;std::vector<GLuint> textures;
+   std::vector<std::size_t> mapping;std::map<std::string,GLuint> cache;std::size_t total=0;
+   try{
+    for(std::size_t i=0;i<views.size();++i){const auto& part=views[i];const auto& geometry=*part.geometry;
+     if(geometry.primitives.size()!=part.materials->size()||geometry.positions.size()>65536)
+      throw std::runtime_error("V6 equipment material/topology count is invalid");
+     for(std::size_t j=0;j<geometry.primitives.size();++j){const auto& primitive=geometry.primitives[j];
+      if(primitive.collada_type||primitive.indices.size()%3||primitive.indices.size()>3000000||
+         total>1000000-geometry.positions.size())
+       throw std::runtime_error("V6 equipment triangle/vertex budget exceeded");
+      total+=geometry.positions.size();const auto material=part.materials->at(j);
+      if(material>=part.material_table->size()||part.material_table->at(material).id!=primitive.material_symbol)
+       throw std::runtime_error("V6 equipment primitive material binding differs");
+      auto attribute=[&](unsigned slot)->const dh2::skinning::VisualAttributeV6*{
+       const auto index=primitive.attributes.at(slot);if(index<0)return nullptr;
+       if(std::size_t(index)>=geometry.attributes.size())throw std::runtime_error("V6 equipment attribute index exceeds geometry");
+       const auto& value=geometry.attributes[std::size_t(index)];
+       if(!value.components||value.components>4||value.values.size()!=geometry.positions.size()*value.components)
+        throw std::runtime_error("V6 equipment attribute stream is incomplete");
+       return &value;
+      };
+      const auto* uv=attribute(4);const auto* color_stream=attribute(2);
+      if(uv&&uv->components<2)throw std::runtime_error("V6 equipment UV stream has fewer than two components");
+      std::vector<Vertex> vertices(geometry.positions.size());
+      for(std::size_t k=0;k<vertices.size();++k){auto& vertex=vertices[k];
+       std::copy(part.positions->at(k).begin(),part.positions->at(k).end(),vertex.p);
+       if(uv)std::copy_n(uv->values.data()+k*uv->components,2,vertex.uv);
+       std::fill(vertex.color,vertex.color+4,1.f);
+       if(color_stream)for(unsigned c=0;c<color_stream->components;++c)
+        vertex.color[c]=color_stream->values[k*color_stream->components+c]/(color_stream->type==1?255.f:1.f);
+      }
+      std::vector<std::uint16_t> indices;indices.reserve(primitive.indices.size());
+      for(auto index:primitive.indices){
+       if(index>=vertices.size()||index>65535)
+        throw std::runtime_error("V6 equipment index exceeds GLES2 bounds");
+       indices.push_back(static_cast<std::uint16_t>(index));}
+      next.emplace_back();auto& draw=next.back();draw.material=part.material_table->at(material);
+      draw.placement=part.world;draw.environment=true;draw.count=static_cast<GLsizei>(indices.size());
+      draw.cpu_vertices=std::move(vertices);mapping.push_back(i);
+      draw.diffuse=upload(assets,draw.material.diffuse,cache,textures);
+      draw.alpha=upload(assets,draw.material.alpha_map,cache,textures);
+      glGenBuffers(1,&draw.vertices);glBindBuffer(GL_ARRAY_BUFFER,draw.vertices);
+      glBufferData(GL_ARRAY_BUFFER,draw.cpu_vertices.size()*sizeof(Vertex),draw.cpu_vertices.data(),GL_DYNAMIC_DRAW);
+      glGenBuffers(1,&draw.indices);glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,draw.indices);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER,indices.size()*sizeof(std::uint16_t),indices.data(),GL_STATIC_DRAW);
+      check("V6 player equipment buffer upload");
+     }
+    }
+   }catch(...){release(next,textures);throw;}
+   release(equipment_draws,equipment_images);equipment_draws=std::move(next);
+   equipment_images=std::move(textures);draw_part=std::move(mapping);
+  }else{
+   for(std::size_t i=0;i<equipment_draws.size();++i){auto& draw=equipment_draws[i];
+    const auto& part=views.at(draw_part.at(i));
+    if(draw.cpu_vertices.size()!=part.positions->size())
+     throw std::runtime_error("V6 equipment pose size differs from retained mesh");
+    draw.placement=part.world;
+    if(part.pose_revision==parts.at(draw_part.at(i)).pose_revision)continue;
+    for(std::size_t k=0;k<part.positions->size();++k)
+     std::copy(part.positions->at(k).begin(),part.positions->at(k).end(),draw.cpu_vertices[k].p);
+    glBindBuffer(GL_ARRAY_BUFFER,draw.vertices);
+    glBufferSubData(GL_ARRAY_BUFFER,0,draw.cpu_vertices.size()*sizeof(Vertex),draw.cpu_vertices.data());
+   }
+  }
+  parts.resize(views.size());
+  for(std::size_t i=0;i<views.size();++i){const auto& view=views[i];auto& part=parts[i];
+   part.retention=view.retention;part.geometry=view.geometry;part.material_table=view.material_table;
+   part.materials=view.materials;part.category=view.category;part.module=view.module;
+   part.weapon_slot=view.weapon_slot;part.pose_revision=view.pose_revision;
+  }
+  return true;
+ }
+};
+void clear_player_equipment_native(bool gl_context){
+ if(gl_context)release(equipment_draws,equipment_images);
+ else{equipment_draws.clear();equipment_images.clear();}
+ if(player_equipment_native){player_equipment_native->services.reset();player_equipment_native->visual.reset();}
+ player_equipment_native.reset();
+}
+bool initialize_player_equipment_native(AAssetManager* assets,
+    const std::vector<std::uint8_t>& prince,std::string& error){
+ clear_player_equipment_native(true);auto owner=std::make_unique<PlayerEquipmentNativeV1>();
+ if(!owner->initialize(assets,prince,error)){owner->services.reset();owner->visual.reset();return false;}
+ player_equipment_native=std::move(owner);
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+    "Native player equipment connected | visual %016llx | canonical V4 %016llx | views %zu",
+    static_cast<unsigned long long>(player_equipment_native->visual_identity),
+    static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(prince_combat.inventory.get())),
+    player_equipment_native->parts.size());return true;
+}
 std::array<float,3> cross(const std::array<float,3>& a,const std::array<float,3>& b){return {a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]};}
 void normalize(std::array<float,3>& a){float n=std::sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]);for(float& x:a)x/=n;}
 float dot(const std::array<float,3>& a,const std::array<float,3>& b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
@@ -2192,6 +2432,27 @@ Matrix camera(int width,int height){
     }
   }
   return result;
+}
+Matrix crypt_source_camera(int width,int height){
+ using namespace dh2::native::crypt_camera_frame_v1;
+ Frame frame{};
+ const Vec3 target{actor_position[0],actor_position[1],actor_position[2]};
+ if(!build(active_level_assets.name,active_level_assets.level_file,target,width,height,&frame))
+  throw std::runtime_error("Verified Crypt source camera frame rejected its route/viewport/actor");
+ std::memcpy(source_camera.matrix.elements,frame.view_projection.data(),sizeof(source_camera.matrix.elements));
+ std::memcpy(source_camera.frustum.position,frame.eye.data(),sizeof(source_camera.frustum.position));
+ if(dh2::engine_camera::frustum_runtime::set_from(&source_camera.matrix,&source_camera.frustum)!=
+    dh2::engine_camera::frustum_runtime::Status::complete)
+  throw std::runtime_error("Verified Crypt source camera frustum rejected live frame");
+ const bool resized=source_camera.width!=width||source_camera.height!=height;
+ source_camera.width=width;source_camera.height=height;
+ if((source_camera.frames++%128)==0||resized){
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+    "Crypt source-framed camera | %dx%d | eye %.4f %.4f %.4f | target %.4f %.4f %.4f | fov %.9g aspect %.9g near %.0f far %.0f | input yaw %.6g pitch %.6g | animated providers pending",
+    width,height,frame.eye[0],frame.eye[1],frame.eye[2],frame.target[0],frame.target[1],frame.target[2],
+    kVerticalFovRadians,frame.aspect,kNearPlane,kFarPlane,frame.input_yaw,frame.input_pitch);
+ }
+ return frame.view_projection;
 }
 #include "model_menu_scene_v69.hpp"
 }
@@ -2719,7 +2980,8 @@ if(active_crypt_room_runtime){
   throw std::runtime_error("Crypt RoomZone owner retirement failed during EGL reset");
  active_crypt_room_runtime.reset();
 }
-native_actor_ready=false;clear_actor_world(retain);search_world.clear();prince_search_projection={};prince_body={};
+ native_actor_ready=false;clear_actor_world(retain);search_world.clear();prince_search_projection={};prince_body={};
+ clear_player_equipment_native(false);
  resume_world=retain;world_mode=false;move_x=move_y=0;draws.clear();images.clear();object_groups.clear();world_objects.clear();
  if(!retain){
   prince_retained_pose.clear();prince_locomotion=dh2::actor::BlendedPlayback{};
@@ -2728,6 +2990,7 @@ native_actor_ready=false;clear_actor_world(retain);search_world.clear();prince_s
  inspected_object=-1;current_scene={};player=dh2::animation::Player{};walk_player=dh2::animation::Player{};level={};program=0;enabled=false;
 }
 void deactivate(){
+ clear_player_equipment_native(true);
  source_camera={};
  release_class_previews();menu_background=false;class_scene=false;
  if(active_crypt_room_runtime){
@@ -3519,6 +3782,34 @@ bool ui_player_equipped_item(std::uintptr_t identity,std::int32_t requested,UiEq
       owned->item->name.empty()?definition->name:owned->item->name};
  error.clear();return true;
 }
+bool ui_player_equip_item(std::uintptr_t identity,std::int32_t item_index,
+                          std::int32_t equipment_slot,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!player_equipment_native||!player_equipment_native->services||
+    !prince_combat.inventory||!prince_combat.item_power_tables){
+  error="Inventory equip requires the active canonical V4 and V6-backed equipment services";return false;
+ }
+ if(item_index<0||std::size_t(item_index)>=prince_combat.inventory->items().size()||
+    equipment_slot<0||equipment_slot>=9){
+  error="Inventory equip index or EquipmentSlots value is outside the source domain";return false;
+ }
+ if(!player_equipment_native->services->equip(std::uint32_t(equipment_slot),
+       std::uint32_t(item_index),error))return false;
+ error.clear();return true;
+}
+bool ui_player_unequip_item(std::uintptr_t identity,std::int32_t equipment_slot,
+                            std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!player_equipment_native||!player_equipment_native->services||
+    !prince_combat.inventory){
+  error="Inventory unequip requires the active canonical V4 and V6-backed equipment services";return false;
+ }
+ if(equipment_slot<0||equipment_slot>=9){
+  error="Inventory unequip slot is outside the source EquipmentSlots range";return false;
+ }
+ if(!player_equipment_native->services->unequip(std::uint32_t(equipment_slot),error))return false;
+ error.clear();return true;
+}
 bool ui_player_weapon_flags(std::uintptr_t identity,bool& offhand,bool& two_handed,std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
  if(identity!=current||!prince_combat.inventory){error="Weapon flags require the active V4 inventory";return false;}
@@ -4028,18 +4319,20 @@ void advance_native_actor(unsigned dt_ms){
  // camera-relative angle before Character::Move. Keep this at the same per
  // actor-update point; the adapter reports the conditioned activity state.
  float input[3]{move_x,move_y,0};bool input_active=false;
- if(dh2::native::camera_input_v1::map_touch_ground_input(input,yaw,pitch,world_mode,&input_active))
+ const bool source_crypt_camera=verified_crypt_camera_route();
+ const float input_yaw=source_crypt_camera
+     ?dh2::native::crypt_camera_frame_v1::kInputYawRadians:yaw;
+ const float input_pitch=source_crypt_camera
+     ?dh2::native::crypt_camera_frame_v1::input_pitch_radians():pitch;
+ if(dh2::native::camera_input_v1::map_touch_ground_input(input,input_yaw,input_pitch,world_mode,&input_active))
   throw std::runtime_error("Native camera-relative touch input rejected");
  const bool was_heading=prince_state.heading_active!=0;
  if(!prince_state.controller_locked){
-  if(input_active){
-   if(dh2_nav_set_heading(&prince_runtime.controller.heading,input,1))throw std::runtime_error("Native input heading rejected");
-   prince_runtime.rotation.heading_angle=prince_runtime.controller.heading.angle;
-   for(unsigned i=0;i<3;++i)prince_runtime.subobjects.destination[i]=prince_runtime.subobjects.position[i]+input[i]*1000.f;
-  }else{
-   prince_runtime.controller.heading.active=0;
-   std::fill(prince_runtime.controller.heading.direction,prince_runtime.controller.heading.direction+3,0);
-  }
+  // This is the source HeadTowards command, not MoveTo: preserve the
+  // GameObject destination/path owner while updating only heading state.
+  if(dh2::native::camera_input_v1::apply_head_towards(
+      &prince_runtime.controller.heading,&prince_runtime.rotation.heading_angle,input))
+   throw std::runtime_error("Native input heading rejected");
   prince_state.heading_active=prince_runtime.controller.heading.active;
   if(input_active&&prince_event(0xc351,0)<0)throw std::runtime_error("Character Move request failed");
   if(prince_state.current==5&&was_heading!=(prince_state.heading_active!=0)&&prince_event(0x1c,0)<0)throw std::runtime_error("Character attack heading event failed");
@@ -4279,6 +4572,9 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     std::string retention_error;
     if(world_mode&&!prince_retained_pose.capture(prince_locomotion,prince_attack_clips,prince_visual,current_scene,retention_error))
       throw std::runtime_error("Player scene retention failed: "+retention_error);
+    // The V6 renderer borrows current_scene. Retire it after pose capture and
+    // before load_scene/world publication replaces that Scene's graph.
+    clear_player_equipment_native(true);
     if(!restore){prince_skills.reset();prince_source_ai.reset();}
     std::vector<std::uint8_t> source_mlx_bytes,source_layout_bytes,source_spawn_bytes;
     std::vector<dh2::world::GeneratedMgpView> generated_crypt_mgps;
@@ -5086,6 +5382,8 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     actor_position=restore?previous:level.spawn;
     world_mode=true;resume_world=false;walking=false;move_x=move_y=0;heading=restore?previous_heading:source_spawn_heading;movement_steps=blocked_steps=0;
     radius=350;yaw=-1.57f;pitch=.75f;zoom=1;object_epoch=epoch=last_frame=std::chrono::steady_clock::now();sampled_ms=0;frozen=restore?previous_frozen:false;
+    if(!initialize_player_equipment_native(assets,prince,error))
+      throw std::runtime_error("Native player equipment initialization: "+error);
     initialize_native_actor(assets,restore);
     initialize_active_crypt_room_zones();
     if(!ensure_native_world_items(error))throw std::runtime_error("World item runtime restore failed: "+error);
@@ -5621,7 +5919,8 @@ void draw(int width,int height){
     if(world_mode&&!prince_visual.update_world(current_scene,error))throw std::runtime_error(error);
   }
   if(class_scene&&animation_failed)throw std::runtime_error("Class scene animation sampling failed");
-  const auto projection=class_scene?class_camera(width,height):menu_background?menu_camera():camera(width,height);glUseProgram(program);
+  const auto projection=class_scene?class_camera(width,height):menu_background?menu_camera():
+      verified_crypt_camera_route()?crypt_source_camera(width,height):camera(width,height);glUseProgram(program);
   if(world_mode&&active_crypt_room_runtime&&
      !active_crypt_room_runtime->update_frustum(actor_position))
     throw std::runtime_error("Source RoomZone frustum transition failed");
@@ -5643,7 +5942,14 @@ void draw(int width,int height){
     glVertexAttribPointer(texcoord,2,GL_FLOAT,GL_FALSE,sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex,uv)));
     glVertexAttribPointer(color,4,GL_FLOAT,GL_FALSE,sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex,color)));glDrawElements(GL_TRIANGLES,b.count,GL_UNSIGNED_SHORT,nullptr);
   };
+  if(world_mode&&player_equipment_native){
+    const std::vector<dh2::skinning::VisualDrawViewV32>* views{};std::string error;
+    if(!player_equipment_native->visual->draw_views(views,error)||!views)
+      throw std::runtime_error("V6 live player draw views failed: "+error);
+    player_equipment_native->sync_draws(*views);
+  }
   for(auto& b:draws){
+    if(world_mode&&player_equipment_native&&!b.environment)continue;
     if(!b.skin.nodes.empty()){
       std::string error;std::vector<dh2::skinning::Matrix> matrices;std::vector<std::array<float,3>> deformed;
       if(!dh2::skinning::palette(b.skin,current_scene,matrices,error)||!dh2::skinning::positions(b.skin,matrices,b.rest_positions,deformed,error)){
@@ -5654,6 +5960,8 @@ void draw(int width,int height){
     // Native actor joints already include owner * helper * authored graph.
     const auto transform=b.environment?dh2::scene::multiply(projection,b.placement):b.skin.nodes.empty()?dh2::scene::multiply(projection,current_scene.graph[b.node].world):projection;submit(b,transform);
   }
+  if(world_mode&&player_equipment_native)
+    for(const auto& b:equipment_draws)submit(b,dh2::scene::multiply(projection,b.placement));
   if(class_scene)for(auto& actor:class_preview_actors){
    auto& resource=actor.resource;const auto& clip=resource.animation;std::string error;
    const auto ms=clip.start+int(actor.sample_elapsed%unsigned(clip.end-clip.start));

@@ -30,6 +30,26 @@ inline int rotate_ground_input(float* direction, float camera_yaw, float camera_
     return dh2_nav_rotate_input_for_camera(direction, look_at);
 }
 
+// v2GamepadController::Update sends the conditioned vector through
+// v2Controller::Cmd_HeadTowards -> Character::Ctrl_HeadTowards ->
+// GameObject::SetHeadingDirection (IDA: 0x4082b0, 0x405374, 0x3adb60,
+// 0x393be8). This operation updates heading/activity/angle only. The source
+// HeadTowards path does not call PathTo or SetDestination; destination and
+// route ownership remain with the existing world/path owner.
+inline int apply_head_towards(dh2::navigation::HeadingState* heading,
+                              float* movement_heading_angle,
+                              const float* mapped_direction) {
+    if (!heading || !movement_heading_angle || heading->reserved ||
+        !std::isfinite(heading->angle) || !std::isfinite(*movement_heading_angle) ||
+        !mapped_direction || !std::isfinite(mapped_direction[0]) ||
+        !std::isfinite(mapped_direction[1]) || !std::isfinite(mapped_direction[2])) return 1;
+    auto next = *heading;
+    if (dh2_nav_set_heading(&next, mapped_direction, 1)) return 1;
+    *heading = next;
+    *movement_heading_angle = next.angle;
+    return 0;
+}
+
 // v2GamepadController::Update converts calibrated analog axes into a radial
 // stick vector: deadzone length 0.25, normalize, then scale the sub-unit range
 // linearly to [0,1]. CameraBase rotation is applied afterward. `active` reports

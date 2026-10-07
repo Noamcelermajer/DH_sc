@@ -26,6 +26,7 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
     private int videoHeight;
     private boolean requested;
     private boolean prepared;
+    private boolean seekPending;
     private boolean paused;
     private boolean finished;
     private int resumePositionMs;
@@ -73,14 +74,7 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
         }
         // prepareAsync may still be in flight when Activity resumes. Only the
         // prepared state is allowed to call MediaPlayer.start().
-        if (prepared) {
-            try {
-                if (!finished && !player.isPlaying()) player.start();
-            } catch (IllegalStateException e) {
-                Log.w(TAG, "Could not resume opening movie", e);
-                finish();
-            }
-        }
+        if (prepared) startPreparedPlayback(player);
     }
 
     void dispose() {
@@ -126,20 +120,24 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
                 videoHeight = mp.getVideoHeight();
                 fitVideo();
                 if (resumePositionMs > 0) {
-                    try {
-                        mp.seekTo(resumePositionMs);
+                    final int position = resumePositionMs;
+                    seekPending = true;
+                    mp.setOnSeekCompleteListener(seekPlayer -> {
+                        if (finished || player != seekPlayer) return;
+                        seekPending = false;
                         resumePositionMs = 0;
+                        startPreparedPlayback(seekPlayer);
+                    });
+                    try {
+                        mp.seekTo(position);
                     } catch (IllegalStateException e) {
                         Log.w(TAG, "Could not restore opening movie position", e);
+                        seekPending = false;
+                        resumePositionMs = 0;
+                        startPreparedPlayback(mp);
                     }
-                }
-                if (!paused) {
-                    try {
-                        mp.start();
-                    } catch (IllegalStateException e) {
-                        Log.w(TAG, "Could not start opening movie", e);
-                        finish();
-                    }
+                } else {
+                    startPreparedPlayback(mp);
                 }
             });
             candidate.setOnCompletionListener(mp -> finish());
@@ -172,6 +170,16 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
         setTransform(transform);
     }
 
+    private void startPreparedPlayback(MediaPlayer target) {
+        if (finished || paused || seekPending || !prepared || target == null || player != target) return;
+        try {
+            if (!target.isPlaying()) target.start();
+        } catch (IllegalStateException e) {
+            Log.w(TAG, "Could not start opening movie", e);
+            finish();
+        }
+    }
+
     @Override protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
         // A window resize can change the TextureView without recreating its
@@ -190,7 +198,7 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
 
     private void releasePlayer() {
         MediaPlayer old = player;
-        if (!finished && old != null && prepared) {
+        if (!finished && old != null && prepared && !seekPending) {
             try {
                 resumePositionMs = Math.max(0, old.getCurrentPosition());
             } catch (IllegalStateException ignored) {
@@ -199,12 +207,14 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
         }
         player = null;
         prepared = false;
+        seekPending = false;
         if (old != null) {
             try {
                 old.setOnCompletionListener(null);
                 old.setOnErrorListener(null);
                 old.setOnPreparedListener(null);
                 old.setOnVideoSizeChangedListener(null);
+                old.setOnSeekCompleteListener(null);
                 old.release();
             } catch (IllegalStateException ignored) {
                 // Releasing an already-failed decoder is safe to ignore.

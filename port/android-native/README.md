@@ -3,8 +3,9 @@
 This project builds the current source reconstruction for Android. It is still
 an incomplete development game; see the [project checklist](../../docs/PROJECT-CHECKLIST.md)
 for verified systems and open work. The current debug APK is available from the
-[GitHub prerelease](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-combat-quest-tail-api37-2026-10-08).
-That release builds ARM64 and x86_64, but this exact APK has not been live-tested.
+[GitHub prerelease](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-ui-equipment-crypt-api37-2026-10-08).
+It builds ARM64 and x86_64; an API 37 x86_64 emulator smoke reached the opening
+cinematic, menu, Single Player and Crypt HUD. See the release notes for limits.
 
 ## Build and install
 
