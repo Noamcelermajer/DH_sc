@@ -322,7 +322,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [ ] Complete all CalculateResult/ApplyResult dependencies, effects, notifications and actor ownership.
 - [ ] Connect melee/ranged/spell combat, skills, criticals, resistances and status effects in the final runtime.
 - [ ] Complete player damage/death, attacker/killer credit, resurrection and respawn.
-- [ ] Connect Character::Kill/DropLoot with IDA's live/dead, player-death, level+336 and Boss/MiniBoss/killer gates. Supply CharProperties 195/196, live class/party counts, `InfiniteLootDrops`, `DBG_DropAllLoots`, and level+280 difficulty; then connect the five-object ItemManager visual/physics/pickup pool, AutoTransmute/full-inventory UI, and rewards/progression.
+- [ ] Connect Character::Kill/DropLoot with IDA's live/dead, player-death, level+336 and Boss/MiniBoss/killer gates. Supply live CharProperties 195 (gold multiplier) and 196 (magical chance), request power count `-1` for the probabilistic path, class counts from attached PlayerInfo Character ClassIDs, total player count for DistType repeats, `InfiniteLootDrops`, `DBG_DropAllLoots`, and level+280 difficulty; then connect the five-object ItemManager visual/physics/pickup pool, AutoTransmute/full-inventory UI, and rewards/progression.
 - [ ] Complete XP, leveling, rewards, gold and difficulty scaling through actual game owners.
 - [ ] Validate boss encounters and any original cooperative/network behavior retained by the project.
 - [ ] Complete a real original level through its exit using the integrated combat loop.
