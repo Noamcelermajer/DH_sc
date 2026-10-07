@@ -172,6 +172,8 @@ struct NativePlayerSaveAssociation {
  dh2::character_gameplay_save_v1::SaveRef* save_14e8=nullptr;
  std::unique_ptr<dh2::character_gameplay_save_v1::Runtime> runtime;
  std::uintptr_t character_identity=0,save_identity=0,loader_identity=0;
+ std::uintptr_t mask4_profile_identity=0;
+ unsigned mask4_transport_requests=0;
  unsigned mask2_calls=0,mask4_calls=0;
  bool mask2_loaded=false,mask4_loaded=false;
 
@@ -207,10 +209,15 @@ struct NativePlayerSaveAssociation {
  }
  bool load_mask4_once(std::string& error){
   if(!runtime||!mask2_loaded||mask4_calls){error="source SG_Load(4) requires the initialized Save association and one earlier SG_Load(2)";return false;}
+  if(!save_ref.loader){error="source SG_Load(4) has no retained LoadOwner";return false;}
   ++mask4_calls;dh2::character_gameplay_save_v1::Result result{};
-  if(runtime->load(4,&result,error)!=dh2::character_gameplay_save_v1::Status::complete)return false;
+  const auto status=runtime->load(4,&result,error);
+  mask4_profile_identity=save_ref.loader->profile().identity;
+  mask4_transport_requests=save_ref.loader->delivered_calls();
+  if(status!=dh2::character_gameplay_save_v1::Status::complete)return false;
   if(result.captured_character!=character_identity||result.captured_save!=save_identity||
      result.mask!=4||result.load_calls!=1){error="source SG_Load(4) used a different Character, Save, or mask";return false;}
+  if(!mask4_profile_identity||mask4_transport_requests<9){error="source SG_Load(4) did not dispatch its bound profile section requests";return false;}
   mask4_loaded=true;error.clear();return true;
  }
 };
@@ -3541,13 +3548,15 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
        source_save_association.mask4_calls!=1||!source_save_association.mask4_loaded)
      throw std::runtime_error("Native Player mask2/mask4 Save/embedded Quest identities differ");
     __android_log_print(ANDROID_LOG_INFO,"DH2Native",
-     "Native Player Save masks 2+4 | Character %zu | Save %zu | loader %zu | Quest118 %zu | QuestB8 %zu | calls %u/%u | retained %u | section reads and writer registrations; InitPost effects/GEAR writer/persistence pending",
+     "Native Player Save masks 2+4 | Character %zu | Save %zu | loader %zu | Quest118 %zu | QuestB8 %zu | calls %u/%u | retained %u | profile %zu | mask4 requests %u | InitPost effects/GEAR writer/persistence pending",
      std::size_t(source_save_association.character_identity),
      std::size_t(source_save_association.save_identity),
      std::size_t(source_save_association.loader_identity),
      std::size_t(prince_combat.savegame->source_quest_log_118().character_5c),
      std::size_t(prince_combat.savegame->source_quest_log_b8().character_5c),
-     source_save_association.mask2_calls,source_save_association.mask4_calls,unsigned(restore));
+     source_save_association.mask2_calls,source_save_association.mask4_calls,unsigned(restore),
+     std::size_t(source_save_association.mask4_profile_identity),
+     source_save_association.mask4_transport_requests);
     const auto& quest_receipt=prince_combat.quests->receipt();
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Quest startup | Save %zu | Character %zu | log b8 %u | log118 %u | constants %u | retained %u | Compile and quest gameplay pending",std::size_t(prince_combat.savegame.get()),std::size_t(prince_combat.savegame->character()),quest_receipt.published[0],quest_receipt.published[1],quest_receipt.constant_queries,unsigned(restore));
     if(!restore){

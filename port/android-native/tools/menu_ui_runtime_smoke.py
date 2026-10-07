@@ -69,7 +69,8 @@ QUEST_STARTUP = re.compile(r'Native Quest startup \| Save (\d+) \| Character (\d
                            r' log b8 (\d+) \| log118 (\d+) \| constants (\d+) \| retained (\d+)')
 PLAYER_SAVE_MASKS = re.compile(r'Native Player Save masks 2\+4 \| Character (\d+) \| Save (\d+) \|'
                                r' loader (\d+) \| Quest118 (\d+) \| QuestB8 (\d+) \|'
-                               r' calls (\d+)/(\d+) \| retained (\d+) \|')
+                               r' calls (\d+)/(\d+) \| retained (\d+) \| profile (\d+) \|'
+                               r' mask4 requests (\d+) \|')
 CHARACTER_OWNER = re.compile(r'Native Character owner bound \| object (\d+) \| Coordinator (\d+) \|'
                              r' Save (\d+) \| properties (\d+) \| inventory (\d+) \|'
                              r' item rows (\d+) \| loot rows (\d+) \| item count (\d+) \|'
@@ -230,8 +231,9 @@ def verify_start(text, slot, character_class, preset, animation_table):
     save_mask_receipts = list(PLAYER_SAVE_MASKS.finditer(text))
     assert len(save_mask_receipts) == 1 and classes[-1].start() < save_mask_receipts[-1].start() < quest_startup[-1].start(), 'Exactly one Character SG_Load(2)/SG_Load(4) receipt must precede native Quest startup'
     save_mask_values = tuple(map(int, save_mask_receipts[-1].groups()))
-    assert save_mask_values == (character_identity, quest_values[0], save_mask_values[2], character_identity,
-                                character_identity, 1, 1, 0) and save_mask_values[2] > 0, 'SG_Load(2) and SG_Load(4) must use the same Character, Save and both embedded Quest owners'
+    assert save_mask_values[:8] == (character_identity, quest_values[0], save_mask_values[2], character_identity,
+                                    character_identity, 1, 1, 0) and save_mask_values[2] > 0, 'SG_Load(2) and SG_Load(4) must use the same Character, Save and both embedded Quest owners'
+    assert save_mask_values[8] > 0 and save_mask_values[9] >= 9, 'SG_Load(4) must dispatch eight bound sections plus the online-state request'
     owner_bindings = list(CHARACTER_OWNER.finditer(text))
     assert owner_bindings, 'Reconstructed native Character owner publication missing'
     owner_values = tuple(map(int, owner_bindings[-1].groups()))
@@ -272,7 +274,11 @@ def verify_start(text, slot, character_class, preset, animation_table):
             'source_save_masks_2_4': {'character': save_mask_values[0], 'save': save_mask_values[1],
                                       'loader': save_mask_values[2], 'embedded_quest_owners_match': True,
                                       'mask2_calls': save_mask_values[5], 'mask4_calls': save_mask_values[6],
-                                      'retained': save_mask_values[7]}}
+                                      'retained': save_mask_values[7],
+                                      'profile_identity': save_mask_values[8],
+                                      'mask4_transport_requests': save_mask_values[9],
+                                      'mask4_section_callbacks_registered': 8,
+                                      'mask4_payloads_read': False}}
 
 
 def source_hud_frames(hp, max_hp, mp, max_mp, xp, next_xp):
@@ -350,7 +356,7 @@ def main():
     preserve, restore = preservation_scripts(transaction)
     report = {'validation': 'FAIL', 'apk_sha256': hashlib.sha256(args.apk.read_bytes()).hexdigest(),
               'serial': args.serial, 'libraries': inspect_apk(args.apk),
-              'scope': 'Actual original menu/name/class/Start Single Player taps, selected source profile creation/Assign, development Crypt continuation, native Character owner publication with an empty canonical V4 inventory over real LootTable resources, connected source HUD, occupied-slot reopen and Home/resume. Source _AddCharacter parity, SG4/GEAR inventory contents, full NativeStartGame/campaign/InitPost/gameplay controls remain open.',
+              'scope': 'Actual original menu/name/class/Start Single Player taps, selected source profile creation/Assign, development Crypt continuation, native Character owner publication with an empty canonical V4 inventory over real LootTable resources, mask 4 section requests on the metadata-only profile, connected source HUD, occupied-slot reopen and Home/resume. Source _AddCharacter parity, mask-4 payload restoration, GEAR inventory contents, full NativeStartGame/campaign/InitPost/gameplay controls remain open.',
               'private_transaction_directory': 'files/' + transaction,
               'personal_saves_pulled': False, 'cases': [], 'screenshots': []}
     events, pid, since, last_text = [], '', '', ''
@@ -636,7 +642,6 @@ def main():
             assert not re.search(r'Native menu profile created \|', logs()), 'Occupied slot was recreated'
             reopened = start(slot, character_class, preset, animation_table)
             screenshot('%d-crypt-occupied' % index)
-            before = len(logs())
             home_pid = pid
             wait_focus('Home from Crypt')
             adb('shell', 'input', '-d', '0', 'keyevent', 'KEYCODE_HOME')
@@ -650,6 +655,7 @@ def main():
                 assert time.monotonic() < deadline, 'Actual Home/background transition missing'
                 time.sleep(.2)
             # am start brings the existing Activity forward without force-stop.
+            before = len(logs())
             assert 'Status: ok' in adb('shell', 'am', 'start', '-W', '-n', PACKAGE + '/.MainActivity'), 'Resume failed'
             text = wait(lambda t: HUD.search(t[before:]) is not None, 'connected HUD after Home/resume', 70)
             assert not SOURCE_RNG_GSINIT.search(text[before:]) and not SOURCE_RNG_UNLOAD.search(text[before:]), 'Home/resume must retain the source RNG session without lifecycle reseeding'
@@ -666,7 +672,9 @@ def main():
             assert len(resumed_masks) == 1 and tuple(map(int, resumed_masks[-1])) == (
                 reopened['source_save_masks_2_4']['character'], reopened['source_save_masks_2_4']['save'],
                 reopened['source_save_masks_2_4']['loader'], reopened['source_save_masks_2_4']['character'],
-                reopened['source_save_masks_2_4']['character'], 1, 1, 1), 'Home/resume must retain the source Save association without replaying SG_Load(2) or SG_Load(4)'
+                reopened['source_save_masks_2_4']['character'], 1, 1, 1,
+                reopened['source_save_masks_2_4']['profile_identity'],
+                reopened['source_save_masks_2_4']['mask4_transport_requests']), 'Home/resume must retain the source Save association without replaying SG_Load(2) or SG_Load(4)'
             screenshot('%d-crypt-resumed' % index)
             back_main()
             screenshot('%d-main-final' % index)
