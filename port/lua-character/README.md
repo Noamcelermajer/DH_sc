@@ -84,4 +84,4 @@ python port/lua-runtime/build.py --help
 python port/lua-runtime/tests/properties_corpus.py --help
 ```
 
-Original engine and cache inputs are owner supplied. See [rights](../../RIGHTS.md).
+Original engine and cache inputs are separate external files. See [rights](../../RIGHTS.md).

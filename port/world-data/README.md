@@ -1,6 +1,6 @@
 # Original world records and module placement
 
-This source component imports the owner's original exported MLX/MGP/MVP records
+This source component imports the original exported MLX/MGP/MVP records
 into an owned world description. The first verified area is **SWAMP**, using
 `data/scene/001_swamp.mlx`. It does not execute the original engine, copy its
 object ABI, render a level, or make the original game playable by itself.

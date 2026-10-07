@@ -84,4 +84,4 @@ Memory/subfile readers retain original seek and callback quirks, including negat
 
 The original `storeLicenseKey` mixes UTF-8 bytes with `wcslen`, which can overread allocation slack. The reconstructed implementation documents a bounded, deterministic approximation rather than reproducing unsafe reads. Matching zero-padded test inputs does not prove equivalence for every real-world string or allocator layout.
 
-This support-library result does not establish a working license service, working Android DRM flow, graphics compatibility or gameplay on a Fold7. No license check has been removed by the project.
+This support-library result does not establish a working license service, working Android DRM flow, graphics compatibility or gameplay on a physical device. No license check has been removed by the project.

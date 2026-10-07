@@ -88,7 +88,7 @@ Historical reports retain their original APK identities and test scopes.
 - [x] Freeze the camera APK with 468 compiler inputs per ABI, 508 source/build archive entries,
   18 ELF64 libraries and Android API37/16 KiB evidence. Capture is post-build;
   Git publication matches tested bytes except documented line-ending conversion.
-- [x] Keep milestones on the separate reconstruction branch and private documents outside Git.
+- [x] Keep active work on development and promote validated functions to main.
 - [ ] Make the final complete-game build reproducible from a clean checkout with
   documented asset installation and dependency setup.
 - [ ] Consolidate the two development runtimes into the final game architecture,

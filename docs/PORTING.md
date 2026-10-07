@@ -1,6 +1,6 @@
 # Work required for a playable modern Android port
 
-The current development target is Android 17 in official emulators; no Fold7 or other physical device was tested for this update. The owner's earlier Fold7 / One UI 8.5 target remains historical context. The supplied engine is ARM32. A complete native ARM64 restoration still requires the engine and its dependencies to be rebuilt from validated source, or a separately validated runtime translation approach. This repository concentrates on source recovery and evidence for reconstruction.
+Current Android testing targets official Android 17 emulators. No physical-device test was run for this update; earlier compatibility experiments are historical. The supplied engine is ARM32. A complete native ARM64 restoration still requires the engine and its dependencies to be rebuilt from validated source, or a separately validated runtime translation approach. This repository concentrates on source recovery and evidence for reconstruction.
 
 | Workstream | Evidence available | Required result |
 | --- | --- | --- |

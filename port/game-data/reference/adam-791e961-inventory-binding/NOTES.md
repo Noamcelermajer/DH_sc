@@ -1,6 +1,6 @@
 # Inventory binding prerequisites from Adam 791e961
 
-Pinned upstream: `791e961b12233100b303038c961666834f4beb9d`, read through Git blobs without changing the audit checkout. The import manifest attributes each exact text dependency and frozen gold fixture. The original ELF SHA is `36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80`; the ELF, APK, canonical text/cache files and private inputs are not imported.
+Pinned upstream: `791e961b12233100b303038c961666834f4beb9d`, read through Git blobs without changing the audit checkout. The import manifest attributes each exact text dependency and frozen gold fixture. The original ELF SHA is `36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80`; the ELF, APK, canonical text/cache files and external assets are not imported.
 
 ## Delivered code and ownership
 

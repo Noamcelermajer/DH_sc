@@ -13,7 +13,7 @@ image, revision 16, reports `x86_64,x86,arm64-v8a,armeabi-v7a,armeabi` and
 The workspace has no KVM acceleration or exposed hardware GPU. The AVD used
 software CPU emulation and SwiftShader, with two virtual CPUs, 2048 MB RAM and
 a 720x1280 display. It reached `sys.boot_completed=1` after 224.1 seconds in the
-recorded smoke run. These conditions do not reproduce the Fold7's Android 16
+recorded smoke run. These conditions do not reproduce the device's Android 16
 system or graphics driver.
 
 Installing the exact released APK with a full streamed transfer failed:
@@ -31,7 +31,7 @@ remain separate from Android/UI testing.
 Two previously uploaded complete cache ZIPs were found in the saved files, but
 both transfer endpoints returned HTTP 502 / connection refused. The cache was
 not available for an emulator loading test. Do not interpret this as a bad or
-missing model in the user's phone cache.
+missing model in the game cache.
 
 ## Repeat the launcher smoke test
 
@@ -44,7 +44,7 @@ python tests/run_emulator_smoke.py \
   --sdk /path/to/android-sdk \
   --avd-home /path/to/avd-directory \
   --avd DH2_API30 \
-  --apk /path/to/Dungeon-Hunter-2-Fold7-test5.apk \
+  --apk /path/to/Dungeon-Hunter-2-test5.apk \
   --out /path/to/new-smoke-results
 ```
 
@@ -58,5 +58,5 @@ emulator. Known output files in `--out` are replaced on each run.
 This checks the launcher only. It does not import the game cache, execute the
 native engine, test the failing character load, or validate gameplay. A
 successful launcher result would not establish that the nested native
-translation works on this emulator. Fold7 loading and gameplay still require
+translation works on this emulator. physical device loading and gameplay still require
 the device comparison described in `TEST5.md`.

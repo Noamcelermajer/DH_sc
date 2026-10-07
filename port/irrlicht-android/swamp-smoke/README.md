@@ -152,7 +152,7 @@ Install the runtime-smoke helper dependency with
 `python -m pip install -r port/android-app/tests/requirements-irrlicht-swamp.txt`.
 
 This is a development diagnostic, not full-game parity. It packages the
-owner-supplied cache inputs listed below and has no Drive/GitHub upload step.
+external cache inputs listed below and uses no external upload service.
 
 The previous two-clip runtime-tested artifact lives in
 `port/android-app/build/irrlicht-swamp-prince-preview/`. The full-bank,

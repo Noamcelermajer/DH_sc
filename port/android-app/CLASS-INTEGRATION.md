@@ -56,7 +56,7 @@ The component runner separately checks all 260 classes / 116,480 final values on
 host, strict sanitizers and both Android page sizes. APK expectations come from
 the checked host corpus and standalone source C, which was separately matched
 to actual original ARM bodies. Original Lua gameplay equivalence and ARM64
-hardware execution are unverified. No Fold7 was tested.
+hardware execution are unverified. No physical-device test was run.
 
 ## Remaining work and reproduction
 

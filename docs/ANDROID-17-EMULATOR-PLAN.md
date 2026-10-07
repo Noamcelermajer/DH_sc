@@ -1,6 +1,6 @@
 # Android 17 emulator compatibility test
 
-The target for current Android compatibility testing is **Android 17 (API 37)** on an official Android Emulator x86_64 system image. Android 9 and 11 results in the [emulator report](EMULATOR-TEST-2026-10-02.md) are diagnostic baselines, not a substitute for this test. No phone test is required for this plan.
+The target for current Android compatibility testing is **Android 17 (API 37)** on an official Android Emulator x86_64 system image. Android 9 and 11 results in the [emulator report](EMULATOR-TEST-2026-10-02.md) are diagnostic baselines, not a substitute for this test. This plan covers emulator testing only.
 
 ## Why the two APK routes differ
 

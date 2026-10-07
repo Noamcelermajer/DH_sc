@@ -14,7 +14,7 @@ guest-log: stdio: Warning: failed to find generated linker configuration from "
 guest-log: stdio: /linkerconfig/ld.config.txt
 guest-log: stdio: "
 guest-log: stdio:
-guest-log: stdio: WorkingDirectory=/storage/emulated/0/android/data/local.dh2.fold7/files/plugins/com.gameloft.android.gand.gloftd2ss/
+guest-log: stdio: WorkingDirectory=<app-storage>/<game-cache>/
 guest-log: stdio: CFileSystem::open input=data/3d/characters/prince/prince_modular.bdae patched=1
 guest-log: stdio: CFileSystem::open returned=file errno=0
 guest-log: stdio: PASS original FILE content intact

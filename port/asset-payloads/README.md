@@ -34,7 +34,7 @@ The original-instruction animation test samples the first/middle/last animation 
 
 ## Build and reproduce
 
-From this directory, with Python 3.12, a host C++17 compiler and the owner's exact cache and original ELF:
+From this directory, with Python 3.12, a host C++17 compiler and the separately supplied original cache and ELF inputs:
 
 ```sh
 python -m pip install -r requirements.txt

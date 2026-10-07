@@ -32,7 +32,7 @@ body fragments above before exercising the owned port views.
 `GameObjectView` takes a borrowed name and a borrowed three-float world
 position. Existing `port/actor-runtime::ActorInstance` values can supply those
 two fields after the MLX/MGP loader has resolved module origin. The host test
-uses the owner-supplied Infected Village cache and checks the four statically
+uses the external Infected Village cache and checks the four statically
 authored Ambush Characters against their imported names and world positions.
 
 `CharacterView` additionally requires the current state ID, state time and hit
@@ -52,7 +52,7 @@ renderer state, animation, combat or Lua `ReturnValues` are emulated here.
 
 ## Build and run
 
-From the repository root, with Python 3, GCC/Clang, and the separate owner cache:
+From the repository root, with Python 3, GCC/Clang, and the separate cache archive:
 
 ```powershell
 python port/gameplay-object-callbacks/tests/run_host.py `

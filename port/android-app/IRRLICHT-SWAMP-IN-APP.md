@@ -6,7 +6,7 @@ separate build output and does not change the default APK or the standalone
 `--irrlicht-swamp` package.
 
 Build it from the repository root with Android SDK 37, NDK r29, and the
-owner-supplied extracted cache:
+separately supplied extracted cache:
 
 ```powershell
 python port/android-app/build.py --sdk ..\emulator-test\sdk `
@@ -69,7 +69,7 @@ The run followed Gameplay → Diagnostics → Irrlicht NativeActivity → Diagno
 ownership errors, and returned to the Java encounter HUD. App data was
 preserved and logcat was not cleared. The existing saved encounter was already
 defeated; this navigation test does not claim to reset or validate that
-encounter. This build was tested only on the 16 KiB emulator; no 4 KiB or Fold7
+encounter. This build was tested only on the 16 KiB emulator; no 4 KiB or physical device
 test was run. Reports, screenshots, UI dumps, and filtered logs are under the
 ignored `port/android-app/build/irrlicht-swamp-in-app/runtime-final-alpha-16k/`
 directory.

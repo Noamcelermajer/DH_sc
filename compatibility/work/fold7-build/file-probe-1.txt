@@ -14,7 +14,7 @@ guest-log: stdio: Warning: failed to find generated linker configuration from "
 guest-log: stdio: /linkerconfig/ld.config.txt
 guest-log: stdio: "
 guest-log: stdio:
-guest-log: stdio: CFile construct: /storage/emulated/0/Android/data/local.dh2.fold7/files/plugins/com.gameloft.android.GAND.GloftD2SS/data/PyData/character_properties_pystructnames.bin
+guest-log: stdio: CFile construct: <app-storage>/<game-cache>/data/PyData/character_properties_pystructnames.bin
 guest-log: stdio: CFile success: begin=fcac2110 end=fcac21a5 basename=fcac217f
 guest-log: stdio: basename=character_properties_pystructnames.bin
 native-calls: (none) total=0

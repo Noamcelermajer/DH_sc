@@ -1,6 +1,6 @@
 # Original class rules for derived character properties
 
-The original class reader fully consumes the **34,224-byte** owner cache file,
+The original class reader fully consumes the **34,224-byte** original cache file,
 containing **260 classes / 1,659 rules**. Actual ClassTable, ClassFuncList and
 ClassFunc readers execute; all five-integer rule payloads match their original
 destinations and ordered name counts agree. Stream reads, zeroed bounded
@@ -67,4 +67,4 @@ python port/character-classes/build.py --help
 python port/character-classes/tests/differential.py --help
 ```
 
-Original engine and cache inputs are supplied by the owner. See [rights](../../RIGHTS.md).
+Original engine and cache are separate external inputs. See [rights](../../RIGHTS.md).

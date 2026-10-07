@@ -74,4 +74,4 @@ the table-name count, checks all variants of
 `InfectedVillage_CommonType1`, reads `AIStates`, verifies the native
 `Limbus -> Spawn` request and miss/repeat/malformed cases, and rejects truncated
 or trailing cache data. It writes a provenance report under the ignored
-`build/` directory. No device, emulator, Drive, or external service is used.
+`build/` directory. No device, emulator, or external service is used.

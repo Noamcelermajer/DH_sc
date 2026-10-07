@@ -29,7 +29,7 @@ Modern Android restricts other apps' access to Android/data. The game can use
 its own app-specific directory, but an ordinary file manager might not let you
 copy into it. A future in-app file-picker importer can copy a locally selected
 archive to the game's own directory. Such an importer has not been implemented
-in this checkpoint. No file-manager workaround has been tested on One UI 8.5.
+in this checkpoint. No file-manager workaround has been tested on tested Android system UI.
 
 Do not delete an existing installation just to prepare this folder: uninstalling
 can remove app-specific saves/data. Keep the original cache archive as a backup.

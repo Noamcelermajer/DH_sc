@@ -166,7 +166,7 @@ The Android renderer uses the existing preview shader, original diffuse textures
 
 ## Reproduce
 
-From the repository root, with the owner-supplied original cache:
+From the repository root, with the separately supplied original cache:
 
 ```powershell
 uv run python port/level-world/tools/prepare_world.py "C:\path\Dungeon-Hunter-2-HD-v1-0-2-cache.zip" --output port/android-native/app/src/main/assets/worlds

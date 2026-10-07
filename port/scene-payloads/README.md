@@ -74,7 +74,7 @@ path-eligibility, and position-validation routines.
 
 ## Validation
 
-`validation.json` records a full scan of the owner's separately supplied
+`validation.json` records a full scan of the separately supplied
 cache: 2,904 BRES files, 1,563 scene references, 1,563 visual scenes, 3,337
 root nodes, 21,472 total nodes, and 11,648 instances. All 1,563 visual URLs
 resolve locally. Of 10,444 type-3 geometry URLs, 10,403 resolve within their
@@ -90,7 +90,7 @@ ARM64 ELF has 16 KiB-aligned load segments. The full-cache audit executes the
 host build; the ARM64 artifact was compiled and inspected, not run on a device.
 
 From the repository root, with Python 3, a C++17 compiler, an optional
-Android NDK r29, and the owner's local cache:
+Android NDK r29, and the external cache:
 
 ```sh
 python port/scene-payloads/build.py --ndk /path/to/android-ndk-r29 \

@@ -1,6 +1,6 @@
-# Fold7 test 4: stop the reproduced file-path abort
+# device test 4: stop the reproduced file-path abort
 
-## What the owner's Test 3 report establishes
+## What the Test 3 report establishes
 
 The report was exported after the 2026-10-01 21:22:17--21:23:09 device session (Asia/Jerusalem). The cinematic completed. The guest later terminated with signal 6 (SIGABRT), with 735 nativeRender calls and 40,389 GL calls. There were no reported missing host calls. Both experimental switches were enabled: fit16by9=true and preserveContext=true. There was one surface creation, with a 2184x1228 view, and rendering continued after the video Activity closed. This run therefore does not show a graphics-context recreation at that transition.
 
@@ -22,7 +22,7 @@ CFile constructs its stored pathname, finds the last slash or backslash, adds on
 
 The new native probe calls the ORIGINAL exported CFileSystem::open, not a rewritten substitute. A real directory with a trailing slash reproduces exit 134 and the same 0x56ca64 / 0x56dde8 stack addresses. An ordinary existing file passes and its contents can be read. This is stronger evidence than a matching error number alone.
 
-The phone's exact failing pathname is still unknown: Test 3 recorded only selected filename suffixes in its open history, excluding directory paths. Thus the directory-path trigger is a reproduced, strongly supported explanation, not yet confirmed by a phone guard message. A corrupted string could also reach the same check; we have not disabled that check.
+the device's exact failing pathname is still unknown: Test 3 recorded only selected filename suffixes in its open history, excluding directory paths. Thus the directory-path trigger is a reproduced, strongly supported explanation, not yet confirmed by a phone guard message. A corrupted string could also reach the same check; we have not disabled that check.
 
 ## Narrow fix
 
@@ -36,16 +36,16 @@ The wrapper logs the rejected path to Android liblog AND unbuffered fd 2, which 
 
 An initial helper build used a non-relocated GOT address; the native probe caught this before packaging. Hidden local helper symbols plus the new relocation-free gate fixed it. A CLI probe without Android logd also showed why logging only to liblog was insufficient; the final helper writes to captured fd 2 as well.
 
-There is no attached Fold7, ART session or Android GPU here. No claim is made that the phone now passes the loading screen or that later gameplay is stable. The Russian language issue remains: the phone locale is en_GB and Prefer English was selected, but game/menu strings remain Russian. The Java language callback alone has not fixed that. Existing save/cache language behavior still needs separate tracing.
+There is no attached physical device, ART session or Android GPU here. No claim is made that the device now passes the loading screen or that later gameplay is stable. The Russian language issue remains: the device locale is en_GB and Prefer English was selected, but game/menu strings remain Russian. The Java language callback alone has not fixed that. Existing save/cache language behavior still needs separate tracing.
 
 ## Device check
 
 1. Install Test 4 OVER Test 3. Do not uninstall, delete saves or reimport the cache.
-2. Keep your last Test 3 settings unchanged for this comparison (your attached session used both display/context switches). The only gameplay compatibility change is the file-open guard.
+2. Keep the selected Test 3 display and context settings unchanged for this comparison. The only gameplay compatibility change is the file-open guard.
 3. Repeat the same character/load action that produced the fairy loading-screen failure.
 4. If loading succeeds, try movement and combat, then save/reload. Export diagnostics whether it succeeds or fails.
 5. If it fails, reopen the launcher and export DH2-test4-diagnostics.zip before another run. The report should reveal whether the guard rejected a path and whether a later failure is different.
 
-Cache stays at `/storage/emulated/0/Android/data/local.dh2.fold7/files/plugins/com.gameloft.android.GAND.GloftD2SS/`.
+Cache stays at `<app-storage>/<game-cache>/`.
 
 Reference: POSIX fopen only mandates EISDIR for directory opens requiring write access; one cannot assume a successful read-only fopen returned a regular file: https://pubs.opengroup.org/onlinepubs/007904975/functions/fopen.html . The fix is scoped to this game's file API, not a global change to libc semantics.

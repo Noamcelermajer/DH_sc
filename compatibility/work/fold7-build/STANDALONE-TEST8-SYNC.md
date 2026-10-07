@@ -6,7 +6,7 @@ existing synchronous path. The source and Android 9 direct-guest result are in
 Android 9; it does not establish Android 17 wrapper behavior.
 
 The optional wrapper build uses `DH2_TEST8_GUEST_APK` instead of
-`DH2_TEST7_GUEST_APK`, with the same exact owner cache input and toolchain
+`DH2_TEST7_GUEST_APK`, with the same exact cache input and toolchain
 requirements described in `STANDALONE-TEST7.md`. The input must be the
 unsigned Test 8 guest with SHA-256
 `8168af36b2d82cf6b897da2fe4ec382c816f6498840e3bb61aede2f23c877e20`.
@@ -30,12 +30,12 @@ Android 17 wrapper setup.
 On the Android 17/API 37.0 4096-byte-page x86_64 emulator, a Test 8 run
 passed the opening cinematic and title screen and remained alive for more than
 six minutes beyond the Test 7 Berberis abort. After tapping to continue, it
-selected the owner's existing `wolf` save. The first prince model opened, then
+selected the existing `wolf` save. The first prince model opened, then
 deferred loading tried a lowercased, duplicated cache root and failed:
 
 ```text
-/storage/emulated/0/Android/data/local.dh2.fold7/files/plugins/com.gameloft.android.GAND.GloftD2SS/
-/storage/emulated/0/android/data/local.dh2.fold7/files/plugins/com.gameloft.android.gand.gloftd2ss/
+<app-storage>/<game-cache>/
+<app-storage>/<game-cache>/
 data/3d/characters/prince/prince_modular.bdae
 ```
 

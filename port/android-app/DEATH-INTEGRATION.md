@@ -36,7 +36,7 @@ DEATH-BINDING.md. Caller-supplied policies expose unresolved engine ownership.
 Actual loot generation, quest consumers, resolved killer/threat credit and XP,
 player death, full attack dispatch, animation/FSM/world/AI, progression and saves
 remain pending. ARM64 is compared in Unicorn; device tests execute x86_64.
-No Fold7, Android 9, ARM64 hardware or full gameplay equivalence is claimed.
+No physical device, Android 9, ARM64 hardware or full gameplay equivalence is claimed.
 
 The browser denied release-upload permission. No release was published from this
 continuation; the exact upload authorization question remains pending.

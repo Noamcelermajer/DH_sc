@@ -1,6 +1,6 @@
 # Texture file views (external cache)
 
-This C++17 component classifies and bounds the external texture files in the complete owner-supplied Dungeon Hunter 2 cache. It borrows immutable bytes and returns dimensions, raw metadata and the exact encoded payload span. It also decodes the cache's PVRTC1 2bpp and 4bpp textures to caller-owned RGBA8 buffers. GPU upload, orientation changes, material binding and the original-engine ABI remain unimplemented. See [`texture.hpp`](texture.hpp) for the small C/C++ interface.
+This C++17 component classifies and bounds the external texture files in the complete external Dungeon Hunter 2 cache. It borrows immutable bytes and returns dimensions, raw metadata and the exact encoded payload span. It also decodes the cache's PVRTC1 2bpp and 4bpp textures to caller-owned RGBA8 buffers. GPU upload, orientation changes, material binding and the original-engine ABI remain unimplemented. See [`texture.hpp`](texture.hpp) for the small C/C++ interface.
 
 ## Verified cache evidence
 
@@ -30,7 +30,7 @@ The [pixel audit](pixel-validation.json) decoded all 234 real BTEX textures, inc
 
 ## Reproduce
 
-With Python 3.10+, a C++17 compiler and the complete owner-supplied ZIP:
+With Python 3.10+, a C++17 compiler and the complete external ZIP:
 
 ```sh
 python port/texture-assets/build.py --cache-zip /path/to/Dungeon-Hunter-2-HD-v1-0-2-cache.zip

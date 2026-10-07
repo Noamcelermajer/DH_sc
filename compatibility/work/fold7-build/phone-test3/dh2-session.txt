@@ -1,3 +1,0 @@
-DH2 test3 session Thu Oct 01 21:22:17 GMT+03:00 2026
-UID=10612
-locale=en_GB

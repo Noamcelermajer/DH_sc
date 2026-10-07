@@ -65,7 +65,7 @@ proven version. The selected separate baseline is the official OGL-ES r6038
 branch (1.9.0 alpha); it is not evidence that Dungeon Hunter 2 used that exact
 revision.
 
-## Evidence from this checkout and owner inputs
+## Evidence from source and external inputs
 
 | Evidence | What it establishes | Limit |
 | --- | --- | --- |
@@ -196,7 +196,7 @@ rg --files .. | rg -i "(^|[\\/])(irrlicht|CIrrFactory|COpenGLES2Driver|CAndroidO
 python -c "import zipfile,pathlib; z=zipfile.ZipFile(pathlib.Path(r'..\cache\files\shaders.pak')); print(len(z.namelist()),sum(x.endswith('.glsl') for x in z.namelist()),z.namelist())"
 ```
 
-The original APK and cache are owner-supplied local inputs and are deliberately
+The original APK and cache are separate external inputs and are deliberately
 not copied into this report folder.
 
 ## References

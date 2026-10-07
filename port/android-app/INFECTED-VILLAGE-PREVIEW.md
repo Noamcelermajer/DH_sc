@@ -74,7 +74,7 @@ Android 17/API 37 x86_64 emulators with both 4 KiB and 16 KiB pages, the current
 APK passed three complete open/render/return cycles and a drag-orbit check. The
 overlay reported all source omissions and unresolved samplers, installed APK
 bytes matched the candidate, and filtered app/EGL/GLES error logs were empty.
-Pinch zoom and physical-device behavior remain unverified. No Fold7 was tested.
+Pinch zoom and physical-device behavior remain unverified. No physical-device test was run.
 The [current exact-APK report](infected-village-current-apk-runtime-validation.json)
 lists screenshots and hashes; the [earlier candidate report](infected-village-preview-runtime-validation.json)
 is retained as historical evidence.

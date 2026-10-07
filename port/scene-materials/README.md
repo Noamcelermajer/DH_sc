@@ -12,7 +12,7 @@ The immutable loader validates ranges, strings, finite components, counts, graph
 
 ## Validation
 
-Two owner-supplied fixtures are not committed: `candle_flame.bdae` and `main_menu_charactere_swamp.bdae`. The native host audit verifies every instantiated mesh, material order, triangle/index data and transformed bounds. It also tests truncated views, an explicit graph cycle and 5,000 byte mutations per fixture under ASan/UBSan.
+Two external fixtures are not committed: `candle_flame.bdae` and `main_menu_charactere_swamp.bdae`. The native host audit verifies every instantiated mesh, material order, triangle/index data and transformed bounds. It also tests truncated views, an explicit graph cycle and 5,000 byte mutations per fixture under ASan/UBSan.
 
 ```sh
 cmake -S port/scene-materials -B port/scene-materials/build/host -G Ninja

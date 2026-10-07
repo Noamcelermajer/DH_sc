@@ -1,7 +1,7 @@
 # Android activity and latest-platform audit
 
 Audit date: 2026-10-03  
-Scope: Android manifest, activity routing, view layouts, touch handling, and the checked-in API 37 runtime evidence. This audit is static; the API 37 emulator is reserved for the parent task's exact-candidate rebuild test. No Fold7 or physical device was used.
+Scope: Android manifest, activity routing, view layouts, touch handling, and the checked-in API 37 runtime evidence. This audit is static; the API 37 emulator is reserved for the parent task's exact-candidate rebuild test. No physical device was used.
 
 ## Current navigation
 
@@ -37,7 +37,7 @@ This audit did not interact with the emulator because it was reserved for the pa
 1. On API 37 x86_64, open the launcher encounter, open Diagnostics, verify the GL preview remains visible while scrolling to and activating the last import control, then return with system Back. Repeat in portrait, landscape, and narrow landscape resize/rotation. Bind screenshots or view-hierarchy evidence to the tested APK SHA-256.
 2. Open SWAMP; run and scroll the intro trace, move with the pad, cancel a touch, use the visible return button, and repeat using system Back.
 3. Open INFECTED VILLAGE; verify drag, pinch, pinch-to-drag transition, system Back, and the visible return button.
-4. Rotate and resize an API 37 large-screen/resizable emulator (not a Fold7), then confirm all controls remain reachable and GL surface aspect changes without losing the activity or crashing.
+4. Rotate and resize an API 37 large-screen/resizable emulator (not a physical device), then confirm all controls remain reachable and GL surface aspect changes without losing the activity or crashing.
 5. Capture package-scoped logcat for each transition and bind the evidence to the tested APK SHA-256.
 
 ## Commands used

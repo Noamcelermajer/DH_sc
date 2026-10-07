@@ -8,7 +8,7 @@ This is reconstructed source, not the original Gameloft development source. It i
 
 | Check | Result | Report |
 |---|---|---|
-| Full owner-supplied cache texture corpus | 242 images decoded: 17 PVRTC 2bpp, 217 PVRTC 4bpp, eight ordinary TGA | [Cache audit](reports/cache-audit.json) |
+| Full external cache texture corpus | 242 images decoded: 17 PVRTC 2bpp, 217 PVRTC 4bpp, eight ordinary TGA | [Cache audit](reports/cache-audit.json) |
 | Original ARM32 header routines against compiled Android ARM64 source | 360 comparisons match, including all 234 real PVR headers, raw/wrapped headers, format mapping, mip/cube/volume flags and malformed inputs | [Differential report](reports/differential.json) |
 | Original ARM32 PVRTC against compiled Android ARM64 source | 11 pixel cases match byte for byte; four complete real 64x64 images, a miniature using real 2bpp payload words, and deterministic synthetic fixtures | Same report |
 | Bounds and orientation under host ASan/UBSan | TGA channel/origin conversion, output guards, misaligned PVRTC input, truncation, capacity checks and 25,000 random inputs pass | [Build/test record](reports/build-validation.json) |

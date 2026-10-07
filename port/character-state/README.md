@@ -56,4 +56,4 @@ python3 port/character-state/tests/differential.py --help
 ```
 
 The differential test needs Unicorn/pyelftools, the pinned original library,
-owner cache, arithmetic oracle and both compiled source modules.
+external cache, arithmetic oracle and both compiled source modules.

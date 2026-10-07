@@ -1,7 +1,7 @@
 # Skin controllers and software bone palettes
 
 Checked immutable views of the original Collada skin records and a software
-position-skinning path. The owner must keep the complete, unrelocated BRES
+position-skinning path. Keep the complete, unrelocated BRES
 bytes alive. This is a source component, not a complete character system.
 
 ## Recovered layout
@@ -97,5 +97,5 @@ cc -shared -fPIC -O2 -fno-fast-math -ffp-contract=off port/engine-math/tests/fp_
 python3 port/skin-payloads/tests/differential.py --original PRIVATE_ORIGINAL_SO --library port/skin-payloads/build/skin-host.so --oracle port/skin-payloads/build/oracle.so --sample PRIVATE_CACHE/data/3d/characters/prince/prince_low_poly_warrior.bdae --report arm-report.json
 ```
 
-Original binaries and cache are private inputs. See [RIGHTS.md](../../RIGHTS.md);
+Original binaries and cache are external inputs. See [RIGHTS.md](../../RIGHTS.md);
 this component does not establish a game-wide open-source licence.

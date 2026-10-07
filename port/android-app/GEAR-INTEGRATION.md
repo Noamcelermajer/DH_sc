@@ -65,7 +65,7 @@ Existing class, equipment-bonus, name, constant, script and property component
 corpora also pass on this runtime. Standalone C matches actual original ARM32
 instructions versus source ARM64/host in **7,147 comparisons**. These are component
 and diagnostic app checks; original Lua combat/gameplay equivalence, ARM64
-hardware and a complete source-built game remain unverified. No Fold7 was tested.
+hardware and a complete source-built game remain unverified. No physical-device test was run.
 
 ## Remaining work and reproduction
 

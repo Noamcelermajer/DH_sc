@@ -56,7 +56,7 @@ queries on host, strict sanitizers and both Android page sizes. The standalone
 reader/query comparison passes 24,670 original ARM32 versus source ARM64/host
 checks; 312 supported original bonus/shield callback cases also match host Lua.
 Original Lua gameplay equivalence and ARM64 hardware execution are unverified.
-No Fold7 was tested.
+No physical-device test was run.
 
 The same exact APK also passes the existing class integration (40 actual class
 applications / 8,960 final queries), seven shared-script rejection/recovery

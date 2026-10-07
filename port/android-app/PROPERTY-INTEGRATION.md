@@ -57,7 +57,7 @@ The component runner separately checks all 448 real records / 100,352 composed
 final values, plus 224 serialized defaults, on host, strict sanitizers and both
 Android page sizes. APK queries use an authored reference of previously checked
 composition rules; they do not establish original Lua gameplay equivalence.
-ARM64 hardware execution is unverified. No Fold7 was tested.
+ARM64 hardware execution is unverified. No physical-device test was run.
 
 ## Reproduce
 

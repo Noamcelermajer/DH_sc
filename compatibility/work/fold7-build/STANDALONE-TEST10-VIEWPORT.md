@@ -1,10 +1,10 @@
-# Private Test 10 viewport correction on Android 17
+# Test 10 viewport correction on Android 17
 
 Test 10 builds on the pinned Test 9 ARM32 guest and ARM64 ZettaBridge wrapper.
-The original game APK and complete cache ZIP are owner-supplied private inputs;
-neither their bytes nor the signed output belong in the public source tree.
+The original game APK and complete cache ZIP are separate inputs;
+the inputs and signed output are not included in the public source tree.
 See `STANDALONE-TEST7.md` and [`RIGHTS.md`](../../../RIGHTS.md) for the base runtime recipe and
-provenance limits. All tests below used emulators, not a Fold7 or other phone.
+provenance limits. All tests below used emulators, not a physical-device test.
 
 ## Cause and source change
 
@@ -44,10 +44,10 @@ every other entry with Test 9 and requires these hashes:
 | Test 10 unsigned guest APK | `57cefd15cba47116a98fa96e406ba8d8a4ef90fb0e82185802a8f09210ba2b7e` |
 | Test 10 primary `classes.dex` | `03c71b7a981b15ac8d28129d9a0abe38d9356d8890c0d4f1374cbac654b9df72` |
 | Test 10 helper `classes2.dex` | `bba5f019caf2a0cc0c6f6c8a8f673dc69ec792355af272b7f5020693820d3efe` |
-| Owner cache ZIP | `3fdf4e4c21d45a780a7c35fb4042abde0e88e76bf75416aad1f227481560b679` |
+| Cache archive | `3fdf4e4c21d45a780a7c35fb4042abde0e88e76bf75416aad1f227481560b679` |
 
 To build the ARM64 wrapper, set `DH2_TEST10_GUEST_APK` to that unsigned Test 10
-guest, `DH2_CACHE_ZIP` to the owner ZIP, and the normal `DH2_ANDROID_SDK_ROOT`,
+guest, `DH2_CACHE_ZIP` to the cache archive, and the normal `DH2_ANDROID_SDK_ROOT`,
 `DH2_ANDROID_JAR`, and `DH2_JDK_ROOT` inputs described in
 `STANDALONE-TEST7.md`. Set `DH2_OUTPUT_APK` to a private output path and run
 `build_apk.py` in the restored compatibility tree. The builder verifies the

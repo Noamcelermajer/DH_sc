@@ -12,7 +12,7 @@ cache archive (`f01c1657…`), file hashes, CRCs and nested shader archive membe
 `cache-manifest.json` is that historical extraction's accounting, including
 its truncation. These reports must not be described as the later complete
 cache audit. [The complete cache](../../docs/COMPLETE-CACHE.md) is a different
-owner-supplied archive and remains outside Git.
+external archive and remains outside Git.
 
 The [import ledger](../../reports/remaining-recovery-evidence-import.json)
 pins all of these bytes against the verified recovery ZIP, together with

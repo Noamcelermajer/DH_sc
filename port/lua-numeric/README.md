@@ -56,6 +56,6 @@ python3 port/lua-numeric/build.py --ndk /path/to/windows-ndk --report /path/to/a
 python3 port/lua-numeric/tests/differential.py --help
 ```
 
-The differential test needs Unicorn, pyelftools, the owner's original library
+The differential test needs Unicorn, pyelftools, the original library
 and the previously built host arithmetic oracle. Proprietary binaries are not
 inputs to ordinary source builds.

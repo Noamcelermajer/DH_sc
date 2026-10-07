@@ -1,6 +1,6 @@
-# Fold7 test 3: capture the post-cinematic loading abort
+# device test 3: capture the post-cinematic loading abort
 
-Test 2 reaches the cinematic on SM-F966B / Android 16 / ARM64 / 4096-byte pages. The owner clarified that **the cinematic completes; the game crashes during the following loading screen when a small fairy appears**. The cinematic itself is not the reported failure. Test 3 is a diagnostic and compatibility-option build; the loading crash is not yet claimed fixed.
+Test 2 reaches the cinematic on Android 16 test device / Android 16 / ARM64 / 4096-byte pages. The reported behavior is that **the cinematic completes; the game crashes during the following loading screen when a small fairy appears**. The cinematic itself is not the reported failure. Test 3 is a diagnostic and compatibility-option build; the loading crash is not yet claimed fixed.
 
 ## Evidence and limits
 
@@ -26,7 +26,7 @@ The game uses Java `GLSurfaceView`, which creates/presents its EGL context outsi
 
 **Fit game to 16:9** is experimental and off by default. The supplied Storm native patch has `orig_width=1280.0` and `orig_height=720.0`; it overrides the engine's reported phone dimensions and has viewport/scissor hooks. A fitted, centered view avoids stretching the entire square inner Fold display. When enabled, the original native phone-size callback is updated with the actual surface size before the original resize callback, so its scaling inputs refer to the fitted view. Touch alignment, clipping and fold transitions still require device testing.
 
-**Keep graphics context during cinematics** is off by default, preserving the test 2 baseline after the owner's clarification. It requests `setPreserveEGLContextOnPause(true)` when selected. Two GLMediaPlayer native initializations in test 2 make context recreation worth observing, but do not establish it as the crash cause. Android may still recreate a lost context.
+**Keep graphics context during cinematics** is off by default, preserving the test 2 baseline after clarification. It requests `setPreserveEGLContextOnPause(true)` when selected. Two GLMediaPlayer native initializations in test 2 make context recreation worth observing, but do not establish it as the crash cause. Android may still recreate a lost context.
 
 ## Validation
 
@@ -35,7 +35,7 @@ The game uses Java `GLSurfaceView`, which creates/presents its EGL context outsi
 - Seven media-query regressions still pass.
 - The signed APK's CRCs, nested libraries, ARM64 host, runtime bundle, upgrade version and helper references are checked. Packaged DEX is decoded again to inspect the actual hooks. Test 2 and test 3 signing-certificate digests match.
 - Packaging validation caught an incomplete intermediate APK and a temporary bundle-copy artifact. The final build was serialized, rebuilt from the complete nested APK, checked again, and the packager now rejects incomplete input before appending its helper DEX.
-- No Fold7 or Android GPU is attached to this environment. ZIP export, One UI UI/layout, audio continuity, actual presentation, game loading and sustained gameplay remain device acceptance items.
+- No physical device or Android GPU is attached to this environment. ZIP export, One UI UI/layout, audio continuity, actual presentation, game loading and sustained gameplay remain device acceptance items.
 
 ## Next phone run
 
@@ -46,7 +46,7 @@ The game uses Java `GLSurfaceView`, which creates/presents its EGL context outsi
 5. If the crash persists, use the recorded fatal message, ARM32 PC/LR and module offsets to isolate the failing routine and test a targeted repair. Do not simply ignore aborts or infer an incomplete cache from the last successful open.
 
 Cache remains:
-`/storage/emulated/0/Android/data/local.dh2.fold7/files/plugins/com.gameloft.android.GAND.GloftD2SS/`
+`<app-storage>/<game-cache>/`
 
 Android API references used for the implementation:
 - https://developer.android.com/reference/android/app/ApplicationExitInfo

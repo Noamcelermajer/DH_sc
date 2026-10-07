@@ -1,7 +1,7 @@
 # Private standalone Test 7 build and Android 17 emulator result
 
 This source recipe builds a locally signed ARM64 wrapper containing the hash-pinned
-Test 7 guest APK and the owner's complete cache ZIP. The game and cache bytes are
+Test 7 guest APK and the complete cache ZIP. The game and cache bytes are
 private build inputs and are not part of the Git source tree. See `RIGHTS.md` for
 provenance and publication limits.
 
@@ -20,7 +20,7 @@ Android platform `android.jar`, JDK 17, and HiddenApiBypass 6.1's AAR and
 
 Set `DH2_TEST7_GUEST_APK` to the **unsigned** Test 7 guest, SHA-256
 `302ae407d27dc6b94501e3e92c64dd9817b4742b3a45f7e134413f4cd40027bd`.
-Set `DH2_CACHE_ZIP` to the complete owner cache ZIP, SHA-256
+Set `DH2_CACHE_ZIP` to the complete cache archive, SHA-256
 `3fdf4e4c21d45a780a7c35fb4042abde0e88e76bf75416aad1f227481560b679`.
 Set `DH2_ANDROID_SDK_ROOT`, `DH2_ANDROID_JAR`, `DH2_JDK_ROOT` to the installed
 tool locations. `DH2_OUTPUT_APK` may select the local signed output path. Then
@@ -95,4 +95,4 @@ was validated on Android 17 by this Test 7 run.
 
 On the 16,384-byte-page Android 17 emulator, bundled cache setup also completed,
 but the wrapper's explicit page-size guard blocked game launch. The 16 KiB
-translator port remains separate. No Fold7 device test was run.
+translator port remains separate. No physical-device test was run.

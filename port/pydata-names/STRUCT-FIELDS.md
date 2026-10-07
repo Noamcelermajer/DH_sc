@@ -58,7 +58,7 @@ These tests pass on [host](../lua-runtime/structs-host-execution-validation.json
 [Android 17 / 16 KiB](../lua-runtime/structs-android-16k-execution-validation.json).
 Each emulator verifies all six staged script/list/assertion/runner hashes before
 execution. Both use the same source-built x86_64 runner. ARM64 is cross-built with
-16 KiB load alignment, without hardware execution. No Fold7 is tested.
+16 KiB load alignment, without hardware execution. No physical-device test was run.
 
 Updated regressions pass for all 8,863 array-name queries, 5,608 constants, 504
 arithmetic vectors and 220 compilation inputs on host and both Android page
@@ -82,5 +82,5 @@ python3 port/lua-runtime/build.py --host --sanitize --report /path/to/build.json
 python3 port/lua-runtime/tests/structs_corpus.py --runner /path/to/runner --report /path/to/run.json
 ```
 
-Tracing uses the owner's exact original library and Unicorn/pyelftools. Source
+Tracing uses the separately supplied original library and Unicorn/pyelftools. Source
 builds and the three-script execution test use only checked repository sources.

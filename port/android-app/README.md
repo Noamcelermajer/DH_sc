@@ -7,8 +7,8 @@ The current local source-built debug APK is
 `ea9d0aef09125f0dac6b4cdb3d37727aae277e6bdabd2faf92b56e219d09583b`). It
 targets API 37 with minimum API 26, includes `arm64-v8a` and `x86_64`, and its
 native libraries pass 16 KiB ELF load alignment. This checkpoint stays local;
-it has not been uploaded to Drive. Rebuild it from the repository root with JDK,
-Android SDK 37, Build Tools 37.0.0, NDK r29 and the owner-supplied extracted
+ Rebuild it from the repository root with JDK,
+Android SDK 37, Build Tools 37.0.0, NDK r29 and the separately supplied extracted
 cache:
 
 ```powershell
@@ -37,7 +37,7 @@ APK passed three open/render/return cycles with camera orbit. It also rendered
 all 18 infected actor model/clip pairs and passed the SWAMP movement,
 pause/resume, off-floor rejection, intro trace and return checks on each page
 size. Installed APK hashes matched; filtered app/EGL/GLES errors were zero.
-Pinch zoom and physical-device behavior remain unverified. No Fold7 was tested. See
+Pinch zoom and physical-device behavior remain unverified. No physical-device test was run. See
 [Infected Village scope](INFECTED-VILLAGE-PREVIEW.md) and the exact current APK
 reports for [Infected Village](infected-village-current-apk-runtime-validation.json),
 [actor previews](infected-actor-current-apk-runtime-validation.json), and
@@ -91,9 +91,9 @@ not part of this lifecycle assertion. See the tracked
 [lifecycle summary](gameplay-activity-current-apk-runtime-validation.json) and
 the local screenshots/logs under `build/gameplay-lifecycle-api37-*`.
 
-These are Android 17/API 37 x86_64 4 KiB and 16 KiB emulator results, not Fold7
+These are Android 17/API 37 x86_64 4 KiB and 16 KiB emulator results, no physical-device test is claimed
 or physical-device results. The candidate APK itself is in the ignored local
-`port/android-app/build/` folder; it is not committed or uploaded to Drive.
+`port/android-app/build/` folder; it is not committed to the repository.
 
 The cache and original APK are supplied inputs, not files in this repository.
 `build.py` checks the exact selected input hashes before packaging. See the root
@@ -326,7 +326,7 @@ python port/android-app/tests/animation_runtime.py --adb PATH_TO_ADB --serial em
 Build the local [UI snapshot helper](tests/ui-helper/README.md) first. It reads
 the live playback interface without requiring it to become idle.
 The script requires an emulator, installs the selected APK, copies three
-owner-supplied fixtures to Downloads, selects them through the system file
+external fixtures to Downloads, selects them through the system file
 picker, checks the midpoint slider and Play/Pause, and compares the installed
 APK hash. It saves screenshots and runtime logs locally. Visually inspect
 the start and midpoint screenshots; UI text alone does not prove rendering.
@@ -364,7 +364,7 @@ This fallback selects one locally resolved controller. It does not assemble
 modular equipment, skin normals or provide gameplay. The
 older scene runtime records below belong to earlier APKs.
 
-This is a new Android APK built from the repository's checked C++ BRES, scene, mesh, material and PVRTC readers. It uses a small Java file-picker UI and an OpenGL ES 2.0 shader to draw checked static triangle commands from an owner-supplied BRES file. It walks the scene hierarchy, applies each command's world transform, retains all three world coordinates, and combines the triangles into one bounded diagnostic draw. The preview has an oblique 3D camera, depth buffer, and touch rotation. The native libraries are built for `arm64-v8a` and `x86_64`, and the manifest targets API 37. The APK contains no original game code, game assets, cache, or proxy engine.
+This is a new Android APK built from the repository's checked C++ BRES, scene, mesh, material and PVRTC readers. It uses a small Java file-picker UI and an OpenGL ES 2.0 shader to draw checked static triangle commands from an external BRES file. It walks the scene hierarchy, applies each command's world transform, retains all three world coordinates, and combines the triangles into one bounded diagnostic draw. The preview has an oblique 3D camera, depth buffer, and touch rotation. The native libraries are built for `arm64-v8a` and `x86_64`, and the manifest targets API 37. The APK contains no original game code, game assets, cache, or proxy engine.
 
 From the repository root, with JDK, Android SDK platform 37, build-tools 35, and NDK r29 installed:
 

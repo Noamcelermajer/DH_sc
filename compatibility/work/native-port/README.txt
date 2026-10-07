@@ -1,5 +1,5 @@
 DUNGEON HUNTER 2 — INDEPENDENT ARM64 PORTING PROTOTYPE
-Target requested: Samsung Galaxy Z Fold7, One UI 8.5.
+Target requested: Samsung physical Android test device, tested Android system UI.
 Work performed: 2026-10-01.
 
 STATUS
@@ -14,7 +14,7 @@ checkpoint does not make that APK run on an ARM64-only system.
 
 WHAT CHANGED
 
-Four small functions were translated directly from the user's original ARM32
+Four small functions were translated directly from the reference ARM32
 library to ARM64 assembly, independently of ZettaBridge:
 
   luaO_log2          -> dh2_log2_u32
@@ -68,7 +68,7 @@ build.py uses Zig's bundled assembler/linker for a no-libc, no-framework probe.
 Zig's aarch64-linux-musl target selects the freestanding ELF output; this library
 does not use musl and is not an Android runtime implementation.
 
-REMAINING WORK FOR A REAL FOLD7 BUILD
+REMAINING WORK FOR A REAL ANDROID BUILD
 
 1. Reconstruct and port the reachable engine and its global data, preserving
    32-bit pointer/structure semantics or explicitly converting all related

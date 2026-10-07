@@ -62,7 +62,7 @@ ASan/UBSan/float-cast checks pass with immediate failure on errors.
 Both Android runs use the exact source x86_64 standalone runtime and verify all
 30 staged file/list/assertion/runner hashes. The 220-input script parse corpus
 and 504 arithmetic vectors pass too. ARM64 is built, without runtime testing.
-No Fold7 or physical device is used. This runtime is not packaged in the source
+No physical device is used. This runtime is not packaged in the source
 preview APK yet; full source-built gameplay remains unfinished.
 
 ## Reproduce
@@ -75,7 +75,7 @@ python3 port/pydata-constants/tests/corpus.py --help
 python3 port/lua-runtime/tests/constants_corpus.py --help
 ```
 
-Original tracing needs the owner's library, Unicorn/pyelftools and the existing
+Original tracing needs the separately supplied library, Unicorn/pyelftools and the existing
 host oracle. Ordinary source builds need none of those proprietary inputs.
 Cache tests use owner files; the trace records exact hashes and decoded rows.
 The repository [rights statement](../../RIGHTS.md) applies to recovered data.

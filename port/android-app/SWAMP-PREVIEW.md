@@ -161,7 +161,7 @@ pause/resume, edge rejection, trace and return checks on Android 17/API 37 with
 records both exact-build runs; [older multi-page-size evidence](swamp-preview-runtime-validation.json)
 belongs to an earlier APK. Host tests cover source water/hole tags,
 baseline-mask filtering, module-zero boundary rollback, and a separate
-adjacent-floor hole rollback fixture. No Fold7 was tested; ARM64 execution on
+adjacent-floor hole rollback fixture. No physical-device test was run; ARM64 execution on
 physical hardware remains unverified.
 
 Keep authored replacement behavior separate from cache-derived records and

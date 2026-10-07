@@ -42,7 +42,7 @@ are not executed. Source ARM64 comparisons run in Unicorn; hardware is untested.
 
 Build with `python3 build.py --host --report host-build-validation.json` under
 Linux, or `python build.py --ndk <Windows-NDK> --report android-build-validation.json`.
-The differential tool requires the owner original library, the existing oracle,
+The differential tool requires the separately supplied original library, the existing oracle,
 both compiled libraries, and optionally the owned host Lua runtime. Its exact
 hashes, original instruction ranges and dependency scope are in
 `differential-validation.json`.

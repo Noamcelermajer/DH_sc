@@ -49,7 +49,7 @@ seek, paused 0/50/100% mixing, advancing Play at 100%, and stable Pause on both
 page sizes. All six mix screenshots were visually inspected. See
 [character regression evidence](scripts-animation-runtime-validation.json).
 ARM64 is built and alignment checked; ARM64 hardware execution is unverified.
-No Fold7 was tested.
+No physical-device test was run.
 
 ## Remaining work
 
@@ -69,4 +69,4 @@ python port/android-app/tests/animation_runtime.py --help
 ```
 
 Build with the Android SDK/NDK and JDK paths accepted by the builder. The tests
-require a running Android 17 emulator, adb, and the owner's cache fixtures.
+require a running Android 17 emulator, adb, and the external cache fixtures.

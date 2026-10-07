@@ -1,6 +1,6 @@
 # Verified historical source import
 
-The older Drive recovery handoff was retrieved on 2026-10-02. Its `Dungeon-Hunter-2-Source-Recovery.zip` passed SHA-256 `b3ff974e2b74f50387465d5665f60d56ac79c29a449c6299745461998045c4d8` and a full CRC check of 3,388 members (79,687,588 uncompressed bytes). `assembly.tar.gz` and `symbols.tar.gz` matched SHA-256 `e7bdc73d7db5c0b8320815f92c7d27c9c86c17710649645c027a4df4081e5601` and `f2dd9d64a9f19a66cfd05e194d30c7482c399ef07d7b488d737ac929652481ca`. The bundle archives remain outside Git.
+The source-recovery bundle was retrieved on 2026-10-02. Its `Dungeon-Hunter-2-Source-Recovery.zip` passed SHA-256 `b3ff974e2b74f50387465d5665f60d56ac79c29a449c6299745461998045c4d8` and a full CRC check of 3,388 members (79,687,588 uncompressed bytes). `assembly.tar.gz` and `symbols.tar.gz` matched SHA-256 `e7bdc73d7db5c0b8320815f92c7d27c9c86c17710649645c027a4df4081e5601` and `f2dd9d64a9f19a66cfd05e194d30c7482c399ef07d7b488d737ac929652481ca`. The bundle archives remain outside Git.
 
 The archived `tools/unpack_native.py` restored 3,625 assembly and 71 symbol files in a private working tree. Archived `tools/verify_recovery.py` passed: all 31,018 engine, 1,498 Storm and 10 JNI original named starts were attempted; 31,794, 3,332 and 31 pseudocode functions respectively were emitted, with one engine and one Storm export failure. It also checked 2,164 recovered text/shader hashes and 288 repaired Java source hashes. This is export accounting, not semantic correctness or a build of the game.
 

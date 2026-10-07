@@ -35,7 +35,7 @@ Compressed `.jsonl.gz` files can be read with Python's `gzip` module; readable
 declaration sketches are informational and require review before compilation.
 
 The archived text provenance describes an earlier incomplete cache. It is
-distinct from the later complete 6,833-member owner cache validated in
+distinct from the later complete 6,833-member cache archive validated in
 [COMPLETE-CACHE.md](COMPLETE-CACHE.md). The source-built Android preview still
 uses its own diagnostic shader; this import does not establish original shader
 runtime behavior. [RIGHTS.md](../RIGHTS.md) records provenance and licensing limits.

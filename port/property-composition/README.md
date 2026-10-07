@@ -68,4 +68,4 @@ python3 port/property-composition/tests/differential.py --help
 ```
 
 The differential check requires Unicorn/pyelftools, the original pinned library,
-owner cache, arithmetic oracle and the two compiled source modules.
+external cache, arithmetic oracle and the two compiled source modules.

@@ -1,7 +1,7 @@
 DUNGEON HUNTER 2 — EXPERIMENTAL ARM32 COMPATIBILITY BUILD
 
 Status: partial compatibility work, NOT a verified modern-Android port.
-Built from the APK supplied in this conversation. No game assets were obtained
+Built from a separately supplied APK. No game assets were obtained
 from another source. The supplied cache ZIP was unavailable and was not read.
 
 WHAT WAS DONE
@@ -89,11 +89,10 @@ install this over a copy signed by someone else. Back up existing saves before
 considering removal of the old copy: uninstalling can delete its saves/data.
 Do not treat this test APK as a completed or verified upgrade.
 
-For the next step, supply the missing cache ZIP and the exact phone model and
-Android version. If ADB is already set up, these read-only commands give useful
+Further compatibility work requires the complete cache archive and a compatible Android test environment.
+If ADB is available, these read-only commands give useful
 compatibility details:
 
-  adb shell getprop ro.product.model
   adb shell getprop ro.build.version.release
   adb shell getprop ro.product.cpu.abilist
   adb shell getprop ro.product.cpu.abilist32
@@ -113,20 +112,17 @@ upstream release URLs and checks the hashes recorded during this build.
 
   python download-tools.py
   java -jar tools/apktool.jar b patched -o rebuilt-unsigned.apk
-  java -jar tools/uber-apk-signer.jar --apks rebuilt-unsigned.apk --ks dh2-local-test.p12 --ksAlias dh2-local-test --ksPass dh2-local-test-only --ksKeyPass dh2-local-test-only --out rebuilt-signed
+  java -jar tools/uber-apk-signer.jar --apks rebuilt-unsigned.apk --ks <development-key.p12> --ksAlias <alias> --ksPass <password> --ksKeyPass <password> --out rebuilt-signed
 
-The included local TEST keystore/password are intentionally provided so this
-user can sign follow-up experimental builds consistently. It is not Gameloft's
-key and must not be reused for other applications or production distribution.
+Use a separately managed development signing identity and keep its key material and credentials out of source control. This test APK is not a production release.
 
 To reproduce the patch from the original APK, decode the original to "decoded"
 in a fresh directory, copy patch_compat.py there, and run it. It creates
-"patched" and a reviewable compatibility.patch. The original APK is supplied
-separately by the user and is not included again in this kit.
+"patched" and a reviewable compatibility.patch. The original APK is a separate input and is not included in this kit.
 
-patch_compat.py, decompile_java.py and verify_build.py also document the steps
-used in the working directory. verify_build.py expects the original APK in
-../upload/ and the signed build in signed/, as used during this session.
+patch_compat.py, decompile_java.py and verify_build.py document the steps
+for a local build. verify_build.py reads the original APK from
+a caller-selected input path and reads the signed build from its configured output directory.
 
 PRIMARY ANDROID REFERENCES
 

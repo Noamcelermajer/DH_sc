@@ -66,6 +66,6 @@ The exact original dodge wrapper references a missing helper when combatants
 are set. The checks expect that error; the original file remains unchanged.
 Original Lua/game equivalence, Character construction, damage/result application,
 buff/state/combo updates, events, AI/navigation, streaming, progression, audio,
-saves and full source gameplay remain unfinished. ARM64 hardware and Fold7 were
+saves and full source gameplay remain unfinished. ARM64 hardware and physical device were
 not tested. The playable Test11 packages still use the original ARM32 engine
 through translation; they are a separate compatibility checkpoint.

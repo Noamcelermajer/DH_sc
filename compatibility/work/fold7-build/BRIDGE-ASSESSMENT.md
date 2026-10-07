@@ -1,6 +1,6 @@
-# Is ZettaBridge suitable for DH2 on this Fold7?
+# Is ZettaBridge suitable for DH2 on this physical device?
 
-Test 3 update: its abort stack maps to an original-engine filename bounds check. Original ARM32 caller probes reproduce the same stack with a directory path. Test 4 supplies a narrow file-open guard; the phone retest remains required. See [TEST4.md](TEST4.md). This evidence favors repairing that boundary before replacing the CPU translator.
+Test 3 update: its abort stack maps to an original-engine filename bounds check. Original ARM32 caller probes reproduce the same stack with a directory path. Test 4 supplies a narrow file-open guard; the device retest remains required. See [TEST4.md](TEST4.md). This evidence favors repairing that boundary before replacing the CPU translator.
 
 The present evidence supports continuing with a **locally audited, game-specific compatibility build**, not accepting upstream claims as proof of DH2 support. It does not yet support calling this a stable port.
 
@@ -25,7 +25,7 @@ The most productive targeted paths are:
 2. If modern bionic reports allocator, mutex or stdio misuse, identify the original assumption and fix the narrow boundary. Do not disable allocator checks to mask corruption.
 3. If the fault is a JNI/GLES marshaling error, correct that bridge path and add an isolated original-ARM32 versus host test for it.
 4. If an instruction or concurrency defect is reproducible independently of Android, compare the small guest program against an independent emulator/reference and repair or replace that component.
-5. If rendering is otherwise sound, replace unnecessary Storm graphics/resize hooks gradually with reviewed implementations and compare output/input on the phone. Removing all of Storm at once would also remove existing shader/texture compatibility behavior.
+5. If rendering is otherwise sound, replace unnecessary Storm graphics/resize hooks gradually with reviewed implementations and compare output/input on the device. Removing all of Storm at once would also remove existing shader/texture compatibility behavior.
 
 ## Manual native reconstruction
 
@@ -33,4 +33,4 @@ Reconstructing selected functions in C/C++ or ARM64 is viable and already exists
 
 ## What would justify calling it stable?
 
-First reproduce and fix this exact fairy loading-screen failure. Then pass repeated cold/warm starts, the intro-to-gameplay transition, character selection, movement/combat, area changes, menus/inventory, saving and reloading, audio, pause/resume, screen lock, and folded/unfolded input alignment. Run at least a 30-minute session with memory/frame timing recorded, followed by a saved-game reload. Those gates must run on SM-F966B; host probes alone cannot establish them. Test other Android devices separately rather than generalizing from one phone.
+First reproduce and fix this exact fairy loading-screen failure. Then pass repeated cold/warm starts, the intro-to-gameplay transition, character selection, movement/combat, area changes, menus/inventory, saving and reloading, audio, pause/resume, screen lock, and folded/unfolded input alignment. Run at least a 30-minute session with memory/frame timing recorded, followed by a saved-game reload. Those gates must run on Android 16 test device; host probes alone cannot establish them. Test other Android devices separately rather than generalizing from one phone.

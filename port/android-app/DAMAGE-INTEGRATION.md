@@ -26,7 +26,7 @@ Size: 865,187 bytes. Package: `local.dh2.sourceviewer`.
   in the same process. Installed APK hash matches; no source-app fatal in-run.
 
 These are diagnostic actor integration checks. The native ARM64 damage library
-is compared in Unicorn; device execution is x86_64 emulator execution. No Fold7,
+is compared in Unicorn; device execution is x86_64 emulator execution. No physical device,
 Android 9, ARM64 hardware, original full Lua VM or full gameplay equivalence is
 claimed. Previous health/combat/gear corpus reports retain their old identities.
 

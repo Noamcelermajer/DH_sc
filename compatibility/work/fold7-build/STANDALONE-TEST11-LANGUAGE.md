@@ -3,7 +3,7 @@
 The Test 10 setup screen checked **Prefer English**, but the tested game menu
 still rendered Russian. Its Java `Get_PhoneLanguage()` hook returned English
 (`0`), while the original native `SavegameManager::getLanguage()` preferred
-the `Language` value in `dh2_settings.savegame`. The owner-provided cache has
+the `Language` value in `dh2_settings.savegame`. The cache archive has
 `Language=2`. Its `data/text/menu.english` contains English strings, and its
 `data/text/menu.german` contains Russian strings. These are facts about this
 owner archive; the private cache and original game APK are not committed.
@@ -15,7 +15,7 @@ in the expected position, and the 14 trailing tutorial bytes. If the current
 value is nonzero, it writes the exact original file once to
 `dh2_settings.savegame.before-prefer-english.bak`, verifies the backup, changes
 only that four-byte value to zero, and atomically replaces the installed
-settings file. The owner ZIP and character/level saves are untouched. An
+settings file. The cache archive and character/level save files are unchanged. An
 unknown format or storage failure leaves the settings as they were and does
 not prevent game launch; the diagnostic session records the outcome.
 
@@ -24,7 +24,7 @@ The native behavior is visible in
 `__loadOptions`, `getLanguage`, and `loadSettings` use the saved option, while
 `__saveOptions` and `__saveTutorials` write the option records followed by 14
 bytes. The earlier phone-language hook is in `GameTrace.java`. The specific
-owner settings fixture is 294 bytes, SHA-256
+settings fixture is 294 bytes, SHA-256
 `3cb97b47cc9853d65dc596ccc0a8b715b82fe4794812435673a921b215f07c4a`;
 only the four-byte field at offsets 207–210 is eligible to change. For this
 fixture, `02 00 00 00` becomes `00 00 00 00`, so only byte 207 differs.
@@ -44,7 +44,7 @@ source/build validation; emulator results for the signed APK are below.
 
 ## Build identity
 
-Test 11 uses the same verified unsigned Test 10 guest APK and owner cache ZIP
+Test 11 uses the same verified unsigned Test 10 guest APK and cache archive
 as Test 10. Their SHA-256 values are respectively
 `57cefd15cba47116a98fa96e406ba8d8a4ef90fb0e82185802a8f09210ba2b7e`
 and `3fdf4e4c21d45a780a7c35fb4042abde0e88e76bf75416aad1f227481560b679`.
@@ -103,4 +103,4 @@ source change does not retroactively change the published Test 10 artifact.
 
 This is a compatibility wrapper around the original ARM32 engine, not a
 complete source-built game. The ownership and license limits in `RIGHTS.md`
-still apply. No Fold7 or other physical device was used for this finding.
+still apply. No physical-device testing was included in this finding.

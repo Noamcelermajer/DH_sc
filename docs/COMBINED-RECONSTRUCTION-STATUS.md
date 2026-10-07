@@ -78,7 +78,7 @@ Reconstruct Dungeon Hunter 2's game logic and engine behavior as maintainable, b
 
 Maintain an evidence-backed ledger from original symbols, addresses, data layouts and scripts to reconstructed implementations. Distinguish recovered evidence, compilable implementation, isolated behavior tests and live gameplay integration. Exercise actual movement, combat, levels, progression, saves and Android lifecycle behavior; investigate and fix failures. Use upstream Irrlicht to help reconstruct the game's customized `glitch::` engine, preserving known custom behavior rather than assuming upstream is interchangeable.
 
-Keep private documents and their contents outside Git. Publish coherent source milestones on the reconstruction branch. Do not update PR #1 or upload to Drive. Runtime validation for this project uses the modern Android 17/API 37 16 KiB development emulator; no Fold7 or 4 KiB test is requested.
+Current runtime validation targets Android 17/API 37 emulators. Physical-device behavior remains unverified.
 
 ### Completion gates
 

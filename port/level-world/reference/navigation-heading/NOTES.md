@@ -2,7 +2,7 @@
 
 `navigation_heading.cpp` reconstructs `GameObject::LookTowards` (0x393b1c,
 204 bytes) and `GameObject::SetHeadingDirection` (0x393be8, 260 bytes).
-The adjacent manifest binds those ranges to the owner-supplied original ELF.
+The adjacent manifest binds those ranges to the original ELF input.
 These are reconstructed implementations, not recovered historical source text.
 
 LookTowards ignores Z. A zero XY vector retains the previous angle. On the

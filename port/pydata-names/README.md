@@ -64,7 +64,7 @@ Each Android run verifies all 74 staged segments/list/assertion/runner hashes;
 the original 35 files are also hash-checked before slicing. The updated runtime
 passes all 5,608 constant queries, 504 arithmetic vectors and the 220-input script
 parse corpus on both page sizes. Original game scripts are unexecuted. ARM64
-is cross-built, without a hardware run. No Fold7/physical device is tested.
+is cross-built, without a hardware run. No physical-device is tested.
 Source APK integration and full source-built gameplay remain unfinished.
 
 ## Reproduce
@@ -77,7 +77,7 @@ python3 port/pydata-names/tests/corpus.py --help
 python3 port/lua-runtime/tests/names_corpus.py --help
 ```
 
-Tracing needs the owner's original library, Unicorn/pyelftools and the existing
+Tracing needs the original library, Unicorn/pyelftools and the existing
 host oracle. Source builds need none of those proprietary inputs. Corpus tests
-use owner cache files. The [rights statement](../../RIGHTS.md) applies to recovered
+use external cache files. The [rights statement](../../RIGHTS.md) applies to recovered
 names and registration metadata.

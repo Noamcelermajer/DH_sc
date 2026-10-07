@@ -1,8 +1,8 @@
-# Fold7 test 5: fix absolute paths during model loading
+# device test 5: fix absolute paths during model loading
 
 ## Device evidence from Test 4
 
-The supplied diagnostic ZIP covers 2026-10-01 21:46:15--21:46:49 (Asia/Jerusalem), on SM-F966B, Android 16. Test 4's guard did execute: it rejected the cache root ending in `/`. The earlier CFile basename out-of-range abort is absent. This run ends with SIGSEGV / status 139, replacing Test 3's SIGABRT / status 134.
+The supplied diagnostic ZIP covers 2026-10-01 21:46:15--21:46:49 (Asia/Jerusalem), on Android 16 device. Test 4's guard did execute: it rejected the cache root ending in `/`. The earlier CFile basename out-of-range abort is absent. This run ends with SIGSEGV / status 139, replacing Test 3's SIGABRT / status 134.
 
 Immediately before the fault, the engine prints a failed open for `prince_modular.bdae`. Its filename contains the cache root followed by another absolute `/storage/.../data/3d/characters/prince/prince_modular.bdae` path. The root is duplicated rather than the filename being relative.
 
@@ -14,7 +14,7 @@ There are 11,121 GL calls, an active context, and an earlier GL_INVALID_ENUM (0x
 
 The original `CFileSystem::open` finds a colon to decide whether to bypass its nonempty WorkingDirectory. This recognizes Windows-style absolute filenames, but does not recognize Android/POSIX leading `/`. Model input is opened initially through other paths, then deferred loading reopens the stored absolute filename. At that point this routine prefixes WorkingDirectory again.
 
-The new probe sets the actual exported WorkingDirectory array, then calls the original ARM32 CFileSystem routine through the same ARM64 translator as the APK. Test 4 fails to open a real existing fixture when given its absolute name and a nonempty root. Test 5 opens it and reads the expected bytes. A separate pair reproduces the phone's lowercased `/storage/emulated/0/android/...` spelling using a filesystem alias. These tests use synthetic bytes to validate file access, not a real BDAE parse or GPU draw.
+The new probe sets the actual exported WorkingDirectory array, then calls the original ARM32 CFileSystem routine through the same ARM64 translator as the APK. Test 4 fails to open a real existing fixture when given its absolute name and a nonempty root. Test 5 opens it and reads the expected bytes. A separate pair reproduces the device's lowercased `/storage/emulated/0/android/...` spelling using a filesystem alias. These tests use synthetic bytes to validate file access, not a real BDAE parse or GPU draw.
 
 ## Change
 
@@ -29,7 +29,7 @@ This is the first compatibility build that changes the game engine binary itself
 - Full native library loading, both native initialization entry points with an inert VM, existing shader/string/inline hooks, and 4096 engine helper inputs.
 - Final package CRCs, engine/Storm hashes, bundled runtime equality, application/version metadata, signing and alignment checks.
 
-See the saved test logs and JSON results for outcomes. Native probes do not exercise ART or Android's graphics driver. The Fold7 loading screen and gameplay still require a device retest. Russian menu text, aspect ratio, the earlier GL error, later gameplay and 16 KB host pages remain unresolved or unverified.
+See the saved test logs and JSON results for outcomes. Native probes do not exercise ART or Android's graphics driver. The physical device loading screen and gameplay still require a device retest. Russian menu text, aspect ratio, the earlier GL error, later gameplay and 16 KB host pages remain unresolved or unverified.
 
 ## Device check
 

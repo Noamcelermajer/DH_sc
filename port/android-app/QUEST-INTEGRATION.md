@@ -41,7 +41,7 @@ Original quest data loading/compile, automatic event dispatch, live world counts
 markers/observers, persistence/rewards, loot generation, killer credit/XP, player
 death, full attack/world/AI, progression/saves and complete source gameplay remain
 pending. ARM64 is compared in Unicorn; devices execute x86_64 emulator builds.
-No Fold7, Android 9, ARM64 hardware or full gameplay equivalence is claimed.
+No physical device, Android 9, ARM64 hardware or full gameplay equivalence is claimed.
 
 Browser permission denied the release upload. No release was published from this
 continuation; the exact upload authorization question remains pending.

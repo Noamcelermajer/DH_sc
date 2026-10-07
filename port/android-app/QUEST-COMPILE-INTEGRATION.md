@@ -48,7 +48,7 @@ Original Character/world loading/ID resolution, collection/cache lifecycle,
 conditions, automatic event dispatch, markers/observers, persistence/rewards,
 loot generation, killer credit/XP, player death, full attack/world/AI,
 progression/saves and complete source gameplay remain pending. ARM64 compares
-in Unicorn; devices execute x86_64 emulator builds. No Fold7, Android 9, ARM64
+in Unicorn; devices execute x86_64 emulator builds. No physical device, Android 9, ARM64
 hardware or full gameplay equivalence is claimed.
 
 Browser permission denied the release upload. No release was published from this

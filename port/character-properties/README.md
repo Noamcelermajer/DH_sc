@@ -1,6 +1,6 @@
 # Character property records and sheet operations
 
-Source C reads the owner's complete `character_properties_pyarray.bin` and
+Source C reads the complete original `character_properties_pyarray.bin` and
 provides owned 224-integer sheets. Original record vtables and ARM32 pointers
 are absent from the source representation. This is a standalone component;
 entity ownership, Lua object callbacks,
@@ -30,7 +30,7 @@ but their gameplay consumers are not implemented. See
 [reader trace](../../reports/character-property-reader-trace.json).
 
 Virtual stream reads and bounded zeroed allocation/disposal are explicit models.
-This does not run entities or the original game. The file belongs to the owner's
+This does not run entities or the original game. The file belongs to the original
 cache and is supplied separately under the repository's [rights scope](../../RIGHTS.md).
 
 ## Property operations
@@ -66,4 +66,4 @@ python3 port/character-properties/tests/differential.py --help
 
 Tracing needs Unicorn/pyelftools and the pinned original library. Source builds
 use only repository C sources. Differential checks require the original library,
-owner cache, existing arithmetic oracle and the two compiled source modules.
+external cache, existing arithmetic oracle and the two compiled source modules.

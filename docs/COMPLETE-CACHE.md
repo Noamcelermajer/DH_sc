@@ -1,6 +1,6 @@
-# Locally supplied complete cache ZIP — 2026-10-02
+# Complete cache validation
 
-The owner supplied a separate ZIP named `Dungeon-Hunter-2-HD-v1-0-2-cache (1).zip` on the local machine. It is **not** the ten-part, 314,572,800-byte prefix described in the earlier recovery reports. The ZIP is an additional input; it is not committed to this repository.
+A complete game cache archive was used for this validation. It is separate from the ten-part, 314,572,800-byte prefix described in earlier recovery reports, and is not included in this repository.
 
 `tools/verify_cache_zip.py` read every member to EOF, checked ZIP CRCs and lengths, rejected duplicate/case-colliding or unsafe paths, and recorded the archive SHA-256. The reproducible result is in [`reports/complete-cache-archive.json`](../reports/complete-cache-archive.json).
 
@@ -29,4 +29,4 @@ To verify another copy without extracting it:
 python tools/verify_cache_zip.py /path/to/cache.zip --report /path/to/audit.json
 ```
 
-The archive includes saves and game assets. Keep the input ZIP private unless the rights holder authorizes distribution; this report contains counts and checksums only. The earlier partial-cache test reports remain valid for their exact input and are not silently reinterpreted as full-cache results.
+The archive includes copyrighted saves and game assets and is not included here. Distribution requires authorization from the rights holder. The earlier partial-cache test reports remain valid for their exact input and are not silently reinterpreted as full-cache results.

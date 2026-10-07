@@ -23,7 +23,7 @@ and cache bytes remain outside Git; see `RIGHTS.md` and
 `STANDALONE-TEST7.md` for the local build prerequisites and provenance.
 
 To reproduce the Test 9 guest, run the existing `patch_storm.py` from a
-restored `compatibility/work/fold7-build` tree, supplying the owner's original
+restored `compatibility/work/fold7-build` tree, supplying the original
 Storm and engine libraries, `--toolchain-bin` pointing to the Android NDK LLVM
 bin directory, and `--output` for the rebuilt Storm library. Then run:
 
@@ -53,7 +53,7 @@ installed with `--abi arm64-v8a`. Bundled cache import completed: 6,835 files
 including generated options and the new completion marker, which contained
 the pinned cache ZIP SHA-256. The setup UI showed "Bundled cache import
 completed". The marker proves that this ZIP finished importing; it is not a
-later cryptographic scan of extracted files. No Fold7 device was tested.
+later cryptographic scan of extracted files. No physical-device test was run.
 
 The first game launch completed the cinematic and reached character selection,
 where logcat repeatedly recorded `DH2FileGuard recovered repeated root` and
@@ -65,7 +65,7 @@ the 2424x1080 emulator display cropped the game menu vertically and put
 the full main menu. This setting is needed for the current emulator layout;
 it remains an experimental user option in the tested APK.
 
-From that full menu, `Start Game` and `Single Player` opened the owner's `wolf`
+From that full menu, `Start Game` and `Single Player` opened the existing `wolf`
 save, loaded the swamp level to 100%, and displayed live 3D gameplay and HUD.
 A joystick drag moved the prince several tiles and shifted the camera. Pause
 opened a working menu; confirming return to the main menu updated the visible

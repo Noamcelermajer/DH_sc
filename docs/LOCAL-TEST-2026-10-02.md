@@ -1,6 +1,6 @@
 # Test 5 local Android check — 2026-10-02
 
-This check used the published Test 5 APK (`e6b81ec649e25bb32c6ec7f3f477d5ef1c2a79b7af43b7ca7643518c5f5e1b8d`) and the separately verified cache ZIP (`3fdf4e4c21d45a780a7c35fb4042abde0e88e76bf75416aad1f227481560b679`). It did not run on the Galaxy Z Fold7. Raw emulator logs and the exported diagnostic ZIP are retained outside Git because they are test artifacts, not source.
+This check used the published Test 5 APK (`e6b81ec649e25bb32c6ec7f3f477d5ef1c2a79b7af43b7ca7643518c5f5e1b8d`) and the separately verified cache ZIP (`3fdf4e4c21d45a780a7c35fb4042abde0e88e76bf75416aad1f227481560b679`). It did not run on the physical Android test device. Raw emulator logs and the exported diagnostic ZIP are retained outside Git because they are test artifacts, not source.
 
 ## x86_64 Google APIs API 30 emulator
 

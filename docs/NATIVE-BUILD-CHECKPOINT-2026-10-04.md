@@ -23,7 +23,7 @@ builds. They must not be applied to this APK.
 ## Runtime verification
 
 Only `emulator-5558`, Android 17/API 37 x86_64, `getconf PAGE_SIZE=16384`, was
-used. No Fold7 or 4 KiB runtime test was run for this checkpoint.
+used. No physical device or 4 KiB runtime test was run for this checkpoint.
 Fingerprint: `google/sdk_gphone16k_x86_64/emu64xa16k:17/CP41.260828.004.A7/16296984:userdebug/dev-keys`.
 
 `prince_bank_smoke.py` passed on this exact APK:

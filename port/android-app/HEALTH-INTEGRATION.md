@@ -10,7 +10,7 @@ translator.
 - ARM64 and x86_64 source libraries, target SDK 37, minimum SDK 26, checked
   16 KiB ELF/ZIP alignment, verified APK v2/v3 signatures.
 - Tested on Android 17 / SDK 37 x86_64 emulators with 4 KiB and 16 KiB pages.
-  No Fold7 testing; physical ARM64 runtime is unverified.
+  No physical-device test was run; ARM64 runtime behavior is unverified.
 
 ## Use your own cache
 

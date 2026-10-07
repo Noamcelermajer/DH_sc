@@ -1,6 +1,6 @@
 # Rebuild the experimental 16 KiB Test11 package
 
-This is the source-only delta from the [Test11 standalone build](../work/fold7-build/STANDALONE-TEST11-LANGUAGE.md). Use DH_sc commit `8b47d20` or a descendant with the same Test11 builder and `LanguagePreference.java`. Keep the ordinary `compatibility/work` source and its 4096-byte launch guard unchanged. All owner media, toolchains, runtime bundles, and signing material stay in a private build directory outside Git.
+This is the source-only delta from the [Test11 standalone build](../work/fold7-build/STANDALONE-TEST11-LANGUAGE.md). Use DH_sc commit `8b47d20` or a descendant with the same Test11 builder and `LanguagePreference.java`. Keep the ordinary `compatibility/work` source and its 4096-byte launch guard unchanged. All media, toolchains, runtime bundles, and signing material stay in a private build directory outside Git.
 
 ## Pinned inputs and native source
 
@@ -26,4 +26,4 @@ Build ZettaBridge's `zbridge` target with CMake/Ninja, Android NDK r29, Boost he
 3. Put the rebuilt 16 KiB `libzbridge.so` into the copy's `research/ZettaBridge/build/launcher/jniLibs/arm64-v8a/`. Keep the rest of the prepared runtime bundle unchanged.
 4. Set `DH2_TEST10_GUEST_APK`, `DH2_CACHE_ZIP`, `DH2_ANDROID_SDK_ROOT`, `DH2_ANDROID_JAR`, `DH2_JDK_ROOT`, and `DH2_OUTPUT_APK` in the build environment. Give `DH2_OUTPUT_APK` a new filename so the tested Test10 package is not overwritten. Run `python fold7-build/build_apk.py` from the copied work directory.
 
-The builder signs and checks the APK with `apksigner verify`, then checks `zipalign -c -P 16 4`. Independently verify versionCode 14, arm64-v8a, the packaged bridge hash, the two pinned owner-input hashes, and the compiled 16384-byte guard before installation. The exact signed APK tested on Android 17/API 37.2 16 KiB emulator had SHA-256 `d688b2a9f4da0c387ea1ddb0448d9de95dd3e00cdac224fca1b1a6e01fa2898e`; another local signing key or build environment can change the APK hash. Treat this as an experimental emulator build while the [16 KiB port blockers](README.md#code-level-blockers-before-app-integration) remain open.
+The builder signs and checks the APK with `apksigner verify`, then checks `zipalign -c -P 16 4`. Independently verify versionCode 14, arm64-v8a, the packaged bridge hash, the two pinned input hashes, and the compiled 16384-byte guard before installation. The exact signed APK tested on Android 17/API 37.2 16 KiB emulator had SHA-256 `d688b2a9f4da0c387ea1ddb0448d9de95dd3e00cdac224fca1b1a6e01fa2898e`; another local signing key or build environment can change the APK hash. Treat this as an experimental emulator build while the [16 KiB port blockers](README.md#code-level-blockers-before-app-integration) remain open.
