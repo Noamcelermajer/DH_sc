@@ -5,7 +5,7 @@ Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,096,688 bytes, SHA-256 `16BE7D0BCC6BD5354A15A4139F4F7F84231DF4FFDDA5ECA67553478F3DDE7969`). API 37 ARM64/x86_64 build, debug signature and 16 KiB ZIP/ELF alignment pass. API 37 x86_64/16 KiB smoke passes one Knight through original menu taps, development Crypt, movement, occupied-slot reopen and Home/resume; it verifies Character, Quest owner and Save association retention. Mask 1 attaches a nonzero profile before mask 4 dispatches eight section requests and two state requests. The generated profile has metadata only; no payload was restored. Attack still says “Walk closer to an enemy,” so combat was not tested. Original `_AddCharacter`/`NativeStartGame`, campaign startup and live `Character::InitPost` remain open. On this long Windows checkout, build with `-Pdh2SourceRoot=<short mapped checkout>`.
+**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (148,164,672 bytes, SHA-256 `AFB9694BA89422B3B917D2896F33996FB93E3471AF6A1F2892DF830CAA3DE581`). API 37 ARM64/x86_64 build, debug signature and 16 KiB ZIP/ELF alignment pass. The latest menu/Crypt smoke applies to the preceding APK, not this rebuild; it covered one Knight through menu, movement, occupied-slot reopen and Home/resume. Original `_AddCharacter`/`NativeStartGame`, campaign startup, live `Character::InitPost` and full gameplay remain open. On this long Windows checkout, build with `-Pdh2SourceRoot=<short mapped checkout>`.
 
 **Latest published APK:** [Android 17 equipment-restore and guarded-loot checkpoint](https://github.com/Noamcelermajer/DH_sc/releases/download/native-equipment-loot-2026-10-07/app-debug.apk), tag `native-equipment-loot-2026-10-07`. Its equipment mutation/UI, weapon visuals, full Kill rewards, skills and live pickup remain open.
 
@@ -36,12 +36,12 @@ still require live gameplay integration. All final completion gates remain open.
 | Rendering, resources and animation | 13 | 6 |
 | World, physics, navigation and factories | 16 | 8 |
 | Character properties, equipment and state | 32 | 6 |
-| Lua, skills and enemy AI | 49 | 14 |
+| Lua, skills and enemy AI | 50 | 14 |
 | Combat, death, loot and progression | 18 | 8 |
-| Quests, campaign, UI, audio and saves | 39 | 10 |
+| Quests, campaign, UI, audio and saves | 40 | 11 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **190** | **74** |
+| **Total scoped tasks** | **192** | **75** |
 
 Prior verified source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. Its `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`.
 
@@ -186,7 +186,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [ ] Add mutation-time equipment redraw against the same draw/pose owner; then check equip/unequip. No second scene or pose owner.
 - [x] Route saved PROP into the same gameplay Save and PlayerCombat PropertyRules/PropertyState: 753 selected-host checks, 26 saved fields, no generic fallback, and reached-prefix retention on truncation. Live InitPost remains unbound.
 - [x] Select `CharAI::UpdateSkills` (`0x3d8a04`) against the existing Save map, live FSM gates, difficulty and borrowed vector/script callbacks; five focused host cases pass. This source kernel is selected but has no live Android InitPost call site.
-- [ ] Bind Character InitPost before InitScriptProcess: preserve SG_Load/GEAR/property order, map-0 slot-0→skill-row-0 setup, conditional IncSkill and pre-init CharAI callbacks through the same Save/V4/PropertyState; current Android Player setup still eagerly runs Load then InitProcess.
+- [ ] Bind Character InitPost before InitScriptProcess: preserve SG_Load/GEAR/property order, map-0 slot-0→skill-row-0 setup, conditional IncSkill and pre-init CharAI callbacks through the same Save/V4/PropertyState. First connect a real profile/level sequence and provide source Skin lifetime plus Player AddLoot; current Android Player setup is the development path.
 - [ ] Complete Character construction, all property sheet/buff/gear ownership and lifecycle phases.
 - [x] Select Adam's V5 item presentation on existing item identities/table authority; 4,031 presentation and 1,119 power-instance gold replays pass. Native text/localization remains open.
 - [x] Select borrowing weapon queries over sole V4 inventory/properties; 1,000 original cases, both equipment sets and preserved combat fields pass. Native inventory binding remains open.
@@ -272,6 +272,10 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [ ] Complete the surrounding `Character::Update` scheduler/eligibility gates,
   native shared concurrent-AI map and frame ownership; native world setup
   directly invokes the bounded Ghost lifecycle. See the [checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
+- [x] Trace original Ghost pursuit in IDA: Level/Character frame order,
+  unchanged `monster` callbacks, PathTo/FindPath, the `+0x1450` home point,
+  and event-40 body attachment. POMonster-specific constructor/pin policy and
+  the ordinary movement/body owner remain open.
 - [x] Reconstruct ObjectBase culling/remote predicates (2,256 ARM cases) and compose CanUpdate (126 nested ARM cases, 63 guards).
 - [ ] Bind CanUpdate to actual scene/culling, visibility, player/online and
   respawn owners, and invoke it in the native Character frame.
@@ -366,6 +370,8 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Reuse Adam v69's original menu, name/class selection and real Single Player screen; create and reopen Warrior/Rogue/Mage profiles into development Crypt on API37/16KiB.
 - [x] Render original HP/MP/XP timelines from the retained live player property sheet for all three classes, after the single world update/render.
 - [x] Verify menu/world Back, occupied-slot cold restart and Home/resume through actual UI input; preserve and restore existing emulator saves.
+- [x] Resolve the IDA `NativeStartGame` save/difficulty/LevelList/LoadLevel plan against the actual 51-row table: 27 host assertions pass, including row 41 SWAMP, row 23 Crypt and online/offline flags. Android does not call the plan yet.
+- [ ] Carry the plan through authored UI to a typed source-level transition and loader boundary; apply save effects through the canonical Save in original order. Keep development Crypt until the selected row has a supported parser/factory path.
 - [ ] Complete original NativeStartGame/Application.LoadLevel, difficulty/location/quest handoff and full gameplay startup.
 - [ ] Restore title/menu flow, character creation/selection, HUD, inventory, skill and quest interfaces.
 - [ ] Complete touch controls, input mapping, orientation/window/lifecycle behavior for the final app.
@@ -431,11 +437,11 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 ## Immediate work order
 
-1. Add the real Character InitPost phase to the current Android Player owner; connect the selected pre-init `UpdateSkills` kernel at its source call site.
-2. Bind the normal existing-profile save writers and complete LevelUp before enabling XP awards that can cross a threshold; then live-verify event4 and connect objectives/outer event2 in source order.
-3. Connect per-enemy Character/CharAI/AIS owners to the Level frame and implement autonomous acquisition, pursuit, combat and death.
-4. Finish campaign progression, factories/content, UI/audio, saves and mod examples; play an original level through its exit.
-5. Complete campaign coverage, clean builds and physical ARM64 release tests.
+1. Carry `NativeStartGamePlanV1` into a typed transition and source loader/factory boundary; preserve Crypt until an authored row loads successfully.
+2. Run Character InitPost with the real profile/level sequence, source Skin lifetime and Player AddLoot provider; connect `UpdateSkills` in source order.
+3. Bind existing-profile save writers and complete LevelUp before threshold-crossing XP; then verify event4 and connect objectives/outer event2.
+4. Connect ordinary Character/CharAI/AIS owners to the Level frame and implement pursuit, combat and death with source body lifetime.
+5. Finish campaign content/UI/audio/saves/mod examples, play an original level to its exit, then run clean and physical ARM64 release validation.
 
 Update the relevant checkboxes only after their stated verification passes. Keep
 the detailed artifact-specific proof in checkpoint documents and reports.
