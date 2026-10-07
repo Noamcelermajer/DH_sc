@@ -20,6 +20,14 @@ endif()
 add_library(dh2_level_world SHARED world.cpp objects.cpp navigation.cpp navigation_search.cpp navigation_world.cpp navigation_path.cpp navigation_motion.cpp navigation_objects.cpp navigation_avoidance.cpp navigation_producers.cpp navigation_heading.cpp navigation_controller.cpp physical_controls.cpp body_transform.cpp subobjects_update.cpp controller_physical.cpp character_body_config.cpp collision.cpp octree.cpp selector.cpp floor_source.cpp floors.cpp)
 target_sources(dh2_level_world PRIVATE ../floor-types/floor_types.cpp)
 target_sources(dh2_level_world PRIVATE source_level_layout.cpp ../world-data/world.cpp ../world-data/source_layout_adapter.cpp)
+if(TARGET dh2_scene_materials)
+ # The Android renderer uses the source Module root path to build real
+ # per-module Crypt bounds. Keep the portable kernels in the shared world
+ # library and reuse the app's already-selected scene/BRES decoder.
+ target_sources(dh2_level_world PRIVATE ../world-data/world_scene.cpp ../scene-payloads/scene.cpp
+  module_scene_root_bounds.cpp crypt_module_bounds_registry_v1.cpp)
+ target_link_libraries(dh2_level_world PRIVATE dh2_scene_materials)
+endif()
 target_compile_features(dh2_level_world PUBLIC cxx_std_17)
 target_sources(dh2_level_world PRIVATE character_aggro_character_list.cpp character_aggro_object_manager_list.cpp)
 target_sources(dh2_level_world PRIVATE physical_world.cpp physical_lifecycle.cpp native_body.cpp visual_motion.cpp move_state.cpp decor_body_config.cpp visual_timeline.cpp actor_rotation.cpp actor_runtime.cpp actor_playback.cpp decor_scene.cpp character_scene.cpp)
@@ -52,7 +60,8 @@ target_sources(dh2_level_world PRIVATE
  character_enemy_spotted.cpp monster_external_script_session.cpp
  character_ai_set_target.cpp character_ai_relations.cpp character_ai_in_combat.cpp
  character_aggro_acquisition_prefix.cpp character_ai_sight.cpp ghost_ai_session.cpp character_monster_retarget.cpp
- source_random_lifecycle_v1.cpp ../random/random.c ../lua-numeric/numeric.c)
+ source_random_lifecycle_v1.cpp ../random-level/crypt_mgx_connectivity_v1.cpp
+ ../random/random.c ../lua-numeric/numeric.c)
 
 target_sources(dh2_level_world PRIVATE character_ai_attack.cpp)
 

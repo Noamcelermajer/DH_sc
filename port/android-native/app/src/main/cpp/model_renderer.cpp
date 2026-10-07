@@ -7,6 +7,7 @@
 #include "skinning.hpp"
 #include "modular_skin_catalog.hpp"
 #include "world.hpp"
+#include "../../../../../../port/level-world/crypt_module_bounds_registry_v1.hpp"
 #include "objects.hpp"
 #include "animation_tables.hpp"
 #include "animation_scheduler.hpp"
@@ -170,6 +171,9 @@ std::uint64_t snapshot_checksum(const dh2::data::PropertySheet& sheet){
  std::uint64_t result=14695981039346656037ull;for(auto value:sheet)for(unsigned i=0;i<4;++i){result^=(std::uint32_t(value)>>(8*i))&255;result*=1099511628211ull;}return result;
 }
 std::vector<ObjectGroup> object_groups;
+// Owned source-backup module bounds for the current development Crypt layout.
+// This is not a RoomZone/ObjectManager or actor-membership owner.
+dh2::crypt_module_bounds_registry_v1::Owner active_crypt_module_bounds;
 std::vector<ObjectActor> saved_actors;
 // Stable borrowed projection of the source Character +0x14e8 association.
 // The Save and its LoadOwner remain owned by PlayerCombat; this object owns
@@ -2031,6 +2035,7 @@ void deactivate(){
   if(actor.native_ai&&actor.native_ai->initialization)retired.push_back(actor.native_ai->initialization);
  native_actor_ready=false;clear_actor_world();prince_body={};
  native_world_items.clear();clear_native_world_item_resources();
+ active_crypt_module_bounds={};
  crypt_spawn_script.clear();crypt_trigger_state={};saved_actors.clear();
  release_objects(object_groups);release(draws,images);world_objects.clear();
  actor_skill_catalogue.reset();level={};current_scene={};
@@ -3184,6 +3189,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
   std::vector<Draw> candidate_itemdrop_draws;
   std::map<std::string,unsigned> candidate_itemdrop_roots;
   std::vector<ObjectGroup> candidate_groups;
+  dh2::crypt_module_bounds_registry_v1::Owner candidate_crypt_module_bounds;
   const bool restore=world_mode||resume_world;const auto previous=actor_position;
   const auto previous_heading=heading;float source_spawn_heading=0;
   const auto previous_random=actor_random;
@@ -3260,6 +3266,29 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     auto raw=read(assets,level_assets.bres,source_static_level?"original-cache":"worlds");dh2::resources::BresView view{};
     if(dh2_bres_open(&view,raw.data(),raw.size())!=dh2::resources::BresError::ok)throw std::runtime_error("World BRES rejected");
     dh2::world::Level candidate;std::string error;if(!dh2::world::load(view,selected_descriptor,selected_descriptor_size,candidate,error))throw std::runtime_error(error);
+    if(level_assets.name=="GOTHICUS_CRYPT_01"&&level_assets.development_layout){
+     const auto source_mlx=read(assets,"x07_crypt_backup.mlx","worlds");
+     dh2::crypt_module_bounds_registry_v1::Result bounds_result{};
+     const auto bounds_status=dh2::crypt_module_bounds_registry_v1::build_from_assets(
+       "GOTHICUS_CRYPT_01","worlds/x07_crypt_backup.mlx",
+       source_mlx.data(),source_mlx.size(),raw.data(),raw.size(),
+       &candidate_crypt_module_bounds,&bounds_result);
+     if(bounds_status!=dh2::crypt_module_bounds_registry_v1::Status::complete||
+        bounds_result.module_count!=8||candidate.rooms!=bounds_result.module_count)
+      throw std::runtime_error("Crypt source module bounds differ from the active eight-room development layout");
+     __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+       "Crypt backup MLX module bounds ready | modules %u | scene nodes %llu | geometry %llu | draw buffers %llu | RoomZone/ObjectManager and actor membership remain disconnected",
+       bounds_result.module_count,
+       static_cast<unsigned long long>(bounds_result.scene_nodes),
+       static_cast<unsigned long long>(bounds_result.geometry_instances),
+       static_cast<unsigned long long>(bounds_result.draw_buffers));
+     for(const auto& module:candidate_crypt_module_bounds.modules)
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+       "Crypt module root bounds | index %u | %s | root %s | min %.3f %.3f %.3f | max %.3f %.3f %.3f",
+       module.module_index,module.module_name.c_str(),module.root_id.c_str(),
+       module.bounds.minimum[0],module.bounds.minimum[1],module.bounds.minimum[2],
+       module.bounds.maximum[0],module.bounds.maximum[1],module.bounds.maximum[2]);
+    }
     if(!restore){
       if(source_spawn_bytes.empty())source_spawn_bytes=read(assets,level_assets.spawns,"worlds");
       const auto& spawn_bytes=source_spawn_bytes;std::vector<dh2::world::EntryPoint> entrypoints;
@@ -3846,6 +3875,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       }
     }
     level=std::move(candidate);player=std::move(candidate_idle);walk_player=std::move(candidate_walk);current_scene=std::move(rest);
+    active_crypt_module_bounds=std::move(candidate_crypt_module_bounds);
     actor_position=restore?previous:level.spawn;
     world_mode=true;resume_world=false;walking=false;move_x=move_y=0;heading=restore?previous_heading:source_spawn_heading;movement_steps=blocked_steps=0;
     radius=350;yaw=-1.57f;pitch=.75f;zoom=1;object_epoch=epoch=last_frame=std::chrono::steady_clock::now();sampled_ms=0;frozen=restore?previous_frozen:false;

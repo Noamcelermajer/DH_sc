@@ -5,7 +5,7 @@ Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,833,403 bytes, SHA-256 `FF27D0F5EB51337BC1BF83CAB677C92AAE5CDC4BE907A0CC95871D7CEF239E5C`). API 37 ARM64/x86_64 build; v2 debug signature verifies. It imports SWAMP MLX, nine MGPs and nine MVPs for layout, entrypoints, five source-monster rows and ten static Decor instances. Focused host audits pass; live SWAMP rendering/gameplay is unverified. Source BRES, remaining object records, Character lifecycle/AI and full campaign remain open. Build with `-Pdh2SourceRoot=<short mapped checkout>`.
+**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,841,367 bytes, SHA-256 `DFB31C02F713770BDBEB2D09EA04B831300EA4E1B554356055EA9D783759FBF1`). API 37 ARM64/x86_64 build; 16 KiB ZIP alignment and v2 signature verify. No emulator/device test was run on this APK. Build with `-Pdh2SourceRoot=<short mapped checkout>`.
 
 **Latest published APK:** [Native SWAMP static Decor checkpoint — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-swamp-source-decors-2026-10-07) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-swamp-source-decors-2026-10-07/Dungeon-Hunter-2-native-swamp-decors-api37-debug.apk)). This debug prerelease includes ten source-selected static Decor instances; live SWAMP rendering/gameplay is not verified.
 
@@ -125,6 +125,9 @@ Historical reports retain their original APK identities and test scopes.
 - [x] Load the original authored eight-room Crypt layout into the native app.
 - [x] Parse both current Crypt MGP SpawnPoints into SPWN; fresh Android start selects ID 0 and floor-snaps, while resume preserves saved pose. Host checks and both ABI builds pass; active-object ordering remains open.
 - [x] Import SWAMP row 41's original `.mlx`, nine MGPs and nine MVPs at runtime to rebuild DWLD/SPWN, five direct-monster DACT rows and ten static Decor instances sharing one BDAE with source-selected node roots. DACT matches byte-for-byte; both focused host audits pass; API 37 ARM64/x86_64 APK builds and signature verifies. Conditional/animated objects, other source rows, full Character lifecycle/AI and live rendering remain open.
+- [x] Package all 35 active Crypt rule MGP/MVP references from the original cache with source path, size and SHA-256 provenance; APK entries verify against all 35 hashes.
+- [x] Add the eight-module Crypt backup-MLX root-bounds registry to the Android world-load path. Host probe: 146 scene nodes/127 geometry instances; API 37 ARM64/x86_64 build passes. This does not create Module/RoomZone owners, source memberships or procedural layouts.
+- [x] Parse all 21 cached Crypt MGX definitions and derive byte-exact-link/opposite-direction exit adjacency. Host fixture: 201 checks, 35 exits and 160 directed candidate-exit records; selected into `dh2_level_world`. Exit positions remain unmodeled.
 - [x] Verify the selected-library DACT/world actor regression resolves the five source-authored SWAMP Monsters and model dictionary entries.
 - [ ] Start the current SWAMP APK on Android and verify actor load, placement and animation in gameplay; no live run has been made.
 - [x] Parse source `floortypes` with IDA-confirmed duplicate/key/quote behavior, apply native type masks, and make default floor snapping skip void/wall in source order; unknown tags such as `sand` add no mask.
@@ -150,7 +153,7 @@ Historical reports retain their original APK identities and test scopes.
 - [ ] Resolve weighted-template actors and the separate GhostAmbushHallway spawn path.
 - [ ] Finish environment bodies, collision ownership, all module seams and other object types.
 - [ ] Finish all trigger/script commands with real native services.
-- [ ] Reconstruct procedural/random-level generation and original room/module selection.
+- [ ] Reconstruct procedural/random-level generation and original room/module selection. MGX connectivity is implemented, but exit positions, MGP fit/Tile::TrySpawn placement, occupancy/backtracking, source `gDistributions` ordering and MLX serialization remain open.
 - [ ] Connect authored and generated levels to the actual level stack and loading lifecycle.
 - [ ] Complete exits, level transitions, hubs, fast travel and return-to-level behavior.
 
@@ -458,11 +461,11 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 ## Immediate work order
 
-1. Start the current APK once and confirm the ten imported SWAMP Decor instances render at their source placements; the build and resource audits pass, but runtime rendering is not yet verified.
-2. Recover live Crypt Module/ObjectManager/RoomZone ownership and bounds, enroll actors through the existing source adapters, then connect the shared 180 ms CharAI queue and one `ghost_ai_owner` frame to the existing VM/path owner. Current renderer skips gated Ghost frames; `NativeCharAIRegistry` is registration history only. Then connect source event 17 to the mapped callback, bind controller `Stop`/`Attack`, and route named animation hit events to `OnAttack`; the same-VM `OnDied(killer)` adapter is host-tested, but Android lethal hit → loot → event 2 remains open.
-3. Import the remaining source MGP/MVP records and conditions through bounded source adapters, then connect the full object factory/lifecycle path.
-4. Apply canonical Save spawn-clear/save-before-load effects and connect the typed request to source `Application::LoadLevel`/`GSLevel`; run Player Character InitPost with real profile/level, Skin lifetime and AddLoot providers.
-5. Connect skills, existing-profile save writers and LevelUp; finish campaign content/UI/audio/saves/mod examples, play an original level to its exit, then run clean and physical ARM64 release validation.
+1. Turn the retained Crypt root bounds into source Module/RoomZone owners: use ObjectManager identities, `InitObjectList`/`AddInitialObject`, exact center/absolute-AABB behavior, and actor membership.
+2. Connect the shared 180 ms CharAI queue and one `ghost_ai_owner` frame to the existing VM/path owner; then bind Stop/Attack and named hit events. Android still has no live Ghost frame or lethal hit → loot → event 2 path.
+3. Build the generator from the 21 MGX definitions, exact exit graph, `gDistributions`, occupancy/backtracking and source-compatible MLX serialization.
+4. Import remaining object factories/conditions, connect generated/authored levels to the actual loading lifecycle, then finish campaign/save/skills/UI and modding systems.
+5. Validate sustained gameplay on current Android and physical ARM64, then publish reproducible source and release checkpoints.
 
 Update the relevant checkboxes only after their stated verification passes. Keep
 the detailed artifact-specific proof in checkpoint documents and reports.
