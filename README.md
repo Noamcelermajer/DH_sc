@@ -4,9 +4,7 @@ Source-backed C++ ports of selected engine routines and data readers. This is re
 
 ## Branches
 
-- `main` contains the reviewed baseline: three modules with recorded validation.
-- `development` holds ongoing and incomplete project work.
-- `reconstruction/item-world-runtime-2026-10-07` holds the current isolated item-world work. Merge completed work to `development` when it is ready.
+The repository keeps a stable baseline on `main` and uses `development` for ongoing reconstruction work.
 
 ## Reviewed modules
 
