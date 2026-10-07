@@ -1,6 +1,6 @@
 # Exact cache Lua source
 
-The owner's complete cache contains **219 readable source scripts, 900,493
+The complete cache contains **219 readable source scripts, 900,493
 bytes**, under `data/scripts`. Their `.luac` extension does not identify their
 actual encoding: none has a Lua bytecode signature or NUL bytes. All are text;
 217 decode as UTF-8, and two contain single-byte non-UTF-8 characters. Original
