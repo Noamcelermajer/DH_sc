@@ -1,13 +1,13 @@
 # Dungeon Hunter 2 — project completion checklist
 
-Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
+Updated: 2026-10-08. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,524,841 bytes, SHA-256 `1426057656FDBCA32E0BF40D3C5C5C6E0FC8E4D6AAB656D7D09800B3ACE0AB61`). Gradle built the pinned worktree for API 37/target 37 ARM64/x86_64; ZIP integrity and 16 KiB ZIP/ELF alignment pass. This APK has not been run on a device. The preceding menu/Crypt smoke completed its Knight case, then failed during the next class case; ADB lost the emulator before original saves could be restored. Restore the retained on-device transaction before another emulator test. The Ghost query adapter host check and Android native build pass. Original camera, decor/triggers, AI/combat and complete level lifecycle remain open.
+**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,524,841 bytes, SHA-256 `0818D9267D26AD75D21E1BE320B9A92F524BF51EA8FE57FFAF6CC3849F52AAB1`). Gradle built API 37/target 37 for ARM64/x86_64; APK signature and 16 KiB ZIP/ELF alignment pass. Focused melee/loot host tests pass. This exact APK has not been live-tested. Original camera, decor/triggers, autonomous AI and complete level lifecycle remain open.
 
-**Latest published APK:** [Native source world-kernels checkpoint — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-source-world-kernels-api37-2026-10-07) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-source-world-kernels-api37-2026-10-07/app-debug.apk)). Debug prerelease; the smoke result and Crypt limitation are recorded above and in the release notes.
+**Latest published APK:** [Native combat and quest-tail checkpoint — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-combat-quest-tail-api37-2026-10-08) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-combat-quest-tail-api37-2026-10-08/Dungeon-Hunter-2-native-combat-loot-api37-debug.apk)). Debug prerelease; the release notes state that this exact APK has not been live-tested and loot quest-tail providers remain disconnected.
 
 Prior live evidence applies to the previous APK from [commit `d4142762`](https://github.com/Noamcelermajer/DH_sc/commit/d4142762): API37/16KiB emulator tests passed all three class create/reopen/Back/Home-resume flows. A bounded Crypt smoke verified six player hit events with enemy AI disabled. A separate live exchange verified touch movement, seven enemy hits, and a 57-damage ordinary player attack. Neither run tested loot or progression. [Live exchange](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json), [menu](../port/android-native/reports/menu-ui-runtime-smoke-62557f03.json), [combat](../port/android-native/reports/character-combat-smoke-62557f03.json).
 
@@ -34,14 +34,14 @@ still require live gameplay integration. All final completion gates remain open.
 | Inputs, Adam's work and research | 12 | 3 |
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
-| World, physics, navigation and factories | 29 | 9 |
+| World, physics, navigation and factories | 32 | 9 |
 | Character properties, equipment and state | 36 | 8 |
 | Lua, skills and enemy AI | 53 | 15 |
-| Combat, death, loot and progression | 23 | 12 |
-| Quests, campaign, UI, audio and saves | 40 | 11 |
+| Combat, death, loot and progression | 24 | 12 |
+| Quests, campaign, UI, audio and saves | 43 | 11 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **217** | **83** |
+| **Total scoped tasks** | **224** | **83** |
 
 Prior verified source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. Its `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`.
 
@@ -364,6 +364,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Run one live current-build Crypt exchange with automatic enemy melee and normal nearest-target player attack on API37/16KiB; 7 enemy damage events and one 57-point player hit. [Receipt](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json). Equipment-derived damage and the full AI loop remain open.
 - [x] Select Adam's V7 powered-loot creation on V4's caller-owned RNG: 9,931 presentation/power/loot gold replays, 363 actual powered items and 369 shared draws pass. Android compilation passes; native drop/pickup/AddLoot remains open.
 - [x] Compose one original-derived fixed AddLoot entry through the same V4 inventory, V7 power append and V5 value/name path: 147,822 selected-library checks, zero mismatches; original and host each produce one power, value 770 and RNG seed 1302343 after two draws. Text/debug are fixtures; native/full AddLoot remains open. [Report](../reports/branch-audit-2026-10-05/item-loot-backbone-v7-selected-host.json).
+- [x] Host-test a bounded `ItemInventory::AddLoot` adapter over the existing V4/V7 owners: powered row-5 fixture and shared RNG match; rejects mismatched properties/arguments and missing providers, retaining the pending-item prefix on provider failure (106 checks). The direct fixture requests count 1; `_InitEquipment` caller arguments, auto-equip, general callsite integration and live loot remain open.
 - [x] Reconstruct loot-entry percentage classification, class-weighted probability and weighted selection; 320 original ARM32 vs Android ARM64 comparisons, 204 raw-entry checks and exact RNG states pass ([differential](../reports/reconstruction-2026-10-06/loot-entry-selection-v1-arm32-arm64.json), [host](../reports/reconstruction-2026-10-06/loot-entry-selection-v1-host.json)). Recursive AddLootItems and live drops remain open.
 - [x] Add V4-owned world-drop staging outside player inventory and pickup handoff. Original LootTable row 124 (`Gold_01`, Type 13) matches the selected host item/value/RNG; pickup credits its value to wallet gold and retires the staged item ([receipt](../reports/reconstruction-2026-10-07/loot-world-gold-host.json)). Ordinary item pickup preserves ItemInstance identity.
 - [x] Retain V5/V7 loot-power and presentation owners in Android PlayerCombat, borrow the existing process RNG/V4 inventory, and retain each actor's raw `Loot` ID.
@@ -408,12 +409,14 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Verify menu/world Back, occupied-slot cold restart and Home/resume through actual UI input; preserve and restore existing emulator saves.
 - [x] Resolve the IDA `NativeStartGame` plan against the 51-row table and carry Android menu requests through it: 27 host assertions pass; row 41 selects static SWAMP and row 23 selects source-generated Crypt. The API 37 live row-23 run uses a debug-only transient override; campaign save remains unchanged.
 - [x] Apply NativeStartGame numeric and selected-LUSP `SG_Save` effects to the same metadata Save/index; host audit passes 773 checks, API 37 ARM64/x86_64 build and 16 KiB menu/start/movement/reopen smoke pass. No reachable enemy in this smoke; combat remains unverified.
+- [x] Add the bounded GEAR payload writer to the selected `dh2_level_world` library; source field order/encodings and 95-byte fixture pass 293 host checks, including all 95 output truncation prefixes. The original ARM writer is mapped; this test does not execute it.
+- [x] Select raw profile-section assembly over the existing index: host audit verifies lexical tag order, last-duplicate retention, GEAR replacement/round-trip, transactional failure, and the metadata serializer’s seven-tag guard. This utility does not dispatch `Savegame::saveAll` callbacks.
 - [ ] Replace the direct renderer-loader shortcut with `Application::LoadLevel`/`GSLevel`/`Level`, source parser/factory owners, and their remaining providers.
 - [ ] Complete original NativeStartGame/Application.LoadLevel, difficulty/location/quest handoff and full gameplay startup.
 - [ ] Restore title/menu flow, character creation/selection, HUD, inventory, skill and quest interfaces.
 - [ ] Complete touch controls, input mapping, orientation/window/lifecycle behavior for the final app.
 - [ ] Connect music, sound, voice, visual effects and their original timing/lifetimes.
-- [ ] Complete campaign/profile save serialization, load ownership and version handling. Selected host-tested writers now cover CFEE/FAES/FTVL, SKIL, PROP and LVLS over the canonical Save/property/level state; QEST/GEAR writer integration and existing-profile Transport/saveAll persistence remain open.
+- [ ] Complete campaign/profile save serialization, load ownership and version handling. Selected host-tested writers cover CFEE/FAES/FTVL, SKIL, PROP and LVLS; QEST, mask-4 GEAR registration and existing-profile Transport/saveAll persistence remain open.
 - [ ] Support original-save import where its data format is established and compatible.
 - [ ] Verify saves after process death, cold launch, app update and interrupted writes.
 - [ ] Validate every authored/generated level and complete the full campaign playthrough.

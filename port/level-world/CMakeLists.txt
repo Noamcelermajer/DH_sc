@@ -164,7 +164,8 @@ target_sources(dh2_level_world PRIVATE character_level_runtime.cpp character_ini
   ../player-info-level/player_offline_registry_v1.cpp
   ../player-info-level/player_manager_friendly_v1.cpp
   ../player-info-level/player_metadata_prepare_v1.cpp
- player_saved_inventory_v1.cpp character_saved_class_v1.cpp character_gameplay_save_v1.cpp
+ player_saved_inventory_v1.cpp player_save_inventory_v1.cpp
+ character_saved_class_v1.cpp character_gameplay_save_v1.cpp
  character_init_post_player_v1.cpp character_init_final_v1.cpp character_template_random.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_update_all_skills.cpp
  character_ai_update_skills.cpp)
@@ -229,6 +230,12 @@ else()
  target_compile_options(character_init_post_player_v1_audit PRIVATE -Wall -Wextra -Werror)
  add_executable(source_random_lifecycle_v1_audit tests/source_random_lifecycle_v1.cpp)
  target_link_libraries(source_random_lifecycle_v1_audit PRIVATE dh2_level_world)
+ add_executable(player_save_inventory_v1_audit
+  tests/player_save_inventory_v1.cpp)
+ target_link_libraries(player_save_inventory_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(player_save_inventory_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(player_save_inventory_v1_audit PRIVATE
+  -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
  add_executable(player_skill_property_services_v1_audit tests/player_skill_property_services_v1.cpp)
  target_link_libraries(player_skill_property_services_v1_audit PRIVATE dh2_level_world)
  add_executable(objects_spawn_audit tests/objects_spawn.cpp)

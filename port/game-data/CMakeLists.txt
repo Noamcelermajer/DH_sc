@@ -9,7 +9,7 @@ target_sources(dh2_game_data PRIVATE player_save_section_writers_v1.cpp)
 target_sources(dh2_game_data PRIVATE player_skill_save_writer_v1.cpp
  player_property_save_writer_v1.cpp player_level_states_save_writer_v1.cpp)
 target_sources(dh2_game_data PRIVATE player_profile_index_v1.cpp player_save_load_owner_v1.cpp
- player_profile_filename_v1.cpp)
+ player_profile_filename_v1.cpp player_profile_raw_sections_v1.cpp)
 target_sources(dh2_game_data PRIVATE savegame_options_v1.cpp)
 target_sources(dh2_game_data PRIVATE item_gear_properties_v5.cpp item_power_tables_v5.cpp
  loot_power_resources_v7.cpp)
@@ -54,6 +54,8 @@ else()
  target_link_libraries(player_property_save_writer_v1_audit PRIVATE dh2_game_data)
  add_executable(player_level_states_save_writer_v1_audit tests/player_level_states_save_writer_v1.cpp)
  target_link_libraries(player_level_states_save_writer_v1_audit PRIVATE dh2_game_data)
+ add_executable(player_profile_raw_sections_v1_audit tests/player_profile_raw_sections_v1.cpp)
+ target_link_libraries(player_profile_raw_sections_v1_audit PRIVATE dh2_game_data)
  add_executable(item_gear_properties_v5_audit tests/item_gear_properties_v5.cpp)
  target_link_libraries(item_gear_properties_v5_audit PRIVATE dh2_game_data)
  add_executable(loot_power_resources_v7_audit tests/loot_power_resources_v7.cpp)

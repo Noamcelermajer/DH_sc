@@ -19,29 +19,19 @@ unbound state/path/controller callbacks.
 [`Owner::bind_staged`](../../../android-native/app/src/main/cpp/ghost_ai_owner.cpp)
 requires a matching earlier `prepare_pending`, and
 [`ActorSession::adopt_staged`](../../ghost_ai_session.cpp) verifies
-`Session::uses_services` against the prepared ActorSession callback table.
-The current VM's direct table is different. Simply passing that initialized
-VM to `bind_staged` cannot satisfy the adoption contract.
+`Session::uses_services` against the prepared callback table. The renderer
+still creates its VM with direct `NativeMonsterInitialization` callbacks and
+never installs the Ghost Owner table or constructs/ticks that frame owner.
 
-There is also a constructor/publication timing constraint. The source
-AISExternal constructor creates its Lua resource before `SetScript<AISExternal>`
-(`0x3ccaf4/240`) stores the returned pending pointer: the constructor call is
-at `0x3ccb68`, followed by the `CharAI+0x20` pending store at `0x3ccb6c`.
-The current native
-`create_selected` follows this order: `construct_external` reaches
-`construct_service::lua_construct`, then `lifecycle.pending` is assigned only
-after construction returns. `ActorSession::Impl::live` currently requires
-`lifecycle.pending == selected AIS` during `prepare_pending`. Thus the existing
-APIs cannot prepare that callback table before the source constructor's VM
-creation without prematurely publishing pending.
-
-Two possible adapter extensions preserve the original order: construct the
-same VM first, then install the prepared services/lifetime while it is still
-created/unbound after genuine pending publication and before BindFunction; or
-prepare an explicitly unpublished constructor context whose transition to the
-real pending owner is checked later. Neither extension is implemented by this
-note. The first needs a guarded pre-binding Session service-installation API;
-the second needs a separate preparation phase instead of bypassing `live`.
+The source AISExternal constructor creates its Lua resource before
+`SetScript<AISExternal>` (`0x3ccaf4/240`) stores the returned pending pointer:
+construction is at `0x3ccb68`, and the pending store is at `0x3ccb6c`. The
+same-VM ordering constraint is now supported by
+[`Session::install_created_services`](../monster-created-service-install/NOTES.md):
+create the VM, publish the real pending identity, prepare and retain the
+matching Ghost callback context, install it before binding/loading, then adopt
+the exact ready VM. This bridge has focused host coverage; the Android renderer
+has not been wired to it.
 
 The fresh-owner integration target is:
 
@@ -54,9 +44,7 @@ The fresh-owner integration target is:
 3. With the matching `ghost_ai_session::Bindings` and genuinely published
    pending identity, call `Owner::prepare_pending`. Install the returned
    service table **and returned callback lifetime** into the same still
-   unbound VM through the explicit adapter extension described above. These
-   are real initialization queries and later event/controller callbacks.
-   Alternatively, use the separately proved unpublished preparation design.
+   unbound VM through `Session::install_created_services`.
 4. Advance original binding, SetCharacter, common/external loads, InitVCB,
    OnInit, active publication, HP/MP, skills, post, and final stages using this
    same VM. Retain the original source ordering rather than reloading chunks.
@@ -73,63 +61,15 @@ valid migration. See the source constructor and association evidence in
 [`ais-external-initialization`](../ais-external-initialization/original-functions.json)
 and the [script lifecycle](../character-script-lifecycle/NOTES.md).
 
-## Proposed pre-binding service installation contract
+## Implemented pre-binding service bridge
 
-`monster_external_script::Session::Impl::Binding` retains an `Impl*` and an
-operation key. Its native trampoline reads `binding.session->services` when
-invoked. It does not capture a separate table of providers in each Lua closure.
-`create_vm` creates the deferred float32 Lua VM and alias map, initializes the
-per-VM resolved-load cache, and sets `Stage::created`; the source library opens
-and registrations occur later in `bind_ais_functions`. This makes a same-VM
-port ownership bridge feasible without rerunning a source constructor or chunk.
-
-The proposed `Session::install_created_services` operation must:
-
-- Accept only an existing, nonfaulted `Stage::created` VM with the same nonzero
-  owner identity, before AIS/Character registration or any load. Reject an
-  empty, bound, loaded or faulted session and reject synchronous reentry.
-- Copy the returned prepared services and retain their returned nonempty
-  `shared_ptr<void>` lifetime. Keep the existing source policy: a missing used
-  provider produces an explicit script error; installation does not make an
-  unresolved provider successful.
-- Commit both the new table and its lifetime before releasing the old lifetime.
-  Keep the session busy throughout the release, so an old lifetime deleter
-  cannot reset, bind, dispatch or replace this session during the operation.
-- Leave VM identity, alias map, resolved-load cache, source stage and callback
-  counters intact. Validation failure leaves the previous table and lifetime
-  intact and does not fault a usable session. No provider or Lua callback is
-  invoked by installation.
-
-This is port ownership scaffolding and adds no recovered original helper-body
-credit. The parent owns its implementation and tests; this note does not claim
-that the operation or live Ghost adoption is already available.
-
-The returned lifetime retains `ActorSession::Impl` and its copied callback
-tables. Its state projections, lifecycle, upstream service contexts, Character,
-property, path and world objects remain borrowed and must survive through VM
-close. After adoption, `ActorSession` also borrows the external `Session*`.
-Retire frame/timer dispatch first, reset the frame owner, close the VM while
-native projections remain live, then release those owners. `Session::Impl`
-already closes its VM and alias map in its destructor body before its retained
-service-lifetime member is released. Lifetime cleanup must not destroy the
-session synchronously or throw from a `shared_ptr` deleter.
-
-Meaningful bridge tests should cover:
-
-1. Source constructor VM creation, actual pending publication, prepared service
-   installation, all original binding/loading stages, active publication and
-   exact-table `bind_staged`, with one VM and one OnInit execution.
-2. Exact old/new callback contexts: unchanged Lua initialization and runtime
-   callbacks use the new services, while releasing caller-owned lifetime
-   handles does not destroy their retained context before VM close.
-3. An old lifetime deleter attempting reset or binding is rejected as busy;
-   its observations see the committed new services and lifetime.
-4. Empty/later/faulted stages, different owner, missing lifetime and callback
-   reentry are rejected without changing a valid VM, its statistics or its
-   existing services. A still-ready rejected VM can execute another callback.
-5. Provider errors retain already-applied native/script effects and the new
-   lifetime until explicit reset; initialization is not replayed for recovery
-   or graphics recreation.
+`Session::install_created_services` replaces callbacks only on the same-owner,
+created/unbound VM and retains their lifetime before releasing the prior
+context. It preserves VM identity, aliases, cache and stage. The focused host
+runner covers stage/owner guards, same-VM callback replacement, source Lua,
+retirement/reentry and exact Owner prepare/install/adopt composition; see
+[`monster-created-service-install`](../monster-created-service-install/NOTES.md).
+This port ownership adapter adds no reconstructed original-function credit.
 
 ## Real provider closure required before a live frame
 
