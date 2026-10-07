@@ -1,0 +1,70 @@
+{
+  "status": "passed",
+  "compiler": "<local path>
+  "compile_command": [
+    "<local path>
+    "-std=c++11",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-fno-exceptions",
+    "-fno-rtti",
+    "<local path>
+    "<local path>
+    "<local path>
+    "<local path>
+    "<local path>
+    "<local path>
+    "-o",
+    "<local path>
+  ],
+  "test_command": [
+    "<local path>
+    "<local path>
+    "<local path>
+    "<local path>
+    "<local path>
+  ],
+  "source": {
+    "mgp_cache_path": "<local path>
+    "mgp_sha256": "c88e2e8028fe8bdf18bb703f2f0db69c9a6df7b8060f282d4d5f20fb455f04a2",
+    "layout_cache_path": "<local path>
+    "layout_sha256": "706b1e23ea7ca9c3c1695d6cf8679c177bdfb70e71d202e351a2b0c8564023c7",
+    "trigger_name": "_prim_TriggerZone_GhostAmbush01",
+    "script_name": "GhostAmbush01",
+    "local_position": [
+      -1405.23,
+      300.262,
+      608.062
+    ],
+    "scale": [
+      5.06089,
+      1.43277,
+      1.0
+    ],
+    "rotation": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "canonical_backup_module_position": [
+      0.0,
+      19200.0,
+      0.0
+    ],
+    "resolved_backup_world_position": [
+      -1405.23,
+      19500.262,
+      608.062
+    ],
+    "transform_note": "This is the authored x07 backup layout fixture. Runtime-generated layouts must pass the loader-resolved owner transform to the adapter."
+  },
+  "pydata_tables": {
+    "<local path> "96c9ba8b4cf6afef1318495f2fa18ca4e6e125b187f4bad086e109d22fcbf3bd",
+    "<local path> "39bd1a0c3c7b55c996688687b69504c0446175b3b3451bc1e7481ab18135551a",
+    "<local path> "0270ad4f4fb2d2fe9ed0b6cefe208f5431b38504937aff0ea1aafabffd6f8b13",
+    "<local path> "78666c2e163441f806f9fae017030b475613d849f74b833fa6ed58000c5ec3cc"
+  },
+  "scope": "host-only exact trigger geometry/contact and original GhostAmbush01 scheduler activation; no emulator or Android runtime integration"
+}

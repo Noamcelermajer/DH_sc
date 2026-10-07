@@ -1,0 +1,26 @@
+#pragma once
+#include "player_locality_v1.hpp"
+namespace dh2::player_manager_friendly_v1 {
+using Registry=player_manager_host_level::PlayerRegistry;
+using PlayerInfo=player_manager_host_level::PlayerInfoProjection;
+enum class Status {complete,invalid_argument,invalid_registry,missing_provider,provider_failed,missing_projection};
+enum class Operation {none,online,game_state_online,matching,room,net_manager,net_initialized,net_ids,internal_player,character,internal_word};
+struct Services {
+    const player_locality_v1::Services* queries=nullptr;
+    void* context=nullptr;
+    int (*internal_id_670)(void*,PlayerInfo*,std::int32_t*)=nullptr;
+};
+struct Result {
+    Status status=Status::complete;
+    Operation last_operation=Operation::none;
+    std::uint32_t calls=0,examined=0;
+    std::int32_t value=-1;
+    PlayerInfo* player=nullptr;
+};
+// Source manager+6a0 or online vector+6a8/6ac. Friendly ordinal selection
+// scans all players, rather than GetLocalPlayer's separate local-only scan.
+// All fields/providers borrow the same canonical owner; no new player store.
+Status get_num_players(const Registry*,const Services*,Result*);
+Status get_internal_id_by_friendly_id(const Registry*,const Services*,std::int32_t ordinal,std::uint32_t require_character,Result*);
+Status get_player(const Registry*,const Services*,std::int32_t ordinal,std::uint32_t require_character,Result*);
+} // namespace dh2::player_manager_friendly_v1

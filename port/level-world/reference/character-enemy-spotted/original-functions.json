@@ -1,0 +1,42 @@
+{
+  "original_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "scope": "one bounded CharAI OnEnemySpotted gate and late selected AIS dispatch; dependency evidence is not additional implemented bodies; no native wiring",
+  "implementation": {
+    "source": ["port/level-world/character_enemy_spotted.hpp", "port/level-world/character_enemy_spotted.cpp"],
+    "tests": ["port/level-world/tests/character_enemy_spotted.cpp", "port/level-world/tests/run_character_enemy_spotted_host.py"],
+    "new_bounded_gate_implementations": 1,
+    "new_full_native_body_claims": 0,
+    "native_wired": false,
+    "diagnostic_subsystem": "optional explicit service; omitted when absent",
+    "lifetime_and_reentry_guards": "port ownership policy, not original object layout"
+  },
+  "source_facts": {
+    "group_notified_before_state_gates": "0x3d1518..0x3d152c",
+    "awaiting_spawn_not_dead": "SM_IsAwaitingToSpawn at 0x3c0230 compares state17; calls at 0x3d153c and0x3d1570",
+    "limbus": "SM_IsInLimbus at 0x3c01c0 compares state0; calls at 0x3d1580 and0x3d1598",
+    "owner_rereads": ["0x3d1524", "0x3d1564", "0x3d158c", "0x3d15ec"],
+    "enemy_is_player_slot": "0x28; only after truthy AI_IsInCombat",
+    "aggro_add_predicate": "AI_GetAggro(enemy) binary32 equals positive zero; both zero signs qualify, NaN/nonzero do not",
+    "get_aggro_map": "read-only outgoing tree lookup; not inserting getAt",
+    "initial_aggro": "global design object+0x30; captured owner before amount read, AI_AddAggro on owner+0x3c8",
+    "added_delta_predicate": "binary32 greater than positive zero selects diagnostics only; all normal paths converge to AIS dispatch",
+    "selected_ais": "fresh AI+0x1c read at0x3d1618; virtual+0x34 dispatch at0x3d1634"
+  },
+  "comparison_imports": [
+    {"plt_address":"0x30df8c", "original_import":"__aeabi_fcmpeq"},
+    {"plt_address":"0x30e2f8", "original_import":"__aeabi_fcmpgt"}
+  ],
+  "functions": [
+    {"original_symbol":"_ZN6CharAI14OnEnemySpottedEP9Character", "elf_address":"0x3d14b4", "size":480, "sha256":"62c6f8a1f642e082b96bdb6d4667d3bf6ad25e524ddd41aa3da2f4864a5172d3", "scope":"bounded gate and late dispatch; diagnostic/canary bodies excluded"},
+    {"original_symbol":"_ZN6CharAI9GroupInfo14OnEnemySpottedEP9CharacterS2_", "elf_address":"0x3d27cc", "size":616, "sha256":"a3bd805a32fe4a2c183443a24791d785de286b5838ce2fae9cf12153d430c6e7", "scope":"external group callback evidence"},
+    {"original_symbol":"_ZNK16CharStateMachine20SM_IsAwaitingToSpawnEv", "elf_address":"0x3c0230", "size":24, "sha256":"9c84b7e9a22ca895a54266c1e32ba749e1e3afb08f001790d6a112896ace8494", "scope":"actual source predicate; real leaf executes in oracle"},
+    {"original_symbol":"_ZNK16CharStateMachine13SM_IsInLimbusEv", "elf_address":"0x3c01c0", "size":20, "sha256":"9a5a7da0e51a2036859e2a5634b8b29dce869733922178f3d9f15430b7c2b3a7", "scope":"real leaf executes in oracle"},
+    {"original_symbol":"_ZNK16CharStateMachine11SM_GetStateEv", "elf_address":"0x3c01ac", "size":20, "sha256":"4b5797cd91d4afd7ee3becf1bb65b696146e55fc226838e13c0fbef91b0e4743", "scope":"real current state getter executes in oracle"},
+    {"original_symbol":"_ZNK16CharStateMachine9SM_IsDeadEv", "elf_address":"0x3c03f0", "size":24, "sha256":"96482b1fe8b57ecde79e56d4679cc20e8cac9665ad2ecc654423352ba36d1a55", "scope":"distinction evidence only; not called by this handler"},
+    {"original_symbol":"_ZNK6CharAI13AI_IsInCombatEv", "elf_address":"0x3d4bc4", "size":112, "sha256":"7e917c97faa26805e240a111a5719d87b9d14946aa3acd7b08657116d00c3ce3", "scope":"external combat producer evidence"},
+    {"original_symbol":"_ZNK9Character8IsPlayerEv", "elf_address":"0x3a49f0", "size":76, "sha256":"efb4b11a24129fac129ee1ee6460e1a8f9eef7b8648d7f9f70d3d2338eee342a", "scope":"enemy virtual+0x28 producer evidence"},
+    {"original_symbol":"_ZNK6CharAI11AI_GetAggroEP9Character", "elf_address":"0x3d4ac8", "size":252, "sha256":"98c26116c098862a859a801d8a16bae8ff814a525b4a2972068f2283b4511fa9", "scope":"read-only outgoing threat map lookup evidence; external service"},
+    {"original_symbol":"_ZN6CharAI11AI_AddAggroEP9Characterf", "elf_address":"0x3d7c68", "size":308, "sha256":"710b6a40b61b134ddc8b165a38ac5bd0784dd1b2915ec4fce53d2e1bb4825193", "scope":"actual threat mutation service evidence; not newly duplicated here"},
+    {"original_symbol":"_ZN11AISExternal14OnEnemySpottedEP9Character", "elf_address":"0x3dd2f4", "size":80, "sha256":"e6b68fac312e60dab7dddc4197346a003290bee760caff9dab9bde32ea2e2115", "scope":"external callback routing evidence; monster Lua session integration pending"}
+  ]
+}

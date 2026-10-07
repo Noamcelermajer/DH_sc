@@ -1,0 +1,107 @@
+{
+  "original_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "functions": [
+    {
+      "original_symbol": "_ZN9Character11F_DotAttackERNS_12AttackResultEPS_S2_ii",
+      "elf_address": "0x3b2e68",
+      "size": 412,
+      "sha256": "0ded4194cea08229fa585499bf76158b97d41c49f2887a6965053e7c7441e7ae",
+      "scope": "Complete normal caller for retained nonnull arguments; invalid-null diagnostics/stack corruption explicitly excluded."
+    },
+    {
+      "original_symbol": "_ZN9Character18_F_CalculateResultERNS_12AttackResultEPS_S2_iiii",
+      "elf_address": "0x3b2638",
+      "size": 2096,
+      "sha256": "825bf38a123d73fde3febee5b40a1189b041bfad6782deb37518d628f4d59eb7",
+      "scope": "Only mask0x20080000 continuation implemented/compared; full2096B CalculateResult not claimed."
+    },
+    {
+      "original_symbol": "_ZN9Character14_F_ResetResultERNS_12AttackResultE",
+      "elf_address": "0x3af3b0",
+      "size": 72,
+      "sha256": "f03e6cb1f80f67bb024f886a68f69d4d818ce9f89e56315c5bf3873e317e8531",
+      "scope": "Reset field semantics reused by bounded adapter; no separate new helper body credited."
+    },
+    {
+      "original_symbol": "_Z16CF_SetCombatantsP9CharacterS0_ibb",
+      "elf_address": "0x3b059c",
+      "size": 128,
+      "sha256": "f109dc90a61b935c8ff9fa82e13106afd3ae5ee39837d65a725354379b04d572",
+      "scope": "Actual source128B context producer executes in oracle; scalar projection included in bounded adapter, no separate complete body credited."
+    },
+    {
+      "original_symbol": "_ZNK14CharProperties12_GetPropertyERKN7Structs19CharacterPropertiesEi",
+      "elf_address": "0x3dedb4",
+      "size": 292,
+      "sha256": "c227dbb320f18ab04022f3d61d90e90285652215e56bce8c89c8146aa0fa706f",
+      "scope": "Original valid cached getter executes in oracle; normalized live-sheet provider reused, no new getter body."
+    },
+    {
+      "original_symbol": "_Z14CF__CalcDamageP9CharacterS0_iiibb",
+      "elf_address": "0x3b1fb8",
+      "size": 1664,
+      "sha256": "ad228745d2b1e04f3f6a22495338f9940a9dadfce82bc9ddccf615ff916f638d",
+      "scope": "Original type3 direct subpath executes; frozen combat arithmetic reused, other damage branches not claimed here."
+    },
+    {
+      "original_symbol": "_Z20PushProfilingContextPKc",
+      "elf_address": "0x3136b4",
+      "size": 4,
+      "sha256": "379bec29dccd0a93c94826144d7ef6e42fab64ef195a3b8313a16926f66f388f",
+      "scope": "Original4B BX LR executes; proven empty source profiling function."
+    },
+    {
+      "original_symbol": "_Z19PopProfilingContextPKc",
+      "elf_address": "0x3136b8",
+      "size": 4,
+      "sha256": "379bec29dccd0a93c94826144d7ef6e42fab64ef195a3b8313a16926f66f388f",
+      "scope": "Original4B BX LR executes; proven empty source profiling function."
+    },
+    {
+      "original_symbol": "_ZN13DebugSwitches4loadEv",
+      "elf_address": "0x337888",
+      "size": 512,
+      "sha256": "3b864531f3f0c328b5c3b630bf90afa16b9ac232416fa49617dc09f8fb97f803",
+      "scope": "Frozen owned Debug Runtime reused; original ARM provider fixture intercepted, no new body claim."
+    },
+    {
+      "original_symbol": "_ZN13DebugSwitches9GetSwitchERKSs",
+      "elf_address": "0x337a88",
+      "size": 196,
+      "sha256": "34890bace08c03e9acab8957aea2ba00831d3359f3ef29dad001b010794e0487",
+      "scope": "Frozen owned Debug Runtime reused; original ARM provider fixture intercepted, no new body claim."
+    },
+    {
+      "original_symbol": "_ZNSsC1EPKcRKSaIcE",
+      "elf_address": "0x3140ec",
+      "size": 52,
+      "sha256": "526c9b5915d5166cc3f2215547f69037d053058ce6efc3bc2caa4ec13a68446a",
+      "scope": "Native owned std::string allocation substitution; original ARM provider fixture intercepted, no allocator body claim."
+    },
+    {
+      "original_symbol": "_ZNSt4priv12_String_baseIcSaIcEE19_M_deallocate_blockEv",
+      "elf_address": "0x3139ac",
+      "size": 52,
+      "sha256": "a253cd9243de86ccebdf90d3972ae68307d0585ee02ab438976b847e99b8bdda",
+      "scope": "Native owned std::string release substitution; original ARM provider fixture intercepted, no allocator body claim."
+    }
+  ],
+  "debug_literal": {
+    "text": "isTracingChar_Attack",
+    "elf_address": "0x8c3cc0",
+    "sha256": "cbef8d6cf0b5da751e4aeb4295d2b148332e8ac4ed5f2b6bc7282da88c4d9744"
+  },
+  "new_complete_caller_bodies": 1,
+  "new_complete_dependency_bodies": 0,
+  "bounded_calculation_mask": "0x20080000",
+  "whole_calculate_result_body_claimed": false,
+  "native_wired": false,
+  "source_files": [
+    "port/level-world/character_dot_attack.hpp",
+    "port/level-world/character_dot_attack.cpp"
+  ],
+  "tests": [
+    "port/level-world/tests/character_dot_attack.cpp",
+    "port/level-world/tests/run_character_dot_attack_host.py"
+  ]
+}

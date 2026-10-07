@@ -1,0 +1,514 @@
+{
+  "validation": "PASS",
+  "native_wired": false,
+  "apk_runtime_tested": false,
+  "compiled_ai_units": 27,
+  "export_groups": 33,
+  "source_sha256": {
+    "port/level-world/character_ai_interaction_range.cpp": "e7adcccf6438bea3b778c6e25368be503015bb71c68c365635efcfc702a46d46",
+    "port/level-world/character_ai_melee_range.cpp": "5ece7ff32aa677db7e8b14b202e60ca37894fe4d4bfa066dae89a815d67f6fee",
+    "port/level-world/tests/character_ai_interaction_range.cpp": "42b513c847a0ef838af435674dee5a666169c5485ddaee24fdcc9db6f26632c5",
+    "port/level-world/character_ai_interaction_range.hpp": "f2576cde0fb675ce3aa789caa5c5fb4993ae6d3fd1c29456174a45b2c3f9550a",
+    "port/level-world/character_ai_melee_range.hpp": "94f493092f95d1ff91f64a5eac66f03563a939cb4e0185a19878ff14b4eb5f67",
+    "port/level-world/character_ai_sight.hpp": "ae36f54ffd97cfb079905e3e03854fc354853304609135aba76591bfb07e9a81",
+    "port/level-world/character_enemy_retention.hpp": "a8aedc3e9031ab1053931f7f9abd64378280fc9a01a1ba4837a08caa667cab95",
+    "port/level-world/tests/elf_import_identity.py": "b6e4bec2dcc844e74d96dc617bbd13de69dab1797006e7cc4d300dfb069a66d7",
+    "port/level-world/tests/run_character_ai_interaction_range_host.py": "cd4d8f4f066975bf2bf91631acf20e6754d32ac9b7df5528e5524a1f31afcea8",
+    "port/level-world/reference/character-ai-interaction-range/original-functions.json": "d30ccde0945a457f6b4b0498dae0244b5f3471b6a897f3231705ce7a5e8eed9a",
+    "port/level-world/reference/character-ai-interaction-range/NOTES.md": "a0033f3eb36b699406ceaed898b48e9e53f4d9a0fc97b513f5749be00aa4218f",
+    "port/level-world/character_ai_ranged_range.cpp": "e05996fedf0d19f470214c129fedbf351c57a71134f9dc1fdc4f44ee681db7be",
+    "port/level-world/tests/character_ai_ranged_range.cpp": "a55d8221d15a4859a1874db196ab649fb2f5acc611373d1ab71e77a56fff4f6e",
+    "port/level-world/character_ai_ranged_range.hpp": "4ff33987e8f0d97a2fc4ca0fd04cb675124d9c7bba540966a41236530a3333ab",
+    "port/level-world/tests/run_character_ai_ranged_range_host.py": "d5b5647b680ca0ccb840e5f81823063cc7bae093206ea2bb29c0638e4b55f5b6",
+    "port/level-world/reference/character-ai-ranged-range/original-functions.json": "1e0f51f146d78487e2d7ae43a4e3be2b76035ca1a1cce7453973784d036b4893",
+    "port/level-world/reference/character-ai-ranged-range/NOTES.md": "c679dd5427c20bfd2b4f626988fdb13303a36bf9210eb471675a60c891af8907",
+    "port/level-world/character_range_capability.cpp": "e0adf14559191000747e05909760fe53303cf5ce03b96e70b8c0cb05fad38e87",
+    "port/level-world/tests/character_range_capability.cpp": "fbd35d99854c96ccd6541bbef5f90054cb47185a700505e951eae43c115777e3",
+    "port/level-world/character_range_capability.hpp": "9ed2dbeeb69409ae56501cc7942c5831e962421b53e8cbb5c2fc552b9e5b5a8f",
+    "port/level-world/character_combat_queries.hpp": "dc840c1073ef4f1f4eebc3618bff70547c72666b32b12ce3224d9709ec668a02",
+    "port/level-world/tests/run_character_range_capability_host.py": "9dfc4e03550bdc66d65dd4bdfe8fad26a1deb4fb3c1e0edf5659a0a4d83c75d1",
+    "port/level-world/reference/character-range-capability/original-functions.json": "e6fb97b95e9980cc6ce578d1a97c2eeb3924e0c76413c2c074509cc54f28015f",
+    "port/level-world/reference/character-range-capability/NOTES.md": "8e2063ebd84b54640091d018d5500b3382888f880be23fc7fb13d79de4ddf215",
+    "port/level-world/character_ai_queue.cpp": "91c9c43bb6ea1efdf4a895bfb836137a2b51044ffc288cd88170599de68b5141",
+    "port/level-world/character_ai_queue.hpp": "24051a580fdc81add0e29a245502f04cd8d55c50a17673a65edead4fa9a368d5",
+    "port/level-world/tests/character_ai_queue.cpp": "baddcaa6f51d1a0a2eca58b7be956941bc464f570c540dbb3dac0d6f7161b045",
+    "port/level-world/tests/run_character_ai_queue_host.py": "f970b4f44ffef7b07e2d26dfa464e71d7d32b8d3ee51587dd39886a9acb02f70",
+    "port/level-world/character_interactive.cpp": "890d3300046c370c4b37d8607e50d7e93abc228bf0ebee6651b0d20c38cf9d3a",
+    "port/level-world/tests/character_interactive.cpp": "e99537cd0bede20e3b6708440b3f623404e79fe0f86ce47fe49692a69e0d3141",
+    "port/level-world/character_interactive.hpp": "bb64936cd21596c59fe68a70c4fa9c7989b8cc537928d9faf4aecd72ebc9c7d6",
+    "port/level-world/tests/run_character_interactive_host.py": "a98d5bf4b137cd37787c34e9d17fef6897ecfa0ec96099d734b5744aa567f302",
+    "port/level-world/reference/character-interactive/original-functions.json": "38eaad1937518d82289a729019f2b03972fdd052791f446ec2d6d2b56d6ff92b",
+    "port/level-world/reference/character-interactive/NOTES.md": "4f56d56321607979ef40a94cb6fdcc00c914345462588222c379863090c8f554",
+    "port/level-world/character_ai_initialization.cpp": "d08f7316b373e9d72b90b249650c693e406845c4716747f9be59778156ee7241",
+    "port/level-world/character_ai_initialization.hpp": "d16d4a5b2848a9a5e037fc03999cebc44b689543b114edb0d22a50865aac72bd",
+    "port/level-world/tests/character_ai_initialization.cpp": "638a1133d4e818c3f1152f8aebb4f88a4bbf186cfd4a3ce09d462beda2087035",
+    "port/level-world/tests/run_character_ai_initialization_host.py": "5bd0b23d2702488385ae01101adec89c0b1ee3d5b3e841898a7df28eb39cbfc2",
+    "port/level-world/reference/character-ai-initialization/original-functions.json": "4fa1a73f84898f0243a3241c88f8f7505402a23072ed759ccf5d1e792a285bbf",
+    "port/level-world/reference/character-ai-initialization/NOTES.md": "35cf8beeebf2f82c2ef7bcfa5c2cc4327f65b3615b37675a261a242bb465ccb3",
+    "port/scene-materials/render_state_snapshot.cpp": "8924ebbaaa675163509bd938706ded30604602832069e1820b5bcdfc7c4b6083",
+    "port/scene-materials/render_state_snapshot.hpp": "dcf812dc8aad61b55311406def972a3bdeec031c89b568e35f0e4183674541eb",
+    "port/scene-materials/tests/render_state_snapshot.cpp": "36c02a7eccc459ba3539fbc46853dc405a6e238eb25bf5b4075b8a70644bf830",
+    "port/scene-materials/tests/run_render_state_snapshot_host.py": "486381de8ebb447ad27388ab83c2b933bacc297c4f6d4d3577bcf130325fb66b",
+    "port/scene-materials/tests/source_state_conversion.cpp": "b90f125e3eace4ea3591626df849b7522f76118b54e0e458eb9cdbebc3ed47ca",
+    "port/scene-materials/source_state_conversion.cpp": "c2ede9875060eb483387973f1f78f9c4782a4d3a83a4d9350df918b1a975ede2",
+    "port/scene-materials/technique_selector.cpp": "7160bc64f7847d34ba21057baa9ae83428c53e1050e9ba68897126fb3c4e87fd",
+    "port/material-bindings/bindings.cpp": "7ce25fc920a1493283aeeceb884748cc5837afa93a4ee2f78a2ff723f4e493fa",
+    "port/engine-resources/resources.cpp": "5908520d2a2bdd318669c30e0a6863c023b05327366cc0c1cad782700c945b25",
+    "port/scene-materials/source_state_conversion.hpp": "54cd2904fdeb5f5f5426f00ed8c11d2624f1f1e48fd1efc1bc35b8bd35810eec",
+    "port/scene-materials/technique_selector.hpp": "efc0c2c81fb7181ea4aa7ab35276fa2d5b8e66d665cc9ee7946db38e4624c629",
+    "port/material-bindings/bindings.hpp": "7821ff4e8f585df4aadd31bc2f72ab0022094487e0c4efa700405395a892939f",
+    "port/engine-resources/resources.hpp": "e8d08f735c4c5ee30baebb2d3afca0d91b805b9e3cdfc50152011dbf70ceb230",
+    "port/scene-materials/reference/swamp-effect-pass-conversion/manifest.json": "4c4f6a758e81fbbd7091bfc114b2e61a5d9fdeab701cced64fa1b32679b00f70",
+    "port/scene-materials/tests/run_source_state_conversion_host.py": "e16627879ce12d123bfcbb5c740ddb29217ff9b5b324592051306ac01bd6d5f8",
+    "port/level-world/character_scene.cpp": "f4e11f40ebffc3868341d4313718edc81aad23dbd6ac1aefeda4942426768b72",
+    "port/game-data/health.cpp": "98035dd3c80ecac8e0e96c3f06d7f045dd42df80ecfe935411729bf8bff98595",
+    "port/adam-script-runtime/script_function_alias.cpp": "2f40e5f8ba2ebafaf217cb5efe0d795bd193f366e42a83b70960dd57c64f3cea",
+    "port/level-world/physical_world.cpp": "ec9116b687452f5cd3808f64d229aa0af4a9d9b830978fdc7d2f1d6fb75c85e7",
+    "port/game-data/vitals.cpp": "34999512b1bff69e99dd39aa9f252470366c8a950c9de03dc894cf299b67e5b9",
+    "port/level-world/navigation_objects.cpp": "fd3a1c4d33af78262b22a55b92ded760c482cb1b9b60dc049c122e6c7627affa",
+    "port/level-world/character_ai_state.cpp": "3453b19410ab038b889ceba40b41b73b937dc2f0ca4faabd5f98fe5df03b8107",
+    "port/level-world/character_ai_set_target.cpp": "27185727ef99d803d451b9168e90a32aa665202721d942b5056d048ea5e0487d",
+    "port/adam-script-runtime/lua/lmem.c": "08a47c61d5347280fac3040cbe3c07e1fbba81dcef10417136cf7b319a0ad628",
+    "port/game-data/aggro.cpp": "c9f10eb5697227dad1e7fb767b07929da4b5373327d49ce350dc1318e6b2f050",
+    "port/engine-animation/event_track.cpp": "1cc2528d615a85123695cf9717cc3eb04add55d474ab4aa467915371dacec863",
+    "port/game-data/class_tables.cpp": "07da2fa749e71057367e24365fd68a2813fc4c3eefd50c1ad42c4a6990263935",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/Joints/b2GearJoint.cpp": "4a5424b398f016dc9a8c5b5538066a6c5e391e9748498e702bb5d060ad44083d",
+    "port/level-world/character_aggro_target_search.cpp": "f536932219b563816a96d1afcdb7c1ffc9682fe42891d6e5a88cff16de20fb70",
+    "port/physics-backend/box2d-2.0.1/Source/Collision/b2Distance.cpp": "0e5e43d8a6318555994ad7dbd44e3d8d38430964ea8989991aed9c880365dc1a",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/b2WorldCallbacks.cpp": "335f631fd1ab520f44025ca684568905be30fe5ab0eb6f9449af1a756be64ee9",
+    "port/adam-script-runtime/lua/lundump.c": "b9db5bc6d0096e4662d630f097a15a56afe4309f376fc5e20526bc697d7de06d",
+    "port/level-world/navigation_heading.cpp": "8067293e41a4bdaddebafbc9f996ac9484b77f9968290bc3f500bf3bf7c60bc4",
+    "port/level-world/decor_scene.cpp": "23e477c209dd4545639b7d87cba864b9db6938610cd1eed6f71ba18e48af6f10",
+    "port/level-world/character_attack_geometry.cpp": "c00bcda08b2f0aa6e4609cd97a3c2d7365e7f7a4fb63e4a0611f96476547177f",
+    "port/game-data/combat_events.cpp": "a7ac6d24c1d221506617bcfe2b2e86275e7dddac597ae28ae1911218c5238b32",
+    "port/adam-script-runtime/lua/lfunc.c": "344d6f5f003cb87aab783d2ef4d72d0f732cec4a2807de9ddf25db405ab99073",
+    "port/script-runtime/script_runtime.cpp": "5acf91646b99d844e122052de7bf3af39a1c1b3381bdd3c4cf13f481de39ba42",
+    "port/adam-script-runtime/lua/lauxlib.c": "864f1e52a7e12688e148679356fedf8a3baff8a66800d527617535ac1d678d6d",
+    "port/level-world/physical_controls.cpp": "4b9f11b6de5d8145dfc697e745bab5c8dbf8cabd801922bd4c16eb63878dd20a",
+    "port/level-world/ais_state_callbacks.cpp": "b809836420fe255bbea75ad7db2529a3942ba0b6da007120747f4af3b106ffd8",
+    "port/level-world/visual_timeline.cpp": "babda2abc443c38e5bef7e0c8786b9663523cb9229d9c130b3c948e0437c175a",
+    "port/physics-backend/box2d-2.0.1/Source/Collision/Shapes/b2CircleShape.cpp": "0629b27c6fd842dea90070e8ea7dcb27fc0eb86bafe9aadaa13b114dfb61aa20",
+    "port/adam-script-runtime/lua/lbaselib.c": "9005372de751bf9be09a7c412ea25157632465b4e3ee1d5ccc5b6daae8d5f222",
+    "port/level-world/decor_body_config.cpp": "627dec02e5464556e6d04185e99f614c7f6604a6e6fc5f173bf14e50252a9277",
+    "port/physics-backend/box2d-2.0.1/Source/Common/b2Settings.cpp": "5a5d9af838afb02ff85ae840b83c2e3ebd30550005b80ed61109e2eb1cd63625",
+    "port/adam-script-runtime/lua/lstrlib.c": "207703835595b62a0e9c43b0f89ade77804ae1b80854acb1d6a591f3a7e3d700",
+    "port/game-data/animation_bank.cpp": "d01fc6391ddb543eb2eadca8ce52e6b6e814cdd52d146d358c221d5a418d044f",
+    "port/level-world/native_body.cpp": "e820fd71bb6c9387ca9c47a7233a881a399ef8c2cfbfdef091f74a5bd3201bd1",
+    "port/level-world/actor_blended_playback.cpp": "f4f84d16734eb0a9bd071a8234708fa2795b8b8b102bfd93502ab521452de567",
+    "port/zone-contact-runtime/zone_geometry.cpp": "309b5488892877ee0c8ebbcd4bfc8ea5874a82709e0856a10c87e8ef4a2fbd52",
+    "port/level-world/character_animation_ai.cpp": "2cad2aca1bdfd4140e42305ee9ba1ae2ae062fc2f0630775e5721d12d355a842",
+    "port/level-world/character_ai_attack.cpp": "517b8fd84b871827ab05c19b2f5a0d3580b2394ce90fd79306ea872fe5207e8b",
+    "port/level-world/character_ai_frame.cpp": "3e3cc6064dc9315f8ec66622f7980a540b8faca5cd1d79b8d5c44506c4228718",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/Contacts/b2CircleContact.cpp": "ded2f2cda858750019b6859922ac5d2b0916ff1f0d388a3fab2ed9689a665c9d",
+    "port/level-world/monster_external_script_session.cpp": "bc7aa3602d752a99f67e0a90cad0098913b08d0e5f48e0d2c2d4cd11a4fb1454",
+    "port/level-world/character_body_config.cpp": "a882504c827554b6fb7bf4d00cf8ec66a72cb7779ffbf9f9ad1fb529494b6eaf",
+    "port/game-data/items.cpp": "2468a9e5fcc12a00859bf403dba09b66dbc9a39a3231de6c1ac88abb6fd5f091",
+    "port/game-data/animation_scheduler.cpp": "a75190454cb98071e91483125861abe41f84217d280b44d6db5bc1fff432cfd4",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/b2World.cpp": "ad0dd30502b442b6b27bc05e62239ff6ef823ade04a19c34482665c25ecbdd56",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/Joints/b2RevoluteJoint.cpp": "c720e0b2cfe29d40292536913d32b2da0f74cc2d60759c5fe6e67cb735b56c33",
+    "port/level-world/character_animation_events.cpp": "387e8245a4ed5d7ecf7e09c31e950cfd349aeedd2c99b55305605a8ba7c3d5c1",
+    "port/level-world/floor_source.cpp": "483c7bbaa71536b148a79d8ed38c11ac0930ae499ef52607fc32f899e6252aea",
+    "port/physics-backend/box2d-2.0.1/Source/Common/b2Math.cpp": "9dd538fca46377fc5ddfccaa5aaf293397c83d06e8400426856f0dbb8489a688",
+    "port/game-data/animation_selection.cpp": "f9f985cc772e1adea4cdc7dfa1bf27f987d06308f55b3603b64722877de857ad",
+    "port/adam-script-runtime/lua/lzio.c": "e0c2de4dc36d404a907b0a80506f6637acb00a7b17b6db10d74975f7b31e1972",
+    "port/level-world/character_timers.cpp": "5bb3e0181f361c7c3b3633069a6148abcdbfaa99806d6798619a996bef203ba9",
+    "port/level-world/character_ai_relations.cpp": "b88021247e65d54a407e3f1e350e683ba6e4a6dbf1827b8e62c16f94977f5f42",
+    "port/game-data/ai.cpp": "f53b4473fa4dd02ed73d514fe5b84d02058807c4bf800ab1952fc7141a229928",
+    "port/level-world/navigation_producers.cpp": "034e4ef93faf4de950f280f09dd96f8983a7081551bc4b802d1713b23b4e908e",
+    "port/level-world/objects.cpp": "8a4de5306ba09867a29c66859b15712c1c5bc8f3d12a8e38aabbdafcf957c93f",
+    "port/trigger-contact/trigger_contact.cpp": "6cca865cf78b7305f921204eae9ae098266b197c54711eacfc6aa87b2f285426",
+    "port/adam-script-runtime/script_runtime.c": "67a928585a90e242d6c03925fd4a06cff7d50fca279dea4f4b22d56d99bce226",
+    "port/adam-script-runtime/lua/lstring.c": "53cc6dd8cbbef5c91fe390d293f209ae867211c36bbe596dcd5a5857827706d7",
+    "port/game-data/combat_application.cpp": "ef5c7a603160b99cbec98851f69f61f8a62612cacd6dccf1e20f8f0362769557",
+    "port/level-world/character_ai_pause_update.cpp": "9e26911f837c1a83e834cffea583279f81e9abb5a21668ed32623daca38525a6",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/Contacts/b2PolyAndCircleContact.cpp": "0ff192b00e5a99843a0c9515b60a600540f2bdb87b0c493d7d8427798b1891fb",
+    "port/level-world/character_path_commands.cpp": "a8562e98fd449081d2a0fdd27444e302c8e4f7d6807acbf214f13c9bc86d5baf",
+    "port/level-world/character_ai_update.cpp": "936d520aeeed25e7356e92efd9403161864b437b862b06e16eee3a3d63339a3d",
+    "port/level-world/navigation.cpp": "f39f65eb39f315c10e0f4e917df3bd453599572bfdf4646948c927b0d8bcffaa",
+    "port/adam-script-runtime/script_game_bindings.c": "3f2d89631c1908c88677a10417345031f50473fadc1a958db651443f19983292",
+    "port/level-world/character_script_collision.cpp": "82864d4a41ba468168fa32923cf8b8aa761741f0041855e32ada7669acf34be2",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/Contacts/b2Contact.cpp": "a0875445d2a2b253fa2815b26373611fe1cfdfcc24084cae74dba20a21e81b2b",
+    "port/level-world/floors.cpp": "d4dc2d56875cd2f06d5492a19430282845cd472e0a30edbab6105c022984ad55",
+    "port/level-world/crypt_spawn_script_session.cpp": "d9898c58fd89cc6be41ace89801bdb9d7f3480f0136de8729bd1442b928bcbba",
+    "port/level-world/character_script_timers.cpp": "355a6810caf2864c88e668b18f94734568a53589dd4c0147d882dc7754c285ec",
+    "port/physics-backend/box2d-2.0.1/Source/Common/b2StackAllocator.cpp": "abbfebe42cd6d45ee5a46d8afb031c8e6560908eadaab010152afb94e3a8a8c4",
+    "port/level-world/character_monster_retarget.cpp": "a20a9aaeb2f34034bda22a33ee64c4735c237cc407e5f3a4ddf58213a61fa9b0",
+    "port/level-world/character_ai_update_target.cpp": "6271d889d51a3044d45d2b4162810a0253640342904effd334e8d7c19d19dc8e",
+    "port/level-world/character_ai_turn.cpp": "e0eb5bf3bb58dd59798116d4c54e953321de4bfb0dca13bb7ccacaa7746d4cf7",
+    "port/level-world/character_script_lifecycle.cpp": "291251995f3c1db5161460611c72c3e384c4f422363ad7adcecf464ed4a91583",
+    "port/level-world/character_script_update.cpp": "2bf32b7a6e65a4d3bcb4f421c27bce831929291c46e0176cb52a4ffe96b6008c",
+    "port/level-world/character_target_search.cpp": "c1c43e7e1ee1b9cee94ddb6cf14f40af9d7a6353a17d8755e8498f33868590c7",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/b2Body.cpp": "54055e4d49d2dbfb618768bac214855b20eceba404864a585eaf665cd9698cf3",
+    "port/level-world/character_aggro_acquisition_prefix.cpp": "057f78dbcde4e2852f0c9a3e73858dcef94fe145d2ad14b040f8d60cbec9c0b2",
+    "port/level-world/character_ai_master_update.cpp": "b9df80c86dec327a94f21e2074a6cab59cf7d3d6a42cd565566d0341fc5eab63",
+    "port/game-data/animation_tables.cpp": "436cff5b347f1d756777775e35110bab113de3547b6a878932538afac21ef86e",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/Contacts/b2PolyContact.cpp": "04e0d8d2be9eb55e2374935f01d09be785959e806f49ec478700cd07f7d6955c",
+    "port/level-world/body_transform.cpp": "f814c74e8fbd4c4048a64b3ae928e8def5a8d4436086a2dd3075d03942d1c4d2",
+    "port/level-world/character_aggro_delay.cpp": "041e7e2eea050be466169ecddddd604f912a173233733c761a6010330b870a9e",
+    "port/level-world/character_aggro_candidate_events.cpp": "dedf5be12e89fcd4b0d5b57652144505b8b2f277bf3fcf3844513664a91f8e5d",
+    "port/level-world/actor_rotation.cpp": "c966a0fcfa693c327b9e95253efba52d45f2f9bc11202bed152138296602c35f",
+    "port/game-data/data.cpp": "4aed92413669a1457166e3022671a9e67fc1c483f0db1ada38e3f39570cae7c5",
+    "port/game-data/combat.cpp": "228da172df7ee0ef290a59ccaf2fcf21890705f7165528366bf5f6615fdeb4cc",
+    "port/level-world/crypt_spawn_trigger.cpp": "49b4f1a03dae63cb3f75be7da466c90e59511598b8d0ffc35fdb1579448836dd",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/Joints/b2MouseJoint.cpp": "0a9d8342dfa3dc12af1876421d3c33e71b5532d14db8cba0bbf24bf80f6b1e78",
+    "port/physics-backend/box2d-2.0.1/Source/Common/b2BlockAllocator.cpp": "12426570e627db745da2bc5f7edbe0629d95b834dfabf87ef621a91623ae39f5",
+    "port/level-world/navigation_world.cpp": "e12ab20917f787732cd4795bdd21ecb787a264cf6c9043593f7b6c6d71d88e16",
+    "port/engine-animation/animation_registration.cpp": "612c97d63223bfc571815fd561828b756ac74a43628c1467e4e28ba52e4ba108",
+    "port/adam-script-runtime/lua/ltable.c": "d5df266f7ed1bb832c10f32958f8f2940c0205a513c9af1c88ed1a7b164dc4fc",
+    "port/adam-script-runtime/lua/lcode.c": "2c5f2dea541c59fb52634ea46fe40d3e05aa1259e6a9e2c03730cfe0b1b15197",
+    "port/level-world/controller_physical.cpp": "f59e5fd3ddfb21674af730c8fe06a510378e7d1ab57c9729048df621b632a171",
+    "port/physics-backend/box2d-2.0.1/Source/Collision/Shapes/b2PolygonShape.cpp": "2281e552b7cf16b79d704a89160550c5e0a56da2a210ce926fd0719301cb61e1",
+    "port/adam-script-runtime/lua/lobject.c": "5160a4348317285d003aaa7b4c8db374da89459898b441b06a5aaee395c96226",
+    "port/physics-backend/box2d-2.0.1/Source/Collision/Shapes/b2Shape.cpp": "2bcfc135682d3c311ea246b2b8d2ce14ccc7694a5d586348761ae12bc9cd696e",
+    "port/level-world/visual_motion.cpp": "f2e5efbfcf4263c73b8a9cbeca9efb87340906966df41f7cdc41613e49d6464f",
+    "port/adam-script-runtime/lua/lopcodes.c": "fa1233a188697642be338114ce31a623bbfe49c5e718fe5b33a6b4bce2c8bb8c",
+    "port/level-world/ghost_ai_session.cpp": "012c4089241abab7dc41df24a9e7b17b151a462d3f84b5d17a0b5f75bb98e142",
+    "port/physics-backend/box2d-2.0.1/Source/Collision/b2Collision.cpp": "052c979a72176b10b404c7c8b900e1a8662f661ffa6476d2c18edec47e57ddd4",
+    "port/level-world/navigation_motion.cpp": "ddfef4bcc72719fb01e77e0b7296dfafe3fd06417fc8a2da22292caa177df577",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/Joints/b2DistanceJoint.cpp": "0853ceb8d146a5db0ec0eea208f8751f61386f41532f4edf3ac0e72a0108a34c",
+    "port/physics-backend/box2d-2.0.1/Source/Collision/b2BroadPhase.cpp": "cfa4503a3c9a95db001e10dcc4cd6a9f27a97cbe5c676e46a5751cab7a8c06af",
+    "port/adam-script-runtime/lua/ldump.c": "41dd832b0c03e2c9e5d0352eeeb6e32bdb076bf79bb4f2cea59316c89d0865cd",
+    "port/level-world/character_enemy_retention.cpp": "5884f734bfe51b4137b129c99e85c7f0c2cd7d70df52a3c8acdda1df0d779037",
+    "port/level-world/physical_lifecycle.cpp": "a92de0e8831484389cda3aa566a8f6c2bafc1517d86099e21682f9d0817779ab",
+    "port/adam-script-runtime/lua/ltm.c": "a7551c630c2c86701af7ef57648062b3d802b69b2c5bb8081553fe36bf570303",
+    "port/level-world/navigation_avoidance.cpp": "1e30e3e2b6e90466e5f1060cc4656439221460de6e03bbdf40c0f6a79fbc5fcc",
+    "port/scene-materials/scene.cpp": "2e9b93fa4fb414731c5729e8280b02b6f26be66af37f2cf36fb6b425bfa26ada",
+    "port/level-world/animation_blender.cpp": "2ec38b31d7e2bb1a3f97a7ef6debe7a2ce170316cfe1948245e863cba796938f",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/Joints/b2Joint.cpp": "b6a439cbbf8bc4a4fe835d29b652fcfedf5affb3a8dc7786b68ed1e1a45547dd",
+    "port/level-world/navigation_controller.cpp": "e48a96e0a733c7e6bf4a70b7d889176dc018d6eecd2e2ba85b61c457ed417810",
+    "port/adam-script-runtime/lua/lapi.c": "88603b1d26a282cd6c637e0b637b6ecea3373dd05a1ca1bc3e2b9cc56a251b3f",
+    "port/level-world/character_ai_sight.cpp": "841b1b72e26de327434fd337ce8a0d50449805b5fef03e3a0030d82defd6298f",
+    "port/adam-script-runtime/lua/ldo.c": "816fa9f50d1674ea75a2bb7452b39608136b159f4dc40cc3ec31d8fb1ad2c19f",
+    "port/level-world/actor_runtime.cpp": "e3c2c016f930e67caf7dd1f7d8c47b91435c87e48d01ec1a43fc96ee05a83d9d",
+    "port/engine-math/math.cpp": "04baafb69f3520bdee2a9097df8457903c9a3f04d3c1c66c5add870e06179ee6",
+    "port/level-world/collision.cpp": "828f8ec6ff4c0de9388c21930e8aa7774dce324661430b6c384653c3e4c2f9a5",
+    "port/level-world/character_ai_in_combat.cpp": "b762ddde559413c8bc63b9081581b44bac2a447bf8d9e1f20633eeca148bcf58",
+    "port/engine-animation/animation.cpp": "c1ffcca1fd140744e5587251a8fde8a6392da1d169c4879730ea78f35c2a6903",
+    "port/level-world/character_factory.cpp": "28f86f3a3b87fdee1ecb476110a145a6935847229ac6e48ddaceccafa5a65168",
+    "port/level-world/navigation_search.cpp": "c7464583741b171b1a22ce19c092ce09d055aec2507c57076c499ebde13f1579",
+    "port/level-world/character_stance.cpp": "1db27edbff8a8a4a37a31495a1f5fd3aba5684af70ce6f36822c4c98181b14c2",
+    "port/adam-script-runtime/lua/lmathlib.c": "6a2e9673eda84cf41d43040875705ba0bac36b2032460603546be06625aecd9f",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/b2Island.cpp": "6cb95aa76e75683326a5e0a1c841d7df4501559d79d5456ef74dcc7787a0d79f",
+    "port/engine-animation/angle_interpreter.cpp": "5b509d60a4d0800742b14f67a979df6a24c9dc194f5be1016ae60ee20c692787",
+    "port/level-world/ais_default_collision_persist.cpp": "fccd18290a8d16f75122748d18837ba70b5d73d68a5b10386a6b9dddb3b135cf",
+    "port/adam-script-runtime/lua/lstate.c": "a09cc02990c27639560c357babbe2c01c753ac19d8b7bea903abf01c5c3c63fb",
+    "port/level-world/character_combat_queries.cpp": "a11da8bf0515312db35489b8692962f8d76bca576b1e4fb3bd7f75002d7811b0",
+    "port/level-world/character_controller_commands.cpp": "93dda5dc4300a41e3e1250f8d86974368ff386d76e0aa98da180e0231258a806",
+    "port/physics-backend/box2d-2.0.1/Source/Collision/b2TimeOfImpact.cpp": "a4b145c6773ad798844f83ee7fb621a143261a237372e1fbb82c27bb72ee6201",
+    "port/physics-backend/box2d-2.0.1/Source/Collision/b2CollidePoly.cpp": "22b2e4611e696f041298ae0b63596f2eb54159d4a039fc65036290295080dacc",
+    "port/adam-script-runtime/lua/lvm.c": "88cd8a3e80acf774deaef846883f46298ebed29ad3a286e00cb18d285643d1e3",
+    "port/level-world/actor_playback.cpp": "337ea66e2b4955c581d0e1226ca3a3080561f87ab3b6df07aae2ff0d1ae55493",
+    "port/level-world/subobjects_update.cpp": "de6c05d22a767fb324634354c9fa03259c1244a86b793802b251a4057d5a0e8d",
+    "port/random/random.c": "4c9a18d24a9238f1c1e6ea2ddaa755dfbeb7b1c644862b532b956e1ce42242b8",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/Joints/b2PrismaticJoint.cpp": "ee3981cfa0e94d82799d6eebecf81a09cd2bc137ac6f43a6c04ef5de197a9a28",
+    "port/asset-payloads/payloads.cpp": "f921d16550af1133a8c7fb264c0132381ff7f3643c56fbdc3a13512ff478742b",
+    "port/level-world/navigation_path.cpp": "3e898bf804d38b0b91f2f4cdefcfb001796cf170ccee4966efd74cf9cd3522ce",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/Joints/b2PulleyJoint.cpp": "5cb5b0c762d2e6164c79e62316930f9d317fe4f99be8376481f08ebae157a83a",
+    "port/physics-backend/box2d-2.0.1/Source/Collision/b2CollideCircle.cpp": "a0ce1f621ae819514cfd26b2b9231cfd1fb301d960857256c809bd0620495113",
+    "port/game-data/properties.cpp": "efa0bb41855d20f638f7cabe4c250a16997c041f748bf532c11d39f6bac23fb5",
+    "port/adam-script-runtime/lua/ldebug.c": "791fdeeff52e67ebb3d2a196822bbae14cb853413c981b9f903615a50c7cd669",
+    "port/level-world/character_state.cpp": "5a99617670f2de2b75af1534bbfb03ef29ea0607047bf131166b02615e560fb4",
+    "port/level-world/character_coordinator.cpp": "2ab1ac65a49ddd120f6bbc09e7da4ca2b88be329e0aef2434755cdf5cad2338a",
+    "port/adam-script-runtime/lua/llex.c": "31dbfd76b2288bc3c5d0745b3a0b278d762519fbe5f2c75a478d5bea99d26688",
+    "port/engine-animation/animation_blend.cpp": "428d5b26789fbe8bc519f9a9531cfe6dac1e77c1b98a9a25c53375b31be98f11",
+    "port/lua-numeric/numeric.c": "3f089b267266a19838121d9e6e2c933da6b2588b8188ccf0853cdcb34695fee8",
+    "port/level-world/move_state.cpp": "74622f90da0bd193540b08592549ae3bdddc664554ce71e1b5ba448127537264",
+    "port/adam-script-runtime/lua/lgc.c": "0dca5dafe37b81d5f63bd486f183ddf1c2f9b33be64f38aa474340caf082e576",
+    "port/level-world/character_ai_events.cpp": "0e81bd5a93bf67e3be0c558fd637c28624a2a6cf71b0353764f2e782512b2a62",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/b2ContactManager.cpp": "7c370f2d5012f921ce8b2a3ae194332792f5e773f3031e61e7c2c4f4a9dcb6a8",
+    "port/level-world/ais_external_update.cpp": "23f9267964858e163373626c5aa7a68b9ace75001be1a7a359167fe2f9a273b0",
+    "port/adam-script-runtime/lua/lparser.c": "90b79276da5a08dcecd782ce23812eff55f2b95de030bb1fd258d1688bc422ab",
+    "port/level-world/world.cpp": "8c75d0de6488719fae4606352fd59cc38cf80a08bb3ddaf47c20231f12a051c8",
+    "port/pydata-scripts/native/pydata_scripts.cpp": "a146a72dc96f20cd1610a2be18beb91d534174c717bed6a8c958a2d4504d5aa0",
+    "port/adam-script-runtime/lua/ltablib.c": "1e1aa085f3ba40cfc136399002ebf284222b26e1dc7d353d01200933c719fc97",
+    "port/level-world/octree.cpp": "c2d630197ef49a190fdde5ab52bf52d919c41aeb766b9de1aa47749664e2a5c1",
+    "port/engine-skinning/skinning.cpp": "e887fa5f9ae1b8774e795d451d30869bee4331eb87170ea2245e15977c8197b1",
+    "port/physics-backend/box2d-2.0.1/Source/Collision/b2PairManager.cpp": "0ba3ce40b97bc5c4c50aacbd131f665a63e44c8130c2ddf4c9ecc9abe75e2f4c",
+    "port/level-world/character_enemy_spotted.cpp": "e9e5cb5d17f3621f69f3ffab31106f61cbedb3b3736044d9ce4c1ca9ee877c6b",
+    "port/engine-animation/events.cpp": "e53937ac01560ddef84f1304cb0a848669604d3cf7c6ebb5cd82b72f49dc9c74",
+    "port/level-world/character_script_selection.cpp": "83f48d3eaaf05baae41948c66e3099688f849a089b84322f66fec1590a7d6ccd",
+    "port/physics-backend/box2d-2.0.1/Source/Dynamics/Contacts/b2ContactSolver.cpp": "c9c0560fe24e87b37c54268b8a90a36ce3261e61647fc76acf4b38f09b6cf65c",
+    "port/game-data/combat_result.cpp": "8c049006cb01b294304bb9820950f1d8da733bd8f7d4d7c5518d9718f18a18e3",
+    "port/level-world/selector.cpp": "b4cc745ade1732c555a8019a5c4dc2e65a9e4a6e1445718381ff72faa27134b1",
+    "port/engine-animation/component_applicator.cpp": "9abca1a630447b10b7ea871f66af1e523511af5328fd03189e8be13dd1bb57bd",
+    "port/level-world/CMakeLists.txt": "04a924ec51f713a40cce8883d3194dfda87ebac09d908650818af65eab32aaaf",
+    "port/scene-materials/CMakeLists.txt": "6274830b9960800a3653cc0c1545aecc13a30fc678eb5a6dccc9a3888f778f6a"
+  },
+  "component_proofs": {
+    "interaction": {
+      "report": "port/level-world/build/character-ai-interaction-range-final-root/validation.json",
+      "sha256": "de885639e6b85b721f3eddc552234a4870ac72dde5f382e1f09c0bf95dcca034"
+    },
+    "ranged": {
+      "report": "port/level-world/build/character-ai-ranged-range-corrected-root/validation.json",
+      "sha256": "eccc09c9651a531c492474e1126f410e4eb7b6772f65d91b937508a8e3726da1"
+    },
+    "capability": {
+      "report": "port/level-world/build/character-range-capability-corrected-root/validation.json",
+      "sha256": "6c61eda5c60a418e4a75b2815821a8b763a74d99b7867a1b4367acd17399be16"
+    },
+    "queue": {
+      "report": "port/level-world/build/character-ai-queue-root-final/validation.json",
+      "sha256": "18c7999b6768e9b635b7398614d0e8afba95625f0fdf61e848765e21aa0f65a9"
+    },
+    "interactive": {
+      "report": "port/level-world/build/character-interactive-frozen-root/validation.json",
+      "sha256": "cabcc093306544a3fdc19ef8ab0095870e702f528fdbbb7975a7717457eb369e"
+    },
+    "initialization": {
+      "report": "port/level-world/build/character-ai-initialization-root/validation.json",
+      "sha256": "27df9759f4ac6231214f4cdd1c77f501d5c87bdbaafe7d75c33cbfd283825afa"
+    },
+    "render_snapshot": {
+      "report": "port/scene-materials/build/render-state-snapshot-corrected-root/validation.json",
+      "sha256": "b3e505e3c139136d9cf2fbea021005342c48eea90a0e9ee85c0ecd165544710f"
+    },
+    "source_conversion": {
+      "report": "port/scene-materials/build/source-state-conversion-frozen-root/validation.json",
+      "sha256": "8a97ac5f39d373ee5a24b11ac90d1f81a8357c184e3412f5985e63e76cb4d49b"
+    }
+  },
+  "abis": {
+    "arm64-v8a": {
+      "library_bytes": 7265104,
+      "library_sha256": "c036acca73b5554ab4ef62106d1f9d3dbbbff1c48e5b1d7d1dd2233b4bac1dc6",
+      "minimum_load_alignment": 16384,
+      "exports": {
+        "aggro_delay": [
+          "_ZN3dh221character_aggro_delay6updateEPNS0_5StateEP16dh2_random_statePKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "turn_selection": [
+          "_ZN3dh217character_ai_turn8evaluateEPNS0_5StateEPKNS0_7GlobalsEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "target_search": [
+          "dh2_aggro_target_list_init",
+          "dh2_aggro_target_pop",
+          "dh2_aggro_target_search"
+        ],
+        "candidate_events": [
+          "_ZN3dh232character_aggro_candidate_events7consumeEPNS0_5StateEPNS_9character12aggro_search10TargetListEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "enemy_spotted": [
+          "_ZN3dh223character_enemy_spotted16on_enemy_spottedEPNS0_5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "external_monster_script": [
+          "_ZN3dh223monster_external_script7Session8dispatchENS0_5EventEmRNSt6__ndk112basic_stringIcNS3_11char_traitsIcEENS3_9allocatorIcEEEE"
+        ],
+        "target_mutation": [
+          "dh2_character_ai_set_target"
+        ],
+        "faction_relations": [
+          "_ZN3dh222character_ai_relations5queryENS0_8RelationEPNS0_5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "combat_query": [
+          "_ZN3dh222character_ai_in_combat8evaluateEPNS0_5StateEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "acquisition_prefix": [
+          "_ZN3dh234character_aggro_acquisition_prefix7prepareEPNS0_5StateEP16dh2_random_statePKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "monster_retarget": [
+          "_ZN3dh226character_monster_retarget6updateEPNS0_5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "sight_distance": [
+          "_ZN3dh218character_ai_sight17evaluate_distanceEPNS0_5StateEjPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "sight_object": [
+          "_ZN3dh218character_ai_sight15evaluate_objectEPNS0_5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "ghost_actor_composition": [
+          "_ZN3dh216ghost_ai_session12ActorSession19search_and_dispatchEPNS_9character12aggro_search10TargetListEPKNS3_12RoomRegistryEffPNS0_10ScanResultE"
+        ],
+        "enemy_retention": [
+          "_ZN3dh225character_enemy_retention6updateEPNS0_5StateEmPNS_13target_search8Target24EjPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "target_update": [
+          "_ZN3dh226character_ai_update_target6updateEPNS_9character10set_target5StateEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "master_update": [
+          "_ZN3dh226character_ai_master_update6updateEPNS0_5StateEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "melee_range": [
+          "_ZN3dh224character_ai_melee_range15evaluate_objectEPNS_18character_ai_sight5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "melee_radius": [
+          "_ZN3dh224character_ai_melee_range10get_radiusEPNS_18character_ai_sight5StateEPKNS0_14RadiusServicesEPNS0_12RadiusResultE"
+        ],
+        "interaction_range": [
+          "_ZN3dh230character_ai_interaction_range15evaluate_objectEPNS_18character_ai_sight5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "ais_external_update": [
+          "_ZN3dh219ais_external_update6updateEPNS0_5StateEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "ais_state_callbacks": [
+          "_ZN3dh219ais_state_callbacks6invokeEPNS0_5StateENS0_8CallbackEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "pause_update": [
+          "_ZN3dh225character_ai_pause_update5pauseEPNS_9character14AIFrameState32EjPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "collision_persist": [
+          "_ZN3dh229ais_default_collision_persist7persistEPNS0_5StateEmjPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "close_range": [
+          "_ZN3dh225character_ai_ranged_range14evaluate_closeEPNS_18character_ai_sight5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "ranged_range": [
+          "_ZN3dh225character_ai_ranged_range15evaluate_rangedEPNS_18character_ai_sight5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "character_range_parameters": [
+          "_ZN3dh226character_range_capability20character_parametersEPNS0_9CharacterEPjS3_S3_PKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "inventory_range_parameters": [
+          "_ZN3dh226character_range_capability20inventory_parametersEPNS0_9InventoryEPjS3_S3_PKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "character_range_capability": [
+          "_ZN3dh226character_range_capability19character_can_rangeEPNS0_9CharacterEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "inventory_range_capability": [
+          "_ZN3dh226character_range_capability17has_ranged_weaponEPNS0_9InventoryEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "shared_ai_queue": [
+          "_ZN3dh218character_ai_queue7advanceEPNS0_5StateEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "character_interactive": [
+          "_ZN3dh221character_interactive8evaluateEPNS0_9CharacterEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "character_ai_initialization": [
+          "_ZN3dh227character_ai_initialization9constructEPNS0_5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ]
+      },
+      "scene_library_sha256": "873c9b15ae208b9ad68764679be4c9ac8a37090b80a18e9add78b4e63037f41a",
+      "scene_library_bytes": 3128360,
+      "scene_exports": {
+        "convert_video_state": [
+          "_ZN3dh215scene_materials12source_state19convert_video_stateEPKhmPhm"
+        ],
+        "decode_pass_state": [
+          "_ZN3dh215scene_materials12render_state17decode_pass_stateEPKhmRNS1_9PassStateE"
+        ]
+      },
+      "compile_database_sha256": "21bc5bfe813fa383523b049362cfdc6fc262c6563670343e14fe53f55b99ca82",
+      "repository_translation_units": 183
+    },
+    "x86_64": {
+      "library_bytes": 6981864,
+      "library_sha256": "31f7c508b1ebcf702474772ffe00b8fd30240762fe005e3e1b7ddbb93525a9b6",
+      "minimum_load_alignment": 16384,
+      "exports": {
+        "aggro_delay": [
+          "_ZN3dh221character_aggro_delay6updateEPNS0_5StateEP16dh2_random_statePKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "turn_selection": [
+          "_ZN3dh217character_ai_turn8evaluateEPNS0_5StateEPKNS0_7GlobalsEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "target_search": [
+          "dh2_aggro_target_list_init",
+          "dh2_aggro_target_pop",
+          "dh2_aggro_target_search"
+        ],
+        "candidate_events": [
+          "_ZN3dh232character_aggro_candidate_events7consumeEPNS0_5StateEPNS_9character12aggro_search10TargetListEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "enemy_spotted": [
+          "_ZN3dh223character_enemy_spotted16on_enemy_spottedEPNS0_5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "external_monster_script": [
+          "_ZN3dh223monster_external_script7Session8dispatchENS0_5EventEmRNSt6__ndk112basic_stringIcNS3_11char_traitsIcEENS3_9allocatorIcEEEE"
+        ],
+        "target_mutation": [
+          "dh2_character_ai_set_target"
+        ],
+        "faction_relations": [
+          "_ZN3dh222character_ai_relations5queryENS0_8RelationEPNS0_5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "combat_query": [
+          "_ZN3dh222character_ai_in_combat8evaluateEPNS0_5StateEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "acquisition_prefix": [
+          "_ZN3dh234character_aggro_acquisition_prefix7prepareEPNS0_5StateEP16dh2_random_statePKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "monster_retarget": [
+          "_ZN3dh226character_monster_retarget6updateEPNS0_5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "sight_distance": [
+          "_ZN3dh218character_ai_sight17evaluate_distanceEPNS0_5StateEjPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "sight_object": [
+          "_ZN3dh218character_ai_sight15evaluate_objectEPNS0_5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "ghost_actor_composition": [
+          "_ZN3dh216ghost_ai_session12ActorSession19search_and_dispatchEPNS_9character12aggro_search10TargetListEPKNS3_12RoomRegistryEffPNS0_10ScanResultE"
+        ],
+        "enemy_retention": [
+          "_ZN3dh225character_enemy_retention6updateEPNS0_5StateEmPNS_13target_search8Target24EjPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "target_update": [
+          "_ZN3dh226character_ai_update_target6updateEPNS_9character10set_target5StateEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "master_update": [
+          "_ZN3dh226character_ai_master_update6updateEPNS0_5StateEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "melee_range": [
+          "_ZN3dh224character_ai_melee_range15evaluate_objectEPNS_18character_ai_sight5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "melee_radius": [
+          "_ZN3dh224character_ai_melee_range10get_radiusEPNS_18character_ai_sight5StateEPKNS0_14RadiusServicesEPNS0_12RadiusResultE"
+        ],
+        "interaction_range": [
+          "_ZN3dh230character_ai_interaction_range15evaluate_objectEPNS_18character_ai_sight5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "ais_external_update": [
+          "_ZN3dh219ais_external_update6updateEPNS0_5StateEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "ais_state_callbacks": [
+          "_ZN3dh219ais_state_callbacks6invokeEPNS0_5StateENS0_8CallbackEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "pause_update": [
+          "_ZN3dh225character_ai_pause_update5pauseEPNS_9character14AIFrameState32EjPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "collision_persist": [
+          "_ZN3dh229ais_default_collision_persist7persistEPNS0_5StateEmjPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "close_range": [
+          "_ZN3dh225character_ai_ranged_range14evaluate_closeEPNS_18character_ai_sight5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "ranged_range": [
+          "_ZN3dh225character_ai_ranged_range15evaluate_rangedEPNS_18character_ai_sight5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "character_range_parameters": [
+          "_ZN3dh226character_range_capability20character_parametersEPNS0_9CharacterEPjS3_S3_PKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "inventory_range_parameters": [
+          "_ZN3dh226character_range_capability20inventory_parametersEPNS0_9InventoryEPjS3_S3_PKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "character_range_capability": [
+          "_ZN3dh226character_range_capability19character_can_rangeEPNS0_9CharacterEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "inventory_range_capability": [
+          "_ZN3dh226character_range_capability17has_ranged_weaponEPNS0_9InventoryEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "shared_ai_queue": [
+          "_ZN3dh218character_ai_queue7advanceEPNS0_5StateEPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "character_interactive": [
+          "_ZN3dh221character_interactive8evaluateEPNS0_9CharacterEmPKNS0_8ServicesEPNS0_6ResultE"
+        ],
+        "character_ai_initialization": [
+          "_ZN3dh227character_ai_initialization9constructEPNS0_5StateEmPKNS0_8ServicesEPNS0_6ResultE"
+        ]
+      },
+      "scene_library_sha256": "ece715efe1b921d85ebdc0806a29b2cfc61f9c492bd8b5aeb2767d57b6b5d083",
+      "scene_library_bytes": 2966496,
+      "scene_exports": {
+        "convert_video_state": [
+          "_ZN3dh215scene_materials12source_state19convert_video_stateEPKhmPhm"
+        ],
+        "decode_pass_state": [
+          "_ZN3dh215scene_materials12render_state17decode_pass_stateEPKhmRNS1_9PassStateE"
+        ]
+      },
+      "compile_database_sha256": "8f39c258e07f589cdf4a8f76a2ffe69315615f1b1506af11f840a1c088a4f4ab",
+      "repository_translation_units": 183
+    }
+  },
+  "scope": "Current corrected/frozen source component hashes and actual NDK29 Android ARM64/x86_64 ELF64 links/export presence/16KiB load alignment. Source converter compiled separately. Library-only proof does not establish APK or live AI integration."
+}
