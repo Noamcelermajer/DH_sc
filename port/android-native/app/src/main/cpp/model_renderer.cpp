@@ -30,6 +30,7 @@
 #include "vitals.hpp"
 #include "combat_events.hpp"
 #include "combat_result.hpp"
+#include "../../../../../game-data/player_equipment_queries_live_v1.hpp"
 #include "health.hpp"
 #include "combat_application.hpp"
 #include "ai.hpp"
@@ -2293,8 +2294,11 @@ void player_authored_event(const dh2::animation::TriggeredEvent& event,int clip)
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player animation event | clip %d | name %s | sequence %d | attack step %d | kind %d | lag %d | %s | Step %u | position %.4f %.4f %.4f",clip,event.name,action.sequence_step,action.attack_step,int(action.kind),event.lag_ms,prince_scene_phase?"scene before Step":"synchronous actor replay",native_physics_steps,prince_runtime.subobjects.position[0],prince_runtime.subobjects.position[1],prince_runtime.subobjects.position[2]);
  if(action.kind!=dh2::data::CombatEventKind::melee)return;
  auto* target=player_target(prince_combat.target);if(!target||!player_reach(*target))return;
- dh2::data::CombatantView av{prince_combat.properties.resolved.data(),-1,-1,0,0,0,prince_state.current,prince_combat.life.combo_hits},dv{target->properties.resolved.data(),-1,-1,0,0,0,target->state=="Attack"?5:-1,target->combat_state.combo_hits};
  auto ap=dh2::data::property_view(actor_property_rules,prince_combat.properties),dp=dh2::data::property_view(actor_property_rules,target->properties);
+ dh2::data::CombatantView av{prince_combat.properties.resolved.data(),-1,-1,0,0,0,prince_state.current,prince_combat.life.combo_hits},dv{target->properties.resolved.data(),-1,-1,0,0,0,target->state=="Attack"?5:-1,target->combat_state.combo_hits};
+ if(!prince_combat.inventory)throw std::runtime_error("Player combat has no canonical V4 inventory");
+ dh2::data::PlayerEquipmentQueriesLiveV1 equipment(*prince_combat.inventory,ap);std::string equipment_error;
+ if(!equipment.combat_view(av,equipment_error))throw std::runtime_error("Player combat equipment query failed: "+equipment_error);
  dh2::data::CombatResult result;dh2::data::MonsterApplication applied;
  const dh2::data::MonsterApplicationRequest request{&result,&ap,&dp,&prince_combat.life,&target->combat_state};
  const unsigned aggro_facts=(target->combat_state.dead?dh2::data::aggro_owner_dead:0u)|(prince_combat.life.dead?dh2::data::aggro_target_dead:0u);
