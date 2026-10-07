@@ -28,3 +28,9 @@ add_executable(item_loot_backbone_v7_selected ../item_loot_backbone_v7.cpp
   ../loot_power_creation_v7_fixture.cpp "${DH2_ITEM_LOOT_ROOT}/port/random/random.c")
 target_link_libraries(item_loot_backbone_v7_selected PRIVATE dh2_game_data)
 target_compile_options(item_loot_backbone_v7_selected PRIVATE -fno-fast-math -ffp-contract=off)
+add_executable(loot_entry_selection_v1_selected ../loot_entry_selection_v1_host.cpp)
+target_link_libraries(loot_entry_selection_v1_selected PRIVATE dh2_game_data)
+add_executable(item_loot_random_table_v1_selected ../item_loot_random_table_v1.cpp
+  "${DH2_ITEM_LOOT_ROOT}/port/random/random.c")
+target_link_libraries(item_loot_random_table_v1_selected PRIVATE dh2_game_data)
+target_compile_options(item_loot_random_table_v1_selected PRIVATE -fno-fast-math -ffp-contract=off)

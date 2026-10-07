@@ -76,8 +76,10 @@ def main():
             run([a.ghidra_home.resolve() / 'support/analyzeHeadless', projects, lib.stem,
                  '-import', lib, '-overwrite', '-scriptPath', tools / 'ghidra',
                  '-preScript', 'ConfigureRecovery.java', modes,
+                 '-preScript', 'FixArmEabiFloatHelpers.java',
                  '-postScript', 'FixThumbRanges.java', modes,
                  '-postScript', 'EnsureNamedFunctions.java', modes,
+                 '-postScript', 'FixArmEabiFloatHelpers.java',
                  '-postScript', 'ExportRecovery.java', repo / 'recovered/native/decompiled', a.workers, 30,
                  '-analysisTimeoutPerFile', 900, '-max-cpu', a.workers])
 

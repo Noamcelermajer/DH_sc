@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <cstdint>
+#include "item_presentation_v5.hpp"
 
 namespace dh2::android_ui {
 // Synchronous borrowed source services. Creation publishes a result only after
@@ -46,6 +47,11 @@ public:
     std::string consume_menu_sound(); // GL owner thread; drains one source request
     std::string consume_menu_audio(); // GL owner -> Android audio control delivery
     bool debug_menu_sound(const std::string& probe,std::string&);
+    // Returns a descriptor which borrows this session's live StringManager
+    // cache and the supplied immutable Item/Character tables. The returned
+    // context remains valid until this session is destroyed or rebound.
+    data::ItemTextServicesV5 item_text_services(const data::ItemTable&,
+                                               const data::CharacterTable&) noexcept;
     bool touch(float x,float y,int action,std::string&);
     bool active() const;
     bool overlays_player() const;

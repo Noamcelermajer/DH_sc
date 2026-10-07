@@ -13,6 +13,10 @@
 #include "class_tables.hpp"
 #include "class_preview_setup.hpp"
 #include "skill_tables.hpp"
+#include "loot_tables_v2.hpp"
+#include "item_power_tables_v5.hpp"
+#include "loot_power_resources_v7.hpp"
+#include "fresh_inventory_owned_v4.hpp"
 #include "player_savegame_v1.hpp"
 #include "savegame_options_v1.hpp"
 #include "level_tables.hpp"
@@ -41,6 +45,7 @@
 #include "character_state.hpp"
 #include "character_timers.hpp"
 #include "character_coordinator.hpp"
+#include "native_player_character_owner_v1.hpp"
 #include "character_factory.hpp"
 #include "crypt_spawn_script_session.hpp"
 #include "character_stance.hpp"
@@ -117,6 +122,8 @@ NativeSourceCamera source_camera;
 using Vertex=dh2::objects::Vertex;
 std::string mod_root;
 std::string runtime_root;
+void* item_text_services_context=nullptr;
+model_renderer::ItemTextServicesFactoryV5 item_text_services_factory=nullptr;
 struct Draw{GLuint vertices=0,indices=0,diffuse=0,alpha=0;GLsizei count=0;unsigned node=0;dh2::scene::Material material;
  dh2::skinning::Skin skin;std::vector<Vertex> cpu_vertices;std::vector<std::array<float,3>> rest_positions;
  bool environment=false;Matrix placement{};};
@@ -134,7 +141,7 @@ struct SpawnOwner;
 struct NativeCharAIProjection;
 struct ObjectActor:dh2::objects::Record {
  dh2::data::AnimationScheduler scheduler;double cursor=0;unsigned completions=0;std::string state="Idle";
- dh2::data::PropertySheet base_class{};int class_id=-1;
+ dh2::data::PropertySheet base_class{};int class_id=-1;std::int32_t loot_table_id=-1;
  dh2::data::PropertyState properties;
  dh2::animation::EventCursor event_cursor;unsigned animation_events=0;
  dh2::data::CombatActorState combat_state;int combat_target=-1;bool pending_death=false;
@@ -194,6 +201,16 @@ struct NativePlayerSaveAssociation {
 };
 struct PlayerCombat {
  dh2::data::PropertyState properties;dh2::data::CombatActorState life;
+ std::shared_ptr<dh2::data::LootTablesV2> inventory_loot_tables;
+ std::shared_ptr<dh2::data::ItemPowerTablesV5> item_power_tables;
+ std::shared_ptr<dh2::data::LootPowerResourcesV7> loot_power_resources;
+ std::unique_ptr<dh2::data::LootPowerCreationV7> loot_power_creation;
+ // Borrows OriginalUiSession's one loaded StringManager cache and this
+ // Character/Item generation; later loot uses the same item text semantics.
+ dh2::data::ItemTextServicesV5 item_text;
+ std::unique_ptr<dh2::data::ItemPresentationOwnerV5> item_presentation;
+ // Keep the presentation authority alive through V4 item retirement.
+ std::unique_ptr<dh2::data::FreshInventoryOwnedV4> inventory;
  std::shared_ptr<dh2::data::PlayerSavegameV1> savegame;
  std::shared_ptr<dh2::data::PlayerSaveProfileV1> save_profile;
  std::shared_ptr<const dh2::data::CharacterTable> profile_characters;
@@ -553,6 +570,85 @@ struct NativeHostPlayer {
    return out;
  }
 } native_host;
+// Per-call forwarding context shared by powered-loot effects and the older
+// V4 inventory callbacks. It borrows the loaded UI StringManager callbacks and
+// the retained presentation owner; it owns no VM, Item, inventory or RNG.
+struct NativeLootAdapterV1 {
+ dh2::data::ItemTextServicesV5 upstream_text;
+ dh2::data::ItemPresentationOwnerV5* presentation{};
+
+ dh2::data::ItemTextServicesV5 text_services() {
+  return {this,forward_metadata,forward_text};
+ }
+ dh2::data::OwnedInventoryServicesV4 inventory_services() {
+  return {this,invoke_inventory,observe_storage,false};
+ }
+ static const dh2::data::Item* forward_metadata(void* raw,
+     const dh2::data::ItemInstanceV1& item,std::string& error) {
+  auto& self=*static_cast<NativeLootAdapterV1*>(raw);
+  if(!self.upstream_text.metadata){error="Original Item metadata/text callback unavailable";return nullptr;}
+  return self.upstream_text.metadata(self.upstream_text.context,item,error);
+ }
+ static bool forward_text(void* raw,dh2::data::ItemInstanceV1& item,
+     const dh2::data::ItemTextRequestV5& request,
+     dh2::data::ItemTextResponseV5& response,std::string& output,
+     std::string& error) {
+  auto& self=*static_cast<NativeLootAdapterV1*>(raw);
+  if(!self.upstream_text.invoke){error="Original StringManager text callback unavailable";return false;}
+  return self.upstream_text.invoke(self.upstream_text.context,item,request,response,output,error);
+ }
+ static bool invoke_inventory(void* raw,dh2::data::FreshInventoryOwnedV4& inventory,
+     const dh2::data::OwnedInventoryRequestV4& request,
+     dh2::data::OwnedInventoryResponseV4& response,std::string& error) {
+  auto& self=*static_cast<NativeLootAdapterV1*>(raw);
+  if(&inventory!=prince_combat.inventory.get()){error="Powered-loot callback used a different V4 inventory owner";return false;}
+  using Operation=dh2::data::OwnedInventoryOperationV4;
+  response={};
+  switch(request.operation){
+   case Operation::debug_load:
+    if(!native_debug){error="Shared native DebugSwitches owner unavailable";return false;}
+    if(native_debug->runtime().load(native_debug->globals(),native_debug->services())!=dh2::debug_switches::Status::complete){error="Shared native DebugSwitches load failed";return false;}
+    error.clear();return true;
+   case Operation::debug_query:
+    if(!native_debug||!request.name){error="Shared DebugSwitches query requires its owner and key";return false;}
+    {std::uint8_t value=0;if(native_debug->runtime().get_switch(request.name,native_debug->globals(),native_debug->services(),value)!=dh2::debug_switches::Status::complete){error="Shared native DebugSwitches query failed";return false;}response.value=value;error.clear();return true;}
+   case Operation::current_player:
+    if(request.argument==1&&request.index==0){response.value=native_save_difficulty;error.clear();return true;}
+    if(request.argument!=0||request.index!=0){error="Unsupported native current-player loot query";return false;}
+    {auto* record=native_host.record_for(native_host.host_projection());if(!record||!record->character_660||record->character_660!=inventory.character()){error="Native current PlayerInfo does not own the staged-loot Character";return false;}response.identity=record->character_660;error.clear();return true;}
+   case Operation::player_count:
+    {auto queries=native_host.locality_services();dh2::player_manager_friendly_v1::Services services{&queries,&native_host,
+      [](void* context,dh2::player_manager_friendly_v1::PlayerInfo* player,std::int32_t* value)->std::int32_t {
+       auto* record=static_cast<NativeHostPlayer*>(context)->record_for(player);if(!record)return 1;*value=record->internal_id_670;return 0;
+      }};dh2::player_manager_friendly_v1::Result result{};
+     if(dh2::player_manager_friendly_v1::get_num_players(&native_host.registry,&services,&result)!=dh2::player_manager_friendly_v1::Status::complete){error="Native PlayerManager player-count query failed";return false;}
+     response.value=result.value;error.clear();return true;}
+   case Operation::update_name:
+    if(!request.item){error="Item name update has no live Item";return false;}
+    return dh2::data::item_update_name_v5(*request.item,self.text_services(),error);
+   case Operation::update_stats:
+    if(!request.item){error="Item stats update has no live Item";return false;}
+    return dh2::data::item_update_stats_v5(*request.item,self.text_services(),error);
+   case Operation::update_requirements:
+    if(!request.item){error="Item requirements update has no live Item";return false;}
+    return dh2::data::item_update_requirements_v5(*request.item,self.text_services(),error);
+   case Operation::add_power:
+    if(!request.item||!self.presentation||request.index>std::uint32_t(INT32_MAX)){error="Item AddPower owner, identity, or mode is invalid";return false;}
+    return self.presentation->add_power(*request.item,request.argument,std::int32_t(request.index),self.text_services(),error);
+   default:
+    error="Unsupported required native powered-loot inventory operation";return false;
+  }
+ }
+ static void observe_storage(void* raw,dh2::data::FreshInventoryOwnedV4& inventory,
+     const dh2::data::OwnedInventoryRequestV4& request) {
+  if(&inventory!=prince_combat.inventory.get())throw std::runtime_error("Item retirement used a different V4 inventory owner");
+  if(request.operation!=dh2::data::OwnedInventoryOperationV4::destroy_item)return;
+  auto& self=*static_cast<NativeLootAdapterV1*>(raw);
+  if(!request.item||!self.presentation)throw std::runtime_error("Native Item retirement lacks its live item/presentation owner");
+  std::string error;if(!self.presentation->forget(*request.item,error))
+   throw std::runtime_error(error.empty()?"Native Item presentation retirement failed":error);
+ }
+};
 // The viewport owns the bounded Level constructor fields. Its normal-difficulty
 // development argument is explicit; the original GSLevel/save stack is pending.
 dh2::level_construction_fields::State actor_level_fields{-1,-1,0,{0,0,0},0};
@@ -666,7 +762,7 @@ dh2::physical::NativeBody prince_body{};
 dh2::visual::SceneBinding prince_visual;
 dh2::actor::BlendedPlayback prince_locomotion;
 dh2::actor_scene_retention_v1::Snapshot prince_retained_pose;
-dh2::character::Coordinator prince_character(0x100000001ull);
+dh2::character::NativePlayerCharacterOwnerV1 prince_character;
 dh2::character::State& prince_state=prince_character.state;
 b2FilterData prince_initial_filter;
 bool prince_scene_phase=false;
@@ -842,7 +938,7 @@ void initialize_char_ai_registry() {
    throw std::runtime_error("Duplicate native Character-to-CharAI projection");
   ++fresh;
  };
- construct(0x100000001ull,0x300000001ull,&prince_source_ai);
+ construct(prince_character.identity(),0x300000001ull,&prince_source_ai);
  for(std::size_t i=0;i<world_objects.size();++i)if(world_objects[i].kind==1) {
   const auto identity=0x100000002ull+i;ObjectActor* actor=nullptr;
   for(auto& group:object_groups)for(auto& entry:group.instances)if(entry.identity==identity)actor=&entry;
@@ -1354,7 +1450,7 @@ void sync_search_projection(ObjectActor& actor) {
 void sync_prince_search_projection() {
  auto& projection=prince_search_projection;
  auto& object=projection.object;
- object.identity=0x100000001ull;
+  object.identity=prince_character.identity();
  std::copy(actor_position.begin(),actor_position.end(),object.position);
  std::copy(actor_position.begin(),actor_position.end(),object.target_position);
  std::copy(prince_runtime.subobjects.position,prince_runtime.subobjects.position+3,
@@ -1593,6 +1689,9 @@ Matrix camera(int width,int height){
 }
 #include "model_menu_scene_v69.hpp"
 }
+void bind_item_text_services(void* context,ItemTextServicesFactoryV5 factory){
+ item_text_services_context=context;item_text_services_factory=factory;
+}
 void mod_directory(std::string directory){mod_root=std::move(directory);}
 void runtime_directory(std::string directory){runtime_root=std::move(directory);if(!native_application.identity)native_application.identity=reinterpret_cast<std::uintptr_t>(&native_application);}
 std::string profile_slot(int slot){
@@ -1701,6 +1800,9 @@ void reset_context(){
 void deactivate(){
  source_camera={};
  release_class_previews();menu_background=false;class_scene=false;
+ std::string player_owner_error;
+ if(!prince_character.unbind_session(player_owner_error))
+  __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Native player Character retirement failed: %s",player_owner_error.c_str());
  prince_combat.source_save_association.reset(); // Drop borrowed +14e8/Save/LoadOwner before their owners.
   prince_skills.reset();prince_source_ai.reset();
  if(prince_combat.quests){
@@ -2067,7 +2169,7 @@ void apply_actor_to_player(ObjectActor& attacker,const dh2::data::CombatEventAct
  dh2::data::CombatResult result;dh2::data::MonsterApplication applied;auto ap=dh2::data::property_view(actor_property_rules,attacker.properties),dp=dh2::data::property_view(actor_property_rules,prince_combat.properties);const dh2::data::MonsterApplicationRequest request{&result,&ap,&dp,&attacker.combat_state,&prince_combat.life};
  const unsigned aggro_facts=dh2::data::aggro_owner_player|(attacker.combat_state.dead?dh2::data::aggro_target_dead:0u);
  if(dh2_combat_melee(&result,&av,&dv,&combat_random,action.offhand,0)||dh2_combat_apply_monster_to_player(&applied,&request,idle)){__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Player defender application failed");enabled=false;return;}
- if(applied.hit_called)add_combat_threat(prince_combat.aggro,attacker.aggro,0x100000001ull,attacker.identity,applied.threat,aggro_facts);
+ if(applied.hit_called)add_combat_threat(prince_combat.aggro,attacker.aggro,prince_character.identity(),attacker.identity,applied.threat,aggro_facts);
  ++combat_hits;++prince_combat.received;
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Prince damage received | attacker %s | attempt %u | result %d %d %d %d %d %d %u %u %d %d | HP %d %d | dead %u | combo %u | RNG %u %u | statuses %u | low health armed %u | cue %u | checksum %016llx",attacker.name.c_str(),prince_combat.received,result.amount,result.dot_element,result.dot_duration,result.dot_amount,result.hp_leech,result.mp_leech,result.outcomes,result.mask,result.weapon_category,result.element,applied.health.before,applied.health.after,prince_combat.life.dead,attacker.combat_state.combo_hits,combat_random.seed,combat_random.calls,applied.status_requests,prince_combat.life.low_health_armed,applied.health.low_health_cue,static_cast<unsigned long long>(snapshot_checksum(prince_combat.properties.resolved)));
  if(applied.health.low_health_cue)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Player low health request | HP %d | maximum %d | audio pending",applied.health.after,prince_combat.properties.resolved[38]);
@@ -2141,7 +2243,7 @@ void player_authored_event(const dh2::animation::TriggeredEvent& event,int clip)
  const dh2::data::MonsterApplicationRequest request{&result,&ap,&dp,&prince_combat.life,&target->combat_state};
  const unsigned aggro_facts=(target->combat_state.dead?dh2::data::aggro_owner_dead:0u)|(prince_combat.life.dead?dh2::data::aggro_target_dead:0u);
  if(dh2_combat_melee(&result,&av,&dv,&combat_random,action.offhand,0)||dh2_combat_apply_player_to_monster(&applied,&request))throw std::runtime_error("Player combat application failed");
- if(applied.hit_called)add_combat_threat(target->aggro,prince_combat.aggro,target->identity,0x100000001ull,applied.threat,aggro_facts);
+ if(applied.hit_called)add_combat_threat(target->aggro,prince_combat.aggro,target->identity,prince_character.identity(),applied.threat,aggro_facts);
  ++combat_hits;++prince_combat.attempts;
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Prince combat hit | target %s | attempt %u | result %d %d %d %d %d %d %u %u %d %d | HP %d %d | dead %u | combo %u | RNG %u %u | statuses %u",target->name.c_str(),prince_combat.attempts,result.amount,result.dot_element,result.dot_duration,result.dot_amount,result.hp_leech,result.mp_leech,result.outcomes,result.mask,result.weapon_category,result.element,applied.health.before,applied.health.after,target->combat_state.dead,prince_combat.life.combo_hits,combat_random.seed,combat_random.calls,applied.status_requests);
  if(applied.health.kill_requested)target->pending_death=true;
@@ -2194,7 +2296,7 @@ int prince_look_service(void*,const dh2::character::CharacterControlRequest32* r
   }
   return -1;
  }
- if(request->service==control_look_at_point&&request->subject==0x100000001ull){
+ if(request->service==control_look_at_point&&request->subject==prince_character.identity()){
   LookAtState16 look{{prince_runtime.subobjects.position[0],prince_runtime.subobjects.position[1],prince_runtime.subobjects.position[2]},prince_runtime.rotation.heading_angle};
   if(dh2_character_look_at_point(&look,request->position))return -1;
   if(look.heading_angle!=prince_runtime.rotation.heading_angle){++native_heading_updates;
@@ -2246,9 +2348,9 @@ void character_service(void*,dh2::character::State* state,const dh2::character::
  case look_at:{
   const CharacterControlServices16 services{nullptr,prince_look_service};
   if(request->argument[0]==1){
-   const ControllerCommandState32 controller{reinterpret_cast<std::uintptr_t>(&prince_state),0x100000001ull,controller_global_blocked,state->controller_locked,prince_controller_forced,0};
+    const ControllerCommandState32 controller{reinterpret_cast<std::uintptr_t>(&prince_state),prince_character.identity(),controller_global_blocked,state->controller_locked,prince_controller_forced,0};
    if(dh2_character_controller_character(&controller,controller_look_object,request->identity,&services)!=1)throw std::runtime_error("Character controller LookAt failed");
-  }else if(dh2_character_control(0x100000001ull,controller_look_object,request->identity,&services)!=1)throw std::runtime_error("Character LookAt failed");
+   }else if(dh2_character_control(prince_character.identity(),controller_look_object,request->identity,&services)!=1)throw std::runtime_error("Character LookAt failed");
   break;
  }
  case set_heading:{
@@ -2429,10 +2531,10 @@ void initialize_native_actor(AAssetManager* assets,bool restore){
  prince_runtime.path.segments=live_path_segments.data();prince_runtime.path.capacity=live_path_segments.size();
  std::copy(actor_position.begin(),actor_position.end(),prince_runtime.path.target);
  dh2_nav_object_defaults(&prince_runtime.object);dh2_nav_motion_policy_defaults(&live_motion_policy);
- const dh2::navigation::ObjectInitRequest init{&level.native_floor->collision_world,&prince_runtime.object,0x100000001ull,{actor_position[0],actor_position[1],actor_position[2]},config.radius*100.f,0,0};
+  const dh2::navigation::ObjectInitRequest init{&level.native_floor->collision_world,&prince_runtime.object,prince_character.identity(),{actor_position[0],actor_position[1],actor_position[2]},config.radius*100.f,0,0};
  if(dh2_nav_init_object(&init))throw std::runtime_error("Native player floor initialization failed");
  const dh2::navigation::ProducerFields fields{dh2::navigation::ProducerClass::character,1,config.radius,0,{box[0],box[1]},{box[3],box[4]}};
- const dh2::navigation::ProducerRequest producer{&level.native_floor->collision_world,&live_registry,&prince_runtime.object,0x100000001ull,&fields};
+  const dh2::navigation::ProducerRequest producer{&level.native_floor->collision_world,&live_registry,&prince_runtime.object,prince_character.identity(),&fields};
  if(dh2_nav_update_game_object(&producer))throw std::runtime_error("Native player obstacle initialization failed");
  std::copy(prince_runtime.object.motion.position,prince_runtime.object.motion.position+3,prince_runtime.subobjects.previous_position);
  std::copy(prince_runtime.object.motion.position,prince_runtime.object.motion.position+3,prince_runtime.subobjects.position);
@@ -2465,7 +2567,7 @@ void initialize_native_actor(AAssetManager* assets,bool restore){
                          {nullptr,character_service},prince_timer_before,prince_timer_after,nullptr,prince_timer_route});
  if(!restore){
   prince_state={};pending_character_services=0;
-  prince_character.reset_timers(0x100000001ull);
+  prince_character.reset_timers(prince_character.identity());
  }
  prince_state.body_present=1;
  if(prince_state.current==-1||prince_state.current==3||prince_state.current==4){
@@ -2570,7 +2672,7 @@ void advance_native_actor(unsigned dt_ms){
  // boundaries. The floor/path/root/body coordinators execute genuine source.
  const dh2::actor::RuntimePolicy policy{{1,0,0,decoded.position_from_physics},1,0,0,0,dh2::actor::base_virtual_speed};
  const dh2::subobjects::Services services{nullptr,actor_virtual_service};
- const dh2::actor::RuntimeRequest request{&prince_runtime,prince_body.body?&prince_body:nullptr,&prince_visual,&current_scene,&level.native_floor->collision_world,&level.native_floor->graph,&live_registry,&live_motion_policy,&live_workspace,nullptr,prince_combat.properties.resolved.data(),&policy,&services,nullptr,0x100000001ull,prince_flags,dt_ms};
+ const dh2::actor::RuntimeRequest request{&prince_runtime,prince_body.body?&prince_body:nullptr,&prince_visual,&current_scene,&level.native_floor->collision_world,&level.native_floor->graph,&live_registry,&live_motion_policy,&live_workspace,nullptr,prince_combat.properties.resolved.data(),&policy,&services,nullptr,prince_character.identity(),prince_flags,dt_ms};
  dh2::actor::RuntimeResult result{};
  if(dh2::actor::update_actor(result,request,error))throw std::runtime_error(error);
  const float dx=prince_runtime.subobjects.position[0]-actor_position[0],dy=prince_runtime.subobjects.position[1]-actor_position[1];
@@ -2602,19 +2704,23 @@ void initialize_native_monster_scripts(AAssetManager* assets) {
   if(!gameplay||metadata==gameplay||native_host.metadata->save().character()!=0||prince_combat.savegame->character()!=prince_character.owner())throw std::runtime_error("Native metadata/gameplay Save ownership differs");
   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native campaign Save owners | metadata %zu | gameplay %zu | metadata slot %d | gameplay slot %d | gameplay Character %zu | distinct source roles; managed association/mask4 pending",std::size_t(metadata),std::size_t(gameplay),native_host.metadata->save().slot(),prince_combat.savegame->slot(),std::size_t(prince_combat.savegame->character()));
  }
- // Reconcile the selected registered record. Character660 remains empty until
- // the genuine _AddCharacter producer is reconstructed.
+ // The development Crypt continuation now publishes its reconstructed 64-bit
+ // owner after Save/property construction. This does not execute _AddCharacter.
  auto* host_projection=native_host.host_projection();
  auto* host_record=native_host.record_for(host_projection);
  if(!host_record)throw std::runtime_error("Native hosting PlayerInfo backing missing");
+ auto* bound_properties=prince_character.properties_for(host_record->character_660);
+ if(host_record->character_660!=prince_character.identity()||
+    bound_properties!=&prince_combat.properties||
+    prince_character.save_for(host_record->character_660)!=prince_combat.savegame.get())
+  throw std::runtime_error("Native PlayerInfo Character does not resolve the live Character owners");
  const dh2::player_manager_host_level::ReconcileState state{host_projection,
-  host_record->character_660,host_record->character_660==prince_character.owner()?
-  reinterpret_cast<std::uintptr_t>(&prince_combat.properties):0};
- if(host_record->character_660&&host_record->character_660!=prince_character.owner())throw std::runtime_error("Native PlayerInfo association has no property owner");
+  host_record->character_660,reinterpret_cast<std::uintptr_t>(bound_properties)};
  const dh2::player_manager_host_level::ReconcileServices reconcile{nullptr,
   [](void*,std::uintptr_t identity,std::uint32_t property,std::uint32_t include_bonus,std::int32_t* output)->std::int32_t {
-   if(identity!=reinterpret_cast<std::uintptr_t>(&prince_combat.properties)||property!=19||include_bonus)return 1;
-   const auto raw=prince_combat.properties.resolved[19];
+   const auto* properties=prince_character.properties_for(prince_character.identity());
+   if(!properties||identity!=reinterpret_cast<std::uintptr_t>(properties)||property!=19||include_bonus)return 1;
+   const auto raw=properties->resolved[19];
    const std::uint32_t shifted=(std::uint32_t(raw)>>8)|(raw<0?0xff000000u:0u);
    std::memcpy(output,&shifted,4);return 0;
   },
@@ -2628,8 +2734,8 @@ void initialize_native_monster_scripts(AAssetManager* assets) {
   throw std::runtime_error("Native managed host Level reconciliation failed");
  std::int32_t host_level=0,host_difficulty=0;
  if(native_host_level(&host_level)||native_host_difficulty(&host_difficulty))throw std::runtime_error("Native host source query failed");
- __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native managed host | Level %d | difficulty %d | property reads %u | member writes %u | skipped unbound %u | canonical record; Character association pending",host_level,host_difficulty,reconciled.property_reads,reconciled.setter_calls,unsigned(reconcile_status==dh2::player_manager_host_level::ReconcileStatus::skipped_unbound_character));
- __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native full PlayerInfo | fields %u | factory %u | level %d | class %d | Character660 %zu | slot664 %d | counter %llu | canonical registered; Character association pending",
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native managed host | Level %d | difficulty %d | property reads %u | member writes %u | skipped unbound %u | reconstructed Character owner bound; _AddCharacter not invoked",host_level,host_difficulty,reconciled.property_reads,reconciled.setter_calls,unsigned(reconcile_status==dh2::player_manager_host_level::ReconcileStatus::skipped_unbound_character));
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native full PlayerInfo | fields %u | factory %u | level %d | class %d | Character660 %zu | slot664 %d | counter %llu | canonical registered owner",
   host_record->base.network.count,unsigned(native_host.record_factory.registered()),host_record->at(0x310)->header.value,host_record->at(0x360)->header.value,
   std::size_t(host_record->character_660),host_record->save_slot_664,static_cast<unsigned long long>(native_host.change_serial));
  const auto common=read(assets,"ai/_commons.luac","scripts"),monster=read(assets,"ai/monster.luac","scripts");
@@ -2750,7 +2856,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
   std::vector<Draw> environment;std::vector<GLuint> textures;
   std::vector<ObjectGroup> candidate_groups;
   const bool restore=world_mode||resume_world;const auto previous=actor_position;
-  const auto previous_heading=heading;
+  const auto previous_heading=heading;float source_spawn_heading=0;
   const auto previous_random=actor_random;
   const bool previous_frozen=frozen;
   if(restore&&!object_groups.empty()){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}
@@ -2770,6 +2876,16 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     auto raw=read(assets,"crypt.bdae","worlds");dh2::resources::BresView view{};
     if(dh2_bres_open(&view,raw.data(),raw.size())!=dh2::resources::BresError::ok)throw std::runtime_error("World BRES rejected");
     dh2::world::Level candidate;std::string error;if(!dh2::world::load(view,descriptor,size,candidate,error))throw std::runtime_error(error);
+    if(!restore){
+      const auto spawn_bytes=read(assets,"crypt01.spwn","worlds");std::vector<dh2::world::EntryPoint> entrypoints;
+      if(!dh2::world::load_entrypoints(spawn_bytes.data(),spawn_bytes.size(),candidate.rooms,entrypoints,error))throw std::runtime_error(error);
+      dh2::world::SpawnSelection start;
+      if(!dh2::world::select_entrypoint(candidate,entrypoints,0,start,error))throw std::runtime_error(error);
+      candidate.spawn=start.position;
+      source_spawn_heading=start.rotation_degrees[2]*0.01745329251994329577f;
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native","Source SpawnPoint selected | ID %d | %s | room %u | floor snapped %u | source xyz %.4f %.4f %.4f | start xyz %.4f %.4f %.4f | source rotation z %.4f deg",
+        start.source.id,start.source.name.c_str(),start.source.room,unsigned(start.floor_snapped),start.source.world.position[0],start.source.world.position[1],start.source.world.position[2],start.position[0],start.position[1],start.position[2],start.rotation_degrees[2]);
+    }
     const auto records_data=read(assets,"character_properties_pyarray.bin","data"),names_data=read(assets,"character_properties_pyarraynames.bin","data"),fields_data=read(assets,"character_properties_pystructnames.bin","data"),model_names=read(assets,"character_models_dictionary_pyarraynames.bin","data"),model_values=read(assets,"character_models_dictionary_pyarray.bin","data");
     dh2::data::CharacterTable character_table;dh2::data::Dictionary model_table;
     if(!dh2::data::load_characters({records_data.data(),records_data.size()},{names_data.data(),names_data.size()},{fields_data.data(),fields_data.size()},character_table,error)||!dh2::data::load_dictionary({model_names.data(),model_names.size()},{model_values.data(),model_values.size()},model_table,error))throw std::runtime_error(error);
@@ -2861,6 +2977,46 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
      __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native campaign metadata | slot %d | class %d | level %d | difficulty %d | level ID %u | sections %u | reads %u | file opens %u | Save %zu | profile %zu | source mask1; spawn/InitPost/mask4/writes pending",receipt.slot,receipt.character_class,receipt.level,receipt.difficulty,receipt.source_level_id,receipt.sections,receipt.field_reads,receipt.file_opens,std::size_t(native_host.metadata->save_identity()),std::size_t(native_host.metadata->profile_identity()));
     }
     PlayerCombat fresh_player;
+    if(!restore){
+     const auto loot_records=read(assets,"loot_table_pyarray.bin","data");
+     const auto loot_names=read(assets,"loot_table_pyarraynames.bin","data");
+     const auto loot_schema=read(assets,"loot_table_pystructnames.bin","data");
+     fresh_player.inventory_loot_tables=std::make_shared<dh2::data::LootTablesV2>();
+     if(!fresh_player.inventory_loot_tables->load(
+          {loot_records.data(),loot_records.size()},
+          {loot_names.data(),loot_names.size()},
+          {loot_schema.data(),loot_schema.size()},error))
+      throw std::runtime_error("Native gameplay LootTable resources rejected: "+error);
+     const char* power_files[]={
+      "item_powers_pyarray.bin","item_powers_pyarraynames.bin","item_powers_pystructnames.bin",
+      "item_powers_monopoly_pyarray.bin","item_powers_monopoly_pyarraynames.bin","item_powers_monopoly_pystructnames.bin"};
+     std::array<std::vector<std::uint8_t>,6> power_bytes;
+     for(std::size_t i=0;i<power_bytes.size();++i)
+      power_bytes[i]=read(assets,power_files[i],"original-cache/data/pydata");
+     fresh_player.item_power_tables=std::make_shared<dh2::data::ItemPowerTablesV5>();
+     if(!fresh_player.item_power_tables->load(
+          {power_bytes[0].data(),power_bytes[0].size()},
+          {power_bytes[1].data(),power_bytes[1].size()},
+          {power_bytes[2].data(),power_bytes[2].size()},error))
+      throw std::runtime_error("Native ItemPower resources rejected: "+error);
+     const auto loot_borrow=fresh_player.inventory_loot_tables->borrow();
+     const auto quantity_offset=loot_borrow.consumed();
+     if(quantity_offset>loot_records.size())
+      throw std::runtime_error("Native NumProbArray offset exceeds original LootTable cache");
+     dh2::data::LootPowerInputsV7 power_input{
+      {power_bytes[0].data(),power_bytes[0].size()},
+      {power_bytes[1].data(),power_bytes[1].size()},
+      {power_bytes[2].data(),power_bytes[2].size()},
+      {power_bytes[3].data(),power_bytes[3].size()},
+      {power_bytes[4].data(),power_bytes[4].size()},
+      {power_bytes[5].data(),power_bytes[5].size()},
+      {loot_records.data()+quantity_offset,loot_records.size()-quantity_offset},
+      {loot_names.data(),loot_names.size()},{loot_schema.data(),loot_schema.size()}};
+     fresh_player.loot_power_resources=std::make_shared<dh2::data::LootPowerResourcesV7>();
+     if(!fresh_player.loot_power_resources->load(power_input,
+          fresh_player.item_power_tables->borrow(),error))
+      throw std::runtime_error("Native powered-loot resources rejected: "+error);
+    }
     fresh_player.savegame=std::make_shared<dh2::data::PlayerSavegameV1>();
     fresh_player.savegame->set_character(prince_character.owner());
     fresh_player.savegame->set_slot(menu_gameplay_slot);
@@ -2869,6 +3025,28 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     }else if(!prince_combat.quests)throw std::runtime_error("Retained native quest factory owner missing");
     fresh_player.save_profile=std::make_shared<dh2::data::PlayerSaveProfileV1>();
     fresh_player.profile_characters=std::make_shared<dh2::data::CharacterTable>(character_table);
+    if(!restore&&item_text_services_factory){
+      const auto tables=fresh_player.inventory_loot_tables->borrow();
+      fresh_player.item_text=item_text_services_factory(item_text_services_context,
+          tables.items(),*fresh_player.profile_characters);
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+          "Native Item text services bound | Item rows %zu | Character rows %zu | one retained StringManager owner",
+          tables.items().rows.size(),fresh_player.profile_characters->rows.size());
+    }else if(!restore){
+      __android_log_print(ANDROID_LOG_WARN,"DH2Native",
+          "Native Item text services unavailable | loot item text calls will fail explicitly");
+    }
+    if(!restore){
+      fresh_player.item_presentation=std::make_unique<dh2::data::ItemPresentationOwnerV5>(
+          fresh_player.item_power_tables->borrow());
+      fresh_player.loot_power_creation=std::make_unique<dh2::data::LootPowerCreationV7>(
+          fresh_player.loot_power_resources->borrow(),
+          dh2::random_lifecycle::inventory_random_service());
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+          "Native powered-loot resources retained | power rows %zu | loot power lists %zu | shared process RNG",
+          fresh_player.item_power_tables->borrow().rows().size(),
+          fresh_player.loot_power_resources->borrow().lists().size());
+    }
     fresh_player.save_transport=std::make_shared<dh2::native::player_profile::Transport>(*fresh_player.savegame,*fresh_player.save_profile);
     if(!fresh_player.save_transport->bind({runtime_root,fresh_player.profile_characters.get(),&native_save_difficulty,{},false,&actor_level_tables,&actor_world_map_tables,fresh_player.quests,&native_host.online},error))throw std::runtime_error(error);
     auto* gameplay_save=fresh_player.savegame.get();auto* gameplay_loader=&fresh_player.save_transport->loader();
@@ -2937,9 +3115,9 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
         actor.identity=0x100000002ull+(&object-object_records.data());
         if(object.kind!=1)return;
         actor.aggro.initialize(object_records.size()+1);
-        const auto character=std::find(character_table.names.begin(),character_table.names.end(),object.character);const auto* class_id=dh2::data::property(character_table,object.character,"ClassID");
+        const auto character=std::find(character_table.names.begin(),character_table.names.end(),object.character);const auto* class_id=dh2::data::property(character_table,object.character,"ClassID");const auto* loot_table_id=dh2::data::property(character_table,object.character,"Loot");
         if(character==character_table.names.end()||!class_id)throw std::runtime_error("Original monster class link absent");
-        actor.class_id=*class_id;actor.base_class=character_table.rows.at(character-character_table.names.begin());
+        actor.class_id=*class_id;actor.loot_table_id=loot_table_id?*loot_table_id:-1;actor.base_class=character_table.rows.at(character-character_table.names.begin());
         if(!dh2::data::apply_class(class_table,actor.class_id,actor.base_class,error))throw std::runtime_error(error);
         __android_log_print(ANDROID_LOG_INFO,"DH2Native","Base class snapshot | %s | character %s | class %d | level raw %d | Max_HP raw %d | Max_MP raw %d | checksum %016llx | cached only",actor.name.c_str(),actor.character.c_str(),actor.class_id,actor.base_class[19],actor.base_class[38],actor.base_class[43],static_cast<unsigned long long>(snapshot_checksum(actor.base_class)));
         dh2::data::reset_properties(property_rules,actor.properties,&character_table.rows.at(character-character_table.names.begin()));
@@ -3048,6 +3226,35 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     }}else{combat_random={0xD22026u,0};combat_hits=0;}
     saved_actors.clear();
     if(!restore)prince_combat=std::move(fresh_player);
+    auto* selected_record=native_host.record_for(native_host.host_projection());
+    if(!selected_record||!prince_combat.savegame)
+      throw std::runtime_error("Native registered PlayerInfo or gameplay Save owner unavailable");
+    std::int8_t native_potion_capacity=0;
+    if(!prince_character.bind_session(&selected_record->character_660,
+         *prince_combat.savegame,prince_combat.properties,
+         restore?prince_combat.inventory.get():nullptr,error))
+      throw std::runtime_error("Native reconstructed Character owner bind: "+error);
+    if(!restore){
+      if(!prince_combat.inventory_loot_tables)
+        throw std::runtime_error("Native Character V4 inventory has no retained LootTable snapshot");
+      const auto property_bits=static_cast<std::uint32_t>(prince_combat.properties.resolved[194]);
+      const auto capacity_bits=(property_bits>>8)|
+          ((property_bits&0x80000000u)?0xff000000u:0u);
+      std::int32_t potion_capacity=0;
+      std::memcpy(&potion_capacity,&capacity_bits,sizeof(potion_capacity));
+      if(potion_capacity<0)potion_capacity=0;
+      native_potion_capacity=static_cast<std::int8_t>(
+          static_cast<std::uint8_t>(potion_capacity));
+      prince_combat.inventory=std::make_unique<dh2::data::FreshInventoryOwnedV4>(
+          prince_character.identity(),prince_combat.inventory_loot_tables->borrow(),
+          dh2::random_lifecycle::inventory_random_service(),native_potion_capacity,
+          prince_combat.properties);
+      if(!prince_character.bind_inventory(*prince_combat.inventory,error))
+        throw std::runtime_error("Native reconstructed Character inventory bind: "+error);
+    }else if(!prince_combat.inventory||
+             prince_character.inventory_for(prince_character.identity())!=prince_combat.inventory.get()){
+      throw std::runtime_error("Retained Character inventory owner differs after Activity resume");
+    }
     if(!restore){
       dh2::native::player_profile::TransportBindings gameplay_bindings{runtime_root,
        prince_combat.profile_characters.get(),&native_save_difficulty,{},false,
@@ -3057,7 +3264,16 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       gameplay_bindings.property_rules=&actor_property_rules;
       gameplay_bindings.properties=&prince_combat.properties;
       if(!prince_combat.save_transport->bind(std::move(gameplay_bindings),error))
-       throw std::runtime_error("Native Player Save provider rebind: "+error);
+        throw std::runtime_error("Native Player Save provider rebind: "+error);
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+       "Native Character owner bound | object %zu | Coordinator %zu | Save %zu | properties %zu | inventory %zu | item rows %zu | loot rows %zu | item count %zu | equipment set %d | potion capacity %d | same V4 Character owner; development continuation",
+       std::size_t(prince_character.identity()),std::size_t(prince_character.owner()),
+       std::size_t(prince_combat.savegame.get()),std::size_t(&prince_combat.properties),
+       std::size_t(prince_combat.inventory.get()),
+       prince_combat.inventory->table().rows.size(),
+       prince_combat.inventory_loot_tables->borrow().loots().size(),
+       prince_combat.inventory->items().size(),
+       prince_combat.inventory->current_equipment(),int(native_potion_capacity));
       auto association=std::make_shared<NativePlayerSaveAssociation>();
       if(!association->bind(prince_character.owner(),*prince_combat.savegame,
                             prince_combat.save_transport->loader(),error))
@@ -3097,7 +3313,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     for(const auto& group:object_groups)for(const auto& object:group.instances){monsters+=object.kind==1;decors+=object.kind==2;object_triangles+=group.resource.triangles;object_draws+=group.draws.size();}
     level=std::move(candidate);player=std::move(candidate_idle);walk_player=std::move(candidate_walk);current_scene=std::move(rest);
     actor_position=restore?previous:level.spawn;
-    world_mode=true;resume_world=false;walking=false;move_x=move_y=0;heading=restore?previous_heading:0;movement_steps=blocked_steps=0;
+    world_mode=true;resume_world=false;walking=false;move_x=move_y=0;heading=restore?previous_heading:source_spawn_heading;movement_steps=blocked_steps=0;
     radius=350;yaw=-1.57f;pitch=.75f;zoom=1;object_epoch=epoch=last_frame=std::chrono::steady_clock::now();sampled_ms=0;frozen=restore?previous_frozen:false;
     initialize_native_actor(assets,restore);
     actor_level_fields=candidate_level_fields;actor_level_file=candidate_level_file;actor_level_fields_ready=true;
@@ -3215,6 +3431,59 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     }
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","World ready | rooms %u | visual draws %zu | navigation triangles %zu | idle tracks %u | walk tracks %u | position %.4f %.4f %.4f",level.rooms,draws.size(),level.floor.size(),player.track_count(),walk_player.track_count(),actor_position[0],actor_position[1],actor_position[2]);return std::string(report)+(combat_resumed?"\nNative combat resumed":"");
   }catch(const std::exception& e){deactivate();release_objects(candidate_groups);release(environment,textures);__android_log_print(ANDROID_LOG_ERROR,"DH2Native","World load failed: %s",e.what());return std::string("World load failed: ")+e.what();}
+}
+bool stage_world_loot_table(std::int32_t loot_table_id,
+    const dh2::data::LootEntrySelectionContextV1& selection,
+    std::int32_t value_bonus256,std::int32_t power_bonus256,
+    std::int32_t requested_power_count,std::int32_t difficulty,
+    LootStagingResultV1& result,std::string& error) {
+ result={};
+ if(!world_mode||!prince_combat.inventory||!prince_combat.inventory_loot_tables){
+  error="Native Character V4 inventory is not active";return false;
+ }
+ if(!prince_combat.item_power_tables||!prince_combat.loot_power_resources||
+    !prince_combat.loot_power_creation||!prince_combat.item_presentation){
+  error="Native powered-loot owners are not retained";return false;
+ }
+ result.first_world_item=prince_combat.inventory->world_items().size();
+ if(loot_table_id<0){error.clear();return true;}
+ if(std::size_t(loot_table_id)>=prince_combat.inventory_loot_tables->borrow().loots().size()){
+  error="Source Loot property ID is outside the retained LootTable";return false;
+ }
+ NativeLootAdapterV1 adapter{prince_combat.item_text,prince_combat.item_presentation.get()};
+ const auto services=adapter.inventory_services();
+ dh2::data::OwnedLootEffectsV7 effects;
+ effects.creation=prince_combat.loot_power_creation.get();
+ effects.powers=prince_combat.item_power_tables->borrow();
+ effects.text=adapter.text_services();
+ effects.value_bonus256=value_bonus256;effects.power_bonus256=power_bonus256;
+ effects.requested_power_count=requested_power_count;effects.difficulty=difficulty;
+ std::unique_ptr<dh2::data::ItemInstanceV1> pending;
+ bool ok=false;
+ try{
+  ok=prince_combat.inventory->add_world_loot_table(loot_table_id,selection,
+      {&pending},services,effects,error);
+ }catch(const std::exception& exception){error=exception.what();}
+ catch(...){error="Native powered Loot staging callback threw";}
+ if(pending){
+  std::string retirement_error;
+  if(!prince_combat.inventory->retire_item({&pending},services,retirement_error)){
+   if(error.empty())error="Retained staged Item retirement failed: "+retirement_error;
+   else error+="; retained staged Item retirement failed: "+retirement_error;
+   return false;
+  }
+ }
+ const auto after=prince_combat.inventory->world_items().size();
+ result.item_count=after>=result.first_world_item?after-result.first_world_item:0;
+ if(!ok){if(error.empty())error="Native Character V4 Loot staging failed";return false;}
+ error.clear();return true;
+}
+bool retire_staged_world_loot_item(std::size_t index,std::string& error) {
+ if(!world_mode||!prince_combat.inventory||!prince_combat.item_presentation){
+  error="Native Character V4 world-item owner is not active";return false;
+ }
+ NativeLootAdapterV1 adapter{prince_combat.item_text,prince_combat.item_presentation.get()};
+ return prince_combat.inventory->retire_world_item(index,adapter.inventory_services(),error);
 }
 void draw(int width,int height){
   if(!enabled||!program)return;

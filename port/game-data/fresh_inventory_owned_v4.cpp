@@ -1,4 +1,5 @@
 #include "fresh_inventory_owned_v4.hpp"
+#include <algorithm>
 #include <cstring>
 #include <stdexcept>
 namespace dh2::data {
@@ -22,48 +23,155 @@ bool FreshInventoryOwnedV4::invoke_loot_power_bridge(void* context,const LootPow
 void FreshInventoryOwnedV4::observe(const OwnedInventoryServicesV4& s,OwnedInventoryOperationV4 op,std::uint32_t caller,ItemInstanceV1* item,std::int32_t arg,std::uint32_t index){if(s.observe_storage){++callback_depth_;struct Guard{std::uint32_t& n;~Guard(){--n;}}guard{callback_depth_};s.observe_storage(s.context,*this,{op,caller,item,nullptr,arg,index});}}
 bool FreshInventoryOwnedV4::deliver(const OwnedInventoryServicesV4& s,OwnedInventoryOperationV4 op,std::uint32_t caller,ItemInstanceV1* instance,const char* name,std::int32_t arg,std::uint32_t index,OwnedInventoryResponseV4& out,std::string& e){out={};if(op==OwnedInventoryOperationV4::destroy_item){if(!s.observe_storage&&!s.stateless_temporaries){e="Required Item retirement provider unavailable at "+std::to_string(caller);return false;}observe(s,op,caller,instance,arg,index);return true;}if(op==OwnedInventoryOperationV4::inventory_full){observe(s,op,caller,instance,arg,index);bool full;if(!is_full(full,s,e))return false;out.value=full;return true;}if(!s.invoke){e="Required owned inventory effect unavailable at "+std::to_string(caller);return false;}++callback_depth_;struct Guard{std::uint32_t& n;~Guard(){--n;}}guard{callback_depth_};if(!s.invoke(s.context,*this,{op,caller,instance,name,arg,index},out,e)){if(e.empty())e="Required owned inventory effect failed at "+std::to_string(caller);return false;}return true;}
 bool FreshInventoryOwnedV4::debug(const OwnedInventoryServicesV4& s,std::uint32_t call,const char* name,std::int32_t& value,std::string& e){OwnedInventoryResponseV4 out;auto load=call-0x1c;if(call==0x40411c||call==0x403d48||call==0x403138)load=call-0x20;else if(call==0x403c2c)load=call-0x24;if(!deliver(s,OwnedInventoryOperationV4::debug_load,load,nullptr,nullptr,0,0,out,e)||!deliver(s,OwnedInventoryOperationV4::debug_query,call,nullptr,name,0,0,out,e))return false;value=out.value;return true;}
-bool FreshInventoryOwnedV4::add_fixed_loot_impl(std::int32_t id,std::unique_ptr<ItemInstanceV1>& owned,bool retained,const OwnedInventoryServicesV4& s,const OwnedLootEffectsV7* loot_effects,std::string& e){
+bool FreshInventoryOwnedV4::add_fixed_loot_impl(std::int32_t id,std::unique_ptr<ItemInstanceV1>& owned,bool retained,const OwnedInventoryServicesV4& s,const OwnedLootEffectsV7* loot_effects,const LootEntrySelectionContextV1* selection,std::vector<std::unique_ptr<OwnedItemSlotV4>>* world_items,std::string& e){
  if(!mutation_allowed(e))return false;if(running_||!s.invoke){e="Malformed fresh loot service or unsupported owner reentry";return false;}if(id<0||std::size_t(id)>=tables_.loots().size()){e.clear();return true;}running_=true;struct Guard{bool& b;~Guard(){b=false;}}guard{running_};std::int32_t ignored=0;auto trace=[&](std::uint32_t at){return debug(s,at,"isTracingItemInventory_Loot",ignored,e);};
  if(loot_effects){const auto& expected=loot_effects->creation?loot_effects->creation->random_service():InventoryRandomServiceV4{};if(!loot_effects->creation||!loot_effects->powers||!loot_effects->text.invoke||!loot_effects->text.metadata||loot_effects->text.context!=s.context||random_.context!=expected.context||random_.next!=expected.next){e="Loot effects require this inventory's borrowed RNG and shared V5 services";return false;}if(&loot_effects->creation->resources().powers().rows()!=&loot_effects->powers.rows()){e="Loot effects must borrow the creation owner's V5 power snapshot";return false;}}
  if(!debug(s,0x40411c,"MP_MinimalRandoms",ignored,e))return false;if(ignored){e.clear();return true;}if(!trace(0x404160)||!trace(0x404190))return false;
- const auto& loot=tables_.loots()[id];if(!loot.random_entries.empty()||!loot.sub_loots.empty()){e="Required random/subloot source continuation unavailable";return false;}
- if(!trace(0x403a20)||!trace(0x403a50)||!trace(0x403a94))return false;
- for(const auto& entry:loot.fixed_entries){if(!trace(0x403b20))return false;auto list=entry.words[0];if(list<0||std::size_t(list)>=tables_.item_lists().size()){e="Loot ItemList requires unrecovered Debug continuation";return false;}if(entry.words[1]!=-1&&!loot_effects){e="Required ItemPowerList producer unavailable";return false;}}
+ std::vector<const LootEntry32V2*> entries;
+ std::vector<std::int32_t> recursion_path;
+ std::size_t expanded_tables=0;
+ const auto& all_loot=tables_.loots();
+ static const std::vector<std::vector<LootQuantityChoiceV7>> no_quantities;
+ const auto& quantities=loot_effects?loot_effects->creation->resources().quantities():no_quantities;
+ auto append_entry=[&](std::vector<const LootEntry32V2*>& destination,const LootEntry32V2& entry,const char* label){
+  if(destination.size()>=65536){e="Expanded loot entry count exceeds native budget";return false;}
+  const auto list=entry.words[0];if(list<0||std::size_t(list)>=tables_.item_lists().size()){e=label;return false;}
+  if(entry.words[1]!=-1&&!loot_effects){e="Required ItemPowerList producer unavailable";return false;}
+  destination.push_back(&entry);return true;
+ };
+ auto roll_entries=[&](const std::vector<const LootEntry32V2*>& pool,std::int32_t quantity_id,std::vector<const LootEntry32V2*>& destination){
+  if(pool.empty())return true;
+  if(!selection||!loot_effects){e="Random loot requires original class/Debug facts and the shared quantity/power owner";return false;}
+  if(quantity_id<0||std::size_t(quantity_id)>=quantities.size()){e="Required invalid NumProbArray Debug continuation";return false;}
+  std::int32_t count=0;const auto& quantity_row=quantities[std::size_t(quantity_id)];
+  if(loot_quantity_v7(&count,random_,quantity_row.data(),std::uint32_t(quantity_row.size()),0,e)){if(e.empty())e="Required NumProbArray selection continuation";return false;}
+  if(count<0||count>4096){e="Random loot entry count exceeds native budget";return false;}
+  std::vector<LootEntry32V2> contiguous;contiguous.reserve(pool.size());for(auto* entry:pool)contiguous.push_back(*entry);
+  for(std::int32_t n=0;n<count;++n){
+   std::uint32_t index=0;
+   // The selection routine consumes a contiguous LootEntry array. For a
+   // pooled recursive table, materialize only these small source records.
+   if(!loot_entries_choose_weighted_v1(contiguous.data(),std::uint32_t(contiguous.size()),selection->player_counts,selection->infinite_loot_drops,random_,index,e))return false;
+   const auto& entry=*pool[index];bool accepted=true;
+   // The original DoPctRolls pass leaves weighted entries alone and gates
+   // only percent-classified rows.
+   if(!selection->infinite_loot_drops&&loot_entry_uses_percent_v1(entry,false)&&
+      !loot_entry_do_percent_roll_v1(entry,false,random_,accepted,e))return false;
+   if(accepted&&!append_entry(destination,entry,"Selected random LootEntry ItemList requires unrecovered Debug continuation"))return false;
+  }
+  return true;
+ };
+ auto expand_table=[&](auto&& self,std::int32_t table_id,std::vector<const LootEntry32V2*>& output,std::vector<const LootEntry32V2*>* shared_random,std::size_t depth)->bool{
+  if(depth>64||++expanded_tables>4096){e="Nested LootTable expansion exceeds native budget";return false;}
+  if(table_id<0||std::size_t(table_id)>=all_loot.size()){e="SubLootTable index requires original assertion continuation";return false;}
+  if(std::find(recursion_path.begin(),recursion_path.end(),table_id)!=recursion_path.end()){e="Cyclic SubLootTable graph is outside the recovered cache domain";return false;}
+  recursion_path.push_back(table_id);struct PathGuard{std::vector<std::int32_t>& p;~PathGuard(){p.pop_back();}} path_guard{recursion_path};
+  const auto& table=all_loot[std::size_t(table_id)];
+  if(!table.random_entries.empty()&&table.roll_type!=0){e="Random loot roll type requires its original caller continuation";return false;}
+  if(!trace(0x403a20)||!trace(0x403a50)||!trace(0x403a94))return false;
+  for(const auto& entry:table.fixed_entries){if(!trace(0x403b20)||!append_entry(output,entry,"Loot ItemList requires unrecovered Debug continuation"))return false;}
+  std::vector<const LootEntry32V2*> local_random;
+  if(!table.random_entries.empty()){
+   if(shared_random){
+    if(shared_random->size()+table.random_entries.size()>65536){e="Expanded pooled LootEntry count exceeds native budget";return false;}
+    for(const auto& entry:table.random_entries)shared_random->push_back(&entry);
+   }else{
+    std::vector<const LootEntry32V2*> direct_random;direct_random.reserve(table.random_entries.size());for(const auto& entry:table.random_entries)direct_random.push_back(&entry);
+    if(!roll_entries(direct_random,table.num_random_item_probs,output))return false;
+   }
+  }
+  auto* child_pool=shared_random?shared_random:&local_random;
+  for(auto child:table.sub_loots)if(!self(self,child,output,child_pool,depth+1))return false;
+  // Native _AddLootTable selects a root quantity only after descendants have
+  // contributed their random rows. Descendant quantity IDs are not consulted.
+  if(!shared_random&&!local_random.empty()){
+   if(!roll_entries(local_random,table.num_random_item_probs,output))return false;
+  }
+  return true;
+ };
+ if(!expand_table(expand_table,id,entries,nullptr,0))return false;
  if(!trace(0x403d48)||!trace(0x403c2c)||!trace(0x404264)||!trace(0x404294))return false;
  struct Prepared {std::int32_t id;std::uint8_t quantity;const Item* row;const LootEntry32V2* entry;};std::vector<Prepared> selected;
- for(const auto& entry:loot.fixed_entries){const auto& list=tables_.item_lists()[entry.words[0]];std::uint32_t sum=0;for(const auto& p:list)sum+=std::uint32_t(std::int32_t(p.probability));if(list.empty()||!sum){e="ItemList weighted selection requires source Debug continuation";return false;}
+ for(const auto* source_entry:entries){const auto& entry=*source_entry;const auto& list=tables_.item_lists()[entry.words[0]];std::uint32_t sum=0;for(const auto& p:list)sum+=std::uint32_t(std::int32_t(p.probability));if(list.empty()||!sum){e="ItemList weighted selection requires source Debug continuation";return false;}
   std::int32_t bound;std::memcpy(&bound,&sum,4);std::int32_t draw;if(!random_.next||!random_.next(random_.context,bound,0,draw,e)){if(e.empty())e="Invalid borrowed source RNG";return false;}std::uint32_t remainder=std::uint32_t(draw);const LootItemEntryV2* chosen=nullptr;for(const auto& p:list){auto weight=std::uint32_t(std::int32_t(p.probability));if(remainder<weight){chosen=&p;break;}remainder-=weight;}if(!chosen){e="Weighted ItemList fell through required Debug continuation";return false;}
-  auto* row=item(tables_.items(),chosen->item);if(!row){e="Selected ItemID exceeds genuine ItemTable";return false;}if(!trace(0x403138))return false;selected.push_back({chosen->item,chosen->quantity,row,&entry});
+  auto generated_id=chosen->item;
+  if(loot_effects&&(loot_effects->difficulty==1||loot_effects->difficulty==2)){
+   const auto& identifiers=tables_.items().identifiers;const auto offset=std::size_t(loot_effects->difficulty);
+   if(std::size_t(generated_id)+offset<identifiers.size()){
+    const auto suffix=loot_effects->difficulty==1?"_Hard":"_VeryHard";
+    if(identifiers[std::size_t(generated_id)+offset]==identifiers[std::size_t(generated_id)]+suffix)generated_id+=loot_effects->difficulty;
+   }
+  }
+  auto* row=item(tables_.items(),generated_id);if(!row){e="Selected ItemID exceeds genuine ItemTable";return false;}if(!trace(0x403138))return false;selected.push_back({generated_id,chosen->quantity,row,&entry});
  }
  if(selected.empty()){if(!trace(0x404574)||!trace(0x4045a4)||!trace(0x4041f8)||!trace(0x404228))return false;e.clear();return true;}
  if(!trace(0x4042fc)||!trace(0x40432c))return false;OwnedInventoryResponseV4 out;
- for(const auto& chosen:selected){auto type=item_type(*chosen.row);if(type==13){e="Required gold-loot valuation unavailable";return false;}std::int32_t repeats=1;auto distribution=chosen.row->record.words[4];if(distribution==2||distribution==3){if(!deliver(s,OwnedInventoryOperationV4::player_count,0x4043a8,nullptr,nullptr,0,0,out,e))return false;repeats=out.value;if(repeats<=0)continue;if(repeats>1024){e="Source player count exceeds owned budget";return false;}}
-  for(std::int32_t j=0;j<repeats;++j){if(!deliver(s,OwnedInventoryOperationV4::current_player,0x4043cc,nullptr,nullptr,0,0,out,e))return false;if(out.identity){if(!deliver(s,OwnedInventoryOperationV4::current_player,0x4043dc,nullptr,nullptr,1,0,out,e))return false;if(out.value!=0){e="Required difficulty-name item variant lookup unavailable";return false;}}
+ for(const auto& chosen:selected){auto type=item_type(*chosen.row);if(type==13&&!loot_effects){e="Gold loot requires the source V7 value provider";return false;}std::int32_t repeats=1;auto distribution=chosen.row->record.words[4];if(distribution==2||distribution==3){if(!deliver(s,OwnedInventoryOperationV4::player_count,0x4043a8,nullptr,nullptr,0,0,out,e))return false;repeats=out.value;if(repeats<=0)continue;if(repeats>1024){e="Source player count exceeds owned budget";return false;}}
+   for(std::int32_t j=0;j<repeats;++j){
    if(!(retained?create_item(chosen.id,1,RetainedItemSlotV4{&owned},s,e):create_item(chosen.id,1,owned,s,e)))return false;auto* instance=owned.get();
    std::int8_t qty;std::memcpy(&qty,&chosen.quantity,1);if(qty==-2)qty=99;if(qty<0){e="SetQty requires original negative Debug continuation";return false;}instance->quantity=std::uint16_t(qty);
-   auto* valued=item(tables_.items(),instance->id);if(!valued||item_type(*valued)==13){e="Item effects changed ID into unsupported valuation continuation";return false;}if(loot_effects){LootPowerBridgeV4 bridge{this,&s};LootPowerServicesV7 power_services{&bridge,invoke_loot_power_bridge};if(!loot_effects->creation->add_powers(*chosen.entry,*instance,loot_effects->power_bonus256,loot_effects->requested_power_count,loot_effects->difficulty,power_services,e))return false;++callback_depth_;struct TextCallbackGuard{std::uint32_t& depth;~TextCallbackGuard(){--depth;}}text_guard{callback_depth_};if(!loot_item_value_v7(*instance,tables_.items(),loot_effects->powers,random_,loot_effects->value_bonus256,loot_effects->text,e))return false;}else{auto value=std::uint32_t(valued->record.words[27])*std::uint32_t(valued->record.words[28]);std::memcpy(&instance->value,&value,4);if(!deliver(s,OwnedInventoryOperationV4::update_name,0x402128,instance,nullptr,0,0,out,e))return false;}
+    auto* valued=item(tables_.items(),instance->id);if(!valued){e="Item effects changed ID outside genuine ItemTable";return false;}if(loot_effects){LootPowerBridgeV4 bridge{this,&s};LootPowerServicesV7 power_services{&bridge,invoke_loot_power_bridge};if(!loot_effects->creation->add_powers(*chosen.entry,*instance,loot_effects->power_bonus256,loot_effects->requested_power_count,loot_effects->difficulty,power_services,e))return false;++callback_depth_;struct TextCallbackGuard{std::uint32_t& depth;~TextCallbackGuard(){--depth;}}text_guard{callback_depth_};if(!loot_item_value_v7(*instance,tables_.items(),loot_effects->powers,random_,loot_effects->value_bonus256,loot_effects->text,e))return false;}else{if(item_type(*valued)==13){e="Gold loot requires the source V7 value provider";return false;}auto value=std::uint32_t(valued->record.words[27])*std::uint32_t(valued->record.words[28]);std::memcpy(&instance->value,&value,4);if(!deliver(s,OwnedInventoryOperationV4::update_name,0x402128,instance,nullptr,0,0,out,e))return false;}
    auto* inserted=item(tables_.items(),instance->id);if(!inserted){e="Item effects changed ID outside genuine ItemTable";return false;}auto inserted_type=item_type(*inserted);
-   if(potion_capacity_==0&&inserted_type==14){if(!destroy(owned,s,0x3ff70c,e))return false;continue;}
-   if(!potion_&&inserted_type==14)potion_=instance;auto slot=std::make_unique<OwnedItemSlotV4>();slot->item=std::move(owned);items_.push_back(std::move(slot));auto index=std::uint32_t(items_.size()-1);if(!deliver(s,OwnedInventoryOperationV4::inventory_full,0x3ff6c4,instance,nullptr,0,index,out,e))return false;if(out.value&&!deliver(s,OwnedInventoryOperationV4::full_notifications,0x3ff7a8,instance,nullptr,0,index,out,e))return false;
+   if(!world_items&&potion_capacity_==0&&inserted_type==14){if(!destroy(owned,s,0x3ff70c,e))return false;continue;}
+   auto slot=std::make_unique<OwnedItemSlotV4>();slot->item=std::move(owned);
+   if(world_items){world_items->push_back(std::move(slot));continue;}
+   if(!potion_&&inserted_type==14)potion_=instance;items_.push_back(std::move(slot));auto index=std::uint32_t(items_.size()-1);if(!deliver(s,OwnedInventoryOperationV4::inventory_full,0x3ff6c4,instance,nullptr,0,index,out,e))return false;if(out.value&&!deliver(s,OwnedInventoryOperationV4::full_notifications,0x3ff7a8,instance,nullptr,0,index,out,e))return false;
   }
  }
  e.clear();return true;
 }
 bool FreshInventoryOwnedV4::add_fixed_loot(std::int32_t id,RetainedItemSlotV4 slot,const OwnedInventoryServicesV4& s,std::string& e){
  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;if(*slot.value){e="Fixed loot incoming slot already owns an item";return false;}
- return add_fixed_loot_impl(id,*slot.value,true,s,nullptr,e);
+ return add_fixed_loot_impl(id,*slot.value,true,s,nullptr,nullptr,nullptr,e);
 }
 bool FreshInventoryOwnedV4::add_fixed_loot(std::int32_t id,const OwnedInventoryServicesV4& s,std::string& e){
- std::unique_ptr<ItemInstanceV1> temporary;bool ok;try{ok=add_fixed_loot_impl(id,temporary,false,s,nullptr,e);}catch(...){if(temporary)observe(s,OwnedInventoryOperationV4::destroy_item,0,temporary.get());throw;}
+ std::unique_ptr<ItemInstanceV1> temporary;bool ok;try{ok=add_fixed_loot_impl(id,temporary,false,s,nullptr,nullptr,nullptr,e);}catch(...){if(temporary)observe(s,OwnedInventoryOperationV4::destroy_item,0,temporary.get());throw;}
  if(temporary)observe(s,OwnedInventoryOperationV4::destroy_item,0,temporary.get());return ok;
 }
 bool FreshInventoryOwnedV4::add_fixed_loot(std::int32_t id,RetainedItemSlotV4 slot,const OwnedInventoryServicesV4& s,const OwnedLootEffectsV7& effects,std::string& e){
  if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;if(*slot.value){e="Fixed loot incoming slot already owns an item";return false;}
- return add_fixed_loot_impl(id,*slot.value,true,s,&effects,e);
+ return add_fixed_loot_impl(id,*slot.value,true,s,&effects,nullptr,nullptr,e);
 }
 bool FreshInventoryOwnedV4::add_fixed_loot(std::int32_t id,const OwnedInventoryServicesV4& s,const OwnedLootEffectsV7& effects,std::string& e){
- std::unique_ptr<ItemInstanceV1> temporary;bool ok;try{ok=add_fixed_loot_impl(id,temporary,false,s,&effects,e);}catch(...){if(temporary)observe(s,OwnedInventoryOperationV4::destroy_item,0,temporary.get());throw;}
+ std::unique_ptr<ItemInstanceV1> temporary;bool ok;try{ok=add_fixed_loot_impl(id,temporary,false,s,&effects,nullptr,nullptr,e);}catch(...){if(temporary)observe(s,OwnedInventoryOperationV4::destroy_item,0,temporary.get());throw;}
  if(temporary)observe(s,OwnedInventoryOperationV4::destroy_item,0,temporary.get());return ok;
+}
+bool FreshInventoryOwnedV4::add_loot_table(std::int32_t id,const LootEntrySelectionContextV1& selection,RetainedItemSlotV4 slot,const OwnedInventoryServicesV4& s,const OwnedLootEffectsV7& effects,std::string& e){
+ if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;if(*slot.value){e="Loot table incoming slot already owns an item";return false;}
+ return add_fixed_loot_impl(id,*slot.value,true,s,&effects,&selection,nullptr,e);
+}
+bool FreshInventoryOwnedV4::add_world_loot_table(std::int32_t id,const LootEntrySelectionContextV1& selection,RetainedItemSlotV4 slot,const OwnedInventoryServicesV4& s,const OwnedLootEffectsV7& effects,std::string& e){
+ if(!mutation_allowed(e)||!lifetime_slot(slot,nullptr,e))return false;if(*slot.value){e="World loot incoming slot already owns an item";return false;}
+ return add_fixed_loot_impl(id,*slot.value,true,s,&effects,&selection,&world_items_,e);
+}
+bool FreshInventoryOwnedV4::pickup_world_item(std::size_t index,std::int32_t& inventory_index,const OwnedInventoryServicesV4& s,std::string& e){
+ if(!mutation_allowed(e)||index>=world_items_.size()||!world_items_[index]||!world_items_[index]->item){e="Invalid retained world item pickup";return false;}
+ const auto* info=metadata(world_items_[index]->item.get(),e);if(!info)return false;
+ if(item_type(*info)==14&&num_potions()>=std::max<int>(0,potion_capacity_)){e="Source ItemObject::Interact leaves a full potion drop in the world";return false;}
+ // Source Interact checks inventory capacity only for item rows with an
+ // equipment slot; slotless items transfer directly, while potions use the
+ // separate capacity check above.
+ if(info->record.words[26]!=-1){bool full=false;if(!inventory_full(full,s,e))return false;if(full){e="Source ItemObject::Interact leaves a full-inventory drop in the world";return false;}}
+ auto* source=world_items_[index]->item.get();ItemInstanceV1* merge_target=nullptr;std::uint16_t merge_quantity=0;
+ if(item_type(*info)!=13&&std::uint8_t(info->record.words[7])){std::uint32_t candidate=0;bool found=false;if(!has_like(source,candidate,found,e))return false;if(found){merge_target=items_[candidate]->item.get();merge_quantity=merge_target->quantity;}}
+ const auto old_gold=gold_;auto* old_potion=potion_;bool accepted=false;
+ try{accepted=add_item(world_items_[index]->item,false,true,inventory_index,s,e);}
+ catch(const std::exception& x){e=x.what();}catch(...){e="World item pickup callback threw";}
+ if(!world_items_[index]->item){
+  if(!accepted&&inventory_index<0)for(std::size_t i=0;i<items_.size();++i)if(items_[i]&&items_[i]->item.get()==source){inventory_index=std::int32_t(i);break;}
+  world_items_.erase(world_items_.begin()+std::ptrdiff_t(index));if(accepted)e.clear();return accepted;
+ }
+ // A failed gold notification or stack-retirement callback must not leave a
+ // retryable world item after applying its value/quantity to inventory.
+ gold_=old_gold;potion_=old_potion;if(merge_target)merge_target->quantity=merge_quantity;
+ if(accepted)e="Source AddItem reported success without transferring the world item";return false;
+}
+bool FreshInventoryOwnedV4::retire_world_item(std::size_t index,const OwnedInventoryServicesV4& s,std::string& e){
+ if(!mutation_allowed(e)||index>=world_items_.size()||!world_items_[index]||!world_items_[index]->item){e="Invalid retained world item retirement";return false;}
+ if(!s.observe_storage){e="Retained world Item retirement provider unavailable";return false;}
+ try{observe(s,OwnedInventoryOperationV4::destroy_item,0,world_items_[index]->item.get());}catch(const std::exception& x){e=x.what();return false;}catch(...){e="World Item retirement provider threw";return false;}
+ world_items_[index]->item.reset();
+ world_items_.erase(world_items_.begin()+std::ptrdiff_t(index));e.clear();return true;
 }
 std::int32_t FreshInventoryOwnedV4::num_potions()const noexcept{std::int16_t value=0;if(potion_)std::memcpy(&value,&potion_->quantity,2);return value;}
 
@@ -83,6 +191,7 @@ bool FreshInventoryOwnedV4::lifetime_slot(RetainedItemSlotV4 slot,const ItemInst
  auto overlaps=[&](const void* p,std::size_t n){auto q=reinterpret_cast<std::uintptr_t>(p);return p&&q<=UINTPTR_MAX-n&&at<q+n&&q<at+sizeof(*slot.value);};
  if(overlaps(this,sizeof(*this))||overlaps(properties_,sizeof(*properties_))||(original&&overlaps(original,sizeof(*original)))){e="Item lifetime slot aliases an owner";return false;}
  for(const auto& cell:items_)if(overlaps(cell.get(),sizeof(*cell))||overlaps(cell->item.get(),sizeof(*cell->item))){e="Item lifetime slot aliases retained inventory storage";return false;}
+ for(const auto& cell:world_items_)if(overlaps(cell.get(),sizeof(*cell))||overlaps(cell->item.get(),sizeof(*cell->item))){e="Item lifetime slot aliases retained world-item storage";return false;}
  return true;
 }
 bool FreshInventoryOwnedV4::create_item(std::int32_t id,std::uint32_t quantity,RetainedItemSlotV4 slot,const OwnedInventoryServicesV4& s,std::string& e){

@@ -13,11 +13,11 @@
     "port/engine-ui/item_text_owner_v5.hpp": "fc3f230a6b4883ff93dc0f213ee68e5f59b36b81ace41a6302151739247b9524",
     "port/engine-ui/item_text_varargs_v5.cpp": "22f6fa8e792b582eeac0ede1b4fde4152f3eb0176a45aebef770f2e7cbe14e07",
     "port/engine-ui/item_text_varargs_v5.hpp": "b895cb56d41a1e2450a745d097ce8a0dc07189cce58f99c5f737411ab6ac5901",
-    "port/engine-ui/localization.cpp": "b519ab31e8553ccc808822fc1c9f846ebdff5f9e608eb31cd2fe3245d2860611",
-    "port/engine-ui/localization.hpp": "48433e35464d7fc14118de3d60a5323766a22c8116761e61eb605809187bbc8c",
+    "port/engine-ui/localization.cpp": "33727e2ea92f19c4ca0f98111feb5341db9731e51e2f6f67a8dd0ba0c3fe6080",
+    "port/engine-ui/localization.hpp": "a5fbf0240e75b19180c8fa952e21b30cd16bd09a5233717c366b3d7c096216b8",
     "port/engine-ui/tests/hud_text_format_v1.cpp": "247ae1e11305a4d442f0177b76505d22a232ff144337ee884de988b10fd8f132",
     "port/engine-ui/tests/inventory-binding-v1/CMakeLists.txt": "d57d24bc5e48c88e6afc2058b96813896253b2463905bae3b353900e0fdd9a13",
-    "port/engine-ui/tests/inventory_binding_text_queries_v1.cpp": "0a7e61ac00561d09c1f3c9b04040eb64a43f54ac38876724aa53f1c10b2ebb86",
+    "port/engine-ui/tests/inventory_binding_text_queries_v1.cpp": "52cba94b39c873303e84d4f760de63d1ba57e5b535373323c6ccaec3e1170906",
     "port/engine-ui/tests/item_text_varargs_v5.cpp": "bf0c437a152c8e36b7c38f7e7514a0b041df40cfe1d6bb756a15adb64454fadd",
     "port/engine-ui/tests/item_text_varargs_v5_fixture.cpp": "95cb88ed36db767a828cb979c45939b0568f744b0379fe30299e4d4e750a25cc",
     "port/engine-ui/tests/run_inventory_binding_v1_host.py": "1fdd559d33ec5dc004282a231aa5be893e118f59570bdc56c91e12eba96bdc0e",
@@ -32,9 +32,11 @@
     "port/game-data/animation_selection.cpp": "f9f985cc772e1adea4cdc7dfa1bf27f987d06308f55b3603b64722877de857ad",
     "port/game-data/animation_tables.cpp": "436cff5b347f1d756777775e35110bab113de3547b6a878932538afac21ef86e",
     "port/game-data/animation_tables.hpp": "031dbc1ec565bc468357a21a9994abfba2c00f046796f4e8c409c63b8b872ecc",
+    "port/game-data/class_preview_setup.cpp": "b4e6d98d78277b0f8992acf81eaf9f325c9770307f80909502a9241365602312",
+    "port/game-data/class_preview_setup.hpp": "1d68419d6ec3a5346832250858b6692544a2ed0352910ba4ea9fbb230e8fcd57",
     "port/game-data/class_tables.cpp": "07da2fa749e71057367e24365fd68a2813fc4c3eefd50c1ad42c4a6990263935",
     "port/game-data/class_tables.hpp": "4d94bb3ea1f91742a0e3e0ccc75fb79b8519f729b18d6e10a4b10d89b79b38e9",
-    "port/game-data/CMakeLists.txt": "854a5dad7ad2b496cdee0045432ac26a8d3d57a2704e49a1b3598ee5adc1ed96",
+    "port/game-data/CMakeLists.txt": "5fa28a798a73b36afa91a680b1fd0af76b6ba39b1def063cd5cc566cff0feaac",
     "port/game-data/combat.cpp": "228da172df7ee0ef290a59ccaf2fcf21890705f7165528366bf5f6615fdeb4cc",
     "port/game-data/combat.hpp": "61cb840335e6eec650dc5520873067e89bafca8aac7dec22cd6c081ca846afd7",
     "port/game-data/combat_application.cpp": "ef5c7a603160b99cbec98851f69f61f8a62612cacd6dccf1e20f8f0362769557",
@@ -45,8 +47,8 @@
     "port/game-data/combat_result.hpp": "80c13844301caea0c6df3f34a0f4d722c8f794a661f681a509729ab132f7c5b2",
     "port/game-data/data.cpp": "4aed92413669a1457166e3022671a9e67fc1c483f0db1ada38e3f39570cae7c5",
     "port/game-data/data.hpp": "fa34d805a525c31b2121d4d722b1dea793f8163480e6d2ad21316f37316fa0c4",
-    "port/game-data/fresh_inventory_owned_v4.cpp": "9abbd1a0f5eed7bd6f6acb801bc2a7be18e3613bd17f43bf063caaa5057535e4",
-    "port/game-data/fresh_inventory_owned_v4.hpp": "e666cc21941ab7cbe39ae3ac0d1edbdd4f3cd0e70fdcffef6c7ffc06055d67a2",
+    "port/game-data/fresh_inventory_owned_v4.cpp": "7b852cd80b26006521140c9e5edbf313c63cf4329338cf1dd57984b802e02542",
+    "port/game-data/fresh_inventory_owned_v4.hpp": "d81362bdcd9cda5e793fc3b3177aa7ef35ab852cf8e48e2bccefa15d35f77e13",
     "port/game-data/health.cpp": "98035dd3c80ecac8e0e96c3f06d7f045dd42df80ecfe935411729bf8bff98595",
     "port/game-data/health.hpp": "54dc3a4600ac752fc8c434bddcd29f3c77df9900eaf5c958ea54ad0aa39140f6",
     "port/game-data/item_gear_properties_v5.cpp": "cdcaa4df6038198b9b6b36ba828bc9ac89c67ceaade52f0059f3a7d85a56107b",
@@ -73,10 +75,18 @@
     "port/game-data/player_equipment_queries_live_v1.hpp": "1b4a55ced7dbee79659b2fa972a00f2a82513c306f2a716576e6540873e19978",
     "port/game-data/player_gear_effects_v5.cpp": "863f410ae216da1e43399be9c8983999475dd9af7a6e03ce30d062c67fa9ad42",
     "port/game-data/player_gear_effects_v5.hpp": "14fda13f2d6758d456fc08e23aebe9b78211dc2e0f59e1c030b202bfbf2d9eb7",
+    "port/game-data/player_profile_create_v1.cpp": "4ae5e1ba5be9617c5f7476303ae31beaa9bcd36e24edf9d19139eaa2fc3b0641",
+    "port/game-data/player_profile_create_v1.hpp": "44a626b1c9997f286a42fc7432a5d9c4d55eda50e78a16eba3cc2010bb0935a8",
+    "port/game-data/player_profile_filename_v1.cpp": "51b3652d1ec8ced62241defa4adf3feef4d436bd75f1f59a47c80a33312695d6",
+    "port/game-data/player_profile_filename_v1.hpp": "b05db5cd2b9740046cdd07dce15a5a55497e6ded3cb391a9b1324b476f898388",
+    "port/game-data/player_profile_index_v1.cpp": "e794d0229dfbd9c970f30eace3408ea88e32bbd2bcca4db37f99460191fbc5ef",
+    "port/game-data/player_profile_index_v1.hpp": "5bfcb8b934cce80ef507f8a96a0db0e9eaacc344e046d3c1817e2c398add0ef7",
+    "port/game-data/player_save_load_owner_v1.cpp": "101f7385e07d48c3ca4d03373dd61625c3dc100825cd1781304ef0b6d81e84a5",
+    "port/game-data/player_save_load_owner_v1.hpp": "e4313b94c95c8d0083c1f3d6d39f735276b1d1f5f8c4a8cf1b59923e6ad234bc",
     "port/game-data/player_saved_skill_slots_v1.cpp": "77f3682f9b8f675d7901126938437b67ec990b5f59238c4429a88da5417e63e8",
     "port/game-data/player_saved_skill_slots_v1.hpp": "4ce996da152ff134ed745afbdafe488c574382fedea66c5da5e5cc55b596f321",
-    "port/game-data/player_savegame_v1.cpp": "e9088a632d74ee276e2157a32130ade41a2f566ef20fb0082e7ad5709c021483",
-    "port/game-data/player_savegame_v1.hpp": "050edc426773e456d8f1aec7d0dfda30f37e6886ae27d2a73e4e397fa0114aeb",
+    "port/game-data/player_savegame_v1.cpp": "fc8881c5379ed9d6bab38bd2b20ec7ae7c11e2e92bcc4d681f04ac0443df74c2",
+    "port/game-data/player_savegame_v1.hpp": "05fba26a7dd9bce4ec37c6c8d3db84ce82ca9bd7f30adbb32070a9e100b97cfe",
     "port/game-data/properties.cpp": "efa0bb41855d20f638f7cabe4c250a16997c041f748bf532c11d39f6bac23fb5",
     "port/game-data/properties.hpp": "6a4219c2745c4301899f8a5c282c054822f2d317bf51f8644c38a101c5adf21d",
     "port/game-data/savegame_options_v1.cpp": "6e29f8d64dd697513804f8f138a0157e2ba5e99b1266fb4c23e6519e8c693b3b",
@@ -93,7 +103,7 @@
   "candidate_query_staged": false,
   "selected_library": {
     "path": "C:\\Users\\noamc\\Documents\\Codex\\inventory-binding-v1-host\\game-data\\libdh2_game_data.dll",
-    "sha256": "30f49be4fcc78b39678a31f46d3a0bd81ca71503ad555b37bfae0e9c18a60f23"
+    "sha256": "b2762adff5d5c6c85428be02e75d7e638439f085ccbd55b66f5fc6b7b8e30701"
   },
   "selected_commands": [
     {
@@ -200,6 +210,18 @@
     },
     {
       "directory": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host",
+      "command": "C:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O2 -g -DNDEBUG -Wall -Wextra -fno-fast-math -o game-data\\CMakeFiles\\dh2_game_data.dir\\class_preview_setup.cpp.obj -c C:\\Users\\noamc\\Documents\\Codex\\2026-10-02\\contineu-from-where-they-left-off\\work\\DH_sc\\port\\game-data\\class_preview_setup.cpp",
+      "file": "C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/class_preview_setup.cpp",
+      "output": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host/game-data/CMakeFiles/dh2_game_data.dir/class_preview_setup.cpp.obj"
+    },
+    {
+      "directory": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host",
+      "command": "C:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O2 -g -DNDEBUG -Wall -Wextra -fno-fast-math -o game-data\\CMakeFiles\\dh2_game_data.dir\\player_profile_create_v1.cpp.obj -c C:\\Users\\noamc\\Documents\\Codex\\2026-10-02\\contineu-from-where-they-left-off\\work\\DH_sc\\port\\game-data\\player_profile_create_v1.cpp",
+      "file": "C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_profile_create_v1.cpp",
+      "output": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host/game-data/CMakeFiles/dh2_game_data.dir/player_profile_create_v1.cpp.obj"
+    },
+    {
+      "directory": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host",
       "command": "C:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O2 -g -DNDEBUG -Wall -Wextra -fno-fast-math -o game-data\\CMakeFiles\\dh2_game_data.dir\\skill_tables.cpp.obj -c C:\\Users\\noamc\\Documents\\Codex\\2026-10-02\\contineu-from-where-they-left-off\\work\\DH_sc\\port\\game-data\\skill_tables.cpp",
       "file": "C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/skill_tables.cpp",
       "output": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host/game-data/CMakeFiles/dh2_game_data.dir/skill_tables.cpp.obj"
@@ -209,6 +231,24 @@
       "command": "C:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O2 -g -DNDEBUG -Wall -Wextra -fno-fast-math -o game-data\\CMakeFiles\\dh2_game_data.dir\\player_savegame_v1.cpp.obj -c C:\\Users\\noamc\\Documents\\Codex\\2026-10-02\\contineu-from-where-they-left-off\\work\\DH_sc\\port\\game-data\\player_savegame_v1.cpp",
       "file": "C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_savegame_v1.cpp",
       "output": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host/game-data/CMakeFiles/dh2_game_data.dir/player_savegame_v1.cpp.obj"
+    },
+    {
+      "directory": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host",
+      "command": "C:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O2 -g -DNDEBUG -Wall -Wextra -fno-fast-math -o game-data\\CMakeFiles\\dh2_game_data.dir\\player_profile_index_v1.cpp.obj -c C:\\Users\\noamc\\Documents\\Codex\\2026-10-02\\contineu-from-where-they-left-off\\work\\DH_sc\\port\\game-data\\player_profile_index_v1.cpp",
+      "file": "C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_profile_index_v1.cpp",
+      "output": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host/game-data/CMakeFiles/dh2_game_data.dir/player_profile_index_v1.cpp.obj"
+    },
+    {
+      "directory": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host",
+      "command": "C:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O2 -g -DNDEBUG -Wall -Wextra -fno-fast-math -o game-data\\CMakeFiles\\dh2_game_data.dir\\player_save_load_owner_v1.cpp.obj -c C:\\Users\\noamc\\Documents\\Codex\\2026-10-02\\contineu-from-where-they-left-off\\work\\DH_sc\\port\\game-data\\player_save_load_owner_v1.cpp",
+      "file": "C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_save_load_owner_v1.cpp",
+      "output": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host/game-data/CMakeFiles/dh2_game_data.dir/player_save_load_owner_v1.cpp.obj"
+    },
+    {
+      "directory": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host",
+      "command": "C:\\Users\\noamc\\.local\\mingw\\mingw64\\bin\\g++.exe -Ddh2_game_data_EXPORTS -IC:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data -O2 -g -DNDEBUG -Wall -Wextra -fno-fast-math -o game-data\\CMakeFiles\\dh2_game_data.dir\\player_profile_filename_v1.cpp.obj -c C:\\Users\\noamc\\Documents\\Codex\\2026-10-02\\contineu-from-where-they-left-off\\work\\DH_sc\\port\\game-data\\player_profile_filename_v1.cpp",
+      "file": "C:/Users/noamc/Documents/Codex/2026-10-02/contineu-from-where-they-left-off/work/DH_sc/port/game-data/player_profile_filename_v1.cpp",
+      "output": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host/game-data/CMakeFiles/dh2_game_data.dir/player_profile_filename_v1.cpp.obj"
     },
     {
       "directory": "C:/Users/noamc/Documents/Codex/inventory-binding-v1-host",
@@ -291,7 +331,7 @@
   ],
   "selected_text_library": {
     "path": "C:\\Users\\noamc\\Documents\\Codex\\inventory-binding-v1-host\\libdh2_inventory_text_v1.dll",
-    "sha256": "a01b2c30219e394f5bd93ded8082e8075d200f953c709f798ef46b8b29406063",
+    "sha256": "a44f56a796b55bef7af741927aeaf30db8aca7873fdc22bbb2e1ea9e68dd4232",
     "dll_dependencies": [
       "libgcc_s_seh-1.dll",
       "libstdc++-6.dll",
@@ -363,7 +403,7 @@
         "checks": 99622,
         "mismatches": 0
       },
-      "executable_sha256": "bcfc74cd019a11d1c3d7e1c1ffd131fb5757f53e0588b40a516a00857819ca1e",
+      "executable_sha256": "e0a6c2dd6ed12673211d47e81287db325fe3f5e149134cabdbe27a6e4dd5836d",
       "dll_dependencies": [
         "libgcc_s_seh-1.dll",
         "libstdc++-6.dll",
@@ -392,7 +432,7 @@
         "guards": 3,
         "mismatches": 0
       },
-      "executable_sha256": "8089d97ea226317800e5466a19c4b9fd9eba341f79fa6e46be75f9caab803e25",
+      "executable_sha256": "f963f4fba219751475e4be1c0843050c4dde9ebb33656d823eb49d5388c79953",
       "dll_dependencies": [
         "libgcc_s_seh-1.dll",
         "libstdc++-6.dll",
@@ -422,7 +462,7 @@
         "checks": 1786,
         "mismatches": 0
       },
-      "executable_sha256": "80c552b8efbc9a3df4f7b2590766abf6b39d072fc36668b37a28e8ef739cc4de",
+      "executable_sha256": "c164d7d4733c0e11968c5fde1e852c45fc751a64c6a6ee5ad1b1e5cc9b07839f",
       "dll_dependencies": [
         "libgcc_s_seh-1.dll",
         "libstdc++-6.dll",

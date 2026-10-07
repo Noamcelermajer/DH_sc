@@ -1,26 +1,15 @@
 # Dungeon Hunter 2 — project completion checklist
 
-Updated: 2026-10-06. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-03`.
+Updated: 2026-10-07. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-03`.
 
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest test APK:** [Android 17 menu, three classes and Crypt](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-06/DH2-native-menu-crypt-api37-d4142762.apk), built from [branch commit `d4142762`](https://github.com/Noamcelermajer/DH_sc/commit/d4142762).
-APK: 151,078,873 bytes; SHA-256 `62557f036d3ee0b29de5c2376b4d2bc33de9f9df930ba528a265d8ddf4b39dad`.
+**Latest test APK:** [Android 17 menu and Crypt checkpoint](https://github.com/Noamcelermajer/DH_sc/releases/download/native-menu-crypt-2026-10-07/DH2-native-menu-crypt-api37-2026-10-07.apk).
+APK: 154,585,761 bytes; SHA-256 `A01BED5649F34BF827A84D74EF8B274BB7DD1DE002709AAA6B6EF38AB73A28C4`.
+The Android 37 debug build compiles for ARM64 and x86_64 and packages the menu/UI and Crypt spawn data. This new APK has build and package checks only; it has not had a live gameplay run yet.
 
-API37/16KiB emulator: all three class create/reopen/Back/Home-resume flows pass.
-The same APK passed a bounded Crypt combat smoke: actual movement reached the
-placed skeleton; an out-of-range attack was rejected; six authored hit events
-reduced HP and closed attacks back to Idle. Enemy AI was disabled and the test
-used the debug target command through the existing attack bridge; it does not
-verify equipment damage, loot or progression. A separate live Crypt exchange
-on this build ran with enemy AI enabled: touch movement reached the skeleton,
-the AI applied seven hits, and the ordinary Attack button selected that target
-and dealt 57 damage. This confirms one hostile melee path, not full AI pursuit/FSM
-or campaign startup. [Live exchange receipt](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json).
-Both Android ABIs build and all packaged native libraries meet 16 KiB alignment.
-Receipts: [menu](../port/android-native/reports/menu-ui-runtime-smoke-62557f03.json),
-[combat](../port/android-native/reports/character-combat-smoke-62557f03.json).
+Prior live evidence applies to the previous APK from [commit `d4142762`](https://github.com/Noamcelermajer/DH_sc/commit/d4142762): API37/16KiB emulator tests passed all three class create/reopen/Back/Home-resume flows. A bounded Crypt smoke verified six player hit events with enemy AI disabled. A separate live exchange verified touch movement, seven enemy hits, and a 57-damage ordinary player attack. Neither run tested loot or progression. [Live exchange](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json), [menu](../port/android-native/reports/menu-ui-runtime-smoke-62557f03.json), [combat](../port/android-native/reports/character-combat-smoke-62557f03.json).
 
 The earlier [quest-startup build and source capture](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-quest-startup-2026-10-06) remain available; its death/pose and skill/buff regression receipts apply to that earlier APK.
 
@@ -42,19 +31,21 @@ still require live gameplay integration. All final completion gates remain open.
 
 | System | Verified tasks | Remaining tasks |
 |---|---:|---:|
-| Inputs, Adam's work and research | 11 | 3 |
+| Inputs, Adam's work and research | 12 | 3 |
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
-| World, physics, navigation and factories | 15 | 8 |
-| Character properties, equipment and state | 31 | 6 |
+| World, physics, navigation and factories | 16 | 8 |
+| Character properties, equipment and state | 32 | 6 |
 | Lua, skills and enemy AI | 49 | 14 |
-| Combat, death, loot and progression | 10 | 7 |
+| Combat, death, loot and progression | 13 | 7 |
 | Quests, campaign, UI, audio and saves | 39 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **179** | **73** |
+| **Total scoped tasks** | **185** | **73** |
 
-Latest source gate: [Quest compilation and payloads](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,659 host checks with nonempty SKIL, FAES, QEST and typed PROP on one Save/PropertyState; a FAES count mismatch still reaches QEST. FAES passes 74 original-ARM differential cases. Both Android ABIs compile. Local debug APK SHA-256 `9e2c0b82…`; all 22 native libraries meet 16 KiB alignment. API37 smoke passes all three classes; final lifecycle assertions verify fresh start/Back seeds and no Home/resume reseed. Saves were restored. Full InitPost/mask4/GEAR, quest-world callbacks and the complete encounter remain open.
+Latest source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`. The source-backed Kill/DropLoot → visible ItemManager object → pickup path remains open.
+
+Historical [quest compilation and payload gate](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,659 host checks with nonempty SKIL, FAES, QEST and typed PROP on one Save/PropertyState; a FAES count mismatch still reaches QEST. FAES passes 74 original-ARM differential cases. Full InitPost/mask4/GEAR and quest-world callbacks remain open.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -64,6 +55,7 @@ Historical reports retain their original APK identities and test scopes.
 
 - [x] Locate the local APK and complete cache; verify the complete cache inventory.
 - [x] Recover original symbols, assembly, decompiler exports and Android glue.
+- [x] Correct six ARM EABI float-helper prototypes in Ghidra 11.0.3; add the [1,424-function cutoff-free caller overlay](../recovered/native/decompiled/eabi-float-helper-overlay-2026-10-06/README.md) while preserving the archival export. The remaining 126 callers are unresolved.
 - [x] Recover 219 original plaintext Lua scripts and preserve baseline bytes.
 - [x] Pin Adam's baseline `45c5348e` and updated main `c3ae7973`; preserve import attribution.
 - [x] Reconcile latest Adam `791e961b` code and milestone documents with our selected libraries; preserve compatible reuse and identify duplicate-owner/deferred work.
@@ -129,6 +121,7 @@ Historical reports retain their original APK identities and test scopes.
 ## 4. World, physics, navigation and object factories
 
 - [x] Load the original authored eight-room Crypt layout into the native app.
+- [x] Parse both current Crypt MGP SpawnPoints into SPWN; fresh Android start selects ID 0 and floor-snaps, while resume preserves saved pose. Host checks and both ABI builds pass; active-object ordering remains open.
 - [x] Resolve 97 of its 166 object records: 84 scenery objects and 13 monsters.
 - [x] Reconstruct bounded navigation graph/search/path/smoothing/avoidance and floor producers.
 - [x] Connect a real owned player body, root motion, physics and navigation in development runtimes.
@@ -199,8 +192,9 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select original Player/Matching locality query bodies: 141 ARM comparisons and selected-host gates pass; native unregistered fallback/null queries pass. Full PlayerInfo/NetStruct registration remains open.
 - [x] Select original fixed Win32 input ownership and channel/stick updates: 325 ARM comparisons, 12 failure prefixes; both Android ABIs compile. Native registration/input delivery remains open.
 - [x] Select CNetPlayerInfo lifecycle and shared scalar/string/byte-array members: 72 lifecycle and 138 member ARM comparisons, six native failure/reentry checks; both Android ABIs compile. Offline map registration and live gameplay remain open.
-- [x] Select full 33-field PlayerInfo lifecycle, Reset/copy/assignment/destruction/setters and native factory backing: 150 ARM comparisons and 14 ownership checks pass through selected libraries. Both Android ABIs compile; three classes retain menu/Crypt behavior on API37/16KiB. Manager fallback only; controller/map and Character660 registration remain open.
-- [x] Select offline membership/AddPlayer/renumber/controller callers over full stable records and the sole input owner: 440 ARM comparisons, 72 failure/reentry cases and 68 integration checks pass. Native controller0 registers before authored Assign; live Warrior create/reopen/Crypt/Back/Home passes on API37/16KiB. Joining/network and Character660 remain open.
+- [x] Select full 33-field PlayerInfo lifecycle, Reset/copy/assignment/destruction/setters and native factory backing: 150 ARM comparisons and 14 ownership checks pass through selected libraries. Both Android ABIs compile; three classes retain menu/Crypt behavior on API37/16KiB. Controller/map and source-backed Character660 registration remain open.
+- [x] Bind reconstructed `NativePlayerCharacterOwnerV1` to registered PlayerInfo `Character660` and the same Save/properties through menu → Crypt → HUD → Home/resume; 12 host checks, both Android ABIs, and API37/Android17 x86_64/16-KiB smoke pass. [Smoke report](../port/android-native/reports/native-character-owner-api37-2026-10-06.json). Source `_AddCharacter` parity and inventory attachment remain open.
+- [x] Select offline membership/AddPlayer/renumber/controller callers over full stable records and the sole input owner: 440 ARM comparisons, 72 failure/reentry cases and 68 integration checks pass. Native controller0 registers before authored Assign; live Warrior create/reopen/Crypt/Back/Home passes on API37/16KiB. Joining/network and source-backed Character660 remain open.
 - [x] Select original GEAR reader over the same V4/property/presentation graph: 19 original cases across three classes, six cached items/one power, 2,495 checks and both Android ABI builds pass. Six original power-table assets are now bundled/hash-gated on Android; runtime consumption, native SG_Load4 and InitPost remain open.
 - [ ] Retain powered equipment split remainders through callback failure and retire presentation before item destruction.
 
@@ -322,10 +316,13 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Run one live current-build Crypt exchange with automatic enemy melee and normal nearest-target player attack on API37/16KiB; 7 enemy damage events and one 57-point player hit. [Receipt](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json). Equipment-derived damage and the full AI loop remain open.
 - [x] Select Adam's V7 powered-loot creation on V4's caller-owned RNG: 9,931 presentation/power/loot gold replays, 363 actual powered items and 369 shared draws pass. Android compilation passes; native drop/pickup/AddLoot remains open.
 - [x] Compose one original-derived fixed AddLoot entry through the same V4 inventory, V7 power append and V5 value/name path: 147,822 selected-library checks, zero mismatches; original and host each produce one power, value 770 and RNG seed 1302343 after two draws. Text/debug are fixtures; native/full AddLoot remains open. [Report](../reports/branch-audit-2026-10-05/item-loot-backbone-v7-selected-host.json).
+- [x] Reconstruct loot-entry percentage classification, class-weighted probability and weighted selection; 320 original ARM32 vs Android ARM64 comparisons, 204 raw-entry checks and exact RNG states pass ([differential](../reports/reconstruction-2026-10-06/loot-entry-selection-v1-arm32-arm64.json), [host](../reports/reconstruction-2026-10-06/loot-entry-selection-v1-host.json)). Recursive AddLootItems and live drops remain open.
+- [x] Add V4-owned world-drop staging outside player inventory and pickup handoff. Original LootTable row 124 (`Gold_01`, Type 13) matches the selected host item/value/RNG; pickup credits its value to wallet gold and retires the staged item ([receipt](../reports/reconstruction-2026-10-07/loot-world-gold-host.json)). Ordinary item pickup preserves ItemInstance identity; no visual/physics or live death callsite is implied.
+- [x] Retain V5/V7 loot-power and presentation owners in Android PlayerCombat, borrow the existing process RNG/V4 inventory, and retain each actor's raw `Loot` ID. Text, DebugSwitches and current-player callbacks share the existing owners; the staging API has no death or ItemManager callsite yet.
 - [ ] Complete all CalculateResult/ApplyResult dependencies, effects, notifications and actor ownership.
 - [ ] Connect melee/ranged/spell combat, skills, criticals, resistances and status effects in the final runtime.
 - [ ] Complete player damage/death, attacker/killer credit, resurrection and respawn.
-- [ ] Complete enemy death/despawn, item generation, loot drops, pickup and inventory delivery.
+- [ ] Connect Character::Kill/DropLoot with IDA's live/dead, player-death, level+336 and Boss/MiniBoss/killer gates. Supply CharProperties 195/196, live class/party counts, `InfiniteLootDrops`, `DBG_DropAllLoots`, and level+280 difficulty; then connect the five-object ItemManager visual/physics/pickup pool, AutoTransmute/full-inventory UI, and rewards/progression.
 - [ ] Complete XP, leveling, rewards, gold and difficulty scaling through actual game owners.
 - [ ] Validate boss encounters and any original cooperative/network behavior retained by the project.
 - [ ] Complete a real original level through its exit using the integrated combat loop.

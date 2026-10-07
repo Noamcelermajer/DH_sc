@@ -13,6 +13,7 @@ target_sources(dh2_game_data PRIVATE item_gear_properties_v5.cpp item_power_tabl
 target_sources(dh2_game_data PRIVATE item_instance.cpp loot_tables_v2.cpp
  fresh_inventory_owned_v4.cpp player_gear_effects_v5.cpp)
 target_sources(dh2_game_data PRIVATE item_presentation_v5.cpp loot_power_creation_v7.cpp)
+target_sources(dh2_game_data PRIVATE loot_entry_selection_v1.cpp)
 target_sources(dh2_game_data PRIVATE player_saved_skill_slots_v1.cpp player_equipment_live_services_v1.cpp)
 target_sources(dh2_game_data PRIVATE quest_savegame_v1.cpp)
 target_sources(dh2_game_data PRIVATE quest_runtime_fields_v1.cpp player_saved_quests_v1.cpp)
@@ -28,7 +29,7 @@ target_sources(dh2_game_data PRIVATE player_equipment_queries_live_v1.cpp)
 set_source_files_properties(item_gear_properties_v5.cpp item_power_tables_v5.cpp
  loot_power_resources_v7.cpp item_instance.cpp loot_tables_v2.cpp
  fresh_inventory_owned_v4.cpp player_gear_effects_v5.cpp item_presentation_v5.cpp
- loot_power_creation_v7.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
+ loot_power_creation_v7.cpp loot_entry_selection_v1.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 target_include_directories(dh2_game_data PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_compile_options(dh2_game_data PRIVATE -Wall -Wextra -fno-fast-math)
 if(ANDROID)

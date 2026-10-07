@@ -24,6 +24,15 @@ class ControlledAddPowerFresh(Fresh):
     dependencies this harness does not own. This provider only supplies the
     native vector stride and ID field; the remaining record bytes are fixtures.
     """
+    def __init__(self):
+        super().__init__()
+        # Fresh's legacy harness stopped after LootTable. Random Loot rows also
+        # require the intervening MerchantTable and original NumProbArray data.
+        self.invoke(0x4b9d40, [self.stream], budget=10_000_000)
+        self.invoke(0x4b9bf4, [self.stream], budget=10_000_000)
+        if self.cursor != 284104:
+            raise RuntimeError(f"original Merchant/NumProb readers ended at {self.cursor}")
+
     def inventory_service(self, uc, address, size, unused):
         if self.capture and address == 0x3fbc60:
             item, power = self.reg(0), self.reg(1)
@@ -42,6 +51,16 @@ class ControlledAddPowerFresh(Fresh):
             self.returned()
             return
         super().inventory_service(uc, address, size, unused)
+
+    def external(self, uc, address, size, unused):
+        name = self.imports.get(address)
+        if name and name.startswith("pthread_mutex"):
+            # The emulated cache readers run single-threaded; the lock object
+            # is a controlled synchronization boundary in this fixture.
+            self.put(0, 0)
+            uc.reg_write(self.pc, uc.reg_read(self.lr))
+            return
+        super().external(uc, address, size, unused)
 
 
 def snapshot_by_get_num_powers(source):
@@ -81,12 +100,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cache", type=Path, required=True,
                         help="canonical cache data/pydata directory")
+    parser.add_argument("--loot-id", type=int, default=5,
+                        help="explicit LootTable row used by the source fixture")
+    parser.add_argument("--seed", type=int, default=1,
+                        help="initial source RNG seed used by the fixture")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
-    # Row 5 is discovered by the host fixture from the actual LootTable cache:
-    # one fixed entry, powered, no random/subloot branch, no gold candidates.
-    loot_id, seed, rng_calls, capacity = 5, 1, 0, 12
+    # Row 5 is the fixed-entry baseline; row 6 is a separate bounded random
+    # entry case. Both IDs are explicit cache-backed source fixtures.
+    loot_id, seed, rng_calls, capacity = args.loot_id, args.seed, 0, 12
     value_bonus, power_bonus, requested, difficulty = 0, 0, 1, 0
     source = ControlledAddPowerFresh()
     powers = args.cache / "item_powers_pyarray.bin"
@@ -108,21 +131,32 @@ def main():
     source.uc.mem_write(source.rngcalls, W(rng_calls))
     # AddLoot's fifth and sixth parameters are stack arguments; the harness
     # exposes them through invoke(stack=...), after preparing its call frame.
-    order = []
+    order, selection_trace = [], []
     ordered_calls = {0x403310, 0x4020b4, 0x3ff5d4}
-    source.uc.hook_add(UC_HOOK_CODE,
-                       lambda uc, address, size, user: order.append(address)
-                       if address in ordered_calls else None)
+    selection_calls = {0x401b90, 0x402a60, 0x402bdc, 0x402d70, 0x4039a0}
+    def observe_source(uc, address, size, user):
+        if address in ordered_calls:
+            order.append(address)
+        elif address in selection_calls:
+            row = {"address": hex(address)}
+            if address == 0x402bdc:
+                pointer = source.reg(0)
+                row["entry_words"] = list(struct.unpack(
+                    "<9I", bytes(uc.mem_read(pointer, 36))))
+            selection_trace.append(row)
+    source.uc.hook_add(UC_HOOK_CODE, observe_source)
     source.invoke(0x40407c,
                   [source.inv, loot_id, value_bonus, power_bonus],
                   stack=(requested, 0),
                   budget=50_000_000)
     source.capture = False
     snapshot = snapshot_by_get_num_powers(source)
-    if order != [0x403310, 0x4020b4, 0x3ff5d4]:
-        raise RuntimeError(f"original AddLoot call order changed: {order!r}")
-    if struct.unpack_from("<I", snapshot, 8)[0] != 1:
-        raise RuntimeError("source fixture did not create exactly one item")
+    add_item_prefix = [0x403310, 0x4020b4, 0x3ff5d4]
+    if (not order or len(order) % len(add_item_prefix) or
+            any(order[at:at + len(add_item_prefix)] != add_item_prefix
+                for at in range(0, len(order), len(add_item_prefix)))):
+        raise RuntimeError(f"original AddLoot item-prefix call order changed: {order!r}")
+    source_inventory_items = struct.unpack_from("<I", snapshot, 8)[0]
 
     payload = (b"ALV7" + W(loot_id, seed, rng_calls, capacity, value_bonus,
                              power_bonus, requested, difficulty,
@@ -136,8 +170,9 @@ def main():
             (ROOT / ".local-inputs/libDungeonHunter2.so").read_bytes()).hexdigest(),
         "item_power_cache_sha256": hashlib.sha256(powers.read_bytes()).hexdigest(),
         "source_calls": [hex(x) for x in order],
-        "source_inventory_items": 1,
-        "source_power_count": struct.unpack_from("<I", snapshot, 36)[0],
+        "selection_calls": selection_trace,
+        "source_inventory_items": source_inventory_items,
+        "source_power_count": struct.unpack_from("<I", snapshot, 36)[0] if source_inventory_items else 0,
         "source_rng_seed_after": source.word(source.seed),
         "source_rng_calls_after": source.word(source.rngcalls),
         "fixture_sha256": hashlib.sha256(payload).hexdigest(),

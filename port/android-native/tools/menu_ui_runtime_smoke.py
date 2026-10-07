@@ -46,8 +46,8 @@ SAFE_EVENTS = re.compile(r'(?:Surface resized to |Owned menu (?:renderer selecte
                          r'Native gameplay (?:class|property cache) \||'
                          r'Menu game start \| slot \d+ \| Crypt \||'
                          r'Connected player HUD submitted \||'
-                         r'Native Player AIS (?:initialized|retained) \||'
-                         r'Native Player Save mask2 \||'
+                          r'Native Player AIS (?:initialized|retained) \||'
+                          r'Native Player Save mask2 \||Native Character owner bound \||'
                          r'Source Random (?:GSInit::Update|Level::Unload) \||'
                          r'Native offline registration \||Native full PlayerInfo \||Native managed metadata \||Native WorldMap catalogue \||Native Quest (?:catalogue|startup|terminal discard) \||'
                          r'Player position [-\d.]|Player input \|)')
@@ -70,6 +70,11 @@ QUEST_STARTUP = re.compile(r'Native Quest startup \| Save (\d+) \| Character (\d
 PLAYER_SAVE_MASK2 = re.compile(r'Native Player Save mask2 \| Character (\d+) \| Save (\d+) \|'
                                r' loader (\d+) \| Quest118 (\d+) \| QuestB8 (\d+) \|'
                                r' calls (\d+) \| retained (\d+) \|')
+CHARACTER_OWNER = re.compile(r'Native Character owner bound \| object (\d+) \| Coordinator (\d+) \|'
+                             r' Save (\d+) \| properties (\d+) \| inventory (\d+) \|'
+                             r' item rows (\d+) \| loot rows (\d+) \| item count (\d+) \|'
+                             r' equipment set (-?\d+) \| potion capacity (-?\d+) \|'
+                             r' same V4 Character owner; development continuation')
 START = re.compile(r'Authored NativeStartGame request queued \| selected slot (\d+) \|'
                    r' numeric difficulty (\d+) \| requested difficulty (-?\d+)')
 CLASS = re.compile(r'Native gameplay class \| slot (\d+) \| class (\d+) \| preset (\w+)')
@@ -197,6 +202,7 @@ def verify_start(text, slot, character_class, preset, animation_table):
     assert caches and tuple(map(int, caches[-1][:2])) == (character_class, animation_table), 'Live cached property2 differs from source class'
     hud = list(HUD.finditer(text))
     assert hud and hud[-1].start() > classes[-1].start(), 'Connected source HUD missing after gameplay class'
+    character_identity = int(hud[-1].group(3), 0)
     values = tuple(map(int, hud[-1].groups()[3:]))
     hp, max_hp, mp, max_mp, xp, next_xp, *frames = values
     assert 0 < hp <= max_hp and 0 < mp <= max_mp and 0 <= xp < next_xp, 'Invalid live health/mana/XP source words'
@@ -207,7 +213,7 @@ def verify_start(text, slot, character_class, preset, animation_table):
     records = list(FULL_PLAYER.finditer(text))
     assert records and records[-1].start() > starts[0].start(), 'Fresh full PlayerInfo receipt missing'
     record = tuple(map(int, records[-1].groups()))
-    assert record == (33, 1, 1, character_class, 0, slot, 45), 'Canonical record must use the selected metadata name/class/level setters'
+    assert record == (33, 1, 1, character_class, character_identity, slot, 45), 'Canonical record must use the metadata setters and publish its native Character owner'
     metadata = list(MANAGED_METADATA.finditer(text))
     assert metadata and starts[0].start() < metadata[-1].start() < classes[-1].start(), 'Managed metadata preparation must precede gameplay class loading'
     managed = tuple(map(int, metadata[-1].groups()))
@@ -224,9 +230,14 @@ def verify_start(text, slot, character_class, preset, animation_table):
     mask2_receipts = list(PLAYER_SAVE_MASK2.finditer(text))
     assert len(mask2_receipts) == 1 and classes[-1].start() < mask2_receipts[-1].start() < quest_startup[-1].start(), 'Exactly one Character SG_Load(2) receipt must precede native Quest startup'
     mask2_values = tuple(map(int, mask2_receipts[-1].groups()))
-    character_identity = int(hud[-1].group(3), 0)
     assert mask2_values == (character_identity, quest_values[0], mask2_values[2], character_identity,
                             character_identity, 1, 0) and mask2_values[2] > 0, 'SG_Load(2) must use the same Character, Save and both embedded Quest owners'
+    owner_bindings = list(CHARACTER_OWNER.finditer(text))
+    assert owner_bindings, 'Reconstructed native Character owner publication missing'
+    owner_values = tuple(map(int, owner_bindings[-1].groups()))
+    assert owner_values[0] == owner_values[1] == character_identity and owner_values[2] == quest_values[0] and owner_values[3] > 0, 'PlayerInfo, Coordinator, gameplay Save and property owner identities differ'
+    assert owner_values[4] > 0 and owner_values[4] not in owner_values[:4], 'V4 inventory has no distinct retained owner identity'
+    assert owner_values[5:10] == (1322, 339, 0, 0, 12), 'Fresh V4 inventory differs from the canonical source table/property projection'
     assert maps and starts[0].start() < maps[-1].start() < metadata[-1].start(), 'Selected WorldMap decoder must precede metadata preparation'
     assert tuple(map(int, maps[-1].groups())) == (13, 3), 'Original WorldMap data differs'
     return {'slot': slot, 'class': character_class, 'preset': preset,
@@ -244,7 +255,16 @@ def verify_start(text, slot, character_class, preset, animation_table):
                                      'before_authored_assign': True},
             'managed_metadata': {'Save680': managed[6], 'published_once': True,
                                  'name_class_level_setters': list(managed[3:6]),
-                                 'Character660_pending': True},
+                                 'Character660_at_prepare': managed[7]},
+            'native_character_owner': {'identity': owner_values[0],
+                                       'Coordinator_identity_matches': True,
+                                       'Save_matches_gameplay_Save': True,
+                                       'property_owner_bound': True,
+                                       'inventory_bound': True,
+                                       'inventory_items_at_source_creation': owner_values[7],
+                                       'inventory_table_items': owner_values[5],
+                                       'inventory_loot_rows': owner_values[6],
+                                       'source_AddCharacter_invoked': False},
             'world_map': {'locations': 13, 'lockers': 3},
             'quest_definitions': 64,
             'quest_startup': {'gameplay_Save': quest_values[0], 'Character': quest_values[1],
@@ -329,7 +349,7 @@ def main():
     preserve, restore = preservation_scripts(transaction)
     report = {'validation': 'FAIL', 'apk_sha256': hashlib.sha256(args.apk.read_bytes()).hexdigest(),
               'serial': args.serial, 'libraries': inspect_apk(args.apk),
-              'scope': 'Actual original menu/name/class/Start Single Player taps, selected source profile creation/Assign, development Crypt continuation, connected source HUD, occupied-slot reopen and Home/resume. Full NativeStartGame/campaign/SG4/InitPost/gameplay controls remain open.',
+              'scope': 'Actual original menu/name/class/Start Single Player taps, selected source profile creation/Assign, development Crypt continuation, native Character owner publication with an empty canonical V4 inventory over real LootTable resources, connected source HUD, occupied-slot reopen and Home/resume. Source _AddCharacter parity, SG4/GEAR inventory contents, full NativeStartGame/campaign/InitPost/gameplay controls remain open.',
               'private_transaction_directory': 'files/' + transaction,
               'personal_saves_pulled': False, 'cases': [], 'screenshots': []}
     events, pid, since, last_text = [], '', '', ''

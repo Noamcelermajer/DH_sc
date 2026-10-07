@@ -34,6 +34,10 @@ void bind_menu_runtime(){
  services.debug_load=[](void*,std::string& error){return model_renderer::menu_debug_load(menu_assets,error);};
  services.debug_query=[](void*,const char* key,std::string& error){return model_renderer::menu_debug_query(menu_assets,key,error);};
  original_ui.bind_front_runtime(services);
+ model_renderer::bind_item_text_services(&original_ui,
+  [](void* context,const dh2::data::ItemTable& items,const dh2::data::CharacterTable& characters){
+   return static_cast<dh2::android_ui::OriginalUiSession*>(context)->item_text_services(items,characters);
+  });
 }
 const char* vs_source=R"(attribute vec2 position;attribute vec2 uv;uniform vec2 scale;varying vec2 texcoord;
 void main(){texcoord=uv;gl_Position=vec4(position*scale,0.0,1.0);})";

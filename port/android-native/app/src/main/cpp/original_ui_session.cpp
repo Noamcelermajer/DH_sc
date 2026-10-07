@@ -24,6 +24,9 @@ extern "C" {
 #include "swf_menu_save_slots.hpp"
 #include "menu_save_slot_projection_v1.hpp"
 #include "campaign_profile_files_v1.hpp"
+#include "data.hpp"
+#include "hud_text_format_v1.hpp"
+#include "item_text_varargs_v5.hpp"
 #include "swf_menu_launch_v1.hpp"
 #include "model_renderer.hpp"
 #include <android/log.h>
@@ -59,6 +62,8 @@ struct OriginalUiSession::Impl {
     std::array<std::vector<std::uint8_t>,2> constant_bytes;
     std::array<dh2_pycst_view,2> constants{};
     ui::Localization localization;
+    const dh2::data::ItemTable* item_text_items{};
+    const dh2::data::CharacterTable* item_text_characters{};
     ui::GameOptionTableV1 option_table;
     std::unique_ptr<ui::OwnedHudSettingsV1> settings;
     std::unique_ptr<ui::SettingsNativeFilesV1> settings_files;
@@ -510,6 +515,56 @@ struct OriginalUiSession::Impl {
         if((request.operation==ui::hud_text_title_v1||request.operation==ui::hud_text_version_v1)&&value.size()>=request.limit){error="Application source C-string limit exceeded";return false;}
         parsed.retained.push_back(std::move(value));reply.text=parsed.retained.back().c_str();return true;
     }
+    static const dh2::data::Item* item_text_metadata(void* context,const dh2::data::ItemInstanceV1& instance,std::string& error){
+        auto& self=*static_cast<Impl*>(context);
+        if(!self.item_text_items){error="Original Item table is not bound to the retained text owner";return nullptr;}
+        const auto* row=dh2::data::item(*self.item_text_items,instance.id);
+        if(!row)error="Original Item ID absent from the retained Item table";
+        return row;
+    }
+    static bool item_text_invoke(void* context,dh2::data::ItemInstanceV1&,
+        const dh2::data::ItemTextRequestV5& request,dh2::data::ItemTextResponseV5& reply,
+        std::string& output,std::string& error){
+        auto& self=*static_cast<Impl*>(context);
+        using Op=dh2::data::ItemTextOperationV5;
+        if(request.operation==Op::constant){
+            std::uint32_t raw=0;
+            if(!constant(&self,request.group,request.key,raw,error))return false;
+            std::memcpy(&reply.value,&raw,sizeof(raw));return true;
+        }
+        if(request.operation==Op::integer_string){
+            return self.localization.string_id(static_cast<std::uint32_t>(request.value),
+                self.text_services(),reply.text,error);
+        }
+        if(request.operation==Op::class_name){
+            if(!self.item_text_characters||request.value<0||
+                std::size_t(request.value)>=self.item_text_characters->rows.size()){
+                error="Source item requirement Character row unavailable";return false;
+            }
+            reply.value=self.item_text_characters->rows[std::size_t(request.value)][5];return true;
+        }
+        ParseContext parse{self,{}};
+        const ui::HudTextServicesV1 services{&parse,parsed_text};
+        if(request.operation==Op::parse_varargs){
+            bool changed=false;
+            return ui::item_text_varargs_v5(request.input,request.arguments,request.count,
+                services,output,changed,error);
+        }
+        if(request.operation==Op::parse_ex){
+            if(request.count>65536||(request.count&&!request.arguments)){
+                error="Malformed Item parseEx argument span";return false;
+            }
+            std::vector<ui::HudTextVariantV1> values;values.reserve(request.count);
+            for(std::uint32_t i=0;i<request.count;++i){
+                const auto& value=request.arguments[i];
+                values.push_back({value.number,value.integer,value.text});
+            }
+            bool changed=false;
+            return ui::hud_text_parse_ex_v1(request.input,values.data(),values.size(),
+                services,output,changed,error);
+        }
+        error="Unsupported source Item text operation";return false;
+    }
     static bool start_integer(void* context,double value,std::int32_t& result,std::string& error){
         auto& self=*static_cast<Impl*>(context);
         if(!self.runtime.eabi_integer){error="Source EABI integer provider unavailable";return false;}
@@ -862,6 +917,12 @@ struct OriginalUiSession::Impl {
 OriginalUiSession::OriginalUiSession():impl_(std::make_unique<Impl>()){}
 OriginalUiSession::~OriginalUiSession()=default;
 void OriginalUiSession::bind_front_runtime(const FrontRuntimeServices& services){impl_->runtime=services;}
+data::ItemTextServicesV5 OriginalUiSession::item_text_services(
+    const data::ItemTable& items,const data::CharacterTable& characters) noexcept {
+    impl_->item_text_items=&items;
+    impl_->item_text_characters=&characters;
+    return {impl_.get(),Impl::item_text_metadata,Impl::item_text_invoke};
+}
 bool OriginalUiSession::consume_launch_request(std::int32_t& slot){
     if(impl_->launch_requests.empty())return false;
     slot=impl_->launch_requests.front();impl_->launch_requests.pop_front();impl_->launch_delivered=true;return true;

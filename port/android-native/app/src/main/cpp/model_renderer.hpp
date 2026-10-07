@@ -5,7 +5,13 @@
 #include <string>
 #include <array>
 #include <vector>
+#include "data.hpp"
+#include "item_presentation_v5.hpp"
+#include "loot_entry_selection_v1.hpp"
 namespace model_renderer {
+using ItemTextServicesFactoryV5 = dh2::data::ItemTextServicesV5 (*)(
+ void*,const dh2::data::ItemTable&,const dh2::data::CharacterTable&);
+void bind_item_text_services(void*,ItemTextServicesFactoryV5);
 void mod_directory(std::string);
 void runtime_directory(std::string);
 std::string profile_slot(int);
@@ -44,6 +50,15 @@ std::string debug_player_death();
 std::string set_combat_target(int index,int target);
 std::string player_attack(int target=-1);
 std::array<int,7> player_vitals();
+struct LootStagingResultV1 {std::size_t first_world_item{},item_count{};};
+// Owning GL thread only. Stages powered Loot through the existing Character
+// V4 inventory/RNG and its retained Item presentation owner. This does not
+// attach a world transform, render a pooled Item, or invoke death handling.
+bool stage_world_loot_table(std::int32_t,const dh2::data::LootEntrySelectionContextV1&,
+ std::int32_t value_bonus256,std::int32_t power_bonus256,
+ std::int32_t requested_power_count,std::int32_t difficulty,
+ LootStagingResultV1&,std::string& error);
+bool retire_staged_world_loot_item(std::size_t,std::string& error);
 void orbit(float dx,float dy,float zoom);
 void set_time(int milliseconds);
 void set_enemy_ai(bool);

@@ -1,8 +1,10 @@
 #pragma once
 #include "loot_tables_v2.hpp"
+#include "loot_entry_selection_v1.hpp"
 #include "item_instance.hpp"
 #include "properties.hpp"
 #include "loot_power_creation_v7.hpp"
+#include <cstddef>
 namespace dh2::data {
 struct OwnedItemSlotV4 {std::unique_ptr<ItemInstanceV1> item;std::array<std::int8_t,2> slots{{-1,-1}};};
 enum class OwnedInventoryOperationV4:std::uint32_t {
@@ -45,7 +47,7 @@ struct OwnedLootEffectsV7 {
 class FreshInventoryOwnedV4 {
  LootTablesV2::Borrow tables_;InventoryRandomServiceV4 random_;std::uintptr_t character_;
  PropertyState* properties_{};std::shared_ptr<PropertyState> fixture_properties_;
- std::vector<std::unique_ptr<OwnedItemSlotV4>> items_;ItemInstanceV1* potion_{};
+ std::vector<std::unique_ptr<OwnedItemSlotV4>> items_,world_items_;ItemInstanceV1* potion_{};
  std::array<std::array<OwnedItemSlotV4*,9>,2> equipment_{};std::uint8_t selected_{};
  std::int8_t potion_capacity_;std::int32_t gold_{},gold_limit_{INT32_MAX};bool unlimited_{},running_{};std::uint32_t callback_depth_{};
  bool mutation_allowed(std::string&)const;
@@ -63,7 +65,7 @@ class FreshInventoryOwnedV4 {
  bool has_like(const ItemInstanceV1*,std::uint32_t&,bool&,std::string&)const;
  bool add_quantity(ItemInstanceV1&,std::int32_t,std::string&);
  bool lifetime_slot(RetainedItemSlotV4,const ItemInstanceV1*,std::string&)const;
- bool add_fixed_loot_impl(std::int32_t,std::unique_ptr<ItemInstanceV1>&,bool,const OwnedInventoryServicesV4&,const OwnedLootEffectsV7*,std::string&);
+ bool add_fixed_loot_impl(std::int32_t,std::unique_ptr<ItemInstanceV1>&,bool,const OwnedInventoryServicesV4&,const OwnedLootEffectsV7*,const LootEntrySelectionContextV1*,std::vector<std::unique_ptr<OwnedItemSlotV4>>*,std::string&);
  bool equip_to_slot_impl(std::uint32_t,std::uint32_t,bool,std::unique_ptr<ItemInstanceV1>&,bool,const OwnedInventoryServicesV4&,std::string&);
 public:
  // Live mode borrows the Character's one authoritative PropertyState and RNG.
@@ -76,6 +78,16 @@ public:
  bool add_fixed_loot(std::int32_t,RetainedItemSlotV4,const OwnedInventoryServicesV4&,std::string&);
  bool add_fixed_loot(std::int32_t,const OwnedInventoryServicesV4&,const OwnedLootEffectsV7&,std::string&);
  bool add_fixed_loot(std::int32_t,RetainedItemSlotV4,const OwnedInventoryServicesV4&,const OwnedLootEffectsV7&,std::string&);
+ // LootTable caller with source-order recursive child expansion. Descendant
+ // random rows share the root quantity distribution and this owner's RNG.
+ // Requires original class-count/DebugSwitch facts and shared loot effects.
+ bool add_loot_table(std::int32_t,const LootEntrySelectionContextV1&,RetainedItemSlotV4,const OwnedInventoryServicesV4&,const OwnedLootEffectsV7&,std::string&);
+ // Character::DropLoot stages generated items outside player inventory. A
+ // later ItemWorld owner supplies position/visuals and calls pickup_world_item
+ // with the same V4 owner when source Interact succeeds.
+ bool add_world_loot_table(std::int32_t,const LootEntrySelectionContextV1&,RetainedItemSlotV4,const OwnedInventoryServicesV4&,const OwnedLootEffectsV7&,std::string&);
+ bool pickup_world_item(std::size_t,std::int32_t&,const OwnedInventoryServicesV4&,std::string&);
+ bool retire_world_item(std::size_t,const OwnedInventoryServicesV4&,std::string&);
  // Source-invalid indices/negative assertions and destructive native reentry
  // reject explicitly; read-only queries and live cached-property/selection writes
  // remain available synchronously in effects. Partial source prefixes persist.
@@ -104,6 +116,7 @@ public:
  bool add_gold(std::int32_t,const OwnedInventoryServicesV4&,std::string&);
  static bool equal(const ItemInstanceV1&,const ItemInstanceV1&)noexcept;
  const auto& items()const noexcept{return items_;}const auto& equipment()const noexcept{return equipment_;}
+ const auto& world_items()const noexcept{return world_items_;}
  const ItemInstanceV1* potion()const noexcept{return potion_;}std::int32_t num_potions()const noexcept;
  const ItemTable& table()const{return tables_.items();}
  std::uintptr_t character()const noexcept{return character_;}

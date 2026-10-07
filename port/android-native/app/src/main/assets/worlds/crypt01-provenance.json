@@ -2,6 +2,8 @@
   "cache_sha256": "3fdf4e4c21d45a780a7c35fb4042abde0e88e76bf75416aad1f227481560b679",
   "layout": "x07_crypt_backup.mlx",
   "compiled_descriptor_sha256": "0041f14cef4acd5a438fa0f14a687529b4f3714526c0a4042ed7744a212e22da",
+  "compiled_entrypoints_bytes": 304,
+  "compiled_entrypoints_sha256": "696604662ef9964064d144aaae91bd183f050380ae4ea7d1efeba2732c1f445e",
   "rooms": [
     {
       "name": "cemetery_entrance_0",
@@ -96,6 +98,86 @@
     -2227.77,
     1220.93,
     812.557
+  ],
+  "entrypoints": [
+    {
+      "entrypoint_id": 0,
+      "name": "_prim_EntryPoint_fromDW",
+      "room": 0,
+      "local": {
+        "position": [
+          -2227.77,
+          1220.93,
+          812.557
+        ],
+        "rotation_degrees": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "world": {
+        "position": [
+          -2227.77,
+          1220.93,
+          812.557
+        ],
+        "rotation_degrees": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "entrypoint_id": 2,
+      "name": "_prim_EntryPoint_fromGothicus2",
+      "room": 7,
+      "local": {
+        "position": [
+          0.0,
+          4044.78,
+          658.711
+        ],
+        "rotation_degrees": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "world": {
+        "position": [
+          0.0,
+          23244.78,
+          658.711
+        ],
+        "rotation_degrees": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    }
   ],
   "objects": [
     {

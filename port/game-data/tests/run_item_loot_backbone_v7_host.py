@@ -69,18 +69,31 @@ def main():
                     ROOT / "port/game-data/tests/item-loot-backbone-v7/CMakeLists.txt"])
     before = {p.relative_to(ROOT).as_posix(): digest(p) for p in sorted(sources)}
     run(["cmake", "--build", args.build, "--parallel", "1", "--target",
-         "item_presentation_v5_selected", "item_loot_backbone_v7_selected"])
+         "item_presentation_v5_selected", "item_loot_backbone_v7_selected",
+         "item_loot_random_table_v1_selected"])
     for name in units:
         matches = [entry for entry in selected if Path(entry["file"]).name == name]
         assert len(matches) == 1, (name, matches)
     # On Windows, the DLL is produced under the shared-library subdirectory.
     library = args.build / "game-data/libdh2_game_data.dll"
     env["PATH"] = str(library.parent) + os.pathsep + env["PATH"]
+    source_loot_fixtures = [
+        ROOT / "port/game-data/reference/player-creation-v2/powered-addloot-v7.bin",
+        ROOT / "port/game-data/reference/player-creation-v2/powered-random-addloot-v7.bin",
+        ROOT / "port/game-data/reference/player-creation-v2/powered-nested-addloot-v7.bin",
+        ROOT / "port/game-data/reference/player-creation-v2/powered-gold-addloot-v7.bin",
+    ]
     commands = [
         [args.build / "item_presentation_v5_selected.exe", REF / "player-item-effects-v5/presentation-fixtures.bin",
          REF / "player-item-effects-v5/power-instance-fixtures.bin", args.cache],
         [args.build / "item_loot_backbone_v7_selected.exe", REF / "loot-power-creation-v7/fixtures.bin", args.cache,
-         ROOT / "port/game-data/reference/player-creation-v2/powered-addloot-v7.bin"],
+         source_loot_fixtures[0]],
+        [args.build / "item_loot_random_table_v1_selected.exe",
+             source_loot_fixtures[1], args.cache],
+        [args.build / "item_loot_random_table_v1_selected.exe",
+             source_loot_fixtures[2], args.cache],
+        [args.build / "item_loot_random_table_v1_selected.exe",
+             source_loot_fixtures[3], args.cache],
     ]
     tests = [{"command": [str(x) for x in command], "result": json.loads(run(command))} for command in commands]
     assert all(test["result"]["validation"] == "PASS" for test in tests)
@@ -88,11 +101,12 @@ def main():
     assert before == after, "Source changed during the gate; rerun the frozen selection"
     report = {
         "validation": "PASS", "upstream_commit": "791e961b12233100b303038c961666834f4beb9d",
-        "scope": "Candidate through selected shared library. Original-derived powered AddLoot fixed-entry snapshot and RNG are compared alongside loot/power gold. Text/debug are explicit fixtures; this does not claim Android/runtime gameplay parity or full AddLoot coverage.",
+        "scope": "Candidate through selected shared library. Original-derived fixed/random/nested AddLoot snapshots and RNG are compared, including LootTable row 124 (Gold_01, Type 13); pickup converts its source-valued world item into wallet gold. Text/debug/AddPower are explicit fixtures; this does not claim Android runtime gameplay parity or full AddLoot coverage.",
         "source_before_after_equal": True, "source_sha256": before,
         "selected_library": {"path": str(library), "sha256": digest(library)},
         "selected_commands": selected, "tests": tests,
         "gold_sha256": {p.relative_to(REF).as_posix(): digest(p) for p in REF.rglob("*.bin")},
+        "original_addloot_fixtures_sha256": {p.name: digest(p) for p in source_loot_fixtures},
         "cache_sha256": {p.name: digest(p) for p in args.cache.glob("*.bin")
                          if p.name.startswith(("loot_table_", "item_powers_"))},
     }
