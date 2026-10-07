@@ -141,7 +141,7 @@ public final class MainActivity extends Activity {
                     if(pendingSurfaceLoad){pendingSurfaceLoad=false;surface.post(()->surface.queueEvent(()->{
                         if(menuGameplaySlot>=0&&assets[selected].startsWith("worlds/")){
                             String start=NativeBridge.startMenuGame(menuGameplaySlot,getAssets());
-                            if(start!=null&&start.startsWith("Crypt |"))acceptGameStart(menuGameplaySlot,start);
+                            if(isPlayableStart(start))acceptGameStart(menuGameplaySlot,start);
                             else{
                                 // A fresh process has no retained canonical PlayerInfo.
                                 // Re-enter the authored menu to assign it explicitly.
@@ -322,10 +322,13 @@ public final class MainActivity extends Activity {
     }
     private void acceptGameStart(int slot,String report){
         Log.i("DH2Native","Menu game start | slot "+slot+" | "+report);
-        if(report==null||!report.startsWith("Crypt |")){runOnUiThread(()->{status.setVisibility(View.VISIBLE);status.setText(report);});return;}
-        menuGameplaySlot=slot;loadedAsset="worlds/crypt01.dwld";baseReport=report;
+        if(!isPlayableStart(report)){runOnUiThread(()->{status.setVisibility(View.VISIBLE);status.setText(report);});return;}
+        menuGameplaySlot=slot;loadedAsset=report.startsWith("SWAMP |")?"worlds/001_swamp.dwld":"worlds/crypt01.dwld";baseReport=report;
         for(int i=0;i<assets.length;i++)if(assets[i].equals(loadedAsset)){selected=i;break;}
         runOnUiThread(()->{frontAudio.stop();movement.setVisibility(View.VISIBLE);attack.setVisibility(View.VISIBLE);vitals.setVisibility(inspectionMode?View.VISIBLE:View.GONE);status.setVisibility(inspectionMode?View.VISIBLE:View.GONE);});
+    }
+    private static boolean isPlayableStart(String report){
+        return report!=null&&(report.startsWith("Crypt |")||report.startsWith("SWAMP |"));
     }
     private void handleBack(){
         if(!inspectionMode&&ready&&loadedAsset!=null&&loadedAsset.startsWith("worlds/")){

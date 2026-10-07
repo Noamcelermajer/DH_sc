@@ -3,9 +3,34 @@
 #include <cmath>
 #include <cstring>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 namespace dh2::floors {
 namespace {
 void require(bool condition,const char* message){if(!condition)throw std::runtime_error(message);}
+std::string_view trim(std::string_view value){
+ const auto first=value.find_first_not_of(" \t\r\n");
+ if(first==std::string_view::npos)return {};
+ const auto last=value.find_last_not_of(" \t\r\n");return value.substr(first,last-first+1);
+}
+floor_source::Flags source_flags(const scene::Node& node){
+ floor_source::Flags flags{0,1};
+ if(node.user_properties.empty())return flags;
+ const auto equals=node.user_properties.find('=');
+ require(equals!=std::string::npos,"Unsupported floor property layout");
+ const auto key=trim(std::string_view(node.user_properties).substr(0,equals));
+ const auto value=trim(std::string_view(node.user_properties).substr(equals+1));
+ require(key=="floortypes","Unsupported floor property key");
+ // SWAMP serializes this one CStrProps entry as an URL-quoted string. Keep
+ // the supported source subset explicit; CStrProps maps and other properties
+ // are not inferred. The existing flag kernel handles water/hole substrings.
+ require(value=="%22wood%22"||value=="%22water%22"||
+         value=="%22door%22"||value=="%22hole%22",
+         "Unsupported SWAMP floor type value");
+ require(dh2_floor_source_flags(&flags,value.data(),value.size())==0,
+         "SWAMP floor type flags rejected");
+ return flags;
+}
 unsigned query(void* owner,unsigned id,const float* point){
  auto& world=*static_cast<World*>(owner);if(id>=world.selectors.size())return 0;collision::Result result{};
  return dh2_selector_floor(&result,&world.selectors[id],point)==1;
@@ -15,8 +40,7 @@ bool append(const resources::BresView& view,const scene::Scene& scene,const scen
  error.clear();try{
   require(out.records.size()<512,"Too many native floors");require(instance.node_index<scene.graph.size(),"Invalid floor node");const auto& node=scene.graph[instance.node_index];
   require(node.parent>=0&&unsigned(node.parent)<scene.graph.size(),"Floor has no room parent");
-  require(node.user_properties.find("floortypes")==std::string::npos,"Floor property decoding still requires reconstruction");
-  auto record=std::make_unique<Record>();record->name=node.name;record->room=room;record->geometry=instance.geometry;record->flags={0,1};
+  auto record=std::make_unique<Record>();record->name=node.name;record->room=room;record->geometry=instance.geometry;record->flags=source_flags(node);
   // constructNode creates a CSceneNode with the authored TRS, then a
   // BaseMeshSceneNode child with identity local TRS. _LoadNavMesh reads
   // properties/name from that CSceneNode, moves the child to its cached

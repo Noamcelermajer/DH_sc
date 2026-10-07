@@ -5,7 +5,7 @@ Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (148,164,672 bytes, SHA-256 `AFB9694BA89422B3B917D2896F33996FB93E3471AF6A1F2892DF830CAA3DE581`). API 37 ARM64/x86_64 build, debug signature and 16 KiB ZIP/ELF alignment pass. The latest menu/Crypt smoke applies to the preceding APK, not this rebuild; it covered one Knight through menu, movement, occupied-slot reopen and Home/resume. Original `_AddCharacter`/`NativeStartGame`, campaign startup, live `Character::InitPost` and full gameplay remain open. On this long Windows checkout, build with `-Pdh2SourceRoot=<short mapped checkout>`.
+**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (151,398,326 bytes, SHA-256 `4E95C702C699185D8370886D3CBEA9D995E46A6DF3EBE62BC353D40423E7D792`). API 37 ARM64/x86_64 build, debug signature, 16 KiB ZIP/ELF alignment, SWAMP descriptor/BDAE/SPWN and sampler assets pass. The selected-library host test loads the bounded static SWAMP world. No live SWAMP start was run; earlier menu/Crypt smoke evidence applies only to its preceding APK. Full source startup/gameplay remains open. Build with `-Pdh2SourceRoot=<short mapped checkout>`.
 
 **Latest published APK:** [Android 17 equipment-restore and guarded-loot checkpoint](https://github.com/Noamcelermajer/DH_sc/releases/download/native-equipment-loot-2026-10-07/app-debug.apk), tag `native-equipment-loot-2026-10-07`. Its equipment mutation/UI, weapon visuals, full Kill rewards, skills and live pickup remain open.
 
@@ -124,6 +124,8 @@ Historical reports retain their original APK identities and test scopes.
 
 - [x] Load the original authored eight-room Crypt layout into the native app.
 - [x] Parse both current Crypt MGP SpawnPoints into SPWN; fresh Android start selects ID 0 and floor-snaps, while resume preserves saved pose. Host checks and both ABI builds pass; active-object ordering remains open.
+- [x] Compile cache-backed LevelList row 41 into a bounded static SWAMP DWLD/BDAE/SPWN bundle, preserving 34 source render assets; selected-library host load verifies 9 rooms, 16 floors, 377 visuals, material bindings and entrypoint floor snap. General MLX/object factories remain open.
+- [x] Decode the four authored SWAMP `floortypes` values using IDA-derived water/hole flags; other property maps remain explicitly unsupported.
 - [x] Resolve 97 of its 166 object records: 84 scenery objects and 13 monsters.
 - [x] Reconstruct bounded navigation graph/search/path/smoothing/avoidance and floor producers.
 - [x] Connect a real owned player body, root motion, physics and navigation in development runtimes.
@@ -370,8 +372,8 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Reuse Adam v69's original menu, name/class selection and real Single Player screen; create and reopen Warrior/Rogue/Mage profiles into development Crypt on API37/16KiB.
 - [x] Render original HP/MP/XP timelines from the retained live player property sheet for all three classes, after the single world update/render.
 - [x] Verify menu/world Back, occupied-slot cold restart and Home/resume through actual UI input; preserve and restore existing emulator saves.
-- [x] Resolve the IDA `NativeStartGame` save/difficulty/LevelList/LoadLevel plan against the actual 51-row table: 27 host assertions pass, including row 41 SWAMP, row 23 Crypt and online/offline flags. Android does not call the plan yet.
-- [ ] Carry the plan through authored UI to a typed source-level transition and loader boundary; apply save effects through the canonical Save in original order. Keep development Crypt until the selected row has a supported parser/factory path.
+- [x] Resolve the IDA `NativeStartGame` plan against the actual 51-row table and carry authored Android menu requests through it: 27 host assertions pass; row 41 selects bounded static SWAMP and row 23 Crypt development layout. Android ARM64/x86_64 compile passes; live SWAMP start is unverified.
+- [ ] Apply source clear-spawn/save ordering to the canonical Save and replace the direct renderer-loader shortcut with `Application::LoadLevel`/`GSLevel`/`Level` transition and source parser/factory owners.
 - [ ] Complete original NativeStartGame/Application.LoadLevel, difficulty/location/quest handoff and full gameplay startup.
 - [ ] Restore title/menu flow, character creation/selection, HUD, inventory, skill and quest interfaces.
 - [ ] Complete touch controls, input mapping, orientation/window/lifecycle behavior for the final app.
@@ -437,7 +439,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 ## Immediate work order
 
-1. Carry `NativeStartGamePlanV1` into a typed transition and source loader/factory boundary; preserve Crypt until an authored row loads successfully.
+1. Apply canonical Save spawn-clear/save-before-load effects, then connect the typed request to source `Application::LoadLevel`/`GSLevel` and the `.mlx`/object factory path; keep the static SWAMP route as a verified checkpoint.
 2. Run Character InitPost with the real profile/level sequence, source Skin lifetime and Player AddLoot provider; connect `UpdateSkills` in source order.
 3. Bind existing-profile save writers and complete LevelUp before threshold-crossing XP; then verify event4 and connect objectives/outer event2.
 4. Connect ordinary Character/CharAI/AIS owners to the Level frame and implement pursuit, combat and death with source body lifetime.

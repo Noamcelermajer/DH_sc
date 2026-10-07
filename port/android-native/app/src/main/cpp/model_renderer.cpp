@@ -75,6 +75,7 @@
 #include "../../../../../player-info-level/player_manager_host_level.hpp"
 #include "../../../../../player-info-level/player_locality_v1.hpp"
 #include "native_player_profile.hpp"
+#include "native_start_game_plan_v1.hpp"
 #include "native_menu_runtime.hpp"
 #include "../../../../../../port/level-world/source_random_lifecycle_v1.hpp"
 #include "character_saved_class_v1.hpp"
@@ -94,6 +95,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <map>
+#include <optional>
 #include <limits>
 #include <memory>
 #include <set>
@@ -261,6 +263,15 @@ struct PlayerCombat {
 PlayerCombat prince_combat;
 std::int32_t requested_player_class=-1;
 std::int32_t menu_gameplay_slot=-1;
+struct PendingMenuStart {std::int32_t slot=-1;bool has_numeric_difficulty=false;std::int32_t requested_difficulty=0;bool valid=false;};
+struct RuntimeLevelAssets {
+ std::int32_t row=-1;std::string name="GOTHICUS_CRYPT_01",level_file="007_crypt_01.rule.xml";
+ std::string descriptor="crypt01.dwld",bres="crypt.bdae",spawns="crypt01.spwn",objects="crypt01.dact";
+ bool development_layout=true;
+};
+PendingMenuStart pending_menu_start;
+std::optional<dh2::data::NativeStartGamePlanV1> active_native_start_plan;
+RuntimeLevelAssets active_level_assets;
 // MenuMainMenu's preview selection is separate from PlayerInfo::saveSlot664.
 // The original Character/plane producer has not been reconstructed here.
 struct MenuPreviewSelection {std::int32_t slot=-1;std::uintptr_t character=0,plane=0;} menu_preview_selection;
@@ -1827,22 +1838,106 @@ bool select_menu_preview_slot(std::int32_t slot,bool force,std::string& error){
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native menu preview selection | slot %d | force %d | avatar producer pending",slot,force);
  error.clear();return true;
 }
+namespace {
+bool prepare_native_menu_start(std::int32_t slot,const PendingMenuStart& menu,
+    AAssetManager* assets,dh2::data::NativeStartGamePlanV1& plan,
+    RuntimeLevelAssets& runtime,std::vector<std::uint8_t>& descriptor,std::string& error){
+ auto character_data=read(assets,"character_properties_pyarray.bin","data");
+ auto character_names=read(assets,"character_properties_pyarraynames.bin","data");
+ auto character_schema=read(assets,"character_properties_pystructnames.bin","data");
+ dh2::data::CharacterTable characters;
+ if(!dh2::data::load_characters({character_data.data(),character_data.size()},
+      {character_names.data(),character_names.size()},
+      {character_schema.data(),character_schema.size()},characters,error))return false;
+ auto level_data=read(assets,"levels_pyarray.bin","data");
+ auto level_names=read(assets,"levels_pyarraynames.bin","data");
+ auto level_schema=read(assets,"levels_pystructnames.bin","data");
+ dh2::data::LevelTables levels;
+ if(!dh2::data::load_levels({level_data.data(),level_data.size()},
+      {level_names.data(),level_names.size()},
+      {level_schema.data(),level_schema.size()},levels,error))return false;
+ // NativeStartGame falls back to DesignSettingsTable.members[0]+0x24 only
+ // when the selected LNAM row is -1. The packed table starts with a count,
+ // followed by 43-word (172-byte) DesignSettings records.
+ const auto design=read(assets,"design_pyarray.bin","original-cache/data/pydata");
+ if(design.size()<4+172){error="Original DesignSettings table is truncated";return false;}
+ const auto read_u32=[](const std::uint8_t* p){return std::uint32_t(p[0])|
+      (std::uint32_t(p[1])<<8)|(std::uint32_t(p[2])<<16)|(std::uint32_t(p[3])<<24);};
+ const auto design_count=read_u32(design.data());
+ if(!design_count||design_count>4096||design.size()<4+std::uint64_t(design_count)*172){
+  error="Original DesignSettings row count is invalid";return false;
+ }
+ std::int32_t initial_level_row=0;const auto initial_bits=read_u32(design.data()+4+0x24);
+ std::memcpy(&initial_level_row,&initial_bits,sizeof(initial_level_row));
+ dh2::native::player_profile::Metadata temporary_save;
+ if(!temporary_save.load(slot,runtime_root,characters,native_save_difficulty,error))return false;
+ const auto& source_save=temporary_save.save();
+ dh2::data::NativeStartGameSaveViewV1 save;
+ save.slot=source_save.slot();save.unlocked_difficulty=source_save.unlocked_difficulty();
+ save.level_rows=source_save.level_name_fields().word50;
+ save.entry_points=source_save.level_entry_points();
+ save.use_spawn_points=source_save.use_spawn_points();
+ dh2::data::NativeStartGameRequestV1 request;
+ request.current_difficulty=native_save_difficulty;
+ request.has_numeric_difficulty=menu.has_numeric_difficulty;
+ request.requested_difficulty=menu.requested_difficulty;
+ request.online=native_host.online!=0;request.local_player_hosting=false;
+ request.initial_level_row=initial_level_row;
+ if(!dh2::data::resolve_native_start_game_plan_v1(levels,save,request,plan,error))return false;
+ if(!plan.should_launch){error="NativeStartGame source state rejected the launch";return false;}
+ runtime={};runtime.row=plan.level_row;runtime.name=plan.level_name;runtime.level_file=plan.level_file;
+ if(plan.level_row==41&&plan.level_name=="SWAMP"&&plan.level_file=="001_swamp.mlx"){
+  runtime.descriptor="001_swamp.dwld";runtime.bres="data/3d/modules/swamp/swamp.bdae";
+  runtime.spawns="001_swamp.spwn";runtime.objects.clear();runtime.development_layout=false;
+  descriptor=read(assets,runtime.descriptor,"worlds");
+ }else if(plan.level_row==23&&plan.level_name=="GOTHICUS_CRYPT_01"&&
+          plan.level_file=="007_crypt_01.rule.xml"){
+  // Keep the existing play-tested room arrangement while the IDA-derived
+  // procedural generator is still being implemented. This is explicitly a
+  // development layout; it is not the source-generated campaign Crypt.
+  runtime.descriptor="crypt01.dwld";runtime.bres="crypt.bdae";
+  runtime.spawns="crypt01.spwn";runtime.objects="crypt01.dact";
+  runtime.development_layout=true;descriptor=read(assets,runtime.descriptor,"worlds");
+ }else{
+  error="Selected LevelList row has no native source loader yet: row "+
+      std::to_string(plan.level_row)+" ("+plan.level_name+" / "+plan.level_file+")";return false;
+ }
+ error.clear();return true;
+}
+}
+
 bool request_menu_start(bool numeric,std::int32_t requested,std::int32_t& slot,std::string& error){
  // The authored button has already called the real NativeAssign service.
- // This bounded development continuation starts Crypt on Normal. Complete
- // NativeStartGame temporary Save/SG_Save/online/LoadLevel effects are open.
- if((numeric&&requested!=0)||native_save_difficulty!=0){error="This development build currently starts Crypt on Normal difficulty";return false;}
+ // Preserve its numeric argument until the source plan reads the same slot's
+ // canonical metadata Save. Difficulty unlock and raw LoadLevel argument are
+ // separate source decisions handled by NativeStartGamePlanV1.
  if(!selected_menu_save_slot(slot,error))return false;
- __android_log_print(ANDROID_LOG_INFO,"DH2Native","Development Crypt start requested | slot %d | numeric %d | requested difficulty %d | full source level transition pending",slot,numeric,requested);
+ pending_menu_start={slot,numeric,requested,true};
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Authored NativeStartGame request accepted | slot %d | numeric %d | requested difficulty %d | source LevelList resolution pending",slot,numeric,requested);
  return true;
 }
 std::string start_menu_game(std::int32_t slot,AAssetManager* assets){
  std::string error;std::int32_t assigned=-1;
  if(!selected_menu_save_slot(assigned,error))return error;
  if(assigned!=slot)return "Start Game selected slot differs";
- menu_gameplay_slot=assigned;
- try{native_host.select_metadata_slot(assigned);const auto descriptor=read(assets,"crypt01.dwld","worlds");return load_world(descriptor.data(),descriptor.size(),assets);}
- catch(const std::exception& e){return std::string("Start Game failed: ")+e.what();}
+ try{
+  native_host.select_metadata_slot(assigned);
+  const PendingMenuStart request=pending_menu_start.valid&&pending_menu_start.slot==assigned
+      ?pending_menu_start:PendingMenuStart{assigned,false,0,true};
+  dh2::data::NativeStartGamePlanV1 plan;RuntimeLevelAssets runtime;
+  std::vector<std::uint8_t> descriptor;
+  if(!prepare_native_menu_start(assigned,request,assets,plan,runtime,descriptor,error))
+   return "Start Game failed: "+error;
+  pending_menu_start={};active_native_start_plan=plan;active_level_assets=std::move(runtime);
+  menu_gameplay_slot=assigned;
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","NativeStartGame plan | slot %d | row %d | %s | source file %s | entry %d | spawn %u | current difficulty %d | raw load difficulty %d | clear+save-before-load effect still pending | layout %s",
+   plan.slot,plan.level_row,plan.level_name.c_str(),plan.level_file.c_str(),plan.entry_point,
+   unsigned(plan.load_spawn_flag),plan.difficulty_for_level,plan.requested_difficulty_for_load,
+   active_level_assets.development_layout?"development":"source-authored-static");
+  const auto result=load_world(descriptor.data(),descriptor.size(),assets);
+  if(result.rfind("World load failed:",0)==0){deactivate();menu_gameplay_slot=-1;active_native_start_plan.reset();active_level_assets=RuntimeLevelAssets{};}
+  return result;
+ }catch(const std::exception& e){pending_menu_start={};return std::string("Start Game failed: ")+e.what();}
 }
 std::vector<std::uint8_t> read_asset(AAssetManager* assets,const std::string& name){return read(assets,name,"");}
 void reset_context(){
@@ -1902,6 +1997,7 @@ void deactivate(){
  actor_skill_catalogue.reset();level={};current_scene={};
  prince_retained_pose.clear();prince_locomotion=dh2::actor::BlendedPlayback{};
  prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;
+ active_native_start_plan.reset();pending_menu_start={};active_level_assets=RuntimeLevelAssets{};
  enabled=false;world_mode=false;resume_world=false;move_x=move_y=0;
  const auto remaining=std::count_if(retired.begin(),retired.end(),[](const auto& owner){return !owner.expired();});
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native terminal world discard | Ghost references %zu | remaining %zu | groups %zu | saved actors %zu | catalogue %u",retired.size(),std::size_t(remaining),object_groups.size(),saved_actors.size(),unsigned(bool(actor_skill_catalogue)));
@@ -3034,6 +3130,17 @@ std::string debug_player_death(){
 
 std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetManager* assets){
   std::vector<Draw> environment;std::vector<GLuint> textures;
+  RuntimeLevelAssets level_assets=active_level_assets;
+  if(!active_native_start_plan&&descriptor){
+    const auto swamp_descriptor=read(assets,"001_swamp.dwld","worlds");
+    if(size==swamp_descriptor.size()&&std::equal(swamp_descriptor.begin(),swamp_descriptor.end(),descriptor)){
+      level_assets.row=41;level_assets.name="SWAMP";level_assets.level_file="001_swamp.mlx";
+      level_assets.descriptor="001_swamp.dwld";level_assets.bres="data/3d/modules/swamp/swamp.bdae";
+      level_assets.spawns="001_swamp.spwn";level_assets.objects.clear();level_assets.development_layout=false;
+      active_level_assets=level_assets;
+    }
+  }
+  const bool source_static_level=!level_assets.development_layout&&level_assets.name=="SWAMP";
   dh2::objects::Resource candidate_itemdrops;
   std::vector<Draw> candidate_itemdrop_draws;
   std::map<std::string,unsigned> candidate_itemdrop_roots;
@@ -3056,14 +3163,15 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     if(world_mode&&!prince_retained_pose.capture(prince_locomotion,prince_attack_clips,prince_visual,current_scene,retention_error))
       throw std::runtime_error("Player scene retention failed: "+retention_error);
     if(!restore){prince_skills.reset();prince_source_ai.reset();}
-    auto raw=read(assets,"crypt.bdae","worlds");dh2::resources::BresView view{};
+    auto raw=read(assets,level_assets.bres,source_static_level?"original-cache":"worlds");dh2::resources::BresView view{};
     if(dh2_bres_open(&view,raw.data(),raw.size())!=dh2::resources::BresError::ok)throw std::runtime_error("World BRES rejected");
     dh2::world::Level candidate;std::string error;if(!dh2::world::load(view,descriptor,size,candidate,error))throw std::runtime_error(error);
     if(!restore){
-      const auto spawn_bytes=read(assets,"crypt01.spwn","worlds");std::vector<dh2::world::EntryPoint> entrypoints;
+      const auto spawn_bytes=read(assets,level_assets.spawns,"worlds");std::vector<dh2::world::EntryPoint> entrypoints;
       if(!dh2::world::load_entrypoints(spawn_bytes.data(),spawn_bytes.size(),candidate.rooms,entrypoints,error))throw std::runtime_error(error);
       dh2::world::SpawnSelection start;
-      if(!dh2::world::select_entrypoint(candidate,entrypoints,0,start,error))throw std::runtime_error(error);
+      const auto entrypoint=active_native_start_plan?active_native_start_plan->entry_point:0;
+      if(!dh2::world::select_entrypoint(candidate,entrypoints,entrypoint,start,error))throw std::runtime_error(error);
       candidate.spawn=start.position;
       source_spawn_heading=start.rotation_degrees[2]*0.01745329251994329577f;
       __android_log_print(ANDROID_LOG_INFO,"DH2Native","Source SpawnPoint selected | ID %d | %s | room %u | floor snapped %u | source xyz %.4f %.4f %.4f | start xyz %.4f %.4f %.4f | source rotation z %.4f deg",
@@ -3121,15 +3229,19 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     if(dh2_pycst_open(&quest_constants.view,quest_constants_bytes->data(),std::uint32_t(quest_constants_bytes->size())))throw std::runtime_error("Native original quest constants rejected");
     quest_constants.owner=quest_constants_bytes;
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Quest catalogue | definitions %u | immutable table and constants generation",quest_tables.borrow().count());
-    const auto crypt_oid=dh2::data::find_level(level_tables,"GOTHICUS_CRYPT_01");
-    if(crypt_oid<0)throw std::runtime_error("Crypt level catalogue row missing");
-    const auto& crypt_declaration=level_tables.levels.at(crypt_oid);
+    const auto selected_level_row=level_assets.row>=0?level_assets.row:
+      dh2::data::find_level(level_tables,"GOTHICUS_CRYPT_01");
+    if(selected_level_row<0||std::size_t(selected_level_row)>=level_tables.levels.size())
+      throw std::runtime_error("Selected level catalogue row missing");
+    const auto& selected_declaration=level_tables.levels.at(std::size_t(selected_level_row));
     dh2::level_construction_fields::State candidate_level_fields{};
     dh2::level_construction_fields::Result candidate_level_scan{};
-    const auto candidate_level_file=crypt_declaration.level_file;
-    if(dh2::level_construction_fields::initialize(&level_tables,candidate_level_file,0,&candidate_level_fields,&candidate_level_scan)!=dh2::level_construction_fields::Status::selected || candidate_level_fields.level_list_index_3c!=crypt_oid)
+    const auto candidate_level_file=level_assets.level_file.empty()?selected_declaration.level_file:level_assets.level_file;
+    const auto candidate_level_difficulty=active_native_start_plan?
+      active_native_start_plan->requested_difficulty_for_load:0;
+    if(dh2::level_construction_fields::initialize(&level_tables,candidate_level_file,candidate_level_difficulty,&candidate_level_fields,&candidate_level_scan)!=dh2::level_construction_fields::Status::selected || candidate_level_fields.level_list_index_3c!=selected_level_row)
       throw std::runtime_error("Source Level constructor field selection failed");
-    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native level catalogue | fast travel %zu | levels %zu | Crypt row %d | ranges %d %d / %d %d / %d %d | GSLevel ownership pending",level_tables.fast_travel.size(),level_tables.levels.size(),crypt_oid,crypt_declaration.monster_lvl_min,crypt_declaration.monster_lvl_max,crypt_declaration.monster_lvl_min_hard,crypt_declaration.monster_lvl_max_hard,crypt_declaration.monster_lvl_min_nightmare,crypt_declaration.monster_lvl_max_nightmare);
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native level catalogue | fast travel %zu | levels %zu | selected %s row %d | ranges %d %d / %d %d / %d %d | GSLevel ownership pending",level_tables.fast_travel.size(),level_tables.levels.size(),selected_declaration.name.c_str(),selected_level_row,selected_declaration.monster_lvl_min,selected_declaration.monster_lvl_max,selected_declaration.monster_lvl_min_hard,selected_declaration.monster_lvl_max_hard,selected_declaration.monster_lvl_min_nightmare,selected_declaration.monster_lvl_max_nightmare);
     dh2::data::PropertyRules property_rules;if(!dh2::data::load_property_rules(character_table,property_rules,error))throw std::runtime_error(error);
     dh2::data::AiTables ai_tables;std::array<std::vector<std::uint8_t>,6> ai_data;const char* ai_names[]={"ai_pyarray.bin","ai_pyarraynames.bin","ai_pystructnames.bin","ai_factions_pyarray.bin","ai_factions_pyarraynames.bin","ai_factions_pystructnames.bin"};for(unsigned i=0;i<6;++i)ai_data[i]=read(assets,ai_names[i],"data");
     if(!dh2::data::load_ai({ai_data[0].data(),ai_data[0].size()},{ai_data[1].data(),ai_data[1].size()},{ai_data[2].data(),ai_data[2].size()},{ai_data[3].data(),ai_data[3].size()},{ai_data[4].data(),ai_data[4].size()},{ai_data[5].data(),ai_data[5].size()},ai_tables,error))throw std::runtime_error(error);
@@ -3146,8 +3258,11 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     dh2::data::Dictionary clip_table;dh2::data::AnimationTables animation_tables;dh2::data::AnimationRandom animation_random;
     if(!dh2::data::load_dictionary({clip_names.data(),clip_names.size()},{clip_values.data(),clip_values.size()},clip_table,error)||!dh2::data::load_animation_tables({animation_data.data(),animation_data.size()},{animation_names.data(),animation_names.size()},{animation_fields.data(),animation_fields.size()},clip_table,animation_tables,error))throw std::runtime_error(error);
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Animation tables ready | sequences %zu | characters %zu | clip paths %zu | bytes %zu",animation_tables.sequences.size(),animation_tables.characters.size(),clip_table.values.size(),animation_tables.data_consumed);
-    const auto objects=read(assets,"crypt01.dact","worlds");std::vector<dh2::objects::Record> object_records;
-    if(!dh2::objects::load_records(objects.data(),objects.size(),candidate.rooms,character_table,model_table,object_records,error))throw std::runtime_error(error);
+    std::vector<dh2::objects::Record> object_records;
+    if(!level_assets.objects.empty()){
+     const auto objects=read(assets,level_assets.objects,"worlds");
+     if(!dh2::objects::load_records(objects.data(),objects.size(),candidate.rooms,character_table,model_table,object_records,error))throw std::runtime_error(error);
+    }
     auto prince=read(assets,"prince_modular.bdae","models"),idle=read(assets,"prince_idle_shield.bdae","animations"),walk=read(assets,"prince_walk_1hand.bdae","animations");
     dh2::resources::BresView actor_view{};dh2_bres_open(&actor_view,prince.data(),prince.size());dh2::scene::Scene rest;
     if(!dh2::scene::load(actor_view,rest,error))throw std::runtime_error(error);
@@ -3156,6 +3271,8 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     if(native_host.metadata_slot>=0){
      if(menu_gameplay_slot>=0)native_host.prepare_metadata(runtime_root,character_table,native_save_difficulty);
      else native_host.load_metadata_preview(runtime_root,character_table,native_save_difficulty);
+     if(menu_gameplay_slot>=0&&active_native_start_plan)
+      native_save_difficulty=active_native_start_plan->difficulty_for_level;
      const auto& receipt=native_host.metadata->receipt();
      __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native campaign metadata | slot %d | class %d | level %d | difficulty %d | level ID %u | sections %u | reads %u | file opens %u | Save %zu | profile %zu | source mask1; spawn/InitPost/mask4/writes pending",receipt.slot,receipt.character_class,receipt.level,receipt.difficulty,receipt.source_level_id,receipt.sections,receipt.field_reads,receipt.file_opens,std::size_t(native_host.metadata->save_identity()),std::size_t(native_host.metadata->profile_identity()));
     }
@@ -3581,9 +3698,10 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     initialize_char_ai_registry();
     initialize_native_player_skills(assets,restore);
     initialize_native_monster_scripts(assets);
-    initialize_crypt_script(assets,restore);
+    if(level_assets.name=="GOTHICUS_CRYPT_01")initialize_crypt_script(assets,restore);
     build_search_world();
-    char report[256];std::snprintf(report,sizeof(report),"Crypt | %u rooms | %u monsters | %u scenery objects\n%u triangles. Drag the movement control to walk.",level.rooms,monsters,decors,triangles+586+object_triangles);
+    const char* display_level=level_assets.name=="GOTHICUS_CRYPT_01"?"Crypt":level_assets.name.c_str();
+    char report[256];std::snprintf(report,sizeof(report),"%s | %u rooms | %u monsters | %u scenery objects\n%u triangles. Drag the movement control to walk.",display_level,level.rooms,monsters,decors,triangles+586+object_triangles);
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Objects ready | monsters %u | decors %u | resources %zu | instance draws %u | triangles %u | character records %zu | model entries %zu | idle preview only",monsters,decors,object_groups.size(),object_draws,object_triangles,character_table.rows.size(),model_table.values.size());
     if(level.native_floor)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Native floors ready | records %zu | graph nodes %u | graph edges %u | selector collision controls height",level.native_floor->records.size(),level.native_floor->graph.node_count,level.native_floor->graph.edge_count);
     if(level.native_floor&&level.native_floor->sewn)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Native floor links ready | neighbour relations %u | validation references %u | graph-node search ready",level.native_floor->sewing.link_count,level.native_floor->graph.validation_count);

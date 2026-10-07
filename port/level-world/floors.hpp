@@ -38,8 +38,9 @@ struct World {
  navigation::Graph graph{};
  World()=default;World(const World&)=delete;World& operator=(const World&)=delete;
 };
-// Supports authored floor nodes with no floortypes override. Full
-// CStrProps decoding remains pending and explicitly rejects such overrides.
+// Supports untagged authored floors and SWAMP's single URL-quoted
+// floortypes={wood,water,door,hole} subset. General CStrProps decoding remains
+// pending; other keys or values are rejected explicitly.
 bool append(const resources::BresView&,const scene::Scene&,const scene::Instance&,unsigned room,World&,std::string&);
 bool build_graph(World&,std::string&);
 bool post_load(World&,std::string&);

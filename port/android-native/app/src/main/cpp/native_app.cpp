@@ -246,7 +246,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_startMenu
  if(!assets||slot<0)return result(env,"Start Game input unavailable");
  original_ui.deactivate();ui_frame_failed=false;report_model_frame=true;
  const auto startup=model_renderer::start_menu_game(slot,AAssetManager_fromJava(env,assets));
- if(startup.find("Crypt |") == 0){
+ if(startup.find("Crypt |") == 0||startup.find("SWAMP |") == 0){
   std::string error;if(!original_ui.attach_player(menu_directory,error))__android_log_print(ANDROID_LOG_ERROR,tag,"Player HUD attach failed: %s",error.c_str());
  }
  return result(env,startup);
