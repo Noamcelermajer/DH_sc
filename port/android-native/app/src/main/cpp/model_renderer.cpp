@@ -147,7 +147,8 @@ struct ObjectActor:dh2::objects::Record {
  dh2::data::PropertyState properties;
  dh2::animation::EventCursor event_cursor;unsigned animation_events=0;
  dh2::data::CombatActorState combat_state;int combat_target=-1;bool pending_death=false;
- bool loot_dropped=false;
+ bool loot_dropped=false,loot_retry_pending=false;unsigned loot_retry_delay_frames=0;
+ std::vector<dh2::data::ItemInstanceV1*> loot_rollback_items;
  AggroStorage aggro;std::uint64_t identity=0;unsigned target_alive=0,target_sight=0;bool target_seeking=false,ai_attack=false;
  SearchObjectProjection search_projection{};
  std::shared_ptr<SpawnOwner> spawn_owner;
@@ -2303,9 +2304,13 @@ void player_authored_event(const dh2::animation::TriggeredEvent& event,int clip)
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Prince combat hit | target %s | attempt %u | result %d %d %d %d %d %d %u %u %d %d | HP %d %d | dead %u | combo %u | RNG %u %u | statuses %u",target->name.c_str(),prince_combat.attempts,result.amount,result.dot_element,result.dot_duration,result.dot_amount,result.hp_leech,result.mp_leech,result.outcomes,result.mask,result.weapon_category,result.element,applied.health.before,applied.health.after,target->combat_state.dead,prince_combat.life.combo_hits,combat_random.seed,combat_random.calls,applied.status_requests);
  if(applied.health.kill_requested){
   target->pending_death=true;
+  target->loot_retry_pending=true;target->loot_retry_delay_frames=0;
   std::string loot_error;
-  if(!drop_actor_loot(*target,loot_error))
+  if(drop_actor_loot(*target,loot_error))target->loot_retry_pending=false;
+  else{
+   target->loot_retry_delay_frames=30;
    __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Source death loot continuation failed | %s | %s",target->name.c_str(),loot_error.c_str());
+  }
  }
  if(applied.status_requests)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Combat status services pending | %s | requests %u",target->name.c_str(),applied.status_requests);
 }
@@ -3749,11 +3754,71 @@ bool source_drop_position(const ObjectActor& victim,std::array<float,3>& out,
 }
 bool drop_actor_loot(ObjectActor& victim,std::string& error) {
  if(victim.loot_dropped){error.clear();return true;}
- victim.loot_dropped=true;
- if(!world_mode||!actor_level_fields_ready||actor_level_kill_loot_gate!=0||
-    prince_combat.life.dead||victim.loot_table_id<0){error.clear();return true;}
+ auto& rollback_items=victim.loot_rollback_items;
+ auto cleanup_rollback_items=[&](){
+  if(rollback_items.empty()){error.clear();return true;}
+  if(!world_mode||!prince_combat.inventory){error="Partial-loot cleanup owner is unavailable";return false;}
+  NativeLootAdapterV1 rollback_adapter{prince_combat.item_text,prince_combat.item_presentation.get()};
+  const auto rollback_services=rollback_adapter.inventory_services();
+  for(auto it=rollback_items.begin();it!=rollback_items.end();){
+   const auto& items=prince_combat.inventory->world_items();
+   const auto found=std::find_if(items.begin(),items.end(),[&](const auto& slot){
+    return slot&&slot->item.get()==*it;
+   });
+   if(found==items.end()){it=rollback_items.erase(it);continue;}
+   const auto index=std::size_t(found-items.begin());
+   const auto projection=std::find_if(native_world_items.begin(),native_world_items.end(),
+    [&](const auto& current){return current->item==*it;});
+   if(projection!=native_world_items.end())
+    destroy_item_projection(std::size_t(projection-native_world_items.begin()));
+   std::string retirement_error;
+   if(!prince_combat.inventory->retire_world_item(index,rollback_services,retirement_error)){
+    error="Pending partial-loot cleanup failed: "+retirement_error;return false;
+   }
+   it=rollback_items.erase(it);
+  }
+  error.clear();return true;
+ };
+ if(!cleanup_rollback_items())return false;
+ if(!world_mode){error="Native world is not active for death loot";return false;}
+ if(!actor_level_fields_ready){error="Native Level loot fields are not ready";return false;}
+ if(actor_level_kill_loot_gate!=0||prince_combat.life.dead||victim.loot_table_id<0){
+  victim.loot_dropped=true;error.clear();return true;
+ }
  if(!prince_combat.inventory){error="Source Character V4 inventory is unavailable";return false;}
  NativeLootAdapterV1 adapter{prince_combat.item_text,prince_combat.item_presentation.get()};
+ const auto services=adapter.inventory_services();
+ auto rollback_appended=[&](std::size_t first,std::string& rollback_error){
+  while(prince_combat.inventory->world_items().size()>first){
+   const auto index=prince_combat.inventory->world_items().size()-1;
+   const auto& slot=prince_combat.inventory->world_items()[index];
+   auto* item=slot&&slot->item?slot->item.get():nullptr;
+   if(!item){rollback_error="Appended source loot slot is empty";return false;}
+   const auto projection=std::find_if(native_world_items.begin(),native_world_items.end(),
+    [&](const auto& current){return current->item==item;});
+   if(projection!=native_world_items.end())
+    destroy_item_projection(std::size_t(projection-native_world_items.begin()));
+   std::string retirement_error;
+   if(!prince_combat.inventory->retire_world_item(index,services,retirement_error)){
+    const auto& items=prince_combat.inventory->world_items();
+    std::vector<dh2::data::ItemInstanceV1*> pending;
+    for(std::size_t i=first;i<items.size();++i)if(items[i]&&items[i]->item){
+     auto* remaining=items[i]->item.get();
+     pending.push_back(remaining);
+    }
+    for(auto* remaining:pending){
+     const auto remaining_projection=std::find_if(native_world_items.begin(),native_world_items.end(),
+      [&](const auto& current){return current->item==remaining;});
+     if(remaining_projection!=native_world_items.end())
+      destroy_item_projection(std::size_t(remaining_projection-native_world_items.begin()));
+     if(std::find(rollback_items.begin(),rollback_items.end(),remaining)==rollback_items.end())
+      rollback_items.push_back(remaining);
+    }
+    rollback_error=retirement_error;return false;
+   }
+  }
+  rollback_error.clear();return true;
+ };
  auto call=[&](dh2::data::OwnedInventoryOperationV4 operation,const char* name,
                dh2::data::OwnedInventoryResponseV4& response){
   const dh2::data::OwnedInventoryRequestV4 request{operation,0x3ecba0,nullptr,name,0,0};
@@ -3762,23 +3827,36 @@ bool drop_actor_loot(ObjectActor& victim,std::string& error) {
  };
  dh2::data::OwnedInventoryResponseV4 response{};
  if(!call(dh2::data::OwnedInventoryOperationV4::player_count,nullptr,response))return false;
- if(response.value!=1){error="Current PlayerManager roster is not the supported single-player roster";return false;}
+ if(response.value!=1){
+  __android_log_print(ANDROID_LOG_WARN,"DH2Native","Source death loot skipped | unsupported PlayerManager roster %d",response.value);
+  victim.loot_dropped=true;error.clear();return true;
+ }
  dh2::data::LootEntrySelectionContextV1 selection{};
  switch(prince_combat.player_class_id){
   case 263:selection.player_counts.warrior=1;break;
   case 290:selection.player_counts.mage=1;break;
   case 325:selection.player_counts.rogue=1;break;
-  default:error="Active Player Character ClassID is outside the recovered loot classes";return false;
+  default:
+   __android_log_print(ANDROID_LOG_WARN,"DH2Native","Source death loot skipped | unsupported ClassID %d",prince_combat.player_class_id);
+   victim.loot_dropped=true;error.clear();return true;
  }
  response={};
  if(!call(dh2::data::OwnedInventoryOperationV4::debug_load,nullptr,response))return false;
  response={};
  if(!call(dh2::data::OwnedInventoryOperationV4::debug_query,"InfiniteLootDrops",response))return false;
  selection.infinite_loot_drops=response.value!=0;
+ const auto first_world_item=prince_combat.inventory->world_items().size();
  LootStagingResultV1 staged{};
  if(!stage_world_loot_table(victim.loot_table_id,selection,
       prince_combat.properties.resolved[195],prince_combat.properties.resolved[196],
-      -1,actor_level_fields.difficulty_118,staged,error))return false;
+      -1,actor_level_fields.difficulty_118,staged,error)){
+  const auto stage_error=error;
+  std::string rollback_error;
+  if(!rollback_appended(first_world_item,rollback_error))
+   error=stage_error+"; partial loot cleanup deferred: "+rollback_error;
+  else error=stage_error;
+  return false;
+ }
  const auto& items=prince_combat.inventory->world_items();
  for(std::size_t i=staged.first_world_item;i<items.size();++i){
   if(!items[i]||!items[i]->item){error="Source loot stage published an empty world slot";break;}
@@ -3787,27 +3865,26 @@ bool drop_actor_loot(ObjectActor& victim,std::string& error) {
      !project_world_item(items[i]->item.get(),position,error))break;
  }
  if(!error.empty()){
-  while(prince_combat.inventory->world_items().size()>staged.first_world_item){
-   const auto index=prince_combat.inventory->world_items().size()-1;
-   auto* item=prince_combat.inventory->world_items()[index]->item.get();
-   const auto projection=std::find_if(native_world_items.begin(),native_world_items.end(),
-    [&](const auto& current){return current->item==item;});
-   if(projection!=native_world_items.end())
-    destroy_item_projection(std::size_t(projection-native_world_items.begin()));
-   std::string retirement_error;
-   if(!retire_staged_world_loot_item(index,retirement_error)){
-    error+="; staged Item rollback failed: "+retirement_error;break;
-   }
-  }
+  const auto projection_error=error;
+  std::string rollback_error;
+  if(!rollback_appended(first_world_item,rollback_error))
+   error=projection_error+"; staged Item cleanup deferred: "+rollback_error;
+  else error=projection_error;
   return false;
  }
  __android_log_print(ANDROID_LOG_INFO,"DH2Native",
   "Source enemy death loot staged | %s | Loot %d | items %zu | ClassID %d | InfiniteLootDrops %u | V4 owner, itemdrops BDAE and MoveOn sensor",
   victim.name.c_str(),victim.loot_table_id,staged.item_count,prince_combat.player_class_id,
   unsigned(selection.infinite_loot_drops));
- error.clear();return true;
+ victim.loot_dropped=true;error.clear();return true;
 }
 void update_native_world_items_after_step() {
+ for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.loot_retry_pending){
+  if(actor.loot_retry_delay_frames){--actor.loot_retry_delay_frames;continue;}
+  std::string error;
+  if(drop_actor_loot(actor,error)){actor.loot_retry_pending=false;actor.loot_retry_delay_frames=0;}
+  else actor.loot_retry_delay_frames=30;
+ }
  if(!prince_combat.inventory)return;
  for(auto& item:native_world_items)if(item->body.body){
   const auto point=item->body.body->GetPosition();
