@@ -1,4 +1,5 @@
 #include "../world.hpp"
+#include "../objects.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -21,8 +22,8 @@ void require(bool condition, const char* message) {
 }
 
 int main(int argc, char** argv) {
-    if (argc != 4) {
-        std::cerr << "usage: swamp_static_world_audit swamp.bdae 001_swamp.dwld 001_swamp.spwn\n";
+    if (argc != 6) {
+        std::cerr << "usage: swamp_static_world_audit swamp.bdae 001_swamp.dwld 001_swamp.spwn 001_swamp.dact asset-data-dir\n";
         return 2;
     }
     try {
@@ -75,12 +76,40 @@ int main(int argc, char** argv) {
                     [](float value) { return std::isfinite(value); }),
                 "SWAMP entrypoint zero did not resolve to source floor");
 
+        const auto dact_bytes = read(argv[4]);
+        const std::string data_root = argv[5];
+        const auto character_records = read((data_root + "/character_properties_pyarray.bin").c_str());
+        const auto character_names = read((data_root + "/character_properties_pyarraynames.bin").c_str());
+        const auto character_fields = read((data_root + "/character_properties_pystructnames.bin").c_str());
+        const auto model_names = read((data_root + "/character_models_dictionary_pyarraynames.bin").c_str());
+        const auto model_values = read((data_root + "/character_models_dictionary_pyarray.bin").c_str());
+        dh2::data::CharacterTable characters;
+        dh2::data::Dictionary models;
+        require(dh2::data::load_characters({character_records.data(), character_records.size()},
+                {character_names.data(), character_names.size()},
+                {character_fields.data(), character_fields.size()}, characters, error),
+                "SWAMP CharacterTable assets rejected");
+        require(dh2::data::load_dictionary({model_names.data(), model_names.size()},
+                {model_values.data(), model_values.size()}, models, error),
+                "SWAMP model dictionary rejected");
+        std::vector<dh2::objects::Record> actors;
+        require(dh2::objects::load_records(dact_bytes.data(), dact_bytes.size(), level.rooms,
+                characters, models, actors, error), error.c_str());
+        require(actors.size() == 5 &&
+                std::all_of(actors.begin(), actors.end(), [](const auto& actor) {
+                    return actor.kind == 1 && actor.room < 9 &&
+                           (actor.character == "Troll" ||
+                            actor.character == "Swamp_LizadMan_Type1" ||
+                            actor.character == "Swamp_LizadMan_Type2");
+                }), "SWAMP direct Monster records differ from the supported source subset");
+
         std::cout << "{\"rooms\":" << level.rooms << ",\"floors\":"
                   << level.native_floor->records.size() << ",\"visual_instances\":"
                   << level.scene.instances.size() << ",\"water_floors\":" << water_floors
                   << ",\"hole_floors\":" << hole_floors
                   << ",\"material_mismatches\":0"
-                  << ",\"entrypoints\":[0,3,13],\"entrypoint_zero_floor_snapped\":true}\n";
+                  << ",\"entrypoints\":[0,3,13],\"entrypoint_zero_floor_snapped\":true"
+                  << ",\"actors\":" << actors.size() << ",\"actor_models\":3}\n";
         return 0;
     } catch (const std::exception& exception) {
         std::cerr << exception.what() << '\n';

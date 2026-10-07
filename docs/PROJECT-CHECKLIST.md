@@ -5,7 +5,7 @@ Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (151,398,326 bytes, SHA-256 `4E95C702C699185D8370886D3CBEA9D995E46A6DF3EBE62BC353D40423E7D792`). API 37 ARM64/x86_64 build, debug signature, 16 KiB ZIP/ELF alignment, SWAMP descriptor/BDAE/SPWN and sampler assets pass. The selected-library host test loads the bounded static SWAMP world. No live SWAMP start was run; earlier menu/Crypt smoke evidence applies only to its preceding APK. Full source startup/gameplay remains open. Build with `-Pdh2SourceRoot=<short mapped checkout>`.
+**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,743,451 bytes, SHA-256 `9aca951578f4c2ef28adfa8b789d848b77f1c3693d897faff2f0d7dfd45ba730`). API 37 ARM64/x86_64 build; debug signature verifies. It includes five source-authored SWAMP DACT Monster records and their model/animation assets. The selected-library host audit verifies nine rooms, 16 floors, 377 visuals, source materials, entrypoint floor snap, and all five actors across three models. No live SWAMP start was run; earlier menu/Crypt smoke evidence applies only to its preceding APK. Full source startup/gameplay remains open. Build with `-Pdh2SourceRoot=<short mapped checkout>`.
 
 **Latest published APK:** [Static SWAMP loader checkpoint — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-swamp-static-2026-10-07) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-swamp-static-2026-10-07/Dungeon-Hunter-2-native-swamp-static-android17-debug.apk)). This is a prerelease; SWAMP passed the selected-library host loader test but was not started in Android gameplay.
 
@@ -34,14 +34,14 @@ still require live gameplay integration. All final completion gates remain open.
 | Inputs, Adam's work and research | 12 | 3 |
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
-| World, physics, navigation and factories | 16 | 8 |
+| World, physics, navigation and factories | 16 | 10 |
 | Character properties, equipment and state | 32 | 6 |
 | Lua, skills and enemy AI | 50 | 14 |
 | Combat, death, loot and progression | 18 | 8 |
 | Quests, campaign, UI, audio and saves | 40 | 11 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **192** | **75** |
+| **Total scoped tasks** | **192** | **77** |
 
 Prior verified source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. Its `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`.
 
@@ -124,8 +124,10 @@ Historical reports retain their original APK identities and test scopes.
 
 - [x] Load the original authored eight-room Crypt layout into the native app.
 - [x] Parse both current Crypt MGP SpawnPoints into SPWN; fresh Android start selects ID 0 and floor-snaps, while resume preserves saved pose. Host checks and both ABI builds pass; active-object ordering remains open.
-- [x] Compile cache-backed LevelList row 41 into a bounded static SWAMP DWLD/BDAE/SPWN bundle, preserving 34 source render assets; selected-library host load verifies 9 rooms, 16 floors, 377 visuals, material bindings and entrypoint floor snap. General MLX/object factories remain open.
-- [x] Decode the four authored SWAMP `floortypes` values using IDA-derived water/hole flags; other property maps remain explicitly unsupported.
+- [x] Compile cache-backed LevelList row 41 into a bounded static SWAMP DWLD/BDAE/SPWN bundle, preserving 34 source render assets; selected-library host load verifies 9 rooms, 16 floors, 377 visuals, material bindings, entrypoint floor snap, and five DACT Monsters across three models. General MLX/object factories remain open.
+- [x] Verify the selected-library DACT/world actor regression resolves the five source-authored SWAMP Monsters and model dictionary entries.
+- [ ] Start the current SWAMP APK on Android and verify actor load, placement and animation in gameplay; no live run has been made.
+- [x] Parse source `floortypes` with IDA-confirmed duplicate/key/quote behavior, apply native type masks, and make default floor snapping skip void/wall in source order; unknown tags such as `sand` add no mask.
 - [x] Resolve 97 of its 166 object records: 84 scenery objects and 13 monsters.
 - [x] Reconstruct bounded navigation graph/search/path/smoothing/avoidance and floor producers.
 - [x] Connect a real owned player body, root motion, physics and navigation in development runtimes.

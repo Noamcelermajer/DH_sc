@@ -1,16 +1,18 @@
 # Floor type properties
 
-This host-only component parses the bounded `floortypes` UserProperties value
-and reproduces the original floor masks used by navigation. `find_property`
+This component parses the bounded `floortypes` UserProperties value and
+reproduces the original floor masks used by navigation. It is linked into the
+selected `dh2_level_world` library. `find_property`
 requires a checked byte extent containing a NUL terminator, splits on LF and
 the first `=`, trims ASCII whitespace around a key, decodes the first `%22...%22`
 value pair, and uses the last occurrence of a duplicate key. A key-only line or
 `key=` is present with an empty value; this is distinct from an absent key.
 Parsing is capped at 64 KiB. Spans borrow the source bytes.
 
-`floor_type_mask` uses the explicit property value whenever `floortypes` exists.
-Only an absent key falls back to the node name. Matching is case-sensitive
-substring matching and multiple tokens combine. The native masks are:
+`floor_type_mask` uses only the explicit `floortypes` property value. An absent
+property leaves the type string empty; the native loader does not inspect the
+node name. Matching is case-sensitive substring matching and multiple tokens
+combine. Values such as `sand`, `wood`, and `door` add no mask. The native masks are:
 
 | Token | Mask | Meaning in the native floor record |
 | --- | ---: | --- |
@@ -32,9 +34,9 @@ path permissions.
   splits LF lines, splits on the first `=`, and extracts the text between the
   first two `%22` markers when both exist.
 - `recovered/native/assembly/libDungeonHunter2.so/PFFloor-ed6502919ecd-001.asm`:
-  `_LoadNavMesh` at `0x520b40`; its case-sensitive substring checks OR the four
-  masks above, and it consults the node name only if the `floortypes` property
-  is absent.
+  `_LoadNavMesh` at `0x520b40`; it reads only the parent `floortypes` property.
+  An absent property leaves the tag string empty; case-sensitive substring
+  checks OR the four masks above.
 - `recovered/native/assembly/libDungeonHunter2.so/PFObject-d3788b6ddde1-001.asm`:
   `CanPathOn` at `0x524230`; the floor mask must be a subset of the object's
   path mask, with a zero floor mask accepted.

@@ -41,11 +41,11 @@ constexpr std::uint32_t kFloorTypeWall = 0x02000000U;
 constexpr std::uint32_t kFloorPathHole = 0x00000001U;
 constexpr std::uint32_t kFloorPathWater = 0x00000002U;
 
-// Uses `property_value` whenever the key exists, including an empty value.
-// Only an absent property falls back to the node name. Matching is native
-// case-sensitive substring matching; matching multiple tokens ORs the masks.
-std::uint32_t floor_type_mask(bool property_present, Span property_value,
-                              Span node_name);
+// Only the explicit `floortypes` property value contributes type bits. The
+// original loader leaves its tag string empty when the property is absent;
+// node names are never used as a fallback. Matching is case-sensitive and
+// multiple recognized substrings OR their masks.
+std::uint32_t floor_type_mask(bool property_present, Span property_value);
 
 // PFObject::CanPathOn: a zero floor mask is always allowed; otherwise every
 // floor requirement bit must be present in the object's path mask.

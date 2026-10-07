@@ -87,9 +87,8 @@ Error find_property(const char* bytes, std::size_t available_bytes,
     return Error::ok;
 }
 
-std::uint32_t floor_type_mask(bool property_present, Span property_value,
-                              Span node_name) {
-    const Span source = property_present ? property_value : node_name;
+std::uint32_t floor_type_mask(bool property_present, Span property_value) {
+    const Span source = property_present ? property_value : Span{nullptr, 0};
     if (!source.data) return 0;
 
     std::uint32_t mask = 0;

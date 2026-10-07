@@ -1,34 +1,22 @@
 #include "floors.hpp"
+#include "../floor-types/floor_types.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <stdexcept>
 #include <string>
-#include <string_view>
 namespace dh2::floors {
 namespace {
 void require(bool condition,const char* message){if(!condition)throw std::runtime_error(message);}
-std::string_view trim(std::string_view value){
- const auto first=value.find_first_not_of(" \t\r\n");
- if(first==std::string_view::npos)return {};
- const auto last=value.find_last_not_of(" \t\r\n");return value.substr(first,last-first+1);
-}
 floor_source::Flags source_flags(const scene::Node& node){
  floor_source::Flags flags{0,1};
- if(node.user_properties.empty())return flags;
- const auto equals=node.user_properties.find('=');
- require(equals!=std::string::npos,"Unsupported floor property layout");
- const auto key=trim(std::string_view(node.user_properties).substr(0,equals));
- const auto value=trim(std::string_view(node.user_properties).substr(equals+1));
- require(key=="floortypes","Unsupported floor property key");
- // SWAMP serializes this one CStrProps entry as an URL-quoted string. Keep
- // the supported source subset explicit; CStrProps maps and other properties
- // are not inferred. The existing flag kernel handles water/hole substrings.
- require(value=="%22wood%22"||value=="%22water%22"||
-         value=="%22door%22"||value=="%22hole%22",
-         "Unsupported SWAMP floor type value");
- require(dh2_floor_source_flags(&flags,value.data(),value.size())==0,
-         "SWAMP floor type flags rejected");
+ const auto* bytes=node.user_properties.c_str();
+ const dh2::floor_types::Span key{"floortypes",10};
+ dh2::floor_types::Property property{};
+ const auto parsed=dh2::floor_types::find_property(bytes,node.user_properties.size()+1U,key,&property);
+ require(parsed==dh2::floor_types::Error::ok,"Source floor properties rejected");
+ if(property.found)require(dh2_floor_source_flags(&flags,property.value.data,property.value.size)==0,
+                           "Source floor type flags rejected");
  return flags;
 }
 unsigned query(void* owner,unsigned id,const float* point){
@@ -161,9 +149,16 @@ void clear_route_cache(World& world){world.route_world.failed_count=0;}
 bool height(const World& world,const float* point,float& result){
  if(!point)return false;
  for(unsigned i=0;i<3;++i)if(!std::isfinite(point[i]))return false;
- double closest=INFINITY;bool found=false;
- for(const auto& floor:world.selectors){collision::Result hit{};if(dh2_selector_floor(&hit,&floor,point)!=1)continue;const double distance=std::abs(double(hit.point[2])-point[2]);
-  if(distance<closest){closest=distance;result=hit.point[2];found=true;}}
- return found;
+ if(world.records.size()!=world.selectors.size())return false;
+ for(unsigned i=0;i<world.selectors.size();++i){
+  // PFFloor::_LoadNavMesh sets void/wall bits; default GetFloorHeightAt
+  // skips those floors, while hole/water remain candidates. PFRoom returns
+  // the first hit in source floor order rather than choosing the nearest.
+  if(!world.records[i])return false;
+  if(world.records[i]->flags.floor&0x03000000u)continue;
+  const auto& floor=world.selectors[i];collision::Result hit{};if(dh2_selector_floor(&hit,&floor,point)!=1)continue;
+  result=hit.point[2];return true;
+ }
+ return false;
 }
 }

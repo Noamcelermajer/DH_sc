@@ -100,24 +100,26 @@ void parser_cases() {
 
 void mask_cases() {
     using namespace dh2::floor_types;
-    require(floor_type_mask(true, span("hole"), span("water")) == kFloorPathHole,
-            "present property overrides fallback name");
-    require(floor_type_mask(false, {nullptr, 0}, span("floor_water")) == kFloorPathWater,
-            "absent property falls back to node name");
-    require(floor_type_mask(true, {"", 0}, span("floor_hole")) == 0,
-            "explicit empty property suppresses fallback");
-    require(floor_type_mask(true, span("void_wall_hole_water"), {nullptr, 0}) ==
+    require(floor_type_mask(true, span("hole")) == kFloorPathHole,
+            "present property selects only its type");
+    require(floor_type_mask(false, {nullptr, 0}) == 0,
+            "absent property leaves the type string empty");
+    require(floor_type_mask(true, {"", 0}) == 0,
+            "explicit empty property has no floor type");
+    require(floor_type_mask(true, span("void_wall_hole_water")) ==
                 (kFloorTypeVoid | kFloorTypeWall | kFloorPathHole | kFloorPathWater),
             "multiple tokens combine distinct flags");
-    require(floor_type_mask(true, span("VOID Wall Hole WATER"), {nullptr, 0}) == 0,
+    require(floor_type_mask(true, span("VOID Wall Hole WATER")) == 0,
             "floor token matching is case-sensitive");
-    require(floor_type_mask(true, span("underholewaterproof"), {nullptr, 0}) ==
+    require(floor_type_mask(true, span("underholewaterproof")) ==
                 (kFloorPathHole | kFloorPathWater),
             "floor tokens use substring matching");
-    require(floor_type_mask(true, span("wood"), {nullptr, 0}) == 0,
+    require(floor_type_mask(true, span("wood")) == 0,
             "wood has no native mask");
-    require(floor_type_mask(true, span("door"), {nullptr, 0}) == 0,
+    require(floor_type_mask(true, span("door")) == 0,
             "door has no native mask");
+    require(floor_type_mask(true, span("sand")) == 0,
+            "unrecognized source floor value adds no mask");
 
     require(can_path_on(0U, 0U), "zero floor mask is always eligible");
     require(can_path_on(kFloorPathHole, kFloorPathHole | kFloorPathWater),
@@ -155,7 +157,7 @@ void cache_cases(const char* path) {
         require(find_property(data.data() + offset, available,
                               span("floortypes"), &property) == Error::ok,
                 labels[i]);
-        require(property.found && floor_type_mask(true, property.value, {nullptr, 0}) == expected[i],
+        require(property.found && floor_type_mask(true, property.value) == expected[i],
                 labels[i]);
     }
 }

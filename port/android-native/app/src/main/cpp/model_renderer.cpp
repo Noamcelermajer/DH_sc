@@ -1888,7 +1888,7 @@ bool prepare_native_menu_start(std::int32_t slot,const PendingMenuStart& menu,
  runtime={};runtime.row=plan.level_row;runtime.name=plan.level_name;runtime.level_file=plan.level_file;
  if(plan.level_row==41&&plan.level_name=="SWAMP"&&plan.level_file=="001_swamp.mlx"){
   runtime.descriptor="001_swamp.dwld";runtime.bres="data/3d/modules/swamp/swamp.bdae";
-  runtime.spawns="001_swamp.spwn";runtime.objects.clear();runtime.development_layout=false;
+  runtime.spawns="001_swamp.spwn";runtime.objects="001_swamp.dact";runtime.development_layout=false;
   descriptor=read(assets,runtime.descriptor,"worlds");
  }else if(plan.level_row==23&&plan.level_name=="GOTHICUS_CRYPT_01"&&
           plan.level_file=="007_crypt_01.rule.xml"){
@@ -3136,7 +3136,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     if(size==swamp_descriptor.size()&&std::equal(swamp_descriptor.begin(),swamp_descriptor.end(),descriptor)){
       level_assets.row=41;level_assets.name="SWAMP";level_assets.level_file="001_swamp.mlx";
       level_assets.descriptor="001_swamp.dwld";level_assets.bres="data/3d/modules/swamp/swamp.bdae";
-      level_assets.spawns="001_swamp.spwn";level_assets.objects.clear();level_assets.development_layout=false;
+      level_assets.spawns="001_swamp.spwn";level_assets.objects="001_swamp.dact";level_assets.development_layout=false;
       active_level_assets=level_assets;
     }
   }
