@@ -9,6 +9,7 @@ final class NativeBridge {
     static native String initialize(android.content.res.AssetManager assets);
     static native String loadFrontScreen(String directory,android.content.res.AssetManager assets);
     static native String returnToMainMenu(String directory,android.content.res.AssetManager assets);
+    /** Sends UI input in GLSurfaceView-local physical pixels (top-left origin); action uses MotionEvent DOWN/UP/MOVE/CANCEL values. */
     static native String menuTouch(float x,float y,int action);
     static native int consumeMenuLaunch();
     static native String startMenuGame(int slot,android.content.res.AssetManager assets,int debugLevelRow);

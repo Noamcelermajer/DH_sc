@@ -41,7 +41,7 @@ android {
         }
     }
 
-    androidResources { noCompress += listOf("wav") }
+    androidResources { noCompress += listOf("wav", "mp4") }
 
     buildTypes {
         release {

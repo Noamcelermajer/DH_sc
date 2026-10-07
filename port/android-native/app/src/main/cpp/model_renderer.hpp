@@ -52,6 +52,45 @@ std::string debug_player_death();
 std::string set_combat_target(int index,int target);
 std::string player_attack(int target=-1);
 std::array<int,7> player_vitals();
+// Read-only localization projection of the one live Player Character and its
+// associated Save name. Requires the attached world; creates no profile owner.
+bool ui_player_identity(std::uintptr_t&,std::string&);
+bool ui_player_name(std::uintptr_t,std::string&,std::string&);
+struct UiPlayerStatsReadV1 {
+ std::string name,class_name;std::int32_t icon{},level{},hp{},hp_bonus{},max_hp{};
+ std::int32_t mp{},mp_bonus{},max_mp{},xp{},max_xp{},strength{},dexterity{};
+ std::int32_t endurance{},energy{},points{};
+};
+bool ui_player_stats(std::uintptr_t,UiPlayerStatsReadV1&,std::string&);
+struct UiSkillReadV1 {
+ std::int32_t id{-1},level{-1},slot{-1},required_level{-1};
+ std::int32_t character_level{};
+ std::int32_t name_text{-1},description_text{-1},current_text{-1},next_text{-1};
+ bool assignable{};std::string icon;
+};
+struct UiInventoryItemReadV1 {
+ std::int32_t id{-1},index{-1},quantity{},slot{-1};std::string name;
+ bool equipped{},equipped_other_hand{};
+};
+struct UiEquippedItemReadV1 {
+ std::int32_t id{-1},index{-1},power_count{};std::string name;
+};
+struct UiItemDetailsReadV1 {
+ std::int32_t id{-1},index{-1},value{},buy_value{},sell_value{},transmute_property_raw{};
+ std::string name,stats,requirements,icon;
+ bool stackable{},equippable{};std::vector<std::string> power_descriptions;
+};
+bool ui_player_skill_slots(std::uintptr_t,std::array<std::int32_t,3>&,std::string&);
+bool ui_player_skill_points(std::uintptr_t,std::int32_t&,std::string&);
+bool ui_player_skill(std::uintptr_t,std::uint32_t,UiSkillReadV1&,std::string&);
+bool ui_player_active_faery(std::uintptr_t,std::int32_t&,std::int32_t&,std::string&);
+bool ui_player_faery_unlocked(std::uintptr_t,std::uint32_t,bool&,std::string&);
+bool ui_player_inventory_gold(std::uintptr_t,std::int32_t&,std::string&);
+bool ui_player_inventory_slot(std::uintptr_t,std::int32_t,std::vector<UiInventoryItemReadV1>&,std::string&);
+bool ui_player_inventory_item_details(std::uintptr_t,std::int32_t,UiItemDetailsReadV1&,std::string&);
+bool ui_player_equipped_item(std::uintptr_t,std::int32_t,UiEquippedItemReadV1&,bool&,std::string&);
+bool ui_player_weapon_flags(std::uintptr_t,bool&,bool&,std::string&);
+bool ui_player_potions(std::uintptr_t,std::int32_t&,std::int32_t&,std::string&);
 struct LootStagingResultV1 {std::size_t first_world_item{},item_count{};};
 // Owning GL thread only. Stages powered Loot through the existing Character
 // V4 inventory/RNG and its retained Item presentation owner. This does not

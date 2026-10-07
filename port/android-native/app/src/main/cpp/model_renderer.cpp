@@ -51,6 +51,7 @@
 #include "navigation_avoidance.hpp"
 #include "navigation_producers.hpp"
 #include "navigation_heading.hpp"
+#include "native_camera_input_v1.hpp"
 #include "actor_runtime.hpp"
 #include "actor_blended_playback.hpp"
 #include "actor_scene_retention_v1.hpp"
@@ -1116,9 +1117,10 @@ dh2::scene::Scene current_scene;dh2::animation::Player player;
 dh2::animation::Player walk_player;dh2::world::Level level;dh2::world::Point actor_position{};
 bool world_mode=false,walking=false,resume_world=false;float move_x=0,move_y=0,heading=0;
 void rotate_touch_heading_to_camera(float direction[3]){
- // The renderer camera targets `center`, matching CameraBase's source look-at
- // vector producer. Keep the tested Point3D angle/rotateXY port as the one owner.
- (void)dh2_nav_rotate_input_for_camera(direction,center);
+ // Movement follows the camera's horizontal look direction. `center` is the
+ // camera's world-space focal point, not a direction vector; using it here
+ // rotated input around the level origin and made controls change by location.
+ (void)dh2::native::camera_input_v1::rotate_ground_input(direction,yaw);
 }
 dh2::character::crypt_scripts::SpawnSession crypt_spawn_script;
 dh2_crypt_spawn_trigger::State crypt_trigger_state{};
@@ -3230,6 +3232,227 @@ std::string player_attack(int supplied_target){
  return "Attacking";
 }
 std::array<int,7> player_vitals(){return {prince_combat.properties.resolved[36],prince_combat.properties.resolved[38],prince_combat.properties.resolved[41],prince_combat.properties.resolved[43],int(prince_combat.life.dead),int(prince_combat.life.low_health_armed),prince_state.current};}
+bool ui_player_identity(std::uintptr_t& identity,std::string& error){
+ if(!world_mode||!prince_source_ai||!prince_source_ai->character_identity||
+    !prince_combat.savegame||prince_combat.savegame->character()!=prince_source_ai->character_identity){
+  error="Gameplay UI requires the current Character and its associated Save";return false;
+ }
+ identity=prince_source_ai->character_identity;error.clear();return true;
+}
+bool ui_player_name(std::uintptr_t identity,std::string& name,std::string& error){
+ std::uintptr_t current=0;
+ if(!ui_player_identity(current,error))return false;
+ if(identity!=current){error="Gameplay UI name query crossed the active Player Character owner";return false;}
+ name=prince_combat.savegame->name();error.clear();return true;
+}
+bool ui_player_stats(std::uintptr_t identity,UiPlayerStatsReadV1& out,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.profile_characters||prince_combat.character_class<0||
+    std::size_t(prince_combat.character_class)>=prince_combat.profile_characters->names.size()){
+  error="Character stats require the active Character, Save and selected class row";return false;
+ }
+ auto property_int=[](std::size_t index){
+  const auto raw=prince_combat.properties.resolved[index];
+  return raw>=0?raw/256:-static_cast<std::int32_t>((-std::int64_t(raw)+255)/256);
+ };
+ UiPlayerStatsReadV1 value;value.name=prince_combat.savegame->name();
+ value.class_name=prince_combat.profile_characters->names[std::size_t(prince_combat.character_class)];
+ switch(prince_combat.player_class_id){
+  case 0x122:case 0x123:case 0x124:value.icon=3;break;
+  case 0x145:case 0x146:case 0x147:value.icon=2;break;
+  default:value.icon=1;break;
+ }
+ value.level=property_int(19);value.hp=property_int(36);value.hp_bonus=property_int(37);
+ value.max_hp=property_int(38);value.mp=property_int(41);value.mp_bonus=property_int(42);
+ value.max_mp=property_int(43);value.xp=property_int(33);value.max_xp=property_int(34);
+ value.strength=property_int(149);value.dexterity=property_int(150);
+ value.endurance=property_int(151);value.energy=property_int(152);value.points=property_int(148);
+ out=std::move(value);error.clear();return true;
+}
+bool ui_player_skill_slots(std::uintptr_t identity,std::array<std::int32_t,3>& slots,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.savegame->skills_initialized()){
+  error="Gameplay skill-slot read requires the active Character's initialized Save";return false;
+ }
+ for(std::int32_t i=0;i<3;++i)slots[std::size_t(i)]=prince_combat.savegame->skill_in_slot(i);
+ error.clear();return true;
+}
+bool ui_player_skill_points(std::uintptr_t identity,std::int32_t& points,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current){error="Gameplay skill-point read crossed the active Player Character owner";return false;}
+ const auto raw=prince_combat.properties.resolved[157];
+ points=raw>=0?raw/256:-static_cast<std::int32_t>((-std::int64_t(raw)+255)/256);
+ error.clear();return true;
+}
+bool ui_player_skill(std::uintptr_t identity,std::uint32_t index,UiSkillReadV1& out,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.savegame->skills_initialized()||!actor_skill_catalogue||!actor_skill_catalogue->tables){
+  error="Gameplay skill-detail read requires the active Save and decoded SkillTables";return false;
+ }
+ const auto& tables=actor_skill_catalogue->tables->skills();
+ auto selector=prince_combat.properties.resolved[28];
+ if(selector<0||std::size_t(selector)>=tables.skill_lists.size())selector=3;
+ if(std::size_t(selector)>=tables.skill_lists.size()||index>=tables.skill_lists[std::size_t(selector)].members.size()){
+  error="Selected Character SkillTree has no requested skill row";return false;
+ }
+ const auto id=tables.skill_lists[std::size_t(selector)].members[index];
+ const auto& rows=tables.skills;
+ if(id<0||std::size_t(id)>=rows.size()){
+  error="Selected Character SkillTree row is outside the decoded SkillTable";return false;
+ }
+ const auto& row=rows[std::size_t(id)];UiSkillReadV1 value;
+ value.id=id;value.level=index<prince_combat.savegame->skills().size()?prince_combat.savegame->skill_level(index):-1;
+ value.slot=prince_combat.savegame->skill_slot(index);value.required_level=row.level;
+ const auto raw_level=prince_combat.properties.resolved[19];
+ value.character_level=raw_level>=0?raw_level/256:-static_cast<std::int32_t>((-std::int64_t(raw_level)+255)/256);
+ value.name_text=row.skill_name;value.description_text=row.skill_description;
+ value.current_text=row.skill_curr_level;value.next_text=row.skill_next_level;
+ value.assignable=row.skill_assignable;value.icon=row.skill_icon;out=std::move(value);error.clear();return true;
+}
+bool ui_player_active_faery(std::uintptr_t identity,std::int32_t& id,std::int32_t& level,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||native_save_difficulty<0||native_save_difficulty>2){
+  error="Gameplay faery read requires the active Save and selected difficulty";return false;
+ }
+ id=prince_combat.savegame->current_faery(std::uint32_t(native_save_difficulty));
+ level=id>=0?prince_combat.savegame->faery_level(std::uint32_t(id),std::uint32_t(native_save_difficulty)):-1;
+ error.clear();return true;
+}
+bool ui_player_faery_unlocked(std::uintptr_t identity,std::uint32_t id,bool& unlocked,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||native_save_difficulty<0||native_save_difficulty>2||id>=5||!native_debug){
+  error="Gameplay faery unlock read requires its active Save, difficulty and DebugSwitches owner";return false;
+ }
+ if(!prince_combat.savegame->faeries_initialized()[std::size_t(native_save_difficulty)]){
+  error="Gameplay faery state is not initialized in the active Save";return false;
+ }
+ if(native_debug->runtime().load(native_debug->globals(),native_debug->services())!=dh2::debug_switches::Status::complete){
+  error="Shared native DebugSwitches load failed for faery query";return false;
+ }
+ std::uint8_t all=0;
+ if(native_debug->runtime().get_switch("UnlockAllFaeries",native_debug->globals(),native_debug->services(),all)!=dh2::debug_switches::Status::complete){
+  error="Shared native UnlockAllFaeries query failed";return false;
+ }
+ unlocked=all!=0||prince_combat.savegame->faeries()[std::size_t(native_save_difficulty)][id].state==1;
+ error.clear();return true;
+}
+bool ui_player_inventory_gold(std::uintptr_t identity,std::int32_t& gold,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.inventory){error="Gameplay inventory gold read requires the active V4 inventory";return false;}
+ gold=prince_combat.inventory->gold();error.clear();return true;
+}
+bool ui_player_inventory_slot(std::uintptr_t identity,std::int32_t requested,std::vector<UiInventoryItemReadV1>& out,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.inventory){error="Gameplay inventory list requires the active V4 inventory";return false;}
+ if(requested<0||requested>9){error="Gameplay inventory slot is outside the recovered EquipmentSlots range";return false;}
+ std::vector<UiInventoryItemReadV1> rows;const auto& items=prince_combat.inventory->items();
+ rows.reserve(items.size());
+ for(std::size_t index=0;index<items.size();++index){
+  const auto* slot=items[index].get();if(!slot||!slot->item)continue;
+  const auto* definition=dh2::data::item(prince_combat.inventory->table(),slot->item->id);
+  if(!definition){error="Gameplay inventory item has no decoded ItemTable row";return false;}
+  const auto item_slot=definition->record.words[26];
+  const bool all_items=requested==9;
+  const bool paired_hand=(requested==1||requested==2)&&item_slot==-3;
+  const bool paired_ring=(requested==5||requested==6)&&item_slot==-2;
+  const bool two_hand=(requested==1||requested==2)&&item_slot==-4;
+  if(!all_items&&item_slot!=requested&&!paired_hand&&!paired_ring&&!two_hand)continue;
+  bool equipped=false;
+  if(!prince_combat.inventory->is_equipped(std::uint32_t(index),equipped,error))return false;
+  UiInventoryItemReadV1 value;value.id=slot->item->id;value.index=std::int32_t(index);
+  value.quantity=slot->item->signed_quantity();value.slot=item_slot;
+  value.name=slot->item->name.empty()?definition->name:slot->item->name;value.equipped=equipped;
+  const auto set=std::size_t(prince_combat.inventory->current_equipment());
+  const auto& equipment=prince_combat.inventory->equipment();
+  const auto paired=requested==1?2:requested==2?1:requested==5?6:requested==6?5:-1;
+  if(paired>=0&&set<equipment.size()&&std::size_t(paired)<equipment[set].size())
+   value.equipped_other_hand=equipment[set][std::size_t(paired)]==slot;
+  rows.push_back(std::move(value));
+ }
+ out=std::move(rows);error.clear();return true;
+}
+bool ui_player_inventory_item_details(std::uintptr_t identity,std::int32_t requested,UiItemDetailsReadV1& out,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.inventory||!prince_combat.item_presentation){
+  error="Inventory detail read requires the active V4 inventory and retained ItemPresentation owner";return false;
+ }
+ const auto& items=prince_combat.inventory->items();
+ if(requested<0||std::size_t(requested)>=items.size()||!items[std::size_t(requested)]||
+    !items[std::size_t(requested)]->item){error="Inventory detail index has no live V4 Item";return false;}
+ const auto& instance=*items[std::size_t(requested)]->item;
+ const auto* definition=dh2::data::item(prince_combat.inventory->table(),instance.id);
+ if(!definition){error="Inventory detail Item has no decoded ItemTable row";return false;}
+ UiItemDetailsReadV1 value;
+ value.id=instance.id;value.index=requested;value.value=instance.value;
+ // Standard inventory detail (no Merchant argument): source merchant
+ // percentages are zero and buy/sell values clamp to one.
+ value.buy_value=1;value.sell_value=1;
+ value.transmute_property_raw=prince_combat.properties.resolved[197];
+ value.name=instance.name.empty()?definition->name:instance.name;
+ value.stats=instance.description;value.requirements=instance.requirements;
+ value.icon=definition->icon_name;
+ value.stackable=(static_cast<std::uint32_t>(definition->record.words[7])&0xffu)!=0;
+ // IsEquippableBy uses the Character's class and resolved requirements. Keep
+ // the control inactive until that exact source predicate is bound.
+ value.equippable=false;
+ if(!instance.powers.empty()){
+  const auto* powers=prince_combat.item_presentation->powers(instance);
+  if(!powers||powers->size()!=instance.powers.size()){
+   error="Inventory Item power descriptions are absent from the retained V5 presentation owner";return false;
+  }
+  value.power_descriptions.reserve(powers->size());
+  for(std::size_t i=0;i<powers->size();++i){
+   if((*powers)[i].id!=instance.powers[i]){error="Inventory Item power presentation diverged from authoritative V4 Item IDs";return false;}
+   value.power_descriptions.push_back((*powers)[i].description);
+  }
+ }
+ out=std::move(value);error.clear();return true;
+}
+bool ui_player_equipped_item(std::uintptr_t identity,std::int32_t requested,UiEquippedItemReadV1& out,bool& present,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.inventory){error="Equipped inventory read requires the active V4 inventory";return false;}
+ if(requested<0||requested>=9){error="Equipped inventory slot is outside EquipmentSlots::Count";return false;}
+ const auto selected=prince_combat.inventory->current_equipment();
+ if(selected<0||selected>=2){error="Selected equipment set is outside the source domain";return false;}
+ const auto* owned=prince_combat.inventory->equipment()[std::size_t(selected)][std::size_t(requested)];
+ present=owned!=nullptr;if(!owned){error.clear();return true;}
+ if(!owned->item){error="Equipped inventory slot has no retained Item instance";return false;}
+ std::int32_t index=-1;
+ const auto& items=prince_combat.inventory->items();
+ for(std::size_t i=0;i<items.size();++i)if(items[i].get()==owned){index=static_cast<std::int32_t>(i);break;}
+ if(index<0){error="Equipped Item is absent from the authoritative V4 item vector";return false;}
+ const auto* definition=dh2::data::item(prince_combat.inventory->table(),owned->item->id);
+ if(!definition){error="Equipped Item has no decoded ItemTable row";return false;}
+ out={owned->item->id,index,static_cast<std::int32_t>(owned->item->powers.size()),
+      owned->item->name.empty()?definition->name:owned->item->name};
+ error.clear();return true;
+}
+bool ui_player_weapon_flags(std::uintptr_t identity,bool& offhand,bool& two_handed,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.inventory){error="Weapon flags require the active V4 inventory";return false;}
+ const auto selected=prince_combat.inventory->current_equipment();
+ if(selected<0||selected>=2){error="Selected equipment set is outside the source domain";return false;}
+ const auto* off=prince_combat.inventory->equipment()[std::size_t(selected)][2];
+ offhand=false;
+ if(off){
+  if(!off->item){error="Offhand slot has no retained Item instance";return false;}
+  const auto* row=dh2::data::item(prince_combat.inventory->table(),off->item->id);
+  if(!row){error="Offhand Item has no decoded ItemTable row";return false;}
+  offhand=row->record.words[22]!=6;
+ }
+ if(!prince_combat.inventory->has_two_hander(false,two_handed,error))return false;
+ error.clear();return true;
+}
+bool ui_player_potions(std::uintptr_t identity,std::int32_t& count,std::int32_t& capacity,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.inventory){error="Potion read requires the active V4 inventory";return false;}
+ count=prince_combat.inventory->num_potions();
+ const auto bits=static_cast<std::uint32_t>(prince_combat.properties.resolved[194]);
+ std::uint32_t shifted=(bits>>8)|((bits&0x80000000u)?0xff000000u:0u);
+ std::int32_t signed_capacity=0;std::memcpy(&signed_capacity,&shifted,sizeof(signed_capacity));
+ capacity=static_cast<std::int8_t>(static_cast<std::uint8_t>(std::max(0,signed_capacity)));
+ error.clear();return true;
+}
 namespace {
 void player_authored_event(const dh2::animation::TriggeredEvent& event,int clip){
  const auto& frames=prince_locomotion.scheduler.frames();

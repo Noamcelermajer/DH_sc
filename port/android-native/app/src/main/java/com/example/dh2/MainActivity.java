@@ -15,6 +15,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.MotionEvent;
 import android.view.Gravity;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.widget.*;
 import java.util.Arrays;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -38,6 +40,7 @@ public final class MainActivity extends Activity {
     private boolean inspectionMode;
     private int debugLevelRow=-1;
     private FrontAudio frontAudio;
+    private volatile IntroCinematicView introCinematic;
     private int menuGameplaySlot=-1;
     private volatile boolean attackDisplayPending;
     private BroadcastReceiver debugAttackReceiver;
@@ -52,12 +55,14 @@ public final class MainActivity extends Activity {
         if(debugLevelRow!=-1&&debugLevelRow!=23){Log.w("DH2Native","Ignoring unsupported debug LevelList row "+debugLevelRow);debugLevelRow=-1;}
         if(debugLevelRow==23)Log.i("DH2Native","Debug LevelList row override armed | row 23 | profile save unchanged");
         inspectionMode=getIntent().hasExtra("world")||getIntent().hasExtra("model")||getIntent().hasExtra("texture");
-        if(!inspectionMode){setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION|View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);}
+        boolean resumeOpeningCinematic=state!=null&&state.getBoolean("openingCinematicPending",false);
+        boolean playOpeningCinematic=!inspectionMode&&(state==null||resumeOpeningCinematic)&&!getIntent().getBooleanExtra("skip_intro",false);
+        if(!inspectionMode){setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);}
         if(Build.VERSION.SDK_INT>=33)getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,this::handleBack);
         metadataSlot=state!=null?state.getInt("metadataSlot",-1):getIntent().getIntExtra("profile_slot",-1);
         LinearLayout layout=new LinearLayout(this);layout.setOrientation(LinearLayout.VERTICAL);
         layout.setBackgroundColor(Color.rgb(24,27,32));
-        layout.setOnApplyWindowInsetsListener((view,insets)->{
+        if(inspectionMode)layout.setOnApplyWindowInsetsListener((view,insets)->{
             if(android.os.Build.VERSION.SDK_INT>=30){
                 android.graphics.Insets bars=insets.getInsets(android.view.WindowInsets.Type.systemBars());
                 view.setPadding(bars.left,bars.top,bars.right,bars.bottom);
@@ -96,17 +101,14 @@ public final class MainActivity extends Activity {
             @Override public boolean onTouch(View view,MotionEvent event){
                 if("ui/original-main-menu".equals(loadedAsset)){
                     final float px=event.getX(),py=event.getY();final int action=event.getActionMasked();
-                    surface.queueEvent(()->{
-                        String reply=NativeBridge.menuTouch(px,py,action);
-                        if(reply!=null&&!reply.isEmpty()){
-                            Log.i("DH2Native",reply);
-                            runOnUiThread(()->android.widget.Toast.makeText(MainActivity.this,reply,android.widget.Toast.LENGTH_LONG).show());
-                            // Recover only after the failed native ActionScript
-                            // scope unwinds; its reached prefix stays observable.
-                            NativeBridge.loadFrontScreen(getFilesDir().getAbsolutePath(),getAssets());
-                        }
-                    });
-                    if(action==MotionEvent.ACTION_UP)view.performClick();return true;
+                    if(action!=MotionEvent.ACTION_DOWN&&action!=MotionEvent.ACTION_UP&&action!=MotionEvent.ACTION_MOVE&&action!=MotionEvent.ACTION_CANCEL)return true;
+                    return forwardUiTouch(view,px,py,action,true);
+                }
+                if(!inspectionMode&&loadedAsset!=null&&loadedAsset.startsWith("worlds/")){
+                    final int action=event.getActionMasked();
+                    if(action==MotionEvent.ACTION_DOWN||action==MotionEvent.ACTION_UP||action==MotionEvent.ACTION_MOVE||action==MotionEvent.ACTION_CANCEL)
+                        return forwardUiTouch(view,event.getX(),event.getY(),action,false);
+                    return true;
                 }
                 if(event.getActionMasked()==MotionEvent.ACTION_DOWN){x=event.getX();y=event.getY();return true;}
                 if(event.getActionMasked()==MotionEvent.ACTION_MOVE){
@@ -157,7 +159,7 @@ public final class MainActivity extends Activity {
                         else if(assets.length>0)loadSelected();else show("No bundled asset fixtures");
                     }));}return;
                 }
-                NativeBridge.draw();String audio=NativeBridge.consumeMenuAudio(),effect=NativeBridge.consumeMenuSound();if(!audio.isEmpty())runOnUiThread(()->frontAudio.control(audio));if(!effect.isEmpty())runOnUiThread(()->frontAudio.effect(effect));int startSlot=NativeBridge.consumeMenuLaunch();if(startSlot>=0){String start=startMenuGame(startSlot);acceptGameStart(startSlot,start);}long now=android.os.SystemClock.uptimeMillis();if(now-lastVitals>=200&&loadedAsset!=null&&loadedAsset.startsWith("worlds/")){lastVitals=now;int[] values=NativeBridge.playerVitals();if(attackDisplayPending&&values[6]!=5){attackDisplayPending=false;show(baseReport+"\n"+(values[4]!=0?"Defeated":"Attack finished."));}runOnUiThread(()->{vitals.setText(String.format(java.util.Locale.ROOT,"HP %.1f / %.1f   MP %.1f / %.1f%s",values[0]/256f,values[1]/256f,values[2]/256f,values[3]/256f,values[4]!=0?"   Defeated":""));vitals.setTextColor(values[4]!=0||values[5]==0?Color.rgb(255,150,150):Color.WHITE);});}}
+                NativeBridge.draw();if(introCinematic==null){String audio=NativeBridge.consumeMenuAudio(),effect=NativeBridge.consumeMenuSound();if(!audio.isEmpty())runOnUiThread(()->frontAudio.control(audio));if(!effect.isEmpty())runOnUiThread(()->frontAudio.effect(effect));}int startSlot=NativeBridge.consumeMenuLaunch();if(startSlot>=0){String start=startMenuGame(startSlot);acceptGameStart(startSlot,start);}long now=android.os.SystemClock.uptimeMillis();if(now-lastVitals>=200&&loadedAsset!=null&&loadedAsset.startsWith("worlds/")){lastVitals=now;int[] values=NativeBridge.playerVitals();if(attackDisplayPending&&values[6]!=5){attackDisplayPending=false;show(baseReport+"\n"+(values[4]!=0?"Defeated":"Attack finished."));}runOnUiThread(()->{vitals.setText(String.format(java.util.Locale.ROOT,"HP %.1f / %.1f   MP %.1f / %.1f%s",values[0]/256f,values[1]/256f,values[2]/256f,values[3]/256f,values[4]!=0?"   Defeated":""));vitals.setTextColor(values[4]!=0||values[5]==0?Color.rgb(255,150,150):Color.WHITE);});}}
     });
         surface.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         FrameLayout viewport=new FrameLayout(this);viewport.addView(surface,new FrameLayout.LayoutParams(-1,-1));
@@ -170,6 +172,10 @@ public final class MainActivity extends Activity {
         FrameLayout.LayoutParams attackLayout=new FrameLayout.LayoutParams((int)(112*getResources().getDisplayMetrics().density),(int)(64*getResources().getDisplayMetrics().density),Gravity.BOTTOM|Gravity.RIGHT);attackLayout.rightMargin=attackLayout.bottomMargin=(int)(24*getResources().getDisplayMetrics().density);viewport.addView(attack,attackLayout);
         attack.setOnClickListener(v->surface.queueEvent(()->{String report=NativeBridge.playerAttack(-1);attackDisplayPending=report.equals("Attacking")||attackDisplayPending;Log.i("DH2Native","Player input | "+report);show(baseReport+"\n"+report);}));
         layout.addView(viewport,new LinearLayout.LayoutParams(-1,0,1));
+        if(playOpeningCinematic){
+            introCinematic=new IntroCinematicView(this,()->runOnUiThread(this::finishOpeningCinematic));
+            viewport.addView(introCinematic,new FrameLayout.LayoutParams(-1,-1));
+        }
         TextView attribution=new TextView(this);
         attribution.setText("Dungeon Hunter 2 © Gameloft SE. Published by GOAT Games Company Limited.");
         attribution.setTextColor(Color.rgb(175,185,195));
@@ -183,6 +189,8 @@ public final class MainActivity extends Activity {
             @Override public void onNothingSelected(AdapterView<?> p){}
         });
         setContentView(layout);
+        if(!inspectionMode)getWindow().getDecorView().post(this::enterImmersiveLandscape);
+        if(introCinematic!=null)introCinematic.startPlayback();
         // Debug-only shell command invokes the same playerAttack entry point
         // as the button without am start pausing the Activity/held joystick.
         // DUMP is a system/shell permission, not granted to ordinary apps.
@@ -263,6 +271,45 @@ public final class MainActivity extends Activity {
         }
     }
     private void show(String text){runOnUiThread(()->status.setText(text));}
+    @SuppressWarnings("deprecation")
+    private void enterImmersiveLandscape(){
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(),false);
+        if(Build.VERSION.SDK_INT>=30){
+            WindowInsetsController controller=getWindow().getInsetsController();
+            if(controller!=null){
+                controller.hide(WindowInsets.Type.systemBars());
+                controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        }else getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION|View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    }
+    @Override public void onWindowFocusChanged(boolean hasFocus){
+        super.onWindowFocusChanged(hasFocus);
+        if(hasFocus&&!inspectionMode)enterImmersiveLandscape();
+    }
+    private boolean forwardUiTouch(View view,float x,float y,int action,boolean recoverMenuOnError){
+        // These are GLSurfaceView-local physical pixels (top-left origin); the
+        // native UI session maps them against the current full-screen viewport.
+        surface.queueEvent(()->{
+            String reply=NativeBridge.menuTouch(x,y,action);
+            if(reply!=null&&!reply.isEmpty()){
+                Log.w("DH2Native",reply);
+                if(recoverMenuOnError){
+                    runOnUiThread(()->android.widget.Toast.makeText(MainActivity.this,reply,android.widget.Toast.LENGTH_LONG).show());
+                    // Recover only after the failed ActionScript scope unwinds.
+                    NativeBridge.loadFrontScreen(getFilesDir().getAbsolutePath(),getAssets());
+                }
+            }
+        });
+        if(action==MotionEvent.ACTION_UP)view.performClick();
+        return true;
+    }
+    private void finishOpeningCinematic(){
+        IntroCinematicView current=introCinematic;
+        if(current==null)return;
+        current.dispose();
+        if(current.getParent() instanceof FrameLayout)((FrameLayout)current.getParent()).removeView(current);
+        introCinematic=null;
+    }
     private String startMenuGame(int slot){return NativeBridge.startMenuGame(slot,getAssets(),debugLevelRow);}
     @Override protected void onNewIntent(Intent intent){
         if(intent.hasExtra("profile_slot")&&intent.getIntExtra("profile_slot",-1)!=metadataSlot){
@@ -370,8 +417,8 @@ public final class MainActivity extends Activity {
         @Override public boolean performClick(){super.performClick();return true;}
         void stop(){axisX=axisY=0;invalidate();surface.queueEvent(()->NativeBridge.moveAxis(0,0));}
     }
-    @Override protected void onPause(){super.onPause();frontAudio.pause();ready=false;movement.stop();surface.onPause();}
-    @Override protected void onResume(){super.onResume();frontAudio.resume();surface.onResume();}
-    @Override protected void onDestroy(){if(debugAttackReceiver!=null)unregisterReceiver(debugAttackReceiver);frontAudio.stop();super.onDestroy();}
-    @Override protected void onSaveInstanceState(Bundle state){super.onSaveInstanceState(state);if(assets.length>0)state.putString("asset",assets[selected]);state.putBoolean("pendingPlayerAttack",pendingActorCommand&&getIntent().getBooleanExtra("player_attack",false));state.putBoolean("enemyAi",enemyAi);state.putInt("inspectionTimeMs",inspectionTimeMs);state.putInt("metadataSlot",metadataSlot);state.putInt("menuGameplaySlot",menuGameplaySlot);}
+    @Override protected void onPause(){if(introCinematic!=null)introCinematic.pausePlayback();super.onPause();frontAudio.pause();movement.stop();surface.onPause();}
+    @Override protected void onResume(){super.onResume();frontAudio.resume();if(introCinematic!=null)introCinematic.resumePlayback();surface.onResume();}
+    @Override protected void onDestroy(){if(debugAttackReceiver!=null)unregisterReceiver(debugAttackReceiver);if(introCinematic!=null)introCinematic.dispose();frontAudio.stop();super.onDestroy();}
+    @Override protected void onSaveInstanceState(Bundle state){super.onSaveInstanceState(state);if(assets.length>0)state.putString("asset",assets[selected]);state.putBoolean("pendingPlayerAttack",pendingActorCommand&&getIntent().getBooleanExtra("player_attack",false));state.putBoolean("enemyAi",enemyAi);state.putInt("inspectionTimeMs",inspectionTimeMs);state.putInt("metadataSlot",metadataSlot);state.putInt("menuGameplaySlot",menuGameplaySlot);state.putBoolean("openingCinematicPending",introCinematic!=null&&introCinematic.isPending());}
 }

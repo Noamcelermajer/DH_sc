@@ -16,6 +16,7 @@ add_library(dh2_native SHARED native_app.cpp model_renderer.cpp mod_assets.cpp g
  original_ui_session.cpp original_ui_assets.cpp swf_gpu.cpp authored_shader_program.cpp
  "${DH2_SOURCE_DIR}/port/pydata-names/names.c")
 target_compile_features(dh2_native PRIVATE cxx_std_17)
+target_include_directories(dh2_native SYSTEM PRIVATE "${DH2_SOURCE_DIR}/port/engine-ui/vendor/gameswf1714")
 target_compile_options(dh2_native PRIVATE -Wall -Wextra -Werror)
 target_link_options(dh2_native PRIVATE -Wl,-z,max-page-size=16384 -Wl,--no-undefined)
 target_link_libraries(dh2_native PRIVATE dh2_engine_textures dh2_engine_camera dh2_level_world dh2_script_runtime dh2_inventory_text_v1 dh2_engine_ui android log GLESv2)
