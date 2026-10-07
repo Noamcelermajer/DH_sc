@@ -1,6 +1,6 @@
 # Dungeon Hunter 2 — project completion checklist
 
-Updated: 2026-10-07. Branch: `reconstruction/android17-irrlicht-rebuild-2026-10-03`.
+Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
@@ -41,9 +41,11 @@ still require live gameplay integration. All final completion gates remain open.
 | Quests, campaign, UI, audio and saves | 39 | 10 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **185** | **73** |
+| **Total scoped tasks** | **185** | **74** |
 
-Latest source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`. The source-backed Kill/DropLoot → visible ItemManager object → pickup path remains open.
+Prior verified source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. Its `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`.
+
+Current branch adds the source Kill/DropLoot → V4 staged item → original ItemAudioVisual/BDAE draw + Box2D sensor → deferred MoveOn pickup path. IDA confirms AudioVisualID is ItemRecord word 21 (`ItemObject::InitAgain` reads `ItemInstance::GetItem()+84`); the earlier word-24 lookup was a blocker and is corrected. Host asset/parser checks pass, but this branch's Android compile and live loot/pickup are still pending; the prior APK above does not contain these changes.
 
 Historical [quest compilation and payload gate](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,659 host checks with nonempty SKIL, FAES, QEST and typed PROP on one Save/PropertyState; a FAES count mismatch still reaches QEST. FAES passes 74 original-ARM differential cases. Full InitPost/mask4/GEAR and quest-world callbacks remain open.
 
@@ -317,12 +319,13 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select Adam's V7 powered-loot creation on V4's caller-owned RNG: 9,931 presentation/power/loot gold replays, 363 actual powered items and 369 shared draws pass. Android compilation passes; native drop/pickup/AddLoot remains open.
 - [x] Compose one original-derived fixed AddLoot entry through the same V4 inventory, V7 power append and V5 value/name path: 147,822 selected-library checks, zero mismatches; original and host each produce one power, value 770 and RNG seed 1302343 after two draws. Text/debug are fixtures; native/full AddLoot remains open. [Report](../reports/branch-audit-2026-10-05/item-loot-backbone-v7-selected-host.json).
 - [x] Reconstruct loot-entry percentage classification, class-weighted probability and weighted selection; 320 original ARM32 vs Android ARM64 comparisons, 204 raw-entry checks and exact RNG states pass ([differential](../reports/reconstruction-2026-10-06/loot-entry-selection-v1-arm32-arm64.json), [host](../reports/reconstruction-2026-10-06/loot-entry-selection-v1-host.json)). Recursive AddLootItems and live drops remain open.
-- [x] Add V4-owned world-drop staging outside player inventory and pickup handoff. Original LootTable row 124 (`Gold_01`, Type 13) matches the selected host item/value/RNG; pickup credits its value to wallet gold and retires the staged item ([receipt](../reports/reconstruction-2026-10-07/loot-world-gold-host.json)). Ordinary item pickup preserves ItemInstance identity; no visual/physics or live death callsite is implied.
-- [x] Retain V5/V7 loot-power and presentation owners in Android PlayerCombat, borrow the existing process RNG/V4 inventory, and retain each actor's raw `Loot` ID. Text, DebugSwitches and current-player callbacks share the existing owners; the staging API has no death or ItemManager callsite yet.
+- [x] Add V4-owned world-drop staging outside player inventory and pickup handoff. Original LootTable row 124 (`Gold_01`, Type 13) matches the selected host item/value/RNG; pickup credits its value to wallet gold and retires the staged item ([receipt](../reports/reconstruction-2026-10-07/loot-world-gold-host.json)). Ordinary item pickup preserves ItemInstance identity.
+- [x] Retain V5/V7 loot-power and presentation owners in Android PlayerCombat, borrow the existing process RNG/V4 inventory, and retain each actor's raw `Loot` ID.
+- [ ] Compile and live-test the new Android death-to-item path: guarded alive-to-dead hook, ItemRecord word-21 visual lookup, original BDAE model, sensor and deferred MoveOn pickup. Source is implemented; the branch compile and gameplay test remain pending.
 - [ ] Complete all CalculateResult/ApplyResult dependencies, effects, notifications and actor ownership.
 - [ ] Connect melee/ranged/spell combat, skills, criticals, resistances and status effects in the final runtime.
 - [ ] Complete player damage/death, attacker/killer credit, resurrection and respawn.
-- [ ] Connect Character::Kill/DropLoot with IDA's live/dead, player-death, level+336 and Boss/MiniBoss/killer gates. Supply live CharProperties 195 (gold multiplier) and 196 (magical chance), request power count `-1` for the probabilistic path, class counts from attached PlayerInfo Character ClassIDs, total player count for DistType repeats, `InfiniteLootDrops`, `DBG_DropAllLoots`, and level+280 difficulty; then connect the five-object ItemManager visual/physics/pickup pool, AutoTransmute/full-inventory UI, and rewards/progression.
+- [ ] Complete source loot coverage: currently gated to one active Warrior/Rogue/Mage on Normal with level+336 zero and `InfiniteLootDrops`; add `DBG_DropAllLoots`, all class/multiplayer counts and difficulty variants, then AutoTransmute/full-inventory UI and rewards/progression.
 - [ ] Complete XP, leveling, rewards, gold and difficulty scaling through actual game owners.
 - [ ] Validate boss encounters and any original cooperative/network behavior retained by the project.
 - [ ] Complete a real original level through its exit using the integrated combat loop.

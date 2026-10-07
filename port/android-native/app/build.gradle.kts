@@ -101,8 +101,46 @@ val verifyItemPowerAssets = tasks.register<VerifyItemPowerAssets>("verifyItemPow
     ).map { layout.projectDirectory.file("src/main/assets/original-cache/data/pydata/$it") })
 }
 
+// Original ItemAudioVisual rows map item AudioVisualID values to BDAE visuals.
+abstract class VerifyItemAudioVisualAssets : DefaultTask() {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val audioVisualAssets: ConfigurableFileCollection
+
+    @TaskAction
+    fun verify() {
+        val expected = listOf(
+            Triple("loot_audiovisual_pyarray.bin", 1022L, "f9a6e2c45bad836955d63290d51d2ec811a5003b7fa2c82df907fae5aa44084d"),
+            Triple("loot_audiovisual_pyarraynames.bin", 356L, "1bf13745689a198ee516fb1463637e274e6a583e1f31783333ef50944f38a5be"),
+            Triple("loot_audiovisual_pystructnames.bin", 42L, "86984964c123debae476a20a8c6d0c54fab46bd905d09ee82849b062ab4a3248"),
+            Triple("itemdrops.bdae", 225424L, "c4d783a23a158b4e52687d8ed718c584ee5ad90a325e0111c8da95ae86937610"),
+        )
+        val byName = audioVisualAssets.files.associateBy { it.name }
+        for ((name, size, sha256) in expected) {
+            val asset = byName[name]
+                ?: throw GradleException("Required original ItemAudioVisual asset is missing: $name")
+            val actualSha256 = MessageDigest.getInstance("SHA-256")
+                .digest(asset.readBytes())
+                .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+            if (asset.length() != size || actualSha256 != sha256) {
+                throw GradleException("Original ItemAudioVisual asset failed size/SHA-256 validation: $name (expected $size/$sha256, found ${asset.length()}/$actualSha256)")
+            }
+        }
+    }
+}
+
+val verifyItemAudioVisualAssets = tasks.register<VerifyItemAudioVisualAssets>("verifyItemAudioVisualAssets") {
+    audioVisualAssets.from(listOf(
+        layout.projectDirectory.file("src/main/assets/data/loot_audiovisual_pyarray.bin"),
+        layout.projectDirectory.file("src/main/assets/data/loot_audiovisual_pyarraynames.bin"),
+        layout.projectDirectory.file("src/main/assets/data/loot_audiovisual_pystructnames.bin"),
+        layout.projectDirectory.file("src/main/assets/actors/itemdrops.bdae"),
+    ))
+}
+
 tasks.named("preBuild").configure {
     dependsOn(verifyItemPowerAssets)
+    dependsOn(verifyItemAudioVisualAssets)
 }
 dependencies {
     implementation(libs.androidx.appcompat)

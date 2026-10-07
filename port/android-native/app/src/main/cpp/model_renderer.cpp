@@ -14,6 +14,7 @@
 #include "class_preview_setup.hpp"
 #include "skill_tables.hpp"
 #include "loot_tables_v2.hpp"
+#include "item_audiovisual_table_v1.hpp"
 #include "item_power_tables_v5.hpp"
 #include "loot_power_resources_v7.hpp"
 #include "fresh_inventory_owned_v4.hpp"
@@ -91,6 +92,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <map>
+#include <limits>
 #include <memory>
 #include <set>
 #include <unordered_map>
@@ -145,6 +147,7 @@ struct ObjectActor:dh2::objects::Record {
  dh2::data::PropertyState properties;
  dh2::animation::EventCursor event_cursor;unsigned animation_events=0;
  dh2::data::CombatActorState combat_state;int combat_target=-1;bool pending_death=false;
+ bool loot_dropped=false;
  AggroStorage aggro;std::uint64_t identity=0;unsigned target_alive=0,target_sight=0;bool target_seeking=false,ai_attack=false;
  SearchObjectProjection search_projection{};
  std::shared_ptr<SpawnOwner> spawn_owner;
@@ -202,6 +205,7 @@ struct NativePlayerSaveAssociation {
 struct PlayerCombat {
  dh2::data::PropertyState properties;dh2::data::CombatActorState life;
  std::shared_ptr<dh2::data::LootTablesV2> inventory_loot_tables;
+ std::shared_ptr<dh2::data::ItemAudioVisualTableV1> item_audio_visuals;
  std::shared_ptr<dh2::data::ItemPowerTablesV5> item_power_tables;
  std::shared_ptr<dh2::data::LootPowerResourcesV7> loot_power_resources;
  std::unique_ptr<dh2::data::LootPowerCreationV7> loot_power_creation;
@@ -219,6 +223,7 @@ struct PlayerCombat {
  std::shared_ptr<NativePlayerSaveAssociation> source_save_association;
  std::int16_t property_cache=-1,template_cache=-1;
  std::int32_t character_class=-1;
+ std::int32_t player_class_id=-1;
  int animation_table=-1,target=-1;unsigned attempts=0,received=0;
  bool pending_death=false;std::uint64_t death_target=0;
  AggroStorage aggro;
@@ -654,6 +659,7 @@ struct NativeLootAdapterV1 {
 dh2::level_construction_fields::State actor_level_fields{-1,-1,0,{0,0,0},0};
 std::string actor_level_file;
 bool actor_level_fields_ready=false;
+std::int32_t actor_level_kill_loot_gate=0;
 
 struct NativeLevelQuery {
  const float* number=nullptr;
@@ -789,15 +795,14 @@ struct BodyOwner {
  dh2::physical::WorldObject services{};
  dh2::navigation::PhysicalContact contact{};
  dh2::physical::NativeBody* native=nullptr;
+ struct NativeWorldItem* world_item=nullptr;
+ bool is_player=false;
  unsigned additions=0,results=0;
- BodyOwner(){services.context=this;services.test=test;services.contact=collision;services.velocity=velocity;}
+ explicit BodyOwner(bool player=false):is_player(player){services.context=this;services.test=test;services.contact=collision;services.velocity=velocity;}
  static unsigned test(void* a,void* b,const dh2::physical::Filter*,const dh2::physical::Filter*){
   return dh2_nav_can_collide(&static_cast<BodyOwner*>(a)->contact,&static_cast<BodyOwner*>(b)->contact)==1;
  }
- static void collision(void* a,dh2::physical::ContactEvent event,void*,const float*,unsigned){
-  auto& owner=*static_cast<BodyOwner*>(a);owner.additions+=event==dh2::physical::ContactEvent::add;
-  owner.results+=event==dh2::physical::ContactEvent::result;
- }
+ static void collision(void*,dh2::physical::ContactEvent,void*,const float*,unsigned);
  static void velocity(void* a,float* xy){
   const auto* n=static_cast<BodyOwner*>(a)->native;
   if(n&&n->body){const auto v=n->body->GetLinearVelocity();xy[0]=v.x*100.f;xy[1]=v.y*100.f;}
@@ -807,7 +812,49 @@ struct BodyOwner {
   contact={1,0,1,1,{std::int16_t(c.shape.group_index),std::uint16_t(c.shape.category_bits),std::uint16_t(c.shape.mask_bits),1},{}};
  }
 };
-BodyOwner prince_body_owner;
+struct NativeWorldItem {
+ dh2::data::ItemInstanceV1* item=nullptr;
+ std::int32_t audio_visual_id=-1;
+ unsigned visual_root=UINT32_MAX;
+ std::array<float,3> position{};
+ dh2::physical::NativeBody body{};
+ BodyOwner body_owner;
+ bool pending_interact=false;
+ explicit NativeWorldItem(dh2::data::ItemInstanceV1* value):item(value){body_owner.native=&body;body_owner.world_item=this;}
+};
+BodyOwner prince_body_owner{true};
+std::vector<std::unique_ptr<NativeWorldItem>> native_world_items;
+dh2::objects::Resource itemdrops_resource;
+std::vector<Draw> itemdrops_draws;
+std::map<std::string,unsigned> itemdrop_roots;
+bool itemdrops_ready=false;
+void destroy_native_world_item_bodies();
+void clear_native_world_item_resources();
+bool drop_actor_loot(ObjectActor&,std::string&);
+bool ensure_native_world_items(std::string&);
+void update_native_world_items_after_step();
+void BodyOwner::collision(void* raw,dh2::physical::ContactEvent event,void* other,
+                          const float*,unsigned) {
+ auto& owner=*static_cast<BodyOwner*>(raw);
+ owner.additions+=event==dh2::physical::ContactEvent::add;
+ owner.results+=event==dh2::physical::ContactEvent::result;
+ if((event!=dh2::physical::ContactEvent::add&&
+     event!=dh2::physical::ContactEvent::persist)||!owner.world_item||!other)return;
+ const auto& peer=*static_cast<BodyOwner*>(other);
+ if(peer.is_player&&!prince_combat.life.dead&&
+    (prince_state.current==4||prince_state.current==19))
+  owner.world_item->pending_interact=true;
+}
+void destroy_native_world_item_bodies() {
+ for(auto& value:native_world_items){
+  if(value->body.body){
+   const auto point=value->body.body->GetPosition();
+   value->position[0]=point.x*100.f;value->position[1]=point.y*100.f;
+   if(actor_world.backend())actor_world.destroy(value->body.body);else value->body.body=nullptr;
+  }
+  value->body={};value->body_owner.native=&value->body;
+ }
+}
 unsigned actor_virtual_service(void*,unsigned event,float* payload);
 std::vector<std::unique_ptr<BodyOwner>> decor_body_owners;
 std::vector<dh2::physical::NativeBody> decor_bodies;
@@ -870,6 +917,7 @@ struct SpawnOwner {
 void retire_native_monster_scripts(bool preserve);
 void clear_actor_world(bool preserve_scripts=false) {
  retire_native_monster_scripts(preserve_scripts);
+ destroy_native_world_item_bodies();
  actor_world.clear();
  native_characters.clear();
  search_world.clear();
@@ -1567,6 +1615,10 @@ void release(std::vector<Draw>& batches,std::vector<GLuint>& textures){
   for(auto t:textures)glDeleteTextures(1,&t);batches.clear();textures.clear();
 }
 void release_objects(std::vector<ObjectGroup>& groups){std::vector<GLuint> none;for(auto& group:groups)release(group.draws,none);groups.clear();}
+void clear_native_world_item_resources(){
+ std::vector<GLuint> shared_textures;release(itemdrops_draws,shared_textures);
+ itemdrops_resource={};itemdrop_roots.clear();itemdrops_ready=false;
+}
 std::vector<std::uint8_t> read(AAssetManager* assets,const std::string& name,const std::string& folder="textures"){
   auto path=name;
   if(folder=="textures")std::transform(path.begin(),path.end(),path.begin(),[](unsigned char c){return char(std::tolower(c));});
@@ -1781,6 +1833,8 @@ void reset_context(){
  // These preview GPU names belonged to the replaced EGL context as well.
  class_preview_actors.clear();menu_background=false;class_scene=false;
  for(auto& group:object_groups)group.draws.clear();
+ // The previous EGL context is gone; forget item GPU names without deleting them.
+ itemdrops_draws.clear();itemdrops_resource={};itemdrop_roots.clear();itemdrops_ready=false;
  const bool retain=world_mode||resume_world;
  if(world_mode){
   std::string error;
@@ -1823,6 +1877,7 @@ void deactivate(){
  for(const auto& actor:saved_actors)
   if(actor.native_ai&&actor.native_ai->initialization)retired.push_back(actor.native_ai->initialization);
  native_actor_ready=false;clear_actor_world();prince_body={};
+ native_world_items.clear();clear_native_world_item_resources();
  crypt_spawn_script.clear();crypt_trigger_state={};saved_actors.clear();
  release_objects(object_groups);release(draws,images);world_objects.clear();
  actor_skill_catalogue.reset();level={};current_scene={};
@@ -2246,7 +2301,12 @@ void player_authored_event(const dh2::animation::TriggeredEvent& event,int clip)
  if(applied.hit_called)add_combat_threat(target->aggro,prince_combat.aggro,target->identity,prince_character.identity(),applied.threat,aggro_facts);
  ++combat_hits;++prince_combat.attempts;
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Prince combat hit | target %s | attempt %u | result %d %d %d %d %d %d %u %u %d %d | HP %d %d | dead %u | combo %u | RNG %u %u | statuses %u",target->name.c_str(),prince_combat.attempts,result.amount,result.dot_element,result.dot_duration,result.dot_amount,result.hp_leech,result.mp_leech,result.outcomes,result.mask,result.weapon_category,result.element,applied.health.before,applied.health.after,target->combat_state.dead,prince_combat.life.combo_hits,combat_random.seed,combat_random.calls,applied.status_requests);
- if(applied.health.kill_requested)target->pending_death=true;
+ if(applied.health.kill_requested){
+  target->pending_death=true;
+  std::string loot_error;
+  if(!drop_actor_loot(*target,loot_error))
+   __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Source death loot continuation failed | %s | %s",target->name.c_str(),loot_error.c_str());
+ }
  if(applied.status_requests)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Combat status services pending | %s | requests %u",target->name.c_str(),applied.status_requests);
 }
 }
@@ -2630,6 +2690,7 @@ void advance_native_actor(unsigned dt_ms){
   if(!prince_locomotion.scene_phase(std::uint32_t(scene_clock),prince_attack_clips,prince_visual,current_scene,error))throw std::runtime_error(error);
   prince_scene_phase=false;
  actor_world.update(dt_ms);++native_physics_steps;
+ update_native_world_items_after_step();
  // This renderer advances the authored timer and FSM subset after the world
  // step. The CharAI frame belongs between these calls; native Ghost AI is not
  // wired yet, so do not report this interim sequence as a complete update.
@@ -2854,6 +2915,9 @@ std::string debug_player_death(){
 
 std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetManager* assets){
   std::vector<Draw> environment;std::vector<GLuint> textures;
+  dh2::objects::Resource candidate_itemdrops;
+  std::vector<Draw> candidate_itemdrop_draws;
+  std::map<std::string,unsigned> candidate_itemdrop_roots;
   std::vector<ObjectGroup> candidate_groups;
   const bool restore=world_mode||resume_world;const auto previous=actor_position;
   const auto previous_heading=heading;float source_spawn_heading=0;
@@ -2983,10 +3047,19 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
      const auto loot_schema=read(assets,"loot_table_pystructnames.bin","data");
      fresh_player.inventory_loot_tables=std::make_shared<dh2::data::LootTablesV2>();
      if(!fresh_player.inventory_loot_tables->load(
-          {loot_records.data(),loot_records.size()},
-          {loot_names.data(),loot_names.size()},
-          {loot_schema.data(),loot_schema.size()},error))
+           {loot_records.data(),loot_records.size()},
+           {loot_names.data(),loot_names.size()},
+           {loot_schema.data(),loot_schema.size()},error))
       throw std::runtime_error("Native gameplay LootTable resources rejected: "+error);
+     const auto visual_records=read(assets,"loot_audiovisual_pyarray.bin","data");
+     const auto visual_names=read(assets,"loot_audiovisual_pyarraynames.bin","data");
+     const auto visual_schema=read(assets,"loot_audiovisual_pystructnames.bin","data");
+     fresh_player.item_audio_visuals=std::make_shared<dh2::data::ItemAudioVisualTableV1>();
+     if(!fresh_player.item_audio_visuals->load(
+          {visual_records.data(),visual_records.size()},
+          {visual_names.data(),visual_names.size()},
+          {visual_schema.data(),visual_schema.size()},error))
+      throw std::runtime_error("Native ItemAudioVisual resources rejected: "+error);
      const char* power_files[]={
       "item_powers_pyarray.bin","item_powers_pyarraynames.bin","item_powers_pystructnames.bin",
       "item_powers_monopoly_pyarray.bin","item_powers_monopoly_pyarraynames.bin","item_powers_monopoly_pystructnames.bin"};
@@ -3077,7 +3150,12 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     dh2::character_saved_class_v1::Runtime class_owner(saved_class);dh2::character_saved_class_v1::Result class_result;
     if(class_owner.resolve(&class_result,error)!=dh2::character_saved_class_v1::Status::complete||class_result.value<0||std::size_t(class_result.value)>=character_table.rows.size())throw std::runtime_error("Gameplay class load failed: "+error);
     fresh_player.character_class=class_result.value;
+    const auto* selected_player_class_id=dh2::data::property(
+        character_table,character_table.names.at(std::size_t(fresh_player.character_class)),"ClassID");
+    if(!selected_player_class_id)throw std::runtime_error("Selected Player Character ClassID is absent");
+    fresh_player.player_class_id=*selected_player_class_id;
     if(restore&&prince_combat.character_class!=fresh_player.character_class)throw std::runtime_error("Retained gameplay class differs from its saved profile");
+    if(restore&&prince_combat.player_class_id!=fresh_player.player_class_id)throw std::runtime_error("Retained Player ClassID differs from its saved profile");
     requested_player_class=fresh_player.character_class;
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native gameplay class | slot %d | class %d | preset %s | player queries %u | mask1 calls %u | publications %u | own Save %zu | profile %zu",menu_gameplay_slot,class_result.value,character_table.names.at(class_result.value).c_str(),class_result.player_queries,class_result.load_calls,class_result.property_publications,std::size_t(gameplay_save),std::size_t(fresh_player.save_profile->identity));
     dh2::data::reset_properties(property_rules,fresh_player.properties,&character_table.rows.at(fresh_player.character_class));
@@ -3175,7 +3253,52 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       }
       __android_log_print(ANDROID_LOG_INFO,"DH2Native","Object resource %s | primitives %zu | tracks %u | unbound %u | unsupported %u | removed helpers %u",object.model.c_str(),group.draws.size(),group.resource.animation.track_count(),group.resource.animation.unbound,group.resource.animation.skipped,group.resource.removed_helpers);
     }
-    for(const auto& instance:candidate.scene.instances){dh2::assets::Mesh mesh{};
+     auto itemdrops_bytes=read(assets,"itemdrops.bdae","actors");
+     if(!dh2::objects::load_resource(itemdrops_bytes.data(),itemdrops_bytes.size(),
+                                     nullptr,0,candidate_itemdrops,error))
+      throw std::runtime_error("Original itemdrops.bdae rejected: "+error);
+     const auto audio_visual_owner=restore?prince_combat.item_audio_visuals:fresh_player.item_audio_visuals;
+     if(!audio_visual_owner)throw std::runtime_error("Native ItemAudioVisual owner is unavailable");
+     const auto visual_rows=audio_visual_owner->borrow().rows();
+     auto below_item_visual=[&](unsigned node,unsigned root){
+      unsigned depth=0;
+      while(node<candidate_itemdrops.scene.graph.size()&&depth++<candidate_itemdrops.scene.graph.size()){
+       if(node==root)return true;
+       const auto parent=candidate_itemdrops.scene.graph[node].parent;
+       if(parent<0)return false;
+       node=unsigned(parent);
+      }
+      return false;
+     };
+     for(const auto& row:visual_rows){
+      const auto matches=std::count_if(candidate_itemdrops.scene.graph.begin(),candidate_itemdrops.scene.graph.end(),
+       [&](const auto& node){return node.id==row.visual||node.name==row.visual;});
+      if(matches!=1)throw std::runtime_error("ItemAudioVisual selector is not unique in itemdrops.bdae: "+row.visual);
+      const auto root=std::find_if(candidate_itemdrops.scene.graph.begin(),candidate_itemdrops.scene.graph.end(),
+       [&](const auto& node){return node.id==row.visual||node.name==row.visual;});
+      if(root==candidate_itemdrops.scene.graph.end())
+       throw std::runtime_error("ItemAudioVisual selector is absent from itemdrops.bdae: "+row.visual);
+      const auto index=unsigned(root-candidate_itemdrops.scene.graph.begin());
+      if(std::none_of(candidate_itemdrops.primitives.begin(),candidate_itemdrops.primitives.end(),
+          [&](const auto& primitive){return below_item_visual(primitive.node,index);}))
+       throw std::runtime_error("ItemAudioVisual selector has no renderable BDAE primitive: "+row.visual);
+      candidate_itemdrop_roots.emplace(row.visual,index);
+     }
+     candidate_itemdrop_draws.reserve(candidate_itemdrops.primitives.size());
+     for(const auto& primitive:candidate_itemdrops.primitives){
+      candidate_itemdrop_draws.emplace_back();auto& batch=candidate_itemdrop_draws.back();
+      batch.node=primitive.node;batch.material=candidate_itemdrops.scene.materials.at(primitive.material);
+      batch.skin=primitive.skin;batch.cpu_vertices=primitive.vertices;batch.rest_positions=primitive.rest_positions;
+      batch.count=GLsizei(primitive.indices.size());batch.diffuse=upload(assets,batch.material.diffuse,cache,textures);
+      batch.alpha=upload(assets,batch.material.alpha_map,cache,textures);
+      glGenBuffers(1,&batch.vertices);glBindBuffer(GL_ARRAY_BUFFER,batch.vertices);
+      glBufferData(GL_ARRAY_BUFFER,primitive.vertices.size()*sizeof(Vertex),primitive.vertices.data(),
+                   primitive.skin.nodes.empty()?GL_STATIC_DRAW:GL_DYNAMIC_DRAW);
+      glGenBuffers(1,&batch.indices);glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,batch.indices);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER,primitive.indices.size()*sizeof(std::uint16_t),
+                   primitive.indices.data(),GL_STATIC_DRAW);check("Item drop buffer upload");
+     }
+     for(const auto& instance:candidate.scene.instances){dh2::assets::Mesh mesh{};
       if(dh2_mesh_open(&mesh,&view,instance.geometry)!=dh2::assets::Error::ok||mesh.primitives!=instance.materials.size())throw std::runtime_error("World mesh/binding rejected");
       for(unsigned j=0;j<mesh.primitives;++j){dh2::assets::Primitive p{};dh2_mesh_primitive(&mesh,j,&p);
         if(p.collada_type||p.index_count%3||mesh.vertices>65536)throw std::runtime_error("World topology rejected");
@@ -3198,6 +3321,10 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     if(actor_report.find("Model load failed:")==0)throw std::runtime_error(actor_report);
     environment.insert(environment.end(),std::make_move_iterator(draws.begin()),std::make_move_iterator(draws.end()));draws=std::move(environment);
     images.insert(images.end(),textures.begin(),textures.end());textures.clear();
+    {std::vector<GLuint> shared_textures;release(itemdrops_draws,shared_textures);}
+    itemdrops_resource=std::move(candidate_itemdrops);
+    itemdrops_draws=std::move(candidate_itemdrop_draws);
+    itemdrop_roots=std::move(candidate_itemdrop_roots);itemdrops_ready=true;
     object_groups=std::move(candidate_groups);world_objects=std::move(object_records);unsigned monsters=0,decors=0,object_triangles=0,object_draws=0;
     if(!restore){actor_animation_tables=std::move(animation_tables);actor_clip_table=std::move(clip_table);}
     actor_random=restore?previous_random:animation_random;actor_property_rules=property_rules;actor_ai_tables=std::move(ai_tables);
@@ -3225,7 +3352,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       }
     }}else{combat_random={0xD22026u,0};combat_hits=0;}
     saved_actors.clear();
-    if(!restore)prince_combat=std::move(fresh_player);
+    if(!restore){destroy_native_world_item_bodies();native_world_items.clear();prince_combat=std::move(fresh_player);}
     auto* selected_record=native_host.record_for(native_host.host_projection());
     if(!selected_record||!prince_combat.savegame)
       throw std::runtime_error("Native registered PlayerInfo or gameplay Save owner unavailable");
@@ -3316,7 +3443,9 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     world_mode=true;resume_world=false;walking=false;move_x=move_y=0;heading=restore?previous_heading:source_spawn_heading;movement_steps=blocked_steps=0;
     radius=350;yaw=-1.57f;pitch=.75f;zoom=1;object_epoch=epoch=last_frame=std::chrono::steady_clock::now();sampled_ms=0;frozen=restore?previous_frozen:false;
     initialize_native_actor(assets,restore);
+    if(!ensure_native_world_items(error))throw std::runtime_error("World item runtime restore failed: "+error);
     actor_level_fields=candidate_level_fields;actor_level_file=candidate_level_file;actor_level_fields_ready=true;
+    actor_level_kill_loot_gate=0; // Both source Level constructors initialize +0x150 to zero; no setter is currently bound.
     std::int32_t source_ranges[6]{};
     for(unsigned mode=0;mode<3;++mode){const float difficulty=static_cast<float>(mode);std::uint32_t count=0;
       if(native_current_level_range(&difficulty,source_ranges+2*mode,&count)||count!=2)throw std::runtime_error("Owned native Level range source callback failed");}
@@ -3430,7 +3559,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native heading control | player movement and melee facing use recovered source | UpdatePath rotation subobjects and genuine physics active");
     }
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","World ready | rooms %u | visual draws %zu | navigation triangles %zu | idle tracks %u | walk tracks %u | position %.4f %.4f %.4f",level.rooms,draws.size(),level.floor.size(),player.track_count(),walk_player.track_count(),actor_position[0],actor_position[1],actor_position[2]);return std::string(report)+(combat_resumed?"\nNative combat resumed":"");
-  }catch(const std::exception& e){deactivate();release_objects(candidate_groups);release(environment,textures);__android_log_print(ANDROID_LOG_ERROR,"DH2Native","World load failed: %s",e.what());return std::string("World load failed: ")+e.what();}
+  }catch(const std::exception& e){{std::vector<GLuint> no_textures;release(candidate_itemdrop_draws,no_textures);}deactivate();release_objects(candidate_groups);release(environment,textures);__android_log_print(ANDROID_LOG_ERROR,"DH2Native","World load failed: %s",e.what());return std::string("World load failed: ")+e.what();}
 }
 bool stage_world_loot_table(std::int32_t loot_table_id,
     const dh2::data::LootEntrySelectionContextV1& selection,
@@ -3478,6 +3607,247 @@ bool stage_world_loot_table(std::int32_t loot_table_id,
  if(!ok){if(error.empty())error="Native Character V4 Loot staging failed";return false;}
  error.clear();return true;
 }
+
+namespace {
+bool item_node_below(const dh2::objects::Resource& resource,unsigned node,unsigned root) {
+ unsigned depth=0;
+ while(node<resource.scene.graph.size()&&depth++<resource.scene.graph.size()){
+  if(node==root)return true;
+  const auto parent=resource.scene.graph[node].parent;
+  if(parent<0)return false;
+  node=unsigned(parent);
+ }
+ return false;
+}
+bool item_visual_radius(unsigned root,float& radius,std::string& error) {
+ float min_x=std::numeric_limits<float>::infinity(),min_y=min_x;
+ float max_x=-min_x,max_y=-min_x;
+ for(const auto& batch:itemdrops_draws){
+  if(!item_node_below(itemdrops_resource,batch.node,root))continue;
+  if(batch.node>=itemdrops_resource.scene.graph.size())continue;
+  const auto& matrix=itemdrops_resource.scene.graph[batch.node].world;
+  for(const auto& vertex:batch.cpu_vertices){
+   const float x=matrix[0]*vertex.p[0]+matrix[4]*vertex.p[1]+matrix[8]*vertex.p[2]+matrix[12];
+   const float y=matrix[1]*vertex.p[0]+matrix[5]*vertex.p[1]+matrix[9]*vertex.p[2]+matrix[13];
+   if(!std::isfinite(x)||!std::isfinite(y)){error="Non-finite item visual bounds";return false;}
+   min_x=std::min(min_x,x);max_x=std::max(max_x,x);
+   min_y=std::min(min_y,y);max_y=std::max(max_y,y);
+  }
+ }
+ if(!std::isfinite(min_x)||!std::isfinite(min_y)){
+  error="Item visual has no bounded geometry";return false;
+ }
+ radius=std::max(max_x-min_x,max_y-min_y)*.005f;
+ if(!std::isfinite(radius)||radius<=0.f||radius>10.f){
+  error="Item visual bounds produced an invalid source-unit sensor radius";return false;
+ }
+ error.clear();return true;
+}
+bool create_item_sensor(NativeWorldItem& item,std::string& error) {
+ if(!item.item||!prince_combat.inventory||!prince_combat.item_audio_visuals||
+    !itemdrops_ready||!actor_world.backend()){
+  error="Native V4 Item, AudioVisual table, BDAE or world owner unavailable";return false;
+ }
+ const auto* row=dh2::data::item(prince_combat.inventory->table(),item.item->id);
+ if(!row){error="World Item ID is outside the retained ItemTable";return false;}
+ // ItemRecord's retained schema stores AudioVisualID at word 21; word 24 is
+ // BaseProp. Keep this lookup tied to the original item row, not loot IDs.
+ const auto audio_visual_id=row->record.words[21];
+ const auto audio_visual=prince_combat.item_audio_visuals->borrow().get(audio_visual_id);
+ if(!audio_visual){error="Item AudioVisualID is outside the retained original table";return false;}
+ const auto root=itemdrop_roots.find(audio_visual->visual);
+ if(root==itemdrop_roots.end()){error="Item AudioVisual selector is absent from itemdrops.bdae";return false;}
+ item.audio_visual_id=audio_visual_id;item.visual_root=root->second;
+ float radius=0.f;
+ if(!item_visual_radius(item.visual_root,radius,error))return false;
+ b2BodyDef definition;definition.userData=&item.body_owner.services;
+ definition.position.Set(item.position[0]*.01f,item.position[1]*.01f);
+ definition.allowSleep=true;definition.fixedRotation=true;
+ auto* body=actor_world.create(&definition);
+ if(!body){error="Original ItemObject sensor body creation failed";return false;}
+ b2CircleDef circle;circle.radius=radius;circle.isSensor=true;
+ circle.friction=1.f;circle.restitution=0.f;circle.density=11.24f;
+ circle.filter.groupIndex=-3;circle.filter.categoryBits=0x40;circle.filter.maskBits=4;
+ circle.userData=&item.body_owner.services;
+ if(!body->CreateShape(&circle)){actor_world.destroy(body);error="Original ItemObject circle sensor creation failed";return false;}
+ body->SetMassFromShapes();
+ item.body={body,radius,false};item.body_owner.native=&item.body;
+ item.body_owner.contact={1,0,1,1,{-3,0x40,4,1},{}};
+ error.clear();return true;
+}
+void destroy_item_projection(std::size_t index) {
+ if(index>=native_world_items.size())return;
+ auto& item=*native_world_items[index];
+ if(item.body.body&&actor_world.backend())actor_world.destroy(item.body.body);
+ item.body={};
+ native_world_items.erase(native_world_items.begin()+std::ptrdiff_t(index));
+}
+bool project_world_item(dh2::data::ItemInstanceV1* source,
+                        const std::array<float,3>& position,std::string& error) {
+ if(!source){error="V4 world Item has no live ItemInstance";return false;}
+ auto found=std::find_if(native_world_items.begin(),native_world_items.end(),
+  [&](const auto& item){return item->item==source;});
+ if(found!=native_world_items.end()){
+  auto& item=**found;item.position=position;
+  if(!item.body.body)return create_item_sensor(item,error);
+  error.clear();return true;
+ }
+ auto item=std::make_unique<NativeWorldItem>(source);item->position=position;
+ auto* stable=item.get();native_world_items.push_back(std::move(item));
+ if(!create_item_sensor(*stable,error)){native_world_items.pop_back();return false;}
+ return true;
+}
+bool ensure_native_world_items(std::string& error) {
+ if(!world_mode||!prince_combat.inventory||!itemdrops_ready){
+  error="Native V4 inventory, active world and item visual owner are required";return false;
+ }
+ const auto& items=prince_combat.inventory->world_items();
+ for(std::size_t i=0;i<native_world_items.size();){
+  const auto* pointer=native_world_items[i]->item;
+  const bool live=std::any_of(items.begin(),items.end(),[&](const auto& slot){
+   return slot&&slot->item.get()==pointer;
+  });
+  if(!live){destroy_item_projection(i);continue;}
+  if(!native_world_items[i]->body.body&&
+     !create_item_sensor(*native_world_items[i],error))return false;
+  ++i;
+ }
+ for(const auto& slot:items){
+  if(!slot||!slot->item)continue;
+  const auto found=std::find_if(native_world_items.begin(),native_world_items.end(),
+   [&](const auto& item){return item->item==slot->item.get();});
+  if(found!=native_world_items.end())continue;
+  if(!project_world_item(slot->item.get(),actor_position,error))return false;
+ }
+ error.clear();return true;
+}
+bool source_drop_position(const ObjectActor& victim,std::array<float,3>& out,
+                          std::string& error) {
+ std::array<float,3> center=victim.position;
+ if(victim.spawn_owner&&victim.spawn_owner->body.body){
+  const auto point=victim.spawn_owner->body.body->GetPosition();
+  center[0]=point.x*100.f;center[1]=point.y*100.f;
+ }
+ const std::array<float,3> killer{actor_position[0],actor_position[1],actor_position[2]};
+ std::array<float,3> direction{killer[0]-center[0],killer[1]-center[1],killer[2]-center[2]};
+ const float length=std::sqrt(direction[0]*direction[0]+direction[1]*direction[1]+direction[2]*direction[2]);
+ if(length>0.f)for(auto& component:direction)component/=length;
+ auto random=dh2::random_lifecycle::inventory_random_service();
+ std::int32_t distance=0,lateral=0;
+ if(!random.next||!random.next(random.context,200,0,distance,error)||
+    !random.next(random.context,300,0,lateral,error)){
+  if(error.empty())error="Source process RNG unavailable for ItemObject drop position";
+  return false;
+ }
+ const float forward=float(distance+150),side=float(lateral-150);
+ // _GetRandomDropPos normalizes killer-victim, advances 150..349 units,
+ // then applies a perpendicular -150..149-unit spread on the same process RNG.
+ out={center[0]+direction[0]*forward-direction[1]*side,
+      center[1]+direction[1]*forward+direction[0]*side,
+      center[2]+direction[2]*forward};
+ error.clear();return true;
+}
+bool drop_actor_loot(ObjectActor& victim,std::string& error) {
+ if(victim.loot_dropped){error.clear();return true;}
+ victim.loot_dropped=true;
+ if(!world_mode||!actor_level_fields_ready||actor_level_kill_loot_gate!=0||
+    prince_combat.life.dead||victim.loot_table_id<0){error.clear();return true;}
+ if(!prince_combat.inventory){error="Source Character V4 inventory is unavailable";return false;}
+ NativeLootAdapterV1 adapter{prince_combat.item_text,prince_combat.item_presentation.get()};
+ auto call=[&](dh2::data::OwnedInventoryOperationV4 operation,const char* name,
+               dh2::data::OwnedInventoryResponseV4& response){
+  const dh2::data::OwnedInventoryRequestV4 request{operation,0x3ecba0,nullptr,name,0,0};
+  return NativeLootAdapterV1::invoke_inventory(&adapter,*prince_combat.inventory,
+                                                request,response,error);
+ };
+ dh2::data::OwnedInventoryResponseV4 response{};
+ if(!call(dh2::data::OwnedInventoryOperationV4::player_count,nullptr,response))return false;
+ if(response.value!=1){error="Current PlayerManager roster is not the supported single-player roster";return false;}
+ dh2::data::LootEntrySelectionContextV1 selection{};
+ switch(prince_combat.player_class_id){
+  case 263:selection.player_counts.warrior=1;break;
+  case 290:selection.player_counts.mage=1;break;
+  case 325:selection.player_counts.rogue=1;break;
+  default:error="Active Player Character ClassID is outside the recovered loot classes";return false;
+ }
+ response={};
+ if(!call(dh2::data::OwnedInventoryOperationV4::debug_load,nullptr,response))return false;
+ response={};
+ if(!call(dh2::data::OwnedInventoryOperationV4::debug_query,"InfiniteLootDrops",response))return false;
+ selection.infinite_loot_drops=response.value!=0;
+ LootStagingResultV1 staged{};
+ if(!stage_world_loot_table(victim.loot_table_id,selection,
+      prince_combat.properties.resolved[195],prince_combat.properties.resolved[196],
+      -1,actor_level_fields.difficulty_118,staged,error))return false;
+ const auto& items=prince_combat.inventory->world_items();
+ for(std::size_t i=staged.first_world_item;i<items.size();++i){
+  if(!items[i]||!items[i]->item){error="Source loot stage published an empty world slot";break;}
+  std::array<float,3> position{};
+  if(!source_drop_position(victim,position,error)||
+     !project_world_item(items[i]->item.get(),position,error))break;
+ }
+ if(!error.empty()){
+  while(prince_combat.inventory->world_items().size()>staged.first_world_item){
+   const auto index=prince_combat.inventory->world_items().size()-1;
+   auto* item=prince_combat.inventory->world_items()[index]->item.get();
+   const auto projection=std::find_if(native_world_items.begin(),native_world_items.end(),
+    [&](const auto& current){return current->item==item;});
+   if(projection!=native_world_items.end())
+    destroy_item_projection(std::size_t(projection-native_world_items.begin()));
+   std::string retirement_error;
+   if(!retire_staged_world_loot_item(index,retirement_error)){
+    error+="; staged Item rollback failed: "+retirement_error;break;
+   }
+  }
+  return false;
+ }
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+  "Source enemy death loot staged | %s | Loot %d | items %zu | ClassID %d | InfiniteLootDrops %u | V4 owner, itemdrops BDAE and MoveOn sensor",
+  victim.name.c_str(),victim.loot_table_id,staged.item_count,prince_combat.player_class_id,
+  unsigned(selection.infinite_loot_drops));
+ error.clear();return true;
+}
+void update_native_world_items_after_step() {
+ if(!prince_combat.inventory)return;
+ for(auto& item:native_world_items)if(item->body.body){
+  const auto point=item->body.body->GetPosition();
+  item->position[0]=point.x*100.f;item->position[1]=point.y*100.f;
+ }
+ for(std::size_t i=0;i<native_world_items.size();){
+  auto& projection=*native_world_items[i];
+  if(!projection.pending_interact){++i;continue;}
+  projection.pending_interact=false;
+  auto* tracked=projection.item;
+  const auto tracked_id=tracked?tracked->id:-1;
+  const auto& items=prince_combat.inventory->world_items();
+  const auto found=std::find_if(items.begin(),items.end(),[&](const auto& slot){
+   return slot&&slot->item.get()==tracked;
+  });
+  if(found==items.end()){destroy_item_projection(i);continue;}
+  const auto index=std::size_t(found-items.begin());
+  NativeLootAdapterV1 adapter{prince_combat.item_text,prince_combat.item_presentation.get()};
+  std::int32_t inventory_index=-1;std::string error;
+  const bool accepted=prince_combat.inventory->pickup_world_item(
+      index,inventory_index,adapter.inventory_services(),error);
+  const auto& after=prince_combat.inventory->world_items();
+  const bool still_world=std::any_of(after.begin(),after.end(),[&](const auto& slot){
+   return slot&&slot->item.get()==tracked;
+  });
+  if(!still_world){
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+    "Source MoveOn ItemObject::Interact accepted | Item %d | inventory index %d | V4 wallet/equipment/potion",
+    tracked_id,inventory_index);
+   destroy_item_projection(i);continue;
+  }
+  if(!accepted)
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+    "Source MoveOn ItemObject::Interact retained world Item | Item %d | %s",
+    tracked_id,error.c_str());
+  ++i;
+ }
+}
+} // namespace
+
 bool retire_staged_world_loot_item(std::size_t index,std::string& error) {
  if(!world_mode||!prince_combat.inventory||!prince_combat.item_presentation){
   error="Native Character V4 world-item owner is not active";return false;
@@ -3630,6 +4000,31 @@ void draw(int width,int height){
         render_actor(actor,nullptr);
       }
     }
+  }
+  if(world_mode&&itemdrops_ready){
+   for(auto& batch:itemdrops_draws)if(!batch.skin.nodes.empty()){
+    std::string error;std::vector<dh2::skinning::Matrix> matrices;
+    std::vector<std::array<float,3>> deformed;
+    if(!dh2::skinning::palette(batch.skin,itemdrops_resource.scene,matrices,error)||
+       !dh2::skinning::positions(batch.skin,matrices,batch.rest_positions,deformed,error))
+     throw std::runtime_error("Item drop skin pose failed: "+error);
+    for(unsigned k=0;k<batch.cpu_vertices.size();++k)
+     std::copy(deformed[k].begin(),deformed[k].end(),batch.cpu_vertices[k].p);
+    glBindBuffer(GL_ARRAY_BUFFER,batch.vertices);
+    glBufferSubData(GL_ARRAY_BUFFER,0,batch.cpu_vertices.size()*sizeof(Vertex),batch.cpu_vertices.data());
+   }
+   for(const auto& item:native_world_items){
+    if(!item->item||item->visual_root>=itemdrops_resource.scene.graph.size())continue;
+    Matrix placement{};placement[0]=placement[5]=placement[10]=placement[15]=1.f;
+    placement[12]=item->position[0];placement[13]=item->position[1];placement[14]=item->position[2];
+    const auto placed=dh2::scene::multiply(projection,placement);
+    for(const auto& batch:itemdrops_draws){
+     if(!item_node_below(itemdrops_resource,batch.node,item->visual_root))continue;
+     const auto transform=batch.skin.nodes.empty()
+       ?dh2::scene::multiply(placed,itemdrops_resource.scene.graph[batch.node].world):placed;
+     submit(batch,transform);
+    }
+   }
   }
   sync_search_world();
   glDisableVertexAttribArray(position);glDisableVertexAttribArray(texcoord);glDisableVertexAttribArray(color);

@@ -10,7 +10,7 @@ target_sources(dh2_game_data PRIVATE player_profile_index_v1.cpp player_save_loa
 target_sources(dh2_game_data PRIVATE savegame_options_v1.cpp)
 target_sources(dh2_game_data PRIVATE item_gear_properties_v5.cpp item_power_tables_v5.cpp
  loot_power_resources_v7.cpp)
-target_sources(dh2_game_data PRIVATE item_instance.cpp loot_tables_v2.cpp
+target_sources(dh2_game_data PRIVATE item_instance.cpp loot_tables_v2.cpp item_audiovisual_table_v1.cpp
  fresh_inventory_owned_v4.cpp player_gear_effects_v5.cpp)
 target_sources(dh2_game_data PRIVATE item_presentation_v5.cpp loot_power_creation_v7.cpp)
 target_sources(dh2_game_data PRIVATE loot_entry_selection_v1.cpp)
@@ -35,6 +35,8 @@ target_compile_options(dh2_game_data PRIVATE -Wall -Wextra -fno-fast-math)
 if(ANDROID)
  target_link_options(dh2_game_data PRIVATE -Wl,-z,max-page-size=16384 -Wl,--no-undefined)
 else()
+ add_executable(item_audiovisual_table_v1_audit tests/item_audiovisual_table_v1.cpp)
+ target_link_libraries(item_audiovisual_table_v1_audit PRIVATE dh2_game_data)
  add_executable(savegame_options_v1_audit tests/savegame_options_v1.cpp)
  target_link_libraries(savegame_options_v1_audit PRIVATE dh2_game_data)
  add_executable(player_savegame_v1_audit tests/player_savegame_v1.cpp)
