@@ -89,8 +89,20 @@ static bool load_resource_impl(const std::uint8_t* input,std::size_t size,const 
     if(found!=1)throw std::runtime_error("Original modular controller absent or ambiguous: "+id);
    }
   }
+  // The source prop BDAEs also contain a far-away TemplateDefs visual whose
+  // nodes provide factories for runtime Decor objects. It is not part of the
+  // placed resource; discard the complete prototype subtree before resolving
+  // mesh/material bindings (some prototype materials intentionally alias).
+  std::vector<bool> template_nodes(candidate.scene.graph.size(),false);
+  for(std::size_t i=0;i<candidate.scene.graph.size();++i){const auto& node=candidate.scene.graph[i];
+   template_nodes[i]=node.id=="TemplateDefs-node"||(node.parent>=0&&
+    static_cast<std::size_t>(node.parent)<template_nodes.size()&&template_nodes[std::size_t(node.parent)]);
+  }
   auto& instances=candidate.scene.instances;const auto before=instances.size();
-  instances.erase(std::remove_if(instances.begin(),instances.end(),[](const scene::Instance& i){return i.node.find("_colbox_")!=std::string::npos||i.node.find("_mesh_shadow_")!=std::string::npos;}),instances.end());candidate.removed_helpers=before-instances.size();
+  instances.erase(std::remove_if(instances.begin(),instances.end(),[&](const scene::Instance& i){
+   return i.node.find("_colbox_")!=std::string::npos||i.node.find("_mesh_shadow_")!=std::string::npos||
+    (i.node_index<template_nodes.size()&&template_nodes[i.node_index]);
+  }),instances.end());candidate.removed_helpers=before-instances.size();
   unsigned total=0;
   for(const auto& instance:instances){assets::Mesh mesh{};if(dh2_mesh_open(&mesh,&view,instance.geometry)!=assets::Error::ok||mesh.primitives!=instance.materials.size())throw std::runtime_error("Object mesh/binding rejected");
    for(unsigned j=0;j<mesh.primitives;++j){assets::Primitive raw{};dh2_mesh_primitive(&mesh,j,&raw);

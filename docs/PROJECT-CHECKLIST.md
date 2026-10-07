@@ -5,9 +5,9 @@ Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,777,075 bytes, SHA-256 `FEED7D19DA6B6FCB1F8B2E20CA37BDACBC2CF48C3413ECFE36C2CA94C1D2C6A9`). API 37 ARM64/x86_64 build; debug signature verifies. It imports the original SWAMP MLX and nine MGPs for layout and supported entrypoints; BRES/DACT remain checkpoint data. Host audits match DWLD/SPWN descriptors, and the selected-library world audit covers nine rooms, 16 floors, 377 visuals, materials, floor snap and five actors. No live SWAMP start was run; full source object loading/gameplay remains open. Build with `-Pdh2SourceRoot=<short mapped checkout>`.
+**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,832,147 bytes, SHA-256 `E9207AD769200E52CC9CB6B3FFBD911A90E5B1C72EC9111108F4179D41B95CAB`). API 37 ARM64/x86_64 build; v2 debug signature verifies. It imports SWAMP MLX, nine MGPs and nine MVPs for layout, entrypoints, five source-monster rows and ten static Decor instances. Focused host audits pass; live SWAMP rendering/gameplay is unverified. Source BRES, remaining object records, Character lifecycle/AI and full campaign remain open. Build with `-Pdh2SourceRoot=<short mapped checkout>`.
 
-**Latest published APK:** [Native SWAMP actor checkpoint — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-swamp-monsters-2026-10-07) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-swamp-monsters-2026-10-07/Dungeon-Hunter-2-native-swamp-actors-api37-debug.apk)). This is a debug prerelease; host tests cover the static world and five actors, with no live SWAMP gameplay run.
+**Latest published APK:** [Native SWAMP static Decor checkpoint — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-swamp-source-decors-2026-10-07) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-swamp-source-decors-2026-10-07/Dungeon-Hunter-2-native-swamp-decors-api37-debug.apk)). This debug prerelease includes ten source-selected static Decor instances; live SWAMP rendering/gameplay is not verified.
 
 Prior live evidence applies to the previous APK from [commit `d4142762`](https://github.com/Noamcelermajer/DH_sc/commit/d4142762): API37/16KiB emulator tests passed all three class create/reopen/Back/Home-resume flows. A bounded Crypt smoke verified six player hit events with enemy AI disabled. A separate live exchange verified touch movement, seven enemy hits, and a 57-damage ordinary player attack. Neither run tested loot or progression. [Live exchange](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json), [menu](../port/android-native/reports/menu-ui-runtime-smoke-62557f03.json), [combat](../port/android-native/reports/character-combat-smoke-62557f03.json).
 
@@ -124,7 +124,7 @@ Historical reports retain their original APK identities and test scopes.
 
 - [x] Load the original authored eight-room Crypt layout into the native app.
 - [x] Parse both current Crypt MGP SpawnPoints into SPWN; fresh Android start selects ID 0 and floor-snaps, while resume preserves saved pose. Host checks and both ABI builds pass; active-object ordering remains open.
-- [x] Import SWAMP row 41's original `.mlx` and nine source MGPs at runtime to rebuild translation-only DWLD and supported SPWN (IDs 0/3/13); host audits match both descriptors byte-for-byte and reject duplicate IDs. API37 ARM64/x86_64 APK builds and verifies. BRES/DACT remain checkpoint data; other MGP/MVP objects, factories and live gameplay remain open.
+- [x] Import SWAMP row 41's original `.mlx`, nine MGPs and nine MVPs at runtime to rebuild DWLD/SPWN, five direct-monster DACT rows and ten static Decor instances sharing one BDAE with source-selected node roots. DACT matches byte-for-byte; both focused host audits pass; API 37 ARM64/x86_64 APK builds and signature verifies. Conditional/animated objects, other source rows, full Character lifecycle/AI and live rendering remain open.
 - [x] Verify the selected-library DACT/world actor regression resolves the five source-authored SWAMP Monsters and model dictionary entries.
 - [ ] Start the current SWAMP APK on Android and verify actor load, placement and animation in gameplay; no live run has been made.
 - [x] Parse source `floortypes` with IDA-confirmed duplicate/key/quote behavior, apply native type masks, and make default floor snapping skip void/wall in source order; unknown tags such as `sand` add no mask.
@@ -441,11 +441,11 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 ## Immediate work order
 
-1. Apply canonical Save spawn-clear/save-before-load effects, then connect the typed request to source `Application::LoadLevel`/`GSLevel` and the `.mlx`/object factory path; keep the static SWAMP route as a verified checkpoint.
-2. Run Character InitPost with the real profile/level sequence, source Skin lifetime and Player AddLoot provider; connect `UpdateSkills` in source order.
-3. Bind existing-profile save writers and complete LevelUp before threshold-crossing XP; then verify event4 and connect objectives/outer event2.
-4. Connect ordinary Character/CharAI/AIS owners to the Level frame and implement pursuit, combat and death with source body lifetime.
-5. Finish campaign content/UI/audio/saves/mod examples, play an original level to its exit, then run clean and physical ARM64 release validation.
+1. Start the current APK once and confirm the ten imported SWAMP Decor instances render at their source placements; the build and resource audits pass, but runtime rendering is not yet verified.
+2. Complete one live Crypt Ghost pursuit loop: advance CharAI once per actor, route source event 9 through the existing Lua session, and bind target/HeadTo/MoveTo to the existing path/root-motion owners. Then replace the five-row DACT projection with full source Character lifecycle, Monster combat, death and loot.
+3. Import the remaining source MGP/MVP records and conditions through bounded source adapters, then connect the full object factory/lifecycle path.
+4. Apply canonical Save spawn-clear/save-before-load effects and connect the typed request to source `Application::LoadLevel`/`GSLevel`; run Player Character InitPost with real profile/level, Skin lifetime and AddLoot providers.
+5. Connect skills, existing-profile save writers and LevelUp; finish campaign content/UI/audio/saves/mod examples, play an original level to its exit, then run clean and physical ARM64 release validation.
 
 Update the relevant checkboxes only after their stated verification passes. Keep
 the detailed artifact-specific proof in checkpoint documents and reports.

@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+namespace dh2::data { struct CharacterTable; struct Dictionary; }
 namespace dh2::world {
 using Point=std::array<float,3>;
 struct Triangle{Point a,b,c;unsigned room;};
@@ -12,6 +13,17 @@ struct Level{scene::Scene scene;std::vector<Triangle> floor;Point spawn{};unsign
 struct Transform{Point position{};Point rotation_degrees{};Point scale{1,1,1};};
 struct EntryPoint{std::int32_t id=-1;unsigned room=0;std::string name;Transform local;Transform world;};
 struct SourceMgpView{const char* source_path=nullptr;const std::uint8_t* data=nullptr;std::size_t size=0;};
+struct SourceMvpView{const char* source_path=nullptr;const std::uint8_t* data=nullptr;std::size_t size=0;};
+struct SourceMvpDecor{
+ std::uint32_t module_index=0;
+ std::uint32_t source_record=0;
+ std::string name;
+ std::string xrefobject;
+ std::string dae_path;
+ std::string source_path;
+ Transform local;
+ Transform world;
+};
 struct SpawnSelection{EntryPoint source;Point position{};Point rotation_degrees{};bool floor_snapped=false;};
 bool load(const resources::BresView&,const std::uint8_t* descriptor,std::size_t,Level&,std::string&);
 // Build the bounded static Module layout from the original Level .mlx and
@@ -26,6 +38,19 @@ bool compile_source_layout(const std::uint8_t* mlx,std::size_t mlx_size,
 bool compile_source_spawnpoints(const std::uint8_t* mlx,std::size_t mlx_size,
                                 const SourceMgpView* mgps,std::size_t mgp_count,
                                 std::vector<std::uint8_t>& spawnpoints,std::string& error);
+// Compile only the five reviewed, unconditional direct SWAMP Monster records
+// into the current DACT v1 owner. Character model and authored scale values
+// come from the supplied source CharacterTable and ModelFile dictionary.
+bool compile_source_dact(const std::uint8_t* mlx,std::size_t mlx_size,
+                         const SourceMgpView* mgps,std::size_t mgp_count,
+                         const data::CharacterTable& characters,
+                         const data::Dictionary& models,
+                         std::vector<std::uint8_t>& dact,std::string& error);
+// Import the nine source MVPs and project only the ten reviewed unconditional
+// SWAMP static Decor records into owned render-instance descriptions.
+bool compile_source_mvp(const std::uint8_t* mlx,std::size_t mlx_size,
+                        const SourceMvpView* mvps,std::size_t mvp_count,
+                        std::vector<SourceMvpDecor>& out,std::string& error);
 // SPWN v1 carries Crypt's two active entrypoints and SWAMP's three supported
 // unconditional MGP entrypoints. Conditional SWAMP transition groups remain
 // outside this format.

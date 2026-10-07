@@ -158,9 +158,14 @@ struct ObjectActor:dh2::objects::Record {
  SearchObjectProjection search_projection{};
  std::shared_ptr<SpawnOwner> spawn_owner;
  std::shared_ptr<NativeCharAIProjection> native_ai;
+ std::string source_root_node_id;
+ std::uint32_t source_module_index=std::numeric_limits<std::uint32_t>::max();
+ std::uint32_t source_record=std::numeric_limits<std::uint32_t>::max();
+ unsigned visual_root=std::numeric_limits<unsigned>::max();
  ObjectActor(const dh2::objects::Record& r):Record(r){}
 };
 struct ObjectGroup{dh2::objects::Resource resource;std::vector<Draw> draws;std::vector<ObjectActor> instances;std::map<int,dh2::animation::Player> clips;int animation_table=-1;};
+bool item_node_below(const dh2::objects::Resource&,unsigned,unsigned);
 std::uint64_t snapshot_checksum(const dh2::data::PropertySheet& sheet){
  std::uint64_t result=14695981039346656037ull;for(auto value:sheet)for(unsigned i=0;i<4;++i){result^=(std::uint32_t(value)>>(8*i))&255;result*=1099511628211ull;}return result;
 }
@@ -3163,11 +3168,16 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     if(world_mode&&!prince_retained_pose.capture(prince_locomotion,prince_attack_clips,prince_visual,current_scene,retention_error))
       throw std::runtime_error("Player scene retention failed: "+retention_error);
     if(!restore){prince_skills.reset();prince_source_ai.reset();}
-    std::vector<std::uint8_t> source_layout_bytes,source_spawn_bytes;
+    std::vector<std::uint8_t> source_mlx_bytes,source_layout_bytes,source_spawn_bytes;
+    std::vector<std::vector<std::uint8_t>> source_mgp_bytes;
+    std::vector<dh2::world::SourceMgpView> source_mgps;
+    std::vector<std::vector<std::uint8_t>> source_mvp_bytes;
+    std::vector<dh2::world::SourceMvpView> source_mvps;
+    std::vector<dh2::world::SourceMvpDecor> source_mvp_decors;
     const std::uint8_t* selected_descriptor=descriptor;std::size_t selected_descriptor_size=size;
     if(source_static_level){
       std::string source_layout_error;
-      const auto mlx=read(assets,"data/scene/001_swamp.mlx","original-cache");
+      source_mlx_bytes=read(assets,"data/scene/001_swamp.mlx","original-cache");
       static constexpr std::array<const char*,9> source_mgp_paths={
         "data/3d/modules/swamp/mgp/obj_4of4_brdwalk_sw_00.mgp",
         "data/3d/modules/swamp/mgp/obj_3of4_brdwalk_sw_00.mgp",
@@ -3178,8 +3188,16 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
         "data/3d/modules/swamp/mgp/deadend_brdwalk_w_00.mgp",
         "data/3d/modules/swamp/mgp/bossroom_ruins_ns_.mgp",
         "data/3d/modules/swamp/mgp/obj_2of4_brdwalk_sw_00.mgp"};
-      std::vector<std::vector<std::uint8_t>> source_mgp_bytes;
-      std::vector<dh2::world::SourceMgpView> source_mgps;
+      static constexpr std::array<const char*,9> source_mvp_paths={
+        "data/3d/modules/swamp/mvp/obj_4of4_brdwalk_sw_00.mvp",
+        "data/3d/modules/swamp/mvp/obj_3of4_brdwalk_sw_00.mvp",
+        "data/3d/modules/swamp/mvp/obj_1of4_brdwalk_nse_00.mvp",
+        "data/3d/modules/swamp/mvp/corner_ruin_ws_00.mvp",
+        "data/3d/modules/swamp/mvp/merchantcamp_ruins_swe_00.mvp",
+        "data/3d/modules/swamp/mvp/corner_brdwalk_se_00.mvp",
+        "data/3d/modules/swamp/mvp/deadend_brdwalk_w_00.mvp",
+        "data/3d/modules/swamp/mvp/bossroom_ruins_ns_.mvp",
+        "data/3d/modules/swamp/mvp/obj_2of4_brdwalk_sw_00.mvp"};
       source_mgp_bytes.reserve(source_mgp_paths.size());
       source_mgps.reserve(source_mgp_paths.size());
       for(const auto* path:source_mgp_paths){
@@ -3187,11 +3205,18 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
         const auto& bytes=source_mgp_bytes.back();
         source_mgps.push_back({path,bytes.data(),bytes.size()});
       }
-      if(!dh2::world::compile_source_spawnpoints(mlx.data(),mlx.size(),source_mgps.data(),
+      source_mvp_bytes.reserve(source_mvp_paths.size());
+      source_mvps.reserve(source_mvp_paths.size());
+      for(const auto* path:source_mvp_paths){
+        source_mvp_bytes.push_back(read(assets,path,"original-cache"));
+        const auto& bytes=source_mvp_bytes.back();
+        source_mvps.push_back({path,bytes.data(),bytes.size()});
+      }
+      if(!dh2::world::compile_source_spawnpoints(source_mlx_bytes.data(),source_mlx_bytes.size(),source_mgps.data(),
           source_mgps.size(),source_spawn_bytes,source_layout_error))
         throw std::runtime_error("Original source MGP SpawnPoint import rejected: "+source_layout_error);
       const auto entrypoint=active_native_start_plan?active_native_start_plan->entry_point:0;
-      if(!dh2::world::compile_source_layout(mlx.data(),mlx.size(),source_spawn_bytes.data(),
+      if(!dh2::world::compile_source_layout(source_mlx_bytes.data(),source_mlx_bytes.size(),source_spawn_bytes.data(),
           source_spawn_bytes.size(),entrypoint,source_layout_bytes,source_layout_error))
         throw std::runtime_error("Original source MLX layout rejected: "+source_layout_error);
       selected_descriptor=source_layout_bytes.data();selected_descriptor_size=source_layout_bytes.size();
@@ -3296,8 +3321,18 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Animation tables ready | sequences %zu | characters %zu | clip paths %zu | bytes %zu",animation_tables.sequences.size(),animation_tables.characters.size(),clip_table.values.size(),animation_tables.data_consumed);
     std::vector<dh2::objects::Record> object_records;
     if(!level_assets.objects.empty()){
-     const auto objects=read(assets,level_assets.objects,"worlds");
-     if(!dh2::objects::load_records(objects.data(),objects.size(),candidate.rooms,character_table,model_table,object_records,error))throw std::runtime_error(error);
+     std::vector<std::uint8_t> source_object_bytes;
+     if(source_static_level){
+      if(!dh2::world::compile_source_dact(source_mlx_bytes.data(),source_mlx_bytes.size(),source_mgps.data(),source_mgps.size(),character_table,model_table,source_object_bytes,error))
+       throw std::runtime_error("Original source MGP actor import rejected: "+error);
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native","Source MGP direct actors imported | DACT bytes %zu | supported records 5 | scripted/conditional actors deferred",source_object_bytes.size());
+     }else source_object_bytes=read(assets,level_assets.objects,"worlds");
+     if(!dh2::objects::load_records(source_object_bytes.data(),source_object_bytes.size(),candidate.rooms,character_table,model_table,object_records,error))throw std::runtime_error(error);
+    }
+    if(source_static_level){
+     if(!dh2::world::compile_source_mvp(source_mlx_bytes.data(),source_mlx_bytes.size(),source_mvps.data(),source_mvps.size(),source_mvp_decors,error))
+      throw std::runtime_error("Original source MVP decor import rejected: "+error);
+     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Source MVP static decor imported | records %zu | shared prop_swamp_corpses.bdae | conditional/animated objects deferred",source_mvp_decors.size());
     }
     auto prince=read(assets,"prince_modular.bdae","models"),idle=read(assets,"prince_idle_shield.bdae","animations"),walk=read(assets,"prince_walk_1hand.bdae","animations");
     dh2::resources::BresView actor_view{};dh2_bres_open(&actor_view,prince.data(),prince.size());dh2::scene::Scene rest;
@@ -3527,6 +3562,55 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       }
       __android_log_print(ANDROID_LOG_INFO,"DH2Native","Object resource %s | primitives %zu | tracks %u | unbound %u | unsupported %u | removed helpers %u",object.model.c_str(),group.draws.size(),group.resource.animation.track_count(),group.resource.animation.unbound,group.resource.animation.skipped,group.resource.removed_helpers);
     }
+    for(const auto& decor:source_mvp_decors){
+      dh2::objects::Record record{};record.kind=2;record.room=decor.module_index;
+      record.name=decor.name;record.model=decor.dae_path;
+      record.position=decor.world.position;record.rotation_degrees=decor.world.rotation_degrees;
+      record.scale=decor.world.scale;
+      const float half=3.14159265358979323846f/360.f;
+      const float x=record.rotation_degrees[0]*half,y=record.rotation_degrees[1]*half,z=record.rotation_degrees[2]*half;
+      const float sx=std::sin(x),cx=std::cos(x),sy=std::sin(y),cy=std::cos(y),sz=std::sin(z),cz=std::cos(z);
+      const float quaternion[]{sx*cy*cz-cx*sy*sz,cx*sy*cz+sx*cy*sz,cx*cy*sz-sx*sy*cz,cx*cy*cz+sx*sy*sz};
+      dh2_node_matrix(record.placement.data(),record.position.data(),quaternion,record.scale.data());
+      for(const auto value:record.placement)if(!std::isfinite(value))throw std::runtime_error("Source MVP placement is not finite");
+
+      auto found=std::find_if(candidate_groups.begin(),candidate_groups.end(),[&](const ObjectGroup& group){
+        return group.animation_table<0&&!group.instances.empty()&&group.instances.front().model==record.model;
+      });
+      if(found==candidate_groups.end()){
+        candidate_groups.emplace_back();found=std::prev(candidate_groups.end());
+        found->animation_table=-1;
+        const auto model=read(assets,record.model,"original-cache");
+        if(!dh2::objects::load_resource(model.data(),model.size(),nullptr,0,found->resource,error))
+          throw std::runtime_error("Original source MVP BDAE rejected: "+error);
+        for(const auto& primitive:found->resource.primitives){
+          Draw draw;draw.node=primitive.node;draw.material=found->resource.scene.materials.at(primitive.material);
+          draw.skin=primitive.skin;draw.cpu_vertices=primitive.vertices;draw.rest_positions=primitive.rest_positions;
+          draw.count=GLsizei(primitive.indices.size());found->draws.push_back(std::move(draw));auto& batch=found->draws.back();
+          batch.diffuse=upload(assets,batch.material.diffuse,cache,textures);batch.alpha=upload(assets,batch.material.alpha_map,cache,textures);
+          glGenBuffers(1,&batch.vertices);glBindBuffer(GL_ARRAY_BUFFER,batch.vertices);
+          glBufferData(GL_ARRAY_BUFFER,primitive.vertices.size()*sizeof(Vertex),primitive.vertices.data(),
+                       primitive.skin.nodes.empty()?GL_STATIC_DRAW:GL_DYNAMIC_DRAW);
+          glGenBuffers(1,&batch.indices);glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,batch.indices);
+          glBufferData(GL_ELEMENT_ARRAY_BUFFER,primitive.indices.size()*sizeof(std::uint16_t),primitive.indices.data(),GL_STATIC_DRAW);
+          check("Source MVP decor buffer upload");
+        }
+      }
+
+      const auto root_id=decor.xrefobject+"-node";
+      const auto root_matches=std::count_if(found->resource.scene.graph.begin(),found->resource.scene.graph.end(),
+        [&](const auto& node){return node.id==root_id;});
+      if(root_matches!=1)throw std::runtime_error("Source MVP xrefobject root is absent or ambiguous: "+root_id);
+      const auto root=std::find_if(found->resource.scene.graph.begin(),found->resource.scene.graph.end(),
+        [&](const auto& node){return node.id==root_id;});
+      const auto root_index=static_cast<unsigned>(root-found->resource.scene.graph.begin());
+      if(std::none_of(found->resource.primitives.begin(),found->resource.primitives.end(),
+          [&](const auto& primitive){return item_node_below(found->resource,primitive.node,root_index);}))
+        throw std::runtime_error("Source MVP xrefobject root has no renderable primitive: "+root_id);
+      ObjectActor instance(record);instance.identity=0;instance.source_root_node_id=root_id;
+      instance.source_module_index=decor.module_index;instance.source_record=decor.source_record;
+      instance.visual_root=root_index;found->instances.push_back(std::move(instance));
+    }
      auto itemdrops_bytes=read(assets,"itemdrops.bdae","actors");
      if(!dh2::objects::load_resource(itemdrops_bytes.data(),itemdrops_bytes.size(),
                                      nullptr,0,candidate_itemdrops,error))
@@ -3718,7 +3802,15 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       prince_attack_clips=std::move(candidate_player_clips);prince_animation_bank=std::move(candidate_bank);
     }
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player properties | %s | HP %d | MP %d | checksum %016llx | attempts %u | attacking %d",character_table.names.at(prince_combat.character_class).c_str(),prince_combat.properties.resolved[36],prince_combat.properties.resolved[41],static_cast<unsigned long long>(snapshot_checksum(prince_combat.properties.resolved)),prince_combat.attempts,int(prince_state.current==5));
-    for(const auto& group:object_groups)for(const auto& object:group.instances){monsters+=object.kind==1;decors+=object.kind==2;object_triangles+=group.resource.triangles;object_draws+=group.draws.size();}
+    for(const auto& group:object_groups)for(const auto& object:group.instances){
+      monsters+=object.kind==1;decors+=object.kind==2;
+      for(std::size_t i=0;i<group.draws.size();++i){
+        const auto& primitive=group.resource.primitives[i];
+        if(object.visual_root!=std::numeric_limits<unsigned>::max()&&
+           !item_node_below(group.resource,primitive.node,object.visual_root))continue;
+        object_triangles+=primitive.indices.size()/3;++object_draws;
+      }
+    }
     level=std::move(candidate);player=std::move(candidate_idle);walk_player=std::move(candidate_walk);current_scene=std::move(rest);
     actor_position=restore?previous:level.spawn;
     world_mode=true;resume_world=false;walking=false;move_x=move_y=0;heading=restore?previous_heading:source_spawn_heading;movement_steps=blocked_steps=0;
@@ -4292,6 +4384,8 @@ void draw(int width,int height){
   if(world_mode)for(auto& group:object_groups){
     std::string error;
     auto render_actor=[&](const ObjectActor& instance,SpawnOwner* owner){for(unsigned i=0;i<group.draws.size();++i){const auto& primitive=group.resource.primitives[i];const auto& batch=group.draws[i];
+      if(instance.visual_root!=std::numeric_limits<unsigned>::max()&&
+         !item_node_below(group.resource,primitive.node,instance.visual_root))continue;
       const auto& scene=owner?owner->scene:group.resource.scene;
       const auto& vertices=owner?owner->render_vertices.at(i):primitive.vertices;
       if(!primitive.skin.nodes.empty()){

@@ -2,7 +2,13 @@
 
 ## Current Android checkpoint - 2026-10-07
 
-Latest local APK: `port/android-native/app/build/outputs/apk/debug/app-debug.apk`, 154,777,075 bytes, SHA-256 `FEED7D19DA6B6FCB1F8B2E20CA37BDACBC2CF48C3413ECFE36C2CA94C1D2C6A9`. API 37 ARM64/x86_64 build and debug signature verify. Runtime imports SWAMP's original `.mlx` and nine MGPs to rebuild translation-only DWLD and supported SPWN; host audits match both checked-in descriptors byte-for-byte (SPWN: 448 bytes, IDs 0/3/13; duplicate IDs rejected). The APK packages those source inputs. It still uses checkpoint BRES/DACT and has no MGP/MVP object factories or live SWAMP gameplay. Campaign systems and source save writes remain open.
+Latest local APK: `port/android-native/app/build/outputs/apk/debug/app-debug.apk`, 154,832,147 bytes, SHA-256 `E9207AD769200E52CC9CB6B3FFBD911A90E5B1C72EC9111108F4179D41B95CAB`. API 37 ARM64/x86_64 build; v2 signature verifies. Runtime imports SWAMP's original `.mlx`, nine MGPs and nine MVPs to rebuild translation-only DWLD, supported SPWN, five direct-monster DACT rows, and ten unconditional static Decor instances. Host audits match DACT byte-for-byte and validate all ten MVP identities/transforms plus five visible roots in the shared corpse BDAE; condition/script/root/extra-row mutations fail closed. `TemplateDefs-node` prototypes are filtered before object material binding. This is compile/package and host-audit evidence only: live SWAMP rendering, source BRES, remaining MGP/MVP records, Character factories/AI and campaign systems remain open.
+
+IDA confirms the source MGP path `Level::_LoadFromXML` → `ObjectManager::LoadFromXML` / `GetNewObject`; five of 50 SWAMP Character records meet the direct-monster DACT subset and join `charpropsname` to CharacterTable → ModelFile dictionary. DACT is a visual projection: original `Character::InitPost`, conditions, AI and Level frame lifecycle are not connected.
+
+IDA confirms plain "monster" selects `AISExternal`. The shortest live enemy milestone is one Crypt Ghost pursuit loop: advance CharAI once per actor, route source event 9 through the existing Lua session, then bind target/HeadTo/MoveTo to the existing SpawnOwner path and root-motion owners. These frame and target bindings are still missing; Attack/Stop, death callbacks and enemy loot follow later.
+
+Published checkpoint before this build: [release page](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-swamp-source-mgp-2026-10-07), [direct APK](https://github.com/Noamcelermajer/DH_sc/releases/download/native-swamp-source-mgp-2026-10-07/Dungeon-Hunter-2-native-swamp-source-mgp-api37-debug.apk).
 
 
 ## Inputs and identities
