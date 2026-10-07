@@ -41,6 +41,7 @@
 #include "vitals.hpp"
 #include "combat_events.hpp"
 #include "combat_result.hpp"
+#include "melee_pipeline.hpp"
 #include "../../../../../game-data/player_equipment_queries_live_v1.hpp"
 #include "health.hpp"
 #include "combat_application.hpp"
@@ -3150,12 +3151,19 @@ void apply_actor_to_player(ObjectActor& attacker,const dh2::data::CombatEventAct
  // Original SM_IsIdle(false) accepts both; do not suppress its hit reaction
  // merely because movement input is held. Full original FSM producers remain pending.
  const bool idle=dh2_character_state_is_idle(prince_state.current,0)==1;
- dh2::data::CombatantView av{attacker.properties.resolved.data(),-1,-1,0,0,0,5,attacker.combat_state.combo_hits},dv{prince_combat.properties.resolved.data(),-1,-1,0,0,0,prince_state.current,prince_combat.life.combo_hits};
- dh2::data::CombatResult result;dh2::data::MonsterApplication applied;auto ap=dh2::data::property_view(actor_property_rules,attacker.properties),dp=dh2::data::property_view(actor_property_rules,prince_combat.properties);
+ auto ap=dh2::data::property_view(actor_property_rules,attacker.properties),dp=dh2::data::property_view(actor_property_rules,prince_combat.properties);
+ dh2::data::melee_pipeline::Owner source_attacker{&ap,&attacker.combat_state,-1,-1,0,0,0,5};
+ dh2::data::melee_pipeline::Owner source_player{&dp,&prince_combat.life,-1,-1,0,0,0,prince_state.current};
  const unsigned aggro_facts=dh2::data::aggro_owner_player|(attacker.combat_state.dead?dh2::data::aggro_target_dead:0u);
  CombatAggroBeforeHit aggro{&prince_combat.aggro,&attacker.aggro,prince_character.identity(),attacker.identity,aggro_facts};
- const dh2::data::MonsterApplicationRequest request{&result,&ap,&dp,&attacker.combat_state,&prince_combat.life,&add_combat_threat_before_hit,&aggro};
- if(dh2_combat_melee(&result,&av,&dv,&combat_random,action.offhand,0)||dh2_combat_apply_monster_to_player(&applied,&request,idle)){__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Player defender application failed");enabled=false;return;}
+ const dh2::data::melee_pipeline::Request request{
+     &source_attacker, &source_player, &combat_random,
+     static_cast<std::uint32_t>(action.offhand),
+     static_cast<std::uint32_t>(idle),
+     &add_combat_threat_before_hit, &aggro};
+ dh2::data::melee_pipeline::Exchange exchange;
+ if(dh2::data::melee_pipeline::monster_to_player(&request,&exchange)!=dh2::data::melee_pipeline::Status::complete){__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Player defender application failed");enabled=false;return;}
+ auto& result=exchange.result;auto& applied=exchange.application;
  ++combat_hits;++prince_combat.received;
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Prince damage received | attacker %s | attempt %u | result %d %d %d %d %d %d %u %u %d %d | HP %d %d | dead %u | combo %u | RNG %u %u | statuses %u | low health armed %u | cue %u | checksum %016llx",attacker.name.c_str(),prince_combat.received,result.amount,result.dot_element,result.dot_duration,result.dot_amount,result.hp_leech,result.mp_leech,result.outcomes,result.mask,result.weapon_category,result.element,applied.health.before,applied.health.after,prince_combat.life.dead,attacker.combat_state.combo_hits,combat_random.seed,combat_random.calls,applied.status_requests,prince_combat.life.low_health_armed,applied.health.low_health_cue,static_cast<unsigned long long>(snapshot_checksum(prince_combat.properties.resolved)));
  if(applied.health.low_health_cue)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Player low health request | HP %d | maximum %d | audio pending",applied.health.after,prince_combat.properties.resolved[38]);

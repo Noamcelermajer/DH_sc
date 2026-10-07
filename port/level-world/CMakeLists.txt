@@ -183,6 +183,7 @@ target_sources(dh2_level_world PRIVATE character_ai_events.cpp player_enemy_kill
  character_give_xp_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_distribute_xp_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_attack_geometry.cpp)
+target_sources(dh2_level_world PRIVATE loot_pickup_quest_tail_v10.cpp)
 target_include_directories(dh2_level_world PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_compile_options(dh2_level_world PRIVATE -Wall -Wextra -fno-fast-math -ffp-contract=off)
 target_link_libraries(dh2_level_world PUBLIC dh2_engine_skinning dh2_game_data dh2_box2d_201 PRIVATE dh2_script_runtime)
@@ -400,4 +401,9 @@ else()
  target_link_libraries(inspect_pose PRIVATE dh2_level_world)
  add_executable(player_combat_audit tests/player_combat.cpp)
  target_link_libraries(player_combat_audit PRIVATE dh2_level_world)
+ add_executable(loot_pickup_quest_tail_v10_audit
+  tests/loot_pickup_quest_tail_v10.cpp loot_pickup_quest_tail_v10.cpp)
+ target_compile_features(loot_pickup_quest_tail_v10_audit PRIVATE cxx_std_17)
+ target_compile_options(loot_pickup_quest_tail_v10_audit PRIVATE
+  -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
 endif()
