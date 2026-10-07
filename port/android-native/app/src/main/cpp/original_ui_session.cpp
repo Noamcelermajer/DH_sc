@@ -576,7 +576,7 @@ struct OriginalUiSession::Impl {
         std::int32_t slot=-1;
         if(!self.runtime.request_start_game(self.runtime.context,numeric,difficulty,slot,error))return false;
         self.launch_requests.push_back(slot);
-        __android_log_print(ANDROID_LOG_INFO,tag,"Authored NativeStartGame request queued | selected slot %d | numeric difficulty %d | requested difficulty %d | development Crypt continuation | delivery unwinds before world load",slot,numeric,difficulty);
+        __android_log_print(ANDROID_LOG_INFO,tag,"Authored NativeStartGame request queued | selected slot %d | numeric difficulty %d | requested difficulty %d | development handoff | delivery unwinds before world load",slot,numeric,difficulty);
         return true;
     }
     static bool native_action(void* context,const char* name,const gameswf::fn_call& fn,std::string& error) {

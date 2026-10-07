@@ -1,8 +1,11 @@
 #include "crypt_mgx_connectivity_v1.hpp"
+#include "crypt_mgx_placement_v1.hpp"
 
 #include <cerrno>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
+#include <limits>
 #include <map>
 #include <utility>
 
@@ -46,6 +49,45 @@ bool equals_ascii_case_insensitive(std::string_view first, std::string_view seco
   return true;
 }
 
+bool compute_source_cell_position(const CryptMgxModuleV1& module,
+                                  CryptMgxExitV1& exit) noexcept {
+  if (!module.has_grid_geometry || !exit.has_raw_position) return false;
+  const CryptMgxGridGeometryV1 geometry{
+      module.source_unit_width, module.source_unit_height,
+      module.block_width, module.block_height};
+  CryptMgxExitCellV1 cell;
+  if (!crypt_mgx_exit_position_to_cell_v1(
+          geometry, exit.position_x, exit.position_y, exit.position_z, cell)) {
+    return false;
+  }
+  exit.cell_x = cell.x;
+  exit.cell_y = cell.y;
+  exit.has_cell_position = true;
+  return true;
+}
+
+bool parse_source_position(std::string_view source,
+                           CryptMgxExitV1& exit) {
+  float* const components[] = {&exit.position_x, &exit.position_y, &exit.position_z};
+  std::size_t cursor = 0;
+  for (float* component : components) {
+    // The original StrToObj uses strtok with ',' and strtod. strtok collapses
+    // adjacent delimiters, and missing tail components retain their zeros.
+    while (cursor < source.size() && source[cursor] == ',') ++cursor;
+    if (cursor == source.size()) break;
+    const auto end = source.find(',', cursor);
+    const auto length = (end == std::string_view::npos ? source.size() : end) - cursor;
+    const std::string token(source.substr(cursor, length));
+    const double parsed = std::strtod(token.c_str(), nullptr);
+    const float value = static_cast<float>(parsed);
+    if (!std::isfinite(value)) return false;
+    *component = value;
+    cursor = end == std::string_view::npos ? source.size() : end;
+  }
+  exit.has_raw_position = true;
+  return true;
+}
+
 class MgxXmlParser {
  public:
   explicit MgxXmlParser(std::string_view source) : source_(source) {}
@@ -63,6 +105,14 @@ class MgxXmlParser {
         !read_positive_double(root, "unit_height", module.unit_height)) {
       return false;
     }
+    module.source_unit_width = static_cast<float>(module.unit_width);
+    module.source_unit_height = static_cast<float>(module.unit_height);
+    if (!std::isfinite(module.source_unit_width) ||
+        !std::isfinite(module.source_unit_height) ||
+        module.source_unit_width <= 0.0f || module.source_unit_height <= 0.0f) {
+      return fail("MGX unit dimensions exceed source float range");
+    }
+    if (!read_grid_geometry(root, module)) return false;
 
     bool saw_closing_root = false;
     while (!saw_closing_root) {
@@ -96,7 +146,17 @@ class MgxXmlParser {
       if (module.exits.size() >= kMaxLinkExitsPerModule) {
         return fail("MGX link-exit count exceeds parser bound");
       }
-      module.exits.push_back({*object_name, *link_type, parsed_direction});
+      CryptMgxExitV1 parsed_exit{*object_name, *link_type, parsed_direction};
+      if (const auto* position = attribute(tag, "position")) {
+        if (!parse_source_position(*position, parsed_exit)) {
+          return fail("invalid source-float MGX link position");
+        }
+        if (module.has_grid_geometry &&
+            !compute_source_cell_position(module, parsed_exit)) {
+          return fail("MGX link position cannot be mapped to source grid cells");
+        }
+      }
+      module.exits.push_back(std::move(parsed_exit));
     }
 
     if (!skip_misc()) return false;
@@ -232,6 +292,29 @@ class MgxXmlParser {
     return true;
   }
 
+  bool read_grid_geometry(const XmlTag& tag, CryptMgxModuleV1& module) {
+    const auto* block_width = attribute(tag, "block_width");
+    const auto* block_height = attribute(tag, "block_height");
+    if (!block_width && !block_height) return true;
+    if (!block_width || !block_height) {
+      return fail("MGX grid geometry requires both block_width and block_height");
+    }
+
+    // IDA: MgxBlock::LoadFromXml calls TiXmlElement::QueryIntAttribute
+    // (0x5157f0), whose QueryIntValue uses sscanf("%d") (0x515798). That
+    // accepts the cached export spelling "1.0" as integer 1.
+    int parsed_width = 0;
+    int parsed_height = 0;
+    if (std::sscanf(block_width->c_str(), "%d", &parsed_width) != 1 ||
+        std::sscanf(block_height->c_str(), "%d", &parsed_height) != 1) {
+      return fail("invalid MGX integer block dimensions");
+    }
+    module.block_width = static_cast<std::int32_t>(parsed_width);
+    module.block_height = static_cast<std::int32_t>(parsed_height);
+    module.has_grid_geometry = true;
+    return true;
+  }
+
   static bool parse_direction(std::string_view source, DirectionV1& output) {
     if (source == "north") {
       output = DirectionV1::north;
@@ -260,6 +343,32 @@ bool opposite(DirectionV1 first, DirectionV1 second) noexcept {
     case DirectionV1::west: return second == DirectionV1::east;
   }
   return false;
+}
+
+bool derive_pair_origin(const CryptMgxExitV1& anchor,
+                        const CryptMgxExitV1& candidate,
+                        std::int32_t& origin_x,
+                        std::int32_t& origin_y,
+                        float& origin_z) noexcept {
+  if (!crypt_exits_compatible_v1(anchor, candidate) ||
+      !anchor.has_cell_position || !candidate.has_cell_position) {
+    return false;
+  }
+  const CryptMgxExitCellV1 anchor_cell{
+      anchor.cell_x, anchor.cell_y, anchor.position_z};
+  const CryptMgxExitCellV1 candidate_cell{
+      candidate.cell_x, candidate.cell_y, candidate.position_z};
+  const CryptMgxTileOriginV1 anchor_tile{};
+  CryptMgxTilePlacementV1 placement;
+  if (!crypt_mgx_try_spawn_placement_v1(anchor_tile, &anchor_cell,
+                                        candidate_cell, candidate.direction,
+                                        placement)) {
+    return false;
+  }
+  origin_x = placement.x;
+  origin_y = placement.y;
+  origin_z = placement.elevation;
+  return true;
 }
 
 }  // namespace
@@ -294,6 +403,28 @@ std::vector<CryptExitAdjacencyV1> enumerate_crypt_exit_adjacencies_v1(
         }
       }
     }
+  }
+  return result;
+}
+
+std::vector<CryptExitPlacementCandidateV1> enumerate_crypt_exit_placement_candidates_v1(
+    const std::vector<CryptMgxModuleV1>& modules) {
+  std::vector<CryptExitPlacementCandidateV1> result;
+  const auto topology = enumerate_crypt_exit_adjacencies_v1(modules);
+  result.reserve(topology.size());
+  for (const auto& edge : topology) {
+    const auto& anchor = modules[edge.first_module].exits[edge.first_exit];
+    const auto& candidate = modules[edge.second_module].exits[edge.second_exit];
+    CryptExitPlacementCandidateV1 placement;
+    if (!derive_pair_origin(anchor, candidate, placement.second_origin_x,
+                            placement.second_origin_y, placement.second_origin_z)) {
+      continue;
+    }
+    placement.first_module = edge.first_module;
+    placement.first_exit = edge.first_exit;
+    placement.second_module = edge.second_module;
+    placement.second_exit = edge.second_exit;
+    result.push_back(placement);
   }
   return result;
 }

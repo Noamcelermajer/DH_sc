@@ -8,6 +8,7 @@
 #include "modular_skin_catalog.hpp"
 #include "world.hpp"
 #include "../../../../../../port/level-world/crypt_module_bounds_registry_v1.hpp"
+#include "../../../../../../port/level-world/crypt_generated_spawnpoints_v1.hpp"
 #include "objects.hpp"
 #include "animation_tables.hpp"
 #include "animation_scheduler.hpp"
@@ -277,6 +278,10 @@ struct RuntimeLevelAssets {
  std::int32_t row=-1;std::string name="GOTHICUS_CRYPT_01",level_file="007_crypt_01.rule.xml";
  std::string descriptor="crypt01.dwld",bres="crypt.bdae",spawns="crypt01.spwn",objects="crypt01.dact";
  bool development_layout=true;
+};
+struct GeneratedWorldPayload {
+ std::vector<std::uint8_t> dwld_v1;
+ std::vector<std::uint8_t> spwn_v1;
 };
 PendingMenuStart pending_menu_start;
 std::optional<dh2::data::NativeStartGamePlanV1> active_native_start_plan;
@@ -1701,6 +1706,11 @@ std::vector<std::uint8_t> read(AAssetManager* assets,const std::string& name,con
   if(override_status==dh2::mods::Lookup::rejected)throw std::runtime_error(mod_error);
   if(override_status==dh2::mods::Lookup::loaded){__android_log_print(ANDROID_LOG_INFO,"DH2Native","Mod asset loaded | %s | bytes %zu",relative.c_str(),override_bytes.size());return override_bytes;}
   auto* a=AAssetManager_open(assets,relative.c_str(),AASSET_MODE_BUFFER);
+  if(!a&&folder=="actors"&&path.rfind("data/3d/",0)==0){
+    const auto original_relative="original-cache/"+path;
+    a=AAssetManager_open(assets,original_relative.c_str(),AASSET_MODE_BUFFER);
+    if(a)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Original-cache actor resource | %s",path.c_str());
+  }
   if(!a)throw std::runtime_error("Bundled asset missing: "+folder+"/"+name);
   const auto n=AAsset_getLength64(a);
   if(n<=0||n>32*1024*1024){AAsset_close(a);throw std::runtime_error("Texture exceeds size limit");}
@@ -1882,9 +1892,37 @@ bool select_menu_preview_slot(std::int32_t slot,bool force,std::string& error){
  error.clear();return true;
 }
 namespace {
+bool compile_packaged_crypt_spawnpoints(AAssetManager* assets,
+    const std::vector<std::uint8_t>& source_level,
+    std::vector<std::uint8_t>& output,std::string& error){
+ try{
+ struct Input {const char* source_path;const char* asset_name;};
+ static constexpr std::array<Input,8> inputs={{
+  {"data/iphone/3d/modules/crypt/mgp/crypt_cemetery_entrance_01.mgp","crypt_cemetery_entrance_01.mgp"},
+  {"data/iphone/3d/modules/crypt/mgp/crypt_straight_ns_01.mgp","crypt_straight_ns_01.mgp"},
+  {"data/iphone/3d/modules/crypt/mgp/crypt_corner_sw_02.mgp","crypt_corner_sw_02.mgp"},
+  {"data/iphone/3d/modules/crypt/mgp/crypt_corner_ne_02.mgp","crypt_corner_ne_02.mgp"},
+  {"data/iphone/3d/modules/crypt/mgp/crypt_t_sew_01.mgp","crypt_t_sew_01.mgp"},
+  {"data/iphone/3d/modules/crypt/mgp/crypt_deadend_e_01.mgp","crypt_deadend_e_01.mgp"},
+  {"data/iphone/3d/modules/crypt/mgp/crypt_corner_nw_02.mgp","crypt_corner_nw_02.mgp"},
+  {"data/iphone/3d/modules/crypt/mgp/crypt_straight_c_ns_01.mgp","crypt_straight_c_ns_01.mgp"}}};
+ std::vector<std::vector<std::uint8_t>> storage;storage.reserve(inputs.size());
+ std::vector<dh2::world::GeneratedMgpView> views;views.reserve(inputs.size());
+ for(const auto& input:inputs){
+  storage.push_back(read(assets,input.asset_name,"worlds"));
+  const auto& bytes=storage.back();
+  views.push_back({input.source_path,bytes.data(),bytes.size()});
+ }
+ if(!dh2::world::compile_generated_spawnpoints_v1(source_level.data(),source_level.size(),
+      "GOTHICUS_CRYPT_01","data/scene/x07_crypt_backup.mlx",views.data(),views.size(),output,error))
+  return false;
+ return true;
+ }catch(const std::exception& e){output.clear();error=e.what();return false;}
+}
+
 bool prepare_native_menu_start(std::int32_t slot,const PendingMenuStart& menu,
     AAssetManager* assets,dh2::data::NativeStartGamePlanV1& plan,
-    RuntimeLevelAssets& runtime,std::vector<std::uint8_t>& descriptor,std::string& error){
+    RuntimeLevelAssets& runtime,GeneratedWorldPayload& payload,std::string& error){
  auto character_data=read(assets,"character_properties_pyarray.bin","data");
  auto character_names=read(assets,"character_properties_pyarraynames.bin","data");
  auto character_schema=read(assets,"character_properties_pystructnames.bin","data");
@@ -1932,15 +1970,29 @@ bool prepare_native_menu_start(std::int32_t slot,const PendingMenuStart& menu,
  if(plan.level_row==41&&plan.level_name=="SWAMP"&&plan.level_file=="001_swamp.mlx"){
   runtime.descriptor="001_swamp.dwld";runtime.bres="data/3d/modules/swamp/swamp.bdae";
   runtime.spawns="001_swamp.spwn";runtime.objects="001_swamp.dact";runtime.development_layout=false;
-  descriptor=read(assets,runtime.descriptor,"worlds");
+  payload.dwld_v1=read(assets,runtime.descriptor,"worlds");
  }else if(plan.level_row==23&&plan.level_name=="GOTHICUS_CRYPT_01"&&
           plan.level_file=="007_crypt_01.rule.xml"){
   // Keep the existing play-tested room arrangement while the IDA-derived
   // procedural generator is still being implemented. This is explicitly a
   // development layout; it is not the source-generated campaign Crypt.
-  runtime.descriptor="crypt01.dwld";runtime.bres="crypt.bdae";
-  runtime.spawns="crypt01.spwn";runtime.objects="crypt01.dact";
-  runtime.development_layout=true;descriptor=read(assets,runtime.descriptor,"worlds");
+ runtime.descriptor="crypt01.dwld";runtime.bres="crypt.bdae";
+ runtime.spawns="crypt01.spwn";runtime.objects="crypt01.dact";
+  runtime.development_layout=true;payload.dwld_v1=read(assets,runtime.descriptor,"worlds");
+  // Rebuild the current authored Crypt SPWN from its packaged source MLX/MGPs.
+  // Keep the existing campaign sidecar authoritative unless the generated
+  // bytes match it exactly; no procedural layout or gameplay change is made.
+  try{
+   const auto source_level=read(assets,"x07_crypt_backup.mlx","worlds");
+   std::vector<std::uint8_t> generated_spawns;std::string spawn_error;
+   if(compile_packaged_crypt_spawnpoints(assets,source_level,generated_spawns,spawn_error)){
+    const auto packaged_spawns=read(assets,runtime.spawns,"worlds");
+    if(generated_spawns==packaged_spawns)payload.spwn_v1=std::move(generated_spawns);
+    else __android_log_print(ANDROID_LOG_WARN,"DH2Native","Crypt SPWN regeneration differs from packaged fixture; using packaged sidecar");
+   }else __android_log_print(ANDROID_LOG_WARN,"DH2Native","Crypt SPWN regeneration unavailable; using packaged sidecar | %s",spawn_error.c_str());
+  }catch(const std::exception& e){
+   __android_log_print(ANDROID_LOG_WARN,"DH2Native","Crypt SPWN regeneration input unavailable; using packaged sidecar | %s",e.what());
+  }
  }else{
   error="Selected LevelList row has no native source loader yet: row "+
       std::to_string(plan.level_row)+" ("+plan.level_name+" / "+plan.level_file+")";return false;
@@ -1968,8 +2020,8 @@ std::string start_menu_game(std::int32_t slot,AAssetManager* assets){
   const PendingMenuStart request=pending_menu_start.valid&&pending_menu_start.slot==assigned
       ?pending_menu_start:PendingMenuStart{assigned,false,0,true};
   dh2::data::NativeStartGamePlanV1 plan;RuntimeLevelAssets runtime;
-  std::vector<std::uint8_t> descriptor;
-  if(!prepare_native_menu_start(assigned,request,assets,plan,runtime,descriptor,error))
+  GeneratedWorldPayload payload;
+  if(!prepare_native_menu_start(assigned,request,assets,plan,runtime,payload,error))
    return "Start Game failed: "+error;
   pending_menu_start={};active_native_start_plan=plan;active_level_assets=std::move(runtime);
   menu_gameplay_slot=assigned;
@@ -1977,7 +2029,8 @@ std::string start_menu_game(std::int32_t slot,AAssetManager* assets){
    plan.slot,plan.level_row,plan.level_name.c_str(),plan.level_file.c_str(),plan.entry_point,
    unsigned(plan.load_spawn_flag),plan.difficulty_for_level,plan.requested_difficulty_for_load,
    active_level_assets.development_layout?"development":"source-authored-static");
-  const auto result=load_world(descriptor.data(),descriptor.size(),assets);
+  const auto result=load_world(payload.dwld_v1.data(),payload.dwld_v1.size(),assets,
+      payload.spwn_v1.empty()?nullptr:payload.spwn_v1.data(),payload.spwn_v1.size());
   if(result.rfind("World load failed:",0)==0){deactivate();menu_gameplay_slot=-1;active_native_start_plan.reset();active_level_assets=RuntimeLevelAssets{};}
   return result;
  }catch(const std::exception& e){pending_menu_start={};return std::string("Start Game failed: ")+e.what();}
@@ -3105,7 +3158,14 @@ void initialize_native_monster_scripts(AAssetManager* assets) {
    __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native monster timer retained | %s | slot %u | event %x | duration %u | elapsed %u | active %u | paused %u",actor.name.c_str(),timer.id,unsigned(timer.event),timer.duration_ms,timer.elapsed_ms,unsigned(timer.active),unsigned(timer.paused));
   }
  }
- if(initialized!=2)throw std::runtime_error("Native Ghost initialization count differs");
+ // The development Crypt fixture historically supplied exactly two eligible
+ // Ghosts. NativeStartGame can select other source-authored levels (including
+ // the initial SWAMP row), whose valid actor set is different or still empty;
+ // each eligible owner is checked above, so a Crypt-only count must not abort
+ // an otherwise valid level load.
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+     "Native Ghost initialization census | initialized %u | level row %d | source-level actor set",
+     initialized,active_level_assets.row);
  const auto& counters=native_debug->counters();
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Debug persistence | loaded %u | switches %zu | read opens %llu | read closes %llu | saves %llu | write closes %llu | IO errors %llu | app-private real file",unsigned(native_debug->globals().loaded),native_debug->runtime().switches().size(),static_cast<unsigned long long>(counters.read_opens),static_cast<unsigned long long>(counters.read_closes),static_cast<unsigned long long>(counters.save_completions),static_cast<unsigned long long>(counters.write_closes),static_cast<unsigned long long>(counters.io_errors));
 }
@@ -3172,7 +3232,9 @@ std::string debug_player_death(){
  }
 }
 
-std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetManager* assets){
+std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetManager* assets,
+                       const std::uint8_t* generated_spawnpoints,
+                       std::size_t generated_spawnpoints_size){
   std::vector<Draw> environment;std::vector<GLuint> textures;
   RuntimeLevelAssets level_assets=active_level_assets;
   if(!active_native_start_plan&&descriptor){
@@ -3209,6 +3271,13 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       throw std::runtime_error("Player scene retention failed: "+retention_error);
     if(!restore){prince_skills.reset();prince_source_ai.reset();}
     std::vector<std::uint8_t> source_mlx_bytes,source_layout_bytes,source_spawn_bytes;
+    if(generated_spawnpoints||generated_spawnpoints_size){
+      if(!generated_spawnpoints||!generated_spawnpoints_size||
+         generated_spawnpoints_size>16+512*144)
+        throw std::runtime_error("Generated SPWN payload is incomplete or exceeds the runtime limit");
+      source_spawn_bytes.assign(generated_spawnpoints,
+                                generated_spawnpoints+generated_spawnpoints_size);
+    }
     std::vector<std::vector<std::uint8_t>> source_mgp_bytes;
     std::vector<dh2::world::SourceMgpView> source_mgps;
     std::vector<std::vector<std::uint8_t>> source_mvp_bytes;
@@ -3897,6 +3966,11 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Objects ready | monsters %u | decors %u | resources %zu | instance draws %u | triangles %u | character records %zu | model entries %zu | idle preview only",monsters,decors,object_groups.size(),object_draws,object_triangles,character_table.rows.size(),model_table.values.size());
     if(level.native_floor)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Native floors ready | records %zu | graph nodes %u | graph edges %u | selector collision controls height",level.native_floor->records.size(),level.native_floor->graph.node_count,level.native_floor->graph.edge_count);
     if(level.native_floor&&level.native_floor->sewn)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Native floor links ready | neighbour relations %u | validation references %u | graph-node search ready",level.native_floor->sewing.link_count,level.native_floor->graph.validation_count);
+    // Exhaustive route, collision, and avoidance probes are retained for
+    // device diagnostics but are not part of world construction. Run them
+    // only in explicit diagnostic builds; the production path uses the same
+    // selected libraries through gameplay owners and focused host tests.
+#if defined(DH2_ENABLE_NATIVE_NAV_PROBES)
     if(level.native_floor&&level.native_floor->sewn){
       auto& floors=*level.native_floor;const auto& graph=floors.graph;
       std::vector<unsigned> first(floors.records.size()),last(floors.records.size()),path(graph.node_count);unsigned pairs=0,successful=0,segments=0;std::uint64_t digest=0xcbf29ce484222325ull;
@@ -3996,6 +4070,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native actor producer probe | floors %u | registered %u | physical radius updates %u | state %016llx | physical construction and controller pending",producer_floors,producer_registered,physical_radius_updates,static_cast<unsigned long long>(digest));
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native heading control | player movement and melee facing use recovered source | UpdatePath rotation subobjects and genuine physics active");
     }
+#endif
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","World ready | rooms %u | visual draws %zu | navigation triangles %zu | idle tracks %u | walk tracks %u | position %.4f %.4f %.4f",level.rooms,draws.size(),level.floor.size(),player.track_count(),walk_player.track_count(),actor_position[0],actor_position[1],actor_position[2]);return std::string(report)+(combat_resumed?"\nNative combat resumed":"");
   }catch(const std::exception& e){{std::vector<GLuint> no_textures;release(candidate_itemdrop_draws,no_textures);}deactivate();release_objects(candidate_groups);release(environment,textures);__android_log_print(ANDROID_LOG_ERROR,"DH2Native","World load failed: %s",e.what());return std::string("World load failed: ")+e.what();}
 }

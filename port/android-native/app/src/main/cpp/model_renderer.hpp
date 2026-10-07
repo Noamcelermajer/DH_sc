@@ -36,7 +36,9 @@ bool class_scene_input_enabled();
 std::string load_class_scene(AAssetManager*);
 bool select_class_scene(int index,int dt_ms,std::string&);
 void draw_class_scene(int width,int height);
-std::string load_world(const std::uint8_t*,std::size_t,AAssetManager*);
+std::string load_world(const std::uint8_t*,std::size_t,AAssetManager*,
+                       const std::uint8_t* generated_spawnpoints=nullptr,
+                       std::size_t generated_spawnpoints_size=0);
 void move_axis(float x,float y);
 void focus_object(int index);
 std::string set_object_state(int index,const std::string& state);

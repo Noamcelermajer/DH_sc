@@ -54,13 +54,29 @@ target_sources(dh2_level_world PRIVATE character_ai_frame.cpp)
 # native library establishes the 64-bit build boundary; live actor services,
 # candidate ownership and full AIS lifecycle must still be connected by the
 # owning game runtime. Reuse this target's existing Adam Lua core exactly once.
+# The portable Crypt generation, serialization, DACT and SpawnPoint kernels
+# below are likewise ABI-selected; NativeStartGame still uses the fixed layout
+# until its module asset/object activation path is connected.
 target_sources(dh2_level_world PRIVATE
  character_aggro_delay.cpp character_ai_turn.cpp
  character_aggro_target_search.cpp character_aggro_candidate_events.cpp
  character_enemy_spotted.cpp monster_external_script_session.cpp
  character_ai_set_target.cpp character_ai_relations.cpp character_ai_in_combat.cpp
  character_aggro_acquisition_prefix.cpp character_ai_sight.cpp ghost_ai_session.cpp character_monster_retarget.cpp
- source_random_lifecycle_v1.cpp ../random-level/crypt_mgx_connectivity_v1.cpp
+ source_random_lifecycle_v1.cpp crypt_room_zone_owner_v1.cpp
+ object_manager_runtime_owner_v1.cpp crypt_room_zone_manager_bridge_v1.cpp
+ crypt_generated_spawnpoints_v1.cpp
+ ../random-level/native_rule_plan_v1.cpp
+ ../random-level/crypt_mgx_connectivity_v1.cpp
+ ../random-level/crypt_mgx_placement_v1.cpp
+ ../random-level/crypt_candidate_selection_v1.cpp
+ ../random-level/crypt_rule_distribution_v1.cpp
+ ../random-level/crypt_path_runtime_v1.cpp
+ ../random-level/crypt_root_rule_runtime_v1.cpp
+ ../random-level/crypt_rule_generation_runtime_v1.cpp
+ ../random-level/crypt_tile_map_v1.cpp
+ ../random-level/crypt_generated_layout_v1.cpp
+ ../random-level/crypt_generated_dact_v1.cpp
  ../random/random.c ../lua-numeric/numeric.c)
 
 target_sources(dh2_level_world PRIVATE character_ai_attack.cpp)

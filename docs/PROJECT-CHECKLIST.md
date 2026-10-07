@@ -5,9 +5,9 @@ Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,841,367 bytes, SHA-256 `DFB31C02F713770BDBEB2D09EA04B831300EA4E1B554356055EA9D783759FBF1`). API 37 ARM64/x86_64 build; 16 KiB ZIP alignment and v2 signature verify. No emulator/device test was run on this APK. Build with `-Pdh2SourceRoot=<short mapped checkout>`.
+**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (154,175,423 bytes, SHA-256 `EDC0CA6CD4B690A457709F6C80805E07CE4370A600F20265043DA9748465534B`). API 37 ARM64/x86_64 build; 16 KiB ZIP alignment, ELF load alignment and signature verify. Android 17/API 37 smoke reached source-default row 41 SWAMP (9 rooms, 5 Monsters, HUD and actor/timer frames). The Crypt-targeted harness timed out at row 41; Crypt row 23 was not tested. Build with `-Pdh2SourceRoot=<short mapped checkout>`.
 
-**Latest published APK:** [Native SWAMP static Decor checkpoint — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-swamp-source-decors-2026-10-07) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-swamp-source-decors-2026-10-07/Dungeon-Hunter-2-native-swamp-decors-api37-debug.apk)). This debug prerelease includes ten source-selected static Decor instances; live SWAMP rendering/gameplay is not verified.
+**Latest published APK:** [Native source world-kernels checkpoint — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-source-world-kernels-api37-2026-10-07) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-source-world-kernels-api37-2026-10-07/app-debug.apk)). Debug prerelease; the smoke result and Crypt limitation are recorded above and in the release notes.
 
 Prior live evidence applies to the previous APK from [commit `d4142762`](https://github.com/Noamcelermajer/DH_sc/commit/d4142762): API37/16KiB emulator tests passed all three class create/reopen/Back/Home-resume flows. A bounded Crypt smoke verified six player hit events with enemy AI disabled. A separate live exchange verified touch movement, seven enemy hits, and a 57-damage ordinary player attack. Neither run tested loot or progression. [Live exchange](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json), [menu](../port/android-native/reports/menu-ui-runtime-smoke-62557f03.json), [combat](../port/android-native/reports/character-combat-smoke-62557f03.json).
 
@@ -34,14 +34,14 @@ still require live gameplay integration. All final completion gates remain open.
 | Inputs, Adam's work and research | 12 | 3 |
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
-| World, physics, navigation and factories | 16 | 10 |
-| Character properties, equipment and state | 32 | 6 |
-| Lua, skills and enemy AI | 50 | 14 |
-| Combat, death, loot and progression | 18 | 8 |
+| World, physics, navigation and factories | 29 | 9 |
+| Character properties, equipment and state | 36 | 8 |
+| Lua, skills and enemy AI | 53 | 15 |
+| Combat, death, loot and progression | 23 | 12 |
 | Quests, campaign, UI, audio and saves | 40 | 11 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **192** | **76** |
+| **Total scoped tasks** | **217** | **83** |
 
 Prior verified source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. Its `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`.
 
@@ -127,9 +127,10 @@ Historical reports retain their original APK identities and test scopes.
 - [x] Import SWAMP row 41's original `.mlx`, nine MGPs and nine MVPs at runtime to rebuild DWLD/SPWN, five direct-monster DACT rows and ten static Decor instances sharing one BDAE with source-selected node roots. DACT matches byte-for-byte; both focused host audits pass; API 37 ARM64/x86_64 APK builds and signature verifies. Conditional/animated objects, other source rows, full Character lifecycle/AI and live rendering remain open.
 - [x] Package all 35 active Crypt rule MGP/MVP references from the original cache with source path, size and SHA-256 provenance; APK entries verify against all 35 hashes.
 - [x] Add the eight-module Crypt backup-MLX root-bounds registry to the Android world-load path. Host probe: 146 scene nodes/127 geometry instances; API 37 ARM64/x86_64 build passes. This does not create Module/RoomZone owners, source memberships or procedural layouts.
-- [x] Parse all 21 cached Crypt MGX definitions and derive byte-exact-link/opposite-direction exit adjacency. Host fixture: 201 checks, 35 exits and 160 directed candidate-exit records; selected into `dh2_level_world`. Exit positions remain unmodeled.
+- [x] Parse all 21 Crypt MGX definitions, retain 35 source-float exits/cells and derive 160 directed candidates; host fixture passes 395 checks. MGX-only placement passes 22 checks; MGP/MVP do not determine the footprint.
+- [x] Audit 22 active Crypt rule entries: 21 exact triples resolve to listed MGX plus referenced MGP/MVP/MVX; MGX links and MVX geometry roots parse and agree.
 - [x] Verify the selected-library DACT/world actor regression resolves the five source-authored SWAMP Monsters and model dictionary entries.
-- [ ] Start the current SWAMP APK on Android and verify actor load, placement and animation in gameplay; no live run has been made.
+- [ ] Verify actor load, visible placement and animation in gameplay. One Android 17 smoke reached source-default row 41 SWAMP (9 rooms, 5 Monsters, HUD and actor/timer frames), but the Crypt harness timed out because it expected row 23; visible animation, AI and combat were not verified.
 - [x] Parse source `floortypes` with IDA-confirmed duplicate/key/quote behavior, apply native type masks, and make default floor snapping skip void/wall in source order; unknown tags such as `sand` add no mask.
 - [x] Resolve 97 of its 166 object records: 84 scenery objects and 13 monsters.
 - [x] Reconstruct bounded navigation graph/search/path/smoothing/avoidance and floor producers.
@@ -153,7 +154,13 @@ Historical reports retain their original APK identities and test scopes.
 - [ ] Resolve weighted-template actors and the separate GhostAmbushHallway spawn path.
 - [ ] Finish environment bodies, collision ownership, all module seams and other object types.
 - [ ] Finish all trigger/script commands with real native services.
-- [ ] Reconstruct procedural/random-level generation and original room/module selection. MGX connectivity is implemented, but exit positions, MGP fit/Tile::TrySpawn placement, occupancy/backtracking, source `gDistributions` ordering and MLX serialization remain open.
+- [x] Snapshot all 15 supported `gDistributions` rows and add the Path length/direction helper. Focused host tests: 57 distribution checks, 33 Path checks; all 2,412 row bytes and 15 terminators match IDA.
+- [x] Model exact list/block candidate filtering, RootRule selection and recursive `Rule::Impl::Step/OneStep`; 16, 15 and 13 focused checks pass, including nested rollback/retry order.
+- [x] Model source Array2d occupancy, growth, placement order and rollback; 26 focused host checks pass.
+- [x] Add host ObjectManager identity/order and RoomZone enrollment bridge kernels; focused checks pass and the Player no-room list remains separate. Native Android owner registration/activation is still open.
+- [x] Serialize source-shaped `LevelConfig` plus flat preorder Module GameObjects and DWLD v1; the actual source world importer accepts the output (18 checks).
+- [x] Compile generated Crypt SpawnPoints from source-ordered module MGPs to SPWN v1; fixture IDs 0 and 2 preserve module/order/transforms. Conditions, scripts and duplicate IDs fail closed.
+- [ ] Connect exact Crypt assets/seed and rule output to Android: generate one explicit-seed module id/origin/MGP/MVP record, import its objects, apply existing scene-root/RoomZone bounds helpers, then pass owned DWLD+SPWN through `NativeStartGame`/`load_world`. Full factories, conditions and Module/ObjectManager/PFWorld/GSLevel lifecycle remain open; the APK still loads the fixed eight-room layout.
 - [ ] Connect authored and generated levels to the actual level stack and loading lifecycle.
 - [ ] Complete exits, level transitions, hubs, fast travel and return-to-level behavior.
 
@@ -297,12 +304,14 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
   `VisualObject::SyncVisibility` (`0x4713d0`) via `+0x2d8`, then
   `ObjectBase::setUpdating` (`0x33dcf0`) via vtable `+0x3c`; adapter names and
   fields corrected; 22 original ARM cases pass with zero mismatches.
-- [ ] Connect authentic `Module::InitPost` root bounds → `RoomZone` creation →
+- [ ] Connect authentic `Module::InitPost` root bounds → native `RoomZone` creation →
   `InitObjectList`/`AddInitialObject`, then source zonability, InZone and object
   ownership. Start from the packaged 8-module `x07_crypt_backup.mlx` matching
   `crypt01.dwld`; room-7 DACT rows 78/79 already own the native Ghost VM path.
-  `SetPosition(center,true)` must update absolute bounds from relative bounds
-  before enrollment. The existing kernels have no live owner.
+  Host `crypt_room_zone_owner_v1` now models ordered bounds/enrollment and passes
+  its focused test; it is not registered with ObjectManager and does not cover
+  PlayerManager no-room or activation/streaming. Keep source InZone unset until
+  native ownership is connected.
 - [ ] Bind current-state constructor/registry/transition ownership and actual
   OnUpdate/state callbacks to the native AIS frame.
 - [ ] Supply original Character name/raw-death producers for all actor types.
@@ -394,7 +403,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Reuse Adam v69's original menu, name/class selection and real Single Player screen; create and reopen Warrior/Rogue/Mage profiles into development Crypt on API37/16KiB.
 - [x] Render original HP/MP/XP timelines from the retained live player property sheet for all three classes, after the single world update/render.
 - [x] Verify menu/world Back, occupied-slot cold restart and Home/resume through actual UI input; preserve and restore existing emulator saves.
-- [x] Resolve the IDA `NativeStartGame` plan against the actual 51-row table and carry authored Android menu requests through it: 27 host assertions pass; row 41 selects bounded static SWAMP and row 23 Crypt development layout. Android ARM64/x86_64 compile passes; live SWAMP start is unverified.
+- [x] Resolve the IDA `NativeStartGame` plan against the actual 51-row table and carry authored Android menu requests through it: 27 host assertions pass; row 41 selects bounded static SWAMP and row 23 Crypt development layout. Android ARM64/x86_64 compile passes; API 37 smoke reached row 41 SWAMP, while row 23 Crypt remains untested.
 - [ ] Apply source clear-spawn/save ordering to the canonical Save and replace the direct renderer-loader shortcut with `Application::LoadLevel`/`GSLevel`/`Level` transition and source parser/factory owners.
 - [ ] Complete original NativeStartGame/Application.LoadLevel, difficulty/location/quest handoff and full gameplay startup.
 - [ ] Restore title/menu flow, character creation/selection, HUD, inventory, skill and quest interfaces.
