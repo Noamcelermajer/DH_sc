@@ -1,0 +1,363 @@
+{
+  "schema_version": 1,
+  "description": "Selected exact ARM assembly listings with original source line ranges and SHA-256 digests of matching original ELF function byte ranges.",
+  "elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "elf_class": 32,
+    "endianness": "little",
+    "machine": 40
+  },
+  "assembly_excerpt": {
+    "path": "animation-functions.asm",
+    "sha256": "d3b968bf142713c8c3aa11b7e9179c52920a717a5473b80ad3d64378745c71d0"
+  },
+  "functions": [
+    {
+      "name": "get_output",
+      "claim": "SAnimationAccessor::getOutput(int); output-array view evidence",
+      "original_symbol": "_ZNK6glitch7collada18SAnimationAccessor9getOutputEi",
+      "demangled": "glitch::collada::SAnimationAccessor::getOutput(int) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00669e24",
+      "elf_size_bytes": 32,
+      "elf_file_offset": "0x00669e24",
+      "function_slice_sha256": "ebbae3803b8841315855c8aeb748d80121405fb42b1082a214e3feffb0dc5fe7",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_SAnimationAccessor-dd6bb90af5fe-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 26,
+        "end": 38
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 9,
+        "end": 21
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "get_key_time",
+      "claim": "SAnimationAccessor::getKeyTime(int); time-array view evidence",
+      "original_symbol": "_ZNK6glitch7collada18SAnimationAccessor10getKeyTimeEi",
+      "demangled": "glitch::collada::SAnimationAccessor::getKeyTime(int) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00669eec",
+      "elf_size_bytes": 32,
+      "elf_file_offset": "0x00669eec",
+      "function_slice_sha256": "1a440d4d63ee559d0d99fea56f78c50e6df2eb1a086942c1da626e4367402e3d",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_SAnimationAccessor-dd6bb90af5fe-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 136,
+        "end": 148
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 25,
+        "end": 37
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "keyframe_search_wrapper",
+      "claim": "Generic query wrapper resolves key-time vector then enters typed dispatcher",
+      "original_symbol": "_ZNK6glitch7collada18SAnimationAccessor14findKeyFrameNoEiiRiRfi",
+      "demangled": "glitch::collada::SAnimationAccessor::findKeyFrameNo(int, int, int&, float&, int) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0066b814",
+      "elf_size_bytes": 76,
+      "elf_file_offset": "0x0066b814",
+      "function_slice_sha256": "5ca8adca6b00589a75b211ec0f268d3a449f2df0d30516bd594eb463e5cedc40",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_SAnimationAccessor-dd6bb90af5fe-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 905,
+        "end": 928
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 41,
+        "end": 64
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "keyframe_cached_typed_dispatch",
+      "claim": "Per-accessor cached time-type dispatch to typed search implementations",
+      "original_symbol": "_ZNK6glitch7collada18SAnimationAccessor14findKeyFrameNoEiRKNS_3res6vectorIiEEiRiRfi",
+      "demangled": "glitch::collada::SAnimationAccessor::findKeyFrameNo(int, glitch::res::vector<int> const&, int, int&, float&, int) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0066b65c",
+      "elf_size_bytes": 440,
+      "elf_file_offset": "0x0066b65c",
+      "function_slice_sha256": "c9be0d5b471dc6bd17ea1c6102893ba537ebeabd6dad620d929ae957afecfeb4",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_SAnimationAccessor-dd6bb90af5fe-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 789,
+        "end": 903
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 68,
+        "end": 182
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "animation_set_compile",
+      "claim": "Animation binding compilation traverses channels and virtual track/template callbacks",
+      "original_symbol": "_ZN6glitch7collada13CAnimationSet7compileEv",
+      "demangled": "glitch::collada::CAnimationSet::compile()",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00660710",
+      "elf_size_bytes": 996,
+      "elf_file_offset": "0x00660710",
+      "function_slice_sha256": "ed7763d3a06f2ea24706dc589903fa3477ee8ab302a4c7aa824006d9e8711c2e",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CAnimationSet-b1d6a1ba6c69-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 647,
+        "end": 900
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 186,
+        "end": 439
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "track_apply_value_with_extra_float",
+      "claim": "Extra-float CAnimationTrackEx applyValue overload searches key/fraction then dispatches through overload-specific vtable slots",
+      "original_symbol": "_ZNK6glitch7collada17CAnimationTrackEx10applyValueERKNS0_18SAnimationAccessorEiPvPNS0_15animation_track15CApplicatorInfoERifb",
+      "demangled": "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, float, bool) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006e2a18",
+      "elf_size_bytes": 192,
+      "elf_file_offset": "0x006e2a18",
+      "function_slice_sha256": "f5bd67c1f56e6fc7cefe6d065222199338c952bae0c5aa2283caf3a4f7eb0039",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CAnimationTrackEx-3b337e928626-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 41,
+        "end": 93
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 443,
+        "end": 495
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "transformation_target_binding",
+      "claim": "Scene-node target template creates entries for channel types 1, 5, 10",
+      "original_symbol": "_ZN6glitch7collada35CAnimationSetTransformationTemplate24addTransformationTargetsEPNS0_10CSceneNodeE",
+      "demangled": "glitch::collada::CAnimationSetTransformationTemplate::addTransformationTargets(glitch::collada::CSceneNode*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006e24e8",
+      "elf_size_bytes": 356,
+      "elf_file_offset": "0x006e24e8",
+      "function_slice_sha256": "bec0370ef100c586fe9eb1d8086763405307432a38044af39d6c216bf3213b08",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CAnimationSetTransformationTemplate-1c978bae381c-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 196,
+        "end": 289
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 499,
+        "end": 592
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "default_value_target_lookup",
+      "claim": "Default-value target lookup remains channel keyed and void-pointer based",
+      "original_symbol": "_ZNK6glitch7collada35CAnimationSetTransformationTemplate15getDefaultValueEPKNS0_8SChannelEPPv",
+      "demangled": "glitch::collada::CAnimationSetTransformationTemplate::getDefaultValue(glitch::collada::SChannel const*, void**) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006e23d0",
+      "elf_size_bytes": 100,
+      "elf_file_offset": "0x006e23d0",
+      "function_slice_sha256": "c68d29207cd3d93be504016e0504dfba31b5f5e3d8e36af5c59184bd49e916b4",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CAnimationSetTransformationTemplate-1c978bae381c-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 165,
+        "end": 194
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 596,
+        "end": 625
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "float_direct_apply",
+      "claim": "One scalar-float material-parameter specialization direct-key path",
+      "original_symbol": "_ZN6glitch7collada15animation_track13CApplyValueExIfNS1_6CMixinIfLi1ENS1_17SMaterialSetParamINS1_15SAnimationTypesIffEEEELin1EfEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE",
+      "demangled": "glitch::collada::animation_track::CApplyValueEx<float, glitch::collada::animation_track::CMixin<float, 1, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float, float> >, -1, float> >::applyKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0061d3d0",
+      "elf_size_bytes": 68,
+      "elf_file_offset": "0x0061d3d0",
+      "function_slice_sha256": "e3a9a58ceef362630c150916af5f5460c4055e368bd7598b6477f72bb945ef62",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CApplyValueEx_float_glitch_collada_animation_track_CMixin_f-84be5729e817-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 46,
+        "end": 67
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 629,
+        "end": 650
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "float_interpreter_lerp",
+      "claim": "One scalar-float default-lerp interpreter specialization",
+      "original_symbol": "_ZN6glitch7collada15animation_track12CInterpreterINS1_6CMixinIfLi1ENS1_17SMaterialSetParamINS1_15SAnimationTypesIffEEEELin1EfEEfLi1ENS1_15SUseDefaultLerpIfEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CMixin<float, 1, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float, float> >, -1, float>, float, 1, glitch::collada::animation_track::SUseDefaultLerp<float> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0062020c",
+      "elf_size_bytes": 120,
+      "elf_file_offset": "0x0062020c",
+      "function_slice_sha256": "2e96a393ce092edb8410f6103fd8610e37580a5dba72faf78c8d7677bf5b96ea",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreter_glitch_collada_animation_track_CMixin_float_1_-77f8dfcf7eec-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 33,
+        "end": 67
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 654,
+        "end": 688
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "scale_vec3_interpreter_direct",
+      "claim": "One three-float scale-mixin interpreter path",
+      "original_symbol": "_ZN6glitch7collada15animation_track12CInterpreterINS1_20CSceneNodeScaleMixinIfEEfLi3ENS1_15SUseDefaultLerpIfEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeScaleMixin<float>, float, 3, glitch::collada::animation_track::SUseDefaultLerp<float> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0061242c",
+      "elf_size_bytes": 124,
+      "elf_file_offset": "0x0061242c",
+      "function_slice_sha256": "d9a77afc740491dbf235c0c72342effcbd2f22e2054f1fb0430fae18ee336a1f",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreter_glitch_collada_animation_track_CSceneNodeScale-e2c50c5c1681-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 40
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 692,
+        "end": 727
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "scale_vec3_interpreter_lerp",
+      "claim": "One three-float scale-mixin interpolated path",
+      "original_symbol": "_ZN6glitch7collada15animation_track12CInterpreterINS1_20CSceneNodeScaleMixinIfEEfLi3ENS1_15SUseDefaultLerpIfEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeScaleMixin<float>, float, 3, glitch::collada::animation_track::SUseDefaultLerp<float> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00628850",
+      "elf_size_bytes": 256,
+      "elf_file_offset": "0x00628850",
+      "function_slice_sha256": "6337fc51cd454293f3c78e0f932d498624fd4c2a3645c1418f785121b88a0b1c",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreter_glitch_collada_animation_track_CSceneNodeScale-e2c50c5c1681-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 42,
+        "end": 110
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 731,
+        "end": 799
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "global_animation_cache_candidate",
+      "claim": "Separate AnimationSet cache-candidate search",
+      "original_symbol": "_ZN12AnimationSet19_FindCacheCandidateEv",
+      "demangled": "AnimationSet::_FindCacheCandidate()",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x003649e0",
+      "elf_size_bytes": 244,
+      "elf_file_offset": "0x003649e0",
+      "function_slice_sha256": "b6eafc6d9778e714a362b2c729ac6d4592742f21b8d3ff4555e82bc899a783e2",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/AnimationSet-bd1cc53c51c7-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 54,
+        "end": 119
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 803,
+        "end": 868
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "global_animation_cache_lookup",
+      "claim": "Separate AnimationSet lookup by set index",
+      "original_symbol": "_ZN12AnimationSet22GetAnimationBySetIndexEi",
+      "demangled": "AnimationSet::GetAnimationBySetIndex(int)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00364bf4",
+      "elf_size_bytes": 172,
+      "elf_file_offset": "0x00364bf4",
+      "function_slice_sha256": "e916052b6ff41150901e3a0ca780773b3c7c52cdd208cf38cf5d7ed5daa68cf5",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/AnimationSet-bd1cc53c51c7-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 162,
+        "end": 209
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 872,
+        "end": 919
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "animation_block_range_cache",
+      "claim": "CAnimationBlock range cache lookup, distinct from value search",
+      "original_symbol": "_ZN6glitch7collada15CAnimationBlock8getBlockERNS0_24SAnimationBlockSearchKeyE",
+      "demangled": "glitch::collada::CAnimationBlock::getBlock(glitch::collada::SAnimationBlockSearchKey&)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0060b350",
+      "elf_size_bytes": 124,
+      "elf_file_offset": "0x0060b350",
+      "function_slice_sha256": "62183fd6930ee41b2850f84b242466ee89e7b770dd89fe05d5ad46846aad1f91",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CAnimationBlock-9f7e5d4e00f6-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 40
+      },
+      "package_copy": "reference/animation-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 923,
+        "end": 958
+      },
+      "listing_bytes_match_elf_slice": true
+    }
+  ]
+}

@@ -1,0 +1,1647 @@
+{
+  "schema": "dh2-observed-type1-mesh-suffix-census-v1",
+  "source": {
+    "recovered_cache_relative_root": "cache-recovery/extracted/com.gameloft.android.GAND.GloftD2SS/files",
+    "cache_manifest_sha256": "07ea5c64c073a4add2503e52858a8875adea1f792e86e05a8a573b49a223edf8",
+    "library_sha256": "8c5d68ac19d97810857776e46525aec76dbd12b1d2a99bd8cb72bf4f80582864"
+  },
+  "scope": "Direct BRES byte inspection of the nine type-1 geometry records reported by the full-cache audit. Per-file hashes and offsets identify the exact recovered inputs.",
+  "interpretation_limit": "The first 20 payload bytes are retained as uninterpreted corpus bytes. The suffix at payload+0x14 matches the already documented type-0 SMesh, interleaved-stream, and primitive-buffer layouts. This is a data-layout observation and does not establish an APK runtime type-1 consumer.",
+  "summary": {
+    "records": 9,
+    "all_geometry_index_zero": true,
+    "all_type1": true,
+    "all_same_opaque_prefix": true,
+    "opaque_prefix_hex": "000000000f000000030000000000000000000000",
+    "all_nested_meshes_fit_file": true,
+    "all_expected_fixup_fields_marked": true,
+    "vertex_count_distribution": {
+      "24": 2,
+      "52": 2,
+      "78": 5
+    },
+    "material_counts": {
+      "ColorMaterial": 1,
+      "Standard_7": 5,
+      "_7_-_Default": 1,
+      "fx_magic_lenz_flares_bwa": 2
+    },
+    "all_bres_root_word_0x64_zero": true,
+    "all_triangle_lists": true,
+    "all_declared_count_matches_indices": true,
+    "all_indices_within_declared_bounds": true
+  },
+  "records": [
+    {
+      "file": "data/3d/characters/dragon/dragon.bdae",
+      "file_size": 107028,
+      "sha256": "97e980e2b5516fcff63f713427a729c736d9d955a25309cd5b56bfb78cf55fce",
+      "bres_fixup_count": 1350,
+      "geometry_table_count": 4,
+      "geometry_type_counts": {
+        "type_0": 3,
+        "type_1": 1,
+        "other": 0
+      },
+      "geometry_index": 0,
+      "geometry_record_file_offset": 25148,
+      "geometry_record_hex": "082100006c190000010000007c620000",
+      "geometry_id": "Circle01-spline",
+      "geometry_name": "",
+      "geometry_type": 1,
+      "payload_file_offset": 25212,
+      "opaque_prefix": {
+        "length": 20,
+        "bytes_hex": "000000000f000000030000000000000000000000",
+        "raw_u32_words": [
+          0,
+          15,
+          3,
+          0,
+          0
+        ]
+      },
+      "nested_smesh": {
+        "payload_relative_offset": "0x14",
+        "file_offset": 25232,
+        "record_size": 44,
+        "stream_mode": 1,
+        "vertex_count": 24,
+        "stream_descriptor_file_offset": 25276,
+        "primitive_count": 1,
+        "primitive_table_file_offset": 25368,
+        "bounds_xyz_min_max": [
+          -250.0,
+          -250.0,
+          0.0,
+          250.0,
+          250.0,
+          1000.0
+        ]
+      },
+      "stream_descriptor": {
+        "record_size": 44,
+        "stride": 32,
+        "attribute_count": 3,
+        "byte_offsets_array_file_offset": 25320,
+        "scalar_types_array_file_offset": 25332,
+        "component_counts_array_file_offset": 25344,
+        "bounding_box_refs_array_file_offset": 25356,
+        "vertex_data_file_offset": 37276,
+        "vertex_data_size": 768,
+        "vertex_data_fits_file": true,
+        "vertex_data_sha256": "4c64ff9e47f401baac29f87d9bce679a2ccad2c8b470bd68e3b9558a549e669d",
+        "runtime_buffer_word": 0,
+        "attributes": [
+          {
+            "byte_offset": 0,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 12,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 24,
+            "scalar_type": 6,
+            "components": 2,
+            "bounding_box_reference": 0
+          }
+        ]
+      },
+      "primitive": {
+        "file_offset": 25368,
+        "record_size": 56,
+        "collada_primitive_type": 0,
+        "material": "ColorMaterial",
+        "declared_primitive_count": 12,
+        "attribute_refs": [
+          0,
+          1,
+          -1,
+          -1,
+          2,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "minimum_index": 0,
+        "maximum_index": 23,
+        "index_count": 36,
+        "index_width_bytes": 2,
+        "index_data_file_offset": 38044,
+        "index_data_size": 72,
+        "index_data_fits_file": true,
+        "index_data_sha256": "1103d407310c34042b6a050c281e16e3e46b2345f3cfca5a2540273a83109e6a",
+        "observed_index_minimum": 0,
+        "observed_index_maximum": 23,
+        "triangle_list": true,
+        "declared_count_matches_indices": true
+      },
+      "payload_fixup_evidence": [
+        {
+          "payload_relative_field": "0x1c",
+          "role": "nested SMesh stream descriptor",
+          "fixup_present": true,
+          "target_file_offset": "0x62bc"
+        },
+        {
+          "payload_relative_field": "0x24",
+          "role": "nested SMesh primitive table",
+          "fixup_present": true,
+          "target_file_offset": "0x6318"
+        },
+        {
+          "payload_relative_field": "0x48",
+          "role": "attribute byte-offset array",
+          "fixup_present": true,
+          "target_file_offset": "0x62e8"
+        },
+        {
+          "payload_relative_field": "0x50",
+          "role": "attribute type array",
+          "fixup_present": true,
+          "target_file_offset": "0x62f4"
+        },
+        {
+          "payload_relative_field": "0x58",
+          "role": "attribute component-count array",
+          "fixup_present": true,
+          "target_file_offset": "0x6300"
+        },
+        {
+          "payload_relative_field": "0x60",
+          "role": "attribute bounding-box-reference array",
+          "fixup_present": true,
+          "target_file_offset": "0x630c"
+        },
+        {
+          "payload_relative_field": "0x64",
+          "role": "vertex bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x919c"
+        },
+        {
+          "payload_relative_field": "0xa0",
+          "role": "primitive material string",
+          "fixup_present": true,
+          "target_file_offset": "0x2148"
+        },
+        {
+          "payload_relative_field": "0xc8",
+          "role": "primitive index bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x949c"
+        }
+      ],
+      "bres_root_word_0x64_raw": 0,
+      "all_indices_within_declared_bounds": true
+    },
+    {
+      "file": "data/3d/interface/skill_dh2_monster_dragon_attack_02.bdae",
+      "file_size": 52696,
+      "sha256": "7b721e0454499b23c08c851942c3ce4f57fc6ccd8c4503a84fe65566ce43c7fa",
+      "bres_fixup_count": 1035,
+      "geometry_table_count": 5,
+      "geometry_type_counts": {
+        "type_0": 4,
+        "type_1": 1,
+        "other": 0
+      },
+      "geometry_index": 0,
+      "geometry_record_file_offset": 41948,
+      "geometry_record_hex": "60220000781f0000010000002ca40000",
+      "geometry_id": "Circle01-spline",
+      "geometry_name": "",
+      "geometry_type": 1,
+      "payload_file_offset": 42028,
+      "opaque_prefix": {
+        "length": 20,
+        "bytes_hex": "000000000f000000030000000000000000000000",
+        "raw_u32_words": [
+          0,
+          15,
+          3,
+          0,
+          0
+        ]
+      },
+      "nested_smesh": {
+        "payload_relative_offset": "0x14",
+        "file_offset": 42048,
+        "record_size": 44,
+        "stream_mode": 1,
+        "vertex_count": 52,
+        "stream_descriptor_file_offset": 42092,
+        "primitive_count": 1,
+        "primitive_table_file_offset": 42184,
+        "bounds_xyz_min_max": [
+          -223.7220001220703,
+          -223.7220001220703,
+          0.0,
+          223.7220001220703,
+          223.7220001220703,
+          789.1409912109375
+        ]
+      },
+      "stream_descriptor": {
+        "record_size": 44,
+        "stride": 32,
+        "attribute_count": 3,
+        "byte_offsets_array_file_offset": 42136,
+        "scalar_types_array_file_offset": 42148,
+        "component_counts_array_file_offset": 42160,
+        "bounding_box_refs_array_file_offset": 42172,
+        "vertex_data_file_offset": 44888,
+        "vertex_data_size": 1664,
+        "vertex_data_fits_file": true,
+        "vertex_data_sha256": "ec4fc919d4c971435dcf43d38f976184af7f2ccdac2088092c18b174b2b32505",
+        "runtime_buffer_word": 0,
+        "attributes": [
+          {
+            "byte_offset": 0,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 12,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 24,
+            "scalar_type": 6,
+            "components": 2,
+            "bounding_box_reference": 0
+          }
+        ]
+      },
+      "primitive": {
+        "file_offset": 42184,
+        "record_size": 56,
+        "collada_primitive_type": 0,
+        "material": "fx_magic_lenz_flares_bwa",
+        "declared_primitive_count": 48,
+        "attribute_refs": [
+          0,
+          1,
+          -1,
+          -1,
+          2,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "minimum_index": 0,
+        "maximum_index": 51,
+        "index_count": 144,
+        "index_width_bytes": 2,
+        "index_data_file_offset": 46552,
+        "index_data_size": 288,
+        "index_data_fits_file": true,
+        "index_data_sha256": "6bd2d3e182d79c13f5a324029e9e2d04ad7397c2ad4e66299bb68172af0ce3d4",
+        "observed_index_minimum": 0,
+        "observed_index_maximum": 51,
+        "triangle_list": true,
+        "declared_count_matches_indices": true
+      },
+      "payload_fixup_evidence": [
+        {
+          "payload_relative_field": "0x1c",
+          "role": "nested SMesh stream descriptor",
+          "fixup_present": true,
+          "target_file_offset": "0xa46c"
+        },
+        {
+          "payload_relative_field": "0x24",
+          "role": "nested SMesh primitive table",
+          "fixup_present": true,
+          "target_file_offset": "0xa4c8"
+        },
+        {
+          "payload_relative_field": "0x48",
+          "role": "attribute byte-offset array",
+          "fixup_present": true,
+          "target_file_offset": "0xa498"
+        },
+        {
+          "payload_relative_field": "0x50",
+          "role": "attribute type array",
+          "fixup_present": true,
+          "target_file_offset": "0xa4a4"
+        },
+        {
+          "payload_relative_field": "0x58",
+          "role": "attribute component-count array",
+          "fixup_present": true,
+          "target_file_offset": "0xa4b0"
+        },
+        {
+          "payload_relative_field": "0x60",
+          "role": "attribute bounding-box-reference array",
+          "fixup_present": true,
+          "target_file_offset": "0xa4bc"
+        },
+        {
+          "payload_relative_field": "0x64",
+          "role": "vertex bytes",
+          "fixup_present": true,
+          "target_file_offset": "0xaf58"
+        },
+        {
+          "payload_relative_field": "0xa0",
+          "role": "primitive material string",
+          "fixup_present": true,
+          "target_file_offset": "0x1380"
+        },
+        {
+          "payload_relative_field": "0xc8",
+          "role": "primitive index bytes",
+          "fixup_present": true,
+          "target_file_offset": "0xb5d8"
+        }
+      ],
+      "bres_root_word_0x64_raw": 0,
+      "all_indices_within_declared_bounds": true
+    },
+    {
+      "file": "data/3d/interface/skill_dh2_monster_dragon_attack_03.bdae",
+      "file_size": 48636,
+      "sha256": "1a74b8cd645b5a62df0d0d849952f722b47b53f7ea97abb567d0249beb779d90",
+      "bres_fixup_count": 1035,
+      "geometry_table_count": 5,
+      "geometry_type_counts": {
+        "type_0": 4,
+        "type_1": 1,
+        "other": 0
+      },
+      "geometry_index": 0,
+      "geometry_record_file_offset": 37888,
+      "geometry_record_hex": "60220000781f00000100000050940000",
+      "geometry_id": "Circle01-spline",
+      "geometry_name": "",
+      "geometry_type": 1,
+      "payload_file_offset": 37968,
+      "opaque_prefix": {
+        "length": 20,
+        "bytes_hex": "000000000f000000030000000000000000000000",
+        "raw_u32_words": [
+          0,
+          15,
+          3,
+          0,
+          0
+        ]
+      },
+      "nested_smesh": {
+        "payload_relative_offset": "0x14",
+        "file_offset": 37988,
+        "record_size": 44,
+        "stream_mode": 1,
+        "vertex_count": 52,
+        "stream_descriptor_file_offset": 38032,
+        "primitive_count": 1,
+        "primitive_table_file_offset": 38124,
+        "bounds_xyz_min_max": [
+          -223.7220001220703,
+          -223.7220001220703,
+          0.0,
+          223.7220001220703,
+          223.7220001220703,
+          789.1409912109375
+        ]
+      },
+      "stream_descriptor": {
+        "record_size": 44,
+        "stride": 32,
+        "attribute_count": 3,
+        "byte_offsets_array_file_offset": 38076,
+        "scalar_types_array_file_offset": 38088,
+        "component_counts_array_file_offset": 38100,
+        "bounding_box_refs_array_file_offset": 38112,
+        "vertex_data_file_offset": 40828,
+        "vertex_data_size": 1664,
+        "vertex_data_fits_file": true,
+        "vertex_data_sha256": "ec4fc919d4c971435dcf43d38f976184af7f2ccdac2088092c18b174b2b32505",
+        "runtime_buffer_word": 0,
+        "attributes": [
+          {
+            "byte_offset": 0,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 12,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 24,
+            "scalar_type": 6,
+            "components": 2,
+            "bounding_box_reference": 0
+          }
+        ]
+      },
+      "primitive": {
+        "file_offset": 38124,
+        "record_size": 56,
+        "collada_primitive_type": 0,
+        "material": "fx_magic_lenz_flares_bwa",
+        "declared_primitive_count": 48,
+        "attribute_refs": [
+          0,
+          1,
+          -1,
+          -1,
+          2,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "minimum_index": 0,
+        "maximum_index": 51,
+        "index_count": 144,
+        "index_width_bytes": 2,
+        "index_data_file_offset": 42492,
+        "index_data_size": 288,
+        "index_data_fits_file": true,
+        "index_data_sha256": "6bd2d3e182d79c13f5a324029e9e2d04ad7397c2ad4e66299bb68172af0ce3d4",
+        "observed_index_minimum": 0,
+        "observed_index_maximum": 51,
+        "triangle_list": true,
+        "declared_count_matches_indices": true
+      },
+      "payload_fixup_evidence": [
+        {
+          "payload_relative_field": "0x1c",
+          "role": "nested SMesh stream descriptor",
+          "fixup_present": true,
+          "target_file_offset": "0x9490"
+        },
+        {
+          "payload_relative_field": "0x24",
+          "role": "nested SMesh primitive table",
+          "fixup_present": true,
+          "target_file_offset": "0x94ec"
+        },
+        {
+          "payload_relative_field": "0x48",
+          "role": "attribute byte-offset array",
+          "fixup_present": true,
+          "target_file_offset": "0x94bc"
+        },
+        {
+          "payload_relative_field": "0x50",
+          "role": "attribute type array",
+          "fixup_present": true,
+          "target_file_offset": "0x94c8"
+        },
+        {
+          "payload_relative_field": "0x58",
+          "role": "attribute component-count array",
+          "fixup_present": true,
+          "target_file_offset": "0x94d4"
+        },
+        {
+          "payload_relative_field": "0x60",
+          "role": "attribute bounding-box-reference array",
+          "fixup_present": true,
+          "target_file_offset": "0x94e0"
+        },
+        {
+          "payload_relative_field": "0x64",
+          "role": "vertex bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x9f7c"
+        },
+        {
+          "payload_relative_field": "0xa0",
+          "role": "primitive material string",
+          "fixup_present": true,
+          "target_file_offset": "0x1380"
+        },
+        {
+          "payload_relative_field": "0xc8",
+          "role": "primitive index bytes",
+          "fixup_present": true,
+          "target_file_offset": "0xa5fc"
+        }
+      ],
+      "bres_root_word_0x64_raw": 0,
+      "all_indices_within_declared_bounds": true
+    },
+    {
+      "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate.bdae",
+      "file_size": 40128,
+      "sha256": "bbf1daae7bebb4fe55c52de8b0234265f349164dbba021ac0e5aa8196d2f6381",
+      "bres_fixup_count": 660,
+      "geometry_table_count": 5,
+      "geometry_type_counts": {
+        "type_0": 4,
+        "type_1": 1,
+        "other": 0
+      },
+      "geometry_index": 0,
+      "geometry_record_file_offset": 24740,
+      "geometry_record_hex": "3c160000c013000001000000f4600000",
+      "geometry_id": "Circle01-spline",
+      "geometry_name": "",
+      "geometry_type": 1,
+      "payload_file_offset": 24820,
+      "opaque_prefix": {
+        "length": 20,
+        "bytes_hex": "000000000f000000030000000000000000000000",
+        "raw_u32_words": [
+          0,
+          15,
+          3,
+          0,
+          0
+        ]
+      },
+      "nested_smesh": {
+        "payload_relative_offset": "0x14",
+        "file_offset": 24840,
+        "record_size": 44,
+        "stream_mode": 1,
+        "vertex_count": 78,
+        "stream_descriptor_file_offset": 24884,
+        "primitive_count": 1,
+        "primitive_table_file_offset": 24976,
+        "bounds_xyz_min_max": [
+          -144.7310028076172,
+          -152.7740020751953,
+          23.512500762939453,
+          155.74899291992188,
+          138.42999267578125,
+          96.9446029663086
+        ]
+      },
+      "stream_descriptor": {
+        "record_size": 44,
+        "stride": 32,
+        "attribute_count": 3,
+        "byte_offsets_array_file_offset": 24928,
+        "scalar_types_array_file_offset": 24940,
+        "component_counts_array_file_offset": 24952,
+        "bounding_box_refs_array_file_offset": 24964,
+        "vertex_data_file_offset": 27840,
+        "vertex_data_size": 2496,
+        "vertex_data_fits_file": true,
+        "vertex_data_sha256": "ca2fc4f46984135eb03fbbc51a39c96c192960347b4feacc3a234dda30562643",
+        "runtime_buffer_word": 0,
+        "attributes": [
+          {
+            "byte_offset": 0,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 12,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 24,
+            "scalar_type": 6,
+            "components": 2,
+            "bounding_box_reference": 0
+          }
+        ]
+      },
+      "primitive": {
+        "file_offset": 24976,
+        "record_size": 56,
+        "collada_primitive_type": 0,
+        "material": "Standard_7",
+        "declared_primitive_count": 96,
+        "attribute_refs": [
+          0,
+          1,
+          -1,
+          -1,
+          2,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "minimum_index": 0,
+        "maximum_index": 77,
+        "index_count": 288,
+        "index_width_bytes": 2,
+        "index_data_file_offset": 30336,
+        "index_data_size": 576,
+        "index_data_fits_file": true,
+        "index_data_sha256": "de18df6ee14e0763e7f6ddf944941f428e339821bb9499553745c37b4794b644",
+        "observed_index_minimum": 0,
+        "observed_index_maximum": 77,
+        "triangle_list": true,
+        "declared_count_matches_indices": true
+      },
+      "payload_fixup_evidence": [
+        {
+          "payload_relative_field": "0x1c",
+          "role": "nested SMesh stream descriptor",
+          "fixup_present": true,
+          "target_file_offset": "0x6134"
+        },
+        {
+          "payload_relative_field": "0x24",
+          "role": "nested SMesh primitive table",
+          "fixup_present": true,
+          "target_file_offset": "0x6190"
+        },
+        {
+          "payload_relative_field": "0x48",
+          "role": "attribute byte-offset array",
+          "fixup_present": true,
+          "target_file_offset": "0x6160"
+        },
+        {
+          "payload_relative_field": "0x50",
+          "role": "attribute type array",
+          "fixup_present": true,
+          "target_file_offset": "0x616c"
+        },
+        {
+          "payload_relative_field": "0x58",
+          "role": "attribute component-count array",
+          "fixup_present": true,
+          "target_file_offset": "0x6178"
+        },
+        {
+          "payload_relative_field": "0x60",
+          "role": "attribute bounding-box-reference array",
+          "fixup_present": true,
+          "target_file_offset": "0x6184"
+        },
+        {
+          "payload_relative_field": "0x64",
+          "role": "vertex bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x6cc0"
+        },
+        {
+          "payload_relative_field": "0xa0",
+          "role": "primitive material string",
+          "fixup_present": true,
+          "target_file_offset": "0xb48"
+        },
+        {
+          "payload_relative_field": "0xc8",
+          "role": "primitive index bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x7680"
+        }
+      ],
+      "bres_root_word_0x64_raw": 0,
+      "all_indices_within_declared_bounds": true
+    },
+    {
+      "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate_01.bdae",
+      "file_size": 40492,
+      "sha256": "f12fd64bd4da6507c1b210532e796e3894e905b87d4b6d573d04c399227fff26",
+      "bres_fixup_count": 648,
+      "geometry_table_count": 5,
+      "geometry_type_counts": {
+        "type_0": 4,
+        "type_1": 1,
+        "other": 0
+      },
+      "geometry_index": 0,
+      "geometry_record_file_offset": 25104,
+      "geometry_record_hex": "94150000141300000100000060620000",
+      "geometry_id": "Circle01-spline",
+      "geometry_name": "",
+      "geometry_type": 1,
+      "payload_file_offset": 25184,
+      "opaque_prefix": {
+        "length": 20,
+        "bytes_hex": "000000000f000000030000000000000000000000",
+        "raw_u32_words": [
+          0,
+          15,
+          3,
+          0,
+          0
+        ]
+      },
+      "nested_smesh": {
+        "payload_relative_offset": "0x14",
+        "file_offset": 25204,
+        "record_size": 44,
+        "stream_mode": 1,
+        "vertex_count": 78,
+        "stream_descriptor_file_offset": 25248,
+        "primitive_count": 1,
+        "primitive_table_file_offset": 25340,
+        "bounds_xyz_min_max": [
+          -144.7310028076172,
+          -152.7740020751953,
+          23.512500762939453,
+          155.74899291992188,
+          138.42999267578125,
+          96.9446029663086
+        ]
+      },
+      "stream_descriptor": {
+        "record_size": 44,
+        "stride": 32,
+        "attribute_count": 3,
+        "byte_offsets_array_file_offset": 25292,
+        "scalar_types_array_file_offset": 25304,
+        "component_counts_array_file_offset": 25316,
+        "bounding_box_refs_array_file_offset": 25328,
+        "vertex_data_file_offset": 28204,
+        "vertex_data_size": 2496,
+        "vertex_data_fits_file": true,
+        "vertex_data_sha256": "ca2fc4f46984135eb03fbbc51a39c96c192960347b4feacc3a234dda30562643",
+        "runtime_buffer_word": 0,
+        "attributes": [
+          {
+            "byte_offset": 0,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 12,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 24,
+            "scalar_type": 6,
+            "components": 2,
+            "bounding_box_reference": 0
+          }
+        ]
+      },
+      "primitive": {
+        "file_offset": 25340,
+        "record_size": 56,
+        "collada_primitive_type": 0,
+        "material": "Standard_7",
+        "declared_primitive_count": 96,
+        "attribute_refs": [
+          0,
+          1,
+          -1,
+          -1,
+          2,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "minimum_index": 0,
+        "maximum_index": 77,
+        "index_count": 288,
+        "index_width_bytes": 2,
+        "index_data_file_offset": 30700,
+        "index_data_size": 576,
+        "index_data_fits_file": true,
+        "index_data_sha256": "de18df6ee14e0763e7f6ddf944941f428e339821bb9499553745c37b4794b644",
+        "observed_index_minimum": 0,
+        "observed_index_maximum": 77,
+        "triangle_list": true,
+        "declared_count_matches_indices": true
+      },
+      "payload_fixup_evidence": [
+        {
+          "payload_relative_field": "0x1c",
+          "role": "nested SMesh stream descriptor",
+          "fixup_present": true,
+          "target_file_offset": "0x62a0"
+        },
+        {
+          "payload_relative_field": "0x24",
+          "role": "nested SMesh primitive table",
+          "fixup_present": true,
+          "target_file_offset": "0x62fc"
+        },
+        {
+          "payload_relative_field": "0x48",
+          "role": "attribute byte-offset array",
+          "fixup_present": true,
+          "target_file_offset": "0x62cc"
+        },
+        {
+          "payload_relative_field": "0x50",
+          "role": "attribute type array",
+          "fixup_present": true,
+          "target_file_offset": "0x62d8"
+        },
+        {
+          "payload_relative_field": "0x58",
+          "role": "attribute component-count array",
+          "fixup_present": true,
+          "target_file_offset": "0x62e4"
+        },
+        {
+          "payload_relative_field": "0x60",
+          "role": "attribute bounding-box-reference array",
+          "fixup_present": true,
+          "target_file_offset": "0x62f0"
+        },
+        {
+          "payload_relative_field": "0x64",
+          "role": "vertex bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x6e2c"
+        },
+        {
+          "payload_relative_field": "0xa0",
+          "role": "primitive material string",
+          "fixup_present": true,
+          "target_file_offset": "0xb18"
+        },
+        {
+          "payload_relative_field": "0xc8",
+          "role": "primitive index bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x77ec"
+        }
+      ],
+      "bres_root_word_0x64_raw": 0,
+      "all_indices_within_declared_bounds": true
+    },
+    {
+      "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate_01b.bdae",
+      "file_size": 41448,
+      "sha256": "bdcee26bc73850a0fa938a2d11b5570df20dc010f3cb96430a1584d808b69348",
+      "bres_fixup_count": 660,
+      "geometry_table_count": 5,
+      "geometry_type_counts": {
+        "type_0": 4,
+        "type_1": 1,
+        "other": 0
+      },
+      "geometry_index": 0,
+      "geometry_record_file_offset": 26060,
+      "geometry_record_hex": "4c160000cc130000010000001c660000",
+      "geometry_id": "Circle01-spline",
+      "geometry_name": "",
+      "geometry_type": 1,
+      "payload_file_offset": 26140,
+      "opaque_prefix": {
+        "length": 20,
+        "bytes_hex": "000000000f000000030000000000000000000000",
+        "raw_u32_words": [
+          0,
+          15,
+          3,
+          0,
+          0
+        ]
+      },
+      "nested_smesh": {
+        "payload_relative_offset": "0x14",
+        "file_offset": 26160,
+        "record_size": 44,
+        "stream_mode": 1,
+        "vertex_count": 78,
+        "stream_descriptor_file_offset": 26204,
+        "primitive_count": 1,
+        "primitive_table_file_offset": 26296,
+        "bounds_xyz_min_max": [
+          -144.7310028076172,
+          -152.7740020751953,
+          23.512500762939453,
+          155.74899291992188,
+          138.42999267578125,
+          96.9446029663086
+        ]
+      },
+      "stream_descriptor": {
+        "record_size": 44,
+        "stride": 32,
+        "attribute_count": 3,
+        "byte_offsets_array_file_offset": 26248,
+        "scalar_types_array_file_offset": 26260,
+        "component_counts_array_file_offset": 26272,
+        "bounding_box_refs_array_file_offset": 26284,
+        "vertex_data_file_offset": 29160,
+        "vertex_data_size": 2496,
+        "vertex_data_fits_file": true,
+        "vertex_data_sha256": "ca2fc4f46984135eb03fbbc51a39c96c192960347b4feacc3a234dda30562643",
+        "runtime_buffer_word": 0,
+        "attributes": [
+          {
+            "byte_offset": 0,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 12,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 24,
+            "scalar_type": 6,
+            "components": 2,
+            "bounding_box_reference": 0
+          }
+        ]
+      },
+      "primitive": {
+        "file_offset": 26296,
+        "record_size": 56,
+        "collada_primitive_type": 0,
+        "material": "Standard_7",
+        "declared_primitive_count": 96,
+        "attribute_refs": [
+          0,
+          1,
+          -1,
+          -1,
+          2,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "minimum_index": 0,
+        "maximum_index": 77,
+        "index_count": 288,
+        "index_width_bytes": 2,
+        "index_data_file_offset": 31656,
+        "index_data_size": 576,
+        "index_data_fits_file": true,
+        "index_data_sha256": "de18df6ee14e0763e7f6ddf944941f428e339821bb9499553745c37b4794b644",
+        "observed_index_minimum": 0,
+        "observed_index_maximum": 77,
+        "triangle_list": true,
+        "declared_count_matches_indices": true
+      },
+      "payload_fixup_evidence": [
+        {
+          "payload_relative_field": "0x1c",
+          "role": "nested SMesh stream descriptor",
+          "fixup_present": true,
+          "target_file_offset": "0x665c"
+        },
+        {
+          "payload_relative_field": "0x24",
+          "role": "nested SMesh primitive table",
+          "fixup_present": true,
+          "target_file_offset": "0x66b8"
+        },
+        {
+          "payload_relative_field": "0x48",
+          "role": "attribute byte-offset array",
+          "fixup_present": true,
+          "target_file_offset": "0x6688"
+        },
+        {
+          "payload_relative_field": "0x50",
+          "role": "attribute type array",
+          "fixup_present": true,
+          "target_file_offset": "0x6694"
+        },
+        {
+          "payload_relative_field": "0x58",
+          "role": "attribute component-count array",
+          "fixup_present": true,
+          "target_file_offset": "0x66a0"
+        },
+        {
+          "payload_relative_field": "0x60",
+          "role": "attribute bounding-box-reference array",
+          "fixup_present": true,
+          "target_file_offset": "0x66ac"
+        },
+        {
+          "payload_relative_field": "0x64",
+          "role": "vertex bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x71e8"
+        },
+        {
+          "payload_relative_field": "0xa0",
+          "role": "primitive material string",
+          "fixup_present": true,
+          "target_file_offset": "0xb48"
+        },
+        {
+          "payload_relative_field": "0xc8",
+          "role": "primitive index bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x7ba8"
+        }
+      ],
+      "bres_root_word_0x64_raw": 0,
+      "all_indices_within_declared_bounds": true
+    },
+    {
+      "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate_02.bdae",
+      "file_size": 41320,
+      "sha256": "f6f4879cbd4064eca6cecabb072635e6eb381b1e99e8d046d7edb1684ff34f12",
+      "bres_fixup_count": 654,
+      "geometry_table_count": 5,
+      "geometry_type_counts": {
+        "type_0": 4,
+        "type_1": 1,
+        "other": 0
+      },
+      "geometry_index": 0,
+      "geometry_record_file_offset": 25932,
+      "geometry_record_hex": "f015000070130000010000009c650000",
+      "geometry_id": "Circle01-spline",
+      "geometry_name": "",
+      "geometry_type": 1,
+      "payload_file_offset": 26012,
+      "opaque_prefix": {
+        "length": 20,
+        "bytes_hex": "000000000f000000030000000000000000000000",
+        "raw_u32_words": [
+          0,
+          15,
+          3,
+          0,
+          0
+        ]
+      },
+      "nested_smesh": {
+        "payload_relative_offset": "0x14",
+        "file_offset": 26032,
+        "record_size": 44,
+        "stream_mode": 1,
+        "vertex_count": 78,
+        "stream_descriptor_file_offset": 26076,
+        "primitive_count": 1,
+        "primitive_table_file_offset": 26168,
+        "bounds_xyz_min_max": [
+          -144.7310028076172,
+          -152.7740020751953,
+          23.512500762939453,
+          155.74899291992188,
+          138.42999267578125,
+          96.9446029663086
+        ]
+      },
+      "stream_descriptor": {
+        "record_size": 44,
+        "stride": 32,
+        "attribute_count": 3,
+        "byte_offsets_array_file_offset": 26120,
+        "scalar_types_array_file_offset": 26132,
+        "component_counts_array_file_offset": 26144,
+        "bounding_box_refs_array_file_offset": 26156,
+        "vertex_data_file_offset": 29032,
+        "vertex_data_size": 2496,
+        "vertex_data_fits_file": true,
+        "vertex_data_sha256": "ca2fc4f46984135eb03fbbc51a39c96c192960347b4feacc3a234dda30562643",
+        "runtime_buffer_word": 0,
+        "attributes": [
+          {
+            "byte_offset": 0,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 12,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 24,
+            "scalar_type": 6,
+            "components": 2,
+            "bounding_box_reference": 0
+          }
+        ]
+      },
+      "primitive": {
+        "file_offset": 26168,
+        "record_size": 56,
+        "collada_primitive_type": 0,
+        "material": "Standard_7",
+        "declared_primitive_count": 96,
+        "attribute_refs": [
+          0,
+          1,
+          -1,
+          -1,
+          2,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "minimum_index": 0,
+        "maximum_index": 77,
+        "index_count": 288,
+        "index_width_bytes": 2,
+        "index_data_file_offset": 31528,
+        "index_data_size": 576,
+        "index_data_fits_file": true,
+        "index_data_sha256": "de18df6ee14e0763e7f6ddf944941f428e339821bb9499553745c37b4794b644",
+        "observed_index_minimum": 0,
+        "observed_index_maximum": 77,
+        "triangle_list": true,
+        "declared_count_matches_indices": true
+      },
+      "payload_fixup_evidence": [
+        {
+          "payload_relative_field": "0x1c",
+          "role": "nested SMesh stream descriptor",
+          "fixup_present": true,
+          "target_file_offset": "0x65dc"
+        },
+        {
+          "payload_relative_field": "0x24",
+          "role": "nested SMesh primitive table",
+          "fixup_present": true,
+          "target_file_offset": "0x6638"
+        },
+        {
+          "payload_relative_field": "0x48",
+          "role": "attribute byte-offset array",
+          "fixup_present": true,
+          "target_file_offset": "0x6608"
+        },
+        {
+          "payload_relative_field": "0x50",
+          "role": "attribute type array",
+          "fixup_present": true,
+          "target_file_offset": "0x6614"
+        },
+        {
+          "payload_relative_field": "0x58",
+          "role": "attribute component-count array",
+          "fixup_present": true,
+          "target_file_offset": "0x6620"
+        },
+        {
+          "payload_relative_field": "0x60",
+          "role": "attribute bounding-box-reference array",
+          "fixup_present": true,
+          "target_file_offset": "0x662c"
+        },
+        {
+          "payload_relative_field": "0x64",
+          "role": "vertex bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x7168"
+        },
+        {
+          "payload_relative_field": "0xa0",
+          "role": "primitive material string",
+          "fixup_present": true,
+          "target_file_offset": "0xb30"
+        },
+        {
+          "payload_relative_field": "0xc8",
+          "role": "primitive index bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x7b28"
+        }
+      ],
+      "bres_root_word_0x64_raw": 0,
+      "all_indices_within_declared_bounds": true
+    },
+    {
+      "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate_03.bdae",
+      "file_size": 41852,
+      "sha256": "9b1ab2eab19ec3dd0f534a7a7b61df1de4b96e802c8375c885eb078aa261c15e",
+      "bres_fixup_count": 660,
+      "geometry_table_count": 5,
+      "geometry_type_counts": {
+        "type_0": 4,
+        "type_1": 1,
+        "other": 0
+      },
+      "geometry_index": 0,
+      "geometry_record_file_offset": 26464,
+      "geometry_record_hex": "4c160000cc13000001000000b0670000",
+      "geometry_id": "Circle01-spline",
+      "geometry_name": "",
+      "geometry_type": 1,
+      "payload_file_offset": 26544,
+      "opaque_prefix": {
+        "length": 20,
+        "bytes_hex": "000000000f000000030000000000000000000000",
+        "raw_u32_words": [
+          0,
+          15,
+          3,
+          0,
+          0
+        ]
+      },
+      "nested_smesh": {
+        "payload_relative_offset": "0x14",
+        "file_offset": 26564,
+        "record_size": 44,
+        "stream_mode": 1,
+        "vertex_count": 78,
+        "stream_descriptor_file_offset": 26608,
+        "primitive_count": 1,
+        "primitive_table_file_offset": 26700,
+        "bounds_xyz_min_max": [
+          -144.7310028076172,
+          -152.7740020751953,
+          23.512500762939453,
+          155.74899291992188,
+          138.42999267578125,
+          96.9446029663086
+        ]
+      },
+      "stream_descriptor": {
+        "record_size": 44,
+        "stride": 32,
+        "attribute_count": 3,
+        "byte_offsets_array_file_offset": 26652,
+        "scalar_types_array_file_offset": 26664,
+        "component_counts_array_file_offset": 26676,
+        "bounding_box_refs_array_file_offset": 26688,
+        "vertex_data_file_offset": 29564,
+        "vertex_data_size": 2496,
+        "vertex_data_fits_file": true,
+        "vertex_data_sha256": "ca2fc4f46984135eb03fbbc51a39c96c192960347b4feacc3a234dda30562643",
+        "runtime_buffer_word": 0,
+        "attributes": [
+          {
+            "byte_offset": 0,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 12,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 24,
+            "scalar_type": 6,
+            "components": 2,
+            "bounding_box_reference": 0
+          }
+        ]
+      },
+      "primitive": {
+        "file_offset": 26700,
+        "record_size": 56,
+        "collada_primitive_type": 0,
+        "material": "Standard_7",
+        "declared_primitive_count": 96,
+        "attribute_refs": [
+          0,
+          1,
+          -1,
+          -1,
+          2,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "minimum_index": 0,
+        "maximum_index": 77,
+        "index_count": 288,
+        "index_width_bytes": 2,
+        "index_data_file_offset": 32060,
+        "index_data_size": 576,
+        "index_data_fits_file": true,
+        "index_data_sha256": "de18df6ee14e0763e7f6ddf944941f428e339821bb9499553745c37b4794b644",
+        "observed_index_minimum": 0,
+        "observed_index_maximum": 77,
+        "triangle_list": true,
+        "declared_count_matches_indices": true
+      },
+      "payload_fixup_evidence": [
+        {
+          "payload_relative_field": "0x1c",
+          "role": "nested SMesh stream descriptor",
+          "fixup_present": true,
+          "target_file_offset": "0x67f0"
+        },
+        {
+          "payload_relative_field": "0x24",
+          "role": "nested SMesh primitive table",
+          "fixup_present": true,
+          "target_file_offset": "0x684c"
+        },
+        {
+          "payload_relative_field": "0x48",
+          "role": "attribute byte-offset array",
+          "fixup_present": true,
+          "target_file_offset": "0x681c"
+        },
+        {
+          "payload_relative_field": "0x50",
+          "role": "attribute type array",
+          "fixup_present": true,
+          "target_file_offset": "0x6828"
+        },
+        {
+          "payload_relative_field": "0x58",
+          "role": "attribute component-count array",
+          "fixup_present": true,
+          "target_file_offset": "0x6834"
+        },
+        {
+          "payload_relative_field": "0x60",
+          "role": "attribute bounding-box-reference array",
+          "fixup_present": true,
+          "target_file_offset": "0x6840"
+        },
+        {
+          "payload_relative_field": "0x64",
+          "role": "vertex bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x737c"
+        },
+        {
+          "payload_relative_field": "0xa0",
+          "role": "primitive material string",
+          "fixup_present": true,
+          "target_file_offset": "0xb48"
+        },
+        {
+          "payload_relative_field": "0xc8",
+          "role": "primitive index bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x7d3c"
+        }
+      ],
+      "bres_root_word_0x64_raw": 0,
+      "all_indices_within_declared_bounds": true
+    },
+    {
+      "file": "data/3d/interface/spell_dh2_splined_projectile.bdae",
+      "file_size": 9576,
+      "sha256": "a66c76d81c4df6b17211e72318585ef4d12f24483a1f7a4a31a3dcbcaff07670",
+      "bres_fixup_count": 281,
+      "geometry_table_count": 2,
+      "geometry_type_counts": {
+        "type_0": 1,
+        "type_1": 1,
+        "other": 0
+      },
+      "geometry_index": 0,
+      "geometry_record_file_offset": 7820,
+      "geometry_record_hex": "840a00007c0a000001000000ac1e0000",
+      "geometry_id": "Line01-spline",
+      "geometry_name": "",
+      "geometry_type": 1,
+      "payload_file_offset": 7852,
+      "opaque_prefix": {
+        "length": 20,
+        "bytes_hex": "000000000f000000030000000000000000000000",
+        "raw_u32_words": [
+          0,
+          15,
+          3,
+          0,
+          0
+        ]
+      },
+      "nested_smesh": {
+        "payload_relative_offset": "0x14",
+        "file_offset": 7872,
+        "record_size": 44,
+        "stream_mode": 1,
+        "vertex_count": 24,
+        "stream_descriptor_file_offset": 7916,
+        "primitive_count": 1,
+        "primitive_table_file_offset": 8008,
+        "bounds_xyz_min_max": [
+          -7.405220031738281,
+          -7.405220031738281,
+          -7.405220031738281,
+          7.405220031738281,
+          7.405220031738281,
+          7.405220031738281
+        ]
+      },
+      "stream_descriptor": {
+        "record_size": 44,
+        "stride": 32,
+        "attribute_count": 3,
+        "byte_offsets_array_file_offset": 7960,
+        "scalar_types_array_file_offset": 7972,
+        "component_counts_array_file_offset": 7984,
+        "bounding_box_refs_array_file_offset": 7996,
+        "vertex_data_file_offset": 8736,
+        "vertex_data_size": 768,
+        "vertex_data_fits_file": true,
+        "vertex_data_sha256": "15658bfab24dceec4de43eb657971df1c909f207bfd08c9ecf8cceb2e74b5824",
+        "runtime_buffer_word": 0,
+        "attributes": [
+          {
+            "byte_offset": 0,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 12,
+            "scalar_type": 6,
+            "components": 3,
+            "bounding_box_reference": 0
+          },
+          {
+            "byte_offset": 24,
+            "scalar_type": 6,
+            "components": 2,
+            "bounding_box_reference": 0
+          }
+        ]
+      },
+      "primitive": {
+        "file_offset": 8008,
+        "record_size": 56,
+        "collada_primitive_type": 0,
+        "material": "_7_-_Default",
+        "declared_primitive_count": 12,
+        "attribute_refs": [
+          0,
+          1,
+          -1,
+          -1,
+          2,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "minimum_index": 0,
+        "maximum_index": 23,
+        "index_count": 36,
+        "index_width_bytes": 2,
+        "index_data_file_offset": 9504,
+        "index_data_size": 72,
+        "index_data_fits_file": true,
+        "index_data_sha256": "1103d407310c34042b6a050c281e16e3e46b2345f3cfca5a2540273a83109e6a",
+        "observed_index_minimum": 0,
+        "observed_index_maximum": 23,
+        "triangle_list": true,
+        "declared_count_matches_indices": true
+      },
+      "payload_fixup_evidence": [
+        {
+          "payload_relative_field": "0x1c",
+          "role": "nested SMesh stream descriptor",
+          "fixup_present": true,
+          "target_file_offset": "0x1eec"
+        },
+        {
+          "payload_relative_field": "0x24",
+          "role": "nested SMesh primitive table",
+          "fixup_present": true,
+          "target_file_offset": "0x1f48"
+        },
+        {
+          "payload_relative_field": "0x48",
+          "role": "attribute byte-offset array",
+          "fixup_present": true,
+          "target_file_offset": "0x1f18"
+        },
+        {
+          "payload_relative_field": "0x50",
+          "role": "attribute type array",
+          "fixup_present": true,
+          "target_file_offset": "0x1f24"
+        },
+        {
+          "payload_relative_field": "0x58",
+          "role": "attribute component-count array",
+          "fixup_present": true,
+          "target_file_offset": "0x1f30"
+        },
+        {
+          "payload_relative_field": "0x60",
+          "role": "attribute bounding-box-reference array",
+          "fixup_present": true,
+          "target_file_offset": "0x1f3c"
+        },
+        {
+          "payload_relative_field": "0x64",
+          "role": "vertex bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x2220"
+        },
+        {
+          "payload_relative_field": "0xa0",
+          "role": "primitive material string",
+          "fixup_present": true,
+          "target_file_offset": "0xa1c"
+        },
+        {
+          "payload_relative_field": "0xc8",
+          "role": "primitive index bytes",
+          "fixup_present": true,
+          "target_file_offset": "0x2520"
+        }
+      ],
+      "bres_root_word_0x64_raw": 0,
+      "all_indices_within_declared_bounds": true
+    }
+  ]
+}

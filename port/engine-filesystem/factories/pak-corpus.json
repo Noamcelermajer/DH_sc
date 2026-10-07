@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "scope": "Files whose names end in .pak under the supplied recovered-cache root. Extension does not establish engine PAK format.",
+  "root_scope": "Recovered game-cache files directory supplied to the scanner at runtime.",
+  "file_count": 1,
+  "files": [
+    {
+      "path": "shaders.pak",
+      "size_bytes": 44194,
+      "sha256": "365a4d3c432454c44208ebb484c7a472a3a4534a0c5c9e77a7a90f3b87b1b5c0",
+      "first_16_bytes_hex": "50 4b 03 04 0a 00 00 00 00 00 96 7d 44 3d 45 cf",
+      "first_4_bytes_hex": "504b0304",
+      "zip_valid": true,
+      "engine_pak_header_interpretation_if_registered": {
+        "prefix_gate_passes": true,
+        "index_offset_from_plus_4": 10,
+        "record_count_from_plus_8_shift_right_6": 32921600
+      },
+      "zip_entry_count": 34,
+      "zip_crc_failure": null
+    }
+  ]
+}

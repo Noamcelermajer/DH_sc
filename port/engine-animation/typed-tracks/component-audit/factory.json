@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "description": "APK-backed material-track selection routes; numeric record fields remain unnamed where schema semantics are unresolved.",
+  "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "factory_function": {
+    "va": "0x00611ae0",
+    "file_offset": "0x00611ae0",
+    "size": 1608,
+    "sha256": "bb7590a23775d34fa5821fac78f1e6330a691b0c929b23cf1a3eedb733f37f72",
+    "aliases": [
+      "glitch::collada::CColladaDatabase::getAnimationTrackEx(glitch::collada::SAnimation const*)"
+    ]
+  },
+  "dispatch": {
+    "material_outer_case_va": "0x00611c60",
+    "case_after_one_based_adjustment": 86,
+    "material_discriminator_va": "0x00611c88",
+    "float_cache_lookup_va": "0x00611f9c",
+    "float_cache_init_va": "0x00612074",
+    "color_shape_dispatch_va": "0x00611e70",
+    "observed_numeric_flow": [
+      "The outer switch reaches the material branch at 0x611c60.",
+      "The branch reads a nested value at [r2+0x10] and secondary selector at [r2+0x14].",
+      "The float route initializes and indexes a singleton table of float tracks.",
+      "The color route selects U8[3]/U8[4] SColor track specializations."
+    ],
+    "field_semantics": "The nested numeric fields' source names and serialized meanings remain unresolved."
+  },
+  "float_cache_word_offsets": {
+    "0x10": "float1 component -1",
+    "0x14": "float1 component -1 (same singleton)",
+    "0x24": "float2 component -1",
+    "0x28": "float2 component 0",
+    "0x2c": "float2 component 1",
+    "0x38": "float3 component -1",
+    "0x3c": "float3 component 0",
+    "0x40": "float3 component 0 (same singleton)",
+    "0x44": "float3 component 0 (same singleton)",
+    "0x4c": "float4 component -1",
+    "0x50": "float4 component 0",
+    "0x54": "float4 component 1",
+    "0x58": "float4 component 2",
+    "0x5c": "float4 component 3"
+  },
+  "singleton_initializers": [
+    {
+      "value_type": "float",
+      "arity": 1,
+      "component": -1,
+      "get_instance_va": "0x0061110c",
+      "get_instance_size": 148,
+      "get_instance_sha256": "733be348d05c5e51197510512b81a6f5671a98303f6e76e9e7eb5481850cff45",
+      "vtable_va": "0x00979dc8",
+      "factory_cache_word_offsets": [
+        "0x10",
+        "0x14"
+      ]
+    },
+    {
+      "value_type": "float",
+      "arity": 2,
+      "component": -1,
+      "get_instance_va": "0x006115ac",
+      "get_instance_size": 148,
+      "get_instance_sha256": "f6a23f28ec8f3b9095cf94092aa208b8c76d0fbf1009618d979a6a9fb2fb99d9",
+      "vtable_va": "0x0097a288",
+      "factory_cache_word_offsets": [
+        "0x24"
+      ]
+    },
+    {
+      "value_type": "float",
+      "arity": 2,
+      "component": 0,
+      "get_instance_va": "0x006111a0",
+      "get_instance_size": 148,
+      "get_instance_sha256": "5c3f4f3158e9101bcca5613458e2f0c261e01067c56229f3f89f376f44529942",
+      "vtable_va": "0x00979e60",
+      "factory_cache_word_offsets": [
+        "0x28"
+      ]
+    },
+    {
+      "value_type": "float",
+      "arity": 2,
+      "component": 1,
+      "get_instance_va": "0x00611234",
+      "get_instance_size": 148,
+      "get_instance_sha256": "746e3dc1491c6c9a3b414697894c006db5a3e25b27daec48404af9e47e90c337",
+      "vtable_va": "0x00979ef8",
+      "factory_cache_word_offsets": [
+        "0x2c"
+      ]
+    },
+    {
+      "value_type": "float",
+      "arity": 3,
+      "component": -1,
+      "get_instance_va": "0x00611640",
+      "get_instance_size": 148,
+      "get_instance_sha256": "d328cd9724a5047076b3713c49d335ff85bf44310063108f331a435f024313dd",
+      "vtable_va": "0x0097a320",
+      "factory_cache_word_offsets": [
+        "0x38"
+      ]
+    },
+    {
+      "value_type": "float",
+      "arity": 3,
+      "component": 0,
+      "get_instance_va": "0x006112c8",
+      "get_instance_size": 148,
+      "get_instance_sha256": "47cf8c1d9a6557f3f6e86689d5e66d9a32957b4efe6e96dff6e96d126f9ba396",
+      "vtable_va": "0x00979f90",
+      "factory_cache_word_offsets": [
+        "0x3c",
+        "0x40",
+        "0x44"
+      ]
+    },
+    {
+      "value_type": "float",
+      "arity": 4,
+      "component": -1,
+      "get_instance_va": "0x006116d4",
+      "get_instance_size": 148,
+      "get_instance_sha256": "97fcfd6f0660d9aa5c01b5abb7805657f038affd141167c7afefbc39603c33c5",
+      "vtable_va": "0x0097a3b8",
+      "factory_cache_word_offsets": [
+        "0x4c"
+      ]
+    },
+    {
+      "value_type": "float",
+      "arity": 4,
+      "component": 0,
+      "get_instance_va": "0x0061135c",
+      "get_instance_size": 148,
+      "get_instance_sha256": "20e83e742bd23554acc2afac2b43886b6f75040e4b77e0534cd36ab4ad4aaefa",
+      "vtable_va": "0x0097a028",
+      "factory_cache_word_offsets": [
+        "0x50"
+      ]
+    },
+    {
+      "value_type": "float",
+      "arity": 4,
+      "component": 1,
+      "get_instance_va": "0x006113f0",
+      "get_instance_size": 148,
+      "get_instance_sha256": "47b7743a1ef721e55061dedee5ff0a2b4a62472ce54831f256718d8082769c8d",
+      "vtable_va": "0x0097a0c0",
+      "factory_cache_word_offsets": [
+        "0x54"
+      ]
+    },
+    {
+      "value_type": "float",
+      "arity": 4,
+      "component": 2,
+      "get_instance_va": "0x00611484",
+      "get_instance_size": 148,
+      "get_instance_sha256": "5b8a485eccaa72ba5fd027ec9a88197aee52ae5f1c3d71496311b9aa5ac20d10",
+      "vtable_va": "0x0097a158",
+      "factory_cache_word_offsets": [
+        "0x58"
+      ]
+    },
+    {
+      "value_type": "float",
+      "arity": 4,
+      "component": 3,
+      "get_instance_va": "0x00611518",
+      "get_instance_size": 148,
+      "get_instance_sha256": "a371ca3c5fce8b4ad21701ca46507a92e89933da1f1fcdaccda1c0ec07139646",
+      "vtable_va": "0x0097a1f0",
+      "factory_cache_word_offsets": [
+        "0x5c"
+      ]
+    },
+    {
+      "value_type": "u8",
+      "arity": 3,
+      "component": -1,
+      "get_instance_va": "0x00611a4c",
+      "get_instance_size": 148,
+      "get_instance_sha256": "d61b3b56959be4443af548abde290f95a433619fe9a087b4897647ad4e85ad52",
+      "vtable_va": "0x0097a6b0",
+      "factory_cache_word_offsets": []
+    },
+    {
+      "value_type": "u8",
+      "arity": 4,
+      "component": -1,
+      "get_instance_va": "0x006119b8",
+      "get_instance_size": 148,
+      "get_instance_sha256": "ea3da8c11c0d56f856132ee047c46f2d9aba651d32055f2c52fb620370301644",
+      "vtable_va": "0x0097a748",
+      "factory_cache_word_offsets": []
+    },
+    {
+      "value_type": "u8",
+      "arity": 4,
+      "component": 0,
+      "get_instance_va": "0x00611768",
+      "get_instance_size": 148,
+      "get_instance_sha256": "22760f0c3a422bb70e1cc171f3591d8d6e13c3e6aa705c40d7ef588d6ba2a818",
+      "vtable_va": "0x0097a450",
+      "factory_cache_word_offsets": []
+    },
+    {
+      "value_type": "u8",
+      "arity": 4,
+      "component": 1,
+      "get_instance_va": "0x006117fc",
+      "get_instance_size": 148,
+      "get_instance_sha256": "e0daa8381d579b90dbe0973bc952e100530b3cc8436db836026299a3c8e8b0c3",
+      "vtable_va": "0x0097a4e8",
+      "factory_cache_word_offsets": []
+    },
+    {
+      "value_type": "u8",
+      "arity": 4,
+      "component": 2,
+      "get_instance_va": "0x00611890",
+      "get_instance_size": 148,
+      "get_instance_sha256": "593d114e9cc92ac5e8b739088d3228b186f72d31ae543aeee92feafefb2e5471",
+      "vtable_va": "0x0097a580",
+      "factory_cache_word_offsets": []
+    },
+    {
+      "value_type": "u8",
+      "arity": 4,
+      "component": 3,
+      "get_instance_va": "0x00611924",
+      "get_instance_size": 148,
+      "get_instance_sha256": "f8e5b818e045a7a81e8ff64a8c0d79bf330c6a585b24306346bec067286c4325",
+      "vtable_va": "0x0097a618",
+      "factory_cache_word_offsets": []
+    }
+  ],
+  "material_setter_dependencies": [
+    {
+      "role": "float1_setter",
+      "va": "0x005c6b8c",
+      "file_offset": "0x005c6b8c",
+      "size": 212,
+      "sha256": "06f7d7773201b3e95917ee66bd08999bfe59994666ddd98462836272ecbdf324",
+      "aliases": [
+        "boost::enable_if<glitch::video::detail::SIsValidSetMaterialParamaterOverload<float>, bool>::type glitch::video::detail::IMaterialParameters<glitch::video::CMaterial, glitch::ISharedMemoryBlockHeader<glitch::video::CMaterial> >::setParameterCvt<float>(unsigned short, unsigned int, float const&)"
+      ]
+    },
+    {
+      "role": "float2_setter",
+      "va": "0x005c6c60",
+      "file_offset": "0x005c6c60",
+      "size": 212,
+      "sha256": "69340ebf775cccebcfaee287d2861aaefe5376a0f31ebfdfba33e7b7f52bd36c",
+      "aliases": [
+        "boost::enable_if<glitch::video::detail::SIsValidSetMaterialParamaterOverload<glitch::core::vector2d<float> >, bool>::type glitch::video::detail::IMaterialParameters<glitch::video::CMaterial, glitch::ISharedMemoryBlockHeader<glitch::video::CMaterial> >::setParameterCvt<glitch::core::vector2d<float> >(unsigned short, unsigned int, glitch::core::vector2d<float> const&)"
+      ]
+    },
+    {
+      "role": "float3_setter",
+      "va": "0x005c6d34",
+      "file_offset": "0x005c6d34",
+      "size": 240,
+      "sha256": "e148425119034dc218b90144fed2b81bd1939f4b725ed11518643f52b92e3c74",
+      "aliases": [
+        "boost::enable_if<glitch::video::detail::SIsValidSetMaterialParamaterOverload<glitch::core::vector3d<float> >, bool>::type glitch::video::detail::IMaterialParameters<glitch::video::CMaterial, glitch::ISharedMemoryBlockHeader<glitch::video::CMaterial> >::setParameterCvt<glitch::core::vector3d<float> >(unsigned short, unsigned int, glitch::core::vector3d<float> const&)"
+      ]
+    },
+    {
+      "role": "float4_setter",
+      "va": "0x005ce768",
+      "file_offset": "0x005ce768",
+      "size": 500,
+      "sha256": "a3adc1b54f00d60571ed8215f9fcbdf89641323c6b14762c1ee09d3e845d5fe5",
+      "aliases": [
+        "boost::enable_if<glitch::video::detail::SIsValidSetMaterialParamaterOverload<glitch::core::vector4d<float> >, bool>::type glitch::video::detail::IMaterialParameters<glitch::video::CMaterial, glitch::ISharedMemoryBlockHeader<glitch::video::CMaterial> >::setParameterCvt<glitch::core::vector4d<float> >(unsigned short, unsigned int, glitch::core::vector4d<float> const&)"
+      ]
+    },
+    {
+      "role": "scolor_setter",
+      "va": "0x005cad38",
+      "file_offset": "0x005cad38",
+      "size": 472,
+      "sha256": "17c62a6906f872d43deac5d7748b449678121518a98f8269f6e4f3d4855e6f01",
+      "aliases": [
+        "boost::enable_if<glitch::video::detail::SIsValidSetMaterialParamaterOverload<glitch::video::SColor>, bool>::type glitch::video::detail::IMaterialParameters<glitch::video::CMaterial, glitch::ISharedMemoryBlockHeader<glitch::video::CMaterial> >::setParameterCvt<glitch::video::SColor>(unsigned short, unsigned int, glitch::video::SColor const&)"
+      ]
+    },
+    {
+      "role": "float_to_unsigned_int",
+      "va": "0x008be2a0",
+      "file_offset": "0x008be2a0",
+      "size": 84,
+      "sha256": "1bfbab489e0e7b2166376f736f04f891a50f7bf04191cfb8731e5294b752d66f",
+      "aliases": [
+        "__aeabi_f2uiz",
+        "__fixunssfsi"
+      ]
+    }
+  ],
+  "disassembly": "apk-arm-disassembly.asm",
+  "vtable_matrix": "vtables.json"
+}

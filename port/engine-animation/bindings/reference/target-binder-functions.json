@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "description": "Exact ARM evidence for binding compiled animation tracks in CSceneNodeAnimatorSet to scene-node pointers.",
+  "elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "elf_class": 32,
+    "endianness": "little",
+    "machine": 40,
+    "load_segments": [
+      {
+        "type": "PT_LOAD",
+        "p_offset": "0x000000",
+        "p_vaddr": "0x000000",
+        "p_filesz": "0x955130"
+      },
+      {
+        "type": "PT_LOAD",
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x04954c"
+      }
+    ],
+    "file_offset_formula": "p_offset + (elf_virtual_address - p_vaddr)"
+  },
+  "assembly_excerpt": {
+    "path": "reference/target-binder-functions.asm",
+    "sha256": "9d7e69051010823355ed50995fb77ebdfb85b0faeb09176f2a7833f06dcc76bc"
+  },
+  "vtable": {
+    "name": "_ZTVN6glitch7collada21CSceneNodeAnimatorSetE",
+    "demangled": "vtable for glitch::collada::CSceneNodeAnimatorSet",
+    "elf_virtual_address": "0x00983e60",
+    "elf_file_offset": "0x982e60",
+    "elf_size_bytes": 204,
+    "bytes_sha256": "b4c4f22595f1e976f714273c03abb08231e5a5d61d6d052252e4e26abe7c0d44",
+    "address_point_offset": 12,
+    "relevant_entries": [
+      {
+        "vtable_offset": 96,
+        "vptr_call_offset": "0x54",
+        "target": "glitch::collada::CSceneNodeAnimatorSet::getAnimationTrack(int)"
+      },
+      {
+        "vtable_offset": 116,
+        "vptr_call_offset": "0x68",
+        "target": "glitch::collada::CSceneNodeAnimatorSet::setTarget(int, void*, glitch::collada::animation_track::CApplicatorInfo const*)"
+      },
+      {
+        "vtable_offset": 120,
+        "vptr_call_offset": "0x6c",
+        "target": "glitch::collada::CSceneNodeAnimatorSet::getBindURI(int)"
+      },
+      {
+        "vtable_offset": 124,
+        "vptr_call_offset": "0x70",
+        "target": "glitch::collada::CSceneNodeAnimatorSet::getTargetCount()"
+      }
+    ],
+    "source_listing": "work/recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/vtables-001.json"
+  },
+  "binder_observations": [
+    {
+      "claim": "On bind, the animator stores the supplied scene node at this+0x10. When virtual getTargetCount() returns nonzero, onBind tail-branches to forceBind(); zero returns without binding.",
+      "evidence": [
+        "ISceneNodeAnimator::onBind"
+      ]
+    },
+    {
+      "claim": "forceBind reads each track\u2019s bind URI and track type. For selected track types including 1, 5, and 10, the switch reaches the shared handler at 0x0066820c. That handler calls getSceneNodeFromUID(boundSceneNode, bindURI), then indexed setTarget(index, resolvedNode, nullptr); if nonnull, it registers the animator on the node.",
+      "evidence": [
+        "ISceneNodeAnimator::forceBind",
+        "ISceneNode::getSceneNodeFromUID"
+      ]
+    },
+    {
+      "claim": "CSceneNodeAnimatorSet overrides the virtual track, bind-URI, target-count, and indexed set-target operations used by forceBind. Its CAnimationSet pointer is at +0x24; target pointers are stored in +0x28[index], and applyAnimationValues consumes the stored target while applying the corresponding track.",
+      "evidence": [
+        "CSceneNodeAnimatorSet::init",
+        "CSceneNodeAnimatorSet::getAnimationTrack",
+        "CSceneNodeAnimatorSet::getBindURI",
+        "CSceneNodeAnimatorSet::getTargetCount",
+        "CSceneNodeAnimatorSet::setTarget",
+        "CSceneNodeAnimatorSet::applyAnimationValues"
+      ]
+    },
+    {
+      "claim": "The transform-template side is linked by the bind-string value: addTransformationTargets seeds codes 1, 5, 10 with node pointers; isAnimationExist compares the channel bind string to a seeded node name and admits a matching channel family. At runtime the same bind string is passed to the method named getSceneNodeFromUID. This links the key value through the path without proving whether the serialized key is semantically a node name, UID, or path, or the meaning of other channel payload fields.",
+      "evidence": [
+        "existing channel-runtime-functions.json: CAnimationSetTransformationTemplate::addTransformationTargets at 0x006e24e8",
+        "existing channel-runtime-functions.json: CAnimationSetTransformationTemplate::isAnimationExist at 0x006e22cc"
+      ]
+    }
+  ],
+  "unresolved": [
+    "The binary establishes that the bind string is compared with a seeded node name and then passed as the scene-tree lookup key, with resolved node pointers stored. It does not settle whether the key semantically represents a name, UID, or path, or what every serialized channel field means.",
+    "No coordinate-space interpretation is added by this binder trace. The target-specific position setter evidence is documented separately in port/engine-animation/targets/ANALYSIS.md."
+  ],
+  "functions": [
+    {
+      "name": "ISceneNodeAnimator::onBind",
+      "claim": "Stores the newly bound ISceneNode at animator+0x10; if virtual target count is nonzero, tail-branches to forceBind.",
+      "original_symbol": "_ZN6glitch7collada18ISceneNodeAnimator6onBindEPNS_5scene10ISceneNodeE",
+      "demangled": "glitch::collada::ISceneNodeAnimator::onBind(glitch::scene::ISceneNode*)",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_ISceneNodeAnimator-827428b83dec-001.asm",
+      "source_lines": {
+        "start": 1651,
+        "end": 1670
+      },
+      "elf_virtual_address": "0x00669538",
+      "elf_file_offset": "0x669538",
+      "elf_size_bytes": 60,
+      "function_bytes_sha256": "266328d57a23a9b07ff550103176a2aecf490b8567914199c2497bc2adad097e",
+      "listing_bytes_sha256": "266328d57a23a9b07ff550103176a2aecf490b8567914199c2497bc2adad097e",
+      "listing_matches_apk": true
+    },
+    {
+      "name": "ISceneNodeAnimator::forceBind",
+      "claim": "Iterates target indices, obtains each bind URI and track, then resolves selected track types through getSceneNodeFromUID and indexed setTarget.",
+      "original_symbol": "_ZN6glitch7collada18ISceneNodeAnimator9forceBindEv",
+      "demangled": "glitch::collada::ISceneNodeAnimator::forceBind()",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_ISceneNodeAnimator-827428b83dec-001.asm",
+      "source_lines": {
+        "start": 261,
+        "end": 1649
+      },
+      "elf_virtual_address": "0x00667f18",
+      "elf_file_offset": "0x667f18",
+      "elf_size_bytes": 5664,
+      "function_bytes_sha256": "fbda4533e3c9b612740e7fe97579c2ada6e0f2c2c8155fb31a3673d07bb9ffff",
+      "listing_bytes_sha256": "fbda4533e3c9b612740e7fe97579c2ada6e0f2c2c8155fb31a3673d07bb9ffff",
+      "listing_matches_apk": true
+    },
+    {
+      "name": "ISceneNode::getSceneNodeFromUID",
+      "claim": "Looks up the supplied identifier from this node and recursively through child nodes.",
+      "original_symbol": "_ZN6glitch5scene10ISceneNode19getSceneNodeFromUIDEPKc",
+      "demangled": "glitch::scene::ISceneNode::getSceneNodeFromUID(char const*)",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_scene_ISceneNode-7824e152fc5a-001.asm",
+      "source_lines": {
+        "start": 1587,
+        "end": 1620
+      },
+      "elf_virtual_address": "0x005985e4",
+      "elf_file_offset": "0x5985e4",
+      "elf_size_bytes": 116,
+      "function_bytes_sha256": "4f68498182238aa5d2be99f7c88d24eda20db6322a45c6fbecff7572171713fd",
+      "listing_bytes_sha256": "4f68498182238aa5d2be99f7c88d24eda20db6322a45c6fbecff7572171713fd",
+      "listing_matches_apk": true
+    },
+    {
+      "name": "CSceneNodeAnimatorSet::init",
+      "claim": "Retains a CAnimationSet at animator-set+0x24 and sizes/initializes the per-target and applicator-info arrays.",
+      "original_symbol": "_ZN6glitch7collada21CSceneNodeAnimatorSet4initERKN5boost13intrusive_ptrINS0_13CAnimationSetEEE",
+      "demangled": "glitch::collada::CSceneNodeAnimatorSet::init(boost::intrusive_ptr<glitch::collada::CAnimationSet> const&)",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CSceneNodeAnimatorSet-f431ba0fb368-001.asm",
+      "source_lines": {
+        "start": 815,
+        "end": 894
+      },
+      "elf_virtual_address": "0x00660af4",
+      "elf_file_offset": "0x660af4",
+      "elf_size_bytes": 300,
+      "function_bytes_sha256": "4d622d34b7ad7fef4c2d59bc42fa36ff9092eb5c736d0dde93d0a1bb8d530776",
+      "listing_bytes_sha256": "4d622d34b7ad7fef4c2d59bc42fa36ff9092eb5c736d0dde93d0a1bb8d530776",
+      "listing_matches_apk": true
+    },
+    {
+      "name": "CSceneNodeAnimatorSet::getAnimationTrack",
+      "claim": "Delegates indexed track retrieval to the CAnimationSet stored at animator-set+0x24.",
+      "original_symbol": "_ZN6glitch7collada21CSceneNodeAnimatorSet17getAnimationTrackEi",
+      "demangled": "glitch::collada::CSceneNodeAnimatorSet::getAnimationTrack(int)",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CSceneNodeAnimatorSet-f431ba0fb368-001.asm",
+      "source_lines": {
+        "start": 45,
+        "end": 56
+      },
+      "elf_virtual_address": "0x0065f124",
+      "elf_file_offset": "0x65f124",
+      "elf_size_bytes": 28,
+      "function_bytes_sha256": "f30e4a12aac1cf45d3f451b2c0a5aff0274d326589f647515e2f2bb50d29e825",
+      "listing_bytes_sha256": "f30e4a12aac1cf45d3f451b2c0a5aff0274d326589f647515e2f2bb50d29e825",
+      "listing_matches_apk": true
+    },
+    {
+      "name": "CSceneNodeAnimatorSet::getBindURI",
+      "claim": "Delegates indexed bind-URI retrieval to its CAnimationSet and returns the URI pointer field.",
+      "original_symbol": "_ZN6glitch7collada21CSceneNodeAnimatorSet10getBindURIEi",
+      "demangled": "glitch::collada::CSceneNodeAnimatorSet::getBindURI(int)",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CSceneNodeAnimatorSet-f431ba0fb368-001.asm",
+      "source_lines": {
+        "start": 71,
+        "end": 83
+      },
+      "elf_virtual_address": "0x0065f15c",
+      "elf_file_offset": "0x65f15c",
+      "elf_size_bytes": 32,
+      "function_bytes_sha256": "5e1babc7345df6dc294bf2982cb4be9fc91c8cdecc4f04ea066cc08a233a8b02",
+      "listing_bytes_sha256": "5e1babc7345df6dc294bf2982cb4be9fc91c8cdecc4f04ea066cc08a233a8b02",
+      "listing_matches_apk": true
+    },
+    {
+      "name": "CSceneNodeAnimatorSet::getTargetCount",
+      "claim": "Returns the target/track count stored in its CAnimationSet.",
+      "original_symbol": "_ZN6glitch7collada21CSceneNodeAnimatorSet14getTargetCountEv",
+      "demangled": "glitch::collada::CSceneNodeAnimatorSet::getTargetCount()",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CSceneNodeAnimatorSet-f431ba0fb368-001.asm",
+      "source_lines": {
+        "start": 85,
+        "end": 92
+      },
+      "elf_virtual_address": "0x0065f17c",
+      "elf_file_offset": "0x65f17c",
+      "elf_size_bytes": 12,
+      "function_bytes_sha256": "2bf4dba9f1efe00f1291ee5884e7e776ca105206582207aecceb30e90693853f",
+      "listing_bytes_sha256": "2bf4dba9f1efe00f1291ee5884e7e776ca105206582207aecceb30e90693853f",
+      "listing_matches_apk": true
+    },
+    {
+      "name": "CSceneNodeAnimatorSet::setTarget",
+      "claim": "Stores the resolved target pointer at animator-set+0x28[index] and manages the indexed applicator-info reference at +0x34.",
+      "original_symbol": "_ZN6glitch7collada21CSceneNodeAnimatorSet9setTargetEiPvPKNS0_15animation_track15CApplicatorInfoE",
+      "demangled": "glitch::collada::CSceneNodeAnimatorSet::setTarget(int, void*, glitch::collada::animation_track::CApplicatorInfo const*)",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CSceneNodeAnimatorSet-f431ba0fb368-001.asm",
+      "source_lines": {
+        "start": 138,
+        "end": 168
+      },
+      "elf_virtual_address": "0x0065f208",
+      "elf_file_offset": "0x65f208",
+      "elf_size_bytes": 104,
+      "function_bytes_sha256": "b60ff7e1629da4f590cad39b141912931015f16e561ad9069b7773992bfb52b1",
+      "listing_bytes_sha256": "b60ff7e1629da4f590cad39b141912931015f16e561ad9069b7773992bfb52b1",
+      "listing_matches_apk": true
+    },
+    {
+      "name": "CSceneNodeAnimatorSet::applyAnimationValues",
+      "claim": "Loads the indexed stored target and track and drives the animation-value apply path.",
+      "original_symbol": "_ZN6glitch7collada21CSceneNodeAnimatorSet20applyAnimationValuesEj",
+      "demangled": "glitch::collada::CSceneNodeAnimatorSet::applyAnimationValues(unsigned int)",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CSceneNodeAnimatorSet-f431ba0fb368-001.asm",
+      "source_lines": {
+        "start": 240,
+        "end": 357
+      },
+      "elf_virtual_address": "0x0065f418",
+      "elf_file_offset": "0x65f418",
+      "elf_size_bytes": 452,
+      "function_bytes_sha256": "1388b8745eb8a004e7200c5cfdb6e4528a19c3dd80413fd2dc8567998906c66d",
+      "listing_bytes_sha256": "1388b8745eb8a004e7200c5cfdb6e4528a19c3dd80413fd2dc8567998906c66d",
+      "listing_matches_apk": true
+    }
+  ]
+}

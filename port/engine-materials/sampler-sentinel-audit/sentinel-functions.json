@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "source": {
+    "apk": "Dungeon-Hunter-2-HD-v1-0-2.apk",
+    "apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+    "member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "elf_class": "ELF32 little-endian ARM",
+    "pt_loads": [
+      {"vaddr": "0x00000000", "file_offset": "0x00000000", "file_size": "0x955130"},
+      {"vaddr": "0x00956130", "file_offset": "0x00955130", "file_size": "0x0004954c"}
+    ]
+  },
+  "ranges": [
+    {
+      "name": "CResFileManager::CResFileManager (base constructor)",
+      "vaddr": "0x00657894",
+      "size": 128,
+      "file_offset": "0x00657894",
+      "sha256": "0d80677b754ae0b1191a5e467258568e7dddfe3d6647fa556104a0641c868ee9"
+    },
+    {
+      "name": "CResFileManager::CResFileManager (complete constructor)",
+      "vaddr": "0x00657914",
+      "size": 128,
+      "file_offset": "0x00657914",
+      "sha256": "d4fdb3614ec2ce867f1fc0904f98fdaa95457d10c782b4e9d599d7e5b0538cc5"
+    },
+    {
+      "name": "CResFileManager::~CResFileManager (base destructor)",
+      "vaddr": "0x006582c4",
+      "size": 228,
+      "file_offset": "0x006582c4",
+      "sha256": "47dbdb518f6635318dc1ab62a6e2d17c889246496672439e749222ebe9ac7810"
+    },
+    {
+      "name": "CResFileManager::get(char const*, bool)",
+      "vaddr": "0x0065a9a8",
+      "size": 692,
+      "file_offset": "0x0065a9a8",
+      "sha256": "62a918d472da5807ba14390942d578cd99130a7929117f900cb0bbc0b5060854"
+    },
+    {
+      "name": "std::priv::_Rb_tree<std::string, CResFile*>::_M_lower_bound<char const*>",
+      "vaddr": "0x00659d9c",
+      "size": 416,
+      "file_offset": "0x00659d9c",
+      "sha256": "40549a055f92d8c1c1cc98d256a03f3a3014c7193d58f44b8fd1e04882a20365"
+    },
+    {
+      "name": "std::map<std::string, CResFile*>::operator[]<char const*>",
+      "vaddr": "0x0065a5cc",
+      "size": 380,
+      "file_offset": "0x0065a5cc",
+      "sha256": "9faf24faf46b50579abfd6f521a1508d21fe3cae0c1cdba4f8ebe2d9ea26ea0a"
+    }
+  ],
+  "cross_references": {
+    "post_load_process": "port/engine-materials/texture-runtime-link/texture-runtime-link-ranges.json",
+    "material_creation": "port/engine-materials/texture-runtime-link/texture-runtime-link-ranges.json",
+    "cache_tree_lookup": "0x00659d9c",
+    "cache_tree_insert": "0x0065a5cc",
+    "sampler_value_asset": {
+      "file": "3d/gameobjects/dummy_lever_lockable.bdae",
+      "sha256": "0f83f62a0669ce704f9615c4acc8edc0f1cf0591b709afb2ca6697a821cc2937",
+      "parameter_offset": "0x7e2c",
+      "parameter_value_cell": "0x7f30",
+      "value": "0xffffffff"
+    }
+  }
+}

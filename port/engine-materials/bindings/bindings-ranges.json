@@ -1,0 +1,313 @@
+{
+  "schema_version": 1,
+  "title": "DH2 reflected shader parameter to material binding construction",
+  "hash_basis": "Function ranges were read from the APK member ELF through a file-backed PT_LOAD mapping. Every emitted ARM listing row was byte-compared with the same mapped APK ELF bytes. Full range hashes are independent of listing excerpt length.",
+  "source_apk": {
+    "path": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+    "sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200"
+  },
+  "source_elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "load_segments": [
+      {
+        "index": 0,
+        "file_offset": 0,
+        "virtual_address": 0,
+        "file_size": 9785648,
+        "memory_size": 9785648,
+        "flags": 5,
+        "program_header_index": 1
+      },
+      {
+        "index": 1,
+        "file_offset": 9785648,
+        "virtual_address": 9789744,
+        "file_size": 300364,
+        "memory_size": 914688,
+        "flags": 6,
+        "program_header_index": 2
+      }
+    ]
+  },
+  "ranges": [
+    {
+      "key": "shader_uniform_reflection",
+      "kind": "function",
+      "symbol": "glitch::video::CGLSLShader::linkProgram()",
+      "elf_va": "0x006de9f8",
+      "range_size": 1444,
+      "elf_file_offset": 7203320,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "28361c0616a3366900ac7a3dc1c7b5bc77857fb68bb4a3ec4e55529bc4d1d830",
+      "source_assembly": "glitch_video_CGLSLShader-48e3be0db2af-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x006ded0c",
+          "range_size": 232,
+          "elf_file_offset": 7204108,
+          "pt_load_segment_index": 0,
+          "sha256": "3f4e774c4077453756f4770c7c49222b7d123c79d73f6649ee4abca6cc2ca573",
+          "purpose": "glGetActiveUniform name/type/array data, name-derived parameter type, glGetUniformLocation, and reflected record stores"
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; emitted listing rows byte-compared to the mapped APK ELF slice"
+    },
+    {
+      "key": "shader_parameter_name_index_lookup",
+      "kind": "function",
+      "symbol": "SIDedCollection<SShaderParameterDef>::getId(char const*) const",
+      "elf_va": "0x005bb378",
+      "range_size": 84,
+      "elf_file_offset": 6009720,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "cad9636e5504dd32339f265c2fc27f612971f8a586568ff773bde867e2999137",
+      "source_assembly": "glitch_core_detail_SIDedCollection_glitch_video_SShaderParameterDef_unsigned_short_false_g-8b5dcbd6e70e-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005bb378",
+          "range_size": 84,
+          "elf_file_offset": 6009720,
+          "pt_load_segment_index": 0,
+          "sha256": "cad9636e5504dd32339f265c2fc27f612971f8a586568ff773bde867e2999137",
+          "purpose": "string-key lookup and returned 16-bit ID"
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; emitted listing rows byte-compared to the mapped APK ELF slice"
+    },
+    {
+      "key": "creation_state_parameter_name_lookup",
+      "kind": "function",
+      "symbol": "CMaterialRendererManager::getParameterIDInternal(SSharedString const&) const",
+      "elf_va": "0x005dbc04",
+      "range_size": 64,
+      "elf_file_offset": 6142980,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "909a3e53c060ccb2aa0afa984fbacfc5f7627a35a0bd498a67d169246e64c3aa",
+      "source_assembly": "glitch_video_CMaterialRendererManager-a4bf824a9f3f-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005dbc04",
+          "range_size": 64,
+          "elf_file_offset": 6142980,
+          "pt_load_segment_index": 0,
+          "sha256": "909a3e53c060ccb2aa0afa984fbacfc5f7627a35a0bd498a67d169246e64c3aa",
+          "purpose": "creation-state ordered-map lookup using SSharedString key"
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; emitted listing rows byte-compared to the mapped APK ELF slice"
+    },
+    {
+      "key": "end_technique_reflected_parameter_walk",
+      "kind": "function",
+      "symbol": "CMaterialRendererManager::endTechnique(bool, unsigned short)",
+      "elf_va": "0x005dd664",
+      "range_size": 424,
+      "elf_file_offset": 6149732,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "048d706298122551ebb213e8d69d121f68e6ccccc8566a2521017d4c2f3da624",
+      "source_assembly": "glitch_video_CMaterialRendererManager-a4bf824a9f3f-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005dd664",
+          "range_size": 424,
+          "elf_file_offset": 6149732,
+          "pt_load_segment_index": 0,
+          "sha256": "048d706298122551ebb213e8d69d121f68e6ccccc8566a2521017d4c2f3da624",
+          "purpose": "walk pass shader parameter records and call autoAddAndBindParameter"
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; emitted listing rows byte-compared to the mapped APK ELF slice"
+    },
+    {
+      "key": "auto_add_and_bind_parameter",
+      "kind": "function",
+      "symbol": "CMaterialRendererManager::autoAddAndBindParameter(SRenderPass&, unsigned short, E_SHADER_STAGE, unsigned short, unsigned short)",
+      "elf_va": "0x005dd250",
+      "range_size": 1044,
+      "elf_file_offset": 6148688,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "3936928c0301e634f2ed858e395557adfc8de62f702d7a7bb388b17c191e3e67",
+      "source_assembly": "glitch_video_CMaterialRendererManager-a4bf824a9f3f-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005dd250",
+          "range_size": 1044,
+          "elf_file_offset": 6148688,
+          "pt_load_segment_index": 0,
+          "sha256": "3936928c0301e634f2ed858e395557adfc8de62f702d7a7bb388b17c191e3e67",
+          "purpose": "derive shader parameter name, lookup or create manager definition, and forward binding"
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; emitted listing rows byte-compared to the mapped APK ELF slice"
+    },
+    {
+      "key": "bind_parameter_definition_to_pass",
+      "kind": "function",
+      "symbol": "CMaterialRendererManager::bindParameter(SShaderParameterDef const*, unsigned short, E_SHADER_PARAMETER_TYPE, SRenderPass&, unsigned short, E_SHADER_STAGE)",
+      "elf_va": "0x005da160",
+      "range_size": 1088,
+      "elf_file_offset": 6136160,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "b2739cab7ec72779b63aab74f37d5627af9239b1f5e11fa6886ad52ca2303b40",
+      "source_assembly": "glitch_video_CMaterialRendererManager-a4bf824a9f3f-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005da160",
+          "range_size": 1088,
+          "elf_file_offset": 6136160,
+          "pt_load_segment_index": 0,
+          "sha256": "b2739cab7ec72779b63aab74f37d5627af9239b1f5e11fa6886ad52ca2303b40",
+          "purpose": "check definition/type compatibility and record parameter link in pass state"
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; emitted listing rows byte-compared to the mapped APK ELF slice"
+    },
+    {
+      "key": "bind_parameter_by_temporary_id",
+      "kind": "function",
+      "symbol": "CMaterialRendererManager::bindParameter(STemporaryID, E_SHADER_PARAMETER_TYPE, STemporaryID, unsigned char, unsigned short, E_SHADER_STAGE)",
+      "elf_va": "0x005da83c",
+      "range_size": 128,
+      "elf_file_offset": 6137916,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "d851548951a481b7dbb564c944f8b6bf1483647fb355e87233d18399b7e0ffd6",
+      "source_assembly": "glitch_video_CMaterialRendererManager-a4bf824a9f3f-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005da83c",
+          "range_size": 128,
+          "elf_file_offset": 6137916,
+          "pt_load_segment_index": 0,
+          "sha256": "d851548951a481b7dbb564c944f8b6bf1483647fb355e87233d18399b7e0ffd6",
+          "purpose": "resolve temporary definition ID, validate range, and delegate to definition bind"
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; emitted listing rows byte-compared to the mapped APK ELF slice"
+    },
+    {
+      "key": "manager_add_parameter_definition",
+      "kind": "function",
+      "symbol": "CMaterialRendererManager::addParameterInternal(SSharedString const&, E_SHADER_PARAMETER_TYPE, E_SHADER_PARAMETER_VALUE_TYPE, unsigned int, bool)",
+      "elf_va": "0x005dcd64",
+      "range_size": 112,
+      "elf_file_offset": 6147428,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "d45522ac7d04bd85259ec024ba3d7a5824486fcb883c38f51659643578b041ed",
+      "source_assembly": "glitch_video_CMaterialRendererManager-a4bf824a9f3f-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005dcd64",
+          "range_size": 112,
+          "elf_file_offset": 6147428,
+          "pt_load_segment_index": 0,
+          "sha256": "d45522ac7d04bd85259ec024ba3d7a5824486fcb883c38f51659643578b041ed",
+          "purpose": "validate current state/type and delegate definition creation"
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; emitted listing rows byte-compared to the mapped APK ELF slice"
+    },
+    {
+      "key": "creation_state_add_parameter_definition",
+      "kind": "function",
+      "symbol": "CMaterialRendererManager::SCreationState::addParameter(SSharedString const&, E_SHADER_PARAMETER_TYPE, E_SHADER_PARAMETER_VALUE_TYPE, unsigned int, bool)",
+      "elf_va": "0x005dca40",
+      "range_size": 804,
+      "elf_file_offset": 6146624,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "d3ca084a2877abb219e1bee9ca7e9704b7dcab3a06f1c89b22d0ad3a329e3ad5",
+      "source_assembly": "glitch_video_CMaterialRendererManager_SCreationState-ec75b4328515-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005dca40",
+          "range_size": 804,
+          "elf_file_offset": 6146624,
+          "pt_load_segment_index": 0,
+          "sha256": "d3ca084a2877abb219e1bee9ca7e9704b7dcab3a06f1c89b22d0ad3a329e3ad5",
+          "purpose": "create or update a named runtime parameter definition"
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; emitted listing rows byte-compared to the mapped APK ELF slice"
+    },
+    {
+      "key": "material_renderer_binding_array_construction",
+      "kind": "function",
+      "symbol": "CMaterialRenderer::CMaterialRenderer(..., SShaderParameterDef const* const*, unsigned int, unsigned short, unsigned short const*) [C1]",
+      "elf_va": "0x005d3124",
+      "range_size": 1448,
+      "elf_file_offset": 6107428,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "41e88093a6138c8afe2fd0c684bb9c63c04091411cc3c43e5c016aa90d7e0f0f",
+      "source_assembly": "glitch_video_CMaterialRenderer-a2aa4bc66635-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005d32e0",
+          "range_size": 172,
+          "elf_file_offset": 6107872,
+          "pt_load_segment_index": 0,
+          "sha256": "11e0995a8b7e74cfd47a84ea2043527be5edfd5e90abd9d815c0ee6177481b27",
+          "purpose": "write two 16-bit selectors per binding, with stage bit combined with shader parameter index"
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; emitted listing rows byte-compared to the mapped APK ELF slice"
+    },
+    {
+      "key": "material_renderer_finalization_autobind_call",
+      "kind": "function",
+      "symbol": "CMaterialRendererManager::endMaterialRenderer()",
+      "elf_va": "0x005dddb4",
+      "range_size": 4204,
+      "elf_file_offset": 6151604,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "479230c8dae06300405bb39c3c22e15ef8f958bbaf55162194bef9610ed932b5",
+      "source_assembly": "glitch_video_CMaterialRendererManager-a4bf824a9f3f-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005de114",
+          "range_size": 80,
+          "elf_file_offset": 6152468,
+          "pt_load_segment_index": 0,
+          "sha256": "b6bede788d94ba55753b609985fb6d29dca96f7a36a3cb01f73c99f3774ef0ad",
+          "purpose": "finalization loop invokes autoAddAndBindParameter"
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; emitted listing rows byte-compared to the mapped APK ELF slice"
+    },
+    {
+      "key": "material_parameter_commit_selector_decode",
+      "kind": "function",
+      "symbol": "CProgrammableGLDriver<CGLSLShaderHandler>::commitCurrentMaterialParametersAux<CMaterial>(...)",
+      "elf_va": "0x005b4da0",
+      "range_size": 1440,
+      "elf_file_offset": 5983648,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "44379294a26e8941e0d0cbe2c25f3fb4fe968b65b5e1ab14aa5883e7d177217f",
+      "source_assembly": "void_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHandler-30fe099cd72a-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005b4df8",
+          "range_size": 80,
+          "elf_file_offset": 5983736,
+          "pt_load_segment_index": 0,
+          "sha256": "be2c2dda08291e0b80b8fb17e773a03bf79f6a128f1772e9d73a14a97b9024c3",
+          "purpose": "decode two selector halfwords and select material and reflected shader descriptors"
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; emitted listing rows byte-compared to the mapped APK ELF slice"
+    },
+    {
+      "key": "shader_parameter_name_type_classifier",
+      "kind": "function",
+      "symbol": "glitch::video::guessShaderParameterType(char const*)",
+      "elf_va": "0x005e2284",
+      "range_size": 9492,
+      "elf_file_offset": 6169220,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "6b5e54c6672bc4fb25048a5661e4db6e60ed8c30dbd94255845076752c4ebf39",
+      "source_assembly": "glitch_video-aadc65bf0959-001.asm",
+      "excerpt_ranges": [],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; emitted listing rows byte-compared to the mapped APK ELF slice"
+    }
+  ]
+}

@@ -1,0 +1,199 @@
+{
+  "schema": "dh2-scene-reachable-vertex-remap-census-v1",
+  "method": "Follow BRES root visual-scene table (root+0x98/+0x9c), scene node arrays (scene+0x08/+0x0c, stride 80), node typed-reference arrays (node+0x40/+0x44, stride 8), type-3 SInstanceGeometry references, per-buffer SInstanceMaterial arrays (instance geometry +0x0c/+0x10, stride 60), both runtime-selected profile descriptors (+0x1c/+0x24), technique rows (stride 12), then per-technique 12-byte map subrecords. The two-byte arrays passed to CVertexAttributeMap::set are counted as (destination, source) pairs.",
+  "source_cache_zip": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2-cache.zip",
+  "source_cache_zip_sha256": "3fdf4e4c21d45a780a7c35fb4042abde0e88e76bf75416aad1f227481560b679",
+  "stats": {
+    "bdae_images_read": 2901,
+    "bdae_members": 2901,
+    "files_with_visual_scenes": 1563,
+    "files_without_visual_scenes": 1338,
+    "geometry_instances_without_material_records": 10,
+    "profile_map_descriptors": 346,
+    "scene_geometry_instances": 1334,
+    "serialized_map_subrecords": 8304,
+    "serialized_pairs": 9653,
+    "technique_rows": 8304,
+    "valid_bres_headers": 2901,
+    "visual_scene_records": 1563
+  },
+  "pair_histogram": [
+    {
+      "destination": 1,
+      "source": 1,
+      "occurrences": 4152
+    },
+    {
+      "destination": 2,
+      "source": 1,
+      "occurrences": 3786
+    },
+    {
+      "destination": 2,
+      "source": 2,
+      "occurrences": 73
+    },
+    {
+      "destination": 3,
+      "source": 1,
+      "occurrences": 11
+    },
+    {
+      "destination": 3,
+      "source": 18,
+      "occurrences": 1631
+    }
+  ],
+  "codes_9_to_16": {
+    "9": {
+      "destination_occurrences": 0,
+      "source_occurrences": 0
+    },
+    "10": {
+      "destination_occurrences": 0,
+      "source_occurrences": 0
+    },
+    "11": {
+      "destination_occurrences": 0,
+      "source_occurrences": 0
+    },
+    "12": {
+      "destination_occurrences": 0,
+      "source_occurrences": 0
+    },
+    "13": {
+      "destination_occurrences": 0,
+      "source_occurrences": 0
+    },
+    "14": {
+      "destination_occurrences": 0,
+      "source_occurrences": 0
+    },
+    "15": {
+      "destination_occurrences": 0,
+      "source_occurrences": 0
+    },
+    "16": {
+      "destination_occurrences": 0,
+      "source_occurrences": 0
+    }
+  },
+  "sample_for_each_observed_pair": [
+    {
+      "destination": 1,
+      "source": 1,
+      "member": "com.gameloft.android.GAND.GloftD2SS/files/data/3d/props/swamp/prop_swamp_corpses.bdae",
+      "file_sha256": "50b681e96d5e5f2647adee92e7344be815afd821e0a2586e61a61dd60e1b9e01",
+      "root_offset": "0x7228",
+      "visual_scene_offset": "0x9780",
+      "visual_scene_name": "prop_swamp_corpses_max",
+      "node_offset": "0x97e0",
+      "node_reference_offset": "0xa4dc",
+      "instance_geometry_offset": "0xa4e4",
+      "geometry_id": null,
+      "material_id": "#_prop_axe_corpse-mesh",
+      "instance_material_offset": "0xa4fc",
+      "profile_descriptor_offset": "0x24",
+      "technique_row_offset": "0xa7b4",
+      "technique": "L1_Vc_----_----_----_----_----",
+      "subrecord_offset": "0xa8d4",
+      "subrecord_word0_uninterpreted": "0x00006c90",
+      "pair_count": 3,
+      "pair_data_offset": "0xa8e0",
+      "pair_bytes_hex": "01 01 02 02 03 12"
+    },
+    {
+      "destination": 2,
+      "source": 1,
+      "member": "com.gameloft.android.GAND.GloftD2SS/files/data/3d/props/swamp/prop_swamp_corpses.bdae",
+      "file_sha256": "50b681e96d5e5f2647adee92e7344be815afd821e0a2586e61a61dd60e1b9e01",
+      "root_offset": "0x7228",
+      "visual_scene_offset": "0x9780",
+      "visual_scene_name": "prop_swamp_corpses_max",
+      "node_offset": "0x97e0",
+      "node_reference_offset": "0xa4dc",
+      "instance_geometry_offset": "0xa4e4",
+      "geometry_id": null,
+      "material_id": "#_prop_axe_corpse-mesh",
+      "instance_material_offset": "0xa4fc",
+      "profile_descriptor_offset": "0x24",
+      "technique_row_offset": "0xa7c0",
+      "technique": "L1_Vc_----_Sp_----_----_----",
+      "subrecord_offset": "0xa8e8",
+      "subrecord_word0_uninterpreted": "0x00006c90",
+      "pair_count": 3,
+      "pair_data_offset": "0xa8f4",
+      "pair_bytes_hex": "01 01 02 01 03 12"
+    },
+    {
+      "destination": 2,
+      "source": 2,
+      "member": "com.gameloft.android.GAND.GloftD2SS/files/data/3d/props/swamp/prop_swamp_corpses.bdae",
+      "file_sha256": "50b681e96d5e5f2647adee92e7344be815afd821e0a2586e61a61dd60e1b9e01",
+      "root_offset": "0x7228",
+      "visual_scene_offset": "0x9780",
+      "visual_scene_name": "prop_swamp_corpses_max",
+      "node_offset": "0x97e0",
+      "node_reference_offset": "0xa4dc",
+      "instance_geometry_offset": "0xa4e4",
+      "geometry_id": null,
+      "material_id": "#_prop_axe_corpse-mesh",
+      "instance_material_offset": "0xa4fc",
+      "profile_descriptor_offset": "0x24",
+      "technique_row_offset": "0xa7b4",
+      "technique": "L1_Vc_----_----_----_----_----",
+      "subrecord_offset": "0xa8d4",
+      "subrecord_word0_uninterpreted": "0x00006c90",
+      "pair_count": 3,
+      "pair_data_offset": "0xa8e0",
+      "pair_bytes_hex": "01 01 02 02 03 12"
+    },
+    {
+      "destination": 3,
+      "source": 1,
+      "member": "com.gameloft.android.GAND.GloftD2SS/files/data/3d/modules/icy_cavern/icy_cavern.bdae",
+      "file_sha256": "41a8fa21ff428730b0616e696ac4dcc0585fdec7d43e6566b54214c67e495014",
+      "root_offset": "0x35bf4",
+      "visual_scene_offset": "0x44da4",
+      "visual_scene_name": "icy_cavern_max",
+      "node_offset": "0x44ea4",
+      "node_reference_offset": "0x4a754",
+      "instance_geometry_offset": "0x4a75c",
+      "geometry_id": null,
+      "material_id": "#_module_bossroom_icycavern_w_00-mesh",
+      "instance_material_offset": "0x4a7b0",
+      "profile_descriptor_offset": "0x24",
+      "technique_row_offset": "0x4afac",
+      "technique": "L1_Vc_----_Sp_----_----_----",
+      "subrecord_offset": "0x4b0d0",
+      "subrecord_word0_uninterpreted": "0x0002f6ec",
+      "pair_count": 3,
+      "pair_data_offset": "0x4b0dc",
+      "pair_bytes_hex": "01 01 02 01 03 01"
+    },
+    {
+      "destination": 3,
+      "source": 18,
+      "member": "com.gameloft.android.GAND.GloftD2SS/files/data/3d/props/swamp/prop_swamp_corpses.bdae",
+      "file_sha256": "50b681e96d5e5f2647adee92e7344be815afd821e0a2586e61a61dd60e1b9e01",
+      "root_offset": "0x7228",
+      "visual_scene_offset": "0x9780",
+      "visual_scene_name": "prop_swamp_corpses_max",
+      "node_offset": "0x97e0",
+      "node_reference_offset": "0xa4dc",
+      "instance_geometry_offset": "0xa4e4",
+      "geometry_id": null,
+      "material_id": "#_prop_axe_corpse-mesh",
+      "instance_material_offset": "0xa4fc",
+      "profile_descriptor_offset": "0x24",
+      "technique_row_offset": "0xa7b4",
+      "technique": "L1_Vc_----_----_----_----_----",
+      "subrecord_offset": "0xa8d4",
+      "subrecord_word0_uninterpreted": "0x00006c90",
+      "pair_count": 3,
+      "pair_data_offset": "0xa8e0",
+      "pair_bytes_hex": "01 01 02 02 03 12"
+    }
+  ],
+  "interpretation_limit": "This census establishes serialized values and runtime reachability through the original scene/map call chain. It does not assign semantic names to numeric attribute codes."
+}

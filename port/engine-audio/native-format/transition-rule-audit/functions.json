@@ -1,0 +1,82 @@
+{
+  "component": "Dungeon Hunter 2 native audio transition-rule path",
+  "original_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "original_library": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "original_library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "load_mapping": "All listed functions lie in PT_LOAD segment 1 with p_offset=0 and p_vaddr=0, so ELF file offset equals VA.",
+  "functions": [
+    {
+      "symbol": "vox::DecoderNativeCursor::ParseFile()",
+      "elf_va": "0x008738bc",
+      "range_size": 2616,
+      "elf_file_offset": 8861884,
+      "function_bytes_sha256": "db37531fce39bdf9c8d2a98084ddb31360fb81ddae015d34a1474f5d9b294674",
+      "evidence_listing": "../../reference/original-functions.asm",
+      "role": "Rule chunk dispatch, count/stride derivation, and row copy."
+    },
+    {
+      "symbol": "vox::VoxNativeSubDecoder::IsExtraSegmentNeeded(vox::TransitionRule*)",
+      "elf_va": "0x00884470",
+      "range_size": 120,
+      "elf_file_offset": 8930416,
+      "function_bytes_sha256": "98c39eff5b9f58db344510faf32f2d44f03b8d8984340f3c1fb7d748dcbda0bd",
+      "evidence_listing": "reference/is-extra-segment-needed.asm",
+      "role": "Tests rule word +4 and, when zero, compares word +0x18 with floating-point zero."
+    },
+    {
+      "symbol": "vox::VoxNativeSubDecoder::ApplyTransitionRule(vox::TransitionRule*)",
+      "elf_va": "0x008855e8",
+      "range_size": 344,
+      "elf_file_offset": 8934888,
+      "function_bytes_sha256": "0fffcb23c9d24fc7f30cb820337c48a605dbb4937ff22af7f6079593a1aa7914",
+      "evidence_listing": "../reference/native-audio-runtime.asm",
+      "role": "Reads rule words +0 and +8 and stores them in decoder state."
+    },
+    {
+      "symbol": "vox::VoxNativeSubDecoder::UpdateSegmentsStates()",
+      "elf_va": "0x00885740",
+      "range_size": 580,
+      "elf_file_offset": 8935232,
+      "function_bytes_sha256": "c8ce27e9b649e0a64ae6b939422bc3b767614f9327b7325886d0f8b78cc0c804",
+      "evidence_listing": "../reference/native-audio-runtime.asm",
+      "role": "Selects a transition row using 36-byte stride and coordinates rule/state updates."
+    },
+    {
+      "symbol": "vox::VoxNativeSubDecoder::InterpretTransitionRule(int)",
+      "elf_va": "0x00885984",
+      "range_size": 184,
+      "elf_file_offset": 8935812,
+      "function_bytes_sha256": "18f9dae9063ef0066e83ff615af64c128a58a42a8f15429c69947e0e5f203114",
+      "evidence_listing": "../reference/native-audio-runtime.asm",
+      "role": "Checks selected row word +4 before playlist lookup."
+    },
+    {
+      "symbol": "vox::VoxNativeSubDecoder::UpdateOldSegmentState(vox::TransitionRule*)",
+      "elf_va": "0x008847e8",
+      "range_size": 716,
+      "elf_file_offset": 8931304,
+      "function_bytes_sha256": "f960634867694e862f755a4ccc174527adf0dd737ddde22fdf3cab7ac854adde",
+      "evidence_listing": "../reference/native-audio-runtime.asm",
+      "role": "Consumes rule words +0x0c, +0x18, and +0x1c in old-segment state calculations."
+    },
+    {
+      "symbol": "vox::VoxNativeSubDecoder::UpdateDyingSegmentState(vox::TransitionRule*)",
+      "elf_va": "0x00884ab4",
+      "range_size": 272,
+      "elf_file_offset": 8932020,
+      "function_bytes_sha256": "0e13c18a9284ad915b121ee773a40d10d2bbf2bc43d902c49b28cb89eb28b25a",
+      "evidence_listing": "../reference/native-audio-runtime.asm",
+      "role": "Consumes rule word +0x18 in dying-segment progression."
+    },
+    {
+      "symbol": "vox::VoxNativeSubDecoder::UpdateCurrentSegmentState(vox::TransitionRule*, bool)",
+      "elf_va": "0x00884bc4",
+      "range_size": 832,
+      "elf_file_offset": 8932292,
+      "function_bytes_sha256": "5b7b91f96067725b758126874f2d598d518c415761508554cec8886f07211185",
+      "evidence_listing": "../reference/native-audio-runtime.asm",
+      "role": "Consumes rule words +0x10 and +0x14 in current-segment progression."
+    }
+  ],
+  "corpus_evidence": "corpus/rule-rows.json"
+}

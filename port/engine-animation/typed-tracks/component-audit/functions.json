@@ -1,0 +1,1943 @@
+{
+  "schema_version": 1,
+  "description": "APK-byte-backed ranges for scalar position/scale and material-parameter blend/add routes, apply helpers, setters, factory and material singleton initializers.",
+  "apk": {
+    "sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200"
+  },
+  "elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "package_relative_copy": "work/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "file_backed_load_segments": [
+      {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130"
+      },
+      {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c"
+      }
+    ],
+    "file_offset_formula": "p_offset + (VA - p_vaddr)"
+  },
+  "disassembly": "apk-arm-disassembly.asm",
+  "functions": [
+    {
+      "va": "0x005c6b8c",
+      "file_offset": "0x005c6b8c",
+      "size": 212,
+      "sha256": "06f7d7773201b3e95917ee66bd08999bfe59994666ddd98462836272ecbdf324",
+      "aliases": [
+        "boost::enable_if<glitch::video::detail::SIsValidSetMaterialParamaterOverload<float>, bool>::type glitch::video::detail::IMaterialParameters<glitch::video::CMaterial, glitch::ISharedMemoryBlockHeader<glitch::video::CMaterial> >::setParameterCvt<float>(unsigned short, unsigned int, float const&)"
+      ]
+    },
+    {
+      "va": "0x005c6c60",
+      "file_offset": "0x005c6c60",
+      "size": 212,
+      "sha256": "69340ebf775cccebcfaee287d2861aaefe5376a0f31ebfdfba33e7b7f52bd36c",
+      "aliases": [
+        "boost::enable_if<glitch::video::detail::SIsValidSetMaterialParamaterOverload<glitch::core::vector2d<float> >, bool>::type glitch::video::detail::IMaterialParameters<glitch::video::CMaterial, glitch::ISharedMemoryBlockHeader<glitch::video::CMaterial> >::setParameterCvt<glitch::core::vector2d<float> >(unsigned short, unsigned int, glitch::core::vector2d<float> const&)"
+      ]
+    },
+    {
+      "va": "0x005c6d34",
+      "file_offset": "0x005c6d34",
+      "size": 240,
+      "sha256": "e148425119034dc218b90144fed2b81bd1939f4b725ed11518643f52b92e3c74",
+      "aliases": [
+        "boost::enable_if<glitch::video::detail::SIsValidSetMaterialParamaterOverload<glitch::core::vector3d<float> >, bool>::type glitch::video::detail::IMaterialParameters<glitch::video::CMaterial, glitch::ISharedMemoryBlockHeader<glitch::video::CMaterial> >::setParameterCvt<glitch::core::vector3d<float> >(unsigned short, unsigned int, glitch::core::vector3d<float> const&)"
+      ]
+    },
+    {
+      "va": "0x005cad38",
+      "file_offset": "0x005cad38",
+      "size": 472,
+      "sha256": "17c62a6906f872d43deac5d7748b449678121518a98f8269f6e4f3d4855e6f01",
+      "aliases": [
+        "boost::enable_if<glitch::video::detail::SIsValidSetMaterialParamaterOverload<glitch::video::SColor>, bool>::type glitch::video::detail::IMaterialParameters<glitch::video::CMaterial, glitch::ISharedMemoryBlockHeader<glitch::video::CMaterial> >::setParameterCvt<glitch::video::SColor>(unsigned short, unsigned int, glitch::video::SColor const&)"
+      ]
+    },
+    {
+      "va": "0x005ce768",
+      "file_offset": "0x005ce768",
+      "size": 500,
+      "sha256": "a3adc1b54f00d60571ed8215f9fcbdf89641323c6b14762c1ee09d3e845d5fe5",
+      "aliases": [
+        "boost::enable_if<glitch::video::detail::SIsValidSetMaterialParamaterOverload<glitch::core::vector4d<float> >, bool>::type glitch::video::detail::IMaterialParameters<glitch::video::CMaterial, glitch::ISharedMemoryBlockHeader<glitch::video::CMaterial> >::setParameterCvt<glitch::core::vector4d<float> >(unsigned short, unsigned int, glitch::core::vector4d<float> const&)"
+      ]
+    },
+    {
+      "va": "0x0060f148",
+      "file_offset": "0x0060f148",
+      "size": 164,
+      "sha256": "6b483fa88c90ebf4c38bb169498f3daa3979585d7674ffa59719a23e635d91fc",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 0, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0061110c",
+      "file_offset": "0x0061110c",
+      "size": 148,
+      "sha256": "733be348d05c5e51197510512b81a6f5671a98303f6e76e9e7eb5481850cff45",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float, glitch::collada::animation_track::CMixin<float, 1, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float, float> >, -1, float> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x006111a0",
+      "file_offset": "0x006111a0",
+      "size": 148,
+      "sha256": "5c3f4f3158e9101bcca5613458e2f0c261e01067c56229f3f89f376f44529942",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 0, float> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x00611234",
+      "file_offset": "0x00611234",
+      "size": 148,
+      "sha256": "746e3dc1491c6c9a3b414697894c006db5a3e25b27daec48404af9e47e90c337",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 1, float> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x006112c8",
+      "file_offset": "0x006112c8",
+      "size": 148,
+      "sha256": "47cf8c1d9a6557f3f6e86689d5e66d9a32957b4efe6e96dff6e96d126f9ba396",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, 0, float> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x0061135c",
+      "file_offset": "0x0061135c",
+      "size": 148,
+      "sha256": "20e83e742bd23554acc2afac2b43886b6f75040e4b77e0534cd36ab4ad4aaefa",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 0, float> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x006113f0",
+      "file_offset": "0x006113f0",
+      "size": 148,
+      "sha256": "47b7743a1ef721e55061dedee5ff0a2b4a62472ce54831f256718d8082769c8d",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 1, float> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x00611484",
+      "file_offset": "0x00611484",
+      "size": 148,
+      "sha256": "5b8a485eccaa72ba5fd027ec9a88197aee52ae5f1c3d71496311b9aa5ac20d10",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 2, float> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x00611518",
+      "file_offset": "0x00611518",
+      "size": 148,
+      "sha256": "a371ca3c5fce8b4ad21701ca46507a92e89933da1f1fcdaccda1c0ec07139646",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 3, float> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x006115ac",
+      "file_offset": "0x006115ac",
+      "size": 148,
+      "sha256": "f6a23f28ec8f3b9095cf94092aa208b8c76d0fbf1009618d979a6a9fb2fb99d9",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, -1, float> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x00611640",
+      "file_offset": "0x00611640",
+      "size": 148,
+      "sha256": "d328cd9724a5047076b3713c49d335ff85bf44310063108f331a435f024313dd",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, -1, float> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x006116d4",
+      "file_offset": "0x006116d4",
+      "size": 148,
+      "sha256": "97fcfd6f0660d9aa5c01b5abb7805657f038affd141167c7afefbc39603c33c5",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, -1, float> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x00611768",
+      "file_offset": "0x00611768",
+      "size": 148,
+      "sha256": "22760f0c3a422bb70e1cc171f3591d8d6e13c3e6aa705c40d7ef588d6ba2a818",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 0, unsigned char> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x006117fc",
+      "file_offset": "0x006117fc",
+      "size": 148,
+      "sha256": "e0daa8381d579b90dbe0973bc952e100530b3cc8436db836026299a3c8e8b0c3",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 1, unsigned char> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x00611890",
+      "file_offset": "0x00611890",
+      "size": 148,
+      "sha256": "593d114e9cc92ac5e8b739088d3228b186f72d31ae543aeee92feafefb2e5471",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 2, unsigned char> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x00611924",
+      "file_offset": "0x00611924",
+      "size": 148,
+      "sha256": "f8e5b818e045a7a81e8ff64a8c0d79bf330c6a585b24306346bec067286c4325",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 3, unsigned char> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x006119b8",
+      "file_offset": "0x006119b8",
+      "size": 148,
+      "sha256": "ea3da8c11c0d56f856132ee047c46f2d9aba651d32055f2c52fb620370301644",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [3], glitch::collada::animation_track::CMixin<unsigned char, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [3], glitch::video::SColor> >, -1, unsigned char> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x00611a4c",
+      "file_offset": "0x00611a4c",
+      "size": 148,
+      "sha256": "d61b3b56959be4443af548abde290f95a433619fe9a087b4897647ad4e85ad52",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, -1, unsigned char> > >::getInstance()"
+      ]
+    },
+    {
+      "va": "0x00611ae0",
+      "file_offset": "0x00611ae0",
+      "size": 1608,
+      "sha256": "bb7590a23775d34fa5821fac78f1e6330a691b0c929b23cf1a3eedb733f37f72",
+      "aliases": [
+        "glitch::collada::CColladaDatabase::getAnimationTrackEx(glitch::collada::SAnimation const*)"
+      ]
+    },
+    {
+      "va": "0x00618ffc",
+      "file_offset": "0x00618ffc",
+      "size": 140,
+      "sha256": "a98fc87e40a73f0def5f3c88fc3f8aa54114b18b77ee059a877f806d3d0c42c2",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<float, glitch::collada::animation_track::CMixin<float, 1, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float, float> >, -1, float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00619088",
+      "file_offset": "0x00619088",
+      "size": 28,
+      "sha256": "f29f69102dd6d85e7f1364ccb7b0bdaa5d84b7d484295b47f2dd7f382ba67388",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float, glitch::collada::animation_track::CMixin<float, 1, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float, float> >, -1, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006191f4",
+      "file_offset": "0x006191f4",
+      "size": 252,
+      "sha256": "662fb853701dadd43f91cd8fb86f7df27f4c945e916504735218f43c3b0e0d3f",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, -1, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062008c",
+      "file_offset": "0x0062008c",
+      "size": 140,
+      "sha256": "248a77d7af4a81613913b96e68882d1733e55ae70117fedd2fe615813fb4ece4",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<float, glitch::collada::animation_track::CMixin<float, 1, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float, float> >, -1, float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00620118",
+      "file_offset": "0x00620118",
+      "size": 28,
+      "sha256": "f29f69102dd6d85e7f1364ccb7b0bdaa5d84b7d484295b47f2dd7f382ba67388",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float, glitch::collada::animation_track::CMixin<float, 1, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float, float> >, -1, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00620134",
+      "file_offset": "0x00620134",
+      "size": 108,
+      "sha256": "9b6573225a79d4be67a808130674b52d7cdbacdaa94ae4bbd07cbf3655f05750",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float, glitch::collada::animation_track::CMixin<float, 1, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float, float> >, -1, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x006201a0",
+      "file_offset": "0x006201a0",
+      "size": 108,
+      "sha256": "306de721087aa478fddf87dc38c88cbc307555fd287db37c17965acc77dc0810",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float, glitch::collada::animation_track::CMixin<float, 1, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float, float> >, -1, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x006212d8",
+      "file_offset": "0x006212d8",
+      "size": 240,
+      "sha256": "863f3f3ee92476b4016204dc2562ff4e27e8d3a6d29cba9e9e5b9c0c4a35bb6c",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [3], glitch::collada::animation_track::CMixin<unsigned char, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [3], glitch::video::SColor> >, -1, unsigned char> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x006214b8",
+      "file_offset": "0x006214b8",
+      "size": 288,
+      "sha256": "481b5594363b47c7434b91a4dbbc77341d49a3c162abf5fb396dfcc97039e20b",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [3], glitch::collada::animation_track::CMixin<unsigned char, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [3], glitch::video::SColor> >, -1, unsigned char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00621748",
+      "file_offset": "0x00621748",
+      "size": 288,
+      "sha256": "d4d832c296b72f6346cd90ffc22542b830f5bfae8feb2026bb0ef98ae1482f9f",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [3], glitch::collada::animation_track::CMixin<unsigned char, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [3], glitch::video::SColor> >, -1, unsigned char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00621868",
+      "file_offset": "0x00621868",
+      "size": 240,
+      "sha256": "a7faa71e2d679663997bf850fd18da979cec8c362566e45993921cba4a5674b5",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [3], glitch::collada::animation_track::CMixin<unsigned char, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [3], glitch::video::SColor> >, -1, unsigned char> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00621ba0",
+      "file_offset": "0x00621ba0",
+      "size": 196,
+      "sha256": "be5e3616542425de737e3156abccb913ab7b339b36a49c2dddc48650bd8f3d88",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 1, float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00621c64",
+      "file_offset": "0x00621c64",
+      "size": 28,
+      "sha256": "9dffd31655dbd508d8e38be9b8bcfa767fb56b9fba6fa1b135df1530a2bf6bd7",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 1, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00621c80",
+      "file_offset": "0x00621c80",
+      "size": 196,
+      "sha256": "2644dae4b49753eaa049b38494e4a9361df9ce17892e5360d249d018b24a395c",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 1, float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00621d44",
+      "file_offset": "0x00621d44",
+      "size": 28,
+      "sha256": "9dffd31655dbd508d8e38be9b8bcfa767fb56b9fba6fa1b135df1530a2bf6bd7",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 1, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00621d60",
+      "file_offset": "0x00621d60",
+      "size": 196,
+      "sha256": "685dfd4090daf89dd5140cf8b32ab9f90128063ad2357dcf9333f6534e8a7f17",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, -1, float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00621e24",
+      "file_offset": "0x00621e24",
+      "size": 28,
+      "sha256": "9dffd31655dbd508d8e38be9b8bcfa767fb56b9fba6fa1b135df1530a2bf6bd7",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, -1, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00621e40",
+      "file_offset": "0x00621e40",
+      "size": 196,
+      "sha256": "3657aee3e53698f2a2d953863636f0c245d098e518952f258d1ac3a948dc0458",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, -1, float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00621f04",
+      "file_offset": "0x00621f04",
+      "size": 28,
+      "sha256": "9dffd31655dbd508d8e38be9b8bcfa767fb56b9fba6fa1b135df1530a2bf6bd7",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, -1, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00621f20",
+      "file_offset": "0x00621f20",
+      "size": 164,
+      "sha256": "f02f23d14ddf3cbaef04aa86a8f2e76907b24cc786c395956a7f0056282f6b6a",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 1, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00621fc4",
+      "file_offset": "0x00621fc4",
+      "size": 164,
+      "sha256": "6f1cfe6868e5c0ca9dacb5f76cf0144d417c08164e88c54b2c1034c33ca17b1c",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, -1, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00622068",
+      "file_offset": "0x00622068",
+      "size": 164,
+      "sha256": "3cd32c35f2af4eaf54977b786e098eae98a0b06249302a4fc82886e0557b147e",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 0, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062210c",
+      "file_offset": "0x0062210c",
+      "size": 164,
+      "sha256": "e72d17ad634a801c887e3b417f173e1cfff4c2a061d1dd296e96f2dc1930de1d",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 1, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x006221b0",
+      "file_offset": "0x006221b0",
+      "size": 164,
+      "sha256": "e07fd67e40aa4c780f75ab33ec48c96d558dcdd2f2461b7f75fa0a21570d11ed",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, -1, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062237c",
+      "file_offset": "0x0062237c",
+      "size": 196,
+      "sha256": "dd721031e407d044a35b4ef596db6f073aca8c1435867404fc6269bf98f5847d",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 0, float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00622440",
+      "file_offset": "0x00622440",
+      "size": 28,
+      "sha256": "9dffd31655dbd508d8e38be9b8bcfa767fb56b9fba6fa1b135df1530a2bf6bd7",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 0, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062245c",
+      "file_offset": "0x0062245c",
+      "size": 196,
+      "sha256": "1e20c80b68b148dde82bbda0c2282d3a3cbfee516afc49a5ad9f4ac8f25a8435",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 0, float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00622520",
+      "file_offset": "0x00622520",
+      "size": 28,
+      "sha256": "9dffd31655dbd508d8e38be9b8bcfa767fb56b9fba6fa1b135df1530a2bf6bd7",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [2], glitch::collada::animation_track::CMixin<float, 2, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [2], float [2]> >, 0, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00622658",
+      "file_offset": "0x00622658",
+      "size": 320,
+      "sha256": "51cc81ea409964cca45a7c0146120719aa7ee50221add4dc820a58f1bfe4bdae",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 0, unsigned char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00623df0",
+      "file_offset": "0x00623df0",
+      "size": 248,
+      "sha256": "b437af573428fc3b55ead79d184d3fec19ba34255bef5fdd743804044ebb29e6",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<short>, 2, short> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00623ee8",
+      "file_offset": "0x00623ee8",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<short>, 2, short> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00623f04",
+      "file_offset": "0x00623f04",
+      "size": 244,
+      "sha256": "9ff47f2b45744e5ea35e6a11717f3a3e31f99bf6dbd3a839cffe5a0ada981e94",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 0, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00623ff8",
+      "file_offset": "0x00623ff8",
+      "size": 244,
+      "sha256": "20d10affd0b2d6e3db1f519c94a22136db0f5c46f0478919e871dbed2a3341fc",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 1, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x006240ec",
+      "file_offset": "0x006240ec",
+      "size": 252,
+      "sha256": "79cbc6bdeb1685c6d4bd363076698b59c43bded12d08824118fd6f624ced0314",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 3, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006241e8",
+      "file_offset": "0x006241e8",
+      "size": 252,
+      "sha256": "67c45eb475d851e21ab698488f994196af922de18ed884bb3e93c50267f22f82",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, -1, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006242e4",
+      "file_offset": "0x006242e4",
+      "size": 252,
+      "sha256": "30994c86a2e177e12ac13ad68357ccdc7a50fea3396157b3257ab3b0c9150d25",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 1, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006243e0",
+      "file_offset": "0x006243e0",
+      "size": 252,
+      "sha256": "d984423801622be78dea4b67868bfa30722c0ceea32c45f8ab90b242864ea32f",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 2, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006244dc",
+      "file_offset": "0x006244dc",
+      "size": 252,
+      "sha256": "4cd83042b839ed5f56a1b052b35b8d86cfa6f0c391cd61bbb38980b5b4e81cb5",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 2, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006245d8",
+      "file_offset": "0x006245d8",
+      "size": 252,
+      "sha256": "5defa057eb44f7e84791a702ac00a8e5b03879db86d7e23511e9c68138bcec4f",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 3, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006246d4",
+      "file_offset": "0x006246d4",
+      "size": 244,
+      "sha256": "2a564d68a66ff43b88606f04c4ee00784e56cded636575620337cac13c38af2e",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 2, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x006247c8",
+      "file_offset": "0x006247c8",
+      "size": 244,
+      "sha256": "e928a758ae3fa2758dc8ce4f39554ba0427ad38c78620ff4ad9c42abf49aebdc",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 3, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x006248bc",
+      "file_offset": "0x006248bc",
+      "size": 244,
+      "sha256": "ec5d1833b5ad6a4ffbe70074727c91dd7df6f5b80469bb2e1b4d558851ead6e7",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, -1, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x006249b0",
+      "file_offset": "0x006249b0",
+      "size": 244,
+      "sha256": "e1170fe454410eb4a4892c9bf9d99b632a1950981025093ece5859e6e3eeee8b",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 0, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00624aa4",
+      "file_offset": "0x00624aa4",
+      "size": 244,
+      "sha256": "4096b941475c9d3ba7f13f7f3061bbd9e62c1db3e72420e25290930aef38730c",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 1, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00624b98",
+      "file_offset": "0x00624b98",
+      "size": 244,
+      "sha256": "d282010f90a13ac53c9359a263c098865258239d953cddbf3bda77f7b0764776",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 2, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00624c8c",
+      "file_offset": "0x00624c8c",
+      "size": 244,
+      "sha256": "2f4025d65ce530d1746afa7a03019613d2384a742f69d341b12128a5e538f680",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 3, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00624d80",
+      "file_offset": "0x00624d80",
+      "size": 244,
+      "sha256": "6a9e665dea158247e2606dc55c71f2f3bbb4dc5c3bda322c7728cd994af58c71",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, -1, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00624fb4",
+      "file_offset": "0x00624fb4",
+      "size": 252,
+      "sha256": "04801308946cd5854b41fe25c183d5a80fc5c21190b5084b8c9d23a5240be4ff",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 0, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006250b0",
+      "file_offset": "0x006250b0",
+      "size": 252,
+      "sha256": "c9ea04052d7dbc399875d4cd904e025bbda1e5ee9cc2bdef34f3aa869a7a1727",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 0, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006251ac",
+      "file_offset": "0x006251ac",
+      "size": 252,
+      "sha256": "6647083c927f0c514c4b0e36404fa9c0118a67fc44a2bf52804d1cc39eb98175",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [4], glitch::collada::animation_track::CMixin<float, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [4], float [4]> >, 1, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006252a8",
+      "file_offset": "0x006252a8",
+      "size": 320,
+      "sha256": "56de23c978146abcf245503f54a05cc905aa6f76dcdd5b143166a0d10533f3e1",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 0, unsigned char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006253e8",
+      "file_offset": "0x006253e8",
+      "size": 320,
+      "sha256": "aa2d5be924b9445c5ed92cedc81f6281c7a138133abb83ba4e81492798632d02",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 1, unsigned char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00625528",
+      "file_offset": "0x00625528",
+      "size": 320,
+      "sha256": "631ba702c73eda45be1340c80c29ac38e8e6a33c0aabf3d445905bfe3daa9a0d",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 1, unsigned char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00625668",
+      "file_offset": "0x00625668",
+      "size": 320,
+      "sha256": "369efd98dfaf7ace7e71b5bb580e52d95f283f561f0179b8786dfb237e2944c8",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 2, unsigned char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006257a8",
+      "file_offset": "0x006257a8",
+      "size": 320,
+      "sha256": "3e5fdeeed7bd011c42720ef39c484589ddb2cccce076b55fbea3ebac1d9e3494",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 2, unsigned char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006258e8",
+      "file_offset": "0x006258e8",
+      "size": 320,
+      "sha256": "94da1f3b960d173f1b2f735cecdcec492e1b277ba17e72aee3e34557a60916bd",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 3, unsigned char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00625a28",
+      "file_offset": "0x00625a28",
+      "size": 320,
+      "sha256": "3fa8ca1ba84652471710e6869681a99bf8f93f7af3bd8eaca2abf7cbae4c9a31",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 3, unsigned char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00625b68",
+      "file_offset": "0x00625b68",
+      "size": 320,
+      "sha256": "63916354f9f749a8b30643141649e5d9229a9e0c4b22b91079d81b3cd14f356c",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, -1, unsigned char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00625ca8",
+      "file_offset": "0x00625ca8",
+      "size": 320,
+      "sha256": "1160e33ea5122fec06bebd4878c4796cc9506567bbe14b6854c6164bdb397da8",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, -1, unsigned char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00625de8",
+      "file_offset": "0x00625de8",
+      "size": 276,
+      "sha256": "6286ab6a3e153bb1438d61b9c761adf7dc7a1d477a94b8e9345b36724545f5d1",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 0, unsigned char> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00625efc",
+      "file_offset": "0x00625efc",
+      "size": 276,
+      "sha256": "1217be8121ccfc3eaef2104c0db9df00205aa3028e1856c864834ce7fc6232a4",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 1, unsigned char> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00626010",
+      "file_offset": "0x00626010",
+      "size": 276,
+      "sha256": "9678b5f45660294c3ae9068419076d5cf45be0630fe7cba86eb0b726da813c41",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 2, unsigned char> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00626124",
+      "file_offset": "0x00626124",
+      "size": 276,
+      "sha256": "47515e8b0b4497c25f41d7b6132ba3a6fecd56682adf9dddb309690af7731721",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 3, unsigned char> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00626238",
+      "file_offset": "0x00626238",
+      "size": 276,
+      "sha256": "f34c83cb1cc720cef2d21e2ff701d0e677e9ff1eb9f8bb6101a1255ce6aa8391",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, -1, unsigned char> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062634c",
+      "file_offset": "0x0062634c",
+      "size": 276,
+      "sha256": "8c2caa86f1bb6376767e08c8d050a63d0ac5cde4abd8718d2f8a147a5dad9dbc",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 0, unsigned char> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00626460",
+      "file_offset": "0x00626460",
+      "size": 276,
+      "sha256": "8c6ea04dcca13cabd49d4bb1339cdd7e8a2e4cc9d3e9d2a140b3b54155ff560b",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 1, unsigned char> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00626574",
+      "file_offset": "0x00626574",
+      "size": 276,
+      "sha256": "50d0370d21bba43f7626ff44ad3dcd112ef79645ea6b980f018e2cc284f226ad",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 2, unsigned char> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00626688",
+      "file_offset": "0x00626688",
+      "size": 276,
+      "sha256": "385f43523bebc2b4b8b6cc194bebbe8114d8c4af4b94ec6a6d41adcd198fb12b",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, 3, unsigned char> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062679c",
+      "file_offset": "0x0062679c",
+      "size": 276,
+      "sha256": "568878305b373393d608978415f20eefa7a08b5c29b967f52645c403111478ae",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<unsigned char [4], glitch::collada::animation_track::CMixin<unsigned char, 4, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<unsigned char [4], glitch::video::SColor> >, -1, unsigned char> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00626a38",
+      "file_offset": "0x00626a38",
+      "size": 248,
+      "sha256": "e88ecd83d0d000dfda1f0c336ffb0a9389eb177499de17ce20f369040df83c3c",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, -1, float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00626b30",
+      "file_offset": "0x00626b30",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, -1, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00626df8",
+      "file_offset": "0x00626df8",
+      "size": 228,
+      "sha256": "e4f315523574a22b129304ca0d3f02827d51474b38225a787d5a262aa6518e29",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<float>, 0, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00626edc",
+      "file_offset": "0x00626edc",
+      "size": 228,
+      "sha256": "60ac9bca1d8ed866a8f3886b65fd17cdd67e0f6a986100375783d8442542ae94",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<short>, 0, short> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00626fc0",
+      "file_offset": "0x00626fc0",
+      "size": 228,
+      "sha256": "a756c6f0a28f79f4dd3a92750a49b03d0ef4fd3bb74a48fffe62e57492475871",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<char>, 0, char> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x006270a4",
+      "file_offset": "0x006270a4",
+      "size": 228,
+      "sha256": "94be590c40003ec849e0dd2f8922e5c0f0c990683435d7777713a90fb70ece44",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<float>, 1, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00627188",
+      "file_offset": "0x00627188",
+      "size": 228,
+      "sha256": "f6595e725f5a2ea00fb07002be1ca9c983f34b08c1a238f2edc483bdde5b1b27",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<short>, 1, short> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062726c",
+      "file_offset": "0x0062726c",
+      "size": 228,
+      "sha256": "4f66084c9a432028b2d830153275c58af4fd1d2c46fea177b86168483eb3fd05",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<char>, 1, char> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00627350",
+      "file_offset": "0x00627350",
+      "size": 228,
+      "sha256": "12ee7283084e34a4ee223bfbeffa313886ef7a823ce25676f1f5ca54ff046207",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<float>, 2, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00627434",
+      "file_offset": "0x00627434",
+      "size": 228,
+      "sha256": "8a22cb4c62332e47cd26674c946a1166cf32c3ae4a1c73baf6ae0a9e5a01aad4",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<short>, 2, short> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00627518",
+      "file_offset": "0x00627518",
+      "size": 228,
+      "sha256": "becf13377bfb6947b85a94331f78d62e00128164cdd9627c0497daee44857e30",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<char>, 2, char> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x006278a8",
+      "file_offset": "0x006278a8",
+      "size": 228,
+      "sha256": "7edd554463a7738126068cb391510fc4fb10221391dfe46f0584cf49a9673963",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<float>, 0, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062798c",
+      "file_offset": "0x0062798c",
+      "size": 248,
+      "sha256": "cb8641963722350b35c2a23cb4054de7a5fc54b945a7c5829144b4a719986082",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, 0, float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00627a84",
+      "file_offset": "0x00627a84",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, 0, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00627aa0",
+      "file_offset": "0x00627aa0",
+      "size": 248,
+      "sha256": "d8c4c9d5210f6946b451d749c181dd0f75ee0666ebf2c402ae8118ae06ca6f25",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, -1, float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00627b98",
+      "file_offset": "0x00627b98",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, -1, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00628168",
+      "file_offset": "0x00628168",
+      "size": 248,
+      "sha256": "a561dc75a35c533fb3d664f418cf174e8707a58e67bbafc01119edc926178355",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, 0, float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00628260",
+      "file_offset": "0x00628260",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, 0, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00628d2c",
+      "file_offset": "0x00628d2c",
+      "size": 248,
+      "sha256": "10929d2e872c7e1d2268e8ec4af0d2739e8fb31f9c448295d7f7c21922cd2534",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<float>, 2, float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00628e24",
+      "file_offset": "0x00628e24",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<float>, 2, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00628e40",
+      "file_offset": "0x00628e40",
+      "size": 248,
+      "sha256": "862998d67efdd48d2d27a2cdd83ab73e2a32f7a9e29889f494b700f9cc1ab584",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<float>, 2, float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00628f38",
+      "file_offset": "0x00628f38",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<float>, 2, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00628f54",
+      "file_offset": "0x00628f54",
+      "size": 248,
+      "sha256": "c458ca4ad764513c009d84bcb9adf4aa7351b0c4f3e32b1488c3f5289a3060d0",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<char>, 1, char> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062904c",
+      "file_offset": "0x0062904c",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<char>, 1, char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00629068",
+      "file_offset": "0x00629068",
+      "size": 248,
+      "sha256": "6a6a2a90aa30cba75d1d8442297da5011f1c709dff41e717f959ac1c782f6191",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<char>, 1, char> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00629160",
+      "file_offset": "0x00629160",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<char>, 1, char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062917c",
+      "file_offset": "0x0062917c",
+      "size": 248,
+      "sha256": "4fc49364b7f35f5ff634ef6cb85e0b0618275385bbcd59d77fcee6d0b496b39e",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<short>, 1, short> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00629274",
+      "file_offset": "0x00629274",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<short>, 1, short> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00629290",
+      "file_offset": "0x00629290",
+      "size": 248,
+      "sha256": "7e14289ac4dd8daab46586215002d7edd5a0630228946bb7223dfa1fc89086f0",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<short>, 1, short> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00629388",
+      "file_offset": "0x00629388",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<short>, 1, short> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006293a4",
+      "file_offset": "0x006293a4",
+      "size": 248,
+      "sha256": "f974c5021a6aad88ced9fb3c6e2c2a34af64d17ddfec3e2c58ddb3a809ec4207",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<float>, 1, float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062949c",
+      "file_offset": "0x0062949c",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<float>, 1, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006294b8",
+      "file_offset": "0x006294b8",
+      "size": 248,
+      "sha256": "58205ffa52d18353e883c1d4df7d33d1b0aa108c866861804d4c7cce08f2770c",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<float>, 1, float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x006295b0",
+      "file_offset": "0x006295b0",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<float>, 1, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006295cc",
+      "file_offset": "0x006295cc",
+      "size": 248,
+      "sha256": "1877801e33e2493babcb27d36a639d91c2dc158caeefb8236d62f75ad0fe5aad",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<char>, 0, char> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x006296c4",
+      "file_offset": "0x006296c4",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<char>, 0, char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006296e0",
+      "file_offset": "0x006296e0",
+      "size": 248,
+      "sha256": "a115be0cb763ab767fc5015dbb131598f87b7edee6eb522efca6befefbe6c036",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<char>, 0, char> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x006297d8",
+      "file_offset": "0x006297d8",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<char>, 0, char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x006297f4",
+      "file_offset": "0x006297f4",
+      "size": 248,
+      "sha256": "978512aca68bc33b442cb555ad2fcc48379b6acbf91096e27b828aae7279f056",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<short>, 0, short> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x006298ec",
+      "file_offset": "0x006298ec",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<short>, 0, short> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00629908",
+      "file_offset": "0x00629908",
+      "size": 248,
+      "sha256": "be2a8ebfa1b684deafc41ca75e114d0d248f118b429650840981403d6c62b44c",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<short>, 0, short> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00629a00",
+      "file_offset": "0x00629a00",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<short>, 0, short> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00629a1c",
+      "file_offset": "0x00629a1c",
+      "size": 248,
+      "sha256": "14549a1cd16b79625022c2c911c82e7f7904482c5997ff64ef03d14019ac7940",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<float>, 0, float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00629b14",
+      "file_offset": "0x00629b14",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<float>, 0, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00629b30",
+      "file_offset": "0x00629b30",
+      "size": 248,
+      "sha256": "26f6c9e1fe59df03bef7b2e7615d1c4211199cf16ad9afca3e5a2102d88a7fe3",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<float>, 0, float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x00629c28",
+      "file_offset": "0x00629c28",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<float>, 0, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x00629e6c",
+      "file_offset": "0x00629e6c",
+      "size": 228,
+      "sha256": "8d7fd67e1825723fc48d0bb7667bcff386ca4c6cad6e8e2d388cee83d2266a67",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<short>, 0, short> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x00629f50",
+      "file_offset": "0x00629f50",
+      "size": 228,
+      "sha256": "cfc53d3fbf26ce9b4b1c429c4460de0949e146ab31b2821a882af444f5ad171b",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<char>, 0, char> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062a034",
+      "file_offset": "0x0062a034",
+      "size": 228,
+      "sha256": "1f72192de84a960cfe6caa07033411fe2197265ebc9bcb331656dd6b80f747fd",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<float>, 1, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062a118",
+      "file_offset": "0x0062a118",
+      "size": 228,
+      "sha256": "bf333d0c8a9e13deac22c0800bc11812fd761ba58c9bf1fd6983b264b99c9d16",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<short>, 1, short> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062a1fc",
+      "file_offset": "0x0062a1fc",
+      "size": 228,
+      "sha256": "f7d308542ff7b7ea24be52fcbddeb31289c846af3213ad194d43f378ff88c5b9",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<char>, 1, char> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062a2e0",
+      "file_offset": "0x0062a2e0",
+      "size": 228,
+      "sha256": "d2ab92714e5513ef610cffcd5ae5270694b31b06d935e9939cf6c6a0aa38c6b9",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<float>, 2, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062a3c4",
+      "file_offset": "0x0062a3c4",
+      "size": 228,
+      "sha256": "4940956052f21b4e4e7dff90dbc9787ae4b65538996edf79ca67f483211b740f",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<short>, 2, short> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062a4a8",
+      "file_offset": "0x0062a4a8",
+      "size": 228,
+      "sha256": "194c255d4c7e09bd9ffc5e022d994723435d7d7610ac6732a1a84d6794d0d36c",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<char>, 2, char> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062a58c",
+      "file_offset": "0x0062a58c",
+      "size": 228,
+      "sha256": "88fbcc76095c50ebfc28ffaa2f11d90d27ebccc55465c88ee0d555e1d386ee85",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, 0, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062a670",
+      "file_offset": "0x0062a670",
+      "size": 228,
+      "sha256": "e799d0e1ccd1da929f2553fd860563045d74f9957894bfd7097223b225bafc81",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, -1, float> > >::getBlendedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062aa00",
+      "file_offset": "0x0062aa00",
+      "size": 228,
+      "sha256": "ecf7ce3f84170f5b85e33be2a5d2f4f995e6df45850ab0caa3e04b03ffdfdddc",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<float>, 0, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062aae4",
+      "file_offset": "0x0062aae4",
+      "size": 228,
+      "sha256": "88a03fbaa491bc9c303d56975659f0ce3b1b3186dfddb71d32aea463e66f16c5",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<short>, 0, short> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062abc8",
+      "file_offset": "0x0062abc8",
+      "size": 228,
+      "sha256": "81a6d9cb893a9a2f0e0e32d8042d63915ea86342f43c02da65680218044381d2",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<char>, 0, char> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062acac",
+      "file_offset": "0x0062acac",
+      "size": 228,
+      "sha256": "fd9474b5671783b9a89ec56ed044cddafc4250e0ba467fce944f9943fdc202e5",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<float>, 1, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062ad90",
+      "file_offset": "0x0062ad90",
+      "size": 228,
+      "sha256": "21b9a4fa4ffb9fb148342f2640256f2433170970b1af847ae0ab08b9bae88010",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<short>, 1, short> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062ae74",
+      "file_offset": "0x0062ae74",
+      "size": 228,
+      "sha256": "5a466453217068da1e91e2dd3d444ae7b3ebb78ab93cb3aeec761c69d9573b9d",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<char>, 1, char> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062af58",
+      "file_offset": "0x0062af58",
+      "size": 228,
+      "sha256": "aac37fe9c400d76392b86a0d8b16234356e5fedca27bb47c0e19b782ed95c989",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<float>, 2, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062b03c",
+      "file_offset": "0x0062b03c",
+      "size": 228,
+      "sha256": "121254ad6c6f34f7597c6de40b4be237b0b408f4534816daf2ddbb244b417b27",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<short>, 2, short> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062b120",
+      "file_offset": "0x0062b120",
+      "size": 228,
+      "sha256": "fe2c26a2165e0daccb6f3af8c409ce2460bb717a4d3fcd02aceb668f4977d4b4",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<char>, 2, char> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062b4b0",
+      "file_offset": "0x0062b4b0",
+      "size": 228,
+      "sha256": "279943d563b0b94ebbf038263304c0f0d8487e551188b90a301496a143dbe39a",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<float>, 0, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062b594",
+      "file_offset": "0x0062b594",
+      "size": 228,
+      "sha256": "e53ff35621b53b418a2dd6a9f7103e902620120ff63b3ba780982195b8ce04ec",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<short>, 0, short> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062b678",
+      "file_offset": "0x0062b678",
+      "size": 228,
+      "sha256": "c102d497fd2964a098528937c85e63580a3d6c6985e7033b5afbae8efb9a1624",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<char>, 0, char> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062b75c",
+      "file_offset": "0x0062b75c",
+      "size": 228,
+      "sha256": "80216bc73c5254ebce5acbdf87a4da2994ebd7ecaf3756fe4dc64840705824a0",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<float>, 1, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062b840",
+      "file_offset": "0x0062b840",
+      "size": 228,
+      "sha256": "5d3ab3e6b1bcdd324bf9a8a3d755f16ca5c041e2cbb25dff0491fb55e80a953c",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<short>, 1, short> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062b924",
+      "file_offset": "0x0062b924",
+      "size": 228,
+      "sha256": "4cc0559a167be29660a6ae231de9f27117c68ed3e944602309bc59be0846cd03",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<char>, 1, char> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062ba08",
+      "file_offset": "0x0062ba08",
+      "size": 228,
+      "sha256": "84d9100da2a59b4ef791159e981df590d1f54ef61e3955581ac9b50e0abf2108",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<float>, 2, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062baec",
+      "file_offset": "0x0062baec",
+      "size": 228,
+      "sha256": "7955826b1be544fb2b2269d5a02414a58b2e3e18ed61ab6039ff81466b12c61b",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<short>, 2, short> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062bbd0",
+      "file_offset": "0x0062bbd0",
+      "size": 228,
+      "sha256": "74b83c764d26fc719a6889d207a476919ad5563561c954c1f9d48c9028c2d7a4",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<char>, 2, char> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062bcb4",
+      "file_offset": "0x0062bcb4",
+      "size": 228,
+      "sha256": "4b1c45abd309411582c8e5254f34a199c1c4ba1e1444b8a917375490ec279184",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, 0, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062bd98",
+      "file_offset": "0x0062bd98",
+      "size": 228,
+      "sha256": "beaffd523863a343bf1f32461377eb79c92b8cb5109a04c1411fc0206d3dbea0",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<float [3], glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SMaterialSetParam<glitch::collada::animation_track::SAnimationTypes<float [3], float [3]> >, -1, float> > >::getAddedValue(void*, float*, int, void*) const"
+      ]
+    },
+    {
+      "va": "0x0062be7c",
+      "file_offset": "0x0062be7c",
+      "size": 248,
+      "sha256": "756b8cba5549dba76e9a2645b1c6c7caa1c67787768ee4b00b890188e259f102",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<char>, 2, char> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062bf74",
+      "file_offset": "0x0062bf74",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<char>, 2, char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062bf90",
+      "file_offset": "0x0062bf90",
+      "size": 248,
+      "sha256": "3f0f672691da0720793569de8f930efb51e6ab72e2d14b35aae23021aacf3482",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<char>, 2, char> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062c088",
+      "file_offset": "0x0062c088",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<char>, 2, char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062c0a4",
+      "file_offset": "0x0062c0a4",
+      "size": 248,
+      "sha256": "e4dc7bfbcae59b7cb52c08221c326e455def17217e73e8c98f2d49f813f1ec2e",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<short>, 2, short> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062c19c",
+      "file_offset": "0x0062c19c",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<short>, 2, short> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062c1b8",
+      "file_offset": "0x0062c1b8",
+      "size": 248,
+      "sha256": "c5271e7c9edb5ae788a573a840fc45e964fcab5085315ad4e50c9393e6f78d72",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<short>, 2, short> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062c2b0",
+      "file_offset": "0x0062c2b0",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<short>, 2, short> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062c2cc",
+      "file_offset": "0x0062c2cc",
+      "size": 248,
+      "sha256": "a32c2e75a37be2ce820273280ccd8e62fb921a4dc34d40a2c837017c57c93464",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<float>, 2, float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062c3c4",
+      "file_offset": "0x0062c3c4",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<float>, 2, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062c3e0",
+      "file_offset": "0x0062c3e0",
+      "size": 248,
+      "sha256": "49a1938f53cb98aefe66b9077c754dab22cf7ffe6d4349f9222fd5e6ebc7b150",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<float>, 2, float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062c4d8",
+      "file_offset": "0x0062c4d8",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<float>, 2, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062c4f4",
+      "file_offset": "0x0062c4f4",
+      "size": 248,
+      "sha256": "1892d643aeef6613287a2eb0c9b7f4d46d2bfc2509f1638a7205ade5e8adc2b6",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<char>, 1, char> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062c5ec",
+      "file_offset": "0x0062c5ec",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<char>, 1, char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062c608",
+      "file_offset": "0x0062c608",
+      "size": 248,
+      "sha256": "6171119f589a00ccf7af993bc2007dc853871c151675046a55d26d876bf8e2b4",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<char>, 1, char> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062c700",
+      "file_offset": "0x0062c700",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<char>, 1, char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062c71c",
+      "file_offset": "0x0062c71c",
+      "size": 248,
+      "sha256": "0a85f0cebb7366a8ded6603ee902f13c4fcac6a9b2f756805062d9568bbb340f",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<short>, 1, short> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062c814",
+      "file_offset": "0x0062c814",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<short>, 1, short> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062c830",
+      "file_offset": "0x0062c830",
+      "size": 248,
+      "sha256": "d67f4e4d04f29ef94b1e6f4bd8f7a87201dcdd98dcfbfa91b1f5cfb719eba1f5",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<short>, 1, short> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062c928",
+      "file_offset": "0x0062c928",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<short>, 1, short> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062c944",
+      "file_offset": "0x0062c944",
+      "size": 248,
+      "sha256": "00b397d91b74f46041e72ae7b4fb3d39221da8eaa54c226e4583d19a1246da26",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<float>, 1, float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062ca3c",
+      "file_offset": "0x0062ca3c",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<float>, 1, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062ca58",
+      "file_offset": "0x0062ca58",
+      "size": 248,
+      "sha256": "f8f0af7f159ce25e0195b51cb162cb2e8338e2db478a16047375281c529d701a",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<float>, 1, float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062cb50",
+      "file_offset": "0x0062cb50",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<float>, 1, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062cb6c",
+      "file_offset": "0x0062cb6c",
+      "size": 248,
+      "sha256": "3b101c3c54029b781fcae0e8b1c940b4067fc8b0d97eb40cbf2373050c26e878",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<char>, 0, char> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062cc64",
+      "file_offset": "0x0062cc64",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<char>, 0, char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062cc80",
+      "file_offset": "0x0062cc80",
+      "size": 248,
+      "sha256": "cddb6f942fb5618f7dc96a4d39ebbe2c705f5d9779a9f3b7b042bdd4abe60b6c",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<char>, 0, char> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062cd78",
+      "file_offset": "0x0062cd78",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<char>, 0, char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062cd94",
+      "file_offset": "0x0062cd94",
+      "size": 248,
+      "sha256": "d78827373bc0154ccce2b0ad9bf29c44ebf4d07e3bfbcf76da5337b76be74ed0",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<short>, 0, short> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062ce8c",
+      "file_offset": "0x0062ce8c",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<short>, 0, short> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062cea8",
+      "file_offset": "0x0062cea8",
+      "size": 248,
+      "sha256": "9a2bb97b10081878201bb0c93e4164f0497f9738d16b3b19a415eee96d530444",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<short>, 0, short> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062cfa0",
+      "file_offset": "0x0062cfa0",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<short>, 0, short> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062cfbc",
+      "file_offset": "0x0062cfbc",
+      "size": 248,
+      "sha256": "28581612e0f7e7bff5e650352fe9a9506b97d32c1c92f5b4682d086c8278c999",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<float>, 0, float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062d0b4",
+      "file_offset": "0x0062d0b4",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<float>, 0, float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062d0d0",
+      "file_offset": "0x0062d0d0",
+      "size": 248,
+      "sha256": "3349ea0e46e87bbfbbe648eb8826f995ff7fc94c4fe6b0f5baf7f1174447fcbc",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<float>, 0, float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062d1c8",
+      "file_offset": "0x0062d1c8",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<float>, 0, float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062d85c",
+      "file_offset": "0x0062d85c",
+      "size": 248,
+      "sha256": "3b807d6971050b866497ecdce20a77ddfd12869efe01710a48f53ffc33cb0030",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<char>, 2, char> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062d954",
+      "file_offset": "0x0062d954",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<char>, 2, char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062d970",
+      "file_offset": "0x0062d970",
+      "size": 248,
+      "sha256": "2311777e761b9950666b26c4fcef38fc743537470945ef153bec0cbfdd3b7aba",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<char>, 2, char> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062da68",
+      "file_offset": "0x0062da68",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<char>, 2, char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x0062da84",
+      "file_offset": "0x0062da84",
+      "size": 248,
+      "sha256": "e31d683adbd9cb51e77b17c70654dc342c1c593d68e27d54e6f01f755e9a2478",
+      "aliases": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<short>, 2, short> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ]
+    },
+    {
+      "va": "0x0062db7c",
+      "file_offset": "0x0062db7c",
+      "size": 28,
+      "sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "aliases": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<short>, 2, short> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ]
+    },
+    {
+      "va": "0x008be2a0",
+      "file_offset": "0x008be2a0",
+      "size": 84,
+      "sha256": "1bfbab489e0e7b2166376f736f04f891a50f7bf04191cfb8731e5294b752d66f",
+      "aliases": [
+        "__aeabi_f2uiz",
+        "__fixunssfsi"
+      ]
+    }
+  ],
+  "counts": {
+    "scalar_component_vtables": 18,
+    "material_parameter_vtables": 17,
+    "unique_function_ranges": 212
+  }
+}

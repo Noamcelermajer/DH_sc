@@ -1,0 +1,577 @@
+{
+  "schema": "dh2-producer-vertex-stream-evidence-v1",
+  "method": "SHA-256 is over exact byte ranges mapped through file-backed PT_LOAD entries; bounded llvm-objdump ARM rows were decoded and byte-compared to those same ranges.",
+  "source_apk": {
+    "path": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+    "sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+    "size_bytes": 10269872
+  },
+  "source_elf_member": {
+    "member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "path": "C:\\Users\\NacWorkstation\\Documents\\Codex\\2026-10-03\\let\\work\\DH_sc\\work\\libDungeonHunter2.so",
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "size_bytes": 15938284,
+    "apk_member_byte_match": true,
+    "elf_class": "ELF32",
+    "endianness": "little",
+    "machine": "ARM",
+    "pt_load_segments": [
+      {
+        "index": 0,
+        "elf_program_header_index": 1,
+        "p_offset": 0,
+        "p_vaddr": 0,
+        "p_filesz": 9785648,
+        "p_memsz": 9785648,
+        "p_flags": 5,
+        "p_align": 4096
+      },
+      {
+        "index": 1,
+        "elf_program_header_index": 2,
+        "p_offset": 9785648,
+        "p_vaddr": 9789744,
+        "p_filesz": 300364,
+        "p_memsz": 914688,
+        "p_flags": 6,
+        "p_align": 4096
+      }
+    ]
+  },
+  "supplied_cache_zip": {
+    "path": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2-cache.zip",
+    "sha256": "3fdf4e4c21d45a780a7c35fb4042abde0e88e76bf75416aad1f227481560b679",
+    "entry_count": 7088,
+    "suffix_counts": {
+      ".vs": 0,
+      ".mb": 0,
+      ".bdae": 2904
+    }
+  },
+  "function_ranges": [
+    {
+      "key": "collada_add_stream",
+      "symbol_description": "anonymous Collada helper; prepares one stream record",
+      "elf_va": "0x006bccf0",
+      "range_size": 656,
+      "elf_file_offset": 7064816,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "6b31fed2a17e981495a87a9a3dcb4ab7a65aefcf249972cb1590dedf1dc58034"
+    },
+    {
+      "key": "mesh_buffer_constructor_c2",
+      "symbol_description": "scene::CMeshBuffer C2 Collada constructor",
+      "elf_va": "0x006bcf80",
+      "range_size": 2680,
+      "elf_file_offset": 7065472,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "7f9395749140adaefd3f58ceaa581417a0767ad64e045e1bbfd18d6403f64cb2"
+    },
+    {
+      "key": "mesh_buffer_constructor_c1",
+      "symbol_description": "scene::CMeshBuffer C1 Collada constructor",
+      "elf_va": "0x006bd9f8",
+      "range_size": 2680,
+      "elf_file_offset": 7068152,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "175e56defbf9666c5cb012f976f63d79989b717a03b354c6543a0ab70b48a551"
+    },
+    {
+      "key": "vertex_stream_constructor",
+      "symbol_description": "CVertexStreams constructor",
+      "elf_va": "0x005a113c",
+      "range_size": 308,
+      "elf_file_offset": 5902652,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "06fa519a5d66b89ea7f831e122add6825e4502e4236c52263da2ca1fdbe534c1"
+    },
+    {
+      "key": "vertex_stream_allocate_mask",
+      "symbol_description": "CVertexStreams::allocate(mask)",
+      "elf_va": "0x005a135c",
+      "range_size": 168,
+      "elf_file_offset": 5903196,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "5744e0ab783865ff3b4b632bc50c7b98906982dcf7a0b9523ccb81cd231e8725"
+    },
+    {
+      "key": "vertex_stream_setup_from_data",
+      "symbol_description": "CVertexStreams::setupStreams(data, mask, bool)",
+      "elf_va": "0x005a178c",
+      "range_size": 236,
+      "elf_file_offset": 5904268,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "985be40058f4d862eb1e37b5c3d9c850e1a3b5dccce2b3f307c3cd0eb6b32045"
+    },
+    {
+      "key": "vertex_stream_setup_from_buffer",
+      "symbol_description": "CVertexStreams::setupStreams(buffer, mask)",
+      "elf_va": "0x005a15c0",
+      "range_size": 460,
+      "elf_file_offset": 5903808,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "b4c8dd180c6b56481dedfd70ee4fb64ecf80af286fac6a2b59f0d1251ba50a5d"
+    },
+    {
+      "key": "vertex_stream_set_stream",
+      "symbol_description": "CVertexStreams::setStream(data)",
+      "elf_va": "0x007d46fc",
+      "range_size": 108,
+      "elf_file_offset": 8210172,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "d7ea5c6ea16e533112f3481a188ebca9cbd04a09ceb856c227e13485d4081237"
+    },
+    {
+      "key": "vertex_stream_set_stream_loadvs_clone",
+      "symbol_description": "setStream clone called by loadVS",
+      "elf_va": "0x006b6194",
+      "range_size": 104,
+      "elf_file_offset": 7037332,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "a7a5fc70525fb82b25adca6f86891b634732a444d841788b725d450ff7825cac"
+    },
+    {
+      "key": "vertex_stream_set_streams",
+      "symbol_description": "CVertexStreams::setStreams(source, mask, int, bool)",
+      "elf_va": "0x005a0c60",
+      "range_size": 288,
+      "elf_file_offset": 5901408,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "ecb33c02fa45b15e4f977e0c408a93f56261a3ed6b34f7663f6706491413a7c5"
+    },
+    {
+      "key": "vertex_stream_active_attribute_mask",
+      "symbol_description": "CVertexStreams::getActiveAttributeMask()",
+      "elf_va": "0x005a0a58",
+      "range_size": 84,
+      "elf_file_offset": 5900888,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "58ee0522b6326a41cae1dbe59cc4bb45b479d11dcae05860e73b3e0bfe3f2ea3"
+    },
+    {
+      "key": "append_configure_stream",
+      "symbol_description": "CAppendMeshBuffer::configureStream",
+      "elf_va": "0x006b8950",
+      "range_size": 336,
+      "elf_file_offset": 7047504,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "fd7b12b36b9e764c498d0a31a6d43bc035aaee790680f13cd63861c016ba684c"
+    },
+    {
+      "key": "append_allocate_configured_streams",
+      "symbol_description": "CAppendMeshBuffer::allocateConfiguredVertexStreams",
+      "elf_va": "0x0058cc74",
+      "range_size": 352,
+      "elf_file_offset": 5819508,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "82302752fdfcd87f9036783fede57aa1d69585be3abe4df0a753d368775f31e7"
+    },
+    {
+      "key": "generic_baker_constructor",
+      "symbol_description": "CGenericBaker constructor",
+      "elf_va": "0x00609d28",
+      "range_size": 140,
+      "elf_file_offset": 6331688,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "d2f74f8e14f5bf8da4bd6488d0eb3cc44fe934bce1dc67e426090494147a7db2"
+    },
+    {
+      "key": "generic_baker_configure_append",
+      "symbol_description": "CGenericBaker::configureAppendBuffer",
+      "elf_va": "0x00609ba4",
+      "range_size": 388,
+      "elf_file_offset": 6331300,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "34e44852c865e27033d0aba332b2baa245e5e75c6911b32ce1046b462f0478b3"
+    },
+    {
+      "key": "io_load_vs",
+      "symbol_description": "io::loadVS",
+      "elf_va": "0x006b73d8",
+      "range_size": 2116,
+      "elf_file_offset": 7042008,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "2dad6e8bfbfce9c3b16efe06f655297505e6ec7087c79d1a1327c14d5ad5587b"
+    },
+    {
+      "key": "io_load_mb",
+      "symbol_description": "io::loadMB",
+      "elf_va": "0x006b7c1c",
+      "range_size": 360,
+      "elf_file_offset": 7044124,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "0abc0b7d75eedf5317b069add32408dd873a1c30570c9ab791490d40dd69cae6"
+    },
+    {
+      "key": "io_load_headers_skip_data",
+      "symbol_description": "io::loadHeadersAndSkipData",
+      "elf_va": "0x006b6cac",
+      "range_size": 1836,
+      "elf_file_offset": 7040172,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "ff3964c6db3e5f095b0d985df8c968c4df3ea37219abe987ba993012b0cbfbba"
+    },
+    {
+      "key": "shader_attribute_classifier",
+      "symbol_description": "guessShaderVertexAttribute",
+      "elf_va": "0x006dbb50",
+      "range_size": 2452,
+      "elf_file_offset": 7191376,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "65660efe31f77bde4d7f1ec7b6aee862f0fe66799ab6564b9380b834e6befbcd"
+    },
+    {
+      "key": "shader_link_program",
+      "symbol_description": "CGLSLShader::linkProgram",
+      "elf_va": "0x006de9f8",
+      "range_size": 1444,
+      "elf_file_offset": 7203320,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "28361c0616a3366900ac7a3dc1c7b5bc77857fb68bb4a3ec4e55529bc4d1d830"
+    },
+    {
+      "key": "gles_setup_arrays",
+      "symbol_description": "CProgrammableGLDriver::setupArrays",
+      "elf_va": "0x005b6584",
+      "range_size": 484,
+      "elf_file_offset": 5989764,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "6f2a62d4dcd27b55bde8de4f2c4b15dc237474b8ddef46b64564fd09ad96b4d5"
+    },
+    {
+      "key": "buffered_renderer_constructor",
+      "symbol_description": "BufferedRenderer constructor",
+      "elf_va": "0x007d4768",
+      "range_size": 672,
+      "elf_file_offset": 8210280,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "18961d684cc34bf90360613dd56f129283f22ae5180dd171ad8b3e57ac220f8e"
+    },
+    {
+      "key": "glitch_render_handler_constructor",
+      "symbol_description": "render_handler_glitch constructor",
+      "elf_va": "0x007d60f4",
+      "range_size": 1380,
+      "elf_file_offset": 8216820,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "d6683dfde7e8fab7397bd4e972b0e6abf2ba6bd0a5ea3b930b168feef95a8104"
+    },
+    {
+      "key": "append_end_of_batch_callback",
+      "symbol_description": "SDefaultEndOfBatchCallback::operator()",
+      "elf_va": "0x0059013c",
+      "range_size": 1316,
+      "elf_file_offset": 5833020,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "8e15002a3d180e0636fda8cac0d683139c8bdbf425af6cb1e96bc64e2cd07771"
+    }
+  ],
+  "bounded_assembly_excerpts": [
+    {
+      "key": "mesh_buffer_c2_stream_mask",
+      "label": "Collada C2 stream slots and generic allocation",
+      "elf_va": "0x006bd114",
+      "end_va_exclusive": "0x006bd3d8",
+      "range_size": 708,
+      "elf_file_offset": 7065876,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "9769d930518ca0dde792049818b3172fbeead96d1a51d7223caa601ee62a68c9",
+      "disassembly_raw_bytes_checked": 708
+    },
+    {
+      "key": "mesh_buffer_c1_stream_mask",
+      "label": "Collada C1 mirror of stream slots and allocation",
+      "elf_va": "0x006bdb8c",
+      "end_va_exclusive": "0x006bde5c",
+      "range_size": 720,
+      "elf_file_offset": 7068556,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "be489b9da6c94fe2e22a24c221585b065018a8879eb5d56e1a5b3adbff61d7ce",
+      "disassembly_raw_bytes_checked": 720
+    },
+    {
+      "key": "add_stream",
+      "label": "Collada stream record preparation",
+      "elf_va": "0x006bccf0",
+      "end_va_exclusive": "0x006bcfe0",
+      "range_size": 752,
+      "elf_file_offset": 7064816,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "48ef9589f023cb25a2a38fb8fce4fda41b0494d23281dbcbc6a81938369422cf",
+      "disassembly_raw_bytes_checked": 752
+    },
+    {
+      "key": "vertex_stream_constructor",
+      "label": "Mask-bit iteration and stream-code field initialization",
+      "elf_va": "0x005a113c",
+      "end_va_exclusive": "0x005a1270",
+      "range_size": 308,
+      "elf_file_offset": 5902652,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "06fa519a5d66b89ea7f831e122add6825e4502e4236c52263da2ca1fdbe534c1",
+      "disassembly_raw_bytes_checked": 308
+    },
+    {
+      "key": "vertex_stream_allocate_mask",
+      "label": "Generic allocation retains the requested mask and adds code zero",
+      "elf_va": "0x005a135c",
+      "end_va_exclusive": "0x005a1404",
+      "range_size": 168,
+      "elf_file_offset": 5903196,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "5744e0ab783865ff3b4b632bc50c7b98906982dcf7a0b9523ccb81cd231e8725",
+      "disassembly_raw_bytes_checked": 168
+    },
+    {
+      "key": "setup_streams_from_data",
+      "label": "Installs data only into already allocated code records",
+      "elf_va": "0x005a178c",
+      "end_va_exclusive": "0x005a1878",
+      "range_size": 236,
+      "elf_file_offset": 5904268,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "985be40058f4d862eb1e37b5c3d9c850e1a3b5dccce2b3f307c3cd0eb6b32045",
+      "disassembly_raw_bytes_checked": 236
+    },
+    {
+      "key": "set_stream",
+      "label": "Copies buffer/layout fields without rewriting the code field",
+      "elf_va": "0x007d46fc",
+      "end_va_exclusive": "0x007d4768",
+      "range_size": 108,
+      "elf_file_offset": 8210172,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "d7ea5c6ea16e533112f3481a188ebca9cbd04a09ceb856c227e13485d4081237",
+      "disassembly_raw_bytes_checked": 108
+    },
+    {
+      "key": "loadvs_header_codes",
+      "label": "Serialized 16-bit code values form the allocation mask",
+      "elf_va": "0x006b74c8",
+      "end_va_exclusive": "0x006b7628",
+      "range_size": 352,
+      "elf_file_offset": 7042248,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "4e1b10cb6094f77d4205d2962b0efeadf5f62ce78450ceede70beb3f2ae5f7c5",
+      "disassembly_raw_bytes_checked": 352
+    },
+    {
+      "key": "loadvs_install_streams",
+      "label": "Reader fills allocated records with setStream",
+      "elf_va": "0x006b7960",
+      "end_va_exclusive": "0x006b7a50",
+      "range_size": 240,
+      "elf_file_offset": 7043424,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "b836535b6c53554e5be7c4574bdccda6d310715adad9c1a9d0659793177758f4",
+      "disassembly_raw_bytes_checked": 240
+    },
+    {
+      "key": "loadvs_set_stream_clone",
+      "label": "setStream clone preserves the target code",
+      "elf_va": "0x006b6194",
+      "end_va_exclusive": "0x006b61fc",
+      "range_size": 104,
+      "elf_file_offset": 7037332,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "a7a5fc70525fb82b25adca6f86891b634732a444d841788b725d450ff7825cac",
+      "disassembly_raw_bytes_checked": 104
+    },
+    {
+      "key": "load_headers_raw_codes",
+      "label": "Descriptor parser ORs the serialized 16-bit code into a stream mask",
+      "elf_va": "0x006b6e4c",
+      "end_va_exclusive": "0x006b6f64",
+      "range_size": 280,
+      "elf_file_offset": 7040588,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "023b55f2ff0bbfbfc71ea70945738556bc9cae271fff246acd3e342cb9be934b",
+      "disassembly_raw_bytes_checked": 280
+    },
+    {
+      "key": "generic_baker_code_switch",
+      "label": "Append-buffer layout dispatch for codes 0 through 27",
+      "elf_va": "0x00609bb0",
+      "end_va_exclusive": "0x00609d28",
+      "range_size": 376,
+      "elf_file_offset": 6331312,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "fbc52597b384914f4a209187b0c3998557c76068424826997ad54b4813151ecb",
+      "disassembly_raw_bytes_checked": 376
+    },
+    {
+      "key": "append_configure_stream",
+      "label": "Stores layout in a stream slot and appends its code",
+      "elf_va": "0x006b8950",
+      "end_va_exclusive": "0x006b8aa0",
+      "range_size": 336,
+      "elf_file_offset": 7047504,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "fd7b12b36b9e764c498d0a31a6d43bc035aaee790680f13cd63861c016ba684c",
+      "disassembly_raw_bytes_checked": 336
+    },
+    {
+      "key": "append_allocate_configured_streams",
+      "label": "Configured code list becomes a mask and streams are populated",
+      "elf_va": "0x0058cc74",
+      "end_va_exclusive": "0x0058cdd4",
+      "range_size": 352,
+      "elf_file_offset": 5819508,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "82302752fdfcd87f9036783fede57aa1d69585be3abe4df0a753d368775f31e7",
+      "disassembly_raw_bytes_checked": 352
+    },
+    {
+      "key": "shader_reflection_filter",
+      "label": "Classifier result above code 29 is skipped before storage",
+      "elf_va": "0x006debe4",
+      "end_va_exclusive": "0x006dec74",
+      "range_size": 144,
+      "elf_file_offset": 7203812,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "ae85304314df035bfbc1bc1070c6f35b9862f5538508bdd95fcafbb6100cdf72",
+      "disassembly_raw_bytes_checked": 144
+    },
+    {
+      "key": "buffered_renderer_stream_codes",
+      "label": "Renderer constructor initializes position, UV, and color streams",
+      "elf_va": "0x007d48d8",
+      "end_va_exclusive": "0x007d49b8",
+      "range_size": 224,
+      "elf_file_offset": 8210648,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "2e8bbf52a03be331cc0f4908ca8f11097524b7e77536698654d35ff56f56d7b5",
+      "disassembly_raw_bytes_checked": 224
+    },
+    {
+      "key": "glitch_renderer_stream_codes",
+      "label": "Glitch renderer initializes position, UV, and color streams",
+      "elf_va": "0x007d62f4",
+      "end_va_exclusive": "0x007d63f8",
+      "range_size": 260,
+      "elf_file_offset": 8217332,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "09ec98a4a4f567150bfec3554263df9c72092b2ff95b0dc7f1a205ba63f7a2b4",
+      "disassembly_raw_bytes_checked": 260
+    },
+    {
+      "key": "end_of_batch_allocate_call",
+      "label": "Batch completion invokes configured-stream allocation",
+      "elf_va": "0x005902b8",
+      "end_va_exclusive": "0x00590310",
+      "range_size": 88,
+      "elf_file_offset": 5833400,
+      "pt_load_segment_index_zero_based": 0,
+      "range_sha256": "52cbe17d4f71904d6395d19a19a35c9a7c0858ad13caddc67b94f759213e9c50",
+      "disassembly_raw_bytes_checked": 88
+    }
+  ],
+  "direct_call_xrefs": {
+    "collada_add_stream": {
+      "target_va": "0x006bccf0",
+      "direct_bl_callsites": [
+        "0x006bd140",
+        "0x006bd18c",
+        "0x006bd1d4",
+        "0x006bd200",
+        "0x006bd234",
+        "0x006bd280",
+        "0x006bd2e0",
+        "0x006bd328",
+        "0x006bd354",
+        "0x006bdbb8",
+        "0x006bdc04",
+        "0x006bdc4c",
+        "0x006bdc78",
+        "0x006bdcac",
+        "0x006bdcf8",
+        "0x006bdd58",
+        "0x006bdda0",
+        "0x006bddcc"
+      ]
+    },
+    "vertex_stream_allocate_mask": {
+      "target_va": "0x005a135c",
+      "direct_bl_callsites": [
+        "0x0058ccb8",
+        "0x0059b48c",
+        "0x005aed80",
+        "0x00635084",
+        "0x0063f984",
+        "0x00643bb4",
+        "0x006485d8",
+        "0x0064a660",
+        "0x00656fe0",
+        "0x00671360",
+        "0x006a30a0",
+        "0x006b6ef0",
+        "0x006b7624",
+        "0x006b88e4",
+        "0x006bd368",
+        "0x006bdde0",
+        "0x006d1210",
+        "0x006d5f10",
+        "0x006d6ed4",
+        "0x00702824"
+      ]
+    },
+    "vertex_stream_setup_from_data": {
+      "target_va": "0x005a178c",
+      "direct_bl_callsites": [
+        "0x006bd3d4",
+        "0x006bde4c"
+      ]
+    },
+    "vertex_stream_set_stream": {
+      "target_va": "0x007d46fc",
+      "direct_bl_callsites": [
+        "0x007d4904",
+        "0x007d495c",
+        "0x007d49b4",
+        "0x007d633c",
+        "0x007d6398",
+        "0x007d63f4"
+      ]
+    },
+    "vertex_stream_set_stream_loadvs_clone": {
+      "target_va": "0x006b6194",
+      "direct_bl_callsites": [
+        "0x006b6f48",
+        "0x006b7a4c"
+      ]
+    },
+    "append_configure_stream": {
+      "target_va": "0x006b8950",
+      "direct_bl_callsites": [
+        "0x00609c7c",
+        "0x00609ce4",
+        "0x00609d10"
+      ]
+    },
+    "append_allocate_configured_streams": {
+      "target_va": "0x0058cc74",
+      "direct_bl_callsites": [
+        "0x005902e0"
+      ]
+    },
+    "io_load_vs": {
+      "target_va": "0x006b73d8",
+      "direct_bl_callsites": [
+        "0x006b7c5c"
+      ]
+    },
+    "io_load_headers_skip_data": {
+      "target_va": "0x006b6cac",
+      "direct_bl_callsites": []
+    },
+    "shader_attribute_classifier": {
+      "target_va": "0x006dbb50",
+      "direct_bl_callsites": [
+        "0x006dec08"
+      ]
+    }
+  },
+  "call_xref_method": "Whole-file llvm-objdump ARM disassembly; direct BL immediate targets only. This does not include indirect/vtable calls.",
+  "generator": "tools/capture_evidence.py",
+  "reference_assembly": "reference/producer-stream-excerpts.asm"
+}

@@ -1,0 +1,51 @@
+{
+  "component": "Alternate geometry loader and candidate reader audit",
+  "original_apk": "Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "original_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "original_library": "libDungeonHunter2.so",
+  "original_library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "verified_source": {
+    "apk_entry": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "entry_size": 15938284
+  },
+  "pt_load_mapping": {
+    "elf_class": "ELF32 little-endian ARM",
+    "file_backed_load_segments": [
+      {
+        "p_offset": "0x00000000",
+        "p_vaddr": "0x00000000",
+        "p_filesz": "0x00955130",
+        "p_memsz": "0x00955130"
+      },
+      {
+        "p_offset": "0x00955130",
+        "p_vaddr": "0x00956130",
+        "p_filesz": "0x0004954c",
+        "p_memsz": "0x000df500"
+      }
+    ],
+    "mapping_note": "Both ranges lie in the first file-backed PT_LOAD, where file offset equals ELF VA."
+  },
+  "assembly_evidence": "reference/alternate-paths-functions.asm",
+  "functions": [
+    {
+      "original_symbol": "_ZN6glitch5scene24CColladaBinaryFileLoader10createMeshEPNS_2io9IReadFileE",
+      "demangled": "glitch::scene::CColladaBinaryFileLoader::createMesh(glitch::io::IReadFile*)",
+      "elf_address": "0x006b9458",
+      "file_offset": "0x006b9458",
+      "size": 224,
+      "sha256": "08b1b58c80ad5dbe66221dd37d2e4daa4bcb83aabd46bee72fe2821415ec99f4",
+      "scope": "Scene mesh loader: calls CResFileManager::load and CColladaDatabase::constructScene; it has no separate geometry payload decoder."
+    },
+    {
+      "original_symbol": "_ZN6glitch5scene10CBatchMesh4loadEPNS_2io9IReadFileEPNS_5video12IVideoDriverEPNS2_11IFileSystemEPNS_7collada14CRootSceneNodeEPNSA_15CColladaFactoryE",
+      "demangled": "glitch::scene::CBatchMesh::load(glitch::io::IReadFile*, glitch::video::IVideoDriver*, glitch::io::IFileSystem*, glitch::collada::CRootSceneNode*, glitch::collada::CColladaFactory*)",
+      "elf_address": "0x0057db94",
+      "file_offset": "0x0057db94",
+      "size": 2448,
+      "sha256": "b33556e92d7476b23b6023c8f25ace245a2aac7b9ac83e394f389f4ef289c6b6",
+      "scope": "Separate ZIP/batch-segment loader; it constructs a Collada database for related scene/material data and loads mesh-buffer segments, with no SGeometry construction call."
+    }
+  ],
+  "verification": "Function ranges and SHA-256 values are checked against the library entry read directly from the APK by the repository provenance verifier. No builds or tests were run."
+}

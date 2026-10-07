@@ -1,0 +1,425 @@
+{
+  "limits": [
+    "A matching cache member and BRES pass record prove archive/source name correspondence, not that the game opened this archive in a particular session.",
+    "The shader source bytes and prefix order are recovered, but device compilation, linking, technique selection, draw use, and visual output are not proven."
+  ],
+  "nested_shader_zip": {
+    "bad_crc_member": null,
+    "duplicate_names": [],
+    "entries": [
+      {
+        "compression_method": 0,
+        "crc32": "e96ccf45",
+        "name": "cg.config",
+        "sha256": "36a9e7f1c95b82ffb99743e0c5c4ce95d83c9a430aac59f84ef3cbfab6145068",
+        "size_bytes": 1
+      },
+      {
+        "compression_method": 0,
+        "crc32": "1e4a3387",
+        "name": "DepthCubeFP.glsl",
+        "sha256": "1089992edad43a648dd53a6d97a0c354da47e50526166df8b9689c127da77e64",
+        "size_bytes": 68
+      },
+      {
+        "compression_method": 0,
+        "crc32": "f321d32f",
+        "name": "DepthCubeVP.glsl",
+        "sha256": "e087b1ff2b06e2f24f774c7135da0fa15cb5d6275045c610c14aad5fc149f14f",
+        "size_bytes": 193
+      },
+      {
+        "compression_method": 0,
+        "crc32": "d2fad27c",
+        "name": "ForceCommitTextureFS.glsl",
+        "sha256": "f1c2beb668456d593cc9fc618e1b13b7c7840da0825c02a4de3c82a206efcf20",
+        "size_bytes": 1476
+      },
+      {
+        "compression_method": 0,
+        "crc32": "1be3c68a",
+        "name": "ForceCommitTextureVS.glsl",
+        "sha256": "630f188611b6a6ab3023a86ed589008d82a0ed7c3178ce2d337b31656737f52c",
+        "size_bytes": 860
+      },
+      {
+        "compression_method": 0,
+        "crc32": "b9cf83cf",
+        "name": "GameSWFFS.glsl",
+        "sha256": "7465b4e89519dd371f779eef62048efd12ea9ced3d4e542606ffa0c867036889",
+        "size_bytes": 276
+      },
+      {
+        "compression_method": 0,
+        "crc32": "d4116fb4",
+        "name": "GameSWFFS_blend.glsl",
+        "sha256": "2038491cbcd7af3523e70c98d0ba72a7e904efa784acd7b878b835b60003b59c",
+        "size_bytes": 300
+      },
+      {
+        "compression_method": 0,
+        "crc32": "c78b59e1",
+        "name": "GameSWFVS.glsl",
+        "sha256": "23d0c271fe19c3f305b44529879b18fab395be3416c2c8300605401f42c8bf24",
+        "size_bytes": 410
+      },
+      {
+        "compression_method": 0,
+        "crc32": "00000000",
+        "name": "glsl.config",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "compression_method": 0,
+        "crc32": "82f8fb11",
+        "name": "GL_Diffuse_L1_iPhone_FS.glsl",
+        "sha256": "a39f0025f0605e3bc4e81c984e8cc9b110639bb5901b2cf9b0798d65871e2686",
+        "size_bytes": 3483
+      },
+      {
+        "compression_method": 0,
+        "crc32": "14a98ef4",
+        "name": "GL_Diffuse_L1_iPhone_VS.glsl",
+        "sha256": "1e04da1687b9171cac7aa694966f045bd16b04148a9a3a39b95d9ad4ad25b84c",
+        "size_bytes": 6633
+      },
+      {
+        "compression_method": 0,
+        "crc32": "4f863b5b",
+        "name": "passFP.glsl",
+        "sha256": "d7f2d1ebd78025efbf319155c09add8bb357b74de7d9f66885f9f08a87f5d386",
+        "size_bytes": 65
+      },
+      {
+        "compression_method": 0,
+        "crc32": "3c96a4f6",
+        "name": "passVP.glsl",
+        "sha256": "8865e3ec2bf503867aeefc52d6d6a4ccbcfef0a8e4c94b07323928226931d27a",
+        "size_bytes": 159
+      },
+      {
+        "compression_method": 0,
+        "crc32": "34175a4c",
+        "name": "ProfileCOMMON_emul_FS.glsl",
+        "sha256": "9557110c9ce8373cf8b26d380e579961a15109c96d18cbde1e42d30b244b8aee",
+        "size_bytes": 1872
+      },
+      {
+        "compression_method": 0,
+        "crc32": "29979253",
+        "name": "ProfileCOMMON_emul_VS.glsl",
+        "sha256": "9607ac878bdf2cd09344c0b704388fe2c8d94bb813634181d3354e4516a4e7d4",
+        "size_bytes": 8087
+      },
+      {
+        "compression_method": 0,
+        "crc32": "5665f572",
+        "name": "RadialBlurFP.glsl",
+        "sha256": "b67bb3884a8dd0a108578958184279fd300fca7c7da59886adcef64dcf6c1cfe",
+        "size_bytes": 2375
+      },
+      {
+        "compression_method": 0,
+        "crc32": "4071fccd",
+        "name": "RadialBlurVP.glsl",
+        "sha256": "21bcd33ce0b86510b18734f8df7350648183d1b243af1673016b5770681a8008",
+        "size_bytes": 258
+      },
+      {
+        "compression_method": 0,
+        "crc32": "dde18db2",
+        "name": "TwoTextureBlendFP.glsl",
+        "sha256": "81315800be614a31369822233137ddbb2c3544761f811df3c97bbfead715e2a9",
+        "size_bytes": 339
+      },
+      {
+        "compression_method": 0,
+        "crc32": "8420c5b6",
+        "name": "TwoTextureBlendNoViewProjVP.glsl",
+        "sha256": "6a07e7ca8d5b498eb61aca35fcb2c587feda18cc730035a05e1dea2d1e3b18a8",
+        "size_bytes": 170
+      },
+      {
+        "compression_method": 0,
+        "crc32": "559cc8ce",
+        "name": "UnlitCubeMapReflectionFP.glsl",
+        "sha256": "637cdacadcf1bdd50601af2f8e137d3a9e0ffaf2d6257d0b80acebb245583f56",
+        "size_bytes": 807
+      },
+      {
+        "compression_method": 0,
+        "crc32": "ff4dc393",
+        "name": "UnlitCubeMapReflectionVP.glsl",
+        "sha256": "27d225f9bd0413c94b31ec663ff0e2b3e3cea15c07ceceeb95e2ddf4e44ef735",
+        "size_bytes": 744
+      },
+      {
+        "compression_method": 0,
+        "crc32": "13cdd8ab",
+        "name": "UnlitCubeMapShadowFP.glsl",
+        "sha256": "5def9a42d1b1fe4a863fc313549528a67f94af35ebde750d1e1a0302e90617a5",
+        "size_bytes": 883
+      },
+      {
+        "compression_method": 0,
+        "crc32": "b5df9976",
+        "name": "UnlitCubeMapShadowMapFP.glsl",
+        "sha256": "1396885fd8adcc7765ac5123ac8ce4006002494d0a2b833f7fc11ebb50a5aeb7",
+        "size_bytes": 2721
+      },
+      {
+        "compression_method": 0,
+        "crc32": "e98ab20f",
+        "name": "UnlitCubeMapShadowMapVP.glsl",
+        "sha256": "4df873c430431142f5f4be713a17654445a7061d4b3c578daaa81551fbc8f28b",
+        "size_bytes": 2126
+      },
+      {
+        "compression_method": 0,
+        "crc32": "dffe4d5f",
+        "name": "UnlitCubeMapShadowVP.glsl",
+        "sha256": "dae00c6a26af538cd38b28222c3d3156e414659c0e2570141226ed952a813175",
+        "size_bytes": 619
+      },
+      {
+        "compression_method": 0,
+        "crc32": "170b72cc",
+        "name": "UnlitMaterialColorFP.glsl",
+        "sha256": "e0a0959fe0ea6b7491379f05a749a180d1b6a276bf28a9db0ae6b778cf417637",
+        "size_bytes": 78
+      },
+      {
+        "compression_method": 0,
+        "crc32": "e00aca0f",
+        "name": "UnlitMaterialColorVP.glsl",
+        "sha256": "fb4fda3f066e89f9dca4f059167edbbfb4053d9dd35e7368b25ecc650fcc0726",
+        "size_bytes": 255
+      },
+      {
+        "compression_method": 0,
+        "crc32": "87fcaf91",
+        "name": "UnlitMultiTexturedFP.glsl",
+        "sha256": "e08153997cea67fea2f7964b4058878a62210a37f1c35982888ec0862077bc94",
+        "size_bytes": 247
+      },
+      {
+        "compression_method": 0,
+        "crc32": "13e763b5",
+        "name": "UnlitOneTextureAndVertexColorVP.glsl",
+        "sha256": "7f7136d2deaef29dc7a260cdc771a14e3b8005999a5d6a475c99db4bc10495f2",
+        "size_bytes": 1064
+      },
+      {
+        "compression_method": 0,
+        "crc32": "54ad6dad",
+        "name": "UnlitTexturedAlphaTestFP.glsl",
+        "sha256": "a9b6a0f62cfd6eb7323a9274c46e70d688efa6791469aba36a0bbdca924e3286",
+        "size_bytes": 278
+      },
+      {
+        "compression_method": 0,
+        "crc32": "2784d678",
+        "name": "UnlitTexturedBlendTextureAlphaFP.glsl",
+        "sha256": "62de89a1c2d617837b82ff7d32b67b357fbeb8c201a69a12512250dc1db00546",
+        "size_bytes": 243
+      },
+      {
+        "compression_method": 0,
+        "crc32": "e55320cb",
+        "name": "UnlitTexturedFP.glsl",
+        "sha256": "8b6fc31f6f3e7f5e27cec51764191da5e7a7e217070a064ca0079045527ffea2",
+        "size_bytes": 1397
+      },
+      {
+        "compression_method": 0,
+        "crc32": "170b72cc",
+        "name": "UnlitVertexColorFP.glsl",
+        "sha256": "e0a0959fe0ea6b7491379f05a749a180d1b6a276bf28a9db0ae6b778cf417637",
+        "size_bytes": 78
+      },
+      {
+        "compression_method": 0,
+        "crc32": "2f508a04",
+        "name": "UnlitVertexColorVP.glsl",
+        "sha256": "4bba68c7b7329765352698d11d38b07ae2081a339f029ad1dde9c6a14f11a597",
+        "size_bytes": 249
+      }
+    ],
+    "entry_count": 34,
+    "glsl_entry_count": 32,
+    "nested_archive_candidates": [],
+    "non_glsl_entry_names": [
+      "cg.config",
+      "glsl.config"
+    ]
+  },
+  "outer_cache_zip": {
+    "direct_shader_source_entries": [],
+    "direct_shader_source_entry_count": 0,
+    "entry_count": 7088,
+    "nested_archive_candidates": [
+      {
+        "archive_suffix": ".pak",
+        "first_8_bytes_hex": "504b03040a000000",
+        "name": "com.gameloft.android.GAND.GloftD2SS/files/shaders.pak",
+        "signature_matches": [
+          "zip-local-header"
+        ],
+        "size_bytes": 44194
+      }
+    ],
+    "nested_shader_package": {
+      "compression_method": 8,
+      "crc32": "9aa0ef38",
+      "name": "com.gameloft.android.GAND.GloftD2SS/files/shaders.pak",
+      "sha256": "365a4d3c432454c44208ebb484c7a472a3a4534a0c5c9e77a7a90f3b87b1b5c0",
+      "size_bytes": 44194
+    }
+  },
+  "pass_route": {
+    "bdae_sha256": "84098bbb6d5daac56fcd84c4a0e1248924a068da29bc436ac1f859d73997c9e8",
+    "exact_filename_matches": {
+      "component_1": {
+        "compression_method": 0,
+        "crc32": "29979253",
+        "name": "ProfileCOMMON_emul_VS.glsl",
+        "sha256": "9607ac878bdf2cd09344c0b704388fe2c8d94bb813634181d3354e4516a4e7d4",
+        "size_bytes": 8087
+      },
+      "component_3": {
+        "compression_method": 0,
+        "crc32": "34175a4c",
+        "name": "ProfileCOMMON_emul_FS.glsl",
+        "sha256": "9557110c9ce8373cf8b26d380e579961a15109c96d18cbde1e42d30b244b8aee",
+        "size_bytes": 1872
+      }
+    },
+    "fields": {
+      "component_1": {
+        "nul_terminated_bytes_sha256": "e0463ff861853907a11e41f8f0673329ce53536489f446c7180ad22bd86dc84e",
+        "target_offset": "0x183c",
+        "value": "ProfileCOMMON_emul_VS.glsl"
+      },
+      "component_2": {
+        "nul_terminated_bytes_sha256": "e54a4e06df4b5533a22d65c9e0abcf47d107dda8d9b8dcef6764ed68e795e92d",
+        "target_offset": "0x1868",
+        "value": "#define TEXTURED\n"
+      },
+      "component_3": {
+        "nul_terminated_bytes_sha256": "b20e0ddefa68b71d30180f5a34dd239380dc25f65dd63c21266f2190d87a80e8",
+        "target_offset": "0x1880",
+        "value": "ProfileCOMMON_emul_FS.glsl"
+      },
+      "component_4": {
+        "nul_terminated_bytes_sha256": "43597be90c89ce9d8ab3cd084a72a48c902db331cac8c0b1d0d64918981d4ee9",
+        "target_offset": "0x18a0",
+        "value": "#define TEXTURED\n#define ADDITIVEBLEND\n "
+      }
+    },
+    "native_source_ranges": [
+      {
+        "elf_va": "0x00634b30",
+        "function": "SProfileGLES2Traits::createShader",
+        "sha256": "b8c161d864042f4f4e74803848cb6f907b69b3ceeebae5aa25bb994cd1669684",
+        "size_bytes": 308
+      },
+      {
+        "elf_va": "0x006e01b4",
+        "function": "CGLSLShaderManager::createShader",
+        "sha256": "b53f059259f1e2b65fd6dac8e81801c9d07a8b159bd13dfc949c6693b2163b66",
+        "size_bytes": 404
+      },
+      {
+        "elf_va": "0x006dfe68",
+        "function": "CGLSLShaderManager::createShaderCode",
+        "sha256": "2fc259ff52a2b2287740bc95ff033c95f37c0b396b7a9998df6657576cdc813d",
+        "size_bytes": 844
+      }
+    ],
+    "prefixes": {
+      "fragment": {
+        "defines": [
+          "TEXTURED",
+          "ADDITIVEBLEND"
+        ],
+        "filename": "ProfileCOMMON_emul_FS.glsl",
+        "matching_source_conditionals": {
+          "ADDITIVEBLEND": [
+            {
+              "line": 78,
+              "text": "#ifdef ADDITIVEBLEND"
+            }
+          ],
+          "TEXTURED": [
+            {
+              "line": 30,
+              "text": "#ifdef TEXTURED"
+            },
+            {
+              "line": 58,
+              "text": "#ifdef TEXTURED"
+            }
+          ]
+        },
+        "native_source_order": "prefix string precedes loaded file contents in createShaderCode's source-pointer list",
+        "prefix": "#define TEXTURED\n#define ADDITIVEBLEND\n ",
+        "prefix_sha256_with_nul": "43597be90c89ce9d8ab3cd084a72a48c902db331cac8c0b1d0d64918981d4ee9"
+      },
+      "vertex": {
+        "defines": [
+          "TEXTURED"
+        ],
+        "filename": "ProfileCOMMON_emul_VS.glsl",
+        "matching_source_conditionals": {
+          "TEXTURED": [
+            {
+              "line": 17,
+              "text": "#ifdef TEXTURED"
+            },
+            {
+              "line": 29,
+              "text": "#    ifdef TEXTURED"
+            },
+            {
+              "line": 209,
+              "text": "#ifdef TEXTURED"
+            }
+          ]
+        },
+        "native_source_order": "prefix string precedes loaded file contents in createShaderCode's source-pointer list",
+        "prefix": "#define TEXTURED\n",
+        "prefix_sha256_with_nul": "e54a4e06df4b5533a22d65c9e0abcf47d107dda8d9b8dcef6764ed68e795e92d"
+      }
+    },
+    "record_offset": "0x3670",
+    "record_sha256": "dc8484fa6925c7690870ab84173a5d2460d3a764a450d9a730edbd6f167d89a2"
+  },
+  "same_cache_bdae": {
+    "compression_method": 8,
+    "crc32": "ecc33d62",
+    "name": "com.gameloft.android.GAND.GloftD2SS/files/data/3d/animateddecors/castle/chandelier_castle.bdae",
+    "sha256": "84098bbb6d5daac56fcd84c4a0e1248924a068da29bc436ac1f859d73997c9e8",
+    "size_bytes": 31252
+  },
+  "source_inputs": {
+    "apk": {
+      "nested_archive_candidates": [],
+      "path": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+      "sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+      "shader_related_direct_entries": [],
+      "size_bytes": 10269872,
+      "zip_entry_count": 225
+    },
+    "elf_member": {
+      "name": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "size_bytes": 15938284
+    },
+    "recovered_cache_zip": {
+      "path": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2-cache.zip",
+      "sha256": "3fdf4e4c21d45a780a7c35fb4042abde0e88e76bf75416aad1f227481560b679",
+      "size_bytes": 433189197
+    }
+  }
+}

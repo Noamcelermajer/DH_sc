@@ -1,0 +1,4063 @@
+{
+  "schema": "dh-sc-native-audio-vxn-corpus-audit-v1",
+  "corpus_root_as_observed": "C:\\Users\\NacWorkstation\\Documents\\Codex\\2026-10-03\\let\\work\\cache-recovery\\extracted\\com.gameloft.android.GAND.GloftD2SS\\files\\data\\sounds",
+  "input_file_count": 12,
+  "method": "Read-only byte inventory. Numeric fields are recorded as unsigned little-endian values unless explicitly noted. Derived table strides are arithmetic observations, not semantic schema names.",
+  "assets": [
+    {
+      "file_name": "m_level_cathedral_sfx_catacomb.vxn",
+      "file_size_bytes": 10281472,
+      "file_sha256": "6c0236d19b66011d986a7fd31a332257d8f689ceea69e049abf90376d33ed909",
+      "observed_header": {
+        "magic_ascii": "VoxN",
+        "magic_u32_le": 1316515670,
+        "read_size_u32_at_4": 16,
+        "bytes_8_to_15_hex": "302e302e31003700",
+        "u32_at_16": 10281472,
+        "u32_at_20_audio_base": 512,
+        "file_size_field_equals_actual": true
+      },
+      "parser_derived_chunk_window": {
+        "start": 24,
+        "size": 480,
+        "end_exclusive": 504,
+        "formula": "u32_at_20 - 16 - u32_at_4, read begins at file offset 24",
+        "chunk_records_end": 504,
+        "bytes_between_chunk_window_and_audio_base": 8,
+        "gap_hex": "4461746100e09c00",
+        "audio_base": 512
+      },
+      "chunk_order": [
+        "Afmt",
+        "Segm",
+        "Rule",
+        "Plst",
+        "Stat",
+        "Trsn",
+        "Grps",
+        "Grpe"
+      ],
+      "tags_exactly_match_observed_corpus_set": true,
+      "chunks": [
+        {
+          "tag_bytes": "41666d74",
+          "tag_ascii": "Afmt",
+          "header_offset": 24,
+          "payload_offset": 32,
+          "payload_length": 12,
+          "payload_sha256": "12f3834f2b331e996062bafa53ebe22b8fbf2c6fb57c87236929609d5cbbf9ec",
+          "payload_hex": "11000200007d000000040400",
+          "observed_fields": {
+            "u16_0": 17,
+            "u16_2": 2,
+            "u32_4": 32000,
+            "u16_8": 1024,
+            "u16_10": 4
+          }
+        },
+        {
+          "tag_bytes": "5365676d",
+          "tag_ascii": "Segm",
+          "header_offset": 44,
+          "payload_offset": 52,
+          "payload_length": 52,
+          "payload_sha256": "dea3574415647ef755ca9f9250ffaba9c79cfad2d88e74966422af0ac2c83d84",
+          "payload_hex": "020000000000000000704e00dde54d0000000000000000000000000000704e0000704e00dde54d00000000000000000000000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "rows": [
+            {
+              "row_index": 0,
+              "payload_offset": 4,
+              "raw_hex": "0000000000704e00dde54d00000000000000000000000000",
+              "u32_words": [
+                0,
+                5140480,
+                5105117,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            },
+            {
+              "row_index": 1,
+              "payload_offset": 28,
+              "raw_hex": "00704e0000704e00dde54d00000000000000000000000000",
+              "u32_words": [
+                5140480,
+                5140480,
+                5105117,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            }
+          ]
+        },
+        {
+          "tag_bytes": "52756c65",
+          "tag_ascii": "Rule",
+          "header_offset": 104,
+          "payload_offset": 112,
+          "payload_length": 76,
+          "payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+          "payload_hex": "020000000100000000000000000000000000000000000040000000400000004000000000ffffffff0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 72,
+            "derived_stride_bytes": 36,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "506c7374",
+          "tag_ascii": "Plst",
+          "header_offset": 188,
+          "payload_offset": 196,
+          "payload_length": 20,
+          "payload_sha256": "321128bb66667273d721b0a0c1f0a0109848ac94536e832e3e394e4d026d5ad0",
+          "payload_hex": "0200000000000000010000000000000001000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 16,
+            "derived_stride_bytes": 8,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "tag_bytes": "53746174",
+          "tag_ascii": "Stat",
+          "header_offset": 216,
+          "payload_offset": 224,
+          "payload_length": 68,
+          "payload_sha256": "74fbe529f91ec08c347503664e61f49ba8d9b3cb212933471ed153eb9e70ba1b",
+          "payload_hex": "0200000000000000616d6269656e7400c4f8210068f821002137d0001cf921005c00000001000000636f6d6261740000c4f8210068f821002137d0001cf921005c000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1768058209,
+            7630437,
+            2226372,
+            2226280,
+            13645601,
+            2226460,
+            92,
+            1,
+            1651339107,
+            29793,
+            2226372,
+            2226280,
+            13645601,
+            2226460,
+            92
+          ]
+        },
+        {
+          "tag_bytes": "5472736e",
+          "tag_ascii": "Trsn",
+          "header_offset": 292,
+          "payload_offset": 300,
+          "payload_length": 68,
+          "payload_sha256": "eaeaab6430cd49fa9766520c26f99953bddae59b9a819f79ec15ab021fe1b731",
+          "payload_hex": "040000000000000000000000ffffffff0000000000000000010000000000000000000000010000000000000001000000000000000100000001000000ffffffff00000000",
+          "leading_u32_count_candidate": 4,
+          "count_stride_observation": {
+            "count": 4,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 16,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            4,
+            0,
+            0,
+            4294967295,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            4294967295,
+            0
+          ]
+        },
+        {
+          "tag_bytes": "47727073",
+          "tag_ascii": "Grps",
+          "header_offset": 368,
+          "payload_offset": 376,
+          "payload_length": 52,
+          "payload_sha256": "a6b83179f21e99f8fd07e2bc1c673b097e8ed97040798351e2aaa2567a432cb4",
+          "payload_hex": "020000000000000000000000000000000000000001000000ffffffff0100000000000000000000000000000001000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "47727065",
+          "tag_ascii": "Grpe",
+          "header_offset": 428,
+          "payload_offset": 436,
+          "payload_length": 68,
+          "payload_sha256": "64fdd613f7f03656a54ffe69cc082f9dac19b156ae3589e6c68424288c34f4f9",
+          "payload_hex": "02000000000000000000000000000000000000000000000000000000ffffffff01000000010000000000000000000000010000000000000000000000ffffffff01000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4294967295,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            4294967295,
+            1
+          ]
+        }
+      ],
+      "audio_payload": {
+        "offset": 512,
+        "size_bytes": 10280960,
+        "sha256": "d33f7419574ed45b48f4e9f2fecdb1d97df6a150f37eae7e5d6a8b0b54fce52e"
+      },
+      "segment_spans_derived_from_rows": [
+        {
+          "relative_offset": 0,
+          "encoded_extent_bytes": 5140480,
+          "sample_bound": 5105117,
+          "file_offset_start": 512,
+          "file_offset_end": 5140992
+        },
+        {
+          "relative_offset": 5140480,
+          "encoded_extent_bytes": 5140480,
+          "sample_bound": 5105117,
+          "file_offset_start": 5140992,
+          "file_offset_end": 10281472
+        }
+      ],
+      "segment_extents_sum_to_audio_payload": true,
+      "segment_offsets_are_contiguous": true,
+      "afmt_raw_observed_fields": {
+        "u16_0": 17,
+        "u16_2": 2,
+        "u32_4": 32000,
+        "u16_8": 1024,
+        "u16_10": 4
+      },
+      "afmt_runtime_bits_overwrite_evidence": "Parser handler stores halfword 16 at native-data offset +0x2a after copying Afmt; see ParseFile VA 0x00873c10 in exact assembly.",
+      "unknown_semantics": [
+        "u32 words 3-5 in each Segm row",
+        "all non-Segm table field names and meanings beyond their observed count/stride",
+        "whether every possible VoxN corpus variant has this exact layout"
+      ]
+    },
+    {
+      "file_name": "m_level_darkwood_sfx_darkwood.vxn",
+      "file_size_bytes": 11692544,
+      "file_sha256": "6e5cd6dba229f351bc3d23a65d5575637523a8d768607ab91b6c86cf7f4c78e0",
+      "observed_header": {
+        "magic_ascii": "VoxN",
+        "magic_u32_le": 1316515670,
+        "read_size_u32_at_4": 16,
+        "bytes_8_to_15_hex": "302e302e31003700",
+        "u32_at_16": 11692544,
+        "u32_at_20_audio_base": 512,
+        "file_size_field_equals_actual": true
+      },
+      "parser_derived_chunk_window": {
+        "start": 24,
+        "size": 480,
+        "end_exclusive": 504,
+        "formula": "u32_at_20 - 16 - u32_at_4, read begins at file offset 24",
+        "chunk_records_end": 504,
+        "bytes_between_chunk_window_and_audio_base": 8,
+        "gap_hex": "446174610068b200",
+        "audio_base": 512
+      },
+      "chunk_order": [
+        "Afmt",
+        "Segm",
+        "Rule",
+        "Plst",
+        "Stat",
+        "Trsn",
+        "Grps",
+        "Grpe"
+      ],
+      "tags_exactly_match_observed_corpus_set": true,
+      "chunks": [
+        {
+          "tag_bytes": "41666d74",
+          "tag_ascii": "Afmt",
+          "header_offset": 24,
+          "payload_offset": 32,
+          "payload_length": 12,
+          "payload_sha256": "12f3834f2b331e996062bafa53ebe22b8fbf2c6fb57c87236929609d5cbbf9ec",
+          "payload_hex": "11000200007d000000040400",
+          "observed_fields": {
+            "u16_0": 17,
+            "u16_2": 2,
+            "u32_4": 32000,
+            "u16_8": 1024,
+            "u16_10": 4
+          }
+        },
+        {
+          "tag_bytes": "5365676d",
+          "tag_ascii": "Segm",
+          "header_offset": 44,
+          "payload_offset": 52,
+          "payload_length": 52,
+          "payload_sha256": "b925f2767fd621640569753cb26ebe650129800f80277c763d577505231ce87e",
+          "payload_hex": "0200000000000000003459006e94580000000000000000000000000000345900003459006e945800000000000000000000000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "rows": [
+            {
+              "row_index": 0,
+              "payload_offset": 4,
+              "raw_hex": "00000000003459006e945800000000000000000000000000",
+              "u32_words": [
+                0,
+                5846016,
+                5805166,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            },
+            {
+              "row_index": 1,
+              "payload_offset": 28,
+              "raw_hex": "00345900003459006e945800000000000000000000000000",
+              "u32_words": [
+                5846016,
+                5846016,
+                5805166,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            }
+          ]
+        },
+        {
+          "tag_bytes": "52756c65",
+          "tag_ascii": "Rule",
+          "header_offset": 104,
+          "payload_offset": 112,
+          "payload_length": 76,
+          "payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+          "payload_hex": "020000000100000000000000000000000000000000000040000000400000004000000000ffffffff0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 72,
+            "derived_stride_bytes": 36,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "506c7374",
+          "tag_ascii": "Plst",
+          "header_offset": 188,
+          "payload_offset": 196,
+          "payload_length": 20,
+          "payload_sha256": "321128bb66667273d721b0a0c1f0a0109848ac94536e832e3e394e4d026d5ad0",
+          "payload_hex": "0200000000000000010000000000000001000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 16,
+            "derived_stride_bytes": 8,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "tag_bytes": "53746174",
+          "tag_ascii": "Stat",
+          "header_offset": 216,
+          "payload_offset": 224,
+          "payload_length": 68,
+          "payload_sha256": "d9276d774f51ba2c331c3219753bbcce620aa4daf2642ceea147170be9eaf60e",
+          "payload_hex": "0200000000000000616d6269656e7400dcfb250080fb25002137300134fc25005c00000001000000636f6d6261740000dcfb250080fb25002137300134fc25005c000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1768058209,
+            7630437,
+            2489308,
+            2489216,
+            19937057,
+            2489396,
+            92,
+            1,
+            1651339107,
+            29793,
+            2489308,
+            2489216,
+            19937057,
+            2489396,
+            92
+          ]
+        },
+        {
+          "tag_bytes": "5472736e",
+          "tag_ascii": "Trsn",
+          "header_offset": 292,
+          "payload_offset": 300,
+          "payload_length": 68,
+          "payload_sha256": "eaeaab6430cd49fa9766520c26f99953bddae59b9a819f79ec15ab021fe1b731",
+          "payload_hex": "040000000000000000000000ffffffff0000000000000000010000000000000000000000010000000000000001000000000000000100000001000000ffffffff00000000",
+          "leading_u32_count_candidate": 4,
+          "count_stride_observation": {
+            "count": 4,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 16,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            4,
+            0,
+            0,
+            4294967295,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            4294967295,
+            0
+          ]
+        },
+        {
+          "tag_bytes": "47727073",
+          "tag_ascii": "Grps",
+          "header_offset": 368,
+          "payload_offset": 376,
+          "payload_length": 52,
+          "payload_sha256": "a6b83179f21e99f8fd07e2bc1c673b097e8ed97040798351e2aaa2567a432cb4",
+          "payload_hex": "020000000000000000000000000000000000000001000000ffffffff0100000000000000000000000000000001000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "47727065",
+          "tag_ascii": "Grpe",
+          "header_offset": 428,
+          "payload_offset": 436,
+          "payload_length": 68,
+          "payload_sha256": "64fdd613f7f03656a54ffe69cc082f9dac19b156ae3589e6c68424288c34f4f9",
+          "payload_hex": "02000000000000000000000000000000000000000000000000000000ffffffff01000000010000000000000000000000010000000000000000000000ffffffff01000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4294967295,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            4294967295,
+            1
+          ]
+        }
+      ],
+      "audio_payload": {
+        "offset": 512,
+        "size_bytes": 11692032,
+        "sha256": "9f8ce64ac443d9c964af2bba951a357b9bf7038459eab48cb3b37e4839567dc1"
+      },
+      "segment_spans_derived_from_rows": [
+        {
+          "relative_offset": 0,
+          "encoded_extent_bytes": 5846016,
+          "sample_bound": 5805166,
+          "file_offset_start": 512,
+          "file_offset_end": 5846528
+        },
+        {
+          "relative_offset": 5846016,
+          "encoded_extent_bytes": 5846016,
+          "sample_bound": 5805166,
+          "file_offset_start": 5846528,
+          "file_offset_end": 11692544
+        }
+      ],
+      "segment_extents_sum_to_audio_payload": true,
+      "segment_offsets_are_contiguous": true,
+      "afmt_raw_observed_fields": {
+        "u16_0": 17,
+        "u16_2": 2,
+        "u32_4": 32000,
+        "u16_8": 1024,
+        "u16_10": 4
+      },
+      "afmt_runtime_bits_overwrite_evidence": "Parser handler stores halfword 16 at native-data offset +0x2a after copying Afmt; see ParseFile VA 0x00873c10 in exact assembly.",
+      "unknown_semantics": [
+        "u32 words 3-5 in each Segm row",
+        "all non-Segm table field names and meanings beyond their observed count/stride",
+        "whether every possible VoxN corpus variant has this exact layout"
+      ]
+    },
+    {
+      "file_name": "m_level_darkwood_sfx_void_maze.vxn",
+      "file_size_bytes": 11692544,
+      "file_sha256": "416ea9cb2dd9d4cbe865dd62a76e01b46ec94c24fca5e49dd09b2733dea2b2cc",
+      "observed_header": {
+        "magic_ascii": "VoxN",
+        "magic_u32_le": 1316515670,
+        "read_size_u32_at_4": 16,
+        "bytes_8_to_15_hex": "302e302e31003700",
+        "u32_at_16": 11692544,
+        "u32_at_20_audio_base": 512,
+        "file_size_field_equals_actual": true
+      },
+      "parser_derived_chunk_window": {
+        "start": 24,
+        "size": 480,
+        "end_exclusive": 504,
+        "formula": "u32_at_20 - 16 - u32_at_4, read begins at file offset 24",
+        "chunk_records_end": 504,
+        "bytes_between_chunk_window_and_audio_base": 8,
+        "gap_hex": "446174610068b200",
+        "audio_base": 512
+      },
+      "chunk_order": [
+        "Afmt",
+        "Segm",
+        "Rule",
+        "Plst",
+        "Stat",
+        "Trsn",
+        "Grps",
+        "Grpe"
+      ],
+      "tags_exactly_match_observed_corpus_set": true,
+      "chunks": [
+        {
+          "tag_bytes": "41666d74",
+          "tag_ascii": "Afmt",
+          "header_offset": 24,
+          "payload_offset": 32,
+          "payload_length": 12,
+          "payload_sha256": "12f3834f2b331e996062bafa53ebe22b8fbf2c6fb57c87236929609d5cbbf9ec",
+          "payload_hex": "11000200007d000000040400",
+          "observed_fields": {
+            "u16_0": 17,
+            "u16_2": 2,
+            "u32_4": 32000,
+            "u16_8": 1024,
+            "u16_10": 4
+          }
+        },
+        {
+          "tag_bytes": "5365676d",
+          "tag_ascii": "Segm",
+          "header_offset": 44,
+          "payload_offset": 52,
+          "payload_length": 52,
+          "payload_sha256": "b925f2767fd621640569753cb26ebe650129800f80277c763d577505231ce87e",
+          "payload_hex": "0200000000000000003459006e94580000000000000000000000000000345900003459006e945800000000000000000000000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "rows": [
+            {
+              "row_index": 0,
+              "payload_offset": 4,
+              "raw_hex": "00000000003459006e945800000000000000000000000000",
+              "u32_words": [
+                0,
+                5846016,
+                5805166,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            },
+            {
+              "row_index": 1,
+              "payload_offset": 28,
+              "raw_hex": "00345900003459006e945800000000000000000000000000",
+              "u32_words": [
+                5846016,
+                5846016,
+                5805166,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            }
+          ]
+        },
+        {
+          "tag_bytes": "52756c65",
+          "tag_ascii": "Rule",
+          "header_offset": 104,
+          "payload_offset": 112,
+          "payload_length": 76,
+          "payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+          "payload_hex": "020000000100000000000000000000000000000000000040000000400000004000000000ffffffff0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 72,
+            "derived_stride_bytes": 36,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "506c7374",
+          "tag_ascii": "Plst",
+          "header_offset": 188,
+          "payload_offset": 196,
+          "payload_length": 20,
+          "payload_sha256": "321128bb66667273d721b0a0c1f0a0109848ac94536e832e3e394e4d026d5ad0",
+          "payload_hex": "0200000000000000010000000000000001000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 16,
+            "derived_stride_bytes": 8,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "tag_bytes": "53746174",
+          "tag_ascii": "Stat",
+          "header_offset": 216,
+          "payload_offset": 224,
+          "payload_length": 68,
+          "payload_sha256": "8bb8e60b98076288d518da2447f21cde41154e7a6625d421d70fcbf972ccef97",
+          "payload_hex": "0200000000000000616d6269656e7400c4f6160068f6160021373c011cf716005c00000001000000636f6d6261740000c4f6160068f6160021373c011cf716005c000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1768058209,
+            7630437,
+            1504964,
+            1504872,
+            20723489,
+            1505052,
+            92,
+            1,
+            1651339107,
+            29793,
+            1504964,
+            1504872,
+            20723489,
+            1505052,
+            92
+          ]
+        },
+        {
+          "tag_bytes": "5472736e",
+          "tag_ascii": "Trsn",
+          "header_offset": 292,
+          "payload_offset": 300,
+          "payload_length": 68,
+          "payload_sha256": "eaeaab6430cd49fa9766520c26f99953bddae59b9a819f79ec15ab021fe1b731",
+          "payload_hex": "040000000000000000000000ffffffff0000000000000000010000000000000000000000010000000000000001000000000000000100000001000000ffffffff00000000",
+          "leading_u32_count_candidate": 4,
+          "count_stride_observation": {
+            "count": 4,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 16,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            4,
+            0,
+            0,
+            4294967295,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            4294967295,
+            0
+          ]
+        },
+        {
+          "tag_bytes": "47727073",
+          "tag_ascii": "Grps",
+          "header_offset": 368,
+          "payload_offset": 376,
+          "payload_length": 52,
+          "payload_sha256": "a6b83179f21e99f8fd07e2bc1c673b097e8ed97040798351e2aaa2567a432cb4",
+          "payload_hex": "020000000000000000000000000000000000000001000000ffffffff0100000000000000000000000000000001000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "47727065",
+          "tag_ascii": "Grpe",
+          "header_offset": 428,
+          "payload_offset": 436,
+          "payload_length": 68,
+          "payload_sha256": "64fdd613f7f03656a54ffe69cc082f9dac19b156ae3589e6c68424288c34f4f9",
+          "payload_hex": "02000000000000000000000000000000000000000000000000000000ffffffff01000000010000000000000000000000010000000000000000000000ffffffff01000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4294967295,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            4294967295,
+            1
+          ]
+        }
+      ],
+      "audio_payload": {
+        "offset": 512,
+        "size_bytes": 11692032,
+        "sha256": "6332ac8b2583dbc5644299d24d189fc6403084e22857aeb36a10669e68743cd7"
+      },
+      "segment_spans_derived_from_rows": [
+        {
+          "relative_offset": 0,
+          "encoded_extent_bytes": 5846016,
+          "sample_bound": 5805166,
+          "file_offset_start": 512,
+          "file_offset_end": 5846528
+        },
+        {
+          "relative_offset": 5846016,
+          "encoded_extent_bytes": 5846016,
+          "sample_bound": 5805166,
+          "file_offset_start": 5846528,
+          "file_offset_end": 11692544
+        }
+      ],
+      "segment_extents_sum_to_audio_payload": true,
+      "segment_offsets_are_contiguous": true,
+      "afmt_raw_observed_fields": {
+        "u16_0": 17,
+        "u16_2": 2,
+        "u32_4": 32000,
+        "u16_8": 1024,
+        "u16_10": 4
+      },
+      "afmt_runtime_bits_overwrite_evidence": "Parser handler stores halfword 16 at native-data offset +0x2a after copying Afmt; see ParseFile VA 0x00873c10 in exact assembly.",
+      "unknown_semantics": [
+        "u32 words 3-5 in each Segm row",
+        "all non-Segm table field names and meanings beyond their observed count/stride",
+        "whether every possible VoxN corpus variant has this exact layout"
+      ]
+    },
+    {
+      "file_name": "m_level_gothicus_no_ambiance.vxn",
+      "file_size_bytes": 9515520,
+      "file_sha256": "d87bd34a575f9043d96ef3fe24d062222ea3650d90136a108b830f26702ec1a5",
+      "observed_header": {
+        "magic_ascii": "VoxN",
+        "magic_u32_le": 1316515670,
+        "read_size_u32_at_4": 16,
+        "bytes_8_to_15_hex": "302e302e31008677",
+        "u32_at_16": 9515520,
+        "u32_at_20_audio_base": 512,
+        "file_size_field_equals_actual": true
+      },
+      "parser_derived_chunk_window": {
+        "start": 24,
+        "size": 480,
+        "end_exclusive": 504,
+        "formula": "u32_at_20 - 16 - u32_at_4, read begins at file offset 24",
+        "chunk_records_end": 504,
+        "bytes_between_chunk_window_and_audio_base": 8,
+        "gap_hex": "4461746100309100",
+        "audio_base": 512
+      },
+      "chunk_order": [
+        "Afmt",
+        "Segm",
+        "Rule",
+        "Plst",
+        "Stat",
+        "Trsn",
+        "Grps",
+        "Grpe"
+      ],
+      "tags_exactly_match_observed_corpus_set": true,
+      "chunks": [
+        {
+          "tag_bytes": "41666d74",
+          "tag_ascii": "Afmt",
+          "header_offset": 24,
+          "payload_offset": 32,
+          "payload_length": 12,
+          "payload_sha256": "12f3834f2b331e996062bafa53ebe22b8fbf2c6fb57c87236929609d5cbbf9ec",
+          "payload_hex": "11000200007d000000040400",
+          "observed_fields": {
+            "u16_0": 17,
+            "u16_2": 2,
+            "u32_4": 32000,
+            "u16_8": 1024,
+            "u16_10": 4
+          }
+        },
+        {
+          "tag_bytes": "5365676d",
+          "tag_ascii": "Segm",
+          "header_offset": 44,
+          "payload_offset": 52,
+          "payload_length": 52,
+          "payload_sha256": "718d96192b72f026109495d597443efb044093f4f13cdcd7f23158806a7eea96",
+          "payload_hex": "0200000000000000009848008c16480000000000000000000000000000984800009848008c164800000000000000000000000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "rows": [
+            {
+              "row_index": 0,
+              "payload_offset": 4,
+              "raw_hex": "00000000009848008c164800000000000000000000000000",
+              "u32_words": [
+                0,
+                4757504,
+                4724364,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            },
+            {
+              "row_index": 1,
+              "payload_offset": 28,
+              "raw_hex": "00984800009848008c164800000000000000000000000000",
+              "u32_words": [
+                4757504,
+                4757504,
+                4724364,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            }
+          ]
+        },
+        {
+          "tag_bytes": "52756c65",
+          "tag_ascii": "Rule",
+          "header_offset": 104,
+          "payload_offset": 112,
+          "payload_length": 76,
+          "payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+          "payload_hex": "020000000100000000000000000000000000000000000040000000400000004000000000ffffffff0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 72,
+            "derived_stride_bytes": 36,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "506c7374",
+          "tag_ascii": "Plst",
+          "header_offset": 188,
+          "payload_offset": 196,
+          "payload_length": 20,
+          "payload_sha256": "79cc846e8deca3a581f0851c2ddf10a24cb182e805dd2db95906ceafacc4b4e7",
+          "payload_hex": "0200000000000000020000000000000002000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 16,
+            "derived_stride_bytes": 8,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            2,
+            0,
+            2
+          ]
+        },
+        {
+          "tag_bytes": "53746174",
+          "tag_ascii": "Stat",
+          "header_offset": 216,
+          "payload_offset": 224,
+          "payload_length": 68,
+          "payload_sha256": "94c977c72d605536a5989eb243a0c6278460ffc66d702df5d4b9f980cc914a8e",
+          "payload_hex": "0200000000000000616d6269656e740050f61800f4f5180021373e00a8f618005c00000001000000636f6d626174000050f61800f4f5180021373e00a8f618005c000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1768058209,
+            7630437,
+            1635920,
+            1635828,
+            4077345,
+            1636008,
+            92,
+            1,
+            1651339107,
+            29793,
+            1635920,
+            1635828,
+            4077345,
+            1636008,
+            92
+          ]
+        },
+        {
+          "tag_bytes": "5472736e",
+          "tag_ascii": "Trsn",
+          "header_offset": 292,
+          "payload_offset": 300,
+          "payload_length": 68,
+          "payload_sha256": "eaeaab6430cd49fa9766520c26f99953bddae59b9a819f79ec15ab021fe1b731",
+          "payload_hex": "040000000000000000000000ffffffff0000000000000000010000000000000000000000010000000000000001000000000000000100000001000000ffffffff00000000",
+          "leading_u32_count_candidate": 4,
+          "count_stride_observation": {
+            "count": 4,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 16,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            4,
+            0,
+            0,
+            4294967295,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            4294967295,
+            0
+          ]
+        },
+        {
+          "tag_bytes": "47727073",
+          "tag_ascii": "Grps",
+          "header_offset": 368,
+          "payload_offset": 376,
+          "payload_length": 52,
+          "payload_sha256": "a6b83179f21e99f8fd07e2bc1c673b097e8ed97040798351e2aaa2567a432cb4",
+          "payload_hex": "020000000000000000000000000000000000000001000000ffffffff0100000000000000000000000000000001000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "47727065",
+          "tag_ascii": "Grpe",
+          "header_offset": 428,
+          "payload_offset": 436,
+          "payload_length": 68,
+          "payload_sha256": "64fdd613f7f03656a54ffe69cc082f9dac19b156ae3589e6c68424288c34f4f9",
+          "payload_hex": "02000000000000000000000000000000000000000000000000000000ffffffff01000000010000000000000000000000010000000000000000000000ffffffff01000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4294967295,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            4294967295,
+            1
+          ]
+        }
+      ],
+      "audio_payload": {
+        "offset": 512,
+        "size_bytes": 9515008,
+        "sha256": "98e1b9318840dc779b2162e2b263bd0bc82bcfeb9897ca59a71c4b487ac2e2bf"
+      },
+      "segment_spans_derived_from_rows": [
+        {
+          "relative_offset": 0,
+          "encoded_extent_bytes": 4757504,
+          "sample_bound": 4724364,
+          "file_offset_start": 512,
+          "file_offset_end": 4758016
+        },
+        {
+          "relative_offset": 4757504,
+          "encoded_extent_bytes": 4757504,
+          "sample_bound": 4724364,
+          "file_offset_start": 4758016,
+          "file_offset_end": 9515520
+        }
+      ],
+      "segment_extents_sum_to_audio_payload": true,
+      "segment_offsets_are_contiguous": true,
+      "afmt_raw_observed_fields": {
+        "u16_0": 17,
+        "u16_2": 2,
+        "u32_4": 32000,
+        "u16_8": 1024,
+        "u16_10": 4
+      },
+      "afmt_runtime_bits_overwrite_evidence": "Parser handler stores halfword 16 at native-data offset +0x2a after copying Afmt; see ParseFile VA 0x00873c10 in exact assembly.",
+      "unknown_semantics": [
+        "u32 words 3-5 in each Segm row",
+        "all non-Segm table field names and meanings beyond their observed count/stride",
+        "whether every possible VoxN corpus variant has this exact layout"
+      ]
+    },
+    {
+      "file_name": "m_level_hell_sfx_dark.vxn",
+      "file_size_bytes": 8397312,
+      "file_sha256": "7f6a40dfd6dbcd9b0f2e6f1e970744bef99272259275605070db0ec8f800bf6c",
+      "observed_header": {
+        "magic_ascii": "VoxN",
+        "magic_u32_le": 1316515670,
+        "read_size_u32_at_4": 16,
+        "bytes_8_to_15_hex": "302e302e31003700",
+        "u32_at_16": 8397312,
+        "u32_at_20_audio_base": 512,
+        "file_size_field_equals_actual": true
+      },
+      "parser_derived_chunk_window": {
+        "start": 24,
+        "size": 480,
+        "end_exclusive": 504,
+        "formula": "u32_at_20 - 16 - u32_at_4, read begins at file offset 24",
+        "chunk_records_end": 504,
+        "bytes_between_chunk_window_and_audio_base": 8,
+        "gap_hex": "4461746100208000",
+        "audio_base": 512
+      },
+      "chunk_order": [
+        "Afmt",
+        "Segm",
+        "Rule",
+        "Plst",
+        "Stat",
+        "Trsn",
+        "Grps",
+        "Grpe"
+      ],
+      "tags_exactly_match_observed_corpus_set": true,
+      "chunks": [
+        {
+          "tag_bytes": "41666d74",
+          "tag_ascii": "Afmt",
+          "header_offset": 24,
+          "payload_offset": 32,
+          "payload_length": 12,
+          "payload_sha256": "12f3834f2b331e996062bafa53ebe22b8fbf2c6fb57c87236929609d5cbbf9ec",
+          "payload_hex": "11000200007d000000040400",
+          "observed_fields": {
+            "u16_0": 17,
+            "u16_2": 2,
+            "u32_4": 32000,
+            "u16_8": 1024,
+            "u16_10": 4
+          }
+        },
+        {
+          "tag_bytes": "5365676d",
+          "tag_ascii": "Segm",
+          "header_offset": 44,
+          "payload_offset": 52,
+          "payload_length": 52,
+          "payload_sha256": "5a021c7d64e10c938e7a850153ecb50e6021cc85cdc6b33675eb18be57236011",
+          "payload_hex": "020000000000000000104000be9d3f000000000000000000000000000010400000104000be9d3f00000000000000000000000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "rows": [
+            {
+              "row_index": 0,
+              "payload_offset": 4,
+              "raw_hex": "0000000000104000be9d3f00000000000000000000000000",
+              "u32_words": [
+                0,
+                4198400,
+                4169150,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            },
+            {
+              "row_index": 1,
+              "payload_offset": 28,
+              "raw_hex": "0010400000104000be9d3f00000000000000000000000000",
+              "u32_words": [
+                4198400,
+                4198400,
+                4169150,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            }
+          ]
+        },
+        {
+          "tag_bytes": "52756c65",
+          "tag_ascii": "Rule",
+          "header_offset": 104,
+          "payload_offset": 112,
+          "payload_length": 76,
+          "payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+          "payload_hex": "020000000100000000000000000000000000000000000040000000400000004000000000ffffffff0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 72,
+            "derived_stride_bytes": 36,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "506c7374",
+          "tag_ascii": "Plst",
+          "header_offset": 188,
+          "payload_offset": 196,
+          "payload_length": 20,
+          "payload_sha256": "321128bb66667273d721b0a0c1f0a0109848ac94536e832e3e394e4d026d5ad0",
+          "payload_hex": "0200000000000000010000000000000001000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 16,
+            "derived_stride_bytes": 8,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "tag_bytes": "53746174",
+          "tag_ascii": "Stat",
+          "header_offset": 216,
+          "payload_offset": 224,
+          "payload_length": 68,
+          "payload_sha256": "01df69224b171dda943e7f97fef31d368db66102a1762d75583e98e9700ef654",
+          "payload_hex": "0200000000000000616d6269656e7400e4f4170088f417002137d2003cf517005c00000001000000636f6d6261740000e4f4170088f417002137d2003cf517005c000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1768058209,
+            7630437,
+            1570020,
+            1569928,
+            13776673,
+            1570108,
+            92,
+            1,
+            1651339107,
+            29793,
+            1570020,
+            1569928,
+            13776673,
+            1570108,
+            92
+          ]
+        },
+        {
+          "tag_bytes": "5472736e",
+          "tag_ascii": "Trsn",
+          "header_offset": 292,
+          "payload_offset": 300,
+          "payload_length": 68,
+          "payload_sha256": "eaeaab6430cd49fa9766520c26f99953bddae59b9a819f79ec15ab021fe1b731",
+          "payload_hex": "040000000000000000000000ffffffff0000000000000000010000000000000000000000010000000000000001000000000000000100000001000000ffffffff00000000",
+          "leading_u32_count_candidate": 4,
+          "count_stride_observation": {
+            "count": 4,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 16,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            4,
+            0,
+            0,
+            4294967295,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            4294967295,
+            0
+          ]
+        },
+        {
+          "tag_bytes": "47727073",
+          "tag_ascii": "Grps",
+          "header_offset": 368,
+          "payload_offset": 376,
+          "payload_length": 52,
+          "payload_sha256": "a6b83179f21e99f8fd07e2bc1c673b097e8ed97040798351e2aaa2567a432cb4",
+          "payload_hex": "020000000000000000000000000000000000000001000000ffffffff0100000000000000000000000000000001000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "47727065",
+          "tag_ascii": "Grpe",
+          "header_offset": 428,
+          "payload_offset": 436,
+          "payload_length": 68,
+          "payload_sha256": "64fdd613f7f03656a54ffe69cc082f9dac19b156ae3589e6c68424288c34f4f9",
+          "payload_hex": "02000000000000000000000000000000000000000000000000000000ffffffff01000000010000000000000000000000010000000000000000000000ffffffff01000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4294967295,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            4294967295,
+            1
+          ]
+        }
+      ],
+      "audio_payload": {
+        "offset": 512,
+        "size_bytes": 8396800,
+        "sha256": "1ec67e81093cba7a62be9ac44cbf0a3e2d47331ae9094675cc2d072e0ac88e52"
+      },
+      "segment_spans_derived_from_rows": [
+        {
+          "relative_offset": 0,
+          "encoded_extent_bytes": 4198400,
+          "sample_bound": 4169150,
+          "file_offset_start": 512,
+          "file_offset_end": 4198912
+        },
+        {
+          "relative_offset": 4198400,
+          "encoded_extent_bytes": 4198400,
+          "sample_bound": 4169150,
+          "file_offset_start": 4198912,
+          "file_offset_end": 8397312
+        }
+      ],
+      "segment_extents_sum_to_audio_payload": true,
+      "segment_offsets_are_contiguous": true,
+      "afmt_raw_observed_fields": {
+        "u16_0": 17,
+        "u16_2": 2,
+        "u32_4": 32000,
+        "u16_8": 1024,
+        "u16_10": 4
+      },
+      "afmt_runtime_bits_overwrite_evidence": "Parser handler stores halfword 16 at native-data offset +0x2a after copying Afmt; see ParseFile VA 0x00873c10 in exact assembly.",
+      "unknown_semantics": [
+        "u32 words 3-5 in each Segm row",
+        "all non-Segm table field names and meanings beyond their observed count/stride",
+        "whether every possible VoxN corpus variant has this exact layout"
+      ]
+    },
+    {
+      "file_name": "m_level_icy_cliff_sfx_ice_hub.vxn",
+      "file_size_bytes": 10463744,
+      "file_sha256": "b4e64c5a565ca357b1786f7a8ff138be87f4a3b5051f2feda888db096f47b6f0",
+      "observed_header": {
+        "magic_ascii": "VoxN",
+        "magic_u32_le": 1316515670,
+        "read_size_u32_at_4": 16,
+        "bytes_8_to_15_hex": "302e302e31008677",
+        "u32_at_16": 10463744,
+        "u32_at_20_audio_base": 512,
+        "file_size_field_equals_actual": true
+      },
+      "parser_derived_chunk_window": {
+        "start": 24,
+        "size": 480,
+        "end_exclusive": 504,
+        "formula": "u32_at_20 - 16 - u32_at_4, read begins at file offset 24",
+        "chunk_records_end": 504,
+        "bytes_between_chunk_window_and_audio_base": 8,
+        "gap_hex": "4461746100a89f00",
+        "audio_base": 512
+      },
+      "chunk_order": [
+        "Afmt",
+        "Segm",
+        "Rule",
+        "Plst",
+        "Stat",
+        "Trsn",
+        "Grps",
+        "Grpe"
+      ],
+      "tags_exactly_match_observed_corpus_set": true,
+      "chunks": [
+        {
+          "tag_bytes": "41666d74",
+          "tag_ascii": "Afmt",
+          "header_offset": 24,
+          "payload_offset": 32,
+          "payload_length": 12,
+          "payload_sha256": "12f3834f2b331e996062bafa53ebe22b8fbf2c6fb57c87236929609d5cbbf9ec",
+          "payload_hex": "11000200007d000000040400",
+          "observed_fields": {
+            "u16_0": 17,
+            "u16_2": 2,
+            "u32_4": 32000,
+            "u16_8": 1024,
+            "u16_10": 4
+          }
+        },
+        {
+          "tag_bytes": "5365676d",
+          "tag_ascii": "Segm",
+          "header_offset": 44,
+          "payload_offset": 52,
+          "payload_length": 52,
+          "payload_sha256": "6d05b58c1e84c001c5bcc12897a745b5fb575cdd7edd45d124e588906496504d",
+          "payload_hex": "020000000000000000d44f0013464f0000000000000000000000000000d44f0000d44f0013464f00000000000000000000000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "rows": [
+            {
+              "row_index": 0,
+              "payload_offset": 4,
+              "raw_hex": "0000000000d44f0013464f00000000000000000000000000",
+              "u32_words": [
+                0,
+                5231616,
+                5195283,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            },
+            {
+              "row_index": 1,
+              "payload_offset": 28,
+              "raw_hex": "00d44f0000d44f0013464f00000000000000000000000000",
+              "u32_words": [
+                5231616,
+                5231616,
+                5195283,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            }
+          ]
+        },
+        {
+          "tag_bytes": "52756c65",
+          "tag_ascii": "Rule",
+          "header_offset": 104,
+          "payload_offset": 112,
+          "payload_length": 76,
+          "payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+          "payload_hex": "020000000100000000000000000000000000000000000040000000400000004000000000ffffffff0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 72,
+            "derived_stride_bytes": 36,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "506c7374",
+          "tag_ascii": "Plst",
+          "header_offset": 188,
+          "payload_offset": 196,
+          "payload_length": 20,
+          "payload_sha256": "321128bb66667273d721b0a0c1f0a0109848ac94536e832e3e394e4d026d5ad0",
+          "payload_hex": "0200000000000000010000000000000001000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 16,
+            "derived_stride_bytes": 8,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "tag_bytes": "53746174",
+          "tag_ascii": "Stat",
+          "header_offset": 216,
+          "payload_offset": 224,
+          "payload_length": 68,
+          "payload_sha256": "57bb84a924f996b2563001e1a73487d703a5761a71d66181028f57af2b2d8db6",
+          "payload_hex": "0200000000000000616d6269656e740090f6260034f6260021373701e8f626005c00000001000000636f6d626174000090f6260034f6260021373701e8f626005c000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1768058209,
+            7630437,
+            2553488,
+            2553396,
+            20395809,
+            2553576,
+            92,
+            1,
+            1651339107,
+            29793,
+            2553488,
+            2553396,
+            20395809,
+            2553576,
+            92
+          ]
+        },
+        {
+          "tag_bytes": "5472736e",
+          "tag_ascii": "Trsn",
+          "header_offset": 292,
+          "payload_offset": 300,
+          "payload_length": 68,
+          "payload_sha256": "eaeaab6430cd49fa9766520c26f99953bddae59b9a819f79ec15ab021fe1b731",
+          "payload_hex": "040000000000000000000000ffffffff0000000000000000010000000000000000000000010000000000000001000000000000000100000001000000ffffffff00000000",
+          "leading_u32_count_candidate": 4,
+          "count_stride_observation": {
+            "count": 4,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 16,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            4,
+            0,
+            0,
+            4294967295,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            4294967295,
+            0
+          ]
+        },
+        {
+          "tag_bytes": "47727073",
+          "tag_ascii": "Grps",
+          "header_offset": 368,
+          "payload_offset": 376,
+          "payload_length": 52,
+          "payload_sha256": "a6b83179f21e99f8fd07e2bc1c673b097e8ed97040798351e2aaa2567a432cb4",
+          "payload_hex": "020000000000000000000000000000000000000001000000ffffffff0100000000000000000000000000000001000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "47727065",
+          "tag_ascii": "Grpe",
+          "header_offset": 428,
+          "payload_offset": 436,
+          "payload_length": 68,
+          "payload_sha256": "64fdd613f7f03656a54ffe69cc082f9dac19b156ae3589e6c68424288c34f4f9",
+          "payload_hex": "02000000000000000000000000000000000000000000000000000000ffffffff01000000010000000000000000000000010000000000000000000000ffffffff01000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4294967295,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            4294967295,
+            1
+          ]
+        }
+      ],
+      "audio_payload": {
+        "offset": 512,
+        "size_bytes": 10463232,
+        "sha256": "4b2698ce9a811c6bbad26009dc81824971a97381dd4f7ce95b90abd044e4713d"
+      },
+      "segment_spans_derived_from_rows": [
+        {
+          "relative_offset": 0,
+          "encoded_extent_bytes": 5231616,
+          "sample_bound": 5195283,
+          "file_offset_start": 512,
+          "file_offset_end": 5232128
+        },
+        {
+          "relative_offset": 5231616,
+          "encoded_extent_bytes": 5231616,
+          "sample_bound": 5195283,
+          "file_offset_start": 5232128,
+          "file_offset_end": 10463744
+        }
+      ],
+      "segment_extents_sum_to_audio_payload": true,
+      "segment_offsets_are_contiguous": true,
+      "afmt_raw_observed_fields": {
+        "u16_0": 17,
+        "u16_2": 2,
+        "u32_4": 32000,
+        "u16_8": 1024,
+        "u16_10": 4
+      },
+      "afmt_runtime_bits_overwrite_evidence": "Parser handler stores halfword 16 at native-data offset +0x2a after copying Afmt; see ParseFile VA 0x00873c10 in exact assembly.",
+      "unknown_semantics": [
+        "u32 words 3-5 in each Segm row",
+        "all non-Segm table field names and meanings beyond their observed count/stride",
+        "whether every possible VoxN corpus variant has this exact layout"
+      ]
+    },
+    {
+      "file_name": "m_level_icy_cliff_sfx_wind.vxn",
+      "file_size_bytes": 10463744,
+      "file_sha256": "b084d32bc17a1cc76d80c6f820a68e4ba4e32a1e2a935eb406473cf983639a06",
+      "observed_header": {
+        "magic_ascii": "VoxN",
+        "magic_u32_le": 1316515670,
+        "read_size_u32_at_4": 16,
+        "bytes_8_to_15_hex": "302e302e31008677",
+        "u32_at_16": 10463744,
+        "u32_at_20_audio_base": 512,
+        "file_size_field_equals_actual": true
+      },
+      "parser_derived_chunk_window": {
+        "start": 24,
+        "size": 480,
+        "end_exclusive": 504,
+        "formula": "u32_at_20 - 16 - u32_at_4, read begins at file offset 24",
+        "chunk_records_end": 504,
+        "bytes_between_chunk_window_and_audio_base": 8,
+        "gap_hex": "4461746100a89f00",
+        "audio_base": 512
+      },
+      "chunk_order": [
+        "Afmt",
+        "Segm",
+        "Rule",
+        "Plst",
+        "Stat",
+        "Trsn",
+        "Grps",
+        "Grpe"
+      ],
+      "tags_exactly_match_observed_corpus_set": true,
+      "chunks": [
+        {
+          "tag_bytes": "41666d74",
+          "tag_ascii": "Afmt",
+          "header_offset": 24,
+          "payload_offset": 32,
+          "payload_length": 12,
+          "payload_sha256": "12f3834f2b331e996062bafa53ebe22b8fbf2c6fb57c87236929609d5cbbf9ec",
+          "payload_hex": "11000200007d000000040400",
+          "observed_fields": {
+            "u16_0": 17,
+            "u16_2": 2,
+            "u32_4": 32000,
+            "u16_8": 1024,
+            "u16_10": 4
+          }
+        },
+        {
+          "tag_bytes": "5365676d",
+          "tag_ascii": "Segm",
+          "header_offset": 44,
+          "payload_offset": 52,
+          "payload_length": 52,
+          "payload_sha256": "6d05b58c1e84c001c5bcc12897a745b5fb575cdd7edd45d124e588906496504d",
+          "payload_hex": "020000000000000000d44f0013464f0000000000000000000000000000d44f0000d44f0013464f00000000000000000000000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "rows": [
+            {
+              "row_index": 0,
+              "payload_offset": 4,
+              "raw_hex": "0000000000d44f0013464f00000000000000000000000000",
+              "u32_words": [
+                0,
+                5231616,
+                5195283,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            },
+            {
+              "row_index": 1,
+              "payload_offset": 28,
+              "raw_hex": "00d44f0000d44f0013464f00000000000000000000000000",
+              "u32_words": [
+                5231616,
+                5231616,
+                5195283,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            }
+          ]
+        },
+        {
+          "tag_bytes": "52756c65",
+          "tag_ascii": "Rule",
+          "header_offset": 104,
+          "payload_offset": 112,
+          "payload_length": 76,
+          "payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+          "payload_hex": "020000000100000000000000000000000000000000000040000000400000004000000000ffffffff0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 72,
+            "derived_stride_bytes": 36,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "506c7374",
+          "tag_ascii": "Plst",
+          "header_offset": 188,
+          "payload_offset": 196,
+          "payload_length": 20,
+          "payload_sha256": "321128bb66667273d721b0a0c1f0a0109848ac94536e832e3e394e4d026d5ad0",
+          "payload_hex": "0200000000000000010000000000000001000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 16,
+            "derived_stride_bytes": 8,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "tag_bytes": "53746174",
+          "tag_ascii": "Stat",
+          "header_offset": 216,
+          "payload_offset": 224,
+          "payload_length": 68,
+          "payload_sha256": "2f25cacbd7a45b9711360e0975917ebb817635307890f65895765f3677b8e901",
+          "payload_hex": "0200000000000000616d6269656e740010f51600b4f416002137370168f516005c00000001000000636f6d626174000010f51600b4f416002137370168f516005c000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1768058209,
+            7630437,
+            1504528,
+            1504436,
+            20395809,
+            1504616,
+            92,
+            1,
+            1651339107,
+            29793,
+            1504528,
+            1504436,
+            20395809,
+            1504616,
+            92
+          ]
+        },
+        {
+          "tag_bytes": "5472736e",
+          "tag_ascii": "Trsn",
+          "header_offset": 292,
+          "payload_offset": 300,
+          "payload_length": 68,
+          "payload_sha256": "eaeaab6430cd49fa9766520c26f99953bddae59b9a819f79ec15ab021fe1b731",
+          "payload_hex": "040000000000000000000000ffffffff0000000000000000010000000000000000000000010000000000000001000000000000000100000001000000ffffffff00000000",
+          "leading_u32_count_candidate": 4,
+          "count_stride_observation": {
+            "count": 4,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 16,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            4,
+            0,
+            0,
+            4294967295,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            4294967295,
+            0
+          ]
+        },
+        {
+          "tag_bytes": "47727073",
+          "tag_ascii": "Grps",
+          "header_offset": 368,
+          "payload_offset": 376,
+          "payload_length": 52,
+          "payload_sha256": "a6b83179f21e99f8fd07e2bc1c673b097e8ed97040798351e2aaa2567a432cb4",
+          "payload_hex": "020000000000000000000000000000000000000001000000ffffffff0100000000000000000000000000000001000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "47727065",
+          "tag_ascii": "Grpe",
+          "header_offset": 428,
+          "payload_offset": 436,
+          "payload_length": 68,
+          "payload_sha256": "64fdd613f7f03656a54ffe69cc082f9dac19b156ae3589e6c68424288c34f4f9",
+          "payload_hex": "02000000000000000000000000000000000000000000000000000000ffffffff01000000010000000000000000000000010000000000000000000000ffffffff01000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4294967295,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            4294967295,
+            1
+          ]
+        }
+      ],
+      "audio_payload": {
+        "offset": 512,
+        "size_bytes": 10463232,
+        "sha256": "ba3a5ae94e0bf3d36b993b50b05298620d274a9612d0ca0d29a2ff6e451fc9ec"
+      },
+      "segment_spans_derived_from_rows": [
+        {
+          "relative_offset": 0,
+          "encoded_extent_bytes": 5231616,
+          "sample_bound": 5195283,
+          "file_offset_start": 512,
+          "file_offset_end": 5232128
+        },
+        {
+          "relative_offset": 5231616,
+          "encoded_extent_bytes": 5231616,
+          "sample_bound": 5195283,
+          "file_offset_start": 5232128,
+          "file_offset_end": 10463744
+        }
+      ],
+      "segment_extents_sum_to_audio_payload": true,
+      "segment_offsets_are_contiguous": true,
+      "afmt_raw_observed_fields": {
+        "u16_0": 17,
+        "u16_2": 2,
+        "u32_4": 32000,
+        "u16_8": 1024,
+        "u16_10": 4
+      },
+      "afmt_runtime_bits_overwrite_evidence": "Parser handler stores halfword 16 at native-data offset +0x2a after copying Afmt; see ParseFile VA 0x00873c10 in exact assembly.",
+      "unknown_semantics": [
+        "u32 words 3-5 in each Segm row",
+        "all non-Segm table field names and meanings beyond their observed count/stride",
+        "whether every possible VoxN corpus variant has this exact layout"
+      ]
+    },
+    {
+      "file_name": "m_level_red_desert_sfx_fire.vxn",
+      "file_size_bytes": 8946176,
+      "file_sha256": "ac3dd427a125fb57d05dc1b1a775f8318ff53759e059e69b48ed85afb955afb4",
+      "observed_header": {
+        "magic_ascii": "VoxN",
+        "magic_u32_le": 1316515670,
+        "read_size_u32_at_4": 16,
+        "bytes_8_to_15_hex": "302e302e31003700",
+        "u32_at_16": 8946176,
+        "u32_at_20_audio_base": 512,
+        "file_size_field_equals_actual": true
+      },
+      "parser_derived_chunk_window": {
+        "start": 24,
+        "size": 480,
+        "end_exclusive": 504,
+        "formula": "u32_at_20 - 16 - u32_at_4, read begins at file offset 24",
+        "chunk_records_end": 504,
+        "bytes_between_chunk_window_and_audio_base": 8,
+        "gap_hex": "4461746100808800",
+        "audio_base": 512
+      },
+      "chunk_order": [
+        "Afmt",
+        "Segm",
+        "Rule",
+        "Plst",
+        "Stat",
+        "Trsn",
+        "Grps",
+        "Grpe"
+      ],
+      "tags_exactly_match_observed_corpus_set": true,
+      "chunks": [
+        {
+          "tag_bytes": "41666d74",
+          "tag_ascii": "Afmt",
+          "header_offset": 24,
+          "payload_offset": 32,
+          "payload_length": 12,
+          "payload_sha256": "12f3834f2b331e996062bafa53ebe22b8fbf2c6fb57c87236929609d5cbbf9ec",
+          "payload_hex": "11000200007d000000040400",
+          "observed_fields": {
+            "u16_0": 17,
+            "u16_2": 2,
+            "u32_4": 32000,
+            "u16_8": 1024,
+            "u16_10": 4
+          }
+        },
+        {
+          "tag_bytes": "5365676d",
+          "tag_ascii": "Segm",
+          "header_offset": 44,
+          "payload_offset": 52,
+          "payload_length": 52,
+          "payload_sha256": "46555613a12ff44d94a8598321eaf1890cc98f120a15c77ab5c29209100a0901",
+          "payload_hex": "02000000000000000040440000c64300000000000000000000000000004044000040440000c64300000000000000000000000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "rows": [
+            {
+              "row_index": 0,
+              "payload_offset": 4,
+              "raw_hex": "000000000040440000c64300000000000000000000000000",
+              "u32_words": [
+                0,
+                4472832,
+                4441600,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            },
+            {
+              "row_index": 1,
+              "payload_offset": 28,
+              "raw_hex": "004044000040440000c64300000000000000000000000000",
+              "u32_words": [
+                4472832,
+                4472832,
+                4441600,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            }
+          ]
+        },
+        {
+          "tag_bytes": "52756c65",
+          "tag_ascii": "Rule",
+          "header_offset": 104,
+          "payload_offset": 112,
+          "payload_length": 76,
+          "payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+          "payload_hex": "020000000100000000000000000000000000000000000040000000400000004000000000ffffffff0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 72,
+            "derived_stride_bytes": 36,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "506c7374",
+          "tag_ascii": "Plst",
+          "header_offset": 188,
+          "payload_offset": 196,
+          "payload_length": 20,
+          "payload_sha256": "321128bb66667273d721b0a0c1f0a0109848ac94536e832e3e394e4d026d5ad0",
+          "payload_hex": "0200000000000000010000000000000001000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 16,
+            "derived_stride_bytes": 8,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "tag_bytes": "53746174",
+          "tag_ascii": "Stat",
+          "header_offset": 216,
+          "payload_offset": 224,
+          "payload_length": 68,
+          "payload_sha256": "0184e513d3a22d7d0c0936519bb31872d1b6b51242c46a84addc3549cf342ca4",
+          "payload_hex": "0200000000000000616d6269656e74000cf41a00b0f31a002137370164f41a005c00000001000000636f6d62617400000cf41a00b0f31a002137370164f41a005c000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1768058209,
+            7630437,
+            1766412,
+            1766320,
+            20395809,
+            1766500,
+            92,
+            1,
+            1651339107,
+            29793,
+            1766412,
+            1766320,
+            20395809,
+            1766500,
+            92
+          ]
+        },
+        {
+          "tag_bytes": "5472736e",
+          "tag_ascii": "Trsn",
+          "header_offset": 292,
+          "payload_offset": 300,
+          "payload_length": 68,
+          "payload_sha256": "eaeaab6430cd49fa9766520c26f99953bddae59b9a819f79ec15ab021fe1b731",
+          "payload_hex": "040000000000000000000000ffffffff0000000000000000010000000000000000000000010000000000000001000000000000000100000001000000ffffffff00000000",
+          "leading_u32_count_candidate": 4,
+          "count_stride_observation": {
+            "count": 4,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 16,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            4,
+            0,
+            0,
+            4294967295,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            4294967295,
+            0
+          ]
+        },
+        {
+          "tag_bytes": "47727073",
+          "tag_ascii": "Grps",
+          "header_offset": 368,
+          "payload_offset": 376,
+          "payload_length": 52,
+          "payload_sha256": "a6b83179f21e99f8fd07e2bc1c673b097e8ed97040798351e2aaa2567a432cb4",
+          "payload_hex": "020000000000000000000000000000000000000001000000ffffffff0100000000000000000000000000000001000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "47727065",
+          "tag_ascii": "Grpe",
+          "header_offset": 428,
+          "payload_offset": 436,
+          "payload_length": 68,
+          "payload_sha256": "64fdd613f7f03656a54ffe69cc082f9dac19b156ae3589e6c68424288c34f4f9",
+          "payload_hex": "02000000000000000000000000000000000000000000000000000000ffffffff01000000010000000000000000000000010000000000000000000000ffffffff01000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4294967295,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            4294967295,
+            1
+          ]
+        }
+      ],
+      "audio_payload": {
+        "offset": 512,
+        "size_bytes": 8945664,
+        "sha256": "49b79afba12e21fe3814be2d5c6ba99af26257e182794f937059c25f3ccecd54"
+      },
+      "segment_spans_derived_from_rows": [
+        {
+          "relative_offset": 0,
+          "encoded_extent_bytes": 4472832,
+          "sample_bound": 4441600,
+          "file_offset_start": 512,
+          "file_offset_end": 4473344
+        },
+        {
+          "relative_offset": 4472832,
+          "encoded_extent_bytes": 4472832,
+          "sample_bound": 4441600,
+          "file_offset_start": 4473344,
+          "file_offset_end": 8946176
+        }
+      ],
+      "segment_extents_sum_to_audio_payload": true,
+      "segment_offsets_are_contiguous": true,
+      "afmt_raw_observed_fields": {
+        "u16_0": 17,
+        "u16_2": 2,
+        "u32_4": 32000,
+        "u16_8": 1024,
+        "u16_10": 4
+      },
+      "afmt_runtime_bits_overwrite_evidence": "Parser handler stores halfword 16 at native-data offset +0x2a after copying Afmt; see ParseFile VA 0x00873c10 in exact assembly.",
+      "unknown_semantics": [
+        "u32 words 3-5 in each Segm row",
+        "all non-Segm table field names and meanings beyond their observed count/stride",
+        "whether every possible VoxN corpus variant has this exact layout"
+      ]
+    },
+    {
+      "file_name": "m_level_red_desert_sfx_red_desert.vxn",
+      "file_size_bytes": 8946176,
+      "file_sha256": "76916ba242d32969211ef7db2912fdaf77046a623f659d6a4bd5dbe99a7ee3c2",
+      "observed_header": {
+        "magic_ascii": "VoxN",
+        "magic_u32_le": 1316515670,
+        "read_size_u32_at_4": 16,
+        "bytes_8_to_15_hex": "302e302e31002800",
+        "u32_at_16": 8946176,
+        "u32_at_20_audio_base": 512,
+        "file_size_field_equals_actual": true
+      },
+      "parser_derived_chunk_window": {
+        "start": 24,
+        "size": 480,
+        "end_exclusive": 504,
+        "formula": "u32_at_20 - 16 - u32_at_4, read begins at file offset 24",
+        "chunk_records_end": 504,
+        "bytes_between_chunk_window_and_audio_base": 8,
+        "gap_hex": "4461746100808800",
+        "audio_base": 512
+      },
+      "chunk_order": [
+        "Afmt",
+        "Segm",
+        "Rule",
+        "Plst",
+        "Stat",
+        "Trsn",
+        "Grps",
+        "Grpe"
+      ],
+      "tags_exactly_match_observed_corpus_set": true,
+      "chunks": [
+        {
+          "tag_bytes": "41666d74",
+          "tag_ascii": "Afmt",
+          "header_offset": 24,
+          "payload_offset": 32,
+          "payload_length": 12,
+          "payload_sha256": "12f3834f2b331e996062bafa53ebe22b8fbf2c6fb57c87236929609d5cbbf9ec",
+          "payload_hex": "11000200007d000000040400",
+          "observed_fields": {
+            "u16_0": 17,
+            "u16_2": 2,
+            "u32_4": 32000,
+            "u16_8": 1024,
+            "u16_10": 4
+          }
+        },
+        {
+          "tag_bytes": "5365676d",
+          "tag_ascii": "Segm",
+          "header_offset": 44,
+          "payload_offset": 52,
+          "payload_length": 52,
+          "payload_sha256": "46555613a12ff44d94a8598321eaf1890cc98f120a15c77ab5c29209100a0901",
+          "payload_hex": "02000000000000000040440000c64300000000000000000000000000004044000040440000c64300000000000000000000000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "rows": [
+            {
+              "row_index": 0,
+              "payload_offset": 4,
+              "raw_hex": "000000000040440000c64300000000000000000000000000",
+              "u32_words": [
+                0,
+                4472832,
+                4441600,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            },
+            {
+              "row_index": 1,
+              "payload_offset": 28,
+              "raw_hex": "004044000040440000c64300000000000000000000000000",
+              "u32_words": [
+                4472832,
+                4472832,
+                4441600,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            }
+          ]
+        },
+        {
+          "tag_bytes": "52756c65",
+          "tag_ascii": "Rule",
+          "header_offset": 104,
+          "payload_offset": 112,
+          "payload_length": 76,
+          "payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+          "payload_hex": "020000000100000000000000000000000000000000000040000000400000004000000000ffffffff0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 72,
+            "derived_stride_bytes": 36,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "506c7374",
+          "tag_ascii": "Plst",
+          "header_offset": 188,
+          "payload_offset": 196,
+          "payload_length": 20,
+          "payload_sha256": "321128bb66667273d721b0a0c1f0a0109848ac94536e832e3e394e4d026d5ad0",
+          "payload_hex": "0200000000000000010000000000000001000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 16,
+            "derived_stride_bytes": 8,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "tag_bytes": "53746174",
+          "tag_ascii": "Stat",
+          "header_offset": 216,
+          "payload_offset": 224,
+          "payload_length": 68,
+          "payload_sha256": "4ab37aaf4d00f3038393aaef456f7821a118f1f7b5268ec232ada62699e0f9ba",
+          "payload_hex": "0200000000000000616d6269656e7400a4fb3d0048fb3d0021372200fcfb3d005c00000001000000636f6d6261740000a4fb3d0048fb3d0021372200fcfb3d005c000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1768058209,
+            7630437,
+            4062116,
+            4062024,
+            2242337,
+            4062204,
+            92,
+            1,
+            1651339107,
+            29793,
+            4062116,
+            4062024,
+            2242337,
+            4062204,
+            92
+          ]
+        },
+        {
+          "tag_bytes": "5472736e",
+          "tag_ascii": "Trsn",
+          "header_offset": 292,
+          "payload_offset": 300,
+          "payload_length": 68,
+          "payload_sha256": "eaeaab6430cd49fa9766520c26f99953bddae59b9a819f79ec15ab021fe1b731",
+          "payload_hex": "040000000000000000000000ffffffff0000000000000000010000000000000000000000010000000000000001000000000000000100000001000000ffffffff00000000",
+          "leading_u32_count_candidate": 4,
+          "count_stride_observation": {
+            "count": 4,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 16,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            4,
+            0,
+            0,
+            4294967295,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            4294967295,
+            0
+          ]
+        },
+        {
+          "tag_bytes": "47727073",
+          "tag_ascii": "Grps",
+          "header_offset": 368,
+          "payload_offset": 376,
+          "payload_length": 52,
+          "payload_sha256": "a6b83179f21e99f8fd07e2bc1c673b097e8ed97040798351e2aaa2567a432cb4",
+          "payload_hex": "020000000000000000000000000000000000000001000000ffffffff0100000000000000000000000000000001000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "47727065",
+          "tag_ascii": "Grpe",
+          "header_offset": 428,
+          "payload_offset": 436,
+          "payload_length": 68,
+          "payload_sha256": "64fdd613f7f03656a54ffe69cc082f9dac19b156ae3589e6c68424288c34f4f9",
+          "payload_hex": "02000000000000000000000000000000000000000000000000000000ffffffff01000000010000000000000000000000010000000000000000000000ffffffff01000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4294967295,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            4294967295,
+            1
+          ]
+        }
+      ],
+      "audio_payload": {
+        "offset": 512,
+        "size_bytes": 8945664,
+        "sha256": "a345d872d6e517b798d55a0fb4f26021823dfd7c0a6adb5899eb2630a68c1206"
+      },
+      "segment_spans_derived_from_rows": [
+        {
+          "relative_offset": 0,
+          "encoded_extent_bytes": 4472832,
+          "sample_bound": 4441600,
+          "file_offset_start": 512,
+          "file_offset_end": 4473344
+        },
+        {
+          "relative_offset": 4472832,
+          "encoded_extent_bytes": 4472832,
+          "sample_bound": 4441600,
+          "file_offset_start": 4473344,
+          "file_offset_end": 8946176
+        }
+      ],
+      "segment_extents_sum_to_audio_payload": true,
+      "segment_offsets_are_contiguous": true,
+      "afmt_raw_observed_fields": {
+        "u16_0": 17,
+        "u16_2": 2,
+        "u32_4": 32000,
+        "u16_8": 1024,
+        "u16_10": 4
+      },
+      "afmt_runtime_bits_overwrite_evidence": "Parser handler stores halfword 16 at native-data offset +0x2a after copying Afmt; see ParseFile VA 0x00873c10 in exact assembly.",
+      "unknown_semantics": [
+        "u32 words 3-5 in each Segm row",
+        "all non-Segm table field names and meanings beyond their observed count/stride",
+        "whether every possible VoxN corpus variant has this exact layout"
+      ]
+    },
+    {
+      "file_name": "m_level_swamp_sfx_swamp.vxn",
+      "file_size_bytes": 12278272,
+      "file_sha256": "980137ac5b032e5cee50e3f8e6940d31dbd5e0fd0d70346a5167d3c00567e0a8",
+      "observed_header": {
+        "magic_ascii": "VoxN",
+        "magic_u32_le": 1316515670,
+        "read_size_u32_at_4": 16,
+        "bytes_8_to_15_hex": "302e302e31002800",
+        "u32_at_16": 12278272,
+        "u32_at_20_audio_base": 512,
+        "file_size_field_equals_actual": true
+      },
+      "parser_derived_chunk_window": {
+        "start": 24,
+        "size": 480,
+        "end_exclusive": 504,
+        "formula": "u32_at_20 - 16 - u32_at_4, read begins at file offset 24",
+        "chunk_records_end": 504,
+        "bytes_between_chunk_window_and_audio_base": 8,
+        "gap_hex": "446174610058bb00",
+        "audio_base": 512
+      },
+      "chunk_order": [
+        "Afmt",
+        "Segm",
+        "Rule",
+        "Plst",
+        "Stat",
+        "Trsn",
+        "Grps",
+        "Grpe"
+      ],
+      "tags_exactly_match_observed_corpus_set": true,
+      "chunks": [
+        {
+          "tag_bytes": "41666d74",
+          "tag_ascii": "Afmt",
+          "header_offset": 24,
+          "payload_offset": 32,
+          "payload_length": 12,
+          "payload_sha256": "12f3834f2b331e996062bafa53ebe22b8fbf2c6fb57c87236929609d5cbbf9ec",
+          "payload_hex": "11000200007d000000040400",
+          "observed_fields": {
+            "u16_0": 17,
+            "u16_2": 2,
+            "u32_4": 32000,
+            "u16_8": 1024,
+            "u16_10": 4
+          }
+        },
+        {
+          "tag_bytes": "5365676d",
+          "tag_ascii": "Segm",
+          "header_offset": 44,
+          "payload_offset": 52,
+          "payload_length": 52,
+          "payload_sha256": "795da8cfb0eded47bad51a1a5b3e20359b4c8f39bac4fcf3a58848abda7c72c5",
+          "payload_hex": "020000000000000000ac5d000a075d0000000000000000000000000000ac5d0000ac5d000a075d00000000000000000000000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "rows": [
+            {
+              "row_index": 0,
+              "payload_offset": 4,
+              "raw_hex": "0000000000ac5d000a075d00000000000000000000000000",
+              "u32_words": [
+                0,
+                6138880,
+                6096650,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            },
+            {
+              "row_index": 1,
+              "payload_offset": 28,
+              "raw_hex": "00ac5d0000ac5d000a075d00000000000000000000000000",
+              "u32_words": [
+                6138880,
+                6138880,
+                6096650,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            }
+          ]
+        },
+        {
+          "tag_bytes": "52756c65",
+          "tag_ascii": "Rule",
+          "header_offset": 104,
+          "payload_offset": 112,
+          "payload_length": 76,
+          "payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+          "payload_hex": "020000000100000000000000000000000000000000000040000000400000004000000000ffffffff0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 72,
+            "derived_stride_bytes": 36,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "506c7374",
+          "tag_ascii": "Plst",
+          "header_offset": 188,
+          "payload_offset": 196,
+          "payload_length": 20,
+          "payload_sha256": "321128bb66667273d721b0a0c1f0a0109848ac94536e832e3e394e4d026d5ad0",
+          "payload_hex": "0200000000000000010000000000000001000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 16,
+            "derived_stride_bytes": 8,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "tag_bytes": "53746174",
+          "tag_ascii": "Stat",
+          "header_offset": 216,
+          "payload_offset": 224,
+          "payload_length": 68,
+          "payload_sha256": "f9d5b3eb781fce84aed3b9896a259529ad212cc186beea2a41b75e4f361b3a1f",
+          "payload_hex": "0200000000000000616d6269656e7400b4fa1f0058fa1f0021372d000cfb1f005c00000001000000636f6d6261740000b4fa1f0058fa1f0021372d000cfb1f005c000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1768058209,
+            7630437,
+            2095796,
+            2095704,
+            2963233,
+            2095884,
+            92,
+            1,
+            1651339107,
+            29793,
+            2095796,
+            2095704,
+            2963233,
+            2095884,
+            92
+          ]
+        },
+        {
+          "tag_bytes": "5472736e",
+          "tag_ascii": "Trsn",
+          "header_offset": 292,
+          "payload_offset": 300,
+          "payload_length": 68,
+          "payload_sha256": "eaeaab6430cd49fa9766520c26f99953bddae59b9a819f79ec15ab021fe1b731",
+          "payload_hex": "040000000000000000000000ffffffff0000000000000000010000000000000000000000010000000000000001000000000000000100000001000000ffffffff00000000",
+          "leading_u32_count_candidate": 4,
+          "count_stride_observation": {
+            "count": 4,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 16,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            4,
+            0,
+            0,
+            4294967295,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            4294967295,
+            0
+          ]
+        },
+        {
+          "tag_bytes": "47727073",
+          "tag_ascii": "Grps",
+          "header_offset": 368,
+          "payload_offset": 376,
+          "payload_length": 52,
+          "payload_sha256": "a6b83179f21e99f8fd07e2bc1c673b097e8ed97040798351e2aaa2567a432cb4",
+          "payload_hex": "020000000000000000000000000000000000000001000000ffffffff0100000000000000000000000000000001000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "47727065",
+          "tag_ascii": "Grpe",
+          "header_offset": 428,
+          "payload_offset": 436,
+          "payload_length": 68,
+          "payload_sha256": "64fdd613f7f03656a54ffe69cc082f9dac19b156ae3589e6c68424288c34f4f9",
+          "payload_hex": "02000000000000000000000000000000000000000000000000000000ffffffff01000000010000000000000000000000010000000000000000000000ffffffff01000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4294967295,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            4294967295,
+            1
+          ]
+        }
+      ],
+      "audio_payload": {
+        "offset": 512,
+        "size_bytes": 12277760,
+        "sha256": "c18bd465435e9ddf779e28734d7119316b956a83def709746516f8656ffac5e9"
+      },
+      "segment_spans_derived_from_rows": [
+        {
+          "relative_offset": 0,
+          "encoded_extent_bytes": 6138880,
+          "sample_bound": 6096650,
+          "file_offset_start": 512,
+          "file_offset_end": 6139392
+        },
+        {
+          "relative_offset": 6138880,
+          "encoded_extent_bytes": 6138880,
+          "sample_bound": 6096650,
+          "file_offset_start": 6139392,
+          "file_offset_end": 12278272
+        }
+      ],
+      "segment_extents_sum_to_audio_payload": true,
+      "segment_offsets_are_contiguous": true,
+      "afmt_raw_observed_fields": {
+        "u16_0": 17,
+        "u16_2": 2,
+        "u32_4": 32000,
+        "u16_8": 1024,
+        "u16_10": 4
+      },
+      "afmt_runtime_bits_overwrite_evidence": "Parser handler stores halfword 16 at native-data offset +0x2a after copying Afmt; see ParseFile VA 0x00873c10 in exact assembly.",
+      "unknown_semantics": [
+        "u32 words 3-5 in each Segm row",
+        "all non-Segm table field names and meanings beyond their observed count/stride",
+        "whether every possible VoxN corpus variant has this exact layout"
+      ]
+    },
+    {
+      "file_name": "m_level_swamp_sfx_water.vxn",
+      "file_size_bytes": 12278272,
+      "file_sha256": "d386f78bbf031117d2b99e458ca5b2ff88e6252b1b4ea349883b3159587b7172",
+      "observed_header": {
+        "magic_ascii": "VoxN",
+        "magic_u32_le": 1316515670,
+        "read_size_u32_at_4": 16,
+        "bytes_8_to_15_hex": "302e302e31002800",
+        "u32_at_16": 12278272,
+        "u32_at_20_audio_base": 512,
+        "file_size_field_equals_actual": true
+      },
+      "parser_derived_chunk_window": {
+        "start": 24,
+        "size": 480,
+        "end_exclusive": 504,
+        "formula": "u32_at_20 - 16 - u32_at_4, read begins at file offset 24",
+        "chunk_records_end": 504,
+        "bytes_between_chunk_window_and_audio_base": 8,
+        "gap_hex": "446174610058bb00",
+        "audio_base": 512
+      },
+      "chunk_order": [
+        "Afmt",
+        "Segm",
+        "Rule",
+        "Plst",
+        "Stat",
+        "Trsn",
+        "Grps",
+        "Grpe"
+      ],
+      "tags_exactly_match_observed_corpus_set": true,
+      "chunks": [
+        {
+          "tag_bytes": "41666d74",
+          "tag_ascii": "Afmt",
+          "header_offset": 24,
+          "payload_offset": 32,
+          "payload_length": 12,
+          "payload_sha256": "12f3834f2b331e996062bafa53ebe22b8fbf2c6fb57c87236929609d5cbbf9ec",
+          "payload_hex": "11000200007d000000040400",
+          "observed_fields": {
+            "u16_0": 17,
+            "u16_2": 2,
+            "u32_4": 32000,
+            "u16_8": 1024,
+            "u16_10": 4
+          }
+        },
+        {
+          "tag_bytes": "5365676d",
+          "tag_ascii": "Segm",
+          "header_offset": 44,
+          "payload_offset": 52,
+          "payload_length": 52,
+          "payload_sha256": "795da8cfb0eded47bad51a1a5b3e20359b4c8f39bac4fcf3a58848abda7c72c5",
+          "payload_hex": "020000000000000000ac5d000a075d0000000000000000000000000000ac5d0000ac5d000a075d00000000000000000000000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "rows": [
+            {
+              "row_index": 0,
+              "payload_offset": 4,
+              "raw_hex": "0000000000ac5d000a075d00000000000000000000000000",
+              "u32_words": [
+                0,
+                6138880,
+                6096650,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            },
+            {
+              "row_index": 1,
+              "payload_offset": 28,
+              "raw_hex": "00ac5d0000ac5d000a075d00000000000000000000000000",
+              "u32_words": [
+                6138880,
+                6138880,
+                6096650,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            }
+          ]
+        },
+        {
+          "tag_bytes": "52756c65",
+          "tag_ascii": "Rule",
+          "header_offset": 104,
+          "payload_offset": 112,
+          "payload_length": 76,
+          "payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+          "payload_hex": "020000000100000000000000000000000000000000000040000000400000004000000000ffffffff0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 72,
+            "derived_stride_bytes": 36,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "506c7374",
+          "tag_ascii": "Plst",
+          "header_offset": 188,
+          "payload_offset": 196,
+          "payload_length": 20,
+          "payload_sha256": "321128bb66667273d721b0a0c1f0a0109848ac94536e832e3e394e4d026d5ad0",
+          "payload_hex": "0200000000000000010000000000000001000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 16,
+            "derived_stride_bytes": 8,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "tag_bytes": "53746174",
+          "tag_ascii": "Stat",
+          "header_offset": 216,
+          "payload_offset": 224,
+          "payload_length": 68,
+          "payload_sha256": "b2e1b50ed86d1f3eda3f8828ea42d5a0bf1ef77fd5f8cc99ed5b2858cc4ff835",
+          "payload_hex": "0200000000000000616d6269656e7400acf52d0050f52d002137220104f62d005c00000001000000636f6d6261740000acf52d0050f52d002137220104f62d005c000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            1768058209,
+            7630437,
+            3012012,
+            3011920,
+            19019553,
+            3012100,
+            92,
+            1,
+            1651339107,
+            29793,
+            3012012,
+            3011920,
+            19019553,
+            3012100,
+            92
+          ]
+        },
+        {
+          "tag_bytes": "5472736e",
+          "tag_ascii": "Trsn",
+          "header_offset": 292,
+          "payload_offset": 300,
+          "payload_length": 68,
+          "payload_sha256": "eaeaab6430cd49fa9766520c26f99953bddae59b9a819f79ec15ab021fe1b731",
+          "payload_hex": "040000000000000000000000ffffffff0000000000000000010000000000000000000000010000000000000001000000000000000100000001000000ffffffff00000000",
+          "leading_u32_count_candidate": 4,
+          "count_stride_observation": {
+            "count": 4,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 16,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            4,
+            0,
+            0,
+            4294967295,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            4294967295,
+            0
+          ]
+        },
+        {
+          "tag_bytes": "47727073",
+          "tag_ascii": "Grps",
+          "header_offset": 368,
+          "payload_offset": 376,
+          "payload_length": 52,
+          "payload_sha256": "a6b83179f21e99f8fd07e2bc1c673b097e8ed97040798351e2aaa2567a432cb4",
+          "payload_hex": "020000000000000000000000000000000000000001000000ffffffff0100000000000000000000000000000001000000ffffffff",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            4294967295,
+            1,
+            0,
+            0,
+            0,
+            1,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "47727065",
+          "tag_ascii": "Grpe",
+          "header_offset": 428,
+          "payload_offset": 436,
+          "payload_length": 68,
+          "payload_sha256": "64fdd613f7f03656a54ffe69cc082f9dac19b156ae3589e6c68424288c34f4f9",
+          "payload_hex": "02000000000000000000000000000000000000000000000000000000ffffffff01000000010000000000000000000000010000000000000000000000ffffffff01000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4294967295,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            4294967295,
+            1
+          ]
+        }
+      ],
+      "audio_payload": {
+        "offset": 512,
+        "size_bytes": 12277760,
+        "sha256": "2e84a78092099842d53d8ad211e5fc369989c460dc5c5d12ee33d1a1cb995859"
+      },
+      "segment_spans_derived_from_rows": [
+        {
+          "relative_offset": 0,
+          "encoded_extent_bytes": 6138880,
+          "sample_bound": 6096650,
+          "file_offset_start": 512,
+          "file_offset_end": 6139392
+        },
+        {
+          "relative_offset": 6138880,
+          "encoded_extent_bytes": 6138880,
+          "sample_bound": 6096650,
+          "file_offset_start": 6139392,
+          "file_offset_end": 12278272
+        }
+      ],
+      "segment_extents_sum_to_audio_payload": true,
+      "segment_offsets_are_contiguous": true,
+      "afmt_raw_observed_fields": {
+        "u16_0": 17,
+        "u16_2": 2,
+        "u32_4": 32000,
+        "u16_8": 1024,
+        "u16_10": 4
+      },
+      "afmt_runtime_bits_overwrite_evidence": "Parser handler stores halfword 16 at native-data offset +0x2a after copying Afmt; see ParseFile VA 0x00873c10 in exact assembly.",
+      "unknown_semantics": [
+        "u32 words 3-5 in each Segm row",
+        "all non-Segm table field names and meanings beyond their observed count/stride",
+        "whether every possible VoxN corpus variant has this exact layout"
+      ]
+    },
+    {
+      "file_name": "m_title.vxn",
+      "file_size_bytes": 3837292,
+      "file_sha256": "6dcd53d955ab1c923ea0bb951ce9c5d21dbf086d64d43314002ebfe2c2cd6f4f",
+      "observed_header": {
+        "magic_ascii": "VoxN",
+        "magic_u32_le": 1316515670,
+        "read_size_u32_at_4": 16,
+        "bytes_8_to_15_hex": "302e302e31008677",
+        "u32_at_16": 3837292,
+        "u32_at_20_audio_base": 364,
+        "file_size_field_equals_actual": true
+      },
+      "parser_derived_chunk_window": {
+        "start": 24,
+        "size": 332,
+        "end_exclusive": 356,
+        "formula": "u32_at_20 - 16 - u32_at_4, read begins at file offset 24",
+        "chunk_records_end": 356,
+        "bytes_between_chunk_window_and_audio_base": 8,
+        "gap_hex": "44617461008c3a00",
+        "audio_base": 364
+      },
+      "chunk_order": [
+        "Afmt",
+        "Segm",
+        "Rule",
+        "Plst",
+        "Stat",
+        "Trsn",
+        "Grps",
+        "Grpe"
+      ],
+      "tags_exactly_match_observed_corpus_set": true,
+      "chunks": [
+        {
+          "tag_bytes": "41666d74",
+          "tag_ascii": "Afmt",
+          "header_offset": 24,
+          "payload_offset": 32,
+          "payload_length": 12,
+          "payload_sha256": "12f3834f2b331e996062bafa53ebe22b8fbf2c6fb57c87236929609d5cbbf9ec",
+          "payload_hex": "11000200007d000000040400",
+          "observed_fields": {
+            "u16_0": 17,
+            "u16_2": 2,
+            "u32_4": 32000,
+            "u16_8": 1024,
+            "u16_10": 4
+          }
+        },
+        {
+          "tag_bytes": "5365676d",
+          "tag_ascii": "Segm",
+          "header_offset": 44,
+          "payload_offset": 52,
+          "payload_length": 52,
+          "payload_sha256": "9f39a01232d7973898c8dbdf610a3fc7b7bffcaf315f2cb43fcd3cb240d3c5e2",
+          "payload_hex": "020000000000000000e002000cd9020000000000000000000000000000e0020000ac3700c0473700000000000000000000000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 48,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "rows": [
+            {
+              "row_index": 0,
+              "payload_offset": 4,
+              "raw_hex": "0000000000e002000cd90200000000000000000000000000",
+              "u32_words": [
+                0,
+                188416,
+                186636,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            },
+            {
+              "row_index": 1,
+              "payload_offset": 28,
+              "raw_hex": "00e0020000ac3700c0473700000000000000000000000000",
+              "u32_words": [
+                188416,
+                3648512,
+                3622848,
+                0,
+                0,
+                0
+              ],
+              "observed_word_roles": {
+                "word_0": "relative stream offset consumed by decoder",
+                "word_1": "encoded byte length consumed by IMA decode bounds; matches adjacent/file audio boundaries",
+                "word_2": "sample bound consumed by PCM seek",
+                "words_3_to_5": "unknown"
+              }
+            }
+          ]
+        },
+        {
+          "tag_bytes": "52756c65",
+          "tag_ascii": "Rule",
+          "header_offset": 104,
+          "payload_offset": 112,
+          "payload_length": 40,
+          "payload_sha256": "36ab377077031b9b6d09b6424000ca06c33f281d9ff3751eb82279dc88525143",
+          "payload_hex": "010000000000000006000000000000000000000000000000000000000000000000000000ffffffff",
+          "leading_u32_count_candidate": 1,
+          "count_stride_observation": {
+            "count": 1,
+            "payload_bytes_after_count": 36,
+            "derived_stride_bytes": 36,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            1,
+            0,
+            6,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "506c7374",
+          "tag_ascii": "Plst",
+          "header_offset": 152,
+          "payload_offset": 160,
+          "payload_length": 12,
+          "payload_sha256": "d05796eb3a889d209cc6e6e6a1429bbd9d218df2b58146a51be1fcafc3164042",
+          "payload_hex": "010000000000000001000000",
+          "leading_u32_count_candidate": 1,
+          "count_stride_observation": {
+            "count": 1,
+            "payload_bytes_after_count": 8,
+            "derived_stride_bytes": 8,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "tag_bytes": "53746174",
+          "tag_ascii": "Stat",
+          "header_offset": 172,
+          "payload_offset": 180,
+          "payload_length": 36,
+          "payload_sha256": "2f0e563a3bd3f3aeb90e9528a117d38b0617d7186cfafd825919c87995fcbce2",
+          "payload_hex": "010000000000000073008a7736658a7718f42f00bcf32f0021371e0170f42f005c000000",
+          "leading_u32_count_candidate": 1,
+          "count_stride_observation": {
+            "count": 1,
+            "payload_bytes_after_count": 32,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            1,
+            0,
+            2005532787,
+            2005558582,
+            3142680,
+            3142588,
+            18757409,
+            3142768,
+            92
+          ]
+        },
+        {
+          "tag_bytes": "5472736e",
+          "tag_ascii": "Trsn",
+          "header_offset": 216,
+          "payload_offset": 224,
+          "payload_length": 20,
+          "payload_sha256": "5900e35b9a13ae661c5b7f3694acb895faf23b0cef13645797a04a67be141f26",
+          "payload_hex": "010000000000000000000000ffffffff00000000",
+          "leading_u32_count_candidate": 1,
+          "count_stride_observation": {
+            "count": 1,
+            "payload_bytes_after_count": 16,
+            "derived_stride_bytes": 16,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            1,
+            0,
+            0,
+            4294967295,
+            0
+          ]
+        },
+        {
+          "tag_bytes": "47727073",
+          "tag_ascii": "Grps",
+          "header_offset": 244,
+          "payload_offset": 252,
+          "payload_length": 28,
+          "payload_sha256": "8094ed85e51d40f06f97ac585ea025edca297b09349bce4a2504114d7a0cb3b2",
+          "payload_hex": "010000000000000000000000000000000000000001000000ffffffff",
+          "leading_u32_count_candidate": 1,
+          "count_stride_observation": {
+            "count": 1,
+            "payload_bytes_after_count": 24,
+            "derived_stride_bytes": 24,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            4294967295
+          ]
+        },
+        {
+          "tag_bytes": "47727065",
+          "tag_ascii": "Grpe",
+          "header_offset": 280,
+          "payload_offset": 288,
+          "payload_length": 68,
+          "payload_sha256": "1f4e702f35c17c533839e9c908f06f9cd552569bd2443e629b1a9272d2f7dafe",
+          "payload_hex": "020000000000000000000000000000000000000000000000000000000100000001000000000000000100000000000000010000000000000000000000ffffffff01000000",
+          "leading_u32_count_candidate": 2,
+          "count_stride_observation": {
+            "count": 2,
+            "payload_bytes_after_count": 64,
+            "derived_stride_bytes": 32,
+            "divides_evenly": true
+          },
+          "payload_u32_words": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            4294967295,
+            1
+          ]
+        }
+      ],
+      "audio_payload": {
+        "offset": 364,
+        "size_bytes": 3836928,
+        "sha256": "ba1fc28cfbafa26fa16481b00acc4ffaae8b02107e4d77afebfd4fd15e2dbe3e"
+      },
+      "segment_spans_derived_from_rows": [
+        {
+          "relative_offset": 0,
+          "encoded_extent_bytes": 188416,
+          "sample_bound": 186636,
+          "file_offset_start": 364,
+          "file_offset_end": 188780
+        },
+        {
+          "relative_offset": 188416,
+          "encoded_extent_bytes": 3648512,
+          "sample_bound": 3622848,
+          "file_offset_start": 188780,
+          "file_offset_end": 3837292
+        }
+      ],
+      "segment_extents_sum_to_audio_payload": true,
+      "segment_offsets_are_contiguous": true,
+      "afmt_raw_observed_fields": {
+        "u16_0": 17,
+        "u16_2": 2,
+        "u32_4": 32000,
+        "u16_8": 1024,
+        "u16_10": 4
+      },
+      "afmt_runtime_bits_overwrite_evidence": "Parser handler stores halfword 16 at native-data offset +0x2a after copying Afmt; see ParseFile VA 0x00873c10 in exact assembly.",
+      "unknown_semantics": [
+        "u32 words 3-5 in each Segm row",
+        "all non-Segm table field names and meanings beyond their observed count/stride",
+        "whether every possible VoxN corpus variant has this exact layout"
+      ]
+    }
+  ]
+}

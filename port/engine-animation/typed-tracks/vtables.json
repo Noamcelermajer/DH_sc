@@ -1,0 +1,647 @@
+{
+  "schema_version": 1,
+  "description": "Exact class vtable words for float quaternion and scale-vector3 track implementations.",
+  "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "vtables": [
+    {
+      "name": "quaternion_float",
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>",
+      "channel_type": 5,
+      "elf_virtual_address": "0x00978ae0",
+      "elf_file_offset": "0x00977ae0",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00978ae8",
+      "vtable_slice_sha256": "7146921592e63c0de21f1dee70c25e303811681618eac153d841aafedaa27da1",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "entries": [
+        {
+          "offset": "0x00",
+          "raw_word": "0x00000000",
+          "target_va": null,
+          "target_symbols": []
+        },
+        {
+          "offset": "0x04",
+          "raw_word": "0x00000000",
+          "target_va": null,
+          "target_symbols": []
+        },
+        {
+          "offset": "0x08",
+          "raw_word": "0x0060ed10",
+          "target_va": "0x0060ed10",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::~CVirtualEx()"
+          ]
+        },
+        {
+          "offset": "0x0c",
+          "raw_word": "0x0060f4f8",
+          "target_va": "0x0060f4f8",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::~CVirtualEx()"
+          ]
+        },
+        {
+          "offset": "0x10",
+          "raw_word": "0x0060f0e8",
+          "target_va": "0x0060f0e8",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::getValueSize() const"
+          ]
+        },
+        {
+          "offset": "0x14",
+          "raw_word": "0x0060f0f0",
+          "target_va": "0x0060f0f0",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::getIdentityValue(void*) const"
+          ]
+        },
+        {
+          "offset": "0x18",
+          "raw_word": "0x00613300",
+          "target_va": "0x00613300",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::getBlendedValue(void*, float*, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x1c",
+          "raw_word": "0x00613588",
+          "target_va": "0x00613588",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::getAddedValue(void*, float*, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x20",
+          "raw_word": "0x006209b4",
+          "target_va": "0x006209b4",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x24",
+          "raw_word": "0x00620c24",
+          "target_va": "0x00620c24",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x28",
+          "raw_word": "0x006132e4",
+          "target_va": "0x006132e4",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset": "0x2c",
+          "raw_word": "0x0061d2a8",
+          "target_va": "0x0061d2a8",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset": "0x30",
+          "raw_word": "0x0061cf8c",
+          "target_va": "0x0061cf8c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x34",
+          "raw_word": "0x0061d0ec",
+          "target_va": "0x0061d0ec",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x38",
+          "raw_word": "0x0060df00",
+          "target_va": "0x0060df00",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getBlendedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x3c",
+          "raw_word": "0x0060df04",
+          "target_va": "0x0060df04",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getAddedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x40",
+          "raw_word": "0x0060df08",
+          "target_va": "0x0060df08",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x44",
+          "raw_word": "0x0060df0c",
+          "target_va": "0x0060df0c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x48",
+          "raw_word": "0x00620944",
+          "target_va": "0x00620944",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x4c",
+          "raw_word": "0x0060df3c",
+          "target_va": "0x0060df3c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset": "0x50",
+          "raw_word": "0x006208e4",
+          "target_va": "0x006208e4",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x54",
+          "raw_word": "0x0060df84",
+          "target_va": "0x0060df84",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x58",
+          "raw_word": "0x0060dfa8",
+          "target_va": "0x0060dfa8",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x5c",
+          "raw_word": "0x0060dfac",
+          "target_va": "0x0060dfac",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x60",
+          "raw_word": "0x0060dfb0",
+          "target_va": "0x0060dfb0",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x64",
+          "raw_word": "0x0060dfb4",
+          "target_va": "0x0060dfb4",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x68",
+          "raw_word": "0x006e307c",
+          "target_va": "0x006e307c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, bool) const"
+          ]
+        },
+        {
+          "offset": "0x6c",
+          "raw_word": "0x006e2f3c",
+          "target_va": "0x006e2f3c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, bool) const"
+          ]
+        },
+        {
+          "offset": "0x70",
+          "raw_word": "0x006e2c40",
+          "target_va": "0x006e2c40",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x74",
+          "raw_word": "0x006e2ad8",
+          "target_va": "0x006e2ad8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x78",
+          "raw_word": "0x0062084c",
+          "target_va": "0x0062084c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::applyValue(void*, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x7c",
+          "raw_word": "0x006e2dbc",
+          "target_va": "0x006e2dbc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x80",
+          "raw_word": "0x006e2fdc",
+          "target_va": "0x006e2fdc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x84",
+          "raw_word": "0x006e2b8c",
+          "target_va": "0x006e2b8c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x88",
+          "raw_word": "0x006e2ce8",
+          "target_va": "0x006e2ce8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x8c",
+          "raw_word": "0x006e2e90",
+          "target_va": "0x006e2e90",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x90",
+          "raw_word": "0x006e2a18",
+          "target_va": "0x006e2a18",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x94",
+          "raw_word": "0x0060f10c",
+          "target_va": "0x0060f10c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::retrieveValue(void*, void*) const"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "scale_float",
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>",
+      "channel_type": 10,
+      "elf_virtual_address": "0x00979610",
+      "elf_file_offset": "0x00978610",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00979618",
+      "vtable_slice_sha256": "5beae3e057dc4cded0bd7ab24f8d09b23d8cec8b4b1785e259458f8dd5431e02",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "entries": [
+        {
+          "offset": "0x00",
+          "raw_word": "0x00000000",
+          "target_va": null,
+          "target_symbols": []
+        },
+        {
+          "offset": "0x04",
+          "raw_word": "0x00000000",
+          "target_va": null,
+          "target_symbols": []
+        },
+        {
+          "offset": "0x08",
+          "raw_word": "0x0060ed58",
+          "target_va": "0x0060ed58",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::~CVirtualEx()"
+          ]
+        },
+        {
+          "offset": "0x0c",
+          "raw_word": "0x0060f660",
+          "target_va": "0x0060f660",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::~CVirtualEx()"
+          ]
+        },
+        {
+          "offset": "0x10",
+          "raw_word": "0x0060ef64",
+          "target_va": "0x0060ef64",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::getValueSize() const"
+          ]
+        },
+        {
+          "offset": "0x14",
+          "raw_word": "0x00618a8c",
+          "target_va": "0x00618a8c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::getIdentityValue(void*) const"
+          ]
+        },
+        {
+          "offset": "0x18",
+          "raw_word": "0x006275fc",
+          "target_va": "0x006275fc",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::getBlendedValue(void*, float*, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x1c",
+          "raw_word": "0x0062b204",
+          "target_va": "0x0062b204",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::getAddedValue(void*, float*, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x20",
+          "raw_word": "0x0062d72c",
+          "target_va": "0x0062d72c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x24",
+          "raw_word": "0x0062d840",
+          "target_va": "0x0062d840",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x28",
+          "raw_word": "0x006289b8",
+          "target_va": "0x006289b8",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset": "0x2c",
+          "raw_word": "0x006124a8",
+          "target_va": "0x006124a8",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset": "0x30",
+          "raw_word": "0x00612394",
+          "target_va": "0x00612394",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x34",
+          "raw_word": "0x006123dc",
+          "target_va": "0x006123dc",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x38",
+          "raw_word": "0x0060df00",
+          "target_va": "0x0060df00",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getBlendedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x3c",
+          "raw_word": "0x0060df04",
+          "target_va": "0x0060df04",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getAddedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x40",
+          "raw_word": "0x0060df08",
+          "target_va": "0x0060df08",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x44",
+          "raw_word": "0x0060df0c",
+          "target_va": "0x0060df0c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x48",
+          "raw_word": "0x00628994",
+          "target_va": "0x00628994",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x4c",
+          "raw_word": "0x0060df3c",
+          "target_va": "0x0060df3c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset": "0x50",
+          "raw_word": "0x006239c4",
+          "target_va": "0x006239c4",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x54",
+          "raw_word": "0x0060df84",
+          "target_va": "0x0060df84",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x58",
+          "raw_word": "0x0060dfa8",
+          "target_va": "0x0060dfa8",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x5c",
+          "raw_word": "0x0060dfac",
+          "target_va": "0x0060dfac",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x60",
+          "raw_word": "0x0060dfb0",
+          "target_va": "0x0060dfb0",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x64",
+          "raw_word": "0x0060dfb4",
+          "target_va": "0x0060dfb4",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x68",
+          "raw_word": "0x006e307c",
+          "target_va": "0x006e307c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, bool) const"
+          ]
+        },
+        {
+          "offset": "0x6c",
+          "raw_word": "0x006e2f3c",
+          "target_va": "0x006e2f3c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, bool) const"
+          ]
+        },
+        {
+          "offset": "0x70",
+          "raw_word": "0x006e2c40",
+          "target_va": "0x006e2c40",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x74",
+          "raw_word": "0x006e2ad8",
+          "target_va": "0x006e2ad8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x78",
+          "raw_word": "0x0062393c",
+          "target_va": "0x0062393c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::applyValue(void*, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x7c",
+          "raw_word": "0x006e2dbc",
+          "target_va": "0x006e2dbc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x80",
+          "raw_word": "0x006e2fdc",
+          "target_va": "0x006e2fdc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x84",
+          "raw_word": "0x006e2b8c",
+          "target_va": "0x006e2b8c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x88",
+          "raw_word": "0x006e2ce8",
+          "target_va": "0x006e2ce8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x8c",
+          "raw_word": "0x006e2e90",
+          "target_va": "0x006e2e90",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x90",
+          "raw_word": "0x006e2a18",
+          "target_va": "0x006e2a18",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x94",
+          "raw_word": "0x0060ef6c",
+          "target_va": "0x0060ef6c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::retrieveValue(void*, void*) const"
+          ]
+        }
+      ]
+    }
+  ]
+}

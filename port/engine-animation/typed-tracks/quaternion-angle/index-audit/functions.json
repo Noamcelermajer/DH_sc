@@ -1,0 +1,851 @@
+{
+  "schema_version": 1,
+  "description": "APK-backed ARM32 audit of quaternion-angle false-default behavior and index routing.",
+  "apk": {
+    "path": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+    "sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200"
+  },
+  "elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "class": "ELF32",
+    "endianness": "little",
+    "machine": "ARM",
+    "file_backed_load_segments": [
+      {
+        "offset": 0,
+        "vaddr": 0,
+        "filesz": 9785648,
+        "memsz": 9785648,
+        "flags": 5,
+        "align": 4096
+      },
+      {
+        "offset": 9785648,
+        "vaddr": 9789744,
+        "filesz": 300364,
+        "memsz": 914688,
+        "flags": 6,
+        "align": 4096
+      }
+    ]
+  },
+  "assembly_excerpt": {
+    "path": "reference/index-routes.asm",
+    "sha256": "063132a19fda485d525de3ea5d38cbdb58e62373e56bd8d4a2e11a028a898ee1"
+  },
+  "functions": [
+    {
+      "name": "track_factory",
+      "claim": "Selects the quaternion-angle track family for channel codes 6-9 and the scalar template.",
+      "original_symbol": "_ZN6glitch7collada16CColladaDatabase19getAnimationTrackExEPKNS0_10SAnimationE",
+      "demangled": "glitch::collada::CColladaDatabase::getAnimationTrackEx(glitch::collada::SAnimation const*)",
+      "elf_virtual_address": "0x00611ae0",
+      "elf_file_offset": "0x00611ae0",
+      "elf_size_bytes": 1608,
+      "function_slice_sha256": "bb7590a23775d34fa5821fac78f1e6330a691b0c929b23cf1a3eedb733f37f72",
+      "source_listing": "work/DH_sc/port/engine-animation/typed-tracks/quaternion-angle/reference/quaternion-angle-functions.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 6,
+        "end": 410
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "animation_set_add_animation",
+      "claim": "Caller that evaluates channel descriptors and calls the track factory for an SAnimation.",
+      "original_symbol": "_ZN6glitch7collada13CAnimationSet12addAnimationEPKNS0_10SAnimationE",
+      "demangled": "glitch::collada::CAnimationSet::addAnimation(glitch::collada::SAnimation const*)",
+      "elf_virtual_address": "0x006601fc",
+      "elf_file_offset": "0x006601fc",
+      "elf_size_bytes": 684,
+      "function_slice_sha256": "2496e012d85f5dc9272ddc74dc0dc6a0c1adf30feb7f944dba6c1a93e0f8fdd7",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CAnimationSet-b1d6a1ba6c69-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 376,
+        "end": 551
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "track_get_value_single_index",
+      "claim": "Searches time sampler 0 and dispatches ordinary direct/interpolated typed value retrieval.",
+      "original_symbol": "_ZNK6glitch7collada17CAnimationTrackEx8getValueERKNS0_18SAnimationAccessorEiPvb",
+      "demangled": "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, bool) const",
+      "elf_virtual_address": "0x006e307c",
+      "elf_file_offset": "0x006e307c",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "f6d2b5388c5ab0df5791ed8bd42c06c3d08de880315959cd1f8d29c858293be4",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CAnimationTrackEx-3b337e928626-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 504,
+        "end": 545
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "track_get_value_indexed",
+      "claim": "Searches time sampler 0 and dispatches the indexed quaternion-angle value route.",
+      "original_symbol": "_ZNK6glitch7collada17CAnimationTrackEx8getValueERKNS0_18SAnimationAccessorEiiPvRib",
+      "demangled": "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, int, void*, int&, bool) const",
+      "elf_virtual_address": "0x006e2dbc",
+      "elf_file_offset": "0x006e2dbc",
+      "elf_size_bytes": 212,
+      "function_slice_sha256": "a898d4cd250251f9456c173fefefe01fbb5e469165da7d908f30ffce1b413e2a",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CAnimationTrackEx-3b337e928626-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 304,
+        "end": 362
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "accessor_find_key_frame_no",
+      "claim": "Uses its explicit sampler-index argument when resolving a time vector.",
+      "original_symbol": "_ZNK6glitch7collada18SAnimationAccessor14findKeyFrameNoEiiRiRf",
+      "demangled": "glitch::collada::SAnimationAccessor::findKeyFrameNo(int, int, int&, float&) const",
+      "elf_virtual_address": "0x0066af34",
+      "elf_file_offset": "0x0066af34",
+      "elf_size_bytes": 64,
+      "function_slice_sha256": "c4a57143c1d9939ab0bc44cb05728788dc0bee677ea18a0e041a78441b300e42",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_SAnimationAccessor-dd6bb90af5fe-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 513,
+        "end": 534
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "accessor_find_key_frame_no_extended",
+      "claim": "Extended key search with explicit sampler-index argument and additional mode input.",
+      "original_symbol": "_ZNK6glitch7collada18SAnimationAccessor14findKeyFrameNoEiiRiRfi",
+      "demangled": "glitch::collada::SAnimationAccessor::findKeyFrameNo(int, int, int&, float&, int) const",
+      "elf_virtual_address": "0x0066b814",
+      "elf_file_offset": "0x0066b814",
+      "elf_size_bytes": 76,
+      "function_slice_sha256": "5ca8adca6b00589a75b211ec0f268d3a449f2df0d30516bd594eb463e5cedc40",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_SAnimationAccessor-dd6bb90af5fe-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 905,
+        "end": 928
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "accessor_get_output",
+      "claim": "Resolves one output vector through the selected 28-byte sampler record.",
+      "original_symbol": "_ZNK6glitch7collada18SAnimationAccessor9getOutputEi",
+      "demangled": "glitch::collada::SAnimationAccessor::getOutput(int) const",
+      "elf_virtual_address": "0x00669e24",
+      "elf_file_offset": "0x00669e24",
+      "elf_size_bytes": 32,
+      "function_slice_sha256": "ebbae3803b8841315855c8aeb748d80121405fb42b1082a214e3feffb0dc5fe7",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_SAnimationAccessor-dd6bb90af5fe-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 26,
+        "end": 39
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "accessor_get_channel",
+      "claim": "Returns an SChannel record using a 16-byte stride.",
+      "original_symbol": "_ZNK6glitch7collada18SAnimationAccessor10getChannelEi",
+      "demangled": "glitch::collada::SAnimationAccessor::getChannel(int) const",
+      "elf_virtual_address": "0x00669e44",
+      "elf_file_offset": "0x00669e44",
+      "elf_size_bytes": 16,
+      "function_slice_sha256": "e8610324e8cd139a6c6fcc3c6579cbb3e07a0d246935b97eb37b2ca0ef59a495",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_SAnimationAccessor-dd6bb90af5fe-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 40,
+        "end": 49
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "accessor_has_default_value",
+      "claim": "Tests whether the SAnimation default-value pointer is non-null.",
+      "original_symbol": "_ZNK6glitch7collada18SAnimationAccessor15hasDefaultValueEv",
+      "demangled": "glitch::collada::SAnimationAccessor::hasDefaultValue() const",
+      "elf_virtual_address": "0x00669e54",
+      "elf_file_offset": "0x00669e54",
+      "elf_size_bytes": 20,
+      "function_slice_sha256": "2fe191dca60a4c07938f8796b51e56b7254b2aeabc0e4f899971db00a561ba61",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_SAnimationAccessor-dd6bb90af5fe-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 50,
+        "end": 60
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "accessor_get_default_value",
+      "claim": "Returns the default-value payload pointer.",
+      "original_symbol": "_ZNK6glitch7collada18SAnimationAccessor15getDefaultValueEv",
+      "demangled": "glitch::collada::SAnimationAccessor::getDefaultValue() const",
+      "elf_virtual_address": "0x00669e68",
+      "elf_file_offset": "0x00669e68",
+      "elf_size_bytes": 16,
+      "function_slice_sha256": "78eebd674d99c6aecafef75963c29be3fe2eb4a282e3e02a2a3ea98a16efbfac",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_SAnimationAccessor-dd6bb90af5fe-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 61,
+        "end": 70
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "angle_float_direct_scalar",
+      "claim": "Float angle sampler; no-default branch stores only the scalar at output byte 0.",
+      "original_symbol": "_ZN6glitch7collada15animation_track12CInterpreterINS1_30CSceneNodeQuaternionAngleMixinIfEEfLi4ENS1_17SUseDefaultValuesILi3EfEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiPv",
+      "demangled": "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float>, float, 4, glitch::collada::animation_track::SUseDefaultValues<3, float> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*)",
+      "elf_virtual_address": "0x0061f51c",
+      "elf_file_offset": "0x0061f51c",
+      "elf_size_bytes": 120,
+      "function_slice_sha256": "818eba0e8e6db29d0f6ad1221623d64aba7e5a1e3b14ba0696c06cb6f47d0ec6",
+      "source_listing": "work/DH_sc/port/engine-animation/typed-tracks/quaternion-angle/reference/quaternion-angle-functions.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 537,
+        "end": 574
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "angle_float_interpolated_scalar",
+      "claim": "Float two-key angle sampler; no-default branch stores only the interpolated scalar at output byte 0.",
+      "original_symbol": "_ZN6glitch7collada15animation_track12CInterpreterINS1_30CSceneNodeQuaternionAngleMixinIfEEfLi4ENS1_17SUseDefaultValuesILi3EfEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float>, float, 4, glitch::collada::animation_track::SUseDefaultValues<3, float> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)",
+      "elf_virtual_address": "0x0061f898",
+      "elf_file_offset": "0x0061f898",
+      "elf_size_bytes": 180,
+      "function_slice_sha256": "6aa7dedfa2327301558a6c41701b4adcac43fe973b33d8f73e40078e88275225",
+      "source_listing": "work/DH_sc/port/engine-animation/typed-tracks/quaternion-angle/reference/quaternion-angle-functions.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 575,
+        "end": 627
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "angle_short_direct_scalar",
+      "claim": "Signed-short angle sampler; no-default branch stores only the decoded scalar at output byte 0.",
+      "original_symbol": "_ZN6glitch7collada15animation_track12CInterpreterINS1_30CSceneNodeQuaternionAngleMixinIsEEfLi4ENS1_17SUseDefaultValuesILi3EsEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiPv",
+      "demangled": "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short>, float, 4, glitch::collada::animation_track::SUseDefaultValues<3, short> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*)",
+      "elf_virtual_address": "0x00614a90",
+      "elf_file_offset": "0x00614a90",
+      "elf_size_bytes": 168,
+      "function_slice_sha256": "eb24cf7c7c497647b81ab93baec6ecf3c890b269a191544f6c12af6da11a2b90",
+      "source_listing": "work/DH_sc/port/engine-animation/typed-tracks/quaternion-angle/reference/quaternion-angle-functions.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 628,
+        "end": 677
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "angle_short_interpolated_scalar",
+      "claim": "Signed-short two-key angle sampler; no-default branch stores only the decoded/interpolated scalar at output byte 0.",
+      "original_symbol": "_ZN6glitch7collada15animation_track12CInterpreterINS1_30CSceneNodeQuaternionAngleMixinIsEEfLi4ENS1_17SUseDefaultValuesILi3EsEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short>, float, 4, glitch::collada::animation_track::SUseDefaultValues<3, short> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)",
+      "elf_virtual_address": "0x00614b38",
+      "elf_file_offset": "0x00614b38",
+      "elf_size_bytes": 268,
+      "function_slice_sha256": "c2db42ba5be189ac42e5f51ad0c6dbd620da26e24c82c627b97bbd680ddb35f9",
+      "source_listing": "work/DH_sc/port/engine-animation/typed-tracks/quaternion-angle/reference/quaternion-angle-functions.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 678,
+        "end": 752
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "angle_char_direct_scalar",
+      "claim": "Signed-char angle sampler; no-default branch stores only the decoded scalar at output byte 0.",
+      "original_symbol": "_ZN6glitch7collada15animation_track12CInterpreterINS1_30CSceneNodeQuaternionAngleMixinIcEEfLi4ENS1_17SUseDefaultValuesILi3EcEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiPv",
+      "demangled": "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char>, float, 4, glitch::collada::animation_track::SUseDefaultValues<3, char> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*)",
+      "elf_virtual_address": "0x00614c44",
+      "elf_file_offset": "0x00614c44",
+      "elf_size_bytes": 164,
+      "function_slice_sha256": "8f6b53b01c84e31a43617cd972f39d9562ffad32e351381f6424af138bff2da5",
+      "source_listing": "work/DH_sc/port/engine-animation/typed-tracks/quaternion-angle/reference/quaternion-angle-functions.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 753,
+        "end": 801
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "angle_char_interpolated_scalar",
+      "claim": "Signed-char two-key angle sampler; no-default branch stores only the decoded/interpolated scalar at output byte 0.",
+      "original_symbol": "_ZN6glitch7collada15animation_track12CInterpreterINS1_30CSceneNodeQuaternionAngleMixinIcEEfLi4ENS1_17SUseDefaultValuesILi3EcEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char>, float, 4, glitch::collada::animation_track::SUseDefaultValues<3, char> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)",
+      "elf_virtual_address": "0x00614ce8",
+      "elf_file_offset": "0x00614ce8",
+      "elf_size_bytes": 260,
+      "function_slice_sha256": "230115bbe7b6a936bddbfc581a690715f78a2a46d81ebbf8ea5d080cf9071138",
+      "source_listing": "work/DH_sc/port/engine-animation/typed-tracks/quaternion-angle/reference/quaternion-angle-functions.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 802,
+        "end": 874
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "angle_float_to_quaternion_direct",
+      "claim": "Initializes xyz only, invokes the float scalar sampler, then reads lane 3 as the angle.",
+      "original_symbol": "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIfEEfE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float>, float>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*)",
+      "elf_virtual_address": "0x0061f594",
+      "elf_file_offset": "0x0061f594",
+      "elf_size_bytes": 64,
+      "function_slice_sha256": "fdcb584ddc8ab6a4153f1005f960e281db5be103f2f580cb64b23875f1a9f1e2",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-bc0a4b32386a-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 26
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "angle_float_to_quaternion_interpolated",
+      "claim": "Initializes xyz only, invokes the float two-key sampler, then reads lane 3 as the angle.",
+      "original_symbol": "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIfEEfE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float>, float>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)",
+      "elf_virtual_address": "0x0061f94c",
+      "elf_file_offset": "0x0061f94c",
+      "elf_size_bytes": 60,
+      "function_slice_sha256": "a4c2e45853ee6bef19b40c856c9422603fe9f5359793471012187d9987d5b1ad",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-bc0a4b32386a-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 198,
+        "end": 217
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "angle_short_to_quaternion_direct",
+      "claim": "Initializes xyz only, invokes the short scalar sampler, then reads lane 3 as the angle.",
+      "original_symbol": "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIsEEsE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short>, short>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*)",
+      "elf_virtual_address": "0x00618064",
+      "elf_file_offset": "0x00618064",
+      "elf_size_bytes": 64,
+      "function_slice_sha256": "55a8d64059a1b5b3e85be0c826d31973b5f9bff3deb82d9263d6a380c0e806bb",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-7a07b83b2ec9-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 26
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "angle_short_to_quaternion_interpolated",
+      "claim": "Initializes xyz only, invokes the short two-key sampler, then reads lane 3 as the angle.",
+      "original_symbol": "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIsEEsE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short>, short>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)",
+      "elf_virtual_address": "0x006180b4",
+      "elf_file_offset": "0x006180b4",
+      "elf_size_bytes": 60,
+      "function_slice_sha256": "9f3dd17bf407cb6551918808b0ae15e6af9e9ada6ead0b96865448e4a6064ac7",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-7a07b83b2ec9-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 27,
+        "end": 47
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "angle_char_to_quaternion_direct",
+      "claim": "Initializes xyz only, invokes the char scalar sampler, then reads lane 3 as the angle.",
+      "original_symbol": "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIcEEcE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char>, char>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*)",
+      "elf_virtual_address": "0x006183c0",
+      "elf_file_offset": "0x006183c0",
+      "elf_size_bytes": 64,
+      "function_slice_sha256": "537f6818bbdf4f1ac0d9011fc87386862516b569aae6e934abe86d195dfa3bd8",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-90365ac1a7c5-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 26
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "angle_char_to_quaternion_interpolated",
+      "claim": "Initializes xyz only, invokes the char two-key sampler, then reads lane 3 as the angle.",
+      "original_symbol": "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIcEEcE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char>, char>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)",
+      "elf_virtual_address": "0x00618410",
+      "elf_file_offset": "0x00618410",
+      "elf_size_bytes": 60,
+      "function_slice_sha256": "e021b4f5c592079d08116ca2721c9ced211e1c1ca2d4c5be3fab3505221e9c84",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-90365ac1a7c5-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 27,
+        "end": 47
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "float_direct_virtual_wrapper",
+      "claim": "Normal direct-key vtable thunk into the float quaternion-angle interpreter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const",
+      "elf_virtual_address": "0x0061f5d4",
+      "elf_file_offset": "0x0061f5d4",
+      "elf_size_bytes": 16,
+      "function_slice_sha256": "5e24842f36a7c9b96f3d001f34482217c95e56f4d239853342eccda97519ae29",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-c208f587cbc3-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 127,
+        "end": 136
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "float_interpolated_virtual_wrapper",
+      "claim": "Normal interpolated-key vtable thunk into the float quaternion-angle interpreter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const",
+      "elf_virtual_address": "0x0061f988",
+      "elf_file_offset": "0x0061f988",
+      "elf_size_bytes": 28,
+      "function_slice_sha256": "6dfa0260c36ac388d53404a08def588dc50f91f91b919769b766f8851ddc54ee",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-c208f587cbc3-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 163,
+        "end": 175
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "short_direct_virtual_wrapper",
+      "claim": "Normal direct-key vtable thunk into the short quaternion-angle interpreter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const",
+      "elf_virtual_address": "0x006180a4",
+      "elf_file_offset": "0x006180a4",
+      "elf_size_bytes": 16,
+      "function_slice_sha256": "5e24842f36a7c9b96f3d001f34482217c95e56f4d239853342eccda97519ae29",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-907653e2c2f0-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 106,
+        "end": 115
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "short_interpolated_virtual_wrapper",
+      "claim": "Normal interpolated-key vtable thunk into the short quaternion-angle interpreter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const",
+      "elf_virtual_address": "0x006180f0",
+      "elf_file_offset": "0x006180f0",
+      "elf_size_bytes": 28,
+      "function_slice_sha256": "6dfa0260c36ac388d53404a08def588dc50f91f91b919769b766f8851ddc54ee",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-907653e2c2f0-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 116,
+        "end": 128
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "char_direct_virtual_wrapper",
+      "claim": "Normal direct-key vtable thunk into the char quaternion-angle interpreter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const",
+      "elf_virtual_address": "0x00618400",
+      "elf_file_offset": "0x00618400",
+      "elf_size_bytes": 16,
+      "function_slice_sha256": "5e24842f36a7c9b96f3d001f34482217c95e56f4d239853342eccda97519ae29",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-ff3f68d5b483-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 106,
+        "end": 115
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "char_interpolated_virtual_wrapper",
+      "claim": "Normal interpolated-key vtable thunk into the char quaternion-angle interpreter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const",
+      "elf_virtual_address": "0x006184bc",
+      "elf_file_offset": "0x006184bc",
+      "elf_size_bytes": 28,
+      "function_slice_sha256": "268e659419961d748570cdfdf6883254b8147c06e2f4d63e54cfe968c8cf4555",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-ff3f68d5b483-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 131,
+        "end": 143
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "float_indexed_direct_virtual_wrapper",
+      "claim": "Forwards the extra index and key index into the float indexed interpreter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiiPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const",
+      "elf_virtual_address": "0x0061f6e0",
+      "elf_file_offset": "0x0061f6e0",
+      "elf_size_bytes": 20,
+      "function_slice_sha256": "7d5578bf0d19b0f4a68c1b3da5c6f65163fdb4c7f68d88413553ed623fa4ab40",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-c208f587cbc3-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 137,
+        "end": 147
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "float_indexed_interpolated_virtual_wrapper",
+      "claim": "Forwards the extra index, key bounds, fraction, and output into the float indexed interpreter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiiifPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const",
+      "elf_virtual_address": "0x0061f874",
+      "elf_file_offset": "0x0061f874",
+      "elf_size_bytes": 36,
+      "function_slice_sha256": "9096fcb1ade26dedb5aa29a1a43a46d7fbbdb4023e789b94b58db903cf33ae03",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-c208f587cbc3-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 148,
+        "end": 162
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "short_indexed_direct_virtual_wrapper",
+      "claim": "Forwards the extra index and key index into the short indexed interpreter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiiPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const",
+      "elf_virtual_address": "0x00618208",
+      "elf_file_offset": "0x00618208",
+      "elf_size_bytes": 20,
+      "function_slice_sha256": "7d5578bf0d19b0f4a68c1b3da5c6f65163fdb4c7f68d88413553ed623fa4ab40",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-907653e2c2f0-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 129,
+        "end": 139
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "short_indexed_interpolated_virtual_wrapper",
+      "claim": "Forwards the extra index, key bounds, fraction, and output into the short indexed interpreter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiiifPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const",
+      "elf_virtual_address": "0x0061839c",
+      "elf_file_offset": "0x0061839c",
+      "elf_size_bytes": 36,
+      "function_slice_sha256": "9096fcb1ade26dedb5aa29a1a43a46d7fbbdb4023e789b94b58db903cf33ae03",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-907653e2c2f0-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 140,
+        "end": 154
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "char_indexed_direct_virtual_wrapper",
+      "claim": "Forwards the extra index and key index into the char indexed interpreter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiiPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const",
+      "elf_virtual_address": "0x006185d4",
+      "elf_file_offset": "0x006185d4",
+      "elf_size_bytes": 20,
+      "function_slice_sha256": "7d5578bf0d19b0f4a68c1b3da5c6f65163fdb4c7f68d88413553ed623fa4ab40",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-ff3f68d5b483-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 144,
+        "end": 154
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "char_indexed_interpolated_virtual_wrapper",
+      "claim": "Forwards the extra index, key bounds, fraction, and output into the char indexed interpreter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiiifPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const",
+      "elf_virtual_address": "0x00618768",
+      "elf_file_offset": "0x00618768",
+      "elf_size_bytes": 36,
+      "function_slice_sha256": "9096fcb1ade26dedb5aa29a1a43a46d7fbbdb4023e789b94b58db903cf33ae03",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-ff3f68d5b483-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 155,
+        "end": 169
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "float_indexed_direct_relative_rotation",
+      "claim": "Samples two key indices from output 0 and composes a relative quaternion.",
+      "original_symbol": "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIfEEfE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiiPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float>, float>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, void*)",
+      "elf_virtual_address": "0x0061f5e4",
+      "elf_file_offset": "0x0061f5e4",
+      "elf_size_bytes": 252,
+      "function_slice_sha256": "d7489776172e6bfcd5421bbf77883a040e8da3bed373a40578b347a075267b31",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-bc0a4b32386a-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 27,
+        "end": 95
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "float_indexed_interpolated_relative_rotation",
+      "claim": "Samples three key indices from output 0, slerps two, and composes relative to the third.",
+      "original_symbol": "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIfEEfE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float>, float>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*)",
+      "elf_virtual_address": "0x0061f6f4",
+      "elf_file_offset": "0x0061f6f4",
+      "elf_size_bytes": 384,
+      "function_slice_sha256": "5d2f23b09c85c78d672853bb33711e525a22af0720cd6a1e47c6428dc5f8c86f",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-bc0a4b32386a-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 96,
+        "end": 197
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "short_indexed_direct_relative_rotation",
+      "claim": "Short analogue of the two-index relative quaternion route.",
+      "original_symbol": "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIsEEsE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiiPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short>, short>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, void*)",
+      "elf_virtual_address": "0x0061810c",
+      "elf_file_offset": "0x0061810c",
+      "elf_size_bytes": 252,
+      "function_slice_sha256": "4e26ef1c39fde047c027d12ff1a598577609cdc9e64329eef3ff34924db0edf4",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-7a07b83b2ec9-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 48,
+        "end": 116
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "short_indexed_interpolated_relative_rotation",
+      "claim": "Short analogue of the three-index/slerp relative quaternion route.",
+      "original_symbol": "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIsEEsE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short>, short>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*)",
+      "elf_virtual_address": "0x0061821c",
+      "elf_file_offset": "0x0061821c",
+      "elf_size_bytes": 384,
+      "function_slice_sha256": "42f938ec2845922c11d2e3759dfb21c70a9bb7905caa25374e81b7a63f15c826",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-7a07b83b2ec9-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 117,
+        "end": 217
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "char_indexed_direct_relative_rotation",
+      "claim": "Char analogue of the two-index relative quaternion route.",
+      "original_symbol": "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIcEEcE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiiPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char>, char>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, void*)",
+      "elf_virtual_address": "0x006184d8",
+      "elf_file_offset": "0x006184d8",
+      "elf_size_bytes": 252,
+      "function_slice_sha256": "43f3ff6ab5a21e11dc43d1f32a05854d12d5fad4aebf9a374ec31584336b6b1a",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-90365ac1a7c5-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 48,
+        "end": 116
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "char_indexed_interpolated_relative_rotation",
+      "claim": "Char analogue of the three-index/slerp relative quaternion route.",
+      "original_symbol": "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIcEEcE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char>, char>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*)",
+      "elf_virtual_address": "0x006185e8",
+      "elf_file_offset": "0x006185e8",
+      "elf_size_bytes": 384,
+      "function_slice_sha256": "0ac533bc6b4632c89528966935fe03406c9c8fc7e93ce7cc7d35c86f3a59e067",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-90365ac1a7c5-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 117,
+        "end": 217
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_from_angle_axis",
+      "claim": "Converts angle plus xyz axis into a quaternion.",
+      "original_symbol": "_ZN6glitch4core10quaternion13fromAngleAxisEfRKNS0_8vector3dIfEE",
+      "demangled": "glitch::core::quaternion::fromAngleAxis(float, glitch::core::vector3d<float> const&)",
+      "elf_virtual_address": "0x0060cdbc",
+      "elf_file_offset": "0x0060cdbc",
+      "elf_size_bytes": 104,
+      "function_slice_sha256": "3ae64c6b78e7a3d2cd026ecacdf872bd935963315dc6afc9a767cba667a9883a",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_core_quaternion-0c307365cc58-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 831,
+        "end": 862
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_multiply",
+      "claim": "Quaternion product used by the relative indexed route.",
+      "original_symbol": "_ZNK6glitch4core10quaternionmlERKS1_",
+      "demangled": "glitch::core::quaternion::operator*(glitch::core::quaternion const&) const",
+      "elf_virtual_address": "0x0060dd34",
+      "elf_file_offset": "0x0060dd34",
+      "elf_size_bytes": 448,
+      "function_slice_sha256": "8ccbd2df93a138f1b45ba1ebe938d4da7539c4ab0f0da00bff21da584fdd2ea2",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_core_quaternion-0c307365cc58-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 863,
+        "end": 980
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_slerp",
+      "claim": "Quaternion slerp used by the indexed interpolated route.",
+      "original_symbol": "_ZN6glitch4core10quaternion5slerpES1_S1_f",
+      "demangled": "glitch::core::quaternion::slerp(glitch::core::quaternion, glitch::core::quaternion, float)",
+      "elf_virtual_address": "0x00612d00",
+      "elf_file_offset": "0x00612d00",
+      "elf_size_bytes": 980,
+      "function_slice_sha256": "320c09ce496f978ca29941c242952215c5636791faebe2028c5623199a788c1b",
+      "source_listing": "work/recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_core_quaternion-0c307365cc58-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 981,
+        "end": 1231
+      },
+      "listing_bytes_match_elf_slice": true
+    }
+  ],
+  "corpus": {
+    "corpus_root": "work/cache-recovery/extracted/com.gameloft.android.GAND.GloftD2SS/files/data/3d",
+    "bdae_file_count": 2900,
+    "animation_record_count": 49060,
+    "channel_sampler_relations": {
+      "1/1": 49021,
+      "10/10": 2,
+      "2/2": 26,
+      "3/3": 1,
+      "4/4": 9,
+      "5/5": 1
+    },
+    "multi_channel_or_sampler_records": {
+      "10/10": 2,
+      "2/2": 26,
+      "3/3": 1,
+      "4/4": 9,
+      "5/5": 1
+    },
+    "multi_record_channel_word0_counts": {
+      "-1": 116
+    },
+    "multi_record_channel_type_counts": {
+      "87": 51,
+      "88": 49,
+      "89": 5,
+      "90": 5,
+      "91": 6
+    },
+    "quaternion_angle_channel_counts": {
+      "9": 77
+    },
+    "quaternion_angle_channel_sampler_relations": {
+      "1/1": 77
+    },
+    "quaternion_angle_default_pointer_presence": {
+      "present": 77
+    },
+    "quaternion_angle_offset_scale_pointer_presence": {
+      "absent": 77
+    },
+    "quaternion_angle_multichannel_or_multisampler_records": 0,
+    "examples": {
+      "multi_2_channel_2_sampler": {
+        "file": "crypt_flame.bdae",
+        "file_sha256": "f75781657408d0ef2d5f3fb08a85f35ceb5b14f16f187fd5e41b634d658ec8c1",
+        "animation_name": "offsetV",
+        "channel_words_and_types": [
+          [
+            -1,
+            88
+          ],
+          [
+            -1,
+            87
+          ]
+        ],
+        "samplers": [
+          {
+            "index": 0,
+            "time_entry": 2,
+            "output_entry": 3
+          },
+          {
+            "index": 1,
+            "time_entry": 4,
+            "output_entry": 5
+          }
+        ]
+      },
+      "type9_one_channel_one_sampler_with_default": {
+        "file": "animateddecors/cin_king_gothicus_01.bdae",
+        "file_sha256": "690b9670296a1f7a467afa104988babf7493069dbf6239e88880c603ab35e27d",
+        "animation_name": "Bip01_L_Calf-node-rotation",
+        "channel": {
+          "hash": 2089943039,
+          "index": 0,
+          "target": "Bip01_L_Calf-node",
+          "type": 9,
+          "word0_signed": -1
+        },
+        "sampler": {
+          "index": 0,
+          "interpolation": 1,
+          "time_components": 1,
+          "time_entry": 8,
+          "time_type": 3,
+          "value_components": 1,
+          "value_entry": 9,
+          "value_type": 6
+        },
+        "default_first_four_f32": [
+          0.0,
+          0.0,
+          1.0,
+          -61.72850036621094
+        ],
+        "first_output_keys": [
+          [
+            1.077365517616272
+          ],
+          [
+            1.0785505771636963
+          ],
+          [
+            1.0799365043640137
+          ]
+        ]
+      }
+    }
+  },
+  "interpretation_limits": [
+    "Quaternion-angle codes 6-9 are only observed as code 9 in this BDAE corpus.",
+    "The no-default route is supported by ARM bodies but no matching type-6-through-9 BDAE record was found in this corpus.",
+    "The meaning of the extra integer in indexed CAnimationTrackEx/CInterpreterQuaternionAngle overloads is not inferred beyond its observed use as a key index into output vector zero.",
+    "No general mapping from multi-channel SChannel records to multi-sampler SSampler records is established by this type-specific trace."
+  ],
+  "verification": {
+    "function_ranges": 43,
+    "function_listing_ranges_byte_match": true,
+    "apk_member_matches_local_elf": true,
+    "corpus_parse_errors": 0
+  }
+}

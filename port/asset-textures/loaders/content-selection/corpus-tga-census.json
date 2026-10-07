@@ -1,0 +1,120 @@
+{
+  "source": "Recovered cache prefix extracted from the supplied game's cache parts; only metadata is included here.",
+  "suffix": ".tga",
+  "counts": {
+    "total_files": 242,
+    "BTEXpvr_prefix": 234,
+    "standard_uncompressed_true_color_TGA32": 8
+  },
+  "wrapper_prefix_hex": "4254455870767200",
+  "wrapper_prefix_ascii": "BTEXpvr\\0",
+  "selection_evidence": {
+    "manager_symbol": "glitch::video::CTextureManager::getImageLoader(glitch::io::IReadFile*) const",
+    "manager_elf_va": "0x005e8144",
+    "content_probe_symbol": "glitch::video::CImageLoaderPVR::isALoadableFileFormat(glitch::io::IReadFile*) const",
+    "content_probe_elf_va": "0x006057e0"
+  },
+  "standard_tga32": [
+    {
+      "path": "files/data/3d/textures/menugraphics03.tga",
+      "size_bytes": 1048620,
+      "width": 512,
+      "height": 512,
+      "image_type": 2,
+      "color_map_type": 0,
+      "bits_per_pixel": 32,
+      "descriptor": "0x08",
+      "trailing_bytes": 26,
+      "trailer_kind": "26-byte TRUEVISION-XFILE footer"
+    },
+    {
+      "path": "files/data/3d/textures/menugraphics05.tga",
+      "size_bytes": 1048620,
+      "width": 512,
+      "height": 512,
+      "image_type": 2,
+      "color_map_type": 0,
+      "bits_per_pixel": 32,
+      "descriptor": "0x08",
+      "trailing_bytes": 26,
+      "trailer_kind": "26-byte TRUEVISION-XFILE footer"
+    },
+    {
+      "path": "files/data/3d/textures/MenusGraphics.tga",
+      "size_bytes": 4194348,
+      "width": 1024,
+      "height": 1024,
+      "image_type": 2,
+      "color_map_type": 0,
+      "bits_per_pixel": 32,
+      "descriptor": "0x08",
+      "trailing_bytes": 26,
+      "trailer_kind": "26-byte TRUEVISION-XFILE footer"
+    },
+    {
+      "path": "files/data/3d/textures/splash_final.tga",
+      "size_bytes": 8388652,
+      "width": 2048,
+      "height": 1024,
+      "image_type": 2,
+      "color_map_type": 0,
+      "bits_per_pixel": 32,
+      "descriptor": "0x08",
+      "trailing_bytes": 26,
+      "trailer_kind": "26-byte TRUEVISION-XFILE footer"
+    },
+    {
+      "path": "files/data/3d/textures/splash_final_droid.tga",
+      "size_bytes": 8388652,
+      "width": 2048,
+      "height": 1024,
+      "image_type": 2,
+      "color_map_type": 0,
+      "bits_per_pixel": 32,
+      "descriptor": "0x08",
+      "trailing_bytes": 26,
+      "trailer_kind": "26-byte TRUEVISION-XFILE footer"
+    },
+    {
+      "path": "files/data/3d/textures/splash_final_i9000.tga",
+      "size_bytes": 8388652,
+      "width": 2048,
+      "height": 1024,
+      "image_type": 2,
+      "color_map_type": 0,
+      "bits_per_pixel": 32,
+      "descriptor": "0x08",
+      "trailing_bytes": 26,
+      "trailer_kind": "26-byte TRUEVISION-XFILE footer"
+    },
+    {
+      "path": "files/data/3d/textures/splash_final_jp.tga",
+      "size_bytes": 8388626,
+      "width": 2048,
+      "height": 1024,
+      "image_type": 2,
+      "color_map_type": 0,
+      "bits_per_pixel": 32,
+      "descriptor": "0x28",
+      "trailing_bytes": 0,
+      "trailer_kind": "no trailing bytes"
+    },
+    {
+      "path": "files/data/3d/textures/splash_final_kor.tga",
+      "size_bytes": 16777260,
+      "width": 2048,
+      "height": 2048,
+      "image_type": 2,
+      "color_map_type": 0,
+      "bits_per_pixel": 32,
+      "descriptor": "0x08",
+      "trailing_bytes": 26,
+      "trailer_kind": "26-byte TRUEVISION-XFILE footer"
+    }
+  ],
+  "representative_wrapper": {
+    "path": "files/data/3d/textures/anim_bubule_swamp.tga",
+    "size_bytes": 524348,
+    "first_8_bytes_hex": "4254455870767200"
+  }
+}

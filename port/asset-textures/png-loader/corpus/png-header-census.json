@@ -1,0 +1,2894 @@
+{
+  "source": "Recovered APK app/files tree (read-only structural inventory; not proof these files are loaded by the engine).",
+  "method": "Parse PNG signature, IHDR and chunk lengths/types through first IEND; record whole-file SHA-256. No pixel decoding or CRC validation performed.",
+  "summary": {
+    "file_count": 121,
+    "valid_png_signatures": 121,
+    "complete_through_iend": 121,
+    "color_type_counts": {
+      "6": 111,
+      "2": 10
+    },
+    "bit_depth_counts": {
+      "8": 121
+    },
+    "interlace_method_counts": {
+      "0": 121
+    },
+    "tRNS_chunk_count": 0,
+    "idat_chunk_count_by_file": {
+      "1": 119,
+      "3": 2
+    }
+  },
+  "files": [
+    {
+      "path": "res/0.png",
+      "size_bytes": 8348,
+      "sha256": "5086da2375da97411be190f792e889a3b6af9dccdd2a04b8e273aa87b23342e7",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/1.png",
+      "size_bytes": 8401,
+      "sha256": "9d52b904872355382be3cdfb49b573d7dea6874711cc72600a6c7d8c14fece38",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/10.png",
+      "size_bytes": 8499,
+      "sha256": "1a059849140fa1086fe71d99f868163c6ccb2e286d42f9db0becc6ebb2aec818",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/11.png",
+      "size_bytes": 8522,
+      "sha256": "4b07d30ddbd5c98a968640afb6667f92b31c22dfc06b77f5f374e1e10b287265",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/12.png",
+      "size_bytes": 8537,
+      "sha256": "7a96eca2be62fe9bff121d530fe02bee7e76698c7f2e984d06c37e9ae3cf4f47",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/13.png",
+      "size_bytes": 8460,
+      "sha256": "af9fe85687266767123a0029d1b518d3c6f8369a5151403cb7b5bbca12af3bde",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/14.png",
+      "size_bytes": 8475,
+      "sha256": "9604fab6add41920bb46a60f3c8908846fbbb784892b511118040dd00e44b038",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/15.png",
+      "size_bytes": 8541,
+      "sha256": "49f89b3177f45bd90d578dcd53afb412a7f16c4f636bcf73ba002d11c7426097",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/16.png",
+      "size_bytes": 8462,
+      "sha256": "ed22937c14563c45d0e06e64b2d329391a3e7fbc20dfa21e680b2c4f6349fa22",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/17.png",
+      "size_bytes": 8470,
+      "sha256": "f66286d48cd6608d922e546b48a389784753a3be47306d49973cbd85d28e6115",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/18.png",
+      "size_bytes": 8485,
+      "sha256": "d2f3b1495815cbd8a6f61d63d6e39e9467e8bae4fb2cbb674b7f822d2d868ec9",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/19.png",
+      "size_bytes": 8292,
+      "sha256": "4c3249e81f877b797475f8609ce8ef5904489b4fdbf8d01b984480c63bc2b090",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/2.png",
+      "size_bytes": 8574,
+      "sha256": "aa81b1000be125af643a9287b00c0c1aecb3ba218c11381ad0bf3511584065ba",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/20.png",
+      "size_bytes": 8313,
+      "sha256": "2cbe7ae06b080c299fad97f833a082c5c39a65c00261c5462b9c05b01cf5443b",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/21.png",
+      "size_bytes": 8119,
+      "sha256": "d65a40d4daa61a299e80323941701a1f1eef0ce83a14cf41aa6817d336e37642",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/22.png",
+      "size_bytes": 8337,
+      "sha256": "ae96a3cc778e9b332a0c95d88ccd699f31e7bbdb67d0082ab1f196385fb3b970",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/23.png",
+      "size_bytes": 8342,
+      "sha256": "0f13000840fd03cd7f2da0f2f1304d920d333b76d0050d9ed1a12a72f7b39f64",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/24.png",
+      "size_bytes": 8433,
+      "sha256": "ad2e4c2c7117e8519db910fc0b19a02d41c861c5720c97c068a3a45dcdfa0178",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/25.png",
+      "size_bytes": 8431,
+      "sha256": "fe0384c510d8863b769d410795a32506e9ecfc0af822c92715be4e5001377806",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/26.png",
+      "size_bytes": 8417,
+      "sha256": "a1602dafece6964341e441665d36066bd69a2e54fc843b9362a07f1a8057269d",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/27.png",
+      "size_bytes": 8258,
+      "sha256": "1727bb880904f87d7c23807c3fda3d3273acc6c96f979eeb5c4a0241b557cc1a",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/28.png",
+      "size_bytes": 8314,
+      "sha256": "6ddff54142c30cfca49f7a5c791f515b3256644a83e5c8901ee9ea43c10a1693",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/29.png",
+      "size_bytes": 8226,
+      "sha256": "26bc866252f215e7d2c18c06da7e954a457e9af587768e8490325b95abf88144",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/3.png",
+      "size_bytes": 8394,
+      "sha256": "cea15389cdddbbc180a37f0d401ebc7c2eb12759863ee4745037d0fdeee0ef9c",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/30.png",
+      "size_bytes": 7936,
+      "sha256": "1deb809076f01f62b2e1b3de58981aee6784f46e47353de23b9c88fe153c866e",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/31.png",
+      "size_bytes": 8145,
+      "sha256": "01d47a8e7654aa5baafb3cf9fb4b3c442e7df10fe8e07b128080f01768d7d41d",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/32.png",
+      "size_bytes": 8086,
+      "sha256": "99c183017a3fb129918b31e75b4abd9642c336da16a80d6ac405df6fbda22aa4",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/33.png",
+      "size_bytes": 8260,
+      "sha256": "9f49ef4dd8f888d0b52a62c82e0c0c945e098dfea512dcad415541c8fd371f2a",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/34.png",
+      "size_bytes": 8206,
+      "sha256": "a7d463f92b02cd36a47c29806602d2f96a9bca2a783e5f5a263edac47d146ea6",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/35.png",
+      "size_bytes": 8199,
+      "sha256": "50c67de0836e9b4a2070245c29b259fdfe4c60c26912a0b5e4599e48473b341d",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/36.png",
+      "size_bytes": 8167,
+      "sha256": "45d357e59bd30b2939c39ecec59759dfeaa83d58d286b6e4960d5f561e9a9537",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/37.png",
+      "size_bytes": 8602,
+      "sha256": "c5f2fc8159b78c8b701d2fa58caa11580035bc582ab786d11ebb7e83938bcd9a",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/38.png",
+      "size_bytes": 8490,
+      "sha256": "40b45980eb90df08f3a692df193e5d2ffd5a50fd24a73ee5b3b85a46960a5019",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/39.png",
+      "size_bytes": 8090,
+      "sha256": "52bb1f670452688183f25bfc28977505790a690272bb8b5621c184e9ec470bdf",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/4.png",
+      "size_bytes": 8438,
+      "sha256": "0f9ea48b35ed97e8c67cfb161dd9b991f6755765fbd91b9b3cf0a7d47391a14f",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/40.png",
+      "size_bytes": 8169,
+      "sha256": "17fabbc02911cbd2323f6a3a70245a989a60840604e6b244665a51508ffb6cbb",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/41.png",
+      "size_bytes": 8259,
+      "sha256": "0a19ca39a55592d5c7b6ea814d1d04cb591bf73bf6ea0d96713160c075f97231",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/42.png",
+      "size_bytes": 8248,
+      "sha256": "ece3460e3a8ef18c22637422468ae4bdf6a8de041036ad8f4a29360f1975ab28",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/43.png",
+      "size_bytes": 8389,
+      "sha256": "3c60d399b3d8886202e7174bb2c825bf84dd51dcb1f3579ef165f8b0f8aec9dd",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/44.png",
+      "size_bytes": 8115,
+      "sha256": "859d7be84ad670b55133dd57f2323b0ab7dfac6369ee53caa168221ed6041f79",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/45.png",
+      "size_bytes": 8145,
+      "sha256": "b3455b664d23f2d61fb213a1f25de62abc547e0b961d4aecd10f21267f83f74f",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/46.png",
+      "size_bytes": 8151,
+      "sha256": "ffbd148e993e611d1b08705d3a6681e94b6e72f30b1bfaf26ee46b751dbfc224",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/47.png",
+      "size_bytes": 8155,
+      "sha256": "9a03489b33c78b1469a1e3b006ac48a91dc09696cfcdca9e402126a69e914593",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/48.png",
+      "size_bytes": 8169,
+      "sha256": "682fa6fbf424edbf26fefbfee5965ad646773141088696c32d1fa8e37834e9db",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/49.png",
+      "size_bytes": 8158,
+      "sha256": "b531cd1641f43d83109947ece9bc15b0aae2ba3a8d89e1e83944a33c7bb2da8c",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/5.png",
+      "size_bytes": 8487,
+      "sha256": "c9cb26a4f5249bb8f43e8e32014e26d37e796d2ebdcf9bd3ba3fbd3b6683f26e",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/50.png",
+      "size_bytes": 8137,
+      "sha256": "1fda5e610308f1800bd2b84d4f7b67d060f3d202b954946b3d89d07534229492",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/51.png",
+      "size_bytes": 8168,
+      "sha256": "bbe1893c0fda402bcc8ca4277f90f881887fb4fcd388fe09019c371626628990",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/52.png",
+      "size_bytes": 8145,
+      "sha256": "110739713cf057cba1072c91c1b580cb3504df1f476ae91f6b1da2e67bfcb02f",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/53.png",
+      "size_bytes": 8135,
+      "sha256": "164dfeadc7f66c03314afc0152f319b313599cfbdbe870f5240b805d3edbfde0",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/54.png",
+      "size_bytes": 8438,
+      "sha256": "cd5e9cd1b6464d596278fbf276df6249ce429cb75a0613ea086dd573dac105e3",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/55.png",
+      "size_bytes": 8428,
+      "sha256": "e8616fe928e54fd5a68c01c7fc3cfd3fb54c2669e527e126a834b9648b1d60cf",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/56.png",
+      "size_bytes": 8347,
+      "sha256": "49873f47c0a7a38c36660fb85b8957ae9c45d6b4fb57329c7b6264026fa3f151",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/57.png",
+      "size_bytes": 8085,
+      "sha256": "1affd49cf5bd98f83372b3bde40f6e3a0a712603714fe4eb94b6af08ea106544",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/58.png",
+      "size_bytes": 7959,
+      "sha256": "3d1ae5fe8b4e61baf40424a7fea2a50b9646379c0e56f6a2e9ffec44296f08ff",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/59.png",
+      "size_bytes": 8366,
+      "sha256": "7078804ed1f94e152393458e8a4a1db8e7e3c5faeb0582b8f51de62f3f1b6248",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/6.png",
+      "size_bytes": 8384,
+      "sha256": "4579add3b41ad3ffb88c0c4ea21d74b4dcc0ea246122cae2a2246f52f2c713ff",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/60.png",
+      "size_bytes": 8340,
+      "sha256": "25dacaf171b9163d9d29914bcc99eb86498153b21d5b0244177cc76eab062053",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/61.png",
+      "size_bytes": 8305,
+      "sha256": "d5b65e6150b1acd127042c7b9cd7889dfcf05d086cc8a9c5fa62bdfc41776b90",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/62.png",
+      "size_bytes": 8465,
+      "sha256": "18650eba089feb9eac4fe2427fe4317950fc7fdf87d833e25d0a44bc45c59695",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/63.png",
+      "size_bytes": 8474,
+      "sha256": "8f0295687227f0b4b33522d3f2d6e71649de8d4c5728793441c8dee9e9bc390b",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/64.png",
+      "size_bytes": 8515,
+      "sha256": "3a84946ec7f66852c3fb27c879458e3230faa55d39dc902d7a3ee4831c4765a3",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/65.png",
+      "size_bytes": 8497,
+      "sha256": "0b582c7aea5453ea606d9a2b162ad920a7fa1c73199d0b00a6f2effa8d15d049",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/66.png",
+      "size_bytes": 8156,
+      "sha256": "36f2acdad76e7a2eeabe27c58c905f43930a177f05a3f550236c8a2d1e6fb64f",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/67.png",
+      "size_bytes": 8241,
+      "sha256": "9e3050060b87a13491df2aa222ea85466ed9e0519ad906f0c799f5ecdfcbe4d1",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/68.png",
+      "size_bytes": 8286,
+      "sha256": "3c52377f5cd9dfcfd8a2ae37974f437daee5359c4efcb0e1fc5f030c31742a1d",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/7.png",
+      "size_bytes": 8414,
+      "sha256": "3c9986c771e9498015679a4e52837a09351570746edbd349faad6d4b366b868c",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/8.png",
+      "size_bytes": 8299,
+      "sha256": "f97711aaf90893b73675d3a9ca634dd3b8a24b1b96b4e0d6f9c6f8b222a307dc",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/9.png",
+      "size_bytes": 8474,
+      "sha256": "b1ffc92fbc92d938b59fc7327863d622d8e52ea6d8712c8d940a47500c3c8492",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 48,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/add.png",
+      "size_bytes": 1553,
+      "sha256": "c214e0c1d4147a3cd8a9d2070c90eba0a6f25af2aed8877ecd7ab08021841bec",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 31,
+        "height": 30,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/add_on.png",
+      "size_bytes": 895,
+      "sha256": "2a6b704be983af3a497eda932461b8933920975f1ed8919604d3b8797d1d234c",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 31,
+        "height": 30,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/back.png",
+      "size_bytes": 2549,
+      "sha256": "5e63ae923bc77d924743a1a2b8d448b738685d8d299394af3d491e96791b167a",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 62,
+        "height": 35,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/back_button.png",
+      "size_bytes": 3096,
+      "sha256": "e29f6aa53f9f9a30e263dbbd8e3085ca56e7b7952ae6de973c6967bde67d3df5",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 144,
+        "height": 33,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/back_button_on.png",
+      "size_bytes": 1697,
+      "sha256": "dee4ed279340030db81c05b29a01cf915f3c6ec740f7f2cbbe9691016693335d",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 144,
+        "height": 33,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/back_gc.png",
+      "size_bytes": 18244,
+      "sha256": "581dab2da4d7d56cb08c5f9c830822cbe164c3df4cc919aabeb49a521f97ff4b",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 95,
+        "height": 95,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "sRGB",
+        "bKGD",
+        "pHYs",
+        "tIME",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/back_gc_on.png",
+      "size_bytes": 18510,
+      "sha256": "041b1227210cd93e3ee251dc1184a5a07c7d6ad6fe9002b8dc59c99e3888755d",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 95,
+        "height": 95,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "sRGB",
+        "bKGD",
+        "pHYs",
+        "tIME",
+        "IDAT",
+        "IDAT",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/back_on.png",
+      "size_bytes": 1350,
+      "sha256": "e076a015cfee010634f4aee89d874b3589d4c151f53d3e5ea0e9cfb8d4a54cae",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 62,
+        "height": 35,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/background_loading.png",
+      "size_bytes": 280,
+      "sha256": "17bca849399bd3656f8a0d294a28298910b7561c45d04f735c031df5a5989fa5",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 1,
+        "height": 374,
+        "bit_depth": 8,
+        "color_type": 2,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/badge1.png",
+      "size_bytes": 746,
+      "sha256": "204e237e5aea4ec9af2ae2c1a21ac114d0a8172147c8329e5c76231252819a07",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 22,
+        "height": 20,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/badge1_blue.png",
+      "size_bytes": 762,
+      "sha256": "3ba997f2034552e3c888e01ddad0acc63547a9f78f3102976e8ccc5a03db9cb4",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 22,
+        "height": 20,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/badge2.png",
+      "size_bytes": 776,
+      "sha256": "625f6f9c07ef333ac34e15d909769ca4a8653f68c54a4e715df29235027b5118",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 26,
+        "height": 20,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/badge2_blue.png",
+      "size_bytes": 816,
+      "sha256": "c0d9c997c6d0e0cab69b49b10b98574e4d227ed59e9e1b18e92c4ac827fd5e91",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 26,
+        "height": 20,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/badge3.png",
+      "size_bytes": 791,
+      "sha256": "5b6467a3fc031b8cb1762973b24c311391badbdb51e32208a2c550ffe5ac802e",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 32,
+        "height": 20,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/badge3_blue.png",
+      "size_bytes": 910,
+      "sha256": "d2dabf335b805b6c4dd646074acf153cef4781ba233e355420e1a761350d33ab",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 32,
+        "height": 20,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/close_but.png",
+      "size_bytes": 2148,
+      "sha256": "116b3a6458106882b37a68e2032c854d0e79fc4865b8a55aac14020f798f3a83",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 45,
+        "height": 30,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/close_but_on.png",
+      "size_bytes": 1178,
+      "sha256": "835449de8a4f40d1753ede3101d337b68513d7488b2b262c73855e9ba8472402",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 45,
+        "height": 30,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/footer.png",
+      "size_bytes": 192,
+      "sha256": "184227e92bfb652adf5169581a694b597b4312c5c858f029f75bf1fe2d38eff4",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 320,
+        "height": 62,
+        "bit_depth": 8,
+        "color_type": 2,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/friends.png",
+      "size_bytes": 2579,
+      "sha256": "89cdfbde070270a56c71b27897c7bde61e06b6db974f0f12cc603012a3eed994",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 40,
+        "height": 35,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/friends_on.png",
+      "size_bytes": 8079,
+      "sha256": "dcd0e3e06551bc30e5a87b2df62e8ac891470a15faba1e77191b894a535f2445",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 75,
+        "height": 60,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/g_points_new.png",
+      "size_bytes": 1556,
+      "sha256": "6b29e547caa74bbf68645d86ebddfe976ea9d9ca89e470e67de2db58a4d7b818",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 26,
+        "height": 18,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/games.png",
+      "size_bytes": 2365,
+      "sha256": "c0e57a4b367d41791340572428a630971b4578547c95da0ea028085fd2f40dcd",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 51,
+        "height": 32,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/games_on.png",
+      "size_bytes": 6733,
+      "sha256": "255a9302789ea61ceb874b059c9df7e5bb8c6a279f9966355c8101a523288a58",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 88,
+        "height": 48,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/gc_center.png",
+      "size_bytes": 262330,
+      "sha256": "6c18b55425ec7c2cbb928b1856930b1f86edfeb7877d206175c77e276ca55996",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 492,
+        "height": 464,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/gc_center_on.png",
+      "size_bytes": 239620,
+      "sha256": "068b5edf377b409b099bed36beaf24715dea08979c763f6789526dbbe09eee26",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 492,
+        "height": 464,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/gl_live.png",
+      "size_bytes": 114411,
+      "sha256": "2ff9a1605e0be482fe1e49c756683d33457c585ded8e94d03160865e596e1aca",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 492,
+        "height": 464,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/gl_live_on.png",
+      "size_bytes": 113515,
+      "sha256": "7ad7e466a971473f47f502a36247484cc51f4803eaf067574ddf4901c4db7b84",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 492,
+        "height": 464,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/header.png",
+      "size_bytes": 186,
+      "sha256": "f4a975cbfa21d4713cf7b3529935260eae9a06324e03f9df23edf26dac7bb301",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 320,
+        "height": 44,
+        "bit_depth": 8,
+        "color_type": 2,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/home.png",
+      "size_bytes": 2521,
+      "sha256": "c7313b25413251a3aaab46aee941e8823a81df36102b0da4f908e634e0f4060f",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 40,
+        "height": 40,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/home_on.png",
+      "size_bytes": 5441,
+      "sha256": "24646fc9d714771e4b20aa09e15af0ceae2869a07c4a6c70b96c757ce4bca977",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 74,
+        "height": 68,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/img_0049.png",
+      "size_bytes": 83169,
+      "sha256": "91f786aa234379a27e19afe17d7f76d07fec9fbbde2c1d05e424addd7ec260cc",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 640,
+        "height": 960,
+        "bit_depth": 8,
+        "color_type": 2,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/inbox-new_msg.png",
+      "size_bytes": 1719,
+      "sha256": "85e6a56b245bd3df1c8d41059bc829f80166227bca830df0d656cd9a7b63b5ee",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 31,
+        "height": 30,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/inbox-new_msg_on.png",
+      "size_bytes": 1042,
+      "sha256": "c4fe11e510418ef75efe8e81991cc05e6e14e993ae5b7029e42cd821b67178d9",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 31,
+        "height": 30,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/inbox.png",
+      "size_bytes": 2068,
+      "sha256": "dc908fcc5fed4268dab8beec6e6887202813e5ef05a9128caa2d0f24e56a5b01",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 42,
+        "height": 29,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/inbox_on.png",
+      "size_bytes": 6198,
+      "sha256": "8ada79ba2d51beb9a9c8737038e31a626412d90a4735f8e9dff0277013fb03f1",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 76,
+        "height": 50,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "pHYs",
+        "iCCP",
+        "cHRM",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/info.png",
+      "size_bytes": 2270,
+      "sha256": "c3eb3da4f6c476f4d7ea843f6672fb85544f75b6158e110e92ea6f29ca2b6166",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 31,
+        "height": 31,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/info_on.png",
+      "size_bytes": 1893,
+      "sha256": "181e74a46c27ad420d0eea73c339282002161a822dd242ab27245d5cf4bf4fd2",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 31,
+        "height": 31,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/interact.png",
+      "size_bytes": 2232,
+      "sha256": "1c93fe68e9b71edcc07b7e1e59450aadbefed3962845cbb8293e4c9073d226c3",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 122,
+        "height": 34,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/interact_new.png",
+      "size_bytes": 2104,
+      "sha256": "a4576e6989e07e1f24138761c4302248914a1ba117cd8aa8546c5029cd6786d4",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 39,
+        "height": 30,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/interact_new_on.png",
+      "size_bytes": 1496,
+      "sha256": "82a216a23c9379c777a170c90004a6e579239b496d4492eba30f8a26a0b42c59",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 39,
+        "height": 30,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/interact_on.png",
+      "size_bytes": 1124,
+      "sha256": "a702d89a1251d1cf54b52b84c95c827296bc5a7594046d4a744f05e94ecb42f0",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 122,
+        "height": 34,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/leaderboards_background.png",
+      "size_bytes": 249122,
+      "sha256": "f097326381c08a1a82f3c92e462e13a6627493eebfad8249532be2ac21147c6c",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 480,
+        "height": 480,
+        "bit_depth": 8,
+        "color_type": 2,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/line.png",
+      "size_bytes": 202,
+      "sha256": "fd2ba2a960a08c68cd2bc9d52eb9a83aae009d13fce664ba6eca90d0304c7fc5",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 1,
+        "height": 80,
+        "bit_depth": 8,
+        "color_type": 2,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/loading_but.png",
+      "size_bytes": 1863,
+      "sha256": "512d5813aacfb39086effab661a1f40cad79bd22eb31bed26aff36cb7d0ea256",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 45,
+        "height": 30,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "sRGB",
+        "bKGD",
+        "pHYs",
+        "tIME",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/popup_w.png",
+      "size_bytes": 887,
+      "sha256": "92bbae48bdad2dd9e91dcda92d9dc11c283dc51820ffc3f2e79f091fce1b9ef1",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 303,
+        "height": 63,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "sRGB",
+        "bKGD",
+        "pHYs",
+        "tIME",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/recommend.png",
+      "size_bytes": 2123,
+      "sha256": "ac3cd339366a5738dfba6137048d8dc14181cf9bb9b791f950e02c13105cc862",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 39,
+        "height": 30,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/recommend_on.png",
+      "size_bytes": 1533,
+      "sha256": "81c451217af3a70634a2811c7b333ff81a88a8eb8792a8454f19021783670ce9",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 39,
+        "height": 30,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/selected.png",
+      "size_bytes": 1152,
+      "sha256": "24c4694e2ce9498e8457764f896c13252e3e3d81169c55883578efacce321dab",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 59,
+        "height": 54,
+        "bit_depth": 8,
+        "color_type": 2,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/selected_check.png",
+      "size_bytes": 384,
+      "sha256": "467f623039aaa506d530df4f68faf4ae143c2a0ad9d8e967393a7c7bda87e0b1",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 14,
+        "height": 13,
+        "bit_depth": 8,
+        "color_type": 2,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/send_butt.png",
+      "size_bytes": 1203,
+      "sha256": "cefdfe3bfa120d212800e685339cd4ef03fbb2b3d744ea4eff177e4b797f8a41",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 55,
+        "height": 23,
+        "bit_depth": 8,
+        "color_type": 6,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/top_gradient.png",
+      "size_bytes": 178,
+      "sha256": "4a5635b09248ca6dcf4960d1658025d42c445343bd35b39994cff13ff7cc5dfd",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 1,
+        "height": 32,
+        "bit_depth": 8,
+        "color_type": 2,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    },
+    {
+      "path": "res/unselected.png",
+      "size_bytes": 1167,
+      "sha256": "6efca9b90150107d109b184ba49e2437adb4c6050efb01505939d1926ffad2b8",
+      "valid_png_signature": true,
+      "ihdr": {
+        "width": 61,
+        "height": 56,
+        "bit_depth": 8,
+        "color_type": 2,
+        "compression_method": 0,
+        "filter_method": 0,
+        "interlace_method": 0
+      },
+      "chunks_through_iend": [
+        "IHDR",
+        "gAMA",
+        "tEXt",
+        "IDAT",
+        "IEND"
+      ],
+      "has_iend_before_eof": true
+    }
+  ]
+}

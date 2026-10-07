@@ -1,0 +1,15 @@
+{
+  "schema": "dh2-bres-relocation-png-string-census-v1",
+  "scope": "Null-terminated printable ASCII .png strings at BRES relocation targets in recovered .bdae files.",
+  "interpretation_limit": "A fixup-reachable string is not proof that its containing field is a texture path or that the engine loads it.",
+  "bres_file_count": 2901,
+  "bres_total_bytes": 143565008,
+  "source_file_index_sha256": "12882f3d999c362f5c05a680a0edce9fe1b29a73e9e6d5a1b313c1bf4e726def",
+  "source_file_index_definition": "SHA-256 over sorted relative path UTF-8, NUL, and each file SHA-256 byte sequence.",
+  "valid_bres_count": 2901,
+  "invalid_bres_counts": {},
+  "valid_bres_fixup_count": 2577206,
+  "png_string_reference_count": 0,
+  "distinct_png_strings": [],
+  "references": []
+}

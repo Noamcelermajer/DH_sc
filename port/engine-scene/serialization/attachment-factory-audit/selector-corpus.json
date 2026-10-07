@@ -1,0 +1,110 @@
+{
+  "schema": "dh2-active-scene-attachment-selector-catalog-v1",
+  "assets_root": "work\\cache-recovery\\extracted\\com.gameloft.android.GAND.GloftD2SS\\files",
+  "bdae_files_scanned": 2901,
+  "files_with_visual_scene_table": 1563,
+  "type_6_scene_references": 1563,
+  "matched_named_visual_scenes": 1563,
+  "files_with_selected_visual_scene": 1563,
+  "recursive_snode_records": 21472,
+  "attachment_records": 11648,
+  "selector_counts": {
+    "1": 74,
+    "2": 383,
+    "3": 10444,
+    "4": 182,
+    "9": 415,
+    "12": 149,
+    "13": 1
+  },
+  "selectors_5_through_8_present": false,
+  "selector_13_observations": [
+    {
+      "asset_path": "data/3d/characters/prince/prince_modular.bdae",
+      "asset_size": 3207072,
+      "asset_sha256": "7e998e60bdfcbc9237c9867bd8de146f6d59bc9f8c9c028cd4d2391f460f0b3e",
+      "scene": {
+        "root_scene_entry_offset": "0x6ae84",
+        "root_scene_entry_tag": 6,
+        "root_scene_reference_offset": "0x6ae8c",
+        "root_scene_name_field_offset": "0x6ae90",
+        "requested_name": "prince_modular.max",
+        "visual_scene_descriptor_offset": "0x65bb8",
+        "visual_scene_name_offset": "0xf9cc",
+        "visual_scene_name": "prince_modular.max"
+      },
+      "node_offset": "0x65c18",
+      "node_plus_0x48_raw_word": "0x0",
+      "attachment_array_offset": "0x66668",
+      "attachment_record_offset": "0x66668",
+      "selector": 13,
+      "payload_pointer_field_offset": "0x6666c",
+      "payload_pointer_is_fixup": true,
+      "payload_offset": "0x66670",
+      "payload_words": {
+        "offset_0": 4,
+        "offset_4_pointer_field": "0x66674",
+        "offset_4_pointer_is_fixup": true,
+        "offset_4_target": "0x66680",
+        "offset_8": 0,
+        "offset_0_plus_offset_8": 4
+      },
+      "array_entries": [
+        {
+          "offset": "0x66680",
+          "stride_bytes": 16,
+          "words": [
+            "0x1001c",
+            "0x10028",
+            "0x2b",
+            "0x666c0"
+          ],
+          "word_1_pointer_field_is_fixup": true,
+          "word_1_string_offset": "0x10028",
+          "word_1_string": "#MC_Feet__naked-mesh-skin"
+        },
+        {
+          "offset": "0x66690",
+          "stride_bytes": 16,
+          "words": [
+            "0x106b4",
+            "0x106c4",
+            "0x2b",
+            "0x67860"
+          ],
+          "word_1_pointer_field_is_fixup": true,
+          "word_1_string_offset": "0x106c4",
+          "word_1_string": "#MC_Hands__naked-mesh-skin"
+        },
+        {
+          "offset": "0x666a0",
+          "stride_bytes": 16,
+          "words": [
+            "0x10d54",
+            "0x10d60",
+            "0x2b",
+            "0x68a84"
+          ],
+          "word_1_pointer_field_is_fixup": true,
+          "word_1_string_offset": "0x10d60",
+          "word_1_string": "#MC_Head__naked-mesh-skin"
+        },
+        {
+          "offset": "0x666b0",
+          "stride_bytes": 16,
+          "words": [
+            "0x11398",
+            "0x113a8",
+            "0x2b",
+            "0x69c14"
+          ],
+          "word_1_pointer_field_is_fixup": true,
+          "word_1_string_offset": "0x113a8",
+          "word_1_string": "#MC_Torso__naked-mesh-skin"
+        }
+      ]
+    }
+  ],
+  "traversal_errors": {},
+  "scope_note": "Read-only traversal of the type-6 root scene selector path and its selected visual-scene node trees. Counts do not assign names or semantics to selector values; no complete serialized C++ record layout is claimed."
+}

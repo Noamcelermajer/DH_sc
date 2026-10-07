@@ -1,0 +1,423 @@
+{
+  "schema": "dh2-shader-attribute-aliases-v1",
+  "description": "Exact ASCII keys initialized by glitch::video::guessShaderVertexAttribute; engine_code is the returned numeric value passed as E_VERTEX_ATTRIBUTE by the linked-shader and stream paths. Hashes cover each key plus NUL terminator.",
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "normalization_observed": "The classifier lowercases the input and, when it contains a dot, looks up the suffix after the first dot. Exact runtime behavior remains device-unexecuted.",
+  "unmapped_codes": [
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "aliases": [
+    {
+      "name": "pos",
+      "engine_code": 0,
+      "elf_va": "0x008eb848",
+      "range_size": 4,
+      "elf_file_offset": 9353288,
+      "pt_load_segment_index": 0,
+      "range_sha256": "050a98657e5b4ce60832129ba999722d755253cacc035dfce5f35deacd4072cd"
+    },
+    {
+      "name": "position",
+      "engine_code": 0,
+      "elf_va": "0x008c2230",
+      "range_size": 9,
+      "elf_file_offset": 9183792,
+      "pt_load_segment_index": 0,
+      "range_sha256": "0e3bc92db34e1ab84eb1bcfd48ca8c4b18f90f689489c1a463253300af6c5326"
+    },
+    {
+      "name": "vertices",
+      "engine_code": 0,
+      "elf_va": "0x008eb850",
+      "range_size": 9,
+      "elf_file_offset": 9353296,
+      "pt_load_segment_index": 0,
+      "range_sha256": "be1316f56ac51948f529876e97c6ca469f6af76c0da47558f7fb6ac14be7bc8d"
+    },
+    {
+      "name": "normal",
+      "engine_code": 17,
+      "elf_va": "0x008dd180",
+      "range_size": 7,
+      "elf_file_offset": 9294208,
+      "pt_load_segment_index": 0,
+      "range_sha256": "3e4106386be5ad1f3a8daf33e61c948c4f2bced09cf118163345fd38222b563b"
+    },
+    {
+      "name": "normals",
+      "engine_code": 17,
+      "elf_va": "0x008eb860",
+      "range_size": 8,
+      "elf_file_offset": 9353312,
+      "pt_load_segment_index": 0,
+      "range_sha256": "1e8a4b2f988261343635e9c16388d9f8fd603341573a11e39d6f5318ac55f191"
+    },
+    {
+      "name": "tangent",
+      "engine_code": 20,
+      "elf_va": "0x008eb868",
+      "range_size": 8,
+      "elf_file_offset": 9353320,
+      "pt_load_segment_index": 0,
+      "range_sha256": "45d2dead2aece540234845df5b0abc3f4bb8835c06ff76b735a64bab035a3959"
+    },
+    {
+      "name": "tangents",
+      "engine_code": 20,
+      "elf_va": "0x008eb870",
+      "range_size": 9,
+      "elf_file_offset": 9353328,
+      "pt_load_segment_index": 0,
+      "range_sha256": "57313bc529c82c90d9bf9a2aa81684a668b6d674134de2c1ba56e8f52ed991f1"
+    },
+    {
+      "name": "tangent0",
+      "engine_code": 20,
+      "elf_va": "0x008eb880",
+      "range_size": 9,
+      "elf_file_offset": 9353344,
+      "pt_load_segment_index": 0,
+      "range_sha256": "15c8fb0e8f7a65be9ca56a53c758379d0027a728683bdf39d5dfc0e16ae61b5d"
+    },
+    {
+      "name": "tangent1",
+      "engine_code": 21,
+      "elf_va": "0x008eb890",
+      "range_size": 9,
+      "elf_file_offset": 9353360,
+      "pt_load_segment_index": 0,
+      "range_sha256": "d735be99ff75f12bd7cb05fe6de25fa4935baafd3cff6fe4678de07cc35a8fdb"
+    },
+    {
+      "name": "tangent2",
+      "engine_code": 22,
+      "elf_va": "0x008eb8a0",
+      "range_size": 9,
+      "elf_file_offset": 9353376,
+      "pt_load_segment_index": 0,
+      "range_sha256": "260d4e0c9153b8b66b198bd09c6cc74705ab13df4d55c52567d803401f0a823b"
+    },
+    {
+      "name": "tangent3",
+      "engine_code": 23,
+      "elf_va": "0x008eb8b0",
+      "range_size": 9,
+      "elf_file_offset": 9353392,
+      "pt_load_segment_index": 0,
+      "range_sha256": "bc73c23f33e745c6ffcedec012d668bbd349ecf5e94370c402e1941831961da6"
+    },
+    {
+      "name": "binormal",
+      "engine_code": 24,
+      "elf_va": "0x008eb8c0",
+      "range_size": 9,
+      "elf_file_offset": 9353408,
+      "pt_load_segment_index": 0,
+      "range_sha256": "775fb9f86f34c3b54393f29ef411c9016e499c0edb291ee17eb78d4c91d3199d"
+    },
+    {
+      "name": "binormals",
+      "engine_code": 24,
+      "elf_va": "0x008eb8d0",
+      "range_size": 10,
+      "elf_file_offset": 9353424,
+      "pt_load_segment_index": 0,
+      "range_sha256": "654d752f387e235eeaa2e7bd4e7c543de085fb341f3613f16dac42d07a11e2f5"
+    },
+    {
+      "name": "binormal0",
+      "engine_code": 24,
+      "elf_va": "0x008eb8e0",
+      "range_size": 10,
+      "elf_file_offset": 9353440,
+      "pt_load_segment_index": 0,
+      "range_sha256": "06eada07a3f8537bc0914239267af85343f500e5d44b263ed9a592e91c32a672"
+    },
+    {
+      "name": "binormal1",
+      "engine_code": 25,
+      "elf_va": "0x008eb8f0",
+      "range_size": 10,
+      "elf_file_offset": 9353456,
+      "pt_load_segment_index": 0,
+      "range_sha256": "de67fde903743f27405935a775144a04afa090d45e95239a442efb7299710bac"
+    },
+    {
+      "name": "binormal2",
+      "engine_code": 26,
+      "elf_va": "0x008eb900",
+      "range_size": 10,
+      "elf_file_offset": 9353472,
+      "pt_load_segment_index": 0,
+      "range_sha256": "63488790ad4aa4be903810b4d2703da7f4a0bfdd94fd11cec5eec980b9599a22"
+    },
+    {
+      "name": "binormal3",
+      "engine_code": 27,
+      "elf_va": "0x008eb910",
+      "range_size": 10,
+      "elf_file_offset": 9353488,
+      "pt_load_segment_index": 0,
+      "range_sha256": "f6b979b2ce76885c560055989471dbd871f00f1b83f37ff604f440dfc2850e8f"
+    },
+    {
+      "name": "diffuse",
+      "engine_code": 18,
+      "elf_va": "0x008eb920",
+      "range_size": 8,
+      "elf_file_offset": 9353504,
+      "pt_load_segment_index": 0,
+      "range_sha256": "a987e04c447aac3c988448ba083da45495b10c0d3506620a152b530825414ee3"
+    },
+    {
+      "name": "color",
+      "engine_code": 18,
+      "elf_va": "0x008e2b68",
+      "range_size": 6,
+      "elf_file_offset": 9317224,
+      "pt_load_segment_index": 0,
+      "range_sha256": "d0a30ea822d7c64b1b2ecf30d97a6244ca5d8a9e7b4a9b52822d01e5d54b3ac2"
+    },
+    {
+      "name": "color0",
+      "engine_code": 18,
+      "elf_va": "0x008eb928",
+      "range_size": 7,
+      "elf_file_offset": 9353512,
+      "pt_load_segment_index": 0,
+      "range_sha256": "013639764a4051b3f8e3243ced3c3492b4751a913367b1542371e8794242e81d"
+    },
+    {
+      "name": "color1",
+      "engine_code": 19,
+      "elf_va": "0x008eb930",
+      "range_size": 7,
+      "elf_file_offset": 9353520,
+      "pt_load_segment_index": 0,
+      "range_sha256": "1a79030e9d2dc2a3bd3a49c4e4c5ff3c1dd6ac8eeab1558e0038b375d5bda972"
+    },
+    {
+      "name": "secondarycolor",
+      "engine_code": 19,
+      "elf_va": "0x008eb938",
+      "range_size": 15,
+      "elf_file_offset": 9353528,
+      "pt_load_segment_index": 0,
+      "range_sha256": "52e5df3f38a978f49fbfa6ee00e0fb83e818c29876bc30eae6f49d50898c687d"
+    },
+    {
+      "name": "alternatecolor",
+      "engine_code": 19,
+      "elf_va": "0x008eb948",
+      "range_size": 15,
+      "elf_file_offset": 9353544,
+      "pt_load_segment_index": 0,
+      "range_sha256": "cb3bcab47264f0f5e0fbaf21bf41b6f6e8d04283e197dae82ce8c9a8d2704ebd"
+    },
+    {
+      "name": "coord",
+      "engine_code": 1,
+      "elf_va": "0x008eb958",
+      "range_size": 6,
+      "elf_file_offset": 9353560,
+      "pt_load_segment_index": 0,
+      "range_sha256": "47f31733968185f3ccea59f9ede2677198ac8cc421a4dc289ead8a8c64073dca"
+    },
+    {
+      "name": "coord0",
+      "engine_code": 1,
+      "elf_va": "0x008eb960",
+      "range_size": 7,
+      "elf_file_offset": 9353568,
+      "pt_load_segment_index": 0,
+      "range_sha256": "b06dd4d985cb5351438bdfcc466c44821eb63f04b293991ca8a883e48a85421d"
+    },
+    {
+      "name": "coord1",
+      "engine_code": 2,
+      "elf_va": "0x008eb968",
+      "range_size": 7,
+      "elf_file_offset": 9353576,
+      "pt_load_segment_index": 0,
+      "range_sha256": "cb0eb1c73a78fc3b75c3a8b1117d0583c76a984d46fd76c4556e539ba37fb41c"
+    },
+    {
+      "name": "coord2",
+      "engine_code": 3,
+      "elf_va": "0x008eb970",
+      "range_size": 7,
+      "elf_file_offset": 9353584,
+      "pt_load_segment_index": 0,
+      "range_sha256": "b664b5efb20663a8cb06a42977d25abf5fe73c07d18cb539d0a6a624a6e51bf2"
+    },
+    {
+      "name": "coord3",
+      "engine_code": 4,
+      "elf_va": "0x008eb978",
+      "range_size": 7,
+      "elf_file_offset": 9353592,
+      "pt_load_segment_index": 0,
+      "range_sha256": "dfb290fcc9cae339fa849a54d09612dd4de71de14a59163b9522066820987825"
+    },
+    {
+      "name": "coord4",
+      "engine_code": 5,
+      "elf_va": "0x008eb980",
+      "range_size": 7,
+      "elf_file_offset": 9353600,
+      "pt_load_segment_index": 0,
+      "range_sha256": "33b6ed025f6c5f7e348f195b28c5702629500a4bda07e1eeb1424a59e7e93d0d"
+    },
+    {
+      "name": "coord5",
+      "engine_code": 6,
+      "elf_va": "0x008eb988",
+      "range_size": 7,
+      "elf_file_offset": 9353608,
+      "pt_load_segment_index": 0,
+      "range_sha256": "8ca46d07d111cb9aa9c9760a21429f6dd4e0a1f0a1f4e3006c7c0041c1218282"
+    },
+    {
+      "name": "coord6",
+      "engine_code": 7,
+      "elf_va": "0x008eb990",
+      "range_size": 7,
+      "elf_file_offset": 9353616,
+      "pt_load_segment_index": 0,
+      "range_sha256": "808e5bfcf07dcd3c9e741ffdf319f63d9d29903b74bc9ee6f6c3ceb03203d811"
+    },
+    {
+      "name": "coord7",
+      "engine_code": 8,
+      "elf_va": "0x008eb998",
+      "range_size": 7,
+      "elf_file_offset": 9353624,
+      "pt_load_segment_index": 0,
+      "range_sha256": "b0c21752952d6f51ab074494bad4ee1e00afade460cd13c49e1581da5397c823"
+    },
+    {
+      "name": "texcoord",
+      "engine_code": 1,
+      "elf_va": "0x008eb9a0",
+      "range_size": 9,
+      "elf_file_offset": 9353632,
+      "pt_load_segment_index": 0,
+      "range_sha256": "e69cb07fc53c4dd218452b2ff36f22b8c6ab84c7f31d3e1930459382e4a82ac3"
+    },
+    {
+      "name": "texcoord0",
+      "engine_code": 1,
+      "elf_va": "0x008eb9b0",
+      "range_size": 10,
+      "elf_file_offset": 9353648,
+      "pt_load_segment_index": 0,
+      "range_sha256": "b3d7a3cf9db759912fc4cb983fd10e9077004f1ff8b1cb35c384b6256da5c932"
+    },
+    {
+      "name": "texcoord1",
+      "engine_code": 2,
+      "elf_va": "0x008eb9c0",
+      "range_size": 10,
+      "elf_file_offset": 9353664,
+      "pt_load_segment_index": 0,
+      "range_sha256": "89657fd12be03bc2dee844fb5ad07a8cd22f72b51dfebc560fe6feecc67f528b"
+    },
+    {
+      "name": "texcoord2",
+      "engine_code": 3,
+      "elf_va": "0x008eb9d0",
+      "range_size": 10,
+      "elf_file_offset": 9353680,
+      "pt_load_segment_index": 0,
+      "range_sha256": "927a654377e0e038d7266206f62f29ba77f7b074cd712ca2167d60d5139468a8"
+    },
+    {
+      "name": "texcoord3",
+      "engine_code": 4,
+      "elf_va": "0x008eb9e0",
+      "range_size": 10,
+      "elf_file_offset": 9353696,
+      "pt_load_segment_index": 0,
+      "range_sha256": "25dc97b7f2889d005d1cb38b6b5f0296ef59356cf2c22c0743581d1fd4eb672d"
+    },
+    {
+      "name": "texcoord4",
+      "engine_code": 5,
+      "elf_va": "0x008eb9f0",
+      "range_size": 10,
+      "elf_file_offset": 9353712,
+      "pt_load_segment_index": 0,
+      "range_sha256": "470c98e6a14e046813343b4d24c6464c39f50b2eae0ec2b0f7a5f77e155d17d3"
+    },
+    {
+      "name": "texcoord5",
+      "engine_code": 6,
+      "elf_va": "0x008eba00",
+      "range_size": 10,
+      "elf_file_offset": 9353728,
+      "pt_load_segment_index": 0,
+      "range_sha256": "ff5511b401811c964959b7b2efb838c979145895405a136255f6da664f405ee3"
+    },
+    {
+      "name": "texcoord6",
+      "engine_code": 7,
+      "elf_va": "0x008eba10",
+      "range_size": 10,
+      "elf_file_offset": 9353744,
+      "pt_load_segment_index": 0,
+      "range_sha256": "e7f370df8c6438ca4e554c2afc300f9931265dc70d2ae029d7c96745fc9d52db"
+    },
+    {
+      "name": "texcoord7",
+      "engine_code": 8,
+      "elf_va": "0x008eba20",
+      "range_size": 10,
+      "elf_file_offset": 9353760,
+      "pt_load_segment_index": 0,
+      "range_sha256": "373a5a927d6ac802f9b2e01f867c84687f7c946a2ba965bc8084bc9da2b15baa"
+    },
+    {
+      "name": "skinweights",
+      "engine_code": 28,
+      "elf_va": "0x008eba30",
+      "range_size": 12,
+      "elf_file_offset": 9353776,
+      "pt_load_segment_index": 0,
+      "range_sha256": "b5ee2c818d6c4614502afe56fbf2d24205f1b699f3a840b18e53b89024e93de9"
+    },
+    {
+      "name": "skinweight",
+      "engine_code": 28,
+      "elf_va": "0x008eba40",
+      "range_size": 11,
+      "elf_file_offset": 9353792,
+      "pt_load_segment_index": 0,
+      "range_sha256": "0708a93cd4a9e74460928a3cf11282ce507e2c50ccd5fd0256c5c6d06508d5a0"
+    },
+    {
+      "name": "skinindices",
+      "engine_code": 29,
+      "elf_va": "0x008eba50",
+      "range_size": 12,
+      "elf_file_offset": 9353808,
+      "pt_load_segment_index": 0,
+      "range_sha256": "0b0078f0c7ee239298e0725f93b221b54b2446abef99ac6f8d8f5cc49f0cc55d"
+    },
+    {
+      "name": "skinindex",
+      "engine_code": 29,
+      "elf_va": "0x008eba60",
+      "range_size": 10,
+      "elf_file_offset": 9353824,
+      "pt_load_segment_index": 0,
+      "range_sha256": "3f9d8f842d050b7087e5ea3ec740ad3011bddebecb40c023ea80749465dab56d"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "source": "symbols/libDungeonHunter2.so/imports.csv",
+  "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "symbols": [
+    {
+      "table": ".dynsym",
+      "index": 19802,
+      "name": "glBindTexture",
+      "type": "STT_FUNC",
+      "binding": "STB_GLOBAL"
+    },
+    {
+      "table": ".dynsym",
+      "index": 30826,
+      "name": "glCompressedTexImage2D",
+      "type": "STT_FUNC",
+      "binding": "STB_GLOBAL"
+    },
+    {
+      "table": ".dynsym",
+      "index": 238,
+      "name": "glCompressedTexSubImage2D",
+      "type": "STT_FUNC",
+      "binding": "STB_GLOBAL"
+    },
+    {
+      "table": ".dynsym",
+      "index": 21628,
+      "name": "glDeleteTextures",
+      "type": "STT_FUNC",
+      "binding": "STB_GLOBAL"
+    },
+    {
+      "table": ".dynsym",
+      "index": 253,
+      "name": "glDrawArrays",
+      "type": "STT_FUNC",
+      "binding": "STB_GLOBAL"
+    },
+    {
+      "table": ".dynsym",
+      "index": 16054,
+      "name": "glDrawElements",
+      "type": "STT_FUNC",
+      "binding": "STB_GLOBAL"
+    },
+    {
+      "table": ".dynsym",
+      "index": 22195,
+      "name": "glGenTextures",
+      "type": "STT_FUNC",
+      "binding": "STB_GLOBAL"
+    },
+    {
+      "table": ".dynsym",
+      "index": 7979,
+      "name": "glGetError",
+      "type": "STT_FUNC",
+      "binding": "STB_GLOBAL"
+    },
+    {
+      "table": ".dynsym",
+      "index": 7609,
+      "name": "glPixelStorei",
+      "type": "STT_FUNC",
+      "binding": "STB_GLOBAL"
+    },
+    {
+      "table": ".dynsym",
+      "index": 5299,
+      "name": "glTexImage2D",
+      "type": "STT_FUNC",
+      "binding": "STB_GLOBAL"
+    },
+    {
+      "table": ".dynsym",
+      "index": 26913,
+      "name": "glTexSubImage2D",
+      "type": "STT_FUNC",
+      "binding": "STB_GLOBAL"
+    },
+    {
+      "table": ".dynsym",
+      "index": 21028,
+      "name": "glUseProgram",
+      "type": "STT_FUNC",
+      "binding": "STB_GLOBAL"
+    }
+  ]
+}

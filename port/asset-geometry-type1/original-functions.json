@@ -1,0 +1,190 @@
+{
+  "component": "Type-1 geometry route and alternative-consumer audit",
+  "original_apk": "Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "original_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "original_library": "libDungeonHunter2.so",
+  "original_library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "verified_source": {
+    "apk_entry": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "entry_size": 15938284
+  },
+  "pt_load_mapping": {
+    "elf_class": "ELF32 little-endian ARM",
+    "file_backed_load_segments": [
+      {
+        "p_offset": "0x00000000",
+        "p_vaddr": "0x00000000",
+        "p_filesz": "0x00955130",
+        "p_memsz": "0x00955130"
+      },
+      {
+        "p_offset": "0x00955130",
+        "p_vaddr": "0x00956130",
+        "p_filesz": "0x0004954c",
+        "p_memsz": "0x000df500"
+      }
+    ],
+    "recorded_function_mapping": "All function ranges listed here fall in PT_LOAD p_offset=0x00000000, p_vaddr=0x00000000, p_filesz=0x00955130; file_offset equals ELF VA.",
+    "verification": "Every recovered listing was parsed to bytes and compared byte-for-byte to its mapped slice in the library read directly from the APK."
+  },
+  "assembly_evidence": "reference/geometry-route-functions.asm",
+  "functions": [
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase11getGeometryEi",
+      "demangled": "glitch::collada::CColladaDatabase::getGeometry(int) const",
+      "elf_address": "0x0060e41c",
+      "size": 24,
+      "sha256": "3689e7cdc7ffb4a9ee331ad50e89c3db562dd17485b4f3be5b01dc6c2126aba6",
+      "file_offset": "0x0060e41c",
+      "scope": "Resolves the geometry-table entry for an index; it does not interpret the payload.",
+      "source_assembly": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm"
+    },
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase17constructGeometryEPNS_5video12IVideoDriverEPNS0_9SGeometryE",
+      "demangled": "glitch::collada::CColladaDatabase::constructGeometry(glitch::video::IVideoDriver*, glitch::collada::SGeometry*) const",
+      "elf_address": "0x0060e634",
+      "size": 132,
+      "sha256": "d7c22aecae934a74d1038d0c772e343ec9ce9e628d8534e4cd136978f70292c2",
+      "file_offset": "0x0060e634",
+      "scope": "Central dispatcher: only type 0 reaches the factory callback; every nonzero type stores null and returns.",
+      "source_assembly": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm"
+    },
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase17constructGeometryEPNS_5video12IVideoDriverEi",
+      "demangled": "glitch::collada::CColladaDatabase::constructGeometry(glitch::video::IVideoDriver*, int) const",
+      "elf_address": "0x0060e6b8",
+      "size": 56,
+      "sha256": "6290b2f8efecec3d58695d254c6a7b8cf50eb9977ec35c9ec16d2cfbecc0989a",
+      "file_offset": "0x0060e6b8",
+      "scope": "Resolves by index and forwards the returned SGeometry* to the central dispatcher.",
+      "source_assembly": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm"
+    },
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase11getGeometryEPKc",
+      "demangled": "glitch::collada::CColladaDatabase::getGeometry(char const*) const",
+      "elf_address": "0x0061aa48",
+      "size": 96,
+      "sha256": "2a47c4475278648579c56f0283d3269daa4e0c458caa517d12dc21eb42dd61bf",
+      "file_offset": "0x0061aa48",
+      "scope": "Resolves a geometry entry by name; it does not interpret the payload.",
+      "source_assembly": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm"
+    },
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase17constructGeometryEPNS_5video12IVideoDriverEPKc",
+      "demangled": "glitch::collada::CColladaDatabase::constructGeometry(glitch::video::IVideoDriver*, char const*) const",
+      "elf_address": "0x0061aaa8",
+      "size": 56,
+      "sha256": "3370aa9d2181cb6496531d5ff124da4cb0612df2b9927811689c57630acff931",
+      "file_offset": "0x0061aaa8",
+      "scope": "Resolves by name and forwards the returned SGeometry* to the central dispatcher.",
+      "source_assembly": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm"
+    },
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase17constructGeometryEPNS_5video12IVideoDriverEPKcS6_",
+      "demangled": "glitch::collada::CColladaDatabase::constructGeometry(glitch::video::IVideoDriver*, char const*, char const*) const",
+      "elf_address": "0x0061aae0",
+      "size": 328,
+      "sha256": "4d137a9a8d9f40a0a218d165ef8f4da9019e0f13f131808bf667d6627accaffb",
+      "file_offset": "0x0061aae0",
+      "scope": "Opens/creates a temporary database from a named resource, then calls the by-name overload; it adds no payload decoder.",
+      "source_assembly": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm"
+    },
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase17constructGeometryEPNS_5video12IVideoDriverEPNS0_17SInstanceGeometryEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CColladaDatabase::constructGeometry(glitch::video::IVideoDriver*, glitch::collada::SInstanceGeometry*, glitch::collada::CRootSceneNode*) const",
+      "elf_address": "0x0061aeb8",
+      "size": 500,
+      "sha256": "7f6b5abcb0cc7417df2566e713f3b0665738657101d6c7785aa84d1ab36741c4",
+      "file_offset": "0x0061aeb8",
+      "scope": "Instance-geometry route: resolves geometry by name or named resource through the same gated overloads, then attaches materials.",
+      "source_assembly": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada15CColladaFactory21getVertexBufferConfigERKNS0_16CColladaDatabaseEPNS0_9SGeometryE",
+      "demangled": "glitch::collada::CColladaFactory::getVertexBufferConfig(glitch::collada::CColladaDatabase const&, glitch::collada::SGeometry*)",
+      "elf_address": "0x0062ff08",
+      "size": 24,
+      "sha256": "b1e3ef70ad907e3b00b0053830ac8eea90044906e9b6de1e3158bf386de1c765",
+      "file_offset": "0x0062ff08",
+      "scope": "Writes fixed buffer configuration fields and does not read SGeometry payload fields.",
+      "source_assembly": "glitch_collada_CColladaFactory-db06bc565b1a-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada15CColladaFactory20getIndexBufferConfigERKNS0_16CColladaDatabaseEPNS0_9SGeometryE",
+      "demangled": "glitch::collada::CColladaFactory::getIndexBufferConfig(glitch::collada::CColladaDatabase const&, glitch::collada::SGeometry*)",
+      "elf_address": "0x0062ff20",
+      "size": 24,
+      "sha256": "b1e3ef70ad907e3b00b0053830ac8eea90044906e9b6de1e3158bf386de1c765",
+      "file_offset": "0x0062ff20",
+      "scope": "Writes fixed buffer configuration fields and does not read SGeometry payload fields.",
+      "source_assembly": "glitch_collada_CColladaFactory-db06bc565b1a-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada15CColladaFactory20isSharingMeshBuffersERKNS0_16CColladaDatabaseEPNS0_9SGeometryE",
+      "demangled": "glitch::collada::CColladaFactory::isSharingMeshBuffers(glitch::collada::CColladaDatabase const&, glitch::collada::SGeometry*)",
+      "elf_address": "0x0062ff38",
+      "size": 8,
+      "sha256": "007f34a6c3441b0240da53f253e513b959105da2d8803255e1856aa48f48db47",
+      "file_offset": "0x0062ff38",
+      "scope": "Returns constant true; no payload handling.",
+      "source_assembly": "glitch_collada_CColladaFactory-db06bc565b1a-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada15CColladaFactory14createGeometryERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverEPNS0_9SGeometryE",
+      "demangled": "glitch::collada::CColladaFactory::createGeometry(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, glitch::collada::SGeometry*)",
+      "elf_address": "0x00631924",
+      "size": 180,
+      "sha256": "777953f96b7c6fcdf55f632a73c7674c74db17907d534ee507c5369f48188826",
+      "file_offset": "0x00631924",
+      "scope": "Allocates CMesh from the supplied SGeometry and has no type-1 branch; normal database construction reaches it only after the central type-0 gate.",
+      "source_assembly": "glitch_collada_CColladaFactory-db06bc565b1a-001.asm"
+    },
+    {
+      "original_symbol": "_ZN14ColladaFactory14createGeometryERKN6glitch7collada16CColladaDatabaseEPNS0_5video12IVideoDriverEPNS1_9SGeometryE",
+      "demangled": "ColladaFactory::createGeometry application adapter",
+      "elf_address": "0x00350794",
+      "size": 36,
+      "sha256": "a222d04222de638c66ce105865e2a7ddadaa223352eee68db718dd69124e4329",
+      "file_offset": "0x00350794",
+      "scope": "Thin app-side wrapper that delegates to the engine CColladaFactory implementation; it contains no decoder.",
+      "source_assembly": "ColladaFactory-98195ab58b5b-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada13CMorphingMesh15instanciateMeshEPNS_5video12IVideoDriverEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CMorphingMesh::instanciateMesh(glitch::video::IVideoDriver*, glitch::collada::CRootSceneNode*)",
+      "elf_address": "0x0064b700",
+      "size": 712,
+      "sha256": "f40325c6bf01c984a1de96b3419a9380c60b10a5603736614b488d2eb69b21f5",
+      "file_offset": "0x0064b700",
+      "scope": "Walks the runtime morph geometry-pointer array and calls the central SGeometry dispatcher at 0x0064b81c for each entry.",
+      "source_assembly": "glitch_collada_CMorphingMesh-832437b81c01-001.asm"
+    }
+  ],
+  "related_existing_range": {
+    "original_symbol": "_ZN6glitch7collada5CMeshC1ERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverERKNS0_9SGeometryERKNS0_13SBufferConfigESD_b",
+    "demangled": "glitch::collada::CMesh::CMesh(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, glitch::collada::SGeometry const&, glitch::collada::SBufferConfig const&, glitch::collada::SBufferConfig const&, bool)",
+    "elf_address": "0x00645588",
+    "size": 1504,
+    "sha256": "f84f873b135b3507caae483dfa74e54d829dd0a31f9a517049e3c999d13cea0a",
+    "existing_evidence": "port/asset-payloads/original-functions.json and port/asset-payloads/reference/original-functions.asm",
+    "scope": "Existing standard mesh constructor evidence; it consumes SGeometry only after factory dispatch and does not implement a type-1 alternative."
+  },
+  "symbol_search": {
+    "method": "Searched the original ELF symbol table for demangled symbols containing SGeometry, then inspected all constructor/resolver routes that feed the factory.",
+    "named_sgeometry_consumers": [
+      "CColladaDatabase::constructGeometry(IVideoDriver*, SGeometry*)",
+      "CColladaFactory::getVertexBufferConfig(CColladaDatabase const&, SGeometry*)",
+      "CColladaFactory::getIndexBufferConfig(CColladaDatabase const&, SGeometry*)",
+      "CColladaFactory::isSharingMeshBuffers(CColladaDatabase const&, SGeometry*)",
+      "CColladaFactory::createGeometry(CColladaDatabase const&, IVideoDriver*, SGeometry*)",
+      "CMesh::CMesh(CColladaDatabase const&, IVideoDriver*, SGeometry const&, SBufferConfig const&, SBufferConfig const&, bool)",
+      "ColladaFactory::createGeometry(CColladaDatabase const&, IVideoDriver*, SGeometry*) [application adapter]"
+    ],
+    "result": "No separate runtime type-1 parser or producer was found in these named routes. This does not exclude an unlabelled raw-pointer consumer or an authoring pipeline absent from the APK."
+  },
+  "uncertainty": [
+    "The type-1 payload schema, exact extent, and field variants remain unknown.",
+    "The nine type-1 records remain unsupported. No parser was added.",
+    "The symbol audit is scoped to the APK native library and its named SGeometry routes; external authoring tools and unlabelled raw-pointer code are outside this evidence."
+  ]
+}

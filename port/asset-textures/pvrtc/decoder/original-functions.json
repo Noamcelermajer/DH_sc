@@ -1,0 +1,51 @@
+{
+  "component": "Bounded source port of the embedded PVRTC decoder; static reconstruction only",
+  "original_apk": "Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "original_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "original_library": "libDungeonHunter2.so",
+  "original_library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "executable_pt_load": {
+    "p_vaddr": "0x0",
+    "p_offset": "0x0",
+    "p_filesz": "0x955130",
+    "mapping": "file_offset = p_offset + (elf_va - p_vaddr); for these records file_offset equals elf_va"
+  },
+  "assembly_evidence": "../reference/pvrtc-call-path.asm; exact ARM listings already included in the parent PVRTC evidence file",
+  "functions": [
+    {
+      "symbol": "PVRTCDecompress",
+      "mangled": "_Z15PVRTCDecompressPKviiiPh",
+      "elf_va": "0x0069f768",
+      "file_offset": "0x0069f768",
+      "size_bytes": 2172,
+      "end_exclusive": "0x0069ffe4",
+      "sha256": "ffd425909204ffb18696405f325e67f1e67d2698ed92599b7c0d4c7b3278c3b8",
+      "port_scope": "Mode-dependent 2/4-bpp word geometry, endpoint decode, modulation, interpolation, twiddled reads, and four-byte pixel writes; bounded port accepts only complete power-of-two grids of at least two words per axis."
+    },
+    {
+      "symbol": "InterpolateColours",
+      "mangled": "_ZL18InterpolateColoursPKiS0_S0_S0_iiiPi",
+      "elf_va": "0x0069f570",
+      "file_offset": "0x0069f570",
+      "size_bytes": 388,
+      "end_exclusive": "0x0069f6f4",
+      "sha256": "d18bed21154e148a67c2a6d3d45728ef06c8cc928a85c44bc0e7c01208b880e9",
+      "port_scope": "Fixed-point color interpolation arithmetic used by the source port."
+    },
+    {
+      "symbol": "TwiddleUV",
+      "mangled": "_ZL9TwiddleUVmmmm",
+      "elf_va": "0x0069f6f4",
+      "file_offset": "0x0069f6f4",
+      "size_bytes": 116,
+      "end_exclusive": "0x0069f768",
+      "sha256": "f28bd061bc004d7ea939bf62be3765af89f86c57771ffb37416123d800394018",
+      "port_scope": "Interleaved word-address calculation used for compressed source reads."
+    }
+  ],
+  "provenance_notes": [
+    "Each range is within the executable PT_LOAD and is hashed over exactly the declared bytes.",
+    "The assembly evidence is byte-matched to the APK library in the parent checkpoint.",
+    "This manifest identifies APK target ranges; it does not assert source or runtime equivalence."
+  ]
+}

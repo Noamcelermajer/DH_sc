@@ -1,0 +1,195 @@
+{
+  "schema": "dh2-engine-audio-source-path-provenance-v1",
+  "source_apk": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "source_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "source_elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "source_elf_size": 15938284,
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "pt_load_mappings": [
+    {
+      "offset": 0,
+      "vaddr": 0,
+      "filesz": 9785648,
+      "memsz": 9785648,
+      "flags": 5
+    },
+    {
+      "offset": 9785648,
+      "vaddr": 9789744,
+      "filesz": 300364,
+      "memsz": 914688,
+      "flags": 6
+    }
+  ],
+  "functions": [
+    {
+      "key": "vox_file_adapter_sync",
+      "symbol": "vox::VoxUtils::LoadDataSourceFromFile(char const*, int, int)",
+      "mangled": "_ZN3vox8VoxUtils22LoadDataSourceFromFileEPKcii",
+      "elf_va": "0x0086f558",
+      "range_size": 72,
+      "elf_file_offset": 8844632,
+      "function_bytes_sha256": "60fffc084b28bc52d4b51dd50cbb5327978e27b1cc717bbce27c412b552ea824",
+      "source_assembly": "vox_VoxUtils-47de2598a2aa-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "key": "vox_file_adapter_flags",
+      "symbol": "vox::VoxUtils::LoadDataSourceFromFileEx(char const*, int, vox::VoxSourceLoadingFlags, int)",
+      "mangled": "_ZN3vox8VoxUtils24LoadDataSourceFromFileExEPKciNS_21VoxSourceLoadingFlagsEi",
+      "elf_va": "0x0086f5fc",
+      "range_size": 180,
+      "elf_file_offset": 8844796,
+      "function_bytes_sha256": "76b90e27c6a91a0288da805df2a614edcb4468d4f43bab18b8b0303eb4d254d2",
+      "source_assembly": "vox_VoxUtils-47de2598a2aa-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "key": "vox_auto_detect_decoder",
+      "symbol": "vox::VoxUtils::LoadDataSourceFromFileAutoDetectDecoder(char const*, int)",
+      "mangled": "_ZN3vox8VoxUtils39LoadDataSourceFromFileAutoDetectDecoderEPKci",
+      "elf_va": "0x0086f6b0",
+      "range_size": 560,
+      "elf_file_offset": 8844976,
+      "function_bytes_sha256": "74684b3dd20ec2faff7b78234c3b2725e8be4c05ccc009e54aa41df827ed8794",
+      "source_assembly": "vox_VoxUtils-47de2598a2aa-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "key": "vox_auto_detect_decoder_flags",
+      "symbol": "vox::VoxUtils::LoadDataSourceFromFileAutoDetectDecoderEx(char const*, int, vox::VoxSourceLoadingFlags, vox::DataHandleUserData*)",
+      "mangled": "_ZN3vox8VoxUtils41LoadDataSourceFromFileAutoDetectDecoderExEPKciNS_21VoxSourceLoadingFlagsEPNS_18DataHandleUserDataE",
+      "elf_va": "0x0086f8e0",
+      "range_size": 588,
+      "elf_file_offset": 8845536,
+      "function_bytes_sha256": "07715d06cfb121b1037a4e8e69ec47e9d4c0d62e121ce008d15df735ee5f491f",
+      "source_assembly": "vox_VoxUtils-47de2598a2aa-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "key": "engine_load_source_async",
+      "symbol": "vox::VoxEngineInternal::LoadDataSourceAsync(int, void*, int, void*, int, vox::VoxSourceLoadingFlags)",
+      "mangled": "_ZN3vox17VoxEngineInternal19LoadDataSourceAsyncEiPviS1_iNS_21VoxSourceLoadingFlagsE",
+      "elf_va": "0x0086aee8",
+      "range_size": 604,
+      "elf_file_offset": 8826600,
+      "function_bytes_sha256": "a5359574fb3f38e4155149ee30e9b8c8dd60c7d79ddbb9ec3e5bb58d52266247",
+      "source_assembly": "vox_VoxEngineInternal-87edcdaf697c-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "key": "engine_load_source_sync",
+      "symbol": "vox::VoxEngineInternal::LoadDataSource(int, void*, int, void*, int)",
+      "mangled": "_ZN3vox17VoxEngineInternal14LoadDataSourceEiPviS1_i",
+      "elf_va": "0x0086b144",
+      "range_size": 732,
+      "elf_file_offset": 8827204,
+      "function_bytes_sha256": "b2a23c2be622b7c15acb48530c93798f75d7856f370231af3820a992f46c4da2",
+      "source_assembly": "vox_VoxEngineInternal-87edcdaf697c-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "key": "callback_source_upload_data",
+      "symbol": "vox::DriverCallbackSourceInterface::UploadData(void*, int)",
+      "mangled": "_ZN3vox29DriverCallbackSourceInterface10UploadDataEPvi",
+      "elf_va": "0x00890d40",
+      "range_size": 204,
+      "elf_file_offset": 8981824,
+      "function_bytes_sha256": "20481fe8db6cd69ef1ad4aa090864247db5f1af4e3f7da1fe9834c7d8f915167",
+      "source_assembly": "vox_DriverCallbackSourceInterface-530254aaed21-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "key": "callback_source_need_data",
+      "symbol": "vox::DriverCallbackSourceInterface::NeedData()",
+      "mangled": "_ZN3vox29DriverCallbackSourceInterface8NeedDataEv",
+      "elf_va": "0x00890e0c",
+      "range_size": 128,
+      "elf_file_offset": 8982028,
+      "function_bytes_sha256": "f02f8db79c9f380943fb6fbd6d3125fa35bbb3ec6499de8ea801c095293ab837",
+      "source_assembly": "vox_DriverCallbackSourceInterface-530254aaed21-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "key": "callback_source_get_work_data",
+      "symbol": "vox::DriverCallbackSourceInterface::GetWorkData(unsigned char*, int, int)",
+      "mangled": "_ZN3vox29DriverCallbackSourceInterface11GetWorkDataEPhii",
+      "elf_va": "0x008915c0",
+      "range_size": 672,
+      "elf_file_offset": 8984000,
+      "function_bytes_sha256": "1c4932db192e394de943b3921e0dfadc1326c4df4fce90fe3dec85aba7869c57",
+      "source_assembly": "vox_DriverCallbackSourceInterface-530254aaed21-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "key": "callback_source_fill_stereo16",
+      "symbol": "vox::DriverCallbackSourceInterface::FillBufferStereo16(int*, int)",
+      "mangled": "_ZN3vox29DriverCallbackSourceInterface18FillBufferStereo16EPii",
+      "elf_va": "0x00891860",
+      "range_size": 800,
+      "elf_file_offset": 8984672,
+      "function_bytes_sha256": "c5f6abcf3d58f02d2925392cf7340de81f57d97cb5c146604329f73e1aa74c43",
+      "source_assembly": "vox_DriverCallbackSourceInterface-530254aaed21-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "key": "callback_mixer_fill_buffer",
+      "symbol": "vox::DriverCallbackInterface::_FillBuffer(short*, int)",
+      "mangled": "_ZN3vox23DriverCallbackInterface11_FillBufferEPsi",
+      "elf_va": "0x00890548",
+      "range_size": 344,
+      "elf_file_offset": 8979784,
+      "function_bytes_sha256": "364158e08c2be052a7273e3888037cc55065f80d6632e0293c333f49191ffa68",
+      "source_assembly": "vox_DriverCallbackInterface-c5e710cbfcc1-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "key": "driver_android_init_audio_track",
+      "symbol": "vox::DriverAndroid::_InitAT(void*)",
+      "mangled": "_ZN3vox13DriverAndroid7_InitATEPv",
+      "elf_va": "0x0088f660",
+      "range_size": 832,
+      "elf_file_offset": 8975968,
+      "function_bytes_sha256": "c40bcc143dcbba6f8d202276c10d4a40b6c3a9fa86ea44e66b0a4e3f23d0b518",
+      "source_assembly": "vox_DriverAndroid-34a0f8ecbdd8-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "key": "driver_android_audio_callback",
+      "symbol": "vox::DriverAndroid::DoCallbackAT(_jarray*&)",
+      "mangled": "_ZN3vox13DriverAndroid12DoCallbackATERP7_jarray",
+      "elf_va": "0x0088f14c",
+      "range_size": 476,
+      "elf_file_offset": 8974668,
+      "function_bytes_sha256": "6b657d01ba0d183f72b0cffc2278ede0a7c8920d85a45ac21f5df871f47929e9",
+      "source_assembly": "vox_DriverAndroid-34a0f8ecbdd8-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "key": "driver_android_update_audio_thread",
+      "symbol": "vox::DriverAndroid::UpdateThreadedAT(void*)",
+      "mangled": "_ZN3vox13DriverAndroid16UpdateThreadedATEPv",
+      "elf_va": "0x0088f328",
+      "range_size": 628,
+      "elf_file_offset": 8975144,
+      "function_bytes_sha256": "e0654d26aaa865f7b296f54289445ef81175d6d2645b6775de0073d34ec1e9c6",
+      "source_assembly": "vox_DriverAndroid-34a0f8ecbdd8-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    }
+  ],
+  "data_ranges": [
+    {
+      "key": "audio_extension_literals",
+      "elf_va": "0x009117c0",
+      "range_size": 24,
+      "elf_file_offset": 9508800,
+      "range_sha256": "71c7bd1eae508aee99475f2ab10e7180d2bf91cb649aec4133aab8c54fed7b56",
+      "decoded_strings": [
+        ".wav",
+        ".mpc",
+        ".ogg"
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    }
+  ]
+}

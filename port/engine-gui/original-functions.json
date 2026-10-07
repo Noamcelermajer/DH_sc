@@ -1,0 +1,161 @@
+{
+  "schema": "dh2-engine-gui-provenance-v1",
+  "source_apk": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "source_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "source_elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "source_elf_size": 15938284,
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "elf_format": "ELF32 little-endian ARM",
+  "pt_load_segments": [
+    {
+      "index": 1,
+      "p_offset": "0x0",
+      "p_vaddr": "0x0",
+      "p_filesz": 9785648,
+      "p_memsz": 9785648,
+      "p_flags": 5
+    },
+    {
+      "index": 2,
+      "p_offset": "0x955130",
+      "p_vaddr": "0x956130",
+      "p_filesz": 300364,
+      "p_memsz": 914688,
+      "p_flags": 6
+    }
+  ],
+  "file_offset_formula": "p_offset + (elf_va - p_vaddr)",
+  "verification_basis": "Function hashes cover exactly range_size bytes mapped from the PT_LOAD segment shown. The extracted ELF hash matches the ELF member in the supplied APK.",
+  "functions": [
+    {
+      "key": "irr_factory_create_gui_environment",
+      "symbol": "glitch::CIrrFactory::createGUIEnvironment(boost::intrusive_ptr<glitch::io::IFileSystem> const&, glitch::video::IVideoDriver*, glitch::IOSOperator*)",
+      "elf_va": "0x00533f28",
+      "range_size": 56,
+      "elf_file_offset": 5455656,
+      "function_bytes_sha256": "a99224548575a6d45b867ebc8f0f32194eeaf0ab281bd797a7203dbe7382d79f",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/original-functions.asm"
+    },
+    {
+      "key": "gui_environment_constructor",
+      "symbol": "glitch::gui::CGUIEnvironment::CGUIEnvironment(boost::intrusive_ptr<glitch::io::IFileSystem> const&, glitch::video::IVideoDriver*, glitch::IOSOperator*)",
+      "elf_va": "0x0053a0c0",
+      "range_size": 528,
+      "elf_file_offset": 5480640,
+      "function_bytes_sha256": "d10e52599a79b5d22511bc20ba9c44805db9c6096d2d0bb7f5693fbf036ec0de",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/original-functions.asm"
+    },
+    {
+      "key": "gui_environment_destructor",
+      "symbol": "glitch::gui::CGUIEnvironment::~CGUIEnvironment()",
+      "elf_va": "0x00539118",
+      "range_size": 852,
+      "elf_file_offset": 5476632,
+      "function_bytes_sha256": "b0cfd71762771c67a094c7b3b083e617a161736f9514f2f797f83a29f8e72729",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/original-functions.asm"
+    },
+    {
+      "key": "gui_environment_clear",
+      "symbol": "glitch::gui::CGUIEnvironment::clear()",
+      "elf_va": "0x00535658",
+      "range_size": 176,
+      "elf_file_offset": 5461592,
+      "function_bytes_sha256": "55fa327247ef74c071033f2bfefe3ac6ccff052b0f5b0c2455aa9e7a5ad321c2",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/original-functions.asm"
+    },
+    {
+      "key": "gui_environment_root_getter",
+      "symbol": "glitch::gui::CGUIEnvironment::getRootGUIElement()",
+      "elf_va": "0x00535c10",
+      "range_size": 8,
+      "elf_file_offset": 5463056,
+      "function_bytes_sha256": "730161b65050ad4134b938e30095e89ed181a5df29da40c544b8b17d1b656ba1",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/original-functions.asm"
+    },
+    {
+      "key": "gui_environment_focus_getter",
+      "symbol": "glitch::gui::CGUIEnvironment::getFocus() const",
+      "elf_va": "0x00535598",
+      "range_size": 8,
+      "elf_file_offset": 5461400,
+      "function_bytes_sha256": "569523262c267bad0c57adba763e5f68550d0fd8176dade9f3b8f3abb29f3570",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/original-functions.asm"
+    },
+    {
+      "key": "gui_environment_update_hovered",
+      "symbol": "glitch::gui::CGUIEnvironment::updateHoveredElement(glitch::core::position2d<int>)",
+      "elf_va": "0x005374f4",
+      "range_size": 340,
+      "elf_file_offset": 5469428,
+      "function_bytes_sha256": "df1279522c86a4e3a3dcbb545284315fbe25b2b8c7ab0c400a2cd363fac2c6f3",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/original-functions.asm"
+    },
+    {
+      "key": "gui_environment_post_user_event",
+      "symbol": "glitch::gui::CGUIEnvironment::postEventFromUser(glitch::SEvent const&)",
+      "elf_va": "0x00537c5c",
+      "range_size": 336,
+      "elf_file_offset": 5471324,
+      "function_bytes_sha256": "f9d6962684a1d7db9077caf8450846771c1e6191a050f9ea82da75060fcba22e",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/original-functions.asm"
+    },
+    {
+      "key": "gui_environment_draw_all",
+      "symbol": "glitch::gui::CGUIEnvironment::drawAll()",
+      "elf_va": "0x00537648",
+      "range_size": 220,
+      "elf_file_offset": 5469768,
+      "function_bytes_sha256": "639db0e9d2c75058155f69de4a185f8b9be159e42dc77a88851f372a98baaf8f",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/original-functions.asm"
+    },
+    {
+      "key": "gui_element_draw",
+      "symbol": "glitch::gui::IGUIElement::draw()",
+      "elf_va": "0x00534eb8",
+      "range_size": 64,
+      "elf_file_offset": 5459640,
+      "function_bytes_sha256": "6b11d68abfb226ed6acf9a5c5701ccb39c51d7519f21957cbca3e4a44a60c052",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/original-functions.asm"
+    }
+  ],
+  "data_ranges": [
+    {
+      "key": "CGUIEnvironment vtable group",
+      "elf_va": "0x0096cdc8",
+      "range_size": 496,
+      "elf_file_offset": 9878984,
+      "data_bytes_sha256": "20c0b078bacc979f9b9f2bb16937b0bc1669185858906ed87383c42fd144dcf9",
+      "pt_load_segment_index": 2,
+      "listing": "reference/gui-vtable-observation.txt"
+    },
+    {
+      "key": "IGUIElement vtable group",
+      "elf_va": "0x0096cb98",
+      "range_size": 208,
+      "elf_file_offset": 9878424,
+      "data_bytes_sha256": "c914f93e0f57f5b0bb5e37ddcc7cb3232f2daaafead6dc9bfda82bc9bc44dd29",
+      "pt_load_segment_index": 2,
+      "listing": "reference/gui-vtable-observation.txt"
+    }
+  ]
+}

@@ -1,0 +1,1032 @@
+{
+  "schema_version": 1,
+  "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "vtables": [
+    {
+      "name": "position_x_char",
+      "family": "position_x",
+      "channel_type": 2,
+      "scalar_template": "character",
+      "stored_cxx_type": "char",
+      "component_index": 0,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<char>, 0, char>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_32CSceneNodePositionComponentMixinINS1_21CSceneNodePositionXExIcEELi0EcEEEEEE",
+      "elf_virtual_address": "0x009791e8",
+      "elf_file_offset": "0x009781e8",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x009791f0",
+      "vtable_slice_sha256": "0f086064c7d848a33e5267383047478bb5c334be29ac62f88d3e7ef1f66bf304",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x006153d0",
+          "target_va": "0x006153d0",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<char>, 0, char>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x006152b8",
+          "target_va": "0x006152b8",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<char>, 0, char>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00623038",
+          "target_va": "0x00623038",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<char>, 0, char>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x00622fe0",
+          "target_va": "0x00622fe0",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<char>, 0, char>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "position_x_short",
+      "family": "position_x",
+      "channel_type": 2,
+      "scalar_template": "short_integer",
+      "stored_cxx_type": "short",
+      "component_index": 0,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<short>, 0, short>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_32CSceneNodePositionComponentMixinINS1_21CSceneNodePositionXExIsEELi0EsEEEEEE",
+      "elf_virtual_address": "0x00979150",
+      "elf_file_offset": "0x00978150",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00979158",
+      "vtable_slice_sha256": "bfbd279158ff77ca37ec39b8dd996de8e7ca43b4468e515a50b4237b677ad7ad",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x00614fac",
+          "target_va": "0x00614fac",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<short>, 0, short>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x00614e8c",
+          "target_va": "0x00614e8c",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<short>, 0, short>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00622f78",
+          "target_va": "0x00622f78",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<short>, 0, short>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x00622f20",
+          "target_va": "0x00622f20",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<short>, 0, short>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "position_x_float",
+      "family": "position_x",
+      "channel_type": 2,
+      "scalar_template": "floating_point",
+      "stored_cxx_type": "float",
+      "component_index": 0,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<float>, 0, float>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_32CSceneNodePositionComponentMixinINS1_21CSceneNodePositionXExIfEELi0EfEEEEEE",
+      "elf_virtual_address": "0x009790b8",
+      "elf_file_offset": "0x009780b8",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x009790c0",
+      "vtable_slice_sha256": "b91f308d0885f89e097ecb2bc07c1c7defe4d6ccda6651c597b6eed79e8c2bca",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x0061fadc",
+          "target_va": "0x0061fadc",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<float>, 0, float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x0061fa14",
+          "target_va": "0x0061fa14",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<float>, 0, float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00622eb8",
+          "target_va": "0x00622eb8",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<float>, 0, float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x00622e60",
+          "target_va": "0x00622e60",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<float>, 0, float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "position_y_char",
+      "family": "position_y",
+      "channel_type": 3,
+      "scalar_template": "character",
+      "stored_cxx_type": "char",
+      "component_index": 1,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<char>, 1, char>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_32CSceneNodePositionComponentMixinINS1_21CSceneNodePositionYExIcEELi1EcEEEEEE",
+      "elf_virtual_address": "0x009793b0",
+      "elf_file_offset": "0x009783b0",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x009793b8",
+      "vtable_slice_sha256": "0d0024976252ff4fff9d2c3b7d56f70718f2d7f4c19a8afd65840b6706f65215",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x00615c10",
+          "target_va": "0x00615c10",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<char>, 1, char>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x00615af8",
+          "target_va": "0x00615af8",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<char>, 1, char>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00623acc",
+          "target_va": "0x00623acc",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<char>, 1, char>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x00623a74",
+          "target_va": "0x00623a74",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<char>, 1, char>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "position_y_short",
+      "family": "position_y",
+      "channel_type": 3,
+      "scalar_template": "short_integer",
+      "stored_cxx_type": "short",
+      "component_index": 1,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<short>, 1, short>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_32CSceneNodePositionComponentMixinINS1_21CSceneNodePositionYExIsEELi1EsEEEEEE",
+      "elf_virtual_address": "0x00979318",
+      "elf_file_offset": "0x00978318",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00979320",
+      "vtable_slice_sha256": "19d5f23687c9b737bc4631925de03d14ca5c926515c8788b5aaa6ed7efa4a683",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x006157ec",
+          "target_va": "0x006157ec",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<short>, 1, short>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x006156cc",
+          "target_va": "0x006156cc",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<short>, 1, short>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x006231b8",
+          "target_va": "0x006231b8",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<short>, 1, short>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x00623160",
+          "target_va": "0x00623160",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<short>, 1, short>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "position_y_float",
+      "family": "position_y",
+      "channel_type": 3,
+      "scalar_template": "floating_point",
+      "stored_cxx_type": "float",
+      "component_index": 1,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<float>, 1, float>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_32CSceneNodePositionComponentMixinINS1_21CSceneNodePositionYExIfEELi1EfEEEEEE",
+      "elf_virtual_address": "0x00979280",
+      "elf_file_offset": "0x00978280",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00979288",
+      "vtable_slice_sha256": "a8e5dec0f3ed81fbcc9e31155b193ca1aa36470a2a3305a457e66d0e455e0cc2",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x0061fda8",
+          "target_va": "0x0061fda8",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<float>, 1, float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x0061fce0",
+          "target_va": "0x0061fce0",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<float>, 1, float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x006230f8",
+          "target_va": "0x006230f8",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<float>, 1, float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x006230a0",
+          "target_va": "0x006230a0",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<float>, 1, float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "position_z_char",
+      "family": "position_z",
+      "channel_type": 4,
+      "scalar_template": "character",
+      "stored_cxx_type": "char",
+      "component_index": 2,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<char>, 2, char>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_32CSceneNodePositionComponentMixinINS1_21CSceneNodePositionZExIcEELi2EcEEEEEE",
+      "elf_virtual_address": "0x00979578",
+      "elf_file_offset": "0x00978578",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00979580",
+      "vtable_slice_sha256": "b307c1db4c377546986226bf635f9e5f3cf3cae582c11a9880f48e05a9dd14d3",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x006164c8",
+          "target_va": "0x006164c8",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<char>, 2, char>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x006163b4",
+          "target_va": "0x006163b4",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<char>, 2, char>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00623d0c",
+          "target_va": "0x00623d0c",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<char>, 2, char>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x00623cb4",
+          "target_va": "0x00623cb4",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<char>, 2, char>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "position_z_short",
+      "family": "position_z",
+      "channel_type": 4,
+      "scalar_template": "short_integer",
+      "stored_cxx_type": "short",
+      "component_index": 2,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<short>, 2, short>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_32CSceneNodePositionComponentMixinINS1_21CSceneNodePositionZExIsEELi2EsEEEEEE",
+      "elf_virtual_address": "0x009794e0",
+      "elf_file_offset": "0x009784e0",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x009794e8",
+      "vtable_slice_sha256": "331f9c37a4e8fdece11feea74cf114b9adba25752784f95b1f4f1d0384ef9600",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x006160a8",
+          "target_va": "0x006160a8",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<short>, 2, short>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x00615f8c",
+          "target_va": "0x00615f8c",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<short>, 2, short>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00623c4c",
+          "target_va": "0x00623c4c",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<short>, 2, short>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x00623bf4",
+          "target_va": "0x00623bf4",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<short>, 2, short>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "position_z_float",
+      "family": "position_z",
+      "channel_type": 4,
+      "scalar_template": "floating_point",
+      "stored_cxx_type": "float",
+      "component_index": 2,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<float>, 2, float>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_32CSceneNodePositionComponentMixinINS1_21CSceneNodePositionZExIfEELi2EfEEEEEE",
+      "elf_virtual_address": "0x00979448",
+      "elf_file_offset": "0x00978448",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00979450",
+      "vtable_slice_sha256": "e3d35160ed02964b33e3a9d2e10b60c6181bff154b59997ece0adb4f7b32b196",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x00620070",
+          "target_va": "0x00620070",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<float>, 2, float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x0061ffac",
+          "target_va": "0x0061ffac",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<float>, 2, float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00623b8c",
+          "target_va": "0x00623b8c",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<float>, 2, float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x00623b34",
+          "target_va": "0x00623b34",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<float>, 2, float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "scale_x_char",
+      "family": "scale_x",
+      "channel_type": 11,
+      "scalar_template": "character",
+      "stored_cxx_type": "char",
+      "component_index": 0,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<char>, 0, char>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_29CSceneNodeScaleComponentMixinINS1_18CSceneNodeScaleXExIcEELi0EcEEEEEE",
+      "elf_virtual_address": "0x00979908",
+      "elf_file_offset": "0x00978908",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00979910",
+      "vtable_slice_sha256": "8a64ce33384c8e627c4651f749c06391c907ccfbefd0da45fb7cc591ff30c627",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x00616d08",
+          "target_va": "0x00616d08",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<char>, 0, char>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x00616bf0",
+          "target_va": "0x00616bf0",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<char>, 0, char>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x006235d0",
+          "target_va": "0x006235d0",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<char>, 0, char>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x00623578",
+          "target_va": "0x00623578",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<char>, 0, char>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "scale_x_short",
+      "family": "scale_x",
+      "channel_type": 11,
+      "scalar_template": "short_integer",
+      "stored_cxx_type": "short",
+      "component_index": 0,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<short>, 0, short>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_29CSceneNodeScaleComponentMixinINS1_18CSceneNodeScaleXExIsEELi0EsEEEEEE",
+      "elf_virtual_address": "0x00979870",
+      "elf_file_offset": "0x00978870",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00979878",
+      "vtable_slice_sha256": "223916766ec4e60532390c0f9ba8d9f53452fd8217432e5d18cf919add537879",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x006168e4",
+          "target_va": "0x006168e4",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<short>, 0, short>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x006167c4",
+          "target_va": "0x006167c4",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<short>, 0, short>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00623510",
+          "target_va": "0x00623510",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<short>, 0, short>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x006234b8",
+          "target_va": "0x006234b8",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<short>, 0, short>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "scale_x_float",
+      "family": "scale_x",
+      "channel_type": 11,
+      "scalar_template": "floating_point",
+      "stored_cxx_type": "float",
+      "component_index": 0,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<float>, 0, float>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_29CSceneNodeScaleComponentMixinINS1_18CSceneNodeScaleXExIfEELi0EfEEEEEE",
+      "elf_virtual_address": "0x009797d8",
+      "elf_file_offset": "0x009787d8",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x009797e0",
+      "vtable_slice_sha256": "be798a9264da03d97d4fc20963c266103c2316c4be6bee961e8fb1b89427f272",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x0061dd84",
+          "target_va": "0x0061dd84",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<float>, 0, float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x0061dcbc",
+          "target_va": "0x0061dcbc",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<float>, 0, float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00623450",
+          "target_va": "0x00623450",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<float>, 0, float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x006233f8",
+          "target_va": "0x006233f8",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<float>, 0, float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "scale_y_char",
+      "family": "scale_y",
+      "channel_type": 12,
+      "scalar_template": "character",
+      "stored_cxx_type": "char",
+      "component_index": 1,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<char>, 1, char>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_29CSceneNodeScaleComponentMixinINS1_18CSceneNodeScaleYExIcEELi1EcEEEEEE",
+      "elf_virtual_address": "0x00979ad0",
+      "elf_file_offset": "0x00978ad0",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00979ad8",
+      "vtable_slice_sha256": "6a1330fabe34c6011d13bc2bd5aac7e15ba301ce4e92b101f44dd9ea637d7f49",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x00617548",
+          "target_va": "0x00617548",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<char>, 1, char>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x00617430",
+          "target_va": "0x00617430",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<char>, 1, char>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00623810",
+          "target_va": "0x00623810",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<char>, 1, char>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x006237b8",
+          "target_va": "0x006237b8",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<char>, 1, char>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "scale_y_short",
+      "family": "scale_y",
+      "channel_type": 12,
+      "scalar_template": "short_integer",
+      "stored_cxx_type": "short",
+      "component_index": 1,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<short>, 1, short>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_29CSceneNodeScaleComponentMixinINS1_18CSceneNodeScaleYExIsEELi1EsEEEEEE",
+      "elf_virtual_address": "0x00979a38",
+      "elf_file_offset": "0x00978a38",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00979a40",
+      "vtable_slice_sha256": "e92221bb4d63dbe07049031aefe16e3e2d430ed079e7b7ed09b55fd20246065e",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x00617124",
+          "target_va": "0x00617124",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<short>, 1, short>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x00617004",
+          "target_va": "0x00617004",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<short>, 1, short>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00623750",
+          "target_va": "0x00623750",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<short>, 1, short>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x006236f8",
+          "target_va": "0x006236f8",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<short>, 1, short>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "scale_y_float",
+      "family": "scale_y",
+      "channel_type": 12,
+      "scalar_template": "floating_point",
+      "stored_cxx_type": "float",
+      "component_index": 1,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<float>, 1, float>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_29CSceneNodeScaleComponentMixinINS1_18CSceneNodeScaleYExIfEELi1EfEEEEEE",
+      "elf_virtual_address": "0x009799a0",
+      "elf_file_offset": "0x009789a0",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x009799a8",
+      "vtable_slice_sha256": "6febc8f2cffcf9349bba0cd221caa1fe36501fa0db6305b71890ae733a12f731",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x0061e050",
+          "target_va": "0x0061e050",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<float>, 1, float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x0061df88",
+          "target_va": "0x0061df88",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<float>, 1, float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00623690",
+          "target_va": "0x00623690",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<float>, 1, float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x00623638",
+          "target_va": "0x00623638",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<float>, 1, float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "scale_z_char",
+      "family": "scale_z",
+      "channel_type": 13,
+      "scalar_template": "character",
+      "stored_cxx_type": "char",
+      "component_index": 2,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<char>, 2, char>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_29CSceneNodeScaleComponentMixinINS1_18CSceneNodeScaleZExIcEELi2EcEEEEEE",
+      "elf_virtual_address": "0x00979c98",
+      "elf_file_offset": "0x00978c98",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00979ca0",
+      "vtable_slice_sha256": "f5e5f6a64b3502ca47e336f91192a52e286f3683e4c43406ca318ea16540184b",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x00617d80",
+          "target_va": "0x00617d80",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<char>, 2, char>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x00617c6c",
+          "target_va": "0x00617c6c",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<char>, 2, char>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00623338",
+          "target_va": "0x00623338",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<char>, 2, char>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x006232e0",
+          "target_va": "0x006232e0",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<char>, 2, char>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "scale_z_short",
+      "family": "scale_z",
+      "channel_type": 13,
+      "scalar_template": "short_integer",
+      "stored_cxx_type": "short",
+      "component_index": 2,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<short>, 2, short>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_29CSceneNodeScaleComponentMixinINS1_18CSceneNodeScaleZExIsEELi2EsEEEEEE",
+      "elf_virtual_address": "0x00979c00",
+      "elf_file_offset": "0x00978c00",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00979c08",
+      "vtable_slice_sha256": "341936bafd957794c66a6dfbc3585d9b56637f07d98564f6bba068cb1a800e06",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x00617960",
+          "target_va": "0x00617960",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<short>, 2, short>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x00617844",
+          "target_va": "0x00617844",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<short>, 2, short>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x00623278",
+          "target_va": "0x00623278",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<short>, 2, short>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x00623220",
+          "target_va": "0x00623220",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<short>, 2, short>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    },
+    {
+      "name": "scale_z_float",
+      "family": "scale_z",
+      "channel_type": 13,
+      "scalar_template": "floating_point",
+      "stored_cxx_type": "float",
+      "component_index": 2,
+      "class": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<float>, 2, float>>>",
+      "original_vtable_symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_29CSceneNodeScaleComponentMixinINS1_18CSceneNodeScaleZExIfEELi2EfEEEEEE",
+      "elf_virtual_address": "0x00979b68",
+      "elf_file_offset": "0x00978b68",
+      "elf_size_bytes": 152,
+      "address_point_va": "0x00979b70",
+      "vtable_slice_sha256": "9bc3bdbb7af606ee886da536322cd09df6a6a0e06596c67f43880f1819ac3713",
+      "pt_load": {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      },
+      "selected_slots": [
+        {
+          "method": "interpolated_get_wrapper",
+          "full_vtable_offset": "0x28",
+          "object_vptr_slot_offset": "0x20",
+          "raw_word": "0x0061e318",
+          "target_va": "0x0061e318",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<float>, 2, float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+        },
+        {
+          "method": "direct_get_wrapper",
+          "full_vtable_offset": "0x30",
+          "object_vptr_slot_offset": "0x28",
+          "raw_word": "0x0061e254",
+          "target_va": "0x0061e254",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<float>, 2, float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+        },
+        {
+          "method": "interpolated_apply_wrapper",
+          "full_vtable_offset": "0x48",
+          "object_vptr_slot_offset": "0x40",
+          "raw_word": "0x006238d0",
+          "target_va": "0x006238d0",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<float>, 2, float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        },
+        {
+          "method": "direct_apply_wrapper",
+          "full_vtable_offset": "0x50",
+          "object_vptr_slot_offset": "0x48",
+          "raw_word": "0x00623878",
+          "target_va": "0x00623878",
+          "target_symbol": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<float>, 2, float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ]
+    }
+  ]
+}

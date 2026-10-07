@@ -1,0 +1,1008 @@
+{
+  "schema_version": 1,
+  "description": "Exact ARM and vtable evidence for the transform animation track selector and binding callbacks.",
+  "elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "elf_class": 32,
+    "endianness": "little",
+    "machine": 40,
+    "load_segments": [
+      {
+        "type": "PT_LOAD",
+        "p_offset": "0x000000",
+        "p_vaddr": "0x000000",
+        "p_filesz": "0x955130"
+      },
+      {
+        "type": "PT_LOAD",
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c"
+      }
+    ],
+    "file_offset_formula": "p_offset + (elf_virtual_address - p_vaddr)"
+  },
+  "assembly_excerpt": {
+    "path": "animation-binding-functions.asm",
+    "sha256": "03826a614afdd30681bd983be693064119d08d89a2b22dcc5c3b078887a3c441"
+  },
+  "functions": [
+    {
+      "name": "animation_set_add_animation",
+      "claim": "Animation records are appended with the concrete track selected through the database factory",
+      "original_symbol": "_ZN6glitch7collada13CAnimationSet12addAnimationEPKNS0_10SAnimationE",
+      "demangled": "glitch::collada::CAnimationSet::addAnimation(glitch::collada::SAnimation const*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006601fc",
+      "elf_size_bytes": 684,
+      "elf_file_offset": "0x006601fc",
+      "function_slice_sha256": "2496e012d85f5dc9272ddc74dc0dc6a0c1adf30feb7f944dba6c1a93e0f8fdd7",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CAnimationSet-b1d6a1ba6c69-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 376,
+        "end": 550
+      },
+      "package_copy": "reference/animation-binding-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 1,
+        "end": 175
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "animation_track_factory",
+      "claim": "Factory dispatches by first channel type and returns a specialized animation-track singleton",
+      "original_symbol": "_ZN6glitch7collada16CColladaDatabase19getAnimationTrackExEPKNS0_10SAnimationE",
+      "demangled": "glitch::collada::CColladaDatabase::getAnimationTrackEx(glitch::collada::SAnimation const*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00611ae0",
+      "elf_size_bytes": 1608,
+      "elf_file_offset": "0x00611ae0",
+      "function_slice_sha256": "bb7590a23775d34fa5821fac78f1e6330a691b0c929b23cf1a3eedb733f37f72",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 1062,
+        "end": 1463
+      },
+      "package_copy": "reference/animation-binding-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 177,
+        "end": 578
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "transform_target_match",
+      "claim": "Scene transform template accepts channel type groups 1-4, 5-9, and 10-13 against target types 1, 5, and 10",
+      "original_symbol": "_ZN6glitch7collada35CAnimationSetTransformationTemplate16isAnimationExistEPKNS0_8SChannelE",
+      "demangled": "glitch::collada::CAnimationSetTransformationTemplate::isAnimationExist(glitch::collada::SChannel const*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006e22cc",
+      "elf_size_bytes": 260,
+      "elf_file_offset": "0x006e22cc",
+      "function_slice_sha256": "b2e933a8ad935f8eda87be0363425a0e44cce8a2262919d92a43e6ef4b143e4d",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CAnimationSetTransformationTemplate-1c978bae381c-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 94,
+        "end": 163
+      },
+      "package_copy": "reference/animation-binding-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 580,
+        "end": 649
+      },
+      "listing_bytes_match_elf_slice": true
+    }
+  ],
+  "transform_track_targets": [
+    {
+      "family": "position_vector3",
+      "variant": "character",
+      "elf_virtual_address": "0x006103c0",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "8e9785908c6d3fe0cf8181f8fbb3b7e9fdda03b5b67508ca6f201d8e35eefba5",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<char> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "position_vector3",
+      "variant": "short",
+      "elf_virtual_address": "0x0061032c",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "be2fd734b8b18a632e168c5f4e7243ff61e218a39a080d3cdd7692d359d011e9",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<short> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "position_vector3",
+      "variant": "float",
+      "elf_virtual_address": "0x00610298",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "b7d7a48b84c02e88d0dca35f97c5e4074e22f5fd099f6f568feed80790f54999",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "position_x",
+      "variant": "character",
+      "elf_virtual_address": "0x0061057c",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "2c6585b63c81edb2d4470c7d102ae240bfa7c259961ec19a52baa7a095766673",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<char>, 0, char> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "position_x",
+      "variant": "short",
+      "elf_virtual_address": "0x006104e8",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "7f0d2d407b7e443c908d466fbb6c77f913e57d0ceea86abb307d757f7731b729",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<short>, 0, short> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "position_x",
+      "variant": "float",
+      "elf_virtual_address": "0x00610454",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "79fcf6e97ff879ad6afcc5005200a17fae0bd2d00693fcee9e8db35e04281247",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionXEx<float>, 0, float> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "position_y",
+      "variant": "character",
+      "elf_virtual_address": "0x00610738",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "8e558676720bcdae66f3e7ea3a4e895edc2e8c592f9153ee9e0eab02f1f8ea15",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<char>, 1, char> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "position_y",
+      "variant": "short",
+      "elf_virtual_address": "0x006106a4",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "d65a8d41034ff514e70866015ffb53efce716c059548f1d493a78610c1463be6",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<short>, 1, short> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "position_y",
+      "variant": "float",
+      "elf_virtual_address": "0x00610610",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "860fa40e8f899d3c3ec007bdd2877d971751f30e2c05d46e923cad7b734a04b3",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionYEx<float>, 1, float> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "position_z",
+      "variant": "character",
+      "elf_virtual_address": "0x006108f4",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "dd276000f5fb0af4682b00220971fb7505f875c4e63ff028e20ad42eec9ad3bf",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<char>, 2, char> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "position_z",
+      "variant": "short",
+      "elf_virtual_address": "0x00610860",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "f1a21825d13761e369967bffbf29382790343402b6b3d3c6875fc98754f3642f",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<short>, 2, short> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "position_z",
+      "variant": "float",
+      "elf_virtual_address": "0x006107cc",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "bcd5e9205d79c9e5a547f566f0804998aa149fd78ca9d6000eb455e6ac7814fd",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionComponentMixin<glitch::collada::animation_track::CSceneNodePositionZEx<float>, 2, float> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "rotation_quaternion",
+      "variant": "character",
+      "elf_virtual_address": "0x00610048",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "bd685b7456337a935bf9fb64ed442c1258880f1e5323a49a53c89801cddee95a",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<char> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "rotation_quaternion",
+      "variant": "short",
+      "elf_virtual_address": "0x0060ffb4",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "73956ad62c0fa2394f1256034ff5602e02510f9ee24558515eb55376af36fb8f",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<short> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "rotation_quaternion",
+      "variant": "float",
+      "elf_virtual_address": "0x0060ff20",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "8df3e509f1f03646025954e604f1d82c111e62c23894b73d2e111c1a470857ce",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "rotation_quaternion_angle",
+      "variant": "character",
+      "elf_virtual_address": "0x00610204",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "ed49a1bb55f215c4a0b4ace1c9dc8101627b084d44ddde4f8c6ad0fb348ed8a2",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "rotation_quaternion_angle",
+      "variant": "short",
+      "elf_virtual_address": "0x00610170",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "820c34defacd7e41fdc5b94fde0cb809a050d2a185d1d796c4ecc05bbedd32ef",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "rotation_quaternion_angle",
+      "variant": "float",
+      "elf_virtual_address": "0x006100dc",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "0082e79234aebffe20c5e8c2ad3d5d00da68252be30b30bf386b970760dfee5f",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "scale_vector3",
+      "variant": "character",
+      "elf_virtual_address": "0x00610ab0",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "e64b4a1ef344f14b353f43e4fd0d10523ea2c40984a70b36ceaf3caecbd145ea",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<char> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "scale_vector3",
+      "variant": "short",
+      "elf_virtual_address": "0x00610a1c",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "28fd59563983b292cf586693920e2f7310861f55691449dcf59a5308c27504e3",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<short> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "scale_vector3",
+      "variant": "float",
+      "elf_virtual_address": "0x00610988",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "a9970daa37c40a12a5c3b55827abb0180206c6afaf5144f45e0bc1347298d581",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "scale_x",
+      "variant": "character",
+      "elf_virtual_address": "0x00610c6c",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "7f3ab95409e0fd1cbdabe929c702b9aaa48b397d9d5fc476e33538b6cf74e59a",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<char>, 0, char> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "scale_x",
+      "variant": "short",
+      "elf_virtual_address": "0x00610bd8",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "5e50d6e529064adb4a6cbd46bc1eabe133777687d83764c364c2b30142498bc2",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<short>, 0, short> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "scale_x",
+      "variant": "float",
+      "elf_virtual_address": "0x00610b44",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "664318ccfae2cb05b4a2b0277f02c39cc376c98b1dfbd61d3593c5b1015c98a3",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleXEx<float>, 0, float> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "scale_y",
+      "variant": "character",
+      "elf_virtual_address": "0x00610e28",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "78cd1db82d128350c49f9dd1c366b3e7b219c656aaa03711e65a0d7ad23b401b",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<char>, 1, char> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "scale_y",
+      "variant": "short",
+      "elf_virtual_address": "0x00610d94",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "a261b3cd648adb1367436d6b3cabd06411576c42b83696473c4b3352262f3eb9",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<short>, 1, short> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "scale_y",
+      "variant": "float",
+      "elf_virtual_address": "0x00610d00",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "5edf4386b54c5f298b2ada360a2417f3c435509848bf5c16c0d9e6927ae46e04",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleYEx<float>, 1, float> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "scale_z",
+      "variant": "character",
+      "elf_virtual_address": "0x00610fe4",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "7594b440c93a08f3d7a117dd195b9ea761c182c0165c43a553a02b6b7fddbc75",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<char>, 2, char> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "scale_z",
+      "variant": "short",
+      "elf_virtual_address": "0x00610f50",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "01c544bdbc9306b602dd56bc55b95873d2ad3dd8d83143fe517cdbe01b7034d1",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<short>, 2, short> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    },
+    {
+      "family": "scale_z",
+      "variant": "float",
+      "elf_virtual_address": "0x00610ebc",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "8988e83ab1bff42745f2830fdc2798fc15d84dbd63e844c2623e86784c46ceb7",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleComponentMixin<glitch::collada::animation_track::CSceneNodeScaleZEx<float>, 2, float> > >::getInstance()",
+      "symbol_source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json"
+    }
+  ],
+  "symbol_indexes": [
+    {
+      "path": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/function-index-001.json",
+      "sha256": "57c565b353b1076808f4e4e6bf673cb1bceebf349741d7452fb46d17da868684"
+    },
+    {
+      "path": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/vtables-001.json",
+      "sha256": "f31ac7bb6d1cc8590235f835810b63fa5cca2e773bd5141f3450b8fe675f70d8"
+    }
+  ],
+  "vtables": [
+    {
+      "symbol": "_ZTVN6glitch7collada21IAnimationSetTemplateE",
+      "demangled": "vtable for glitch::collada::IAnimationSetTemplate",
+      "elf_virtual_address": "0x00984fd0",
+      "elf_file_offset": "0x00983fd0",
+      "elf_size_bytes": 24,
+      "vtable_slice_sha256": "6856f7946daac7505a9aa1232cedae5e58a33c20f689547799da27e0d71774e6",
+      "source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/vtables-001.json",
+      "entries": [
+        {
+          "offset": "0x00",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x04",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x08",
+          "raw_word": "0x00667588",
+          "target_symbols": [
+            "glitch::collada::IAnimationSetTemplate::~IAnimationSetTemplate()"
+          ]
+        },
+        {
+          "offset": "0x0c",
+          "raw_word": "0x00667610",
+          "target_symbols": [
+            "glitch::collada::IAnimationSetTemplate::~IAnimationSetTemplate()"
+          ]
+        },
+        {
+          "offset": "0x10",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x14",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        }
+      ]
+    },
+    {
+      "symbol": "_ZTVN6glitch7collada35CAnimationSetTransformationTemplateE",
+      "demangled": "vtable for glitch::collada::CAnimationSetTransformationTemplate",
+      "elf_virtual_address": "0x0098b220",
+      "elf_file_offset": "0x0098a220",
+      "elf_size_bytes": 24,
+      "vtable_slice_sha256": "a7be424c9652907923c3b8b8644646e73bab37442e7d8e5eb9f385c97e1f51da",
+      "source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/vtables-001.json",
+      "entries": [
+        {
+          "offset": "0x00",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x04",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x08",
+          "raw_word": "0x006e2248",
+          "target_symbols": [
+            "glitch::collada::CAnimationSetTransformationTemplate::~CAnimationSetTransformationTemplate()"
+          ]
+        },
+        {
+          "offset": "0x0c",
+          "raw_word": "0x006e227c",
+          "target_symbols": [
+            "glitch::collada::CAnimationSetTransformationTemplate::~CAnimationSetTransformationTemplate()"
+          ]
+        },
+        {
+          "offset": "0x10",
+          "raw_word": "0x006e22cc",
+          "target_symbols": [
+            "glitch::collada::CAnimationSetTransformationTemplate::isAnimationExist(glitch::collada::SChannel const*)"
+          ]
+        },
+        {
+          "offset": "0x14",
+          "raw_word": "0x006e23d0",
+          "target_symbols": [
+            "glitch::collada::CAnimationSetTransformationTemplate::getDefaultValue(glitch::collada::SChannel const*, void**) const"
+          ]
+        }
+      ]
+    },
+    {
+      "symbol": "_ZTVN6glitch7collada17CAnimationTrackExE",
+      "demangled": "vtable for glitch::collada::CAnimationTrackEx",
+      "elf_virtual_address": "0x0098b238",
+      "elf_file_offset": "0x0098a238",
+      "elf_size_bytes": 152,
+      "vtable_slice_sha256": "ebb8236077d660d40d263e8a4ba4eda9943011f97f8ec5d460025f2dd8406afc",
+      "source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/vtables-001.json",
+      "entries": [
+        {
+          "offset": "0x00",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x04",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x08",
+          "raw_word": "0x006e29b0",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::~CAnimationTrackEx()"
+          ]
+        },
+        {
+          "offset": "0x0c",
+          "raw_word": "0x006e2a04",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::~CAnimationTrackEx()"
+          ]
+        },
+        {
+          "offset": "0x10",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x14",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x18",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x1c",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x20",
+          "raw_word": "0x0060def8",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x24",
+          "raw_word": "0x0060defc",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x28",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x2c",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x30",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x34",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x38",
+          "raw_word": "0x0060df00",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getBlendedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x3c",
+          "raw_word": "0x0060df04",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getAddedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x40",
+          "raw_word": "0x0060df08",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x44",
+          "raw_word": "0x0060df0c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x48",
+          "raw_word": "0x0060df10",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x4c",
+          "raw_word": "0x0060df3c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset": "0x50",
+          "raw_word": "0x0060df70",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x54",
+          "raw_word": "0x0060df84",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x58",
+          "raw_word": "0x0060dfa8",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x5c",
+          "raw_word": "0x0060dfac",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x60",
+          "raw_word": "0x0060dfb0",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x64",
+          "raw_word": "0x0060dfb4",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x68",
+          "raw_word": "0x006e307c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, bool) const"
+          ]
+        },
+        {
+          "offset": "0x6c",
+          "raw_word": "0x006e2f3c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, bool) const"
+          ]
+        },
+        {
+          "offset": "0x70",
+          "raw_word": "0x006e2c40",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x74",
+          "raw_word": "0x006e2ad8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x78",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x7c",
+          "raw_word": "0x006e2dbc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x80",
+          "raw_word": "0x006e2fdc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x84",
+          "raw_word": "0x006e2b8c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x88",
+          "raw_word": "0x006e2ce8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x8c",
+          "raw_word": "0x006e2e90",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x90",
+          "raw_word": "0x006e2a18",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x94",
+          "raw_word": "0x006e29d4",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::retrieveValue(void*, void*) const"
+          ]
+        }
+      ]
+    },
+    {
+      "symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_23CSceneNodePositionMixinIfEEEEEE",
+      "demangled": "vtable for glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >",
+      "elf_virtual_address": "0x00978ef0",
+      "elf_file_offset": "0x00977ef0",
+      "elf_size_bytes": 152,
+      "vtable_slice_sha256": "bf0ff237eb191348243638cd303b3636b4694294cbf76f85535abff9b76d6011",
+      "source": "../../../recovery/dh2-reconstruction/recovered/native/symbols/libDungeonHunter2.so/vtables-001.json",
+      "entries": [
+        {
+          "offset": "0x00",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x04",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": "0x08",
+          "raw_word": "0x0060ed28",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::~CVirtualEx()"
+          ]
+        },
+        {
+          "offset": "0x0c",
+          "raw_word": "0x0060f570",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::~CVirtualEx()"
+          ]
+        },
+        {
+          "offset": "0x10",
+          "raw_word": "0x0060eff8",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::getValueSize() const"
+          ]
+        },
+        {
+          "offset": "0x14",
+          "raw_word": "0x0061878c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::getIdentityValue(void*) const"
+          ]
+        },
+        {
+          "offset": "0x18",
+          "raw_word": "0x00626b4c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::getBlendedValue(void*, float*, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x1c",
+          "raw_word": "0x0062a754",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::getAddedValue(void*, float*, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x20",
+          "raw_word": "0x0062859c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x24",
+          "raw_word": "0x006286b0",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x28",
+          "raw_word": "0x00628834",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset": "0x2c",
+          "raw_word": "0x00612370",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset": "0x30",
+          "raw_word": "0x0061225c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x34",
+          "raw_word": "0x006122a4",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x38",
+          "raw_word": "0x0060df00",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getBlendedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x3c",
+          "raw_word": "0x0060df04",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getAddedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x40",
+          "raw_word": "0x0060df08",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x44",
+          "raw_word": "0x0060df0c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, float) const"
+          ]
+        },
+        {
+          "offset": "0x48",
+          "raw_word": "0x00628810",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x4c",
+          "raw_word": "0x0060df3c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset": "0x50",
+          "raw_word": "0x00622d58",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x54",
+          "raw_word": "0x0060df84",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const"
+          ]
+        },
+        {
+          "offset": "0x58",
+          "raw_word": "0x0060dfa8",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x5c",
+          "raw_word": "0x0060dfac",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x60",
+          "raw_word": "0x0060dfb0",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x64",
+          "raw_word": "0x0060dfb4",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset": "0x68",
+          "raw_word": "0x006e307c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, bool) const"
+          ]
+        },
+        {
+          "offset": "0x6c",
+          "raw_word": "0x006e2f3c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, bool) const"
+          ]
+        },
+        {
+          "offset": "0x70",
+          "raw_word": "0x006e2c40",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x74",
+          "raw_word": "0x006e2ad8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x78",
+          "raw_word": "0x00623dd8",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::applyValue(void*, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset": "0x7c",
+          "raw_word": "0x006e2dbc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x80",
+          "raw_word": "0x006e2fdc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x84",
+          "raw_word": "0x006e2b8c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x88",
+          "raw_word": "0x006e2ce8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset": "0x8c",
+          "raw_word": "0x006e2e90",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x90",
+          "raw_word": "0x006e2a18",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset": "0x94",
+          "raw_word": "0x0060f000",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::retrieveValue(void*, void*) const"
+          ]
+        }
+      ]
+    }
+  ]
+}

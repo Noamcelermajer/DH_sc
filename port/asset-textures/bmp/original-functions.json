@@ -1,0 +1,39 @@
+{
+  "component": "Dungeon Hunter 2 BMP image-loader trace",
+  "original_apk": "user-supplied Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "original_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "original_library": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "original_library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "hash_assumption": "Each function SHA-256 covers exactly the listed range of bytes from the original ELF. The executable PT_LOAD has p_vaddr=0, p_offset=0, p_filesz=0x955130, so these file offsets equal the listed VAs.",
+  "functions": [
+    {
+      "key": "bmp_signature_probe",
+      "symbol": "glitch::video::CImageLoaderBMP::isALoadableFileFormat(glitch::io::IReadFile*) const",
+      "elf_va": "0x006033d8",
+      "file_offset": "0x006033d8",
+      "size_bytes": 60,
+      "sha256": "f8f1264787451a2362722b4c7756d5dcc66f1acbfd3dd7954bf02d949dbb45da",
+      "scope": "Reads two bytes and compares little-endian 0x4d42 (ASCII BM)."
+    },
+    {
+      "key": "bmp_extension",
+      "symbol": "glitch::video::CImageLoaderBMP::isALoadableFileExtension(char const*) const",
+      "elf_va": "0x006034a0",
+      "file_offset": "0x006034a0",
+      "size_bytes": 76,
+      "sha256": "f1611a95ad1e45f76d2fa6f204f03b86d12806782864471b41e93b2746616a1f",
+      "scope": "Calls strstr with lowercase .bmp and uppercase .BMP patterns."
+    },
+    {
+      "key": "bmp_cpu_image_decode",
+      "symbol": "glitch::video::CImageLoaderBMP::loadImage(glitch::io::IReadFile*) const",
+      "elf_va": "0x006034ec",
+      "file_offset": "0x006034ec",
+      "size_bytes": 3288,
+      "sha256": "97730dcb6408fdc22de7f27c7680e559801dfc90f88430feb188c208f1e8a3fe",
+      "scope": "Native BMP decoder entrypoint; no behavior ported because no BMP sample was found in the recovered cache."
+    }
+  ],
+  "evidence": "reference/bmp-loader.asm contains exact ARM instruction words for all three ranges; bytes are reproduced from the verified APK ELF.",
+  "implementation_scope": "Evidence-only native path reconstruction. No BMP host decoder was added because the recovered cache census found zero BMP suffixes and zero BM signatures. No build or tests were run."
+}

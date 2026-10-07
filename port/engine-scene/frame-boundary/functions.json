@@ -1,0 +1,91 @@
+{
+  "schema": "dh2-frame-boundary-exact-ranges-v1",
+  "source_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "source_elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "elf_size_bytes": 15938284,
+  "hash_basis": "SHA-256 of exact ELF file-backed PT_LOAD range; copied ARM listing byte rows verified against the corresponding ELF slice.",
+  "functions": [
+    {
+      "name": "Application::_Draw()",
+      "elf_va": "0x0032ade8",
+      "range_size": 1116,
+      "elf_file_offset": 3321320,
+      "sha256": "f855f93da1887d13f385a2556e8b95fd6877b0fb273bf1dbd4f7d2f311d4d952",
+      "source_assembly": "Application-e7ad522ea327-001.asm",
+      "source_listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "name": "StateMachine::RecurseDraw() const",
+      "elf_va": "0x0033a090",
+      "range_size": 112,
+      "elf_file_offset": 3383440,
+      "sha256": "2640ccc863970020d9b8273064fcbd90f26149078f30f6745c9032c6a7139769",
+      "source_assembly": "StateMachine-7db56bec69be-001.asm",
+      "source_listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "name": "StateMachine::Draw() const",
+      "elf_va": "0x0033a100",
+      "range_size": 72,
+      "elf_file_offset": 3383552,
+      "sha256": "6391346c424d1364426401cc7cc6c76960701a8ab2d76c6aec26583846cae88b",
+      "source_assembly": "StateMachine-7db56bec69be-001.asm",
+      "source_listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "name": "StateMachine::Draw2D() const",
+      "elf_va": "0x0033a148",
+      "range_size": 52,
+      "elf_file_offset": 3383624,
+      "sha256": "d370a0219e558cf97568aee8a9f48d853e42979823f891bb80420e9b7dadfc77",
+      "source_assembly": "StateMachine-7db56bec69be-001.asm",
+      "source_listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "name": "SceneManager::drawAll(glitch::scene::ISceneNode*)",
+      "elf_va": "0x00359338",
+      "range_size": 364,
+      "elf_file_offset": 3511096,
+      "sha256": "d44c8f6e041dfb62c19c7648a978842d7526c196b455bd053a4363144432196c",
+      "source_assembly": "SceneManager-18f407ee92a7-001.asm",
+      "source_listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "name": "SceneManager::_drawAll(glitch::scene::ISceneNode*)",
+      "elf_va": "0x003592b0",
+      "range_size": 136,
+      "elf_file_offset": 3510960,
+      "sha256": "a24d13bf6bb090ffe84b0725b1bac8bbcb9f7c884bbccf658f2aaa32f519f872",
+      "source_assembly": "SceneManager-18f407ee92a7-001.asm",
+      "source_listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "name": "SceneManager::_registerSceneNodes(glitch::scene::ISceneNode*)",
+      "elf_va": "0x00357ea4",
+      "range_size": 356,
+      "elf_file_offset": 3505828,
+      "sha256": "42856d86fdd1b42ac149748e034c0ff7467080c9162cb73bfc9bbebac306642e",
+      "source_assembly": "SceneManager-18f407ee92a7-001.asm",
+      "source_listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "name": "SceneManager::_RegisterAutomacticLights()",
+      "elf_va": "0x00353bac",
+      "range_size": 208,
+      "elf_file_offset": 3488684,
+      "sha256": "60a72ce35801451013a0003957f86a05091473adc06c939540dcd7ea6f406e25",
+      "source_assembly": "SceneManager-18f407ee92a7-001.asm",
+      "source_listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    },
+    {
+      "name": "SceneManager::_renderLists(glitch::video::IVideoDriver*)",
+      "elf_va": "0x003587a0",
+      "range_size": 2832,
+      "elf_file_offset": 3508128,
+      "sha256": "0f1e54fec8bafee7fd415281d82eff913e1a1c0e8d5a67170ec298c69256c3dc",
+      "source_assembly": "SceneManager-18f407ee92a7-001.asm",
+      "source_listing_byte_comparison": "exact_match_to_original_elf_bytes"
+    }
+  ]
+}

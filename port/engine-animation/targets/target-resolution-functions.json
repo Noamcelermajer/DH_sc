@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "description": "Focused provenance for the animation target pointer, CSceneNode vptr address point, position setter vtable slot, and setter body.",
+  "apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "file_offset_formula": "p_offset + (elf_virtual_address - p_vaddr)",
+    "load_segments": [
+      {
+        "type": "PT_LOAD",
+        "p_offset": "0x000000",
+        "p_vaddr": "0x000000",
+        "p_filesz": "0x955130"
+      },
+      {
+        "type": "PT_LOAD",
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c"
+      }
+    ]
+  },
+  "assembly_excerpt": {
+    "path": "target-resolution-functions.asm",
+    "sha256": "bc7b8f5f9e17d2940926f5432be270a05cc517ec7fbca0eb07294f21b58fbfc6"
+  },
+  "functions": [
+    {
+      "name": "CAnimationSetTransformationTemplate::addTransformationTargets(CSceneNode*)",
+      "claim": "Stores channel records for codes 1, 5, and 10, each with the supplied CSceneNode pointer at record +8, then recurses through child nodes.",
+      "original_symbol": "_ZN6glitch7collada35CAnimationSetTransformationTemplate24addTransformationTargetsEPNS0_10CSceneNodeE",
+      "demangled": "glitch::collada::CAnimationSetTransformationTemplate::addTransformationTargets(glitch::collada::CSceneNode*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006e24e8",
+      "elf_file_offset": "0x006e24e8",
+      "elf_size_bytes": 356,
+      "function_slice_sha256": "bec0370ef100c586fe9eb1d8086763405307432a38044af39d6c216bf3213b08",
+      "original_assembly_listing": "recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CAnimationSetTransformationTemplate-1c978bae381c-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 196,
+        "end": 290
+      },
+      "package_copy": "reference/target-resolution-functions.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "CSceneNode complete-object constructor",
+      "claim": "Initializes the CSceneNode vptr using the vtable base plus 0x1c; the resulting primary address point is the one used by ISceneNode virtual calls.",
+      "original_symbol": "_ZN6glitch7collada10CSceneNodeC1ERKNS0_16CColladaDatabaseEPNS0_5SNodeE",
+      "demangled": "glitch::collada::CSceneNode::CSceneNode(glitch::collada::CColladaDatabase const&, glitch::collada::SNode*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0065d150",
+      "elf_file_offset": "0x0065d150",
+      "elf_size_bytes": 356,
+      "function_slice_sha256": "d06533dc95471d888f3c982205b1e8c5fd094620684f6b84297edb240e3f042c",
+      "original_assembly_listing": "recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CSceneNode-0b30ea7de5e3-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 539,
+        "end": 631
+      },
+      "package_copy": "reference/target-resolution-functions.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "ISceneNode::setPosition(vector3d<float> const&)",
+      "claim": "Copies three float components from the argument to offsets +0xac/+0xb0/+0xb4 and sets bit 0x8 in flags at +0x11c.",
+      "original_symbol": "_ZN6glitch5scene10ISceneNode11setPositionERKNS_4core8vector3dIfEE",
+      "demangled": "glitch::scene::ISceneNode::setPosition(glitch::core::vector3d<float> const&)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0059712c",
+      "elf_file_offset": "0x0059712c",
+      "elf_size_bytes": 40,
+      "function_slice_sha256": "b300b9db8ec709fa73872e371233a4eca0e3f642ac113ea86abf2093876acf05",
+      "original_assembly_listing": "recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_scene_ISceneNode-7824e152fc5a-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 472,
+        "end": 487
+      },
+      "package_copy": "reference/target-resolution-functions.asm",
+      "listing_bytes_match_elf_slice": true
+    }
+  ],
+  "vtable": {
+    "symbol": "_ZTVN6glitch7collada10CSceneNodeE",
+    "demangled": "vtable for glitch::collada::CSceneNode",
+    "elf_virtual_address": "0x009835c0",
+    "elf_file_offset": "0x009825c0",
+    "elf_size_bytes": 304,
+    "vtable_slice_sha256": "7052ff2507ff1b462435f94327fe1d7570506be366bb67603644562be73fdd7f",
+    "primary_address_point_offset": "0x1c",
+    "primary_address_point_va": "0x009835dc",
+    "target_slot_offset_from_address_point": "0xa4",
+    "target_entry_offset_from_symbol": "0xc0",
+    "target_entry_va": "0x00983680",
+    "target_entry_file_offset": "0x00982680",
+    "target_entry_raw_word": "0x0059712c",
+    "target_entry_symbol": "glitch::scene::ISceneNode::setPosition(glitch::core::vector3d<float> const&)",
+    "target_entry_data_bytes_sha256": "b174c4e4f1906a8681a9875f2837ffb133183bdf0825eb4717b4b78a2698da6b"
+  },
+  "supporting_data_ranges": [
+    {
+      "name": "CSceneNode primary-vtable setPosition entry",
+      "demangled_target": "glitch::scene::ISceneNode::setPosition(glitch::core::vector3d<float> const&)",
+      "elf_virtual_address": "0x00983680",
+      "elf_file_offset": "0x00982680",
+      "range_size": 4,
+      "raw_word": "0x0059712c",
+      "data_bytes_sha256": "b174c4e4f1906a8681a9875f2837ffb133183bdf0825eb4717b4b78a2698da6b"
+    }
+  ]
+}

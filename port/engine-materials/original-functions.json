@@ -1,0 +1,73 @@
+{
+  "original_library": "libDungeonHunter2.so",
+  "original_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "source_assembly": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+  "complete_function_count": 6,
+  "functions": [
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase8getImageEi",
+      "demangled": "glitch::collada::CColladaDatabase::getImage(int) const",
+      "elf_address": "0x0060e3c8",
+      "size": 28,
+      "sha256": "540b23c65793cd8e76cfb435f3aea0861dd204feddd91e71688704d4475192d3",
+      "scope": "indexed record address, root pointer field and stride",
+      "port_symbol": "dh2_materials_record_at",
+      "library": "image"
+    },
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase9getEffectEi",
+      "demangled": "glitch::collada::CColladaDatabase::getEffect(int) const",
+      "elf_address": "0x0060e3e4",
+      "size": 28,
+      "sha256": "86a8341de135e486dd3b6514c947eb84cd62abb5c53398b3ebd8a142f725029b",
+      "scope": "indexed record address, root pointer field and stride",
+      "port_symbol": "dh2_materials_record_at",
+      "library": "effect"
+    },
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase11getMaterialEi",
+      "demangled": "glitch::collada::CColladaDatabase::getMaterial(int) const",
+      "elf_address": "0x0060e400",
+      "size": 28,
+      "sha256": "d9efcc2e9e67f27e6fb5cc4ea7517e93aa3bd9272984d75e56d0366adb33f8c6",
+      "scope": "indexed record address, root pointer field and stride",
+      "port_symbol": "dh2_materials_record_at",
+      "library": "material"
+    },
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase8getImageEPKc",
+      "demangled": "glitch::collada::CColladaDatabase::getImage(char const*) const",
+      "elf_address": "0x0061b154",
+      "size": 96,
+      "sha256": "8fbda017549f358cf54961d00ad0d7c1ffcb61965a5d0b1be2f19c7b9e19f1a4",
+      "scope": "linear exact-name lookup through word-zero key; first matching record returned",
+      "port_symbol": "dh2_materials_find_key",
+      "library": "image"
+    },
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase9getEffectEPKc",
+      "demangled": "glitch::collada::CColladaDatabase::getEffect(char const*) const",
+      "elf_address": "0x0061b0ac",
+      "size": 96,
+      "sha256": "433cb8967a341bf0226ed5b0c5126ffd5afcf191ab8d2c2a6392eead19e371c7",
+      "scope": "linear exact-name lookup through word-zero key; first matching record returned",
+      "port_symbol": "dh2_materials_find_key",
+      "library": "effect"
+    },
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase11getMaterialEPKc",
+      "demangled": "glitch::collada::CColladaDatabase::getMaterial(char const*) const",
+      "elf_address": "0x0061ac28",
+      "size": 96,
+      "sha256": "21889da8970daaa0afe0d3092cf6d3c0e4108018ae841b117314a4612ed0a041",
+      "scope": "linear exact-name lookup through word-zero key; first matching record returned",
+      "port_symbol": "dh2_materials_find_key",
+      "library": "material"
+    }
+  ],
+  "evidence_notes": [
+    "The three indexed accessors load BRES root pointer fields 0x50, 0x58 and 0x60 and calculate addresses with strides 0x14, 0x74 and 0x24.",
+    "The three by-name accessors load counts at root fields 0x4c, 0x54 and 0x5c, scan the corresponding arrays at the same strides, compare the word at record offset zero to the query, and return the first match.",
+    "The meaning of all remaining record words and the semantics of non-key fixups are unresolved by this evidence set."
+  ]
+}

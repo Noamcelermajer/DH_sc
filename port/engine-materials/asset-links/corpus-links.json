@@ -1,0 +1,226 @@
+{
+  "schema_version": 2,
+  "method": "Read-only BRES parser; exact unrelocated fixup field/target offsets and resolved printable strings.",
+  "source_root_label": "recovered game cache files/data",
+  "files_scanned": 2900,
+  "aggregate_counts": {
+    "image.plus00_fixups": 3662,
+    "image.plus00_printable_string_targets": 3662,
+    "image.plus04_fixups": 3662,
+    "image.plus04_printable_string_targets": 3662,
+    "image.plus08_fixups": 3662,
+    "image.plus08_printable_string_targets": 3662,
+    "image.plus10_fixups": 0,
+    "image.plus10_zero_words": 3662,
+    "material.effect_key_matches": 3854,
+    "material.effect_unique_key_matches": 3854,
+    "material.records": 4329,
+    "records.effect": 3854,
+    "records.image": 3662,
+    "records.material": 4329
+  },
+  "material_field0c_post_hash_effect_key": {
+    "matched_records": 3854,
+    "unique_effect_key_matches": 3854,
+    "unmatched_value_counts": {
+      "Multilight-fx": 475
+    }
+  },
+  "sampler_name_image_key_convention": {
+    "matching_parameter_records": 193,
+    "examples": [
+      {
+        "file": "3d/animateddecors/cin_king_gothicus_01.bdae",
+        "parameter": "Map__391__char_king.tga_-sampler",
+        "image_key": "Map__391__char_king.tga_"
+      },
+      {
+        "file": "3d/characters/faeries/animations/faeries_template_anim.bdae",
+        "parameter": "Map__108__char_faerie.tga_-sampler",
+        "image_key": "Map__108__char_faerie.tga_"
+      },
+      {
+        "file": "3d/characters/faeries/animations/faeries_template_anim.bdae",
+        "parameter": "Map__108__fx_spark.tga_-sampler",
+        "image_key": "Map__108__fx_spark.tga_"
+      },
+      {
+        "file": "3d/characters/npcs/animations/cin_king_point.bdae",
+        "parameter": "Map__391__char_king.tga_-sampler",
+        "image_key": "Map__391__char_king.tga_"
+      },
+      {
+        "file": "3d/characters/npcs/animations/cin_king_point_idle.bdae",
+        "parameter": "Map__391__char_king.tga_-sampler",
+        "image_key": "Map__391__char_king.tga_"
+      },
+      {
+        "file": "3d/characters/npcs/animations/cin_king_sitting_idle.bdae",
+        "parameter": "Map__391__char_king.tga_-sampler",
+        "image_key": "Map__391__char_king.tga_"
+      },
+      {
+        "file": "3d/characters/npcs/animations/cin_king_situp.bdae",
+        "parameter": "Map__391__char_king.tga_-sampler",
+        "image_key": "Map__391__char_king.tga_"
+      },
+      {
+        "file": "3d/characters/npcs/animations/cin_king_situp_idle.bdae",
+        "parameter": "Map__391__char_king.tga_-sampler",
+        "image_key": "Map__391__char_king.tga_"
+      },
+      {
+        "file": "3d/characters/npcs/animations/cin_king_stand.bdae",
+        "parameter": "Map__391__char_king.tga_-sampler",
+        "image_key": "Map__391__char_king.tga_"
+      },
+      {
+        "file": "3d/characters/npcs/animations/cin_king_stand_idle.bdae",
+        "parameter": "Map__391__char_king.tga_-sampler",
+        "image_key": "Map__391__char_king.tga_"
+      },
+      {
+        "file": "3d/characters/npcs/animations/cs_priest_swamp_intro_part2_00_idle.bdae",
+        "parameter": "Map__404__atlas_skinned_characters_animdecor_gameobjects_001.tga_-sampler",
+        "image_key": "Map__404__atlas_skinned_characters_animdecor_gameobjects_001.tga_"
+      },
+      {
+        "file": "3d/characters/npcs/animations/cs_priest_swamp_intro_part2_00_idle.bdae",
+        "parameter": "Map__404__atlas_skinned_characters_animdecor_gameobjects_001.tga_-sampler",
+        "image_key": "Map__404__atlas_skinned_characters_animdecor_gameobjects_001.tga_"
+      }
+    ]
+  },
+  "negative_checks": {
+    "image_plus10_zero_words": 3662,
+    "image_plus10_fixups": 0,
+    "material_record_parameter_or_value_array_fixups_targeting_image_records": 0
+  },
+  "gles_four_offset_string_candidates": {
+    "candidate_bases": 5707,
+    "examples": [
+      {
+        "file": "3d/animateddecors/castle/chandelier_castle.bdae",
+        "base": 24784,
+        "strings": [
+          "L1_Vc_----_----_----_----_----",
+          "H ",
+          "L1_Vc_----_Sp_----_----_----",
+          "H "
+        ]
+      },
+      {
+        "file": "3d/animateddecors/castle/chandelier_castle.bdae",
+        "base": 24796,
+        "strings": [
+          "L1_Vc_----_Sp_----_----_----",
+          "H ",
+          "L1_Vc_Al_----_----_----_----",
+          "H "
+        ]
+      },
+      {
+        "file": "3d/animateddecors/castle/chandelier_castle.bdae",
+        "base": 24808,
+        "strings": [
+          "L1_Vc_Al_----_----_----_----",
+          "H ",
+          "L1_Vc_At_----_----_----_----",
+          "H "
+        ]
+      },
+      {
+        "file": "3d/animateddecors/castle/chandelier_castle.bdae",
+        "base": 24820,
+        "strings": [
+          "L1_Vc_At_----_----_----_----",
+          "H ",
+          "L1_Vc_Al_Sp_----_----_----",
+          "H "
+        ]
+      },
+      {
+        "file": "3d/animateddecors/castle/chandelier_castle.bdae",
+        "base": 24832,
+        "strings": [
+          "L1_Vc_Al_Sp_----_----_----",
+          "H ",
+          "L1_Vc_At_Sp_----_----_----",
+          "H "
+        ]
+      },
+      {
+        "file": "3d/animateddecors/castle/chandelier_castle.bdae",
+        "base": 24844,
+        "strings": [
+          "L1_Vc_At_Sp_----_----_----",
+          "H ",
+          "L1_Vc_----_----_----_Lm_----",
+          "H "
+        ]
+      },
+      {
+        "file": "3d/animateddecors/castle/chandelier_castle.bdae",
+        "base": 24856,
+        "strings": [
+          "L1_Vc_----_----_----_Lm_----",
+          "H ",
+          "L1_Vc_----_Sp_----_Lm_----",
+          "H "
+        ]
+      },
+      {
+        "file": "3d/animateddecors/castle/chandelier_castle.bdae",
+        "base": 24868,
+        "strings": [
+          "L1_Vc_----_Sp_----_Lm_----",
+          "H ",
+          "L1_Vc_Al_----_----_Lm_----",
+          "H "
+        ]
+      }
+    ]
+  },
+  "examples": {
+    "candle_flame": {
+      "path": "3d/animateddecors/candle_flame.bdae",
+      "sha256": "7ece047e6cb253036d50260018fd7299ad9835e743ca0fcd4e2d3004ea0269a6",
+      "material_record": 12656,
+      "material_ref_field": 12668,
+      "material_ref_target": 4168,
+      "material_ref": "#ProfileCOMMON_Material__12-fx1302961531_candle_flame",
+      "matched_effect_key": "ProfileCOMMON_Material__12-fx1302961531_candle_flame",
+      "effect_record": 7664,
+      "effect_key_target": 3140,
+      "effect_plus14_field": 7684,
+      "effect_plus14_target": 8824,
+      "nested_first_word_target": 3288,
+      "nested_first_word_text": "diffuse-sampler",
+      "parameter_record": 12848,
+      "parameter_name_target": 3288,
+      "parameter_name": "diffuse-sampler"
+    },
+    "cin_king_gothicus_01": {
+      "path": "3d/animateddecors/cin_king_gothicus_01.bdae",
+      "sha256": "690b9670296a1f7a467afa104988babf7493069dbf6239e88880c603ab35e27d",
+      "material_record": 71304,
+      "material_ref_field": 71316,
+      "material_ref_target": 4608,
+      "material_ref": "#ProfileCOMMON__8_-_Default-fx1302961534_cin_king_gothicus_01",
+      "matched_effect_key": "ProfileCOMMON__8_-_Default-fx1302961534_cin_king_gothicus_01",
+      "effect_record": 68784,
+      "effect_key_target": 3900,
+      "parameter_record": 71340,
+      "parameter_name_target": 4056,
+      "parameter_name": "Map__391__char_king.tga_-sampler",
+      "image_record": 68764,
+      "image_key_target": 3788,
+      "image_key": "Map__391__char_king.tga_",
+      "image_path_field": 68772,
+      "image_path_target": 3852,
+      "image_path": "q:/data/iphone/3d/textures/char_king.tga",
+      "parameter_to_image_relation": "parameter name without literal '-sampler' equals image key"
+    }
+  },
+  "skipped": {}
+}

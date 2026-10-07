@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "description": "Exact selected ARM assembly listing blocks with source listing line ranges and SHA-256 digests of matching function byte ranges from the original ELF.",
+  "elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "elf_class": 32,
+    "endianness": "little",
+    "machine": 40
+  },
+  "assembly_excerpt": {
+    "path": "consumer-functions.asm",
+    "sha256": "2df8dd39b9831f511c2a05d2df066c4cad7e52548ab47bc6ab35f0bbe7bd4ff8"
+  },
+  "functions": [
+    {
+      "name": "constructImage",
+      "symbol": "_ZNK6glitch7collada16CColladaDatabase14constructImageEPNS0_6SImageEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CColladaDatabase::constructImage(glitch::collada::SImage*, glitch::collada::CRootSceneNode*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0060fc70",
+      "elf_size_bytes": 80,
+      "elf_file_offset": "0x0060fc70",
+      "function_slice_sha256": "9187fdaa6c44a85b7492a3e2aea2b25a0acf0704e266b2b4593e95e0c86c1ef4",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 1016,
+        "end": 1041
+      },
+      "package_copy": "consumer-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 4,
+        "end": 29
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "CImage::CImage",
+      "symbol": "_ZN6glitch7collada6CImageC1ERKNS0_16CColladaDatabaseERNS0_6SImageE",
+      "demangled": "glitch::collada::CImage::CImage(glitch::collada::CColladaDatabase const&, glitch::collada::SImage&)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0060e1d4",
+      "elf_size_bytes": 184,
+      "elf_file_offset": "0x0060e1d4",
+      "function_slice_sha256": "24ddbff1a27f7bc5b5a421d2a395937f4dc3a40cc144edcea12363ff0af86381",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CImage-b1bd2e56eaab-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 55
+      },
+      "package_copy": "consumer-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 34,
+        "end": 84
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "CColladaFactory::createMaterial",
+      "symbol": "_ZN6glitch7collada15CColladaFactory14createMaterialERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverEPNS0_9SMaterialEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CColladaFactory::createMaterial(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, glitch::collada::SMaterial*, glitch::collada::CRootSceneNode*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006323d0",
+      "elf_size_bytes": 244,
+      "elf_file_offset": "0x006323d0",
+      "function_slice_sha256": "dc3090658f74e4ff70633a92030aab1b739e3b836e2ed704418ca6af4aed0b51",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CColladaFactory-db06bc565b1a-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 739,
+        "end": 805
+      },
+      "package_copy": "consumer-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 89,
+        "end": 155
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "constructEffect",
+      "symbol": "_ZNK6glitch7collada16CColladaDatabase15constructEffectEPNS_5video12IVideoDriverEPNS0_7SEffectEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CColladaDatabase::constructEffect(glitch::video::IVideoDriver*, glitch::collada::SEffect*, glitch::collada::CRootSceneNode*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0060e570",
+      "elf_size_bytes": 116,
+      "elf_file_offset": "0x0060e570",
+      "function_slice_sha256": "0d5e3824c56a4c9056fd4658a409ff70bbc101b5077f74043248fe00ba6c5680",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 316,
+        "end": 351
+      },
+      "package_copy": "consumer-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 160,
+        "end": 195
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "SEffectList::SEffectList",
+      "symbol": "_ZN6glitch7collada11SEffectListC1ERKNS0_16CColladaDatabaseEPNS0_7SEffectE",
+      "demangled": "glitch::collada::SEffectList::SEffectList(glitch::collada::CColladaDatabase const&, glitch::collada::SEffect*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006319d8",
+      "elf_size_bytes": 164,
+      "elf_file_offset": "0x006319d8",
+      "function_slice_sha256": "8d99a67a34b516ce7d46844975e5b8f69d3b62ecb3a05ee67a5bfb40314a7496",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_SEffectList-455354988589-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 50
+      },
+      "package_copy": "consumer-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 200,
+        "end": 245
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "CColladaFactory::createMaterialRenderer(effect overload)",
+      "symbol": "_ZN6glitch7collada15CColladaFactory22createMaterialRendererERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverEPNS0_7SEffectEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CColladaFactory::createMaterialRenderer(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, glitch::collada::SEffect*, glitch::collada::CRootSceneNode*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x003506a4",
+      "elf_size_bytes": 8,
+      "elf_file_offset": "0x003506a4",
+      "function_slice_sha256": "6dcd5e75586fe6683156c0d559d4827b73bd48d501fa5781a1c6099aacd7c877",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CColladaFactory-db06bc565b1a-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 12
+      },
+      "package_copy": "consumer-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 250,
+        "end": 257
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "CColladaFactory::getAdditionalEffects",
+      "symbol": "_ZN6glitch7collada15CColladaFactory20getAdditionalEffectsERKNS0_16CColladaDatabaseEPNS0_7SEffectERNS0_11SEffectListE",
+      "demangled": "glitch::collada::CColladaFactory::getAdditionalEffects(glitch::collada::CColladaDatabase const&, glitch::collada::SEffect*, glitch::collada::SEffectList&)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0062ff04",
+      "elf_size_bytes": 4,
+      "elf_file_offset": "0x0062ff04",
+      "function_slice_sha256": "379bec29dccd0a93c94826144d7ef6e42fab64ef195a3b8313a16926f66f388f",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CColladaFactory-db06bc565b1a-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 27,
+        "end": 33
+      },
+      "package_copy": "consumer-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 262,
+        "end": 268
+      },
+      "listing_bytes_match_elf_slice": true
+    }
+  ]
+}

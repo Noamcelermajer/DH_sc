@@ -1,0 +1,175 @@
+{
+  "schema": "dh2-engine-gui-input-provenance-v1",
+  "source_apk": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "source_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "source_elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "source_elf_size": 15938284,
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "elf_format": "ELF32 little-endian ARM",
+  "pt_load_segment": {
+    "index": 1,
+    "p_offset": "0x0",
+    "p_vaddr": "0x0",
+    "p_filesz": 9785648,
+    "p_memsz": 9785648,
+    "p_flags": 5
+  },
+  "file_offset_formula": "p_offset + (elf_va - p_vaddr)",
+  "verification_basis": "Each listed hash covers exactly range_size bytes at the PT_LOAD-mapped file offset. The APK member and extracted ELF hashes match.",
+  "functions": [
+    {
+      "key": "gui_environment_post_event",
+      "symbol": "glitch::gui::CGUIEnvironment::postEventFromUser(glitch::SEvent const&)",
+      "elf_va": "0x00537c5c",
+      "range_size": 336,
+      "elf_file_offset": 5471324,
+      "function_bytes_sha256": "f9d6962684a1d7db9077caf8450846771c1e6191a050f9ea82da75060fcba22e",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    },
+    {
+      "key": "gui_environment_set_focus",
+      "symbol": "glitch::gui::CGUIEnvironment::setFocus(glitch::gui::IGUIElement*)",
+      "elf_va": "0x005353c8",
+      "range_size": 464,
+      "elf_file_offset": 5460936,
+      "function_bytes_sha256": "f53ca5d717233a475e6597656d66006b4991c9986ebdc339b182d1307032f136",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    },
+    {
+      "key": "gui_environment_remove_focus",
+      "symbol": "glitch::gui::CGUIEnvironment::removeFocus(glitch::gui::IGUIElement*)",
+      "elf_va": "0x005355a0",
+      "range_size": 140,
+      "elf_file_offset": 5461408,
+      "function_bytes_sha256": "aa130d53fed0b3107ca9ce2f03a837d9ef3ff2eb379e905bf4f9b0798614423a",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    },
+    {
+      "key": "gui_environment_get_next_element",
+      "symbol": "glitch::gui::CGUIEnvironment::getNextElement(bool, bool)",
+      "elf_va": "0x00537b44",
+      "range_size": 280,
+      "elf_file_offset": 5471044,
+      "function_bytes_sha256": "8e24df20d891f1f24d91c023262dc43c26858cc8308b7469255e8707bf6d5c27",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    },
+    {
+      "key": "gui_element_get_next_element_recursive_clone2",
+      "symbol": "glitch::gui::IGUIElement::getNextElement(int, bool, bool, glitch::gui::IGUIElement*&, glitch::gui::IGUIElement*&, bool) const (.clone.2)",
+      "elf_va": "0x005379b4",
+      "range_size": 400,
+      "elf_file_offset": 5470644,
+      "function_bytes_sha256": "ab88ef3478865096a727425264c4e64134170e7820beb5253fa4220de4e91b83",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    },
+    {
+      "key": "gui_element_hit_test",
+      "symbol": "glitch::gui::IGUIElement::getElementFromPoint(glitch::core::position2d<int> const&)",
+      "elf_va": "0x00534dd0",
+      "range_size": 120,
+      "elf_file_offset": 5459408,
+      "function_bytes_sha256": "18ce974b8158355f2457557a3a724472c1986dc53f02a8b3e331a00b8d30d0dd",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    },
+    {
+      "key": "gui_element_point_inside",
+      "symbol": "glitch::gui::IGUIElement::isPointInside(glitch::core::position2d<int> const&) const",
+      "elf_va": "0x00534e48",
+      "range_size": 72,
+      "elf_file_offset": 5459528,
+      "function_bytes_sha256": "5bb0640a5fbeab2b1c174ceaa8a185d2fe4f96b7804c8021ed8b8c5846205b99",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    },
+    {
+      "key": "gui_element_parent_event_bubble",
+      "symbol": "glitch::gui::IGUIElement::onEvent(glitch::SEvent const&)",
+      "elf_va": "0x00534fe8",
+      "range_size": 44,
+      "elf_file_offset": 5459944,
+      "function_bytes_sha256": "3f9e9d7248f7a6ed5f09e6fd36610bc2a4fb8ff13fc18e4d9df464cda862a770",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    },
+    {
+      "key": "gui_environment_user_event_receiver",
+      "symbol": "glitch::gui::CGUIEnvironment::onEvent(glitch::SEvent const&)",
+      "elf_va": "0x00535710",
+      "range_size": 88,
+      "elf_file_offset": 5461776,
+      "function_bytes_sha256": "716fa0abf79cf54221bf591d3aaf6ab09bbd5b720f9fbcc37fdbe91b329c5812",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    },
+    {
+      "key": "gui_element_bring_to_front",
+      "symbol": "glitch::gui::IGUIElement::bringToFront(glitch::gui::IGUIElement*)",
+      "elf_va": "0x00535d70",
+      "range_size": 124,
+      "elf_file_offset": 5463408,
+      "function_bytes_sha256": "d40b29709dfd3a561daff5b1b85be819c59040ad1dfeecbf8771026df5b58003",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    },
+    {
+      "key": "gui_button_event_handler",
+      "symbol": "glitch::gui::CGUIButton::onEvent(glitch::SEvent const&)",
+      "elf_va": "0x006a6eac",
+      "range_size": 888,
+      "elf_file_offset": 6975148,
+      "function_bytes_sha256": "e58c67e36169902264277a3d4afde9c3203bb4d3fcd39d29495d6be4db263c23",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    },
+    {
+      "key": "gui_edit_box_event_handler",
+      "symbol": "glitch::gui::CGUIEditBox::onEvent(glitch::SEvent const&)",
+      "elf_va": "0x006b3d70",
+      "range_size": 164,
+      "elf_file_offset": 7028080,
+      "function_bytes_sha256": "25293681ccdffc1ddb7a32d0322b474b44ecba3aa0c8a9c7c53ab8cbcc7fe0c6",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    },
+    {
+      "key": "gui_window_event_handler",
+      "symbol": "glitch::gui::CGUIWindow::onEvent(glitch::SEvent const&)",
+      "elf_va": "0x0055fe1c",
+      "range_size": 624,
+      "elf_file_offset": 5635612,
+      "function_bytes_sha256": "e235d017e5a1cb7dd9fb300bcc8f8634e1e98134a899393d9acbb16fc80f4b30",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    },
+    {
+      "key": "gui_environment_set_user_event_receiver",
+      "symbol": "glitch::gui::CGUIEnvironment::setUserEventReceiver(glitch::IEventReceiver*)",
+      "elf_va": "0x00535768",
+      "range_size": 8,
+      "elf_file_offset": 5461864,
+      "function_bytes_sha256": "347342d6319f119dc6a730de4ab822210be5a8e5fd49aa14e420d783c34f6a12",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "listing": "reference/input-path.asm"
+    }
+  ]
+}

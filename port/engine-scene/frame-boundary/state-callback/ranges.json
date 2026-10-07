@@ -1,0 +1,713 @@
+{
+  "format": "DH_sc exact ARM state-callback boundary range manifest",
+  "source": {
+    "apk": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+    "apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "library_size": 15938284,
+    "elf_class": "ELF32",
+    "endianness": "little",
+    "machine": "ARM",
+    "pt_load_segments": [
+      {
+        "index": 1,
+        "p_vaddr": "0x0",
+        "p_offset": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130"
+      },
+      {
+        "index": 2,
+        "p_vaddr": "0x956130",
+        "p_offset": "0x955130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500"
+      }
+    ]
+  },
+  "hash_basis": "SHA-256 of exact file-backed ELF PT_LOAD ranges; code listing bytes are generated from those exact slices.",
+  "route_code_ranges": [
+    {
+      "name": "Application::Init(glitch::IDevice*)",
+      "mangled": "_ZN11Application4InitEPN6glitch7IDeviceE",
+      "elf_va": "0x00323ae0",
+      "range_size": 228,
+      "elf_file_offset": 3291872,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "4284eda22be9df734e1acc2a2022683f6a43fa475cd3137bdca1424e0344207c",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "Application::PostInit()",
+      "mangled": "_ZN11Application8PostInitEv",
+      "elf_va": "0x0032f7e8",
+      "range_size": 628,
+      "elf_file_offset": 3340264,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "0387dace44d32551cb6531d9fe0bddcef7a5853ca3adecabdb755e6e16587043",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "StateMachine::Draw() const",
+      "mangled": "_ZNK12StateMachine4DrawEv",
+      "elf_va": "0x0033a100",
+      "range_size": 72,
+      "elf_file_offset": 3383552,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "6391346c424d1364426401cc7cc6c76960701a8ab2d76c6aec26583846cae88b",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "IrrFactory::createSceneManager(glitch::video::IVideoDriver*, boost::intrusive_ptr<glitch::io::IFileSystem> const&, glitch::gui::ICursorControl*, glitch::gui::IGUIEnvironment*)",
+      "mangled": "_ZN10IrrFactory18createSceneManagerEPN6glitch5video12IVideoDriverERKN5boost13intrusive_ptrINS0_2io11IFileSystemEEEPNS0_3gui14ICursorControlEPNSB_15IGUIEnvironmentE",
+      "elf_va": "0x00350a80",
+      "range_size": 108,
+      "elf_file_offset": 3476096,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "d10f1fc866b5a798a820ec84780aa4cf7af57dded6af9bc1aa3adc6b25e01613",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "_GLOBAL__I_.._.._sources_Core_Irrlicht_IrrFactory.cpp",
+      "mangled": "_GLOBAL__I_.._.._sources_Core_Irrlicht_IrrFactory.cpp",
+      "elf_va": "0x00350b24",
+      "range_size": 284,
+      "elf_file_offset": 3476260,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "fe3384d71d4413318c7342545062b3e6c63a04d80341f53161fd70a441c8b7b0",
+      "source_symbol_table": ".symtab"
+    },
+    {
+      "name": "SceneManager::SceneManager(glitch::video::IVideoDriver*, boost::intrusive_ptr<glitch::io::IFileSystem>, glitch::gui::ICursorControl*, glitch::gui::IGUIEnvironment*)",
+      "mangled": "_ZN12SceneManagerC1EPN6glitch5video12IVideoDriverEN5boost13intrusive_ptrINS0_2io11IFileSystemEEEPNS0_3gui14ICursorControlEPNS9_15IGUIEnvironmentE",
+      "elf_va": "0x00352c3c",
+      "range_size": 272,
+      "elf_file_offset": 3484732,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "60c96a4eb12ded6e9e70f0d82486e385c3ee161bad9a3e41f4ab57e892c51ece",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "SceneManager::drawAll(glitch::scene::ISceneNode*)",
+      "mangled": "_ZN12SceneManager7drawAllEPN6glitch5scene10ISceneNodeE",
+      "elf_va": "0x00359338",
+      "range_size": 364,
+      "elf_file_offset": 3511096,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "d44c8f6e041dfb62c19c7648a978842d7526c196b455bd053a4363144432196c",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "GSViewer::Draw(StateMachine const*)",
+      "mangled": "_ZN8GSViewer4DrawEPK12StateMachine",
+      "elf_va": "0x003872bc",
+      "range_size": 60,
+      "elf_file_offset": 3699388,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "f876935d5390abffad97ba7b29d73bbe6fca826a685c462449e85d7e85b6bbad",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "glitch::CIrrFactory::CIrrFactory()",
+      "mangled": "_ZN6glitch11CIrrFactoryC2Ev",
+      "elf_va": "0x00533e98",
+      "range_size": 52,
+      "elf_file_offset": 5455512,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "d5bada98ea73d9256aca25b8b2756edde71c9696bad57ab0fdb903a16b50eba7",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "glitch::CIrrFactory::getInstance()",
+      "mangled": "_ZN6glitch11CIrrFactory11getInstanceEv",
+      "elf_va": "0x00533fe8",
+      "range_size": 168,
+      "elf_file_offset": 5455848,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "ba42151002a9da50c29264b12a8ca2cf65b8ae5ea8d6889972158e879cf56e13",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "glitch::scene::CSceneManager::drawAll(glitch::scene::ISceneNode*)",
+      "mangled": "_ZN6glitch5scene13CSceneManager7drawAllEPNS0_10ISceneNodeE",
+      "elf_va": "0x0058b7f4",
+      "range_size": 152,
+      "elf_file_offset": 5814260,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "f62f4b133640af42ad0bee80f1761278cb595589be3c3834fd83a1bf4c9452f2",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "glitch::IDevice::createGUIAndScene()",
+      "mangled": "_ZN6glitch7IDevice17createGUIAndSceneEv",
+      "elf_va": "0x00671554",
+      "range_size": 148,
+      "elf_file_offset": 6755668,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "87b72762d2659692489b9d803cd55100d2cf109a05c08f78589bc89fef7d26f9",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "glitch::CAndroidOSDevice::CAndroidOSDevice(glitch::SCreationParameters const&)",
+      "mangled": "_ZN6glitch16CAndroidOSDeviceC1ERKNS_19SCreationParametersE",
+      "elf_va": "0x006a0634",
+      "range_size": 276,
+      "elf_file_offset": 6948404,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "75fb2ae2c290339e2f3339ef0a233356ce7bd0f1703736e800cd2afc23d06a6b",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "glitch::CAndroidOSDevice::CAndroidOSDevice(glitch::SCreationParameters const&)",
+      "mangled": "_ZN6glitch16CAndroidOSDeviceC2ERKNS_19SCreationParametersE",
+      "elf_va": "0x006a079c",
+      "range_size": 276,
+      "elf_file_offset": 6948764,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "a4cd0db03cf930d9b5bb2c77c689fc9e05a1acfbef3f41b161766727e9b1f7e8",
+      "source_symbol_table": ".dynsym"
+    }
+  ],
+  "state_draw_callback_search_ranges": [
+    {
+      "name": "StateBase::Draw(StateMachine const*)",
+      "mangled": "_ZN9StateBase4DrawEPK12StateMachine",
+      "elf_va": "0x00383264",
+      "range_size": 4,
+      "elf_file_offset": 3682916,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "379bec29dccd0a93c94826144d7ef6e42fab64ef195a3b8313a16926f66f388f",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "GSConsole::Draw(StateMachine const*)",
+      "mangled": "_ZN9GSConsole4DrawEPK12StateMachine",
+      "elf_va": "0x003832fc",
+      "range_size": 8,
+      "elf_file_offset": 3683068,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "ebeb84d03b636c90737846ba81c1a801ae09afd100b218190a3ac99f6137f6fc",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "GSEndGame::Draw(StateMachine const*)",
+      "mangled": "_ZN9GSEndGame4DrawEPK12StateMachine",
+      "elf_va": "0x00383618",
+      "range_size": 20,
+      "elf_file_offset": 3683864,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "76ba53692b1696374f1058c206c90e9d0036f73dff255785e6297a087ebfb0a3",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "GSFlashMenu::Draw(StateMachine const*)",
+      "mangled": "_ZN11GSFlashMenu4DrawEPK12StateMachine",
+      "elf_va": "0x003841a8",
+      "range_size": 12,
+      "elf_file_offset": 3686824,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "f36ba15be5846afb116df940f32bfa7ac0f316cbdc36cbb471d300a5cde73894",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "GSInit::Draw(StateMachine const*)",
+      "mangled": "_ZN6GSInit4DrawEPK12StateMachine",
+      "elf_va": "0x00384a4c",
+      "range_size": 612,
+      "elf_file_offset": 3689036,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "84337b5063039ecb605a49037f3433036c7a85638d178bd3038770337a1eeac2",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "GSKeyboard::Draw(StateMachine const*)",
+      "mangled": "_ZN10GSKeyboard4DrawEPK12StateMachine",
+      "elf_va": "0x00385a84",
+      "range_size": 8,
+      "elf_file_offset": 3693188,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "8fcedc60df1334b0e2172bed84d9799f5672461612d63cca654863fdf5692024",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "GSLevel::Draw(StateMachine const*)",
+      "mangled": "_ZN7GSLevel4DrawEPK12StateMachine",
+      "elf_va": "0x00386014",
+      "range_size": 44,
+      "elf_file_offset": 3694612,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "363e6361bfa2921dee80ffb08e225a35afa268e7769c0ca0f7819a930f7b6573",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "GSLevelMap::Draw(StateMachine const*)",
+      "mangled": "_ZN10GSLevelMap4DrawEPK12StateMachine",
+      "elf_va": "0x00386938",
+      "range_size": 8,
+      "elf_file_offset": 3696952,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "8f3e928e3d8d0d41c4f0a19c091118976fefa029afab07cfb4279c449e55fbbc",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "GSTest::Draw(StateMachine const*)",
+      "mangled": "_ZN6GSTest4DrawEPK12StateMachine",
+      "elf_va": "0x00386adc",
+      "range_size": 4,
+      "elf_file_offset": 3697372,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "379bec29dccd0a93c94826144d7ef6e42fab64ef195a3b8313a16926f66f388f",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "GSViewer::Draw(StateMachine const*)",
+      "mangled": "_ZN8GSViewer4DrawEPK12StateMachine",
+      "elf_va": "0x003872bc",
+      "range_size": 60,
+      "elf_file_offset": 3699388,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "f876935d5390abffad97ba7b29d73bbe6fca826a685c462449e85d7e85b6bbad",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "non-virtual thunk to GS_InterruptLoading::Draw(StateMachine const*)",
+      "mangled": "_ZThn4_N19GS_InterruptLoading4DrawEPK12StateMachine",
+      "elf_va": "0x0041744c",
+      "range_size": 8,
+      "elf_file_offset": 4289612,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "fa04763cc015275f81b1d864426513948ce8bfb90e0889b5098b558301847cdd",
+      "source_symbol_table": ".dynsym"
+    },
+    {
+      "name": "GS_InterruptLoading::Draw(StateMachine const*)",
+      "mangled": "_ZN19GS_InterruptLoading4DrawEPK12StateMachine",
+      "elf_va": "0x00417454",
+      "range_size": 632,
+      "elf_file_offset": 4289620,
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "sha256": "899b90fbf72037cbaf4ced6dbd222ab258489985c09134cba0eedce26a4c1e2a",
+      "source_symbol_table": ".dynsym"
+    }
+  ],
+  "data_ranges": [
+    {
+      "name": "vtable for GSViewer",
+      "symbol": "_ZTV8GSViewer",
+      "va": "0x00963f00",
+      "size": 52,
+      "file_offset": 9842432,
+      "pt_load_index": 2,
+      "segment_p_offset": "0x955130",
+      "segment_p_vaddr": "0x956130",
+      "sha256": "9d42c853ffa921dcb55293daaee5a32a3e2fcf114840e0c65ca9f1047f9e8c26",
+      "validated_words": [
+        "0x00000000",
+        "0x00000000",
+        "0x003871c4",
+        "0x003875a4",
+        "0x003872f8",
+        "0x003871c8",
+        "0x00383258",
+        "0x0038325c",
+        "0x00387270",
+        "0x003872bc",
+        "0x00383268",
+        "0x0038326c",
+        "0x00383270"
+      ],
+      "validated_entries": [
+        {
+          "offset": 20,
+          "address": "0x00963f14",
+          "raw_word": "0x003871c8",
+          "target_symbols": [
+            "GSViewer::Dtor(StateMachine const*)"
+          ]
+        },
+        {
+          "offset": 36,
+          "address": "0x00963f24",
+          "raw_word": "0x003872bc",
+          "target_symbols": [
+            "GSViewer::Draw(StateMachine const*)"
+          ]
+        }
+      ],
+      "validated_slots": {
+        "Draw_raw_offset_0x24": "0x003872bc"
+      },
+      "address_point_offset_from_table_symbol": "0x08",
+      "runtime_draw_vcall_displacement": "0x1c"
+    },
+    {
+      "name": "vtable for IrrFactory",
+      "symbol": "_ZTV10IrrFactory",
+      "va": "0x0095cd18",
+      "size": 28,
+      "file_offset": 9813272,
+      "pt_load_index": 2,
+      "segment_p_offset": "0x955130",
+      "segment_p_vaddr": "0x956130",
+      "sha256": "7b73cdd0e3d10bf031eb377eb98a12a3d05c763489fb80544903313dad999974",
+      "validated_words": [
+        "0x00000000",
+        "0x00000000",
+        "0x00350a4c",
+        "0x00350c40",
+        "0x00350aec",
+        "0x00350a80",
+        "0x00533f28"
+      ],
+      "validated_entries": [
+        {
+          "offset": 20,
+          "address": "0x0095cd2c",
+          "raw_word": "0x00350a80",
+          "target_symbols": [
+            "IrrFactory::createSceneManager(glitch::video::IVideoDriver*, boost::intrusive_ptr<glitch::io::IFileSystem> const&, glitch::gui::ICursorControl*, glitch::gui::IGUIEnvironment*)"
+          ]
+        }
+      ],
+      "validated_slots": {
+        "createSceneManager_raw_offset_0x14": "0x00350a80"
+      },
+      "address_point_offset_from_table_symbol": "0x08",
+      "runtime_createSceneManager_vcall_displacement": "0x0c"
+    },
+    {
+      "name": "vtable for SceneManager",
+      "symbol": "_ZTV12SceneManager",
+      "va": "0x0095cd78",
+      "size": 204,
+      "file_offset": 9813368,
+      "pt_load_index": 2,
+      "segment_p_offset": "0x955130",
+      "segment_p_vaddr": "0x956130",
+      "sha256": "d5ec4e8c43d9f422659171a6456b03c9b7863ec42a6c75e3226fe2efda915c4e",
+      "validated_words": [
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x0000048c",
+        "0x00000000",
+        "0x00000000",
+        "0x00588fe8",
+        "0x0058bbc4",
+        "0x00356bec",
+        "0x00356c9c",
+        "0x00589208",
+        "0x00589d48",
+        "0x00589d58",
+        "0x00589298",
+        "0x0058c3cc",
+        "0x0058f348",
+        "0x0058b88c",
+        "0x00589128",
+        "0x00589fa4",
+        "0x00589168",
+        "0x0058b728",
+        "0x00359338",
+        "0x00589e7c",
+        "0x00589e18",
+        "0x00590660",
+        "0x0058b0a8",
+        "0x0058ff10",
+        "0x0058fee0",
+        "0x0058fccc",
+        "0x0058fc9c",
+        "0x0058b9f0",
+        "0x00589328",
+        "0x00354468",
+        "0x0058942c",
+        "0x0058dd50",
+        "0x00589364",
+        "0x0058d36c",
+        "0x00589b84",
+        "0x0058e768",
+        "0x00589558",
+        "0x00353afc",
+        "0x0035a3d8",
+        "0x00358008",
+        "0x00000000",
+        "0xfffffb74",
+        "0xfffffb74",
+        "0x00000000",
+        "0x0035a8d0",
+        "0x0035a8b0",
+        "0x0031d5cc"
+      ],
+      "validated_entries": [
+        {
+          "offset": 20,
+          "address": "0x0095cd8c",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": 36,
+          "address": "0x0095cd9c",
+          "raw_word": "0x00356bec",
+          "target_symbols": [
+            "SceneManager::~SceneManager()"
+          ]
+        },
+        {
+          "offset": 88,
+          "address": "0x0095cdd0",
+          "raw_word": "0x00359338",
+          "target_symbols": [
+            "SceneManager::drawAll(glitch::scene::ISceneNode*)"
+          ]
+        }
+      ],
+      "validated_slots": {
+        "drawAll_raw_offset_0x58": "0x00359338"
+      },
+      "address_point_offset_from_table_symbol": "0x1c",
+      "runtime_drawAll_vcall_displacement": "0x3c"
+    },
+    {
+      "name": "vtable for glitch::scene::CSceneManager",
+      "symbol": "_ZTVN6glitch5scene13CSceneManagerE",
+      "va": "0x009766d8",
+      "size": 192,
+      "file_offset": 9918168,
+      "pt_load_index": 2,
+      "segment_p_offset": "0x955130",
+      "segment_p_vaddr": "0x956130",
+      "sha256": "2de7ff6e4a3339d0e31527bb937da5f8870191b10f7525b4fa0f6d16c457e795",
+      "validated_words": [
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x0000028c",
+        "0x00000000",
+        "0x00000000",
+        "0x00588fe8",
+        "0x0058bbc4",
+        "0x0058eb70",
+        "0x0058ef00",
+        "0x00589208",
+        "0x00589d48",
+        "0x00589d58",
+        "0x00589298",
+        "0x0058c3cc",
+        "0x0058f348",
+        "0x0058b88c",
+        "0x00589128",
+        "0x00589fa4",
+        "0x00589168",
+        "0x0058b728",
+        "0x0058b7f4",
+        "0x00589e7c",
+        "0x00589e18",
+        "0x00590660",
+        "0x0058b0a8",
+        "0x0058ff10",
+        "0x0058fee0",
+        "0x0058fccc",
+        "0x0058fc9c",
+        "0x0058b9f0",
+        "0x00589328",
+        "0x00589888",
+        "0x0058942c",
+        "0x0058dd50",
+        "0x00589364",
+        "0x0058d36c",
+        "0x00589b84",
+        "0x0058e768",
+        "0x00589558",
+        "0x00000000",
+        "0xfffffd74",
+        "0xfffffd74",
+        "0x00000000",
+        "0x00590ef0",
+        "0x00590ed0",
+        "0x0031d5cc"
+      ],
+      "validated_entries": [
+        {
+          "offset": 20,
+          "address": "0x009766ec",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset": 36,
+          "address": "0x009766fc",
+          "raw_word": "0x0058eb70",
+          "target_symbols": [
+            "glitch::scene::CSceneManager::~CSceneManager()"
+          ]
+        },
+        {
+          "offset": 88,
+          "address": "0x00976730",
+          "raw_word": "0x0058b7f4",
+          "target_symbols": [
+            "glitch::scene::CSceneManager::drawAll(glitch::scene::ISceneNode*)"
+          ]
+        }
+      ],
+      "validated_slots": {
+        "drawAll_raw_offset_0x58": "0x0058b7f4"
+      },
+      "address_point_offset_from_table_symbol": "0x1c",
+      "runtime_drawAll_vcall_displacement": "0x3c"
+    },
+    {
+      "name": "vtable for glitch::CIrrFactory",
+      "symbol": "_ZTVN6glitch11CIrrFactoryE",
+      "va": "0x0096cb78",
+      "size": 28,
+      "file_offset": 9878392,
+      "pt_load_index": 2,
+      "segment_p_offset": "0x955130",
+      "segment_p_vaddr": "0x956130",
+      "sha256": "52e99b46cc2e22603b4d3f45921855f1e02230dce4cfb27eb98516687067304e",
+      "validated_words": [
+        "0x00000000",
+        "0x00000000",
+        "0x00533f04",
+        "0x00534090",
+        "0x00533fb0",
+        "0x00533f60",
+        "0x00533f28"
+      ],
+      "validated_entries": [
+        {
+          "offset": 20,
+          "address": "0x0096cb8c",
+          "raw_word": "0x00533f60",
+          "target_symbols": [
+            "glitch::CIrrFactory::createSceneManager(glitch::video::IVideoDriver*, boost::intrusive_ptr<glitch::io::IFileSystem> const&, glitch::gui::ICursorControl*, glitch::gui::IGUIEnvironment*)"
+          ]
+        }
+      ],
+      "validated_slots": {
+        "base_createSceneManager_raw_offset_0x14": "0x00533f60"
+      },
+      "address_point_offset_from_table_symbol": "0x08",
+      "runtime_createSceneManager_vcall_displacement": "0x0c"
+    },
+    {
+      "name": ".init_array entry for IrrFactory translation-unit initializer",
+      "va": "0x0095620c",
+      "size": 4,
+      "file_offset": 9785868,
+      "sha256": "dc4c09dd56f7c8a8e1ab6ba697f17982db643778233ef37498f3c67cd09aab01",
+      "pt_load_index": 2,
+      "relocation_type": "R_ARM_RELATIVE",
+      "relocation_target_va": "0x00350b24"
+    }
+  ],
+  "relocation_slots": [
+    {
+      "name": "CIrrFactory::s_instance GOT slot",
+      "slot_va": "0x00995f68",
+      "slot_file_offset": 10047336,
+      "slot_bytes_sha256": "4e9fd5bf2b1d395f5386d6f9ee7af019c8fdcc22cafe9ee94f1c0855fabd9be5",
+      "pt_load_index": 2,
+      "relocation_type": "R_ARM_RELATIVE",
+      "relocation_target_va": "0x009f6560",
+      "relocation_target_symbol": "glitch::CIrrFactory::s_instance"
+    },
+    {
+      "name": "IrrFactory::s_factory GOT slot",
+      "slot_va": "0x009991c8",
+      "slot_file_offset": 10060232,
+      "slot_bytes_sha256": "f519191b6ccbadaa4e52153d09659cf86e167c093bdb72150b0a3c01512c7967",
+      "pt_load_index": 2,
+      "relocation_type": "R_ARM_RELATIVE",
+      "relocation_target_va": "0x009a1eec",
+      "relocation_target_symbol": "IrrFactory::s_factory"
+    },
+    {
+      "name": "IrrFactory vtable GOT slot",
+      "slot_va": "0x00997030",
+      "slot_file_offset": 10051632,
+      "slot_bytes_sha256": "219bcd87c56f1a27dfbb237bd8aa873ad5571007131e46319d625848f6ef66f8",
+      "pt_load_index": 2,
+      "relocation_type": "R_ARM_RELATIVE",
+      "relocation_target_va": "0x0095cd18",
+      "relocation_target_symbol": "vtable for IrrFactory"
+    },
+    {
+      "name": "Application::s_inst GOT slot",
+      "slot_va": "0x0099828c",
+      "slot_file_offset": 10056332,
+      "slot_bytes_sha256": "e992b4bf2b4007a862595b858fc2972f030b1eaecb45b24b0170b58c66000160",
+      "pt_load_index": 2,
+      "relocation_type": "R_ARM_RELATIVE",
+      "relocation_target_va": "0x0099f72c",
+      "relocation_target_symbol": "Singleton<Application>::s_inst"
+    }
+  ],
+  "verified": {
+    "source_elf_sha256_matches_parent_manifest": true,
+    "all_code_and_table_ranges_are_file_backed": true,
+    "code_bytes_disassembled_from_hashed_elf_slices": true,
+    "vtable_slot_words_read_from_hashed_elf_slices": true,
+    "recovered_elf_symbol_and_relocation_indices_correlate_to_values": true
+  },
+  "listing": {
+    "path": "reference/state-callback.asm",
+    "sha256": "57f2403a102bb2b31a2030282c15acbdff5156c64c4d174535703bdd46167e81"
+  }
+}

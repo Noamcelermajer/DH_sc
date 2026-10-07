@@ -1,0 +1,228 @@
+{
+  "apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "imported_gl_functions": [
+    {
+      "name": "glGetShaderInfoLog",
+      "plt_va": "0x0030dfbc",
+      "range_size": 12,
+      "elf_file_offset": 3203004,
+      "byte_sha256": "41e5947c7e7ce026bf4f10dd7233de3f459f291086077e5588de1bdce51b4b90",
+      "call_sites": [
+        "0x006df4d4"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetShaderInfoLog@plt"
+    },
+    {
+      "name": "glGetProgramInfoLog",
+      "plt_va": "0x0030e214",
+      "range_size": 12,
+      "elf_file_offset": 3203604,
+      "byte_sha256": "52b797c8d3136a498069731019e494c7bb7ed217de06426fb9f498adedcea549",
+      "call_sites": [
+        "0x006df444",
+        "0x006dea60",
+        "0x006dead8"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetProgramInfoLog@plt"
+    },
+    {
+      "name": "glGetActiveAttrib",
+      "plt_va": "0x0030e01c",
+      "range_size": 12,
+      "elf_file_offset": 3203100,
+      "byte_sha256": "cde7b382263e63496528dfc688758b0fbcfcd737c41c5b22ebcdcdade8c40c3d",
+      "call_sites": [
+        "0x006dec00"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetActiveAttrib@plt"
+    },
+    {
+      "name": "glDeleteProgram",
+      "plt_va": "0x0030e0a0",
+      "range_size": 12,
+      "elf_file_offset": 3203232,
+      "byte_sha256": "cceaa686936ab2964c023f98294e49ee55f3878d46c8c09198c255aac5806fc6",
+      "call_sites": [
+        "0x006de90c",
+        "0x006df1e4",
+        "0x006df2ac"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glDeleteProgram@plt"
+    },
+    {
+      "name": "glGetUniformLocation",
+      "plt_va": "0x0030e13c",
+      "range_size": 12,
+      "elf_file_offset": 3203388,
+      "byte_sha256": "44888879a57c56dd0abb34a9a3bcb16c18bae8921686b162d2735423a0da8324",
+      "call_sites": [
+        "0x006ded84"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetUniformLocation@plt"
+    },
+    {
+      "name": "glGetProgramiv",
+      "plt_va": "0x0030e28c",
+      "range_size": 12,
+      "elf_file_offset": 3203724,
+      "byte_sha256": "3db4917e3b69d3ea11710b7317f799306f8fbd4e2ab332b4d8f8b42d546b65ad",
+      "call_sites": [
+        "0x006dea20",
+        "0x006dea40",
+        "0x006deab0",
+        "0x006deb00",
+        "0x006deb14",
+        "0x006deb30",
+        "0x006deb60"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetProgramiv@plt"
+    },
+    {
+      "name": "glCompileShader",
+      "plt_va": "0x0030e46c",
+      "range_size": 12,
+      "elf_file_offset": 3204204,
+      "byte_sha256": "697c116426ee3ce6b2cf283d56da92d12be283d9f7d573263cf5d8feb1111b3e",
+      "call_sites": [
+        "0x006df3e8"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glCompileShader@plt"
+    },
+    {
+      "name": "glCreateShader",
+      "plt_va": "0x0030e538",
+      "range_size": 12,
+      "elf_file_offset": 3204408,
+      "byte_sha256": "6a291cf621a9bbf37570d4980e08a89a89f037bae22c95b1d7d8174aaf96640f",
+      "call_sites": [
+        "0x006df584"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glCreateShader@plt"
+    },
+    {
+      "name": "glDeleteShader",
+      "plt_va": "0x0030e628",
+      "range_size": 12,
+      "elf_file_offset": 3204648,
+      "byte_sha256": "d6c2e0668d0be45f034c692950c12ae79c34b22d7ad98df219a0591955ba2835",
+      "call_sites": [
+        "0x006df608"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glDeleteShader@plt"
+    },
+    {
+      "name": "glGetActiveUniform",
+      "plt_va": "0x0030e6d0",
+      "range_size": 12,
+      "elf_file_offset": 3204816,
+      "byte_sha256": "6506da6956f6f13ed124eff516da4c67f3a7ab0d9d85a028277a5d9b4ab399bf",
+      "call_sites": [
+        "0x006ded0c"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetActiveUniform@plt"
+    },
+    {
+      "name": "glGetAttribLocation",
+      "plt_va": "0x0030e73c",
+      "range_size": 12,
+      "elf_file_offset": 3204924,
+      "byte_sha256": "333ba8aec01675bee34f1088c1fff4b6d8563abf4794b87ae12b1602431a7a61",
+      "call_sites": [
+        "0x006dec20"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetAttribLocation@plt"
+    },
+    {
+      "name": "glAttachShader",
+      "plt_va": "0x0030ebf8",
+      "range_size": 12,
+      "elf_file_offset": 3206136,
+      "byte_sha256": "ed882102c72d187d09a2a514f80dcd9e0e28728040e5face3e2771f91e63dfac",
+      "call_sites": [
+        "0x006df274",
+        "0x006df284"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glAttachShader@plt"
+    },
+    {
+      "name": "glCreateProgram",
+      "plt_va": "0x0030ec1c",
+      "range_size": 12,
+      "elf_file_offset": 3206172,
+      "byte_sha256": "7d354761688da2ec623345176b0e1d3143c19e9055b6d7f29faa5c1e550b8377",
+      "call_sites": [
+        "0x006de8e8"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glCreateProgram@plt"
+    },
+    {
+      "name": "glGetShaderiv",
+      "plt_va": "0x0030ed54",
+      "range_size": 12,
+      "elf_file_offset": 3206484,
+      "byte_sha256": "9db9ff836647179831e6c4df38ba73d7b9a709dda3a6796bcf521b6a0bf4f786",
+      "call_sites": [
+        "0x006df3fc",
+        "0x006df410",
+        "0x006df454",
+        "0x006df4e4"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetShaderiv@plt"
+    },
+    {
+      "name": "glLinkProgram",
+      "plt_va": "0x0030ed78",
+      "range_size": 12,
+      "elf_file_offset": 3206520,
+      "byte_sha256": "37edee1e059da44ccfecccf9d1a9bd6be0fd268d8c2c1b0cbaf2e6dc387ac42a",
+      "call_sites": [
+        "0x006dea08"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glLinkProgram@plt"
+    },
+    {
+      "name": "glShaderSource",
+      "plt_va": "0x0030ed84",
+      "range_size": 12,
+      "elf_file_offset": 3206532,
+      "byte_sha256": "330cc20a8ca59b504a6a23468629c719810ec06f943fac7f2d02b11a44f2fe00",
+      "call_sites": [
+        "0x006df5a0"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glShaderSource@plt"
+    }
+  ]
+}

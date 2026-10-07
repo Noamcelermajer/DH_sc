@@ -1,0 +1,226 @@
+{
+  "schema": "dh2-serialized-vertex-remap-evidence-v1",
+  "method": "SHA-256 covers exact byte ranges. ELF VAs are mapped through file-backed PT_LOAD segments. Assembly bytes are decoded from the source ELF.",
+  "inputs": {
+    "apk": {
+      "path": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+      "sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200"
+    },
+    "elf": {
+      "path": "work\\DH_sc\\work\\libDungeonHunter2.so",
+      "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "size_bytes": 15938284,
+      "class": "ELF32",
+      "endianness": "little",
+      "machine": "ARM",
+      "pt_load_segments": [
+        {
+          "index": 1,
+          "virtual_address": 0,
+          "file_offset": 0,
+          "file_size": 9785648,
+          "memory_size": 9785648
+        },
+        {
+          "index": 2,
+          "virtual_address": 9789744,
+          "file_offset": 9785648,
+          "file_size": 300364,
+          "memory_size": 914688
+        }
+      ]
+    },
+    "bres_cache_zip": {
+      "path": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2-cache.zip",
+      "sha256": "3fdf4e4c21d45a780a7c35fb4042abde0e88e76bf75416aad1f227481560b679"
+    },
+    "corpus_census": {
+      "path": "corpus-census.json",
+      "sha256": "f397cba303ca4ce7d6798af96fd5fb834130ac003e05cb9b846ac115ae370edf"
+    }
+  },
+  "function_ranges": [
+    {
+      "key": "get_visual_scene_by_index",
+      "symbol": "_ZNK6glitch7collada16CColladaDatabase14getVisualSceneEi",
+      "elf_va": "0x0060e54c",
+      "size_bytes": 36,
+      "file_offset": "0x60e54c",
+      "sha256": "e629c6c37bcb70c63b21671327c46d29959c9b6fd8367c28c4c90bede5d5e424"
+    },
+    {
+      "key": "construct_visual_scene",
+      "symbol": "_ZNK6glitch7collada16CColladaDatabase20constructVisualSceneEPNS_5video12IVideoDriverEPNS0_12SVisualSceneEPNS0_14CRootSceneNodeE",
+      "elf_va": "0x0061b8bc",
+      "size_bytes": 204,
+      "file_offset": "0x61b8bc",
+      "sha256": "d35fbff3ca43ca621f9e4304b4370c9908131faf71e941f0ab75a22916482258"
+    },
+    {
+      "key": "construct_node",
+      "symbol": "_ZNK6glitch7collada16CColladaDatabase13constructNodeEPNS_5video12IVideoDriverEPNS0_5SNodeEPNS0_14CRootSceneNodeE",
+      "elf_va": "0x0061b2f4",
+      "size_bytes": 1480,
+      "file_offset": "0x61b2f4",
+      "sha256": "9e047558fe98fb8d63868ffd99023086eaeab7284e550954810440da90d88b59"
+    },
+    {
+      "key": "construct_geometry_instance",
+      "symbol": "_ZNK6glitch7collada16CColladaDatabase17constructGeometryEPNS_5video12IVideoDriverEPNS0_17SInstanceGeometryEPNS0_14CRootSceneNodeE",
+      "elf_va": "0x0061aeb8",
+      "size_bytes": 500,
+      "file_offset": "0x61aeb8",
+      "sha256": "7f6b5abcb0cc7417df2566e713f3b0665738657101d6c7785aa84d1ab36741c4"
+    },
+    {
+      "key": "create_material_vertex_attribute_map",
+      "symbol": "_ZN6glitch7collada15CColladaFactory32createMaterialVertexAttributeMapERKNS0_16CColladaDatabaseEPNS0_17SInstanceMaterialERKN5boost13intrusive_ptrINS0_5IMeshEEERKNS8_INS_5video9CMaterialEEEjb",
+      "elf_va": "0x00634520",
+      "size_bytes": 1152,
+      "file_offset": "0x634520",
+      "sha256": "2181e4833f595b9c3d200b08299e98536b25e9e78df902c4c5fe8c209c8485fd"
+    },
+    {
+      "key": "vertex_attribute_map_set",
+      "symbol": "_ZN6glitch5video19CVertexAttributeMap3setERKN5boost13intrusive_ptrIKNS0_14CVertexStreamsEEEjPKhb",
+      "elf_va": "0x005a0708",
+      "size_bytes": 128,
+      "file_offset": "0x5a0708",
+      "sha256": "3429093c705e188296b049b6cb906bd0cc3ee878784d5884e6431e1f8ea7b8ad"
+    },
+    {
+      "key": "vertex_stream_get_stream",
+      "symbol": "_ZNK6glitch5video14CVertexStreams9getStreamENS0_18E_VERTEX_ATTRIBUTEEPKNS0_13SVertexStreamES5_",
+      "elf_va": "0x005a0aac",
+      "size_bytes": 68,
+      "file_offset": "0x5a0aac",
+      "sha256": "325770b6c97267f20d014c5740327d74c5e3249f07bd4ef982b45547c310d718"
+    },
+    {
+      "key": "material_map_set",
+      "symbol": "_ZN6glitch5video27CMaterialVertexAttributeMap3setEhhRKN5boost13intrusive_ptrINS0_19CVertexAttributeMapEEE",
+      "elf_va": "0x005df814",
+      "size_bytes": 132,
+      "file_offset": "0x5df814",
+      "sha256": "1f12001d9ca601aa13d896a1562acd995d525c502e1a55ae940fb071f2e1470b"
+    }
+  ],
+  "assembly_excerpt_ranges": [
+    {
+      "key": "get_visual_scene_lookup",
+      "elf_va_start": "0x0060e54c",
+      "elf_va_end_exclusive": "0x0060e570",
+      "size_bytes": 36,
+      "file_offset": "0x60e54c",
+      "sha256": "e629c6c37bcb70c63b21671327c46d29959c9b6fd8367c28c4c90bede5d5e424"
+    },
+    {
+      "key": "visual_scene_node_array",
+      "elf_va_start": "0x0061b8bc",
+      "elf_va_end_exclusive": "0x0061b958",
+      "size_bytes": 156,
+      "file_offset": "0x61b8bc",
+      "sha256": "172ab19a3fd25ada4002abe03b4eac21edf0bc11951fd9a37d6759f36505a74f"
+    },
+    {
+      "key": "node_typed_reference_array",
+      "elf_va_start": "0x0061b314",
+      "elf_va_end_exclusive": "0x0061b39c",
+      "size_bytes": 136,
+      "file_offset": "0x61b314",
+      "sha256": "47a50d0d5a57dad6250cc46bd34404062f914d12fd2c33fe154a50d0fbaaf438"
+    },
+    {
+      "key": "node_type3_geometry_dispatch",
+      "elf_va_start": "0x0061b68c",
+      "elf_va_end_exclusive": "0x0061b6a8",
+      "size_bytes": 28,
+      "file_offset": "0x61b68c",
+      "sha256": "e1a5013e0ad0ee3cd3df4e236e5223d684b843d294dd5e0ac1f400d56408457e"
+    },
+    {
+      "key": "geometry_instance_record_setup",
+      "elf_va_start": "0x0061aeb8",
+      "elf_va_end_exclusive": "0x0061aee8",
+      "size_bytes": 48,
+      "file_offset": "0x61aeb8",
+      "sha256": "a16de9391b82924256f99606c131c56371a2b9fdc799b6dda34ce221b4c2944b"
+    },
+    {
+      "key": "geometry_per_buffer_material_loop",
+      "elf_va_start": "0x0061af38",
+      "elf_va_end_exclusive": "0x0061b020",
+      "size_bytes": 232,
+      "file_offset": "0x61af38",
+      "sha256": "0b5e74a14dcefa4c434330cd334f526c442ef12b18b45ece3282cc91e5869e6f"
+    },
+    {
+      "key": "factory_profile_technique_subrecord_loop",
+      "elf_va_start": "0x0063459c",
+      "elf_va_end_exclusive": "0x00634780",
+      "size_bytes": 484,
+      "file_offset": "0x63459c",
+      "sha256": "65dce8890f8d2d84ce46342960c2d6707d76bd5c45f03c61ef8c6a07a064c8f5"
+    },
+    {
+      "key": "vertex_attribute_map_set_pair_semantics",
+      "elf_va_start": "0x005a0720",
+      "elf_va_end_exclusive": "0x005a0778",
+      "size_bytes": 88,
+      "file_offset": "0x5a0720",
+      "sha256": "e76f9c586f2b6e9cf6d8c4a700d8cf81f95e51386916adece61d2a39b549d39b"
+    }
+  ],
+  "vtable_slot": {
+    "elf_va": "0x0097b804",
+    "file_offset": "0x97a804",
+    "size_bytes": 4,
+    "raw_bytes_hex": "20 45 63 00",
+    "little_endian_word": "0x00634520",
+    "sha256": "dbdb2fa793c589eacc84f209d19f8d8e12909f92561008a6f9eca00c6d1d2af3",
+    "vtable_symbol": "_ZTVN6glitch7collada15CColladaFactoryE",
+    "vtable_va": "0x0097b7d8",
+    "vtable_size_bytes": 136,
+    "slot_from_vtable_start": "0x2c",
+    "object_vptr_slot_offset": "0x24",
+    "relocations": [
+      {
+        "section": ".rel.dyn",
+        "offset": "0x97b804",
+        "type": 23,
+        "symbol_index": 0
+      }
+    ]
+  },
+  "serialized_sample": {
+    "cache_member": "com.gameloft.android.GAND.GloftD2SS/files/data/3d/props/swamp/prop_swamp_corpses.bdae",
+    "uncompressed_member_sha256": "50b681e96d5e5f2647adee92e7344be815afd821e0a2586e61a61dd60e1b9e01",
+    "uncompressed_byte_offset": "0xa8e0",
+    "size_bytes": 6,
+    "pair_bytes_hex": "01 01 02 02 03 12",
+    "decoded_pairs_destination_source": [
+      [
+        1,
+        1
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        3,
+        18
+      ]
+    ]
+  },
+  "census_summary": {
+    "valid_bres_images": 2901,
+    "images_with_visual_scenes": 1563,
+    "scene_geometry_instances": 1334,
+    "profile_map_descriptors": 346,
+    "technique_rows": 8304,
+    "unique_serialized_map_subrecords": 8304,
+    "serialized_pairs": 9653,
+    "code_9_to_16_occurrences_in_either_pair_role": 0
+  }
+}

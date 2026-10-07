@@ -1,0 +1,133 @@
+{
+  "original_library": "libDungeonHunter2.so",
+  "original_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "verified_source": {
+    "container": "Dungeon-Hunter-2-HD-v1-0-2.apk",
+    "container_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+    "entry": "lib/armeabi-v7a/libDungeonHunter2.so"
+  },
+  "hash_basis": "For each function, SHA-256 was computed over the original ELF byte range at elf_address after mapping the address through its unique file-backed PT_LOAD segment. Each selected copied ARM listing range was compared byte-for-byte with that ELF slice, and its byte length matches range_size.",
+  "complete_function_count": 12,
+  "functions": [
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase13constructSkinEPNS_5video12IVideoDriverEPNS0_11SControllerEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CColladaDatabase::constructSkin(glitch::video::IVideoDriver*, glitch::collada::SController*, glitch::collada::CRootSceneNode*) const",
+      "elf_address": "0x0060f924",
+      "size": 128,
+      "sha256": "d20d2131ca54ca009e16fa186f2ffbea218c28c32bdbfaa6fed035bebcdf41e3",
+      "scope": "complete function",
+      "role": "skin controller construction",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm"
+    },
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase14constructMorphEPNS_5video12IVideoDriverEPNS0_11SControllerEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CColladaDatabase::constructMorph(glitch::video::IVideoDriver*, glitch::collada::SController*, glitch::collada::CRootSceneNode*) const",
+      "elf_address": "0x0060f9a4",
+      "size": 128,
+      "sha256": "ae4dad87282b9b2327594bed123e06554a4f68338296b6cfe7d436ecc110eb86",
+      "scope": "complete function",
+      "role": "morph controller construction",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm"
+    },
+    {
+      "original_symbol": "_ZNK6glitch7collada16CColladaDatabase19constructControllerEPNS_5video12IVideoDriverEPNS0_11SControllerEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CColladaDatabase::constructController(glitch::video::IVideoDriver*, glitch::collada::SController*, glitch::collada::CRootSceneNode*) const",
+      "elf_address": "0x0060fa24",
+      "size": 76,
+      "sha256": "60416ffca6232a47ca640aa4d92494e91a315e1822d9b17324aba9293066104a",
+      "scope": "complete function",
+      "role": "controller type dispatch",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada15CColladaFactory10createSkinERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverEPNS0_11SControllerEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CColladaFactory::createSkin(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, glitch::collada::SController*, glitch::collada::CRootSceneNode*)",
+      "elf_address": "0x006315cc",
+      "size": 92,
+      "sha256": "c7615e8f2b232a02d613f9f70b05a208aec1a68d053b9c635ae83a4a74c1c733",
+      "scope": "complete function",
+      "role": "skin factory allocation and construction",
+      "assembly_file": "glitch_collada_CColladaFactory-db06bc565b1a-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada15CColladaFactory11createMorphERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverEPNS0_11SControllerEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CColladaFactory::createMorph(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, glitch::collada::SController*, glitch::collada::CRootSceneNode*)",
+      "elf_address": "0x006318c8",
+      "size": 92,
+      "sha256": "4e85b92ca4a1d6563c690310b7af594813b6d053ffb24f672ec621dba5851299",
+      "scope": "complete function",
+      "role": "morph factory allocation and construction",
+      "assembly_file": "glitch_collada_CColladaFactory-db06bc565b1a-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada13CMorphingMesh15instanciateMeshEPNS_5video12IVideoDriverEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CMorphingMesh::instanciateMesh(glitch::video::IVideoDriver*, glitch::collada::CRootSceneNode*)",
+      "elf_address": "0x0064b700",
+      "size": 712,
+      "sha256": "f40325c6bf01c984a1de96b3419a9380c60b10a5603736614b488d2eb69b21f5",
+      "scope": "complete function",
+      "role": "morph mesh instantiation",
+      "assembly_file": "glitch_collada_CMorphingMesh-832437b81c01-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada13CMorphingMeshC1ERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverERNS0_11SControllerEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CMorphingMesh::CMorphingMesh(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, glitch::collada::SController&, glitch::collada::CRootSceneNode*)",
+      "elf_address": "0x0064b9c8",
+      "size": 216,
+      "sha256": "28affec4892aef82d88d225d22f6c016219b84fc903cab14366c7ba867b1560a",
+      "scope": "complete function",
+      "role": "morph mesh constructor C1",
+      "assembly_file": "glitch_collada_CMorphingMesh-832437b81c01-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada13CMorphingMeshC2ERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverERNS0_11SControllerEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CMorphingMesh::CMorphingMesh(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, glitch::collada::SController&, glitch::collada::CRootSceneNode*)",
+      "elf_address": "0x0064baa0",
+      "size": 216,
+      "sha256": "107f8aa5c73ba8b3f7d4f9f9a5edeb16ed92d0dd1bc78f722da2796b678236cc",
+      "scope": "complete function",
+      "role": "morph mesh constructor C2",
+      "assembly_file": "glitch_collada_CMorphingMesh-832437b81c01-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch3res8onDemandINS_7collada9SSkinDataIfEEE3getERNS0_14onDemandReaderE",
+      "demangled": "glitch::res::onDemand<glitch::collada::SSkinData<float> >::get(glitch::res::onDemandReader&)",
+      "elf_address": "0x00663bd0",
+      "size": 108,
+      "sha256": "fd9ac867bc2fec9a269223cc381d591c6ff8dee3b8c6f488bb8669d288428a7b",
+      "scope": "complete function",
+      "role": "on-demand SSkinData<float> loader",
+      "assembly_file": "glitch_res_onDemand_glitch_collada_SSkinData_float-d27536c869b5-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada12CSkinnedMesh15instanciateMeshEPNS_5video12IVideoDriverEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CSkinnedMesh::instanciateMesh(glitch::video::IVideoDriver*, glitch::collada::CRootSceneNode*)",
+      "elf_address": "0x00664af8",
+      "size": 396,
+      "sha256": "23569c04b1f8b7c6847a87e38f19de004a300e2635402e88efd72a146661e520",
+      "scope": "complete function",
+      "role": "skin mesh instantiation",
+      "assembly_file": "glitch_collada_CSkinnedMesh-976a300b44b5-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada12CSkinnedMeshC2ERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverERNS0_11SControllerEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CSkinnedMesh::CSkinnedMesh(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, glitch::collada::SController&, glitch::collada::CRootSceneNode*)",
+      "elf_address": "0x00665fe8",
+      "size": 1288,
+      "sha256": "26dbbe26d6bca5c41d3e2b5ceb0604cedf88c1015061ddb1a9b90b3cdcc7b1cf",
+      "scope": "complete function",
+      "role": "skin mesh constructor C2",
+      "assembly_file": "glitch_collada_CSkinnedMesh-976a300b44b5-001.asm"
+    },
+    {
+      "original_symbol": "_ZN6glitch7collada12CSkinnedMeshC1ERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverERNS0_11SControllerEPNS0_14CRootSceneNodeE",
+      "demangled": "glitch::collada::CSkinnedMesh::CSkinnedMesh(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, glitch::collada::SController&, glitch::collada::CRootSceneNode*)",
+      "elf_address": "0x006664f0",
+      "size": 1288,
+      "sha256": "29658b99c6d082d0c087d7a91818fac8ad28dab5b1c5ff0f711ba4947331f4f3",
+      "scope": "complete function",
+      "role": "skin mesh constructor C1",
+      "assembly_file": "glitch_collada_CSkinnedMesh-976a300b44b5-001.asm"
+    }
+  ]
+}

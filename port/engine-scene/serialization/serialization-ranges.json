@@ -1,0 +1,187 @@
+{
+  "schema": "dh2-engine-scene-serialization-provenance-v1",
+  "source_apk": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "source_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "source_elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "source_elf_size": 15938284,
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "elf_format": "ELF32 little-endian ARM",
+  "pt_load_segments": [
+    {
+      "index": 1,
+      "offset": 0,
+      "vaddr": 0,
+      "filesz": 9785648
+    },
+    {
+      "index": 2,
+      "offset": 9785648,
+      "vaddr": 9789744,
+      "filesz": 300364
+    }
+  ],
+  "hash_basis": "SHA-256 covers exact bytes read directly from the APK ELF through PT_LOAD mapping. Listed ARM byte rows were extracted from recovered original listings and compared byte-for-byte with those APK bytes.",
+  "function_count": 10,
+  "functions": [
+    {
+      "demangled": "glitch::collada::CColladaFactory::createScene(glitch::collada::CColladaDatabase const&)",
+      "elf_address": "0x00631628",
+      "elf_file_offset": "0x00631628",
+      "range_size": 40,
+      "original_code_sha256": "e543897b72bd9ad8e653b20cd58e09bbbfa2f340662179209a7bfe00d8577cd3",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CColladaFactory-db06bc565b1a-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    },
+    {
+      "demangled": "glitch::collada::CRootSceneNode::CRootSceneNode(glitch::collada::CColladaDatabase const&)",
+      "elf_address": "0x0065b734",
+      "elf_file_offset": "0x0065b734",
+      "range_size": 272,
+      "original_code_sha256": "f1d577086284e710948004b54f8b8e2703d7932306b00c589a9454c65074f855",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CRootSceneNode-d3662147f216-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::constructScene(glitch::video::IVideoDriver*) const",
+      "elf_address": "0x0061b9e8",
+      "elf_file_offset": "0x0061b9e8",
+      "range_size": 212,
+      "original_code_sha256": "f632c3e51c10a474b83195765435cbc4c622f13ad5ad3b53fffcea8cc1cfba6e",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::constructVisualScene(glitch::video::IVideoDriver*, glitch::collada::SVisualScene*, glitch::collada::CRootSceneNode*) const",
+      "elf_address": "0x0061b8bc",
+      "elf_file_offset": "0x0061b8bc",
+      "range_size": 204,
+      "original_code_sha256": "d35fbff3ca43ca621f9e4304b4370c9908131faf71e941f0ab75a22916482258",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::constructVisualScene(glitch::video::IVideoDriver*, char const*, glitch::collada::CRootSceneNode*) const",
+      "elf_address": "0x0061b9b8",
+      "elf_file_offset": "0x0061b9b8",
+      "range_size": 48,
+      "original_code_sha256": "e9cca9c4b4e391ccad70e20d35be575bc91c4896b55634a1333ca5ab51daace8",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::constructNode(glitch::video::IVideoDriver*, glitch::collada::SNode*, glitch::collada::CRootSceneNode*) const",
+      "elf_address": "0x0061b2f4",
+      "elf_file_offset": "0x0061b2f4",
+      "range_size": 1480,
+      "original_code_sha256": "9e047558fe98fb8d63868ffd99023086eaeab7284e550954810440da90d88b59",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::constructCamera(char const*, glitch::collada::CRootSceneNode*) const",
+      "elf_address": "0x0061b2d0",
+      "elf_file_offset": "0x0061b2d0",
+      "range_size": 36,
+      "original_code_sha256": "cff2a8a64d89ef6e27f3f80b437472bfc3902600150cdef65b002a08571d6374",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::constructCamera(glitch::collada::SCamera*, glitch::collada::CRootSceneNode*) const",
+      "elf_address": "0x00619398",
+      "elf_file_offset": "0x00619398",
+      "range_size": 72,
+      "original_code_sha256": "19c7b13831cdb8bf3746e92d824c2b003f8bd9ea33de9fc4443750e06cd292e0",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    },
+    {
+      "demangled": "glitch::collada::CColladaFactory::createCameraNode(glitch::collada::CColladaDatabase const&, glitch::collada::SCamera*)",
+      "elf_address": "0x006317d0",
+      "elf_file_offset": "0x006317d0",
+      "range_size": 48,
+      "original_code_sha256": "db06ad7449de1e7b3ed7ab50115fee936b2a0ee725fdd1e9af107d9ae4bc9b1c",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CColladaFactory-db06bc565b1a-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    },
+    {
+      "demangled": "glitch::collada::CCameraSceneNode::CCameraSceneNode(glitch::collada::CColladaDatabase const&, glitch::collada::SCamera&)",
+      "elf_address": "0x006e5550",
+      "elf_file_offset": "0x006e5550",
+      "range_size": 608,
+      "original_code_sha256": "62e1bac9a0ac3fab45f682007c7c8a9837ab648a1ecbe13bf4db22a3ca9d3ad4",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CCameraSceneNode-bba68041ca96-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    }
+  ],
+  "supporting_data_ranges": [
+    {
+      "name": "CSceneNode vtable visible entry",
+      "demangled_target": "glitch::scene::ISceneNode::setVisible(bool)",
+      "elf_address": "0x00983624",
+      "elf_virtual_address": "0x00983624",
+      "elf_file_offset": "0x00982624",
+      "range_size": 4,
+      "raw_word": "0x00596ec4",
+      "data_bytes_sha256": "09add57fe62829276350492862b954ef799dfedf6da0ff5d870239d6b85e8037",
+      "pt_load_segment_index": 2,
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    },
+    {
+      "name": "CSceneNode vtable scale entry",
+      "demangled_target": "glitch::scene::ISceneNode::setScale(glitch::core::vector3d<float> const&)",
+      "elf_address": "0x00983670",
+      "elf_virtual_address": "0x00983670",
+      "elf_file_offset": "0x00982670",
+      "range_size": 4,
+      "raw_word": "0x005970c4",
+      "data_bytes_sha256": "e87adbf31809ecd1b95b7bb437f8d6be2e36d381e3f9a21c00749b9a9c1ea1bb",
+      "pt_load_segment_index": 2,
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    },
+    {
+      "name": "CSceneNode vtable rotation entry",
+      "demangled_target": "glitch::scene::ISceneNode::setRotation(glitch::core::quaternion const&)",
+      "elf_address": "0x00983678",
+      "elf_virtual_address": "0x00983678",
+      "elf_file_offset": "0x00982678",
+      "range_size": 4,
+      "raw_word": "0x005970f4",
+      "data_bytes_sha256": "88c70c0c0bfdbe9a364ff90e169c188fabe02d6033e40f8f4078018155717ca5",
+      "pt_load_segment_index": 2,
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    },
+    {
+      "name": "CSceneNode vtable position entry",
+      "demangled_target": "glitch::scene::ISceneNode::setPosition(glitch::core::vector3d<float> const&)",
+      "elf_address": "0x00983680",
+      "elf_virtual_address": "0x00983680",
+      "elf_file_offset": "0x00982680",
+      "range_size": 4,
+      "raw_word": "0x0059712c",
+      "data_bytes_sha256": "b174c4e4f1906a8681a9875f2837ffb133183bdf0825eb4717b4b78a2698da6b",
+      "pt_load_segment_index": 2,
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes"
+    }
+  ]
+}

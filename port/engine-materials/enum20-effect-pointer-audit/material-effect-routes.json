@@ -1,0 +1,595 @@
+{
+  "schema_version": 1,
+  "description": "Focused material enum-20 and effect-pointer relocation/ownership supplement.",
+  "source": {
+    "apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+    "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "elf_size_bytes": 15938284,
+    "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "elf_class": "ELF32 little-endian ARM",
+    "pt_load_segments": [
+      {
+        "program_header_index": 1,
+        "p_offset": 0,
+        "p_vaddr": 0,
+        "p_filesz": 9785648,
+        "p_memsz": 9785648
+      },
+      {
+        "program_header_index": 2,
+        "p_offset": 9785648,
+        "p_vaddr": 9789744,
+        "p_filesz": 300364,
+        "p_memsz": 914688
+      }
+    ],
+    "hash_basis": "SHA-256 covers exact file-backed PT_LOAD bytes mapped from each listed ELF VA."
+  },
+  "function_ranges": [
+    {
+      "name": "CResFileManager::postLoadProcess",
+      "elf_va": "0x00658c90",
+      "range_size_bytes": 2064,
+      "elf_file_offset": 6655120,
+      "pt_load_program_header_index": 1,
+      "sha256": "e85095e743755648b2ca68999ddaca7fa1155ab335ee435b585ad2b7a1b13ad2",
+      "llvm_nm_symbol": "glitch::collada::CResFileManager::postLoadProcess(glitch::collada::CResFile*, glitch::io::IReadFile*)",
+      "llvm_nm_size_bytes": 2064
+    },
+    {
+      "name": "collada::createMaterial",
+      "elf_va": "0x00631ce8",
+      "range_size_bytes": 1768,
+      "elf_file_offset": 6495464,
+      "pt_load_program_header_index": 1,
+      "sha256": "85623a86cab3a537b4b865cd201292198524a9033ce9a266fed7713c3c138e4b",
+      "llvm_nm_symbol": "glitch::collada::createMaterial(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, boost::intrusive_ptr<glitch::video::CMaterialRenderer> const&, glitch::collada::SMaterial&, glitch::collada::CRootSceneNode*)",
+      "llvm_nm_size_bytes": 1768
+    },
+    {
+      "name": "CColladaFactory::createMaterial",
+      "elf_va": "0x006323d0",
+      "range_size_bytes": 244,
+      "elf_file_offset": 6497232,
+      "pt_load_program_header_index": 1,
+      "sha256": "dc3090658f74e4ff70633a92030aab1b739e3b836e2ed704418ca6af4aed0b51",
+      "llvm_nm_symbol": "glitch::collada::CColladaFactory::createMaterial(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, glitch::collada::SMaterial*, glitch::collada::CRootSceneNode*)",
+      "llvm_nm_size_bytes": 244
+    },
+    {
+      "name": "CMaterialRenderer::getTechniqueID",
+      "elf_va": "0x005d4714",
+      "range_size_bytes": 160,
+      "elf_file_offset": 6113044,
+      "pt_load_program_header_index": 1,
+      "sha256": "984f068cc2459e9915caef91dfaa2c13c36c0ff38d4b5ac576e65dfa75193142",
+      "llvm_nm_symbol": "glitch::video::CMaterialRenderer::getTechniqueID(char const*) const",
+      "llvm_nm_size_bytes": 160
+    },
+    {
+      "name": "CColladaDatabase::getEffect(int) const",
+      "elf_va": "0x0060e3e4",
+      "range_size_bytes": 28,
+      "elf_file_offset": 6349796,
+      "pt_load_program_header_index": 1,
+      "sha256": "86a8341de135e486dd3b6514c947eb84cd62abb5c53398b3ebd8a142f725029b",
+      "llvm_nm_symbol": "glitch::collada::CColladaDatabase::getEffect(int) const",
+      "llvm_nm_size_bytes": 28
+    },
+    {
+      "name": "CColladaDatabase::getEffect(char const*) const",
+      "elf_va": "0x0061b0ac",
+      "range_size_bytes": 96,
+      "elf_file_offset": 6402220,
+      "pt_load_program_header_index": 1,
+      "sha256": "433cb8967a341bf0226ed5b0c5126ffd5afcf191ab8d2c2a6392eead19e371c7",
+      "llvm_nm_symbol": "glitch::collada::CColladaDatabase::getEffect(char const*) const",
+      "llvm_nm_size_bytes": 96
+    },
+    {
+      "name": "CColladaDatabase::CColladaDatabase(char const*, CColladaFactory*)",
+      "elf_va": "0x0060f25c",
+      "range_size_bytes": 84,
+      "elf_file_offset": 6353500,
+      "pt_load_program_header_index": 1,
+      "sha256": "8c3c3ac060641caf088f0f3f103889456804ae41790bebc09907a87314d3c4b0",
+      "llvm_nm_symbol": "glitch::collada::CColladaDatabase::CColladaDatabase(char const*, glitch::collada::CColladaFactory*)",
+      "llvm_nm_size_bytes": 84
+    },
+    {
+      "name": "CColladaDatabase::~CColladaDatabase()",
+      "elf_va": "0x00619474",
+      "range_size_bytes": 156,
+      "elf_file_offset": 6394996,
+      "pt_load_program_header_index": 1,
+      "sha256": "904f118210ad7546534e55e2616334274f6c7ce667820e4c03cf277bc93cc5a9",
+      "llvm_nm_symbol": "glitch::collada::CColladaDatabase::~CColladaDatabase()",
+      "llvm_nm_size_bytes": 156
+    },
+    {
+      "name": "CResFileManager::CResFileManager(IDevice*)",
+      "elf_va": "0x00657914",
+      "range_size_bytes": 128,
+      "elf_file_offset": 6650132,
+      "pt_load_program_header_index": 1,
+      "sha256": "d4fdb3614ec2ce867f1fc0904f98fdaa95457d10c782b4e9d599d7e5b0538cc5",
+      "llvm_nm_symbol": "glitch::collada::CResFileManager::CResFileManager(glitch::IDevice*)",
+      "llvm_nm_size_bytes": 128
+    },
+    {
+      "name": "CResFile::CResFile(char const*, IReadFile*, bool)",
+      "elf_va": "0x00658048",
+      "range_size_bytes": 276,
+      "elf_file_offset": 6651976,
+      "pt_load_program_header_index": 1,
+      "sha256": "889c7e4a506d6531f257be9aaa4306a9d6c5e640e078c86c23935394c4fd0008",
+      "llvm_nm_symbol": "glitch::collada::CResFile::CResFile(char const*, glitch::io::IReadFile*, bool)",
+      "llvm_nm_size_bytes": 276
+    },
+    {
+      "name": "CResFileManager::get(IReadFile*, bool, bool)",
+      "elf_va": "0x0065a748",
+      "range_size_bytes": 580,
+      "elf_file_offset": 6661960,
+      "pt_load_program_header_index": 1,
+      "sha256": "c0dd305b36a44df95c95e9d5655973254019f42bbff0f192de117015959288ed",
+      "llvm_nm_symbol": "glitch::collada::CResFileManager::get(glitch::io::IReadFile*, bool, bool)",
+      "llvm_nm_size_bytes": 580
+    },
+    {
+      "name": "CResFileManager::get(char const*, bool)",
+      "elf_va": "0x0065a9a8",
+      "range_size_bytes": 692,
+      "elf_file_offset": 6662568,
+      "pt_load_program_header_index": 1,
+      "sha256": "62a918d472da5807ba14390942d578cd99130a7929117f900cb0bbc0b5060854",
+      "llvm_nm_symbol": "glitch::collada::CResFileManager::get(char const*, bool)",
+      "llvm_nm_size_bytes": 692
+    },
+    {
+      "name": "CResFileManager::load(char const*, bool, callback)",
+      "elf_va": "0x0065ac5c",
+      "range_size_bytes": 24,
+      "elf_file_offset": 6663260,
+      "pt_load_program_header_index": 1,
+      "sha256": "6999a177b9b37d5f6d411e9c792dc7b5b5ea8e8bd5ce2e8ada7e7e24567b551a",
+      "llvm_nm_symbol": "glitch::collada::CResFileManager::load(char const*, bool, void (*)(char const*, glitch::collada::SCollada const*))",
+      "llvm_nm_size_bytes": 24
+    },
+    {
+      "name": "CResFileManager::unload(iterator, bool)",
+      "elf_va": "0x006584fc",
+      "range_size_bytes": 104,
+      "elf_file_offset": 6653180,
+      "pt_load_program_header_index": 1,
+      "sha256": "c6e00ba7814a823bbbb372a03ceccae912560564fa63d83af0cf9a16b719aaef",
+      "llvm_nm_symbol": "glitch::collada::CResFileManager::unload(std::priv::_Rb_tree_iterator<std::pair<std::basic_string<char, std::char_traits<char>, glitch::core::SAllocator<char, (glitch::memory::E_MEMORY_HINT)0>> const, glitch::collada::CResFile*>, std::priv::_MapTraitsT<std::pair<std::basic_string<char, std::char_traits<char>, glitch::core::SAllocator<char, (glitch::memory::E_MEMORY_HINT)0>> const, glitch::collada::CResFile*>>>, bool)",
+      "llvm_nm_size_bytes": 104
+    },
+    {
+      "name": "CResFileManager::unload(char const*, bool)",
+      "elf_va": "0x00659b60",
+      "range_size_bytes": 220,
+      "elf_file_offset": 6658912,
+      "pt_load_program_header_index": 1,
+      "sha256": "0e54c0532f165bf9df45849c0fc14258e513f29616c5773d08fcda44d2ca26e6",
+      "llvm_nm_symbol": "glitch::collada::CResFileManager::unload(char const*, bool)",
+      "llvm_nm_size_bytes": 220
+    },
+    {
+      "name": "CResFileManager::~CResFileManager()",
+      "elf_va": "0x006582c4",
+      "range_size_bytes": 228,
+      "elf_file_offset": 6652612,
+      "pt_load_program_header_index": 1,
+      "sha256": "47dbdb518f6635318dc1ab62a6e2d17c889246496672439e749222ebe9ac7810",
+      "llvm_nm_symbol": "glitch::collada::CResFileManager::~CResFileManager()",
+      "llvm_nm_size_bytes": 228
+    },
+    {
+      "name": "SEffectList::SEffectList(CColladaDatabase const&, SEffect*)",
+      "elf_va": "0x006319d8",
+      "range_size_bytes": 164,
+      "elf_file_offset": 6494680,
+      "pt_load_program_header_index": 1,
+      "sha256": "8d99a67a34b516ce7d46844975e5b8f69d3b62ecb3a05ee67a5bfb40314a7496",
+      "llvm_nm_symbol": "glitch::collada::SEffectList::SEffectList(glitch::collada::CColladaDatabase const&, glitch::collada::SEffect*)",
+      "llvm_nm_size_bytes": 164
+    },
+    {
+      "name": "SEffectList list clear",
+      "elf_va": "0x00631a7c",
+      "range_size_bytes": 72,
+      "elf_file_offset": 6494844,
+      "pt_load_program_header_index": 1,
+      "sha256": "ce7e2ce857b0f11c585fb0023bab6ed239d9ad0ef70cfa4de9fac95331749717",
+      "llvm_nm_symbol": "std::priv::_List_base<glitch::collada::SEffectList::SEntry, glitch::core::SProcessBufferAllocator<glitch::collada::SEffectList::SEntry>>::clear()",
+      "llvm_nm_size_bytes": 72
+    },
+    {
+      "name": "CColladaFactory::createMaterialRenderer(effect overload)",
+      "elf_va": "0x00636c8c",
+      "range_size_bytes": 412,
+      "elf_file_offset": 6515852,
+      "pt_load_program_header_index": 1,
+      "sha256": "0fc31372fb7aa16156c948b5f666b3d54bc155f8dba05407c55f6d597fb8a8ee",
+      "llvm_nm_symbol": "glitch::collada::CColladaFactory::createMaterialRenderer(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, glitch::collada::SEffect*, char const*, char const*, glitch::collada::CRootSceneNode*)",
+      "llvm_nm_size_bytes": 412
+    }
+  ],
+  "assembly_path": "reference/material-effect-routes.asm",
+  "assembly_sha256": "4a37b3a6cafb773469f6906473b9b9922bf58a87a69eafb66583d72364cdd962",
+  "excerpts": [
+    {
+      "name": "material-table offsets and raw effect-index check",
+      "function": "CResFileManager::postLoadProcess",
+      "start_va": "0x00658f1c",
+      "end_va_exclusive": "0x00658f34",
+      "file_offset": 6655772,
+      "byte_count": 24,
+      "sha256": "4c680844056beb61959eb67efd6295ef02ddc2eb5b01b4880faa0f119e987434",
+      "instruction_rows": 6,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "local effect-index to pointer relocation",
+      "function": "CResFileManager::postLoadProcess",
+      "start_va": "0x00658f98",
+      "end_va_exclusive": "0x00658fb4",
+      "file_offset": 6655896,
+      "byte_count": 28,
+      "sha256": "dd1f600faca1354fae5ce1458fd8cbb55e9bc498f290b87d31f49b4de6143320",
+      "instruction_rows": 7,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "external sentinel database and effect lookup",
+      "function": "CResFileManager::postLoadProcess",
+      "start_va": "0x00659264",
+      "end_va_exclusive": "0x006592b0",
+      "file_offset": 6656612,
+      "byte_count": 76,
+      "sha256": "5b0db0590334f8cbebc3a422cbc1ddd18cf20fa9129588631ea5739e303e0581",
+      "instruction_rows": 19,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "SMaterial effect argument forwarding",
+      "function": "CColladaFactory::createMaterial",
+      "start_va": "0x00632420",
+      "end_va_exclusive": "0x00632454",
+      "file_offset": 6497312,
+      "byte_count": 52,
+      "sha256": "86f9eb9e90f8cf240766f02f29998483877ebf8f82126005a4ea07940206a08d",
+      "instruction_rows": 13,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "enum 20 comparison, technique lookup, and runtime byte store",
+      "function": "collada::createMaterial",
+      "start_va": "0x00631e44",
+      "end_va_exclusive": "0x00631ea4",
+      "file_offset": 6495812,
+      "byte_count": 96,
+      "sha256": "02166e48cc440d52092d18f0fadc847ca56f4cb9375be6f5620992e7aae34aca",
+      "instruction_rows": 24,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "technique name intern and ID lookup",
+      "function": "CMaterialRenderer::getTechniqueID",
+      "start_va": "0x005d4714",
+      "end_va_exclusive": "0x005d47b4",
+      "file_offset": 6113044,
+      "byte_count": 160,
+      "sha256": "984f068cc2459e9915caef91dfaa2c13c36c0ff38d4b5ac576e65dfa75193142",
+      "instruction_rows": 40,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "effect table lookup by integer index",
+      "function": "CColladaDatabase::getEffect(int) const",
+      "start_va": "0x0060e3e4",
+      "end_va_exclusive": "0x0060e400",
+      "file_offset": 6349796,
+      "byte_count": 28,
+      "sha256": "86a8341de135e486dd3b6514c947eb84cd62abb5c53398b3ebd8a142f725029b",
+      "instruction_rows": 7,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "effect table lookup by name",
+      "function": "CColladaDatabase::getEffect(char const*) const",
+      "start_va": "0x0061b0ac",
+      "end_va_exclusive": "0x0061b10c",
+      "file_offset": 6402220,
+      "byte_count": 96,
+      "sha256": "433cb8967a341bf0226ed5b0c5126ffd5afcf191ab8d2c2a6392eead19e371c7",
+      "instruction_rows": 24,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "temporary database constructor and retained CResFile",
+      "function": "CColladaDatabase::CColladaDatabase(char const*, CColladaFactory*)",
+      "start_va": "0x0060f25c",
+      "end_va_exclusive": "0x0060f2a4",
+      "file_offset": 6353500,
+      "byte_count": 72,
+      "sha256": "9326e1761171e5579ed7d4c386271e186c64ed45fd269a6dafa431d6ebf4287a",
+      "instruction_rows": 18,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "temporary database destructor and conditional unload",
+      "function": "CColladaDatabase::~CColladaDatabase()",
+      "start_va": "0x00619474",
+      "end_va_exclusive": "0x00619500",
+      "file_offset": 6394996,
+      "byte_count": 140,
+      "sha256": "cbf2f922dadb70d2e1e00d9f269a82f1f97db99c92bf3b35b36244957f262239",
+      "instruction_rows": 35,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "manager default unload flags",
+      "function": "CResFileManager::CResFileManager(IDevice*)",
+      "start_va": "0x00657948",
+      "end_va_exclusive": "0x0065797c",
+      "file_offset": 6650184,
+      "byte_count": 52,
+      "sha256": "f360d5ff8434e4a5008bd0c57762960d4b98a2ea714a7007d9b7e5873b175155",
+      "instruction_rows": 13,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "CResFile initial manager reference",
+      "function": "CResFile::CResFile(char const*, IReadFile*, bool)",
+      "start_va": "0x00658068",
+      "end_va_exclusive": "0x00658080",
+      "file_offset": 6652008,
+      "byte_count": 24,
+      "sha256": "7313f391ea3908ca2344c3949c20b6501bc409dac9ed92359b9928add9fe0e54",
+      "instruction_rows": 6,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "stream-based get disables auto-unload",
+      "function": "CResFileManager::get(IReadFile*, bool, bool)",
+      "start_va": "0x0065a770",
+      "end_va_exclusive": "0x0065a790",
+      "file_offset": 6662000,
+      "byte_count": 32,
+      "sha256": "ebb8da18e86d2acf100f2501a17c65e4f80ca0e4a11a1252a9093eb074162394",
+      "instruction_rows": 8,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "stream-based get restores flag after post-load",
+      "function": "CResFileManager::get(IReadFile*, bool, bool)",
+      "start_va": "0x0065a8a4",
+      "end_va_exclusive": "0x0065a8d0",
+      "file_offset": 6662308,
+      "byte_count": 44,
+      "sha256": "7e0f85058ed05a9cb34e0123aa8eb9af665734b7c92b67575c7de116ef4dab0b",
+      "instruction_rows": 11,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "stream-based get invokes post-load",
+      "function": "CResFileManager::get(IReadFile*, bool, bool)",
+      "start_va": "0x0065a944",
+      "end_va_exclusive": "0x0065a970",
+      "file_offset": 6662468,
+      "byte_count": 44,
+      "sha256": "01b679f14429555bdf1c77c1f7444cccacf445d43b9af71a11690b8328ac9380",
+      "instruction_rows": 11,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "stream-based get stores the CResFile in the manager map",
+      "function": "CResFileManager::get(IReadFile*, bool, bool)",
+      "start_va": "0x0065a90c",
+      "end_va_exclusive": "0x0065a928",
+      "file_offset": 6662412,
+      "byte_count": 28,
+      "sha256": "46014361a656f510b2ec460c6fc9d8a7c0726d08f9a33525abd16cdf5040a59e",
+      "instruction_rows": 7,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "path-based get disables auto-unload",
+      "function": "CResFileManager::get(char const*, bool)",
+      "start_va": "0x0065a9d8",
+      "end_va_exclusive": "0x0065a9f0",
+      "file_offset": 6662616,
+      "byte_count": 24,
+      "sha256": "de5e7d944774b23767149f6369b61d27ee93fb918436e1c8dd9f9cfb48da3d24",
+      "instruction_rows": 6,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "path-based get restores flag",
+      "function": "CResFileManager::get(char const*, bool)",
+      "start_va": "0x0065aae0",
+      "end_va_exclusive": "0x0065ab0c",
+      "file_offset": 6662880,
+      "byte_count": 44,
+      "sha256": "c705a385d7da0548945149fbe4675184e7f3235250485e00eec82389c4cc076b",
+      "instruction_rows": 11,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "path-based get stores the CResFile in the manager map",
+      "function": "CResFileManager::get(char const*, bool)",
+      "start_va": "0x0065ab78",
+      "end_va_exclusive": "0x0065ab9c",
+      "file_offset": 6663032,
+      "byte_count": 36,
+      "sha256": "e5a8124c0987533e6ef91713f792901fca5edba4de76e31ccb465efa927cd79b",
+      "instruction_rows": 9,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "path-based get invokes post-load",
+      "function": "CResFileManager::get(char const*, bool)",
+      "start_va": "0x0065abc4",
+      "end_va_exclusive": "0x0065ac0c",
+      "file_offset": 6663108,
+      "byte_count": 72,
+      "sha256": "085946a0af80743aeb7d3c6824467a57152a488dc863c63b45ea0c5f3343a0d4",
+      "instruction_rows": 18,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "load delegates to path-based get",
+      "function": "CResFileManager::load(char const*, bool, callback)",
+      "start_va": "0x0065ac5c",
+      "end_va_exclusive": "0x0065ac74",
+      "file_offset": 6663260,
+      "byte_count": 24,
+      "sha256": "6999a177b9b37d5f6d411e9c792dc7b5b5ea8e8bd5ce2e8ada7e7e24567b551a",
+      "instruction_rows": 6,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "name-based unload dispatch",
+      "function": "CResFileManager::unload(char const*, bool)",
+      "start_va": "0x00659bc4",
+      "end_va_exclusive": "0x00659bdc",
+      "file_offset": 6659012,
+      "byte_count": 24,
+      "sha256": "63b48568ec918bc5147d8c9a09bebb8ebadd2b68abb9dd17cfb647d9633b0cad",
+      "instruction_rows": 6,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "unload erases only when refcount permits",
+      "function": "CResFileManager::unload(iterator, bool)",
+      "start_va": "0x0065851c",
+      "end_va_exclusive": "0x00658560",
+      "file_offset": 6653212,
+      "byte_count": 68,
+      "sha256": "e42f41c2939ae37e8351821f2c8631dd0c196f8c7d2d08887eb978e037cd81b1",
+      "instruction_rows": 17,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "manager destruction drops cached CResFile entries",
+      "function": "CResFileManager::~CResFileManager()",
+      "start_va": "0x006582ec",
+      "end_va_exclusive": "0x0065835c",
+      "file_offset": 6652652,
+      "byte_count": 112,
+      "sha256": "c7d47892a44b6ab59df013e06c98f528530232574ffec4cd5fdc704a8141fe1a",
+      "instruction_rows": 28,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "effect-list retains database/factory and stores raw effect",
+      "function": "SEffectList::SEffectList(CColladaDatabase const&, SEffect*)",
+      "start_va": "0x006319e8",
+      "end_va_exclusive": "0x00631a68",
+      "file_offset": 6494696,
+      "byte_count": 128,
+      "sha256": "45742d3210cd37766ee9a1cb0c16ca10b95b217ab3bbf5b1c6aef5964eb26c08",
+      "instruction_rows": 32,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "effect-list clear releases entry database references",
+      "function": "SEffectList list clear",
+      "start_va": "0x00631a98",
+      "end_va_exclusive": "0x00631ab0",
+      "file_offset": 6494872,
+      "byte_count": 24,
+      "sha256": "4146a2292bfc266afb1fa222c7584e1523c129b40841eeb7db166626e9b19b98",
+      "instruction_rows": 6,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    },
+    {
+      "name": "factory seeds effect list then clears it",
+      "function": "CColladaFactory::createMaterialRenderer(effect overload)",
+      "start_va": "0x00636d84",
+      "end_va_exclusive": "0x00636de4",
+      "file_offset": 6516100,
+      "byte_count": 96,
+      "sha256": "4e3f50ef5145b5a6eaf3655722e1b29c45ab7a3c94a6b22edc42f54ff0038ed7",
+      "instruction_rows": 24,
+      "byte_comparison": "all emitted row bytes equal their APK PT_LOAD-mapped ELF bytes"
+    }
+  ],
+  "whole_target_elf_direct_callsite_scan": {
+    "method": "llvm-objdump -d --demangle over the APK's libDungeonHunter2.so member",
+    "direct_CMaterialRenderer_getTechniqueID_calls": [
+      {
+        "call_va": "0x00352a64",
+        "caller": "SceneManager::ChangeTechnique(boost::intrusive_ptr<glitch::video::CMaterial>, char const*)"
+      },
+      {
+        "call_va": "0x003567f8",
+        "caller": "SceneManager::ChangeTechnique(glitch::scene::ISceneNode*, char const*, char const*, int)"
+      },
+      {
+        "call_va": "0x00599bec",
+        "caller": "glitch::scene::IShadowVolumeSceneNode::setupMaterials(glitch::video::IVideoDriver*)"
+      },
+      {
+        "call_va": "0x00599c08",
+        "caller": "glitch::scene::IShadowVolumeSceneNode::setupMaterials(glitch::video::IVideoDriver*)"
+      },
+      {
+        "call_va": "0x00599c1c",
+        "caller": "glitch::scene::IShadowVolumeSceneNode::setupMaterials(glitch::video::IVideoDriver*)"
+      },
+      {
+        "call_va": "0x00599c38",
+        "caller": "glitch::scene::IShadowVolumeSceneNode::setupMaterials(glitch::video::IVideoDriver*)"
+      },
+      {
+        "call_va": "0x00599c4c",
+        "caller": "glitch::scene::IShadowVolumeSceneNode::setupMaterials(glitch::video::IVideoDriver*)"
+      },
+      {
+        "call_va": "0x005cda74",
+        "caller": "glitch::video::CMaterial::deserializeAttributes(glitch::io::IAttributes*, glitch::io::SAttributeReadWriteOptions*)"
+      },
+      {
+        "call_va": "0x005e0094",
+        "caller": "glitch::video::IMaterialTechniqueMapsReader::getTechniqueIDs(unsigned short, char const*, unsigned char&, char const*, unsigned char&)"
+      },
+      {
+        "call_va": "0x005e00ac",
+        "caller": "glitch::video::IMaterialTechniqueMapsReader::getTechniqueIDs(unsigned short, char const*, unsigned char&, char const*, unsigned char&)"
+      },
+      {
+        "call_va": "0x00631e88",
+        "caller": "glitch::collada::createMaterial(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, boost::intrusive_ptr<glitch::video::CMaterialRenderer> const&, glitch::collada::SMaterial&, glitch::collada::CRootSceneNode*)"
+      },
+      {
+        "call_va": "0x00634694",
+        "caller": "glitch::collada::CColladaFactory::createMaterialVertexAttributeMap(glitch::collada::CColladaDatabase const&, glitch::collada::SInstanceMaterial*, boost::intrusive_ptr<glitch::collada::IMesh> const&, boost::intrusive_ptr<glitch::video::CMaterial> const&, unsigned int, bool)"
+      },
+      {
+        "call_va": "0x007d4b04",
+        "caller": "BufferedRenderer::createBlendModeMaterial(boost::intrusive_ptr<glitch::video::CMaterialRenderer>, int, char const*)"
+      }
+    ],
+    "direct_CMaterialRenderer_getTechniqueID_call_count": 13,
+    "direct_postLoadProcess_calls": [
+      {
+        "call_va": "0x0065a954",
+        "caller": "glitch::collada::CResFileManager::get(glitch::io::IReadFile*, bool, bool)"
+      },
+      {
+        "call_va": "0x0065abcc",
+        "caller": "glitch::collada::CResFileManager::get(char const*, bool)"
+      }
+    ],
+    "direct_postLoadProcess_call_count": 2,
+    "enum20_cmp_site_in_collada_createMaterial": "0x00631e68"
+  },
+  "corpus_audit": {
+    "path": "corpus-audit.json",
+    "sha256": "36b71c6e4f24a6f231d2d4a3dc00807e58283de390b77a31c622f6eab926cf69"
+  }
+}

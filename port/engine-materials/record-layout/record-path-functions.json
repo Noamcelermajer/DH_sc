@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "description": "Supplemental record-consumer trace: serialized material reads, effect dispatch, typed texture values, and instance-material vertex-attribute map construction.",
+  "apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "elf_size_bytes": 15938284,
+  "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "hash_basis": "SHA-256 over exact file-backed PT_LOAD slices. Every disassembled instruction row was byte-compared at its ELF address; un-decoded literal/data gaps are retained verbatim as .byte rows.",
+  "pt_load_segments": [
+    {
+      "pt_load_segment_index": 0,
+      "program_header_index": 1,
+      "p_offset": 0,
+      "p_vaddr": 0,
+      "p_filesz": 9785648,
+      "p_memsz": 9785648
+    },
+    {
+      "pt_load_segment_index": 1,
+      "program_header_index": 2,
+      "p_offset": 9785648,
+      "p_vaddr": 9789744,
+      "p_filesz": 300364,
+      "p_memsz": 914688
+    }
+  ],
+  "assembly_path": "reference/material-record-path.asm",
+  "functions": [
+    {
+      "name": "CColladaFactory::createMaterial",
+      "symbol": "_ZN6glitch7collada15CColladaFactory14createMaterialERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverEPNS0_9SMaterialEPNS0_14CRootSceneNodeE",
+      "elf_va": "0x006323d0",
+      "range_size_bytes": 244,
+      "elf_file_offset": 6497232,
+      "sha256": "dc3090658f74e4ff70633a92030aab1b739e3b836e2ed704418ca6af4aed0b51",
+      "disassembled_instruction_rows_match_slice": true,
+      "instruction_row_count": 61,
+      "unparsed_bytes_preserved_verbatim": true,
+      "pt_load_segment_index": 0
+    },
+    {
+      "name": "collada::createMaterial (serialized parameter consumer)",
+      "symbol": "_ZN6glitch7collada14createMaterialERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverERKN5boost13intrusive_ptrINS4_17CMaterialRendererEEERNS0_9SMaterialEPNS0_14CRootSceneNodeE",
+      "elf_va": "0x00631ce8",
+      "range_size_bytes": 1768,
+      "elf_file_offset": 6495464,
+      "sha256": "85623a86cab3a537b4b865cd201292198524a9033ce9a266fed7713c3c138e4b",
+      "disassembled_instruction_rows_match_slice": true,
+      "instruction_row_count": 432,
+      "unparsed_bytes_preserved_verbatim": true,
+      "pt_load_segment_index": 0
+    },
+    {
+      "name": "CColladaFactory::getEffectName",
+      "symbol": "_ZN6glitch7collada15CColladaFactory13getEffectNameERKNS0_16CColladaDatabaseEPKcS6_",
+      "elf_va": "0x00631ac4",
+      "range_size_bytes": 52,
+      "elf_file_offset": 6494916,
+      "sha256": "1db6eb2bdb7f4b7829f436be48f13e829adf51e3401e5db42bd27a5ec746f5a5",
+      "disassembled_instruction_rows_match_slice": true,
+      "instruction_row_count": 13,
+      "unparsed_bytes_preserved_verbatim": true,
+      "pt_load_segment_index": 0
+    },
+    {
+      "name": "CColladaFactory::createMaterialRenderer (effect overload)",
+      "symbol": "_ZN6glitch7collada15CColladaFactory22createMaterialRendererERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverEPNS0_7SEffectEPKcSB_PNS0_14CRootSceneNodeE",
+      "elf_va": "0x00636c8c",
+      "range_size_bytes": 412,
+      "elf_file_offset": 6515852,
+      "sha256": "0fc31372fb7aa16156c948b5f666b3d54bc155f8dba05407c55f6d597fb8a8ee",
+      "disassembled_instruction_rows_match_slice": true,
+      "instruction_row_count": 98,
+      "unparsed_bytes_preserved_verbatim": true,
+      "pt_load_segment_index": 0
+    },
+    {
+      "name": "CColladaFactory::createMaterialVertexAttributeMap",
+      "symbol": "_ZN6glitch7collada15CColladaFactory32createMaterialVertexAttributeMapERKNS0_16CColladaDatabaseEPNS0_17SInstanceMaterialERKN5boost13intrusive_ptrINS0_5IMeshEEERKNS8_INS_5video9CMaterialEEEjb",
+      "elf_va": "0x00634520",
+      "range_size_bytes": 1152,
+      "elf_file_offset": 6505760,
+      "sha256": "2181e4833f595b9c3d200b08299e98536b25e9e78df902c4c5fe8c209c8485fd",
+      "disassembled_instruction_rows_match_slice": true,
+      "instruction_row_count": 288,
+      "unparsed_bytes_preserved_verbatim": true,
+      "pt_load_segment_index": 0
+    }
+  ],
+  "supporting_data": [
+    {
+      "name": "CColladaFactory vtable word resolved from member call displacement +0x1c",
+      "elf_va": "0x0097b7fc",
+      "range_size_bytes": 4,
+      "elf_file_offset": 9938940,
+      "value_u32_le": "0x00636c8c",
+      "sha256": "7bc5ca7dc5098acfba7844c0eb9704e87daf7a7bb54da0ddda2d0c697a0cf4c1",
+      "interpretation": "Vtable symbol 0x0097b7d8 has two 32-bit ABI header words; its address-point offset +0x1c is table word at symbol+0x24 and equals createMaterialRenderer effect overload VA 0x00636c8c.",
+      "pt_load_segment_index": 1
+    }
+  ],
+  "assembly_sha256": "2e7032b612553c5b0370e73b53fb42e4c600f224c6f85099d86abb13d6e9cbe7"
+}

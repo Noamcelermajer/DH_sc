@@ -1,0 +1,883 @@
+{
+  "schema": "dh2-type1-prefix-alias-audit-v1",
+  "sources": {
+    "recovered_cache_root": "work/cache-recovery/extracted/com.gameloft.android.GAND.GloftD2SS/files",
+    "cache_manifest_sha256": "07ea5c64c073a4add2503e52858a8875adea1f792e86e05a8a573b49a223edf8",
+    "direct_apk_path": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+    "direct_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+    "apk_library_entry": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "apk_library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "apk_library_size": 15938284
+  },
+  "checks": {
+    "record_count": 9,
+    "all_common_prefix_hex": true,
+    "all_type1_payload_plus_0x14_equals_geometry_1_payload": true,
+    "all_44_byte_mesh_records_equal_at_alias": true,
+    "all_five_prefix_words_unfixed": true,
+    "all_have_active_selector_3_instance_reference": true,
+    "all_instance_resource_words_zero": true,
+    "all_instance_names_match_id_with_leading_hash": true
+  },
+  "records": [
+    {
+      "asset_path": "data/3d/characters/dragon/dragon.bdae",
+      "asset_size": 107028,
+      "asset_sha256": "97e980e2b5516fcff63f713427a729c736d9d955a25309cd5b56bfb78cf55fce",
+      "type1_geometry": {
+        "index": 0,
+        "record_offset": "0x623c",
+        "id_offset": "0x2108",
+        "id": "Circle01-spline",
+        "name": "",
+        "type": 1,
+        "payload_offset": "0x627c"
+      },
+      "next_geometry": {
+        "index": 1,
+        "record_offset": "0x624c",
+        "id_offset": "0x211c",
+        "id": "_colbox_dragon-mesh",
+        "name": "_colbox_dragon",
+        "type": 0,
+        "payload_offset": "0x6290"
+      },
+      "prefix_offset": "0x627c",
+      "prefix_bytes_hex": "000000000f000000030000000000000000000000",
+      "prefix_u32_le": [
+        0,
+        15,
+        3,
+        0,
+        0
+      ],
+      "prefix_field_fixups": [
+        {
+          "file_offset": "0x627c",
+          "present": false
+        },
+        {
+          "file_offset": "0x6280",
+          "present": false
+        },
+        {
+          "file_offset": "0x6284",
+          "present": false
+        },
+        {
+          "file_offset": "0x6288",
+          "present": false
+        },
+        {
+          "file_offset": "0x628c",
+          "present": false
+        }
+      ],
+      "type0_alias_offset": "0x6290",
+      "type1_payload_plus_0x14": "0x6290",
+      "type0_alias_matches_plus_0x14": true,
+      "mesh_record_length_compared": 44,
+      "mesh_record_sha256": "2e321379b0972ee385438b6662e6d5c5429bb9ffde6574097bcc1e0943a1f427",
+      "mesh_record_bytes_equal": true,
+      "mesh_pointer_fields_fixups": [
+        {
+          "file_offset": "0x6298",
+          "mesh_relative_offset": "+0x8",
+          "present": true
+        },
+        {
+          "file_offset": "0x62a0",
+          "mesh_relative_offset": "+0x10",
+          "present": true
+        }
+      ],
+      "matching_active_scene_attachment": [
+        {
+          "scene_name": "dragon.max",
+          "node_offset": "0x7724",
+          "attachment_record_offset": "0x8a34",
+          "selector": 3,
+          "attachment_pointer_field_offset": "0x8a38",
+          "attachment_pointer_is_fixup": true,
+          "instance_geometry_offset": "0x8a3c",
+          "instance_geometry_resource_word": 0,
+          "instance_geometry_name_field_offset": "0x8a40",
+          "instance_geometry_name_pointer_is_fixup": true,
+          "instance_geometry_name_offset": "0x2b54",
+          "instance_geometry_name": "#Circle01-spline"
+        }
+      ]
+    },
+    {
+      "asset_path": "data/3d/interface/skill_dh2_monster_dragon_attack_02.bdae",
+      "asset_size": 52696,
+      "asset_sha256": "7b721e0454499b23c08c851942c3ce4f57fc6ccd8c4503a84fe65566ce43c7fa",
+      "type1_geometry": {
+        "index": 0,
+        "record_offset": "0xa3dc",
+        "id_offset": "0x2260",
+        "id": "Circle01-spline",
+        "name": "",
+        "type": 1,
+        "payload_offset": "0xa42c"
+      },
+      "next_geometry": {
+        "index": 1,
+        "record_offset": "0xa3ec",
+        "id_offset": "0x2274",
+        "id": "_mesh_cone2_nobatch01-mesh",
+        "name": "_mesh_cone2_nobatch01",
+        "type": 0,
+        "payload_offset": "0xa440"
+      },
+      "prefix_offset": "0xa42c",
+      "prefix_bytes_hex": "000000000f000000030000000000000000000000",
+      "prefix_u32_le": [
+        0,
+        15,
+        3,
+        0,
+        0
+      ],
+      "prefix_field_fixups": [
+        {
+          "file_offset": "0xa42c",
+          "present": false
+        },
+        {
+          "file_offset": "0xa430",
+          "present": false
+        },
+        {
+          "file_offset": "0xa434",
+          "present": false
+        },
+        {
+          "file_offset": "0xa438",
+          "present": false
+        },
+        {
+          "file_offset": "0xa43c",
+          "present": false
+        }
+      ],
+      "type0_alias_offset": "0xa440",
+      "type1_payload_plus_0x14": "0xa440",
+      "type0_alias_matches_plus_0x14": true,
+      "mesh_record_length_compared": 44,
+      "mesh_record_sha256": "a8107dcdac3731883384bfd32db0c7482767a7b222adb986935e593e65b932c7",
+      "mesh_record_bytes_equal": true,
+      "mesh_pointer_fields_fixups": [
+        {
+          "file_offset": "0xa448",
+          "mesh_relative_offset": "+0x8",
+          "present": true
+        },
+        {
+          "file_offset": "0xa450",
+          "mesh_relative_offset": "+0x10",
+          "present": true
+        }
+      ],
+      "matching_active_scene_attachment": [
+        {
+          "scene_name": "skill_dh2_monster_dragon_attack_02.max",
+          "node_offset": "0xa8f0",
+          "attachment_record_offset": "0xa990",
+          "selector": 3,
+          "attachment_pointer_field_offset": "0xa994",
+          "attachment_pointer_is_fixup": true,
+          "instance_geometry_offset": "0xa998",
+          "instance_geometry_resource_word": 0,
+          "instance_geometry_name_field_offset": "0xa99c",
+          "instance_geometry_name_pointer_is_fixup": true,
+          "instance_geometry_name_offset": "0x23d4",
+          "instance_geometry_name": "#Circle01-spline"
+        }
+      ]
+    },
+    {
+      "asset_path": "data/3d/interface/skill_dh2_monster_dragon_attack_03.bdae",
+      "asset_size": 48636,
+      "asset_sha256": "1a74b8cd645b5a62df0d0d849952f722b47b53f7ea97abb567d0249beb779d90",
+      "type1_geometry": {
+        "index": 0,
+        "record_offset": "0x9400",
+        "id_offset": "0x2260",
+        "id": "Circle01-spline",
+        "name": "",
+        "type": 1,
+        "payload_offset": "0x9450"
+      },
+      "next_geometry": {
+        "index": 1,
+        "record_offset": "0x9410",
+        "id_offset": "0x2274",
+        "id": "_mesh_cone2_nobatch01-mesh",
+        "name": "_mesh_cone2_nobatch01",
+        "type": 0,
+        "payload_offset": "0x9464"
+      },
+      "prefix_offset": "0x9450",
+      "prefix_bytes_hex": "000000000f000000030000000000000000000000",
+      "prefix_u32_le": [
+        0,
+        15,
+        3,
+        0,
+        0
+      ],
+      "prefix_field_fixups": [
+        {
+          "file_offset": "0x9450",
+          "present": false
+        },
+        {
+          "file_offset": "0x9454",
+          "present": false
+        },
+        {
+          "file_offset": "0x9458",
+          "present": false
+        },
+        {
+          "file_offset": "0x945c",
+          "present": false
+        },
+        {
+          "file_offset": "0x9460",
+          "present": false
+        }
+      ],
+      "type0_alias_offset": "0x9464",
+      "type1_payload_plus_0x14": "0x9464",
+      "type0_alias_matches_plus_0x14": true,
+      "mesh_record_length_compared": 44,
+      "mesh_record_sha256": "dc12e5f7b3cbb94f236ed74e24a6e534e8d45d5b2fa7c471aebe008b74e08094",
+      "mesh_record_bytes_equal": true,
+      "mesh_pointer_fields_fixups": [
+        {
+          "file_offset": "0x946c",
+          "mesh_relative_offset": "+0x8",
+          "present": true
+        },
+        {
+          "file_offset": "0x9474",
+          "mesh_relative_offset": "+0x10",
+          "present": true
+        }
+      ],
+      "matching_active_scene_attachment": [
+        {
+          "scene_name": "skill_dh2_monster_dragon_attack_03.max",
+          "node_offset": "0x9914",
+          "attachment_record_offset": "0x99b4",
+          "selector": 3,
+          "attachment_pointer_field_offset": "0x99b8",
+          "attachment_pointer_is_fixup": true,
+          "instance_geometry_offset": "0x99bc",
+          "instance_geometry_resource_word": 0,
+          "instance_geometry_name_field_offset": "0x99c0",
+          "instance_geometry_name_pointer_is_fixup": true,
+          "instance_geometry_name_offset": "0x23d4",
+          "instance_geometry_name": "#Circle01-spline"
+        }
+      ]
+    },
+    {
+      "asset_path": "data/3d/interface/skill_dh2_monster_dragon_intimidate.bdae",
+      "asset_size": 40128,
+      "asset_sha256": "bbf1daae7bebb4fe55c52de8b0234265f349164dbba021ac0e5aa8196d2f6381",
+      "type1_geometry": {
+        "index": 0,
+        "record_offset": "0x60a4",
+        "id_offset": "0x163c",
+        "id": "Circle01-spline",
+        "name": "",
+        "type": 1,
+        "payload_offset": "0x60f4"
+      },
+      "next_geometry": {
+        "index": 1,
+        "record_offset": "0x60b4",
+        "id_offset": "0x1650",
+        "id": "_mesh_tornado_b_nobatch02-mesh",
+        "name": "_mesh_tornado_b_nobatch02",
+        "type": 0,
+        "payload_offset": "0x6108"
+      },
+      "prefix_offset": "0x60f4",
+      "prefix_bytes_hex": "000000000f000000030000000000000000000000",
+      "prefix_u32_le": [
+        0,
+        15,
+        3,
+        0,
+        0
+      ],
+      "prefix_field_fixups": [
+        {
+          "file_offset": "0x60f4",
+          "present": false
+        },
+        {
+          "file_offset": "0x60f8",
+          "present": false
+        },
+        {
+          "file_offset": "0x60fc",
+          "present": false
+        },
+        {
+          "file_offset": "0x6100",
+          "present": false
+        },
+        {
+          "file_offset": "0x6104",
+          "present": false
+        }
+      ],
+      "type0_alias_offset": "0x6108",
+      "type1_payload_plus_0x14": "0x6108",
+      "type0_alias_matches_plus_0x14": true,
+      "mesh_record_length_compared": 44,
+      "mesh_record_sha256": "275d03910948efaa947efe9a850bd2cce74d62bd3af9c72d10df65599da75658",
+      "mesh_record_bytes_equal": true,
+      "mesh_pointer_fields_fixups": [
+        {
+          "file_offset": "0x6110",
+          "mesh_relative_offset": "+0x8",
+          "present": true
+        },
+        {
+          "file_offset": "0x6118",
+          "mesh_relative_offset": "+0x10",
+          "present": true
+        }
+      ],
+      "matching_active_scene_attachment": [
+        {
+          "scene_name": "skill_dh2_monster_dragon_intimidate.max",
+          "node_offset": "0x65b8",
+          "attachment_record_offset": "0x6658",
+          "selector": 3,
+          "attachment_pointer_field_offset": "0x665c",
+          "attachment_pointer_is_fixup": true,
+          "instance_geometry_offset": "0x6660",
+          "instance_geometry_resource_word": 0,
+          "instance_geometry_name_field_offset": "0x6664",
+          "instance_geometry_name_pointer_is_fixup": true,
+          "instance_geometry_name_offset": "0x17fc",
+          "instance_geometry_name": "#Circle01-spline"
+        }
+      ]
+    },
+    {
+      "asset_path": "data/3d/interface/skill_dh2_monster_dragon_intimidate_01.bdae",
+      "asset_size": 40492,
+      "asset_sha256": "f12fd64bd4da6507c1b210532e796e3894e905b87d4b6d573d04c399227fff26",
+      "type1_geometry": {
+        "index": 0,
+        "record_offset": "0x6210",
+        "id_offset": "0x1594",
+        "id": "Circle01-spline",
+        "name": "",
+        "type": 1,
+        "payload_offset": "0x6260"
+      },
+      "next_geometry": {
+        "index": 1,
+        "record_offset": "0x6220",
+        "id_offset": "0x15a8",
+        "id": "_mesh_tornado_b_nobatch02-mesh",
+        "name": "_mesh_tornado_b_nobatch02",
+        "type": 0,
+        "payload_offset": "0x6274"
+      },
+      "prefix_offset": "0x6260",
+      "prefix_bytes_hex": "000000000f000000030000000000000000000000",
+      "prefix_u32_le": [
+        0,
+        15,
+        3,
+        0,
+        0
+      ],
+      "prefix_field_fixups": [
+        {
+          "file_offset": "0x6260",
+          "present": false
+        },
+        {
+          "file_offset": "0x6264",
+          "present": false
+        },
+        {
+          "file_offset": "0x6268",
+          "present": false
+        },
+        {
+          "file_offset": "0x626c",
+          "present": false
+        },
+        {
+          "file_offset": "0x6270",
+          "present": false
+        }
+      ],
+      "type0_alias_offset": "0x6274",
+      "type1_payload_plus_0x14": "0x6274",
+      "type0_alias_matches_plus_0x14": true,
+      "mesh_record_length_compared": 44,
+      "mesh_record_sha256": "85ab5cb95e015df1d9d0e765f1bc71d22085a4ccc3d591dbc7fefdeac5bf59fa",
+      "mesh_record_bytes_equal": true,
+      "mesh_pointer_fields_fixups": [
+        {
+          "file_offset": "0x627c",
+          "mesh_relative_offset": "+0x8",
+          "present": true
+        },
+        {
+          "file_offset": "0x6284",
+          "mesh_relative_offset": "+0x10",
+          "present": true
+        }
+      ],
+      "matching_active_scene_attachment": [
+        {
+          "scene_name": "skill_dh2_monster_dragon_intimidate_01.max",
+          "node_offset": "0x6724",
+          "attachment_record_offset": "0x67c4",
+          "selector": 3,
+          "attachment_pointer_field_offset": "0x67c8",
+          "attachment_pointer_is_fixup": true,
+          "instance_geometry_offset": "0x67cc",
+          "instance_geometry_resource_word": 0,
+          "instance_geometry_name_field_offset": "0x67d0",
+          "instance_geometry_name_pointer_is_fixup": true,
+          "instance_geometry_name_offset": "0x175c",
+          "instance_geometry_name": "#Circle01-spline"
+        }
+      ]
+    },
+    {
+      "asset_path": "data/3d/interface/skill_dh2_monster_dragon_intimidate_01b.bdae",
+      "asset_size": 41448,
+      "asset_sha256": "bdcee26bc73850a0fa938a2d11b5570df20dc010f3cb96430a1584d808b69348",
+      "type1_geometry": {
+        "index": 0,
+        "record_offset": "0x65cc",
+        "id_offset": "0x164c",
+        "id": "Circle01-spline",
+        "name": "",
+        "type": 1,
+        "payload_offset": "0x661c"
+      },
+      "next_geometry": {
+        "index": 1,
+        "record_offset": "0x65dc",
+        "id_offset": "0x1660",
+        "id": "_mesh_tornado_b_nobatch02-mesh",
+        "name": "_mesh_tornado_b_nobatch02",
+        "type": 0,
+        "payload_offset": "0x6630"
+      },
+      "prefix_offset": "0x661c",
+      "prefix_bytes_hex": "000000000f000000030000000000000000000000",
+      "prefix_u32_le": [
+        0,
+        15,
+        3,
+        0,
+        0
+      ],
+      "prefix_field_fixups": [
+        {
+          "file_offset": "0x661c",
+          "present": false
+        },
+        {
+          "file_offset": "0x6620",
+          "present": false
+        },
+        {
+          "file_offset": "0x6624",
+          "present": false
+        },
+        {
+          "file_offset": "0x6628",
+          "present": false
+        },
+        {
+          "file_offset": "0x662c",
+          "present": false
+        }
+      ],
+      "type0_alias_offset": "0x6630",
+      "type1_payload_plus_0x14": "0x6630",
+      "type0_alias_matches_plus_0x14": true,
+      "mesh_record_length_compared": 44,
+      "mesh_record_sha256": "e6e335fb7efac7db02536ceedb14aac4c4e3328d7a93aadf95034091f547ea1b",
+      "mesh_record_bytes_equal": true,
+      "mesh_pointer_fields_fixups": [
+        {
+          "file_offset": "0x6638",
+          "mesh_relative_offset": "+0x8",
+          "present": true
+        },
+        {
+          "file_offset": "0x6640",
+          "mesh_relative_offset": "+0x10",
+          "present": true
+        }
+      ],
+      "matching_active_scene_attachment": [
+        {
+          "scene_name": "skill_dh2_monster_dragon_intimidate_01b.max",
+          "node_offset": "0x6ae0",
+          "attachment_record_offset": "0x6b80",
+          "selector": 3,
+          "attachment_pointer_field_offset": "0x6b84",
+          "attachment_pointer_is_fixup": true,
+          "instance_geometry_offset": "0x6b88",
+          "instance_geometry_resource_word": 0,
+          "instance_geometry_name_field_offset": "0x6b8c",
+          "instance_geometry_name_pointer_is_fixup": true,
+          "instance_geometry_name_offset": "0x1814",
+          "instance_geometry_name": "#Circle01-spline"
+        }
+      ]
+    },
+    {
+      "asset_path": "data/3d/interface/skill_dh2_monster_dragon_intimidate_02.bdae",
+      "asset_size": 41320,
+      "asset_sha256": "f6f4879cbd4064eca6cecabb072635e6eb381b1e99e8d046d7edb1684ff34f12",
+      "type1_geometry": {
+        "index": 0,
+        "record_offset": "0x654c",
+        "id_offset": "0x15f0",
+        "id": "Circle01-spline",
+        "name": "",
+        "type": 1,
+        "payload_offset": "0x659c"
+      },
+      "next_geometry": {
+        "index": 1,
+        "record_offset": "0x655c",
+        "id_offset": "0x1604",
+        "id": "_mesh_tornado_b_nobatch02-mesh",
+        "name": "_mesh_tornado_b_nobatch02",
+        "type": 0,
+        "payload_offset": "0x65b0"
+      },
+      "prefix_offset": "0x659c",
+      "prefix_bytes_hex": "000000000f000000030000000000000000000000",
+      "prefix_u32_le": [
+        0,
+        15,
+        3,
+        0,
+        0
+      ],
+      "prefix_field_fixups": [
+        {
+          "file_offset": "0x659c",
+          "present": false
+        },
+        {
+          "file_offset": "0x65a0",
+          "present": false
+        },
+        {
+          "file_offset": "0x65a4",
+          "present": false
+        },
+        {
+          "file_offset": "0x65a8",
+          "present": false
+        },
+        {
+          "file_offset": "0x65ac",
+          "present": false
+        }
+      ],
+      "type0_alias_offset": "0x65b0",
+      "type1_payload_plus_0x14": "0x65b0",
+      "type0_alias_matches_plus_0x14": true,
+      "mesh_record_length_compared": 44,
+      "mesh_record_sha256": "ac3c35350a2b3e154b0ec262af2f47dea6eeb8be7ee9ea61fbd9b1662fc2b7df",
+      "mesh_record_bytes_equal": true,
+      "mesh_pointer_fields_fixups": [
+        {
+          "file_offset": "0x65b8",
+          "mesh_relative_offset": "+0x8",
+          "present": true
+        },
+        {
+          "file_offset": "0x65c0",
+          "mesh_relative_offset": "+0x10",
+          "present": true
+        }
+      ],
+      "matching_active_scene_attachment": [
+        {
+          "scene_name": "skill_dh2_monster_dragon_intimidate_02.max",
+          "node_offset": "0x6a60",
+          "attachment_record_offset": "0x6b00",
+          "selector": 3,
+          "attachment_pointer_field_offset": "0x6b04",
+          "attachment_pointer_is_fixup": true,
+          "instance_geometry_offset": "0x6b08",
+          "instance_geometry_resource_word": 0,
+          "instance_geometry_name_field_offset": "0x6b0c",
+          "instance_geometry_name_pointer_is_fixup": true,
+          "instance_geometry_name_offset": "0x17b8",
+          "instance_geometry_name": "#Circle01-spline"
+        }
+      ]
+    },
+    {
+      "asset_path": "data/3d/interface/skill_dh2_monster_dragon_intimidate_03.bdae",
+      "asset_size": 41852,
+      "asset_sha256": "9b1ab2eab19ec3dd0f534a7a7b61df1de4b96e802c8375c885eb078aa261c15e",
+      "type1_geometry": {
+        "index": 0,
+        "record_offset": "0x6760",
+        "id_offset": "0x164c",
+        "id": "Circle01-spline",
+        "name": "",
+        "type": 1,
+        "payload_offset": "0x67b0"
+      },
+      "next_geometry": {
+        "index": 1,
+        "record_offset": "0x6770",
+        "id_offset": "0x1660",
+        "id": "_mesh_tornado_b_nobatch02-mesh",
+        "name": "_mesh_tornado_b_nobatch02",
+        "type": 0,
+        "payload_offset": "0x67c4"
+      },
+      "prefix_offset": "0x67b0",
+      "prefix_bytes_hex": "000000000f000000030000000000000000000000",
+      "prefix_u32_le": [
+        0,
+        15,
+        3,
+        0,
+        0
+      ],
+      "prefix_field_fixups": [
+        {
+          "file_offset": "0x67b0",
+          "present": false
+        },
+        {
+          "file_offset": "0x67b4",
+          "present": false
+        },
+        {
+          "file_offset": "0x67b8",
+          "present": false
+        },
+        {
+          "file_offset": "0x67bc",
+          "present": false
+        },
+        {
+          "file_offset": "0x67c0",
+          "present": false
+        }
+      ],
+      "type0_alias_offset": "0x67c4",
+      "type1_payload_plus_0x14": "0x67c4",
+      "type0_alias_matches_plus_0x14": true,
+      "mesh_record_length_compared": 44,
+      "mesh_record_sha256": "85f7b936c957d20d3405ea1f1389c5d7131230e069500f4101e9767c92f1e72d",
+      "mesh_record_bytes_equal": true,
+      "mesh_pointer_fields_fixups": [
+        {
+          "file_offset": "0x67cc",
+          "mesh_relative_offset": "+0x8",
+          "present": true
+        },
+        {
+          "file_offset": "0x67d4",
+          "mesh_relative_offset": "+0x10",
+          "present": true
+        }
+      ],
+      "matching_active_scene_attachment": [
+        {
+          "scene_name": "skill_dh2_monster_dragon_intimidate_03.max",
+          "node_offset": "0x6c74",
+          "attachment_record_offset": "0x6d14",
+          "selector": 3,
+          "attachment_pointer_field_offset": "0x6d18",
+          "attachment_pointer_is_fixup": true,
+          "instance_geometry_offset": "0x6d1c",
+          "instance_geometry_resource_word": 0,
+          "instance_geometry_name_field_offset": "0x6d20",
+          "instance_geometry_name_pointer_is_fixup": true,
+          "instance_geometry_name_offset": "0x1814",
+          "instance_geometry_name": "#Circle01-spline"
+        }
+      ]
+    },
+    {
+      "asset_path": "data/3d/interface/spell_dh2_splined_projectile.bdae",
+      "asset_size": 9576,
+      "asset_sha256": "a66c76d81c4df6b17211e72318585ef4d12f24483a1f7a4a31a3dcbcaff07670",
+      "type1_geometry": {
+        "index": 0,
+        "record_offset": "0x1e8c",
+        "id_offset": "0xa84",
+        "id": "Line01-spline",
+        "name": "",
+        "type": 1,
+        "payload_offset": "0x1eac"
+      },
+      "next_geometry": {
+        "index": 1,
+        "record_offset": "0x1e9c",
+        "id_offset": "0xa98",
+        "id": "_mesh_projectile-mesh",
+        "name": "_mesh_projectile",
+        "type": 0,
+        "payload_offset": "0x1ec0"
+      },
+      "prefix_offset": "0x1eac",
+      "prefix_bytes_hex": "000000000f000000030000000000000000000000",
+      "prefix_u32_le": [
+        0,
+        15,
+        3,
+        0,
+        0
+      ],
+      "prefix_field_fixups": [
+        {
+          "file_offset": "0x1eac",
+          "present": false
+        },
+        {
+          "file_offset": "0x1eb0",
+          "present": false
+        },
+        {
+          "file_offset": "0x1eb4",
+          "present": false
+        },
+        {
+          "file_offset": "0x1eb8",
+          "present": false
+        },
+        {
+          "file_offset": "0x1ebc",
+          "present": false
+        }
+      ],
+      "type0_alias_offset": "0x1ec0",
+      "type1_payload_plus_0x14": "0x1ec0",
+      "type0_alias_matches_plus_0x14": true,
+      "mesh_record_length_compared": 44,
+      "mesh_record_sha256": "93a238797b3f70a1b4535429c48b9f07d402c86d2d7bc312b7b419d43e46eed2",
+      "mesh_record_bytes_equal": true,
+      "mesh_pointer_fields_fixups": [
+        {
+          "file_offset": "0x1ec8",
+          "mesh_relative_offset": "+0x8",
+          "present": true
+        },
+        {
+          "file_offset": "0x1ed0",
+          "mesh_relative_offset": "+0x10",
+          "present": true
+        }
+      ],
+      "matching_active_scene_attachment": [
+        {
+          "scene_name": "spell_dh2_splined_projectile.max",
+          "node_offset": "0x1f90",
+          "attachment_record_offset": "0x20d0",
+          "selector": 3,
+          "attachment_pointer_field_offset": "0x20d4",
+          "attachment_pointer_is_fixup": true,
+          "instance_geometry_offset": "0x20d8",
+          "instance_geometry_resource_word": 0,
+          "instance_geometry_name_field_offset": "0x20dc",
+          "instance_geometry_name_pointer_is_fixup": true,
+          "instance_geometry_name_offset": "0xb38",
+          "instance_geometry_name": "#Line01-spline"
+        }
+      ]
+    }
+  ],
+  "runtime_route_ranges": [
+    {
+      "name": "CColladaDatabase::constructNode",
+      "elf_va": "0x0061b2f4",
+      "file_offset": "0x0061b2f4",
+      "size": 1480,
+      "sha256": "9e047558fe98fb8d63868ffd99023086eaeab7284e550954810440da90d88b59",
+      "observed_callsite": "0x0061b6a0 calls constructGeometry(driver,SInstanceGeometry*,root)"
+    },
+    {
+      "name": "CColladaDatabase::constructGeometry(driver,SInstanceGeometry*,root)",
+      "elf_va": "0x0061aeb8",
+      "file_offset": "0x0061aeb8",
+      "size": 500,
+      "sha256": "7f6b5abcb0cc7417df2566e713f3b0665738657101d6c7785aa84d1ab36741c4",
+      "observed_behavior": "when instance resource word is zero, increments its +4 name pointer by one byte and calls the by-name overload"
+    },
+    {
+      "name": "CColladaDatabase::getGeometry(char const*)",
+      "elf_va": "0x0061aa48",
+      "file_offset": "0x0061aa48",
+      "size": 96,
+      "sha256": "2a47c4475278648579c56f0283d3269daa4e0c458caa517d12dc21eb42dd61bf",
+      "observed_behavior": "iterates geometry-table entries and compares each SGeometry ID string to the requested name"
+    },
+    {
+      "name": "CColladaDatabase::constructGeometry(driver,char const*)",
+      "elf_va": "0x0061aaa8",
+      "file_offset": "0x0061aaa8",
+      "size": 56,
+      "sha256": "3370aa9d2181cb6496531d5ff124da4cb0612df2b9927811689c57630acff931",
+      "observed_behavior": "resolves named entry then calls central SGeometry dispatcher"
+    },
+    {
+      "name": "CColladaDatabase::constructGeometry(driver,SGeometry*)",
+      "elf_va": "0x0060e634",
+      "file_offset": "0x0060e634",
+      "size": 132,
+      "sha256": "d7c22aecae934a74d1038d0c772e343ec9ce9e628d8534e4cd136978f70292c2",
+      "observed_behavior": "reads geometry type at +8; returns null for nonzero type; factory callback only for type zero"
+    }
+  ],
+  "interpretation_limit": "This proves a serialized 20-byte prelude immediately before the exact type-0 SMesh payload, plus active selector-3 references whose names normalize to the type-1 geometry IDs. It does not identify the prelude fields or prove how any separate spline-specific runtime consumer interprets them.",
+  "candidate_spline_api_ranges": [
+    {
+      "name": "CDefaultSceneNodeAnimatorFactory::createSceneNodeAnimator(E_SCENE_NODE_ANIMATOR_TYPE, ISceneNode*)",
+      "elf_va": "0x006b9928",
+      "size": 964,
+      "sha256": "008cae88a53714eea3670254aab5f013c7274cd92eb50b8fe7188fcc912d3e8e",
+      "observed_callsite": "contains a construction call to CSceneNodeAnimatorFollowSpline::C1 at 0x006b9b34"
+    },
+    {
+      "name": "CSceneNodeAnimatorFollowSpline::C1",
+      "elf_va": "0x006cccc0",
+      "size": 216,
+      "sha256": "9a5a22c52b0b0ca1944ba2a460b632f8fc2fe84f66b207147318f02a395acde7",
+      "signature_evidence": "constructor accepts an unsigned value, const std::vector<core::vector3d<float>>&, and two floats"
+    },
+    {
+      "name": "CSceneNodeAnimatorFollowSpline::animateNode(ISceneNode*, unsigned int)",
+      "elf_va": "0x006cc830",
+      "size": 1168,
+      "sha256": "95e8617e26729c0bd710ce520646fed004c8cb9a2a4680e4caa5e5ede73d2925",
+      "scope": "consumes the animator-owned sequence of 12-byte vector3 points; no BDAE or SGeometry pointer is exposed in this method signature"
+    }
+  ],
+  "candidate_spline_api_limit": "This is a generic spline-follow animator candidate only. The recovered construction path has no demonstrated connection to the type-1 BDAE geometry entry or its prefix."
+}

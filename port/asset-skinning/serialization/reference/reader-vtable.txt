@@ -1,0 +1,3 @@
+; Raw data from APK ELF, mapped through PT_LOAD segment 2.
+; VA 0x00978558, file offset 0x977558, size 24, SHA-256 7880ece2e35222adbbddb18fe0414ce30f9b9ccb4b4962d4e7fe1eac8869b7ef
+; Six little-endian words: 0x00000000 0x00000000 0x0060b2b4 0x0060b644 0x0060b2b8 0x0060b304

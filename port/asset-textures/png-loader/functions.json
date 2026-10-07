@@ -1,0 +1,453 @@
+{
+  "component": "PNG image loader and embedded libpng call boundary",
+  "original_apk": "Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "original_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "original_library": "libDungeonHunter2.so",
+  "original_library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "pt_load_mapping": {
+    "p_vaddr": "0x00000000",
+    "p_offset": "0x00000000",
+    "p_filesz": "0x00955130",
+    "mapping": "For every listed in-file range, file_offset equals ELF VA."
+  },
+  "functions": [
+    {
+      "key": "manager_default_loaders",
+      "symbol": "glitch::video::CTextureManager::CTextureManager(glitch::video::IVideoDriver*)",
+      "elf_va": "0x005eaed8",
+      "file_offset": "0x005eaed8",
+      "size_bytes": 1116,
+      "sha256": "9946d559e2573fc4f4443c5dcd5bbcd695f545d825b0a3f275b171a5cb4a86b9",
+      "owner": "engine",
+      "scope": "Registers default loader list; PNG is fifth."
+    },
+    {
+      "key": "loader_selection",
+      "symbol": "glitch::video::CTextureManager::getImageLoader(glitch::io::IReadFile*) const",
+      "elf_va": "0x005e8144",
+      "file_offset": "0x005e8144",
+      "size_bytes": 284,
+      "sha256": "1dc678331e1264fc6776fb40bc0990b8f4372da74b2b9e959257592726b1cdec",
+      "owner": "engine",
+      "scope": "Content probes in registration order, restoring cursor, then extension fallback."
+    },
+    {
+      "key": "texture_load_orchestration",
+      "symbol": "glitch::video::CTextureManager::loadTextureFromFile(glitch::io::IReadFile*, char const*, glitch::video::E_PIXEL_FORMAT&, bool)",
+      "elf_va": "0x005ecba4",
+      "file_offset": "0x005ecba4",
+      "size_bytes": 912,
+      "sha256": "a9e7f7832a24494797f70dfa627227c1794bacdc63f1934279211fcc50f55577",
+      "owner": "engine",
+      "scope": "Selects direct texture interface or decoded-image route."
+    },
+    {
+      "key": "image_loader_default_texture_interface",
+      "symbol": "glitch::video::IImageLoader::hasTextureLoadInterface()",
+      "elf_va": "0x00602c84",
+      "file_offset": "0x00602c84",
+      "size_bytes": 8,
+      "sha256": "6dcd5e75586fe6683156c0d559d4827b73bd48d501fa5781a1c6099aacd7c877",
+      "owner": "engine",
+      "scope": "Base image loader returns false; PNG uses image path."
+    },
+    {
+      "key": "png_signature_probe",
+      "symbol": "glitch::video::CImageLoaderPng::isALoadableFileFormat(glitch::io::IReadFile*) const",
+      "elf_va": "0x00605048",
+      "file_offset": "0x00605048",
+      "size_bytes": 148,
+      "sha256": "f32aa29351d9151d3bd2f20c8ac282d5bf2c9d00b23a1ff0bd8e03df7c41033e",
+      "owner": "engine",
+      "scope": "Reads eight bytes from IReadFile and checks PNG signature with png_sig_cmp."
+    },
+    {
+      "key": "png_load_image",
+      "symbol": "glitch::video::CImageLoaderPng::loadImage(glitch::io::IReadFile*) const",
+      "elf_va": "0x006050dc",
+      "file_offset": "0x006050dc",
+      "size_bytes": 1392,
+      "sha256": "74f43ec786747cef0d149d0f466fbe414260fc1acec680f6689aa2707ede429d",
+      "owner": "engine",
+      "scope": "PNG loader policy, libpng API setup, transformations, CImage allocation, row table, cleanup."
+    },
+    {
+      "key": "png_error_callback",
+      "symbol": "glitch::video::(anonymous namespace)::png_cpexcept_error(png_struct_def*, char const*)",
+      "elf_va": "0x0060564c",
+      "file_offset": "0x0060564c",
+      "size_bytes": 40,
+      "sha256": "ae8c0386fe00cd9fccdcd3e406ecf26f87f7324ed7341048ca65ae669ac74106",
+      "owner": "engine",
+      "scope": "Logs fatal PNG error at engine log level 3, then longjmp(png_struct,1)."
+    },
+    {
+      "key": "png_extension_probe",
+      "symbol": "glitch::video::CImageLoaderPng::isALoadableFileExtension(char const*) const",
+      "elf_va": "0x00605674",
+      "file_offset": "0x00605674",
+      "size_bytes": 96,
+      "sha256": "84887c4631de1bb7951bafa46730ebf9f03ee1becf09b50d3e8a3ca140ea992a",
+      "owner": "engine",
+      "scope": "Suffix fallback compares .png and .PNG."
+    },
+    {
+      "key": "png_IReadFile_callback",
+      "symbol": "glitch::video::user_read_data_fcn(png_struct_def*, unsigned char*, unsigned int)",
+      "elf_va": "0x006056d4",
+      "file_offset": "0x006056d4",
+      "size_bytes": 68,
+      "sha256": "3a04e4d97236d9c2ad004da68c42e11ba2dc1e7197fee1c97ad03fc6fa541777",
+      "owner": "engine",
+      "scope": "Reads requested bytes through IReadFile vtable +0xc; calls png_error on short read."
+    },
+    {
+      "key": "cimage_constructor_format_dimension",
+      "symbol": "glitch::video::CImage::CImage(glitch::video::E_PIXEL_FORMAT, glitch::core::dimension2d<int> const&)",
+      "elf_va": "0x00602110",
+      "file_offset": "0x00602110",
+      "size_bytes": 116,
+      "sha256": "8c95ff1fcc769825de6e7a691177d4371b4124151e7ba73c808bf120625936d9",
+      "owner": "engine",
+      "scope": "Stores format/dimensions and calls initData(true)."
+    },
+    {
+      "key": "cimage_init_data",
+      "symbol": "glitch::video::CImage::initData(bool)",
+      "elf_va": "0x00601988",
+      "file_offset": "0x00601988",
+      "size_bytes": 392,
+      "sha256": "15c9c85058738d2ddc6c2caba7a58d7fed0a8c6a9d808e826cdb0c75d1d945e0",
+      "owner": "engine",
+      "scope": "Computes pitch, allocates base pixels, records dimensions/pitch, initializes optional mip chain."
+    },
+    {
+      "key": "pixel_format_compute_pitch",
+      "symbol": "glitch::video::pixel_format::computePitch(glitch::video::E_PIXEL_FORMAT, unsigned int)",
+      "elf_va": "0x005edaec",
+      "file_offset": "0x005edaec",
+      "size_bytes": 92,
+      "sha256": "e2b7a0ea171a2ae34e8e7a2f57004e69b3c4fa063575799f2ed4e3520e2c4eb5",
+      "owner": "engine",
+      "scope": "Computes row pitch from PFDTable bit-depth and packed type fields."
+    },
+    {
+      "key": "libpng_sig_cmp",
+      "symbol": "png_sig_cmp",
+      "elf_va": "0x006841d4",
+      "file_offset": "0x006841d4",
+      "size_bytes": 168,
+      "sha256": "457b1549727da18997be3269f62c3a4d9bab05a378a618bc0c514ef84a25430f",
+      "owner": "embedded-libpng",
+      "scope": "PNG signature comparison called by engine probe and loadImage."
+    },
+    {
+      "key": "libpng_create_read_struct",
+      "symbol": "png_create_read_struct",
+      "elf_va": "0x00687e4c",
+      "file_offset": "0x00687e4c",
+      "size_bytes": 36,
+      "sha256": "2b9cf2da5d0710af4dd4e3bb2efd346a8b85b2ffb69183add2efd4dd84a29591",
+      "owner": "embedded-libpng",
+      "scope": "Creates libpng read struct with null error pointer, engine fatal callback, and null warning callback."
+    },
+    {
+      "key": "libpng_create_info_struct",
+      "symbol": "png_create_info_struct",
+      "elf_va": "0x00684a24",
+      "file_offset": "0x00684a24",
+      "size_bytes": 72,
+      "sha256": "f9f0af224bd2c8eca1bc3735f3971260f5ee2e68aab8fa91937469520029f832",
+      "owner": "embedded-libpng",
+      "scope": "Creates info struct."
+    },
+    {
+      "key": "libpng_set_read_fn",
+      "symbol": "png_set_read_fn",
+      "elf_va": "0x00687e70",
+      "file_offset": "0x00687e70",
+      "size_bytes": 132,
+      "sha256": "4238a169f57aa16e6fc63f8324d77aeeb9a0ee0a0cf34cd55145e8e77f640c00",
+      "owner": "embedded-libpng",
+      "scope": "Stores file context at png_struct+0x114 and callback at +0x110."
+    },
+    {
+      "key": "libpng_set_sig_bytes",
+      "symbol": "png_set_sig_bytes",
+      "elf_va": "0x00684ad4",
+      "file_offset": "0x00684ad4",
+      "size_bytes": 56,
+      "sha256": "83df703ac3d49a860514e67ef8d20dc4210375b74decb68cac70f8ae20599829",
+      "owner": "embedded-libpng",
+      "scope": "Marks eight signature bytes as already consumed."
+    },
+    {
+      "key": "libpng_read_info",
+      "symbol": "png_read_info",
+      "elf_va": "0x00686e68",
+      "file_offset": "0x00686e68",
+      "size_bytes": 1728,
+      "sha256": "7e4e1826cb8eaf70b5e6b23e3309c5fb24eefaf0ac919fb2930ddbedd7420863",
+      "owner": "embedded-libpng",
+      "scope": "Parses PNG header/chunk metadata via configured callback."
+    },
+    {
+      "key": "libpng_get_IHDR",
+      "symbol": "png_get_IHDR",
+      "elf_va": "0x00685ab8",
+      "file_offset": "0x00685ab8",
+      "size_bytes": 388,
+      "sha256": "cf57e955460cc480c0fdad7f14e9f837e11773258eda0cc52fd5dcb256a0c589",
+      "owner": "embedded-libpng",
+      "scope": "Reads header fields before and after transform registration."
+    },
+    {
+      "key": "libpng_set_palette_to_rgb",
+      "symbol": "png_set_palette_to_rgb",
+      "elf_va": "0x00688060",
+      "file_offset": "0x00688060",
+      "size_bytes": 40,
+      "sha256": "49f6588984b7c99c20c82f1e3c57050aaa8c28057443b24762b1cc47ca0eed32",
+      "owner": "embedded-libpng",
+      "scope": "Registers palette expansion."
+    },
+    {
+      "key": "libpng_set_gray_1_2_4_to_8",
+      "symbol": "png_set_gray_1_2_4_to_8",
+      "elf_va": "0x006880ac",
+      "file_offset": "0x006880ac",
+      "size_bytes": 24,
+      "sha256": "ed3646b2f732a95cd9cadc5b04cfa838c2a0cd01c197129e4cd91644927e564b",
+      "owner": "embedded-libpng",
+      "scope": "Registers low-bit-depth grayscale expansion."
+    },
+    {
+      "key": "libpng_set_packing",
+      "symbol": "png_set_packing",
+      "elf_va": "0x00693b18",
+      "file_offset": "0x00693b18",
+      "size_bytes": 40,
+      "sha256": "b5cf009a0a647751535b3ea3a627115c056a12617ed13a421c9815d88c36a5f9",
+      "owner": "embedded-libpng",
+      "scope": "Registers unpacking for other low-bit-depth color forms."
+    },
+    {
+      "key": "libpng_get_valid",
+      "symbol": "png_get_valid",
+      "elf_va": "0x00685054",
+      "file_offset": "0x00685054",
+      "size_bytes": 28,
+      "sha256": "e5282ad63898f2329f956d6ad76858624b9074fe977ad0cbf99f843b84655d1e",
+      "owner": "embedded-libpng",
+      "scope": "Tests tRNS validity flag 0x10."
+    },
+    {
+      "key": "libpng_set_tRNS_to_alpha",
+      "symbol": "png_set_tRNS_to_alpha",
+      "elf_va": "0x006880c4",
+      "file_offset": "0x006880c4",
+      "size_bytes": 32,
+      "sha256": "94d62e65433c3261d3a26efa045a469d86f1e9a726f40c33f03e1dfd61f5c486",
+      "owner": "embedded-libpng",
+      "scope": "Registers tRNS-to-alpha expansion."
+    },
+    {
+      "key": "libpng_set_strip_16",
+      "symbol": "png_set_strip_16",
+      "elf_va": "0x00687f64",
+      "file_offset": "0x00687f64",
+      "size_bytes": 20,
+      "sha256": "0394da6c6b997b205a59165a9dd3e3d72277ab47c44bfe3f49ecbc33e3f2b0ba",
+      "owner": "embedded-libpng",
+      "scope": "Registers 16-bit sample stripping."
+    },
+    {
+      "key": "libpng_set_gray_to_rgb",
+      "symbol": "png_set_gray_to_rgb",
+      "elf_va": "0x006880e4",
+      "file_offset": "0x006880e4",
+      "size_bytes": 28,
+      "sha256": "f6da170b67d0fdf980fd760ced65cd2d97ab99bcc5625e068876f5552766c16c",
+      "owner": "embedded-libpng",
+      "scope": "Registers grayscale to RGB conversion."
+    },
+    {
+      "key": "libpng_read_update_info",
+      "symbol": "png_read_update_info",
+      "elf_va": "0x00686e20",
+      "file_offset": "0x00686e20",
+      "size_bytes": 72,
+      "sha256": "70780df5bf4edf1fead30075b7dd66cd895da182661b6f6af507cac2ea541017",
+      "owner": "embedded-libpng",
+      "scope": "Updates output row layout after transformations."
+    },
+    {
+      "key": "libpng_read_image",
+      "symbol": "png_read_image",
+      "elf_va": "0x00686cf4",
+      "file_offset": "0x00686cf4",
+      "size_bytes": 96,
+      "sha256": "cffccc37fc36afff225e4adbe0a828ddd5306d1cd0db4d2c40436ddc86f9e3bc",
+      "owner": "embedded-libpng",
+      "scope": "Reads rows using engine-provided row pointer table."
+    },
+    {
+      "key": "libpng_read_end",
+      "symbol": "png_read_end",
+      "elf_va": "0x006861d4",
+      "file_offset": "0x006861d4",
+      "size_bytes": 1440,
+      "sha256": "2b7bb8d0608119d1aef59341f846f2824f62b84cd699357805613a029ad5df4a",
+      "owner": "embedded-libpng",
+      "scope": "Reads/validates end of image stream."
+    },
+    {
+      "key": "libpng_destroy_read_struct",
+      "symbol": "png_destroy_read_struct",
+      "elf_va": "0x00686100",
+      "file_offset": "0x00686100",
+      "size_bytes": 212,
+      "sha256": "fcc24f48fcd090de480340e2c9203742b01af83b67a8079b8405f604609bb3da",
+      "owner": "embedded-libpng",
+      "scope": "Releases libpng structs on success and failure."
+    },
+    {
+      "key": "libpng_read_data",
+      "symbol": "png_read_data",
+      "elf_va": "0x00687f38",
+      "file_offset": "0x00687f38",
+      "size_bytes": 44,
+      "sha256": "4e0b7bcc5f22bdc6fc5af9b0cf5775b56e5c2700c20ca2ba50b5ee890c5eb63b",
+      "owner": "embedded-libpng",
+      "scope": "Dispatches to callback at png_struct+0x110, else png_error."
+    },
+    {
+      "key": "libpng_error",
+      "symbol": "png_error",
+      "elf_va": "0x00684df4",
+      "file_offset": "0x00684df4",
+      "size_bytes": 500,
+      "sha256": "ceca9a39abd7e4a774c06ac7f97d1e81169e861b3d7248596ac8f230f834aebe",
+      "owner": "embedded-libpng",
+      "scope": "Invokes configured error callback from png_struct+0x100 and handles libpng fatal path."
+    },
+    {
+      "key": "libc_setjmp_plt",
+      "symbol": "setjmp@plt",
+      "elf_va": "0x0030ead8",
+      "file_offset": "0x0030ead8",
+      "size_bytes": 12,
+      "sha256": "27967dee52936aa53fe235a22beba2f63af469f38d7e7ea3f16835832e3f66dd",
+      "owner": "external-libc-plt",
+      "scope": "APK PLT thunk only; resolved libc implementation is not in this ELF."
+    },
+    {
+      "key": "libc_longjmp_plt",
+      "symbol": "longjmp@plt",
+      "elf_va": "0x0030e574",
+      "file_offset": "0x0030e574",
+      "size_bytes": 12,
+      "sha256": "36dac898057fcdfd4740d37b983680567d06736ceee4c8223a37ec884b9354c0",
+      "owner": "external-libc-plt",
+      "scope": "APK PLT thunk only; resolved libc implementation is not in this ELF."
+    }
+  ],
+  "data_ranges": [
+    {
+      "key": "PFDTable_format_10",
+      "symbol": "glitch::video::pixel_format::detail::PFDTable",
+      "elf_va": "0x008e3850",
+      "file_offset": "0x008e3850",
+      "size_bytes": 40,
+      "sha256": "fc49581bdf53a0d570b719be36af2594fa4effc75c2763b28e3212673a31f147",
+      "format_id": 10,
+      "row_bytes_per_pixel": 3,
+      "evidence_offsets": {
+        "bits_per_pixel": 22,
+        "packed_type": 36
+      },
+      "observed_values": {
+        "bits_per_pixel": 24,
+        "packed_type": 1
+      }
+    },
+    {
+      "key": "PFDTable_format_14",
+      "symbol": "glitch::video::pixel_format::detail::PFDTable",
+      "elf_va": "0x008e38f0",
+      "file_offset": "0x008e38f0",
+      "size_bytes": 40,
+      "sha256": "201a81fbfcf22554099b644e37915ad28fafc2e43a76047b237b743e967b3f1b",
+      "format_id": 14,
+      "row_bytes_per_pixel": 4,
+      "evidence_offsets": {
+        "bits_per_pixel": 22,
+        "packed_type": 36
+      },
+      "observed_values": {
+        "bits_per_pixel": 32,
+        "packed_type": 1
+      }
+    },
+    {
+      "key": "embedded_libpng_version_string",
+      "symbol": "png_libpng_ver",
+      "elf_va": "0x008e7ff8",
+      "file_offset": "0x008e7ff8",
+      "size_bytes": 18,
+      "sha256": "5aaa920885be11953884eee303fea3ffd4812f780928ec31d5203fb085809365",
+      "value": "1.2.32"
+    },
+    {
+      "key": "read_error_message",
+      "elf_va": "0x008e4920",
+      "file_offset": "0x008e4920",
+      "size_bytes": 11,
+      "sha256": "a4960a29537b9b6aa9aec81965c23df6831ac3fd57aedd46d293f8d2fed744fb",
+      "value": "Read Error"
+    },
+    {
+      "key": "png_fatal_log_category",
+      "elf_va": "0x008e4900",
+      "file_offset": "0x008e4900",
+      "size_bytes": 16,
+      "sha256": "0cb83c81a909de892fbcec6d764d9fa0890852ccf4d6b24ada3132108a60febc",
+      "value": "PNG FATAL ERROR"
+    },
+    {
+      "key": "zlib_inflate_version_string",
+      "elf_va": "0x008e6500",
+      "file_offset": "0x008e6500",
+      "size_bytes": 47,
+      "sha256": "c778b0f107b950726e8e0907d6b688ae3adfd5202d5bbf2a6751449bbc119872",
+      "owner": "embedded-zlib",
+      "value": " inflate 1.2.3 Copyright 1995-2005 Mark Adler "
+    },
+    {
+      "key": "zlib_deflate_version_string",
+      "elf_va": "0x008f1058",
+      "file_offset": "0x008f1058",
+      "size_bytes": 53,
+      "sha256": "39c53e2f35afbb5c4f4228d11677e2dd164e488cebac707a9702873977361985",
+      "owner": "embedded-zlib",
+      "value": " deflate 1.2.3 Copyright 1995-2005 Jean-loup Gailly "
+    }
+  ],
+  "notes": [
+    "Ranges/hashes identify bytes in the recovered APK ELF, not original source files.",
+    "libpng code is embedded in libDungeonHunter2.so but is a support library; only the engine-owned loader/callback policy is in the reconstructed engine scope."
+  ],
+  "relocation_evidence": [
+    {
+      "section": ".rel.dyn",
+      "table_index": 46652,
+      "offset_decimal": 10057840,
+      "offset_hex": "0x00997870",
+      "type": "R_ARM_RELATIVE",
+      "addend_decimal": 6313684,
+      "addend_hex": "0x006056d4",
+      "resolves_to": "glitch::video::user_read_data_fcn(png_struct_def*, unsigned char*, unsigned int)",
+      "use": "GOT slot loaded by CImageLoaderPng::loadImage before png_set_read_fn."
+    }
+  ]
+}

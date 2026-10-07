@@ -1,0 +1,546 @@
+{
+  "component": "texture loader dispatch, CPU storage ownership, and GLES upload boundary",
+  "original_apk": "Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "original_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "original_library": "libDungeonHunter2.so",
+  "original_library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "pt_load_mapping": {
+    "p_vaddr": "0x00000000",
+    "p_offset": "0x00000000",
+    "p_filesz": "0x00955130",
+    "mapping": "file_offset = p_offset + (ELF VA - p_vaddr); every listed range fits this PT_LOAD"
+  },
+  "functions": [
+    {
+      "key": "texture_manager_default_loaders",
+      "symbol": "glitch::video::CTextureManager::CTextureManager(glitch::video::IVideoDriver*)",
+      "elf_va": "0x005eaed8",
+      "file_offset": "0x005eaed8",
+      "size_bytes": 1116,
+      "sha256": "9946d559e2573fc4f4443c5dcd5bbcd695f545d825b0a3f275b171a5cb4a86b9",
+      "scope": "Registers loaders in order BMP, JPG, TGA, ATC, PNG, DDS, PVR."
+    },
+    {
+      "key": "loader_selection",
+      "symbol": "glitch::video::CTextureManager::getImageLoader(glitch::io::IReadFile*) const",
+      "elf_va": "0x005e8144",
+      "file_offset": "0x005e8144",
+      "size_bytes": 284,
+      "sha256": "1dc678331e1264fc6776fb40bc0990b8f4372da74b2b9e959257592726b1cdec",
+      "scope": "Checks content probes in registration order, restores the file position, then falls back to extension predicates."
+    },
+    {
+      "key": "texture_load_orchestration",
+      "symbol": "glitch::video::CTextureManager::loadTextureFromFile(glitch::io::IReadFile*, char const*, glitch::video::E_PIXEL_FORMAT&, bool)",
+      "elf_va": "0x005ecba4",
+      "file_offset": "0x005ecba4",
+      "size_bytes": 912,
+      "sha256": "a9e7f7832a24494797f70dfa627227c1794bacdc63f1934279211fcc50f55577",
+      "scope": "Selects texture-interface path or decoded-image fallback."
+    },
+    {
+      "key": "image_loader_default_texture_interface",
+      "symbol": "glitch::video::IImageLoader::hasTextureLoadInterface()",
+      "elf_va": "0x00602c84",
+      "file_offset": "0x00602c84",
+      "size_bytes": 8,
+      "sha256": "6dcd5e75586fe6683156c0d559d4827b73bd48d501fa5781a1c6099aacd7c877",
+      "scope": "Base loader reports false."
+    },
+    {
+      "key": "atc_texture_interface",
+      "symbol": "glitch::video::CImageLoaderATC::hasTextureLoadInterface()",
+      "elf_va": "0x00602c9c",
+      "file_offset": "0x00602c9c",
+      "size_bytes": 8,
+      "sha256": "007f34a6c3441b0240da53f253e513b959105da2d8803255e1856aa48f48db47",
+      "scope": "ATC reports the direct texture-load interface."
+    },
+    {
+      "key": "atc_signature_probe",
+      "symbol": "glitch::video::CImageLoaderATC::isALoadableFileFormat(glitch::io::IReadFile*) const",
+      "elf_va": "0x00602cc4",
+      "file_offset": "0x00602cc4",
+      "size_bytes": 176,
+      "sha256": "6d3550d2d0125f697d9ae2f8495ce734e29e40bdfcf78bc504b1a00025ae1898",
+      "scope": "ATC content probe."
+    },
+    {
+      "key": "atc_header",
+      "symbol": "glitch::video::CImageLoaderATC::loadTextureHeader(glitch::io::IReadFile*, glitch::video::STextureDesc&) const",
+      "elf_va": "0x00602e34",
+      "file_offset": "0x00602e34",
+      "size_bytes": 432,
+      "sha256": "f7547eb0aef346b890368137d28b7a1cb361e753d74de9535a86921973fcec92",
+      "scope": "Observed tags 0x8c92/0x8c93 map to engine formats 21/22."
+    },
+    {
+      "key": "atc_cpu_image_decode",
+      "symbol": "glitch::video::CImageLoaderATC::loadImage(glitch::io::IReadFile*) const",
+      "elf_va": "0x00602fe4",
+      "file_offset": "0x00602fe4",
+      "size_bytes": 624,
+      "sha256": "32d97211f228a50b0092b149b7e674be43a9426644cbdd47dbd31506e6bab3d8",
+      "scope": "ATC also exposes a CPU image-loading entrypoint."
+    },
+    {
+      "key": "atc_texture_data",
+      "symbol": "glitch::video::CImageLoaderATC::loadTextureData(glitch::io::IReadFile*, boost::intrusive_ptr<glitch::video::ITexture> const&, glitch::video::STextureDesc const&) const",
+      "elf_va": "0x006032dc",
+      "file_offset": "0x006032dc",
+      "size_bytes": 164,
+      "sha256": "3b94b6684cec870711c8c181a799d010e8dc4214d70351f74f7919348573f8ae",
+      "scope": "Bridge to common IImageLoader::loadData."
+    },
+    {
+      "key": "atc_extension",
+      "symbol": "glitch::video::CImageLoaderATC::isALoadableFileExtension(char const*) const",
+      "elf_va": "0x00603254",
+      "file_offset": "0x00603254",
+      "size_bytes": 76,
+      "sha256": "9fae12c60ffe045ccacd8d13db7aff71c733153fc9338cf913b35460aaed5645",
+      "scope": "Uses strstr with lower- and uppercase patterns."
+    },
+    {
+      "key": "bmp_signature_probe",
+      "symbol": "glitch::video::CImageLoaderBMP::isALoadableFileFormat(glitch::io::IReadFile*) const",
+      "elf_va": "0x006033d8",
+      "file_offset": "0x006033d8",
+      "size_bytes": 60,
+      "sha256": "f8f1264787451a2362722b4c7756d5dcc66f1acbfd3dd7954bf02d949dbb45da",
+      "scope": "BMP content probe."
+    },
+    {
+      "key": "bmp_cpu_image_decode",
+      "symbol": "glitch::video::CImageLoaderBMP::loadImage(glitch::io::IReadFile*) const",
+      "elf_va": "0x006034ec",
+      "file_offset": "0x006034ec",
+      "size_bytes": 3288,
+      "sha256": "97730dcb6408fdc22de7f27c7680e559801dfc90f88430feb188c208f1e8a3fe",
+      "scope": "CPU BMP decoder entrypoint."
+    },
+    {
+      "key": "bmp_extension",
+      "symbol": "glitch::video::CImageLoaderBMP::isALoadableFileExtension(char const*) const",
+      "elf_va": "0x006034a0",
+      "file_offset": "0x006034a0",
+      "size_bytes": 76,
+      "sha256": "f1611a95ad1e45f76d2fa6f204f03b86d12806782864471b41e93b2746616a1f",
+      "scope": "Uses strstr with lower- and uppercase patterns."
+    },
+    {
+      "key": "dds_texture_interface",
+      "symbol": "glitch::video::CImageLoaderDDS::hasTextureLoadInterface()",
+      "elf_va": "0x006041c4",
+      "file_offset": "0x006041c4",
+      "size_bytes": 8,
+      "sha256": "007f34a6c3441b0240da53f253e513b959105da2d8803255e1856aa48f48db47",
+      "scope": "DDS reports the direct texture-load interface."
+    },
+    {
+      "key": "dds_signature_probe",
+      "symbol": "glitch::video::CImageLoaderDDS::isALoadableFileFormat(glitch::io::IReadFile*) const",
+      "elf_va": "0x006042c0",
+      "file_offset": "0x006042c0",
+      "size_bytes": 76,
+      "sha256": "96983c020dd0e5f4d108a197263dbcd56cc16de353635863197cf58b264d8b9d",
+      "scope": "DDS content probe."
+    },
+    {
+      "key": "dds_header",
+      "symbol": "glitch::video::CImageLoaderDDS::loadTextureHeader(glitch::io::IReadFile*, glitch::video::STextureDesc&) const",
+      "elf_va": "0x00604398",
+      "file_offset": "0x00604398",
+      "size_bytes": 860,
+      "sha256": "c30d640adb76446c167806bd4c199831738f6a767dc01830009180fa526c66f9",
+      "scope": "Maps selected FourCCs to engine-format integers."
+    },
+    {
+      "key": "dds_cpu_image_decode",
+      "symbol": "glitch::video::CImageLoaderDDS::loadImage(glitch::io::IReadFile*) const",
+      "elf_va": "0x006046f4",
+      "file_offset": "0x006046f4",
+      "size_bytes": 536,
+      "sha256": "78ed907ec11b403392c576439c356e2259480933c5fdd7a7473156d4dfa57e92",
+      "scope": "DDS also exposes a CPU image-loading entrypoint."
+    },
+    {
+      "key": "dds_texture_data",
+      "symbol": "glitch::video::CImageLoaderDDS::loadTextureData(glitch::io::IReadFile*, boost::intrusive_ptr<glitch::video::ITexture> const&, glitch::video::STextureDesc const&) const",
+      "elf_va": "0x0060496c",
+      "file_offset": "0x0060496c",
+      "size_bytes": 272,
+      "sha256": "fe04ea1aa706d7e033e655e6b1663b165d15cbbd06643db2942841c57af65077",
+      "scope": "Bridge to common IImageLoader::loadData."
+    },
+    {
+      "key": "dds_extension",
+      "symbol": "glitch::video::CImageLoaderDDS::isALoadableFileExtension(char const*) const",
+      "elf_va": "0x0060490c",
+      "file_offset": "0x0060490c",
+      "size_bytes": 36,
+      "sha256": "c15e95e77a3dd5367c2f0bf07f2b28b6e42a51151f1357d058fb5dd8b2396ead",
+      "scope": "Uses the .dds literal."
+    },
+    {
+      "key": "jpg_signature_probe",
+      "symbol": "glitch::video::CImageLoaderJPG::isALoadableFileFormat(glitch::io::IReadFile*) const",
+      "elf_va": "0x00604b0c",
+      "file_offset": "0x00604b0c",
+      "size_bytes": 148,
+      "sha256": "e0ac84a92f7f9e0b160edd969bf9312b3b302d92b22a7a719d34053174114c77",
+      "scope": "JPEG content probe."
+    },
+    {
+      "key": "jpg_cpu_image_decode",
+      "symbol": "glitch::video::CImageLoaderJPG::loadImage(glitch::io::IReadFile*) const",
+      "elf_va": "0x00604be0",
+      "file_offset": "0x00604be0",
+      "size_bytes": 760,
+      "sha256": "ba2b54b163fa0e04f3721577822291d542e2a0114e9dc7d8a27ab2a3603c452a",
+      "scope": "CPU JPEG decoder entrypoint."
+    },
+    {
+      "key": "jpg_extension",
+      "symbol": "glitch::video::CImageLoaderJPG::isALoadableFileExtension(char const*) const",
+      "elf_va": "0x00604f6c",
+      "file_offset": "0x00604f6c",
+      "size_bytes": 76,
+      "sha256": "8c8b65715b4f60882adc24a1b1b209835f897d3124c16b54e071c5fa05e73610",
+      "scope": "Uses strstr with lower- and uppercase patterns."
+    },
+    {
+      "key": "png_signature_probe",
+      "symbol": "glitch::video::CImageLoaderPng::isALoadableFileFormat(glitch::io::IReadFile*) const",
+      "elf_va": "0x00605048",
+      "file_offset": "0x00605048",
+      "size_bytes": 148,
+      "sha256": "f32aa29351d9151d3bd2f20c8ac282d5bf2c9d00b23a1ff0bd8e03df7c41033e",
+      "scope": "PNG content probe."
+    },
+    {
+      "key": "png_cpu_image_decode",
+      "symbol": "glitch::video::CImageLoaderPng::loadImage(glitch::io::IReadFile*) const",
+      "elf_va": "0x006050dc",
+      "file_offset": "0x006050dc",
+      "size_bytes": 1392,
+      "sha256": "74f43ec786747cef0d149d0f466fbe414260fc1acec680f6689aa2707ede429d",
+      "scope": "CPU PNG decoder entrypoint."
+    },
+    {
+      "key": "png_extension",
+      "symbol": "glitch::video::CImageLoaderPng::isALoadableFileExtension(char const*) const",
+      "elf_va": "0x00605674",
+      "file_offset": "0x00605674",
+      "size_bytes": 96,
+      "sha256": "84887c4631de1bb7951bafa46730ebf9f03ee1becf09b50d3e8a3ca140ea992a",
+      "scope": "Compares the final suffix against .png/.PNG."
+    },
+    {
+      "key": "pvr_texture_interface",
+      "symbol": "glitch::video::CImageLoaderPVR::hasTextureLoadInterface()",
+      "elf_va": "0x00605718",
+      "file_offset": "0x00605718",
+      "size_bytes": 8,
+      "sha256": "007f34a6c3441b0240da53f253e513b959105da2d8803255e1856aa48f48db47",
+      "scope": "PVR reports the direct texture-load interface."
+    },
+    {
+      "key": "pvr_extension",
+      "symbol": "glitch::video::CImageLoaderPVR::isALoadableFileExtension(char const*) const",
+      "elf_va": "0x006061b4",
+      "file_offset": "0x006061b4",
+      "size_bytes": 76,
+      "sha256": "5c3b3ba68d0b5e8993803628d451d10008f793cb6804c0b56a08f98ad2c7a2fc",
+      "scope": "Uses strstr with .pvr/.btex patterns."
+    },
+    {
+      "key": "tga_signature_probe",
+      "symbol": "glitch::video::CImageLoaderTGA::isALoadableFileFormat(glitch::io::IReadFile*) const",
+      "elf_va": "0x00606778",
+      "file_offset": "0x00606778",
+      "size_bytes": 244,
+      "sha256": "6efa4758faa20e163bf18eebef70dce1e15a549ef5145b5e24c0d9f9515285a5",
+      "scope": "TGA content probe."
+    },
+    {
+      "key": "tga_cpu_image_decode",
+      "symbol": "glitch::video::CImageLoaderTGA::loadImage(glitch::io::IReadFile*) const",
+      "elf_va": "0x00606368",
+      "file_offset": "0x00606368",
+      "size_bytes": 1040,
+      "sha256": "f8547b2cd74f9ae61c53ed00c49ef5ef34177ba66d90de3bfc5303212082a82f",
+      "scope": "CPU TGA decoder entrypoint."
+    },
+    {
+      "key": "tga_extension",
+      "symbol": "glitch::video::CImageLoaderTGA::isALoadableFileExtension(char const*) const",
+      "elf_va": "0x0060686c",
+      "file_offset": "0x0060686c",
+      "size_bytes": 76,
+      "sha256": "271a1a76a8f036564a215868c8cc16a0b44004e792069af924e9cefa776cc09d",
+      "scope": "Uses strstr with lower- and uppercase patterns."
+    },
+    {
+      "key": "generic_image_data_transfer",
+      "symbol": "glitch::video::IImageLoader::loadData(glitch::io::IReadFile*, glitch::video::IImageLoader::IDataInfo const&, glitch::video::STextureDesc const&, boost::intrusive_ptr<glitch::video::ITexture> const&)",
+      "elf_va": "0x006083d0",
+      "file_offset": "0x006083d0",
+      "size_bytes": 1152,
+      "sha256": "b859a6cdf1dce67aabf17db5f04e4bd62a7c02c458872f6bfdc13db2930867a3",
+      "scope": "Fills mapped texture storage and unmaps it."
+    },
+    {
+      "key": "texture_map",
+      "symbol": "glitch::video::ITexture::map(glitch::video::E_BUFFER_MAP_ACCESS, glitch::video::E_TEXTURE_CUBE_MAP_FACE, unsigned char)",
+      "elf_va": "0x005fe0d4",
+      "file_offset": "0x005fe0d4",
+      "size_bytes": 556,
+      "sha256": "ac52c10e043e82d964e28cf6271600220138cb5b1c6905fa30a032be22d3866f",
+      "scope": "Returns per-face/mip views; first write map can allocate backing."
+    },
+    {
+      "key": "texture_set_data",
+      "symbol": "glitch::video::ITexture::setData(void*, bool, bool)",
+      "elf_va": "0x005fdf74",
+      "file_offset": "0x005fdf74",
+      "size_bytes": 352,
+      "sha256": "468bfa81cdb8773035af3ad1d745c9395aa81d3a5bfd74d94ddbe25850387f42",
+      "scope": "Stores CPU backing and ownership state."
+    },
+    {
+      "key": "texture_unmap",
+      "symbol": "glitch::video::ITexture::unmap() const",
+      "elf_va": "0x005fdc0c",
+      "file_offset": "0x005fdc0c",
+      "size_bytes": 120,
+      "sha256": "0a9855ff43450e273ae1c701067b4a9ab1917327c5f93669ac37f415ececf553",
+      "scope": "Ends map state and keeps changed-surface state for upload."
+    },
+    {
+      "key": "gl_texture_factory",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::createTextureImpl(char const*, glitch::video::STextureDesc const&)",
+      "elf_va": "0x005b5f6c",
+      "file_offset": "0x005b5f6c",
+      "size_bytes": 1032,
+      "sha256": "34ada247cda6dda00ce33a20d1d0df65b708a6c2d404fb11d24b41b40983321a",
+      "scope": "Validates and constructs the texture object; GL name creation is lazy."
+    },
+    {
+      "key": "gl_texture_bind",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::CTexture::bindImpl(bool)",
+      "elf_va": "0x005b5610",
+      "file_offset": "0x005b5610",
+      "size_bytes": 768,
+      "sha256": "f686f404818da4866c94754a34882a1c5eb299e3f03959314317261ea7b496f0",
+      "scope": "Creates/binds the GL name, then initiates pending update."
+    },
+    {
+      "key": "gl_texture_upload",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::CTexture::updateData(bool) const",
+      "elf_va": "0x005afff0",
+      "file_offset": "0x005afff0",
+      "size_bytes": 1116,
+      "sha256": "9fb09ee2dfd6c052dc1e900ea57542c33b89ed0404e9a4a3ce6642571a500f00",
+      "scope": "PFDTable compressed flag selects compressed or ordinary GLES upload."
+    },
+    {
+      "key": "pvr_signature_probe",
+      "symbol": "glitch::video::CImageLoaderPVR::isALoadableFileFormat(glitch::io::IReadFile*) const",
+      "elf_va": "0x006057e0",
+      "file_offset": "0x006057e0",
+      "size_bytes": 196,
+      "sha256": "4531cf92fb52a47ab1c29440dcb2353a08369d021c19bd41f12c68f7f8aa4e15",
+      "scope": "Recognizes legacy PVR and BTEXpvr signatures during the content-probe pass."
+    }
+  ],
+  "extension_literals": [
+    {
+      "loader": "ATC",
+      "text": ".atc",
+      "elf_va": "0x008e45a8",
+      "file_offset": "0x008e45a8",
+      "size_bytes": 5,
+      "sha256": "82ebdebaaf194ce1f84dd59ad621467b61467296e26c704191ddf12a59d2acee",
+      "nul_terminated": true
+    },
+    {
+      "loader": "ATC",
+      "text": ".ATC",
+      "elf_va": "0x008e45b0",
+      "file_offset": "0x008e45b0",
+      "size_bytes": 5,
+      "sha256": "8d7cae7ab7c8377ea44b13a1833ceb1153b6808651d1f2860e0358d8d825f1fb",
+      "nul_terminated": true
+    },
+    {
+      "loader": "BMP",
+      "text": ".bmp",
+      "elf_va": "0x008e45b8",
+      "file_offset": "0x008e45b8",
+      "size_bytes": 5,
+      "sha256": "e5d5978b0ba19a21c0ae636b749815b7c89c335595cccbc5142f4c7c5f9de028",
+      "nul_terminated": true
+    },
+    {
+      "loader": "BMP",
+      "text": ".BMP",
+      "elf_va": "0x008e45c0",
+      "file_offset": "0x008e45c0",
+      "size_bytes": 5,
+      "sha256": "a5536652e291f00a979fc88a121afa8aad95da06a04a71f0d834c7a182af9a27",
+      "nul_terminated": true
+    },
+    {
+      "loader": "DDS",
+      "text": ".dds",
+      "elf_va": "0x008e4780",
+      "file_offset": "0x008e4780",
+      "size_bytes": 5,
+      "sha256": "385482e43df6154f58f439949946a15536770657333488671b02c76594b17334",
+      "nul_terminated": true
+    },
+    {
+      "loader": "JPG",
+      "text": ".jpg",
+      "elf_va": "0x008e47c8",
+      "file_offset": "0x008e47c8",
+      "size_bytes": 5,
+      "sha256": "2db694d691648e3c7071e60b7c1a8a568580262ac32cb8f2e2bc302b97b615f5",
+      "nul_terminated": true
+    },
+    {
+      "loader": "JPG",
+      "text": ".JPG",
+      "elf_va": "0x008e47d0",
+      "file_offset": "0x008e47d0",
+      "size_bytes": 5,
+      "sha256": "726f68724b78903c6e4b80d9aec03e99ea81609ddb01125f6153edea498095da",
+      "nul_terminated": true
+    },
+    {
+      "loader": "PNG",
+      "text": ".PNG",
+      "elf_va": "0x008e4910",
+      "file_offset": "0x008e4910",
+      "size_bytes": 5,
+      "sha256": "e21aa687c70cd70f0cb48647d618275c7562d2d600709d158994e234c2b0f149",
+      "nul_terminated": true
+    },
+    {
+      "loader": "PNG",
+      "text": ".png",
+      "elf_va": "0x008e4918",
+      "file_offset": "0x008e4918",
+      "size_bytes": 5,
+      "sha256": "1c9491783edca67c243994427ff9100bbff34ff38b8e1dabfe27456fe2f5a6ce",
+      "nul_terminated": true
+    },
+    {
+      "loader": "PVR",
+      "text": ".pvr",
+      "elf_va": "0x008e4a50",
+      "file_offset": "0x008e4a50",
+      "size_bytes": 5,
+      "sha256": "1bfa414dfc7bc78a529f1f4051f7d96db5f61741ed19b012e29164ce9e24cdf9",
+      "nul_terminated": true
+    },
+    {
+      "loader": "PVR",
+      "text": ".btex",
+      "elf_va": "0x008e4a58",
+      "file_offset": "0x008e4a58",
+      "size_bytes": 6,
+      "sha256": "1450fdd4ce9b9cc4db44f5104abdc92865dee32af88cdd59e443708ef365f35a",
+      "nul_terminated": true
+    },
+    {
+      "loader": "TGA",
+      "text": ".tga",
+      "elf_va": "0x008c8140",
+      "file_offset": "0x008c8140",
+      "size_bytes": 5,
+      "sha256": "90f8906f8ba348783621c2f52c8672286fad17c6df121b9653545d1f16f0759c",
+      "nul_terminated": true
+    },
+    {
+      "loader": "TGA",
+      "text": ".TGA",
+      "elf_va": "0x008e4ab0",
+      "file_offset": "0x008e4ab0",
+      "size_bytes": 5,
+      "sha256": "a8c07f55c3e0e3a1dbd632cb708ae6f9ad122c2741fa1032dec981449e2ab0a1",
+      "nul_terminated": true
+    }
+  ],
+  "observed_header_mappings": [
+    {
+      "loader": "ATC",
+      "raw_tag": "0x00008c92",
+      "engine_format": 21
+    },
+    {
+      "loader": "ATC",
+      "raw_tag": "0x00008c93",
+      "engine_format": 22
+    },
+    {
+      "loader": "DDS",
+      "raw_tag_bytes": "DXT1",
+      "raw_tag": "0x31545844",
+      "engine_format": 18
+    },
+    {
+      "loader": "DDS",
+      "raw_tag_bytes": "DXT2",
+      "raw_tag": "0x32545844",
+      "engine_format": 19
+    },
+    {
+      "loader": "DDS",
+      "raw_tag_bytes": "DXT3",
+      "raw_tag": "0x33545844",
+      "engine_format": 19
+    },
+    {
+      "loader": "DDS",
+      "raw_tag_bytes": "DXT4",
+      "raw_tag": "0x34545844",
+      "engine_format": 20
+    },
+    {
+      "loader": "DDS",
+      "raw_tag_bytes": "DXT5",
+      "raw_tag": "0x35545844",
+      "engine_format": 20
+    },
+    {
+      "loader": "DDS",
+      "raw_tag_bytes": "PTC2",
+      "raw_tag": "0x32435450",
+      "engine_format": 25
+    },
+    {
+      "loader": "DDS",
+      "raw_tag_bytes": "PTC4",
+      "raw_tag": "0x34435450",
+      "engine_format": 27
+    }
+  ],
+  "interpretation_limits": [
+    "Registration order is BMP, JPG, TGA, ATC, PNG, DDS, PVR. The manager probes file contents in that order first, restoring the file position after each probe; only then does it try extension predicates in registration order. Most extension predicates use substring matching; PNG checks the final suffix.",
+    "The manager routes ATC, DDS, and PVR through loadTextureHeader/createTexture/loadTextureData. Other image-loader routes use loadImage followed by the manager image-to-texture path.",
+    "ITexture::map supplies views into texture CPU backing. If absent, map allocates backing and setData records its pointer and ownership. Unmap ends map state; the data remains associated with the texture for later upload. Outer cache/reference lifetime is not fully established.",
+    "The texture update path tests the PFDTable compressed bit and selects glCompressedTexImage2D/glCompressedTexSubImage2D or glTexImage2D/glTexSubImage2D. This note does not implement pixel decoders or identify every asset's chosen format.",
+    "ATC and DDS format integers are raw observed mappings. PVR/PVRTC and pixel conversion are covered by sibling notes."
+  ],
+  "assembly_evidence": "reference/original-functions.asm lists full function ranges; disassembled bytes were compared directly to the APK member ELF. Extension strings are separately listed with exact NUL-terminated bytes and hashes.",
+  "verification": {
+    "function_ranges": 38,
+    "extension_literals": 13,
+    "all_range_bytes_equal_apk_elf": true,
+    "whole_apk_hash_matches": true,
+    "whole_elf_hash_matches": true,
+    "tests_or_builds_run": false
+  }
+}

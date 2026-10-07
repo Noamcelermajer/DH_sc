@@ -1,0 +1,1379 @@
+{
+  "schema": "dh2-engine-platform-provenance-v1",
+  "hash_basis": "SHA-256 covers exactly range_size bytes sliced from the original ELF32 little-endian PT_LOAD mapping at elf_va. Function listing byte rows were directly compared for every byte with the APK ELF range. Vtable raw words were directly compared with the same ELF data range.",
+  "source_apk": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "source_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "source_elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "source_elf_size": 15938284,
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "functions": [
+    {
+      "key": "renderer_native_init",
+      "symbol": "Java_com_gameloft_android_GAND_GloftD2SS_GameRenderer_nativeInit",
+      "mangled": "Java_com_gameloft_android_GAND_GloftD2SS_GameRenderer_nativeInit",
+      "elf_va": "0x005311c8",
+      "range_size": 76,
+      "elf_file_offset": 5444040,
+      "function_bytes_sha256": "108813528c1cbb7e997a0e158ea82c6aa3f231e33f4f8225be093214981f90d9",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        77723,
+        77746
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "app_init",
+      "symbol": "appInit",
+      "mangled": "appInit",
+      "elf_va": "0x00530ba8",
+      "range_size": 772,
+      "elf_file_offset": 5442472,
+      "function_bytes_sha256": "8e8975cdfa21316d52976a976e8f1736bbb49c567d156f965a848d99201760e5",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        77297,
+        77474
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "device_factory_parameters",
+      "symbol": "glitch::createDevice(glitch::video::E_DRIVER_TYPE, glitch::core::dimension2d<int> const&, unsigned int, bool, bool, bool, glitch::IEventReceiver*)",
+      "mangled": "_ZN6glitch12createDeviceENS_5video13E_DRIVER_TYPEERKNS_4core11dimension2dIiEEjbbbPNS_14IEventReceiverE",
+      "elf_va": "0x005340ac",
+      "range_size": 204,
+      "elf_file_offset": 5456044,
+      "function_bytes_sha256": "022d11dcb2250d9cf0b4665d6efe884d72204fb7d0d03bd0b9527cf4fb23c854",
+      "source_assembly": "glitch-64aac4add68a-001.asm",
+      "source_listing_lines": [
+        23,
+        80
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "android_device_factory",
+      "symbol": "glitch::createDeviceEx(glitch::SCreationParameters const&)",
+      "mangled": "_ZN6glitch14createDeviceExERKNS_19SCreationParametersE",
+      "elf_va": "0x006a0748",
+      "range_size": 84,
+      "elf_file_offset": 6948680,
+      "function_bytes_sha256": "ac6259a2d4bdcfadc3b2fc271ea68fec640371d414e775ae52eecb65c695404f",
+      "source_assembly": "glitch-64aac4add68a-001.asm",
+      "source_listing_lines": [
+        335,
+        361
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "android_device_constructor",
+      "symbol": "glitch::CAndroidOSDevice::CAndroidOSDevice(glitch::SCreationParameters const&)",
+      "mangled": "_ZN6glitch16CAndroidOSDeviceC1ERKNS_19SCreationParametersE",
+      "elf_va": "0x006a0634",
+      "range_size": 276,
+      "elf_file_offset": 6948404,
+      "function_bytes_sha256": "75fb2ae2c290339e2f3339ef0a233356ce7bd0f1703736e800cd2afc23d06a6b",
+      "source_assembly": "glitch_CAndroidOSDevice-c2fd4b7038c4-001.asm",
+      "source_listing_lines": [
+        319,
+        392
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "android_device_create_driver",
+      "symbol": "glitch::CAndroidOSDevice::createDriver()",
+      "mangled": "_ZN6glitch16CAndroidOSDevice12createDriverEv",
+      "elf_va": "0x006a0454",
+      "range_size": 152,
+      "elf_file_offset": 6947924,
+      "function_bytes_sha256": "f8b23c0b70036f69aa14479313841f058533e04c37b4ffb7bb0b2a26be454db8",
+      "source_assembly": "glitch_CAndroidOSDevice-c2fd4b7038c4-001.asm",
+      "source_listing_lines": [
+        199,
+        241
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "gles2_driver_factory",
+      "symbol": "glitch::video::createOpenGLES2Driver(glitch::IDevice*)",
+      "mangled": "_ZN6glitch5video21createOpenGLES2DriverEPNS_7IDeviceE",
+      "elf_va": "0x005b5dac",
+      "range_size": 84,
+      "elf_file_offset": 5987756,
+      "function_bytes_sha256": "a48f1ab8577fe346dc9379ad4637c85a9648b65c5df44c1e8004e855bf77d721",
+      "source_assembly": "glitch_video-aadc65bf0959-001.asm",
+      "source_listing_lines": [
+        1562,
+        1588
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "base_device_constructor",
+      "symbol": "glitch::IDevice::IDevice(glitch::SCreationParameters const&)",
+      "mangled": "_ZN6glitch7IDeviceC2ERKNS_19SCreationParametersE",
+      "elf_va": "0x0067228c",
+      "range_size": 588,
+      "elf_file_offset": 6759052,
+      "function_bytes_sha256": "a3683ed890f33ceda7d76c3049ae9d22bd9e3afdafb480b84f222ec83a4a7ffd",
+      "source_assembly": "glitch_IDevice-5ff81d3a8772-001.asm",
+      "source_listing_lines": [
+        784,
+        931
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "device_create_gui_scene",
+      "symbol": "glitch::IDevice::createGUIAndScene()",
+      "mangled": "_ZN6glitch7IDevice17createGUIAndSceneEv",
+      "elf_va": "0x00671554",
+      "range_size": 148,
+      "elf_file_offset": 6755668,
+      "function_bytes_sha256": "87b72762d2659692489b9d803cd55100d2cf109a05c08f78589bc89fef7d26f9",
+      "source_assembly": "glitch_IDevice-5ff81d3a8772-001.asm",
+      "source_listing_lines": [
+        93,
+        135
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "device_run",
+      "symbol": "glitch::IDevice::run()",
+      "mangled": "_ZN6glitch7IDevice3runEv",
+      "elf_va": "0x00671b24",
+      "range_size": 180,
+      "elf_file_offset": 6757156,
+      "function_bytes_sha256": "b2b570ceacbb5117f1fd6ebbac12c4aa4d1bf6b82df47094694d342cba4336c7",
+      "source_assembly": "glitch_IDevice-5ff81d3a8772-001.asm",
+      "source_listing_lines": [
+        340,
+        390
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "android_device_run_impl",
+      "symbol": "glitch::CAndroidOSDevice::runImpl()",
+      "mangled": "_ZN6glitch16CAndroidOSDevice7runImplEv",
+      "elf_va": "0x006a0440",
+      "range_size": 20,
+      "elf_file_offset": 6947904,
+      "function_bytes_sha256": "0ba5bf316660f4bc8b87474499778ab5ebb81e815b1c4b07eba1f6a55d6b4bb9",
+      "source_assembly": "glitch_CAndroidOSDevice-c2fd4b7038c4-001.asm",
+      "source_listing_lines": [
+        188,
+        198
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "timer_tick",
+      "symbol": "glitch::os::Timer::tick()",
+      "mangled": "_ZN6glitch2os5Timer4tickEv",
+      "elf_va": "0x0060b22c",
+      "range_size": 64,
+      "elf_file_offset": 6337068,
+      "function_bytes_sha256": "1e4f30ff37117872e89f2825aace38ede0d66702456518069bbe41f0f81a4245",
+      "source_assembly": "glitch_os_Timer-c9682427ca55-001.asm",
+      "source_listing_lines": [
+        236,
+        255
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "renderer_native_render",
+      "symbol": "Java_com_gameloft_android_GAND_GloftD2SS_GameRenderer_nativeRender",
+      "mangled": "Java_com_gameloft_android_GAND_GloftD2SS_GameRenderer_nativeRender",
+      "elf_va": "0x005311a0",
+      "range_size": 40,
+      "elf_file_offset": 5444000,
+      "function_bytes_sha256": "b2ccad3594e972d9bf05b278c554389ff3aa668a02fc832d69af058ceaedb8d0",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        77707,
+        77722
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "renderer_native_on_draw_frame",
+      "symbol": "Java_com_gameloft_android_GAND_GloftD2SS_GameRenderer_nativeOnDrawFrame",
+      "mangled": "Java_com_gameloft_android_GAND_GloftD2SS_GameRenderer_nativeOnDrawFrame",
+      "elf_va": "0x00531158",
+      "range_size": 4,
+      "elf_file_offset": 5443928,
+      "function_bytes_sha256": "379bec29dccd0a93c94826144d7ef6e42fab64ef195a3b8313a16926f66f388f",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        77658,
+        77664
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "app_update",
+      "symbol": "appUpdate",
+      "mangled": "appUpdate",
+      "elf_va": "0x00530fc8",
+      "range_size": 392,
+      "elf_file_offset": 5443528,
+      "function_bytes_sha256": "20661329a1b0848c54e7441d80fd94c2029b8d8630cca8e46a35ec446aed0b6c",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        77547,
+        77643
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "surface_native_resize",
+      "symbol": "Java_com_gameloft_android_GAND_GloftD2SS_GameRenderer_nativeResize",
+      "mangled": "Java_com_gameloft_android_GAND_GloftD2SS_GameRenderer_nativeResize",
+      "elf_va": "0x0053117c",
+      "range_size": 20,
+      "elf_file_offset": 5443964,
+      "function_bytes_sha256": "78c9db69960d87b58ba1245253026299494563364242522742454a214536b110",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        77679,
+        77690
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "surface_native_changed",
+      "symbol": "Java_com_gameloft_android_GAND_GloftD2SS_GameRenderer_nativeOnSurfaceChanged",
+      "mangled": "Java_com_gameloft_android_GAND_GloftD2SS_GameRenderer_nativeOnSurfaceChanged",
+      "elf_va": "0x00531190",
+      "range_size": 12,
+      "elf_file_offset": 5443984,
+      "function_bytes_sha256": "23448faed2310068e0b5d8eee577b4370960556ccf60373de9ffdbc5488329ed",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        77691,
+        77699
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "android_device_set_resize",
+      "symbol": "glitch::CAndroidOSDevice::setResize(int, int)",
+      "mangled": "_ZN6glitch16CAndroidOSDevice9setResizeEii",
+      "elf_va": "0x006a02b8",
+      "range_size": 4,
+      "elf_file_offset": 6947512,
+      "function_bytes_sha256": "379bec29dccd0a93c94826144d7ef6e42fab64ef195a3b8313a16926f66f388f",
+      "source_assembly": "glitch_CAndroidOSDevice-c2fd4b7038c4-001.asm",
+      "source_listing_lines": [
+        22,
+        28
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "android_device_create_window",
+      "symbol": "glitch::CAndroidOSDevice::createWindow()",
+      "mangled": "_ZN6glitch16CAndroidOSDevice12createWindowEv",
+      "elf_va": "0x006a02b0",
+      "range_size": 8,
+      "elf_file_offset": 6947504,
+      "function_bytes_sha256": "007f34a6c3441b0240da53f253e513b959105da2d8803255e1856aa48f48db47",
+      "source_assembly": "glitch_CAndroidOSDevice-c2fd4b7038c4-001.asm",
+      "source_listing_lines": [
+        14,
+        21
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "activity_native_pause",
+      "symbol": "Java_com_gameloft_android_GAND_GloftD2SS_DungeonHunter2_nativePause",
+      "mangled": "Java_com_gameloft_android_GAND_GloftD2SS_DungeonHunter2_nativePause",
+      "elf_va": "0x00533424",
+      "range_size": 4,
+      "elf_file_offset": 5452836,
+      "function_bytes_sha256": "af5ff1bf83ddc740a450b28a3b1388185a355bd0d7bb29c939b67b787c793581",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        80215,
+        80221
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "app_pause",
+      "symbol": "appPause",
+      "mangled": "appPause",
+      "elf_va": "0x005309d8",
+      "range_size": 68,
+      "elf_file_offset": 5442008,
+      "function_bytes_sha256": "3b386b979f821c0de3c2af2f579d03c73a529661efe215f4d8cdcd8770a256bd",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        77157,
+        77178
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "activity_native_resume",
+      "symbol": "Java_com_gameloft_android_GAND_GloftD2SS_DungeonHunter2_nativeResume",
+      "mangled": "Java_com_gameloft_android_GAND_GloftD2SS_DungeonHunter2_nativeResume",
+      "elf_va": "0x005334dc",
+      "range_size": 36,
+      "elf_file_offset": 5453020,
+      "function_bytes_sha256": "981e3a1d4e175fb9ed1a8fec4c4fd2465b6d77204f754c13f3ef10718dba2d8e",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        80291,
+        80305
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "app_resume",
+      "symbol": "appResume",
+      "mangled": "appResume",
+      "elf_va": "0x00530974",
+      "range_size": 100,
+      "elf_file_offset": 5441908,
+      "function_bytes_sha256": "c5c7d6db5fc8cf3356ce5a6adfea3c30e4bde6bc22e4f7f3944389844d0bde95",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        77128,
+        77156
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "touch_native_entry",
+      "symbol": "Java_com_gameloft_android_GAND_GloftD2SS_GameGLSurfaceView_nativeOnTouch",
+      "mangled": "Java_com_gameloft_android_GAND_GloftD2SS_GameGLSurfaceView_nativeOnTouch",
+      "elf_va": "0x00533440",
+      "range_size": 156,
+      "elf_file_offset": 5452864,
+      "function_bytes_sha256": "03390b05fdd575247645795ca432cca0ac5fa5beedb841435816db3a079159b7",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        80246,
+        80290
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "app_touch_dispatch",
+      "symbol": "appOnTouch",
+      "mangled": "appOnTouch",
+      "elf_va": "0x0052f11c",
+      "range_size": 304,
+      "elf_file_offset": 5435676,
+      "function_bytes_sha256": "4c78f776e31a5e1d78a8efe64d3baff9a9f58731db3efea1acd563268a90abed",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        75542,
+        75621
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "renderer_native_done",
+      "symbol": "Java_com_gameloft_android_GAND_GloftD2SS_GameRenderer_nativeDone",
+      "mangled": "Java_com_gameloft_android_GAND_GloftD2SS_GameRenderer_nativeDone",
+      "elf_va": "0x0053119c",
+      "range_size": 4,
+      "elf_file_offset": 5443996,
+      "function_bytes_sha256": "dcd31569e96bdaa2d7fe06b99485a1bbd65958a2672a3a27248361021ac3f6c8",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        77700,
+        77706
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "app_destroy",
+      "symbol": "appDestroy",
+      "mangled": "appDestroy",
+      "elf_va": "0x00530a1c",
+      "range_size": 80,
+      "elf_file_offset": 5442076,
+      "function_bytes_sha256": "b532e4fff9eda7b4af11efcd9f49fa90365fd5a33f52e0ce83f369328b56330c",
+      "source_assembly": "global-functions-3d6ca95892b3-001.asm",
+      "source_listing_lines": [
+        77179,
+        77202
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "android_device_close",
+      "symbol": "glitch::CAndroidOSDevice::closeDevice()",
+      "mangled": "_ZN6glitch16CAndroidOSDevice11closeDeviceEv",
+      "elf_va": "0x006a02a4",
+      "range_size": 12,
+      "elf_file_offset": 6947492,
+      "function_bytes_sha256": "b13224db24ceebd19c3c5087ff610cb52756f0a0cd943d491206200a493b6042",
+      "source_assembly": "glitch_CAndroidOSDevice-c2fd4b7038c4-001.asm",
+      "source_listing_lines": [
+        5,
+        13
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "application_update",
+      "symbol": "Application::Update()",
+      "mangled": "_ZN11Application6UpdateEv",
+      "elf_va": "0x0032ccc4",
+      "range_size": 772,
+      "elf_file_offset": 3329220,
+      "function_bytes_sha256": "3d77c4faff6ba5170a29e0c661a287e11aaad0ff49d7b5ec6da8e30cc0e92118",
+      "source_assembly": "Application-e7ad522ea327-001.asm",
+      "source_listing_lines": [
+        4636,
+        4829
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "touchscreen_began",
+      "symbol": "TouchScreenBase::touchBegan(Point2D<short> const&, long)",
+      "mangled": "_ZN15TouchScreenBase10touchBeganERK7Point2DIsEl",
+      "elf_va": "0x0033ac24",
+      "range_size": 260,
+      "elf_file_offset": 3386404,
+      "function_bytes_sha256": "5c702ee721c9f57f9f3ebea911ce003cbfa4c745b8891eb5428d57a31c2aa41c",
+      "source_assembly": "TouchScreenBase-0ca9fd911a03-001.asm",
+      "source_listing_lines": [
+        189,
+        259
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "touchscreen_moved",
+      "symbol": "TouchScreenBase::touchMoved(Point2D<short> const&, long)",
+      "mangled": "_ZN15TouchScreenBase10touchMovedERK7Point2DIsEl",
+      "elf_va": "0x0033ad28",
+      "range_size": 276,
+      "elf_file_offset": 3386664,
+      "function_bytes_sha256": "8197346b6fdb9101749dc7fc09d13ad5b2ffb75d87099f8d54a769eb2602a1c2",
+      "source_assembly": "TouchScreenBase-0ca9fd911a03-001.asm",
+      "source_listing_lines": [
+        260,
+        334
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "touchscreen_ended_entry",
+      "symbol": "TouchScreenBase::touchEnded(Point2D<short> const&, long)",
+      "mangled": "_ZN15TouchScreenBase10touchEndedERK7Point2DIsEl",
+      "elf_va": "0x0033aeb8",
+      "range_size": 4,
+      "elf_file_offset": 3387064,
+      "function_bytes_sha256": "ffd617ac0c08dd6401c355952ce0ca6346d58e52b157aadabba93b52d577c7ec",
+      "source_assembly": "TouchScreenBase-0ca9fd911a03-001.asm",
+      "source_listing_lines": [
+        372,
+        378
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "touchscreen_cancelled",
+      "symbol": "TouchScreenBase::touchCancelled(Point2D<short> const&, long)",
+      "mangled": "_ZN15TouchScreenBase14touchCancelledERK7Point2DIsEl",
+      "elf_va": "0x0033ae3c",
+      "range_size": 124,
+      "elf_file_offset": 3386940,
+      "function_bytes_sha256": "09a156caa76cb2c4e94f58bc88d4cc0ffb6417bb13680a332877d847c7a47c3a",
+      "source_assembly": "TouchScreenBase-0ca9fd911a03-001.asm",
+      "source_listing_lines": [
+        335,
+        371
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "touchscreen_queue_append",
+      "symbol": "TouchScreenBase::_AddToQueue(TouchScreenBase::TouchEvent, Point2D<float> const&, long)",
+      "mangled": "_ZN15TouchScreenBase11_AddToQueueENS_10TouchEventERK7Point2DIfEl",
+      "elf_va": "0x0033a9bc",
+      "range_size": 284,
+      "elf_file_offset": 3385788,
+      "function_bytes_sha256": "29280eeb8c9e5c0c525ff0f407a3bec4a0847f202a157625bbfafb4685033dde",
+      "source_assembly": "TouchScreenBase-0ca9fd911a03-001.asm",
+      "source_listing_lines": [
+        17,
+        93
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "touchscreen_process_events",
+      "symbol": "TouchScreenBase::ProcessEvents()",
+      "mangled": "_ZN15TouchScreenBase13ProcessEventsEv",
+      "elf_va": "0x0033c568",
+      "range_size": 1776,
+      "elf_file_offset": 3392872,
+      "function_bytes_sha256": "dde6fa4ef5416cb21c15dd1c31ddbc44375b46cac7f05b3b0beef2186107b3de",
+      "source_assembly": "TouchScreenBase-0ca9fd911a03-001.asm",
+      "source_listing_lines": [
+        1170,
+        1613
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    }
+  ],
+  "data_ranges": [
+    {
+      "symbol": "vtable for glitch::CAndroidOSDevice",
+      "mangled": "_ZTVN6glitch16CAndroidOSDeviceE",
+      "elf_va": "0x009858c0",
+      "range_size": 76,
+      "elf_file_offset": 9980096,
+      "bytes_sha256": "006fa47ea9caa2806a0c11eb7814866ff1026fa22343c8d823702d80823172e2",
+      "address_point_offset": 8,
+      "entries": [
+        {
+          "symbol_offset": 0,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 4,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 8,
+          "object_vptr_displacement": 0,
+          "raw_word": "0x006a0548",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::~CAndroidOSDevice()"
+          ]
+        },
+        {
+          "symbol_offset": 12,
+          "object_vptr_displacement": 4,
+          "raw_word": "0x006a05b0",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::~CAndroidOSDevice()"
+          ]
+        },
+        {
+          "symbol_offset": 16,
+          "object_vptr_displacement": 8,
+          "raw_word": "0x0031d5cc",
+          "target_symbols": [
+            "glitch::IReferenceCounted::onDelete()"
+          ]
+        },
+        {
+          "symbol_offset": 20,
+          "object_vptr_displacement": 12,
+          "raw_word": "0x006a02c0",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::yield()"
+          ]
+        },
+        {
+          "symbol_offset": 24,
+          "object_vptr_displacement": 16,
+          "raw_word": "0x006a0374",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::sleep(unsigned int, bool)"
+          ]
+        },
+        {
+          "symbol_offset": 28,
+          "object_vptr_displacement": 20,
+          "raw_word": "0x006a0348",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::getVideoModeList()"
+          ]
+        },
+        {
+          "symbol_offset": 32,
+          "object_vptr_displacement": 24,
+          "raw_word": "0x006a02c4",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::setWindowCaption(wchar_t const*)"
+          ]
+        },
+        {
+          "symbol_offset": 36,
+          "object_vptr_displacement": 28,
+          "raw_word": "0x006a02c8",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::isWindowActive() const"
+          ]
+        },
+        {
+          "symbol_offset": 40,
+          "object_vptr_displacement": 32,
+          "raw_word": "0x006a02d0",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::isWindowFocused() const"
+          ]
+        },
+        {
+          "symbol_offset": 44,
+          "object_vptr_displacement": 36,
+          "raw_word": "0x006a02d8",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::isWindowMinimized() const"
+          ]
+        },
+        {
+          "symbol_offset": 48,
+          "object_vptr_displacement": 40,
+          "raw_word": "0x00671494",
+          "target_symbols": [
+            "glitch::IDevice::isFullscreen() const"
+          ]
+        },
+        {
+          "symbol_offset": 52,
+          "object_vptr_displacement": 44,
+          "raw_word": "0x0067149c",
+          "target_symbols": [
+            "glitch::IDevice::getColorFormat() const"
+          ]
+        },
+        {
+          "symbol_offset": 56,
+          "object_vptr_displacement": 48,
+          "raw_word": "0x006a02a4",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::closeDevice()"
+          ]
+        },
+        {
+          "symbol_offset": 60,
+          "object_vptr_displacement": 52,
+          "raw_word": "0x006a0344",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::setResizeAble(bool)"
+          ]
+        },
+        {
+          "symbol_offset": 64,
+          "object_vptr_displacement": 56,
+          "raw_word": "0x00671438",
+          "target_symbols": [
+            "glitch::IDevice::setScreenCapture(bool)"
+          ]
+        },
+        {
+          "symbol_offset": 68,
+          "object_vptr_displacement": 60,
+          "raw_word": "0x0067142c",
+          "target_symbols": [
+            "glitch::IDevice::isExitRequested()"
+          ]
+        },
+        {
+          "symbol_offset": 72,
+          "object_vptr_displacement": 64,
+          "raw_word": "0x006a0440",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::runImpl()"
+          ]
+        }
+      ],
+      "raw_words_match_original_elf": true
+    },
+    {
+      "symbol": "vtable for TouchScreenBase",
+      "mangled": "_ZTV15TouchScreenBase",
+      "elf_va": "0x0095c3c8",
+      "range_size": 92,
+      "elf_file_offset": 9810888,
+      "bytes_sha256": "8988f060ce9dc976ad431d9a790d1469487ac1219dd652561ff34820c5be3f80",
+      "address_point_offset": 8,
+      "entries": [
+        {
+          "symbol_offset": 0,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 4,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 8,
+          "object_vptr_displacement": 0,
+          "raw_word": "0x0033be08",
+          "target_symbols": [
+            "TouchScreenBase::~TouchScreenBase()"
+          ]
+        },
+        {
+          "symbol_offset": 12,
+          "object_vptr_displacement": 4,
+          "raw_word": "0x0033be48",
+          "target_symbols": [
+            "TouchScreenBase::~TouchScreenBase()"
+          ]
+        },
+        {
+          "symbol_offset": 16,
+          "object_vptr_displacement": 8,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 20,
+          "object_vptr_displacement": 12,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 24,
+          "object_vptr_displacement": 16,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 28,
+          "object_vptr_displacement": 20,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 32,
+          "object_vptr_displacement": 24,
+          "raw_word": "0x0033aad8",
+          "target_symbols": [
+            "TouchScreenBase::getDimension() const"
+          ]
+        },
+        {
+          "symbol_offset": 36,
+          "object_vptr_displacement": 28,
+          "raw_word": "0x0033abbc",
+          "target_symbols": [
+            "TouchScreenBase::getDimension(Rct<short>&) const"
+          ]
+        },
+        {
+          "symbol_offset": 40,
+          "object_vptr_displacement": 32,
+          "raw_word": "0x0033ac24",
+          "target_symbols": [
+            "TouchScreenBase::touchBegan(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 44,
+          "object_vptr_displacement": 36,
+          "raw_word": "0x0033ad28",
+          "target_symbols": [
+            "TouchScreenBase::touchMoved(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 48,
+          "object_vptr_displacement": 40,
+          "raw_word": "0x0033aeb8",
+          "target_symbols": [
+            "TouchScreenBase::touchEnded(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 52,
+          "object_vptr_displacement": 44,
+          "raw_word": "0x0033ae3c",
+          "target_symbols": [
+            "TouchScreenBase::touchCancelled(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 56,
+          "object_vptr_displacement": 48,
+          "raw_word": "0x0033aebc",
+          "target_symbols": [
+            "TouchScreenBase::isRegionPressed(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 60,
+          "object_vptr_displacement": 52,
+          "raw_word": "0x0033b02c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDInitiatedInRegion(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 64,
+          "object_vptr_displacement": 56,
+          "raw_word": "0x0033b0e8",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDInRegion(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 68,
+          "object_vptr_displacement": 60,
+          "raw_word": "0x0033b1a4",
+          "target_symbols": [
+            "TouchScreenBase::getTouchPoint(long)"
+          ]
+        },
+        {
+          "symbol_offset": 72,
+          "object_vptr_displacement": 64,
+          "raw_word": "0x0033b1e0",
+          "target_symbols": [
+            "TouchScreenBase::getFirstTouchPoint(long)"
+          ]
+        },
+        {
+          "symbol_offset": 76,
+          "object_vptr_displacement": 68,
+          "raw_word": "0x0033b21c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchDisplacement(long) const"
+          ]
+        },
+        {
+          "symbol_offset": 80,
+          "object_vptr_displacement": 72,
+          "raw_word": "0x0033b2bc",
+          "target_symbols": [
+            "TouchScreenBase::getSwipeDirection(long) const"
+          ]
+        },
+        {
+          "symbol_offset": 84,
+          "object_vptr_displacement": 76,
+          "raw_word": "0x0033bd2c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDList() const"
+          ]
+        },
+        {
+          "symbol_offset": 88,
+          "object_vptr_displacement": 80,
+          "raw_word": "0x0033b2ec",
+          "target_symbols": [
+            "TouchScreenBase::hasTouch()"
+          ]
+        }
+      ],
+      "raw_words_match_original_elf": true
+    },
+    {
+      "symbol": "vtable for TouchScreenIPhone",
+      "mangled": "_ZTV17TouchScreenIPhone",
+      "elf_va": "0x0095c428",
+      "range_size": 92,
+      "elf_file_offset": 9810984,
+      "bytes_sha256": "ae5909db912783a934834e264c4ce3c342901f6b9c1bafffa9655d40ce95337b",
+      "address_point_offset": 8,
+      "entries": [
+        {
+          "symbol_offset": 0,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 4,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 8,
+          "object_vptr_displacement": 0,
+          "raw_word": "0x0033ccb0",
+          "target_symbols": [
+            "TouchScreenIPhone::~TouchScreenIPhone()"
+          ]
+        },
+        {
+          "symbol_offset": 12,
+          "object_vptr_displacement": 4,
+          "raw_word": "0x0033cce4",
+          "target_symbols": [
+            "TouchScreenIPhone::~TouchScreenIPhone()"
+          ]
+        },
+        {
+          "symbol_offset": 16,
+          "object_vptr_displacement": 8,
+          "raw_word": "0x0033cc58",
+          "target_symbols": [
+            "TouchScreenIPhone::getLeftBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 20,
+          "object_vptr_displacement": 12,
+          "raw_word": "0x0033cc64",
+          "target_symbols": [
+            "TouchScreenIPhone::getRightBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 24,
+          "object_vptr_displacement": 16,
+          "raw_word": "0x0033cc70",
+          "target_symbols": [
+            "TouchScreenIPhone::getTopBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 28,
+          "object_vptr_displacement": 20,
+          "raw_word": "0x0033cc7c",
+          "target_symbols": [
+            "TouchScreenIPhone::getBottomBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 32,
+          "object_vptr_displacement": 24,
+          "raw_word": "0x0033aad8",
+          "target_symbols": [
+            "TouchScreenBase::getDimension() const"
+          ]
+        },
+        {
+          "symbol_offset": 36,
+          "object_vptr_displacement": 28,
+          "raw_word": "0x0033abbc",
+          "target_symbols": [
+            "TouchScreenBase::getDimension(Rct<short>&) const"
+          ]
+        },
+        {
+          "symbol_offset": 40,
+          "object_vptr_displacement": 32,
+          "raw_word": "0x0033ac24",
+          "target_symbols": [
+            "TouchScreenBase::touchBegan(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 44,
+          "object_vptr_displacement": 36,
+          "raw_word": "0x0033ad28",
+          "target_symbols": [
+            "TouchScreenBase::touchMoved(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 48,
+          "object_vptr_displacement": 40,
+          "raw_word": "0x0033aeb8",
+          "target_symbols": [
+            "TouchScreenBase::touchEnded(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 52,
+          "object_vptr_displacement": 44,
+          "raw_word": "0x0033ae3c",
+          "target_symbols": [
+            "TouchScreenBase::touchCancelled(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 56,
+          "object_vptr_displacement": 48,
+          "raw_word": "0x0033ccac",
+          "target_symbols": [
+            "TouchScreenIPhone::isRegionPressed(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 60,
+          "object_vptr_displacement": 52,
+          "raw_word": "0x0033b02c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDInitiatedInRegion(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 64,
+          "object_vptr_displacement": 56,
+          "raw_word": "0x0033cca8",
+          "target_symbols": [
+            "TouchScreenIPhone::getTouchIDInRegion(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 68,
+          "object_vptr_displacement": 60,
+          "raw_word": "0x0033b1a4",
+          "target_symbols": [
+            "TouchScreenBase::getTouchPoint(long)"
+          ]
+        },
+        {
+          "symbol_offset": 72,
+          "object_vptr_displacement": 64,
+          "raw_word": "0x0033b1e0",
+          "target_symbols": [
+            "TouchScreenBase::getFirstTouchPoint(long)"
+          ]
+        },
+        {
+          "symbol_offset": 76,
+          "object_vptr_displacement": 68,
+          "raw_word": "0x0033b21c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchDisplacement(long) const"
+          ]
+        },
+        {
+          "symbol_offset": 80,
+          "object_vptr_displacement": 72,
+          "raw_word": "0x0033b2bc",
+          "target_symbols": [
+            "TouchScreenBase::getSwipeDirection(long) const"
+          ]
+        },
+        {
+          "symbol_offset": 84,
+          "object_vptr_displacement": 76,
+          "raw_word": "0x0033bd2c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDList() const"
+          ]
+        },
+        {
+          "symbol_offset": 88,
+          "object_vptr_displacement": 80,
+          "raw_word": "0x0033b2ec",
+          "target_symbols": [
+            "TouchScreenBase::hasTouch()"
+          ]
+        }
+      ],
+      "raw_words_match_original_elf": true
+    },
+    {
+      "symbol": "vtable for TouchScreenWin32",
+      "mangled": "_ZTV16TouchScreenWin32",
+      "elf_va": "0x0095c500",
+      "range_size": 116,
+      "elf_file_offset": 9811200,
+      "bytes_sha256": "69d4c4df5c11d8c71c6e3e8101fcbe507ab16cc40ff2845a98398d83012fc7bb",
+      "address_point_offset": 8,
+      "entries": [
+        {
+          "symbol_offset": 0,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 4,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 8,
+          "object_vptr_displacement": 0,
+          "raw_word": "0x0033d5d8",
+          "target_symbols": [
+            "TouchScreenWin32::~TouchScreenWin32()"
+          ]
+        },
+        {
+          "symbol_offset": 12,
+          "object_vptr_displacement": 4,
+          "raw_word": "0x0033d628",
+          "target_symbols": [
+            "TouchScreenWin32::~TouchScreenWin32()"
+          ]
+        },
+        {
+          "symbol_offset": 16,
+          "object_vptr_displacement": 8,
+          "raw_word": "0x0033d48c",
+          "target_symbols": [
+            "TouchScreenWin32::getLeftBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 20,
+          "object_vptr_displacement": 12,
+          "raw_word": "0x0033d494",
+          "target_symbols": [
+            "TouchScreenWin32::getRightBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 24,
+          "object_vptr_displacement": 16,
+          "raw_word": "0x0033d49c",
+          "target_symbols": [
+            "TouchScreenWin32::getTopBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 28,
+          "object_vptr_displacement": 20,
+          "raw_word": "0x0033d4a4",
+          "target_symbols": [
+            "TouchScreenWin32::getBottomBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 32,
+          "object_vptr_displacement": 24,
+          "raw_word": "0x0033aad8",
+          "target_symbols": [
+            "TouchScreenBase::getDimension() const"
+          ]
+        },
+        {
+          "symbol_offset": 36,
+          "object_vptr_displacement": 28,
+          "raw_word": "0x0033abbc",
+          "target_symbols": [
+            "TouchScreenBase::getDimension(Rct<short>&) const"
+          ]
+        },
+        {
+          "symbol_offset": 40,
+          "object_vptr_displacement": 32,
+          "raw_word": "0x0033ac24",
+          "target_symbols": [
+            "TouchScreenBase::touchBegan(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 44,
+          "object_vptr_displacement": 36,
+          "raw_word": "0x0033ad28",
+          "target_symbols": [
+            "TouchScreenBase::touchMoved(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 48,
+          "object_vptr_displacement": 40,
+          "raw_word": "0x0033aeb8",
+          "target_symbols": [
+            "TouchScreenBase::touchEnded(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 52,
+          "object_vptr_displacement": 44,
+          "raw_word": "0x0033ae3c",
+          "target_symbols": [
+            "TouchScreenBase::touchCancelled(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 56,
+          "object_vptr_displacement": 48,
+          "raw_word": "0x0033aebc",
+          "target_symbols": [
+            "TouchScreenBase::isRegionPressed(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 60,
+          "object_vptr_displacement": 52,
+          "raw_word": "0x0033b02c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDInitiatedInRegion(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 64,
+          "object_vptr_displacement": 56,
+          "raw_word": "0x0033b0e8",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDInRegion(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 68,
+          "object_vptr_displacement": 60,
+          "raw_word": "0x0033b1a4",
+          "target_symbols": [
+            "TouchScreenBase::getTouchPoint(long)"
+          ]
+        },
+        {
+          "symbol_offset": 72,
+          "object_vptr_displacement": 64,
+          "raw_word": "0x0033b1e0",
+          "target_symbols": [
+            "TouchScreenBase::getFirstTouchPoint(long)"
+          ]
+        },
+        {
+          "symbol_offset": 76,
+          "object_vptr_displacement": 68,
+          "raw_word": "0x0033b21c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchDisplacement(long) const"
+          ]
+        },
+        {
+          "symbol_offset": 80,
+          "object_vptr_displacement": 72,
+          "raw_word": "0x0033b2bc",
+          "target_symbols": [
+            "TouchScreenBase::getSwipeDirection(long) const"
+          ]
+        },
+        {
+          "symbol_offset": 84,
+          "object_vptr_displacement": 76,
+          "raw_word": "0x0033bd2c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDList() const"
+          ]
+        },
+        {
+          "symbol_offset": 88,
+          "object_vptr_displacement": 80,
+          "raw_word": "0x0033b2ec",
+          "target_symbols": [
+            "TouchScreenBase::hasTouch()"
+          ]
+        },
+        {
+          "symbol_offset": 92,
+          "object_vptr_displacement": 84,
+          "raw_word": "0x0033d4b4",
+          "target_symbols": [
+            "TouchScreenWin32::onEvent(glitch::SEvent const&)"
+          ]
+        },
+        {
+          "symbol_offset": 96,
+          "object_vptr_displacement": 88,
+          "raw_word": "0xfffffe4c",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 100,
+          "object_vptr_displacement": 92,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 104,
+          "object_vptr_displacement": 96,
+          "raw_word": "0x0033d5d0",
+          "target_symbols": [
+            "non-virtual thunk to TouchScreenWin32::~TouchScreenWin32()"
+          ]
+        },
+        {
+          "symbol_offset": 108,
+          "object_vptr_displacement": 100,
+          "raw_word": "0x0033d620",
+          "target_symbols": [
+            "non-virtual thunk to TouchScreenWin32::~TouchScreenWin32()"
+          ]
+        },
+        {
+          "symbol_offset": 112,
+          "object_vptr_displacement": 104,
+          "raw_word": "0x0033d4ac",
+          "target_symbols": [
+            "non-virtual thunk to TouchScreenWin32::onEvent(glitch::SEvent const&)"
+          ]
+        }
+      ],
+      "raw_words_match_original_elf": true
+    }
+  ],
+  "observed_globals": [
+    {
+      "name": "s_windowWidth",
+      "elf_va": "0x0099b10c",
+      "size": 4,
+      "section": ".data",
+      "elf_file_offset": 10068236,
+      "bytes_sha256": "961ae28829f0b1cfbd073eff070ac5ea8994618c0e84fab4764367464a14b854"
+    },
+    {
+      "name": "s_windowHeight",
+      "elf_va": "0x0099b110",
+      "size": 4,
+      "section": ".data",
+      "elf_file_offset": 10068240,
+      "bytes_sha256": "c1a9a33cbb961869cef413a3f2d84ff3ea200bdf48a92483b20b870e24a6dd21"
+    },
+    {
+      "name": "Width_Screen",
+      "elf_va": "0x0099b114",
+      "size": 4,
+      "section": ".data",
+      "elf_file_offset": 10068244,
+      "bytes_sha256": "ad95131bc0b799c0b1af477fb14fcf26a6a9f76079e48bf090acb7e8367bfd0e"
+    },
+    {
+      "name": "Height_Screen",
+      "elf_va": "0x0099b118",
+      "size": 4,
+      "section": ".data",
+      "elf_file_offset": 10068248,
+      "bytes_sha256": "ad95131bc0b799c0b1af477fb14fcf26a6a9f76079e48bf090acb7e8367bfd0e"
+    }
+  ]
+}

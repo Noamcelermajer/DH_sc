@@ -1,0 +1,274 @@
+{
+  "schema_version": 1,
+  "component": "CResFileManager default resource-factory object lifecycle",
+  "source": {
+    "apk": "Dungeon-Hunter-2-HD-v1-0-2.apk",
+    "apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+    "member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "elf_class": "ELF32 little-endian ARM",
+    "pt_loads": [
+      {
+        "p_vaddr": "0x00000000",
+        "p_offset": "0x00000000",
+        "p_filesz": "0x00955130"
+      },
+      {
+        "p_vaddr": "0x00956130",
+        "p_offset": "0x00955130",
+        "p_filesz": "0x0004954c"
+      }
+    ]
+  },
+  "functions": [
+    {
+      "name": "CResFileManager::CResFileManager(IDevice*) [C1]",
+      "symbol_or_listing_alias": "_ZN6glitch7collada15CResFileManagerC1EPNS_7IDeviceE",
+      "scope": "engine",
+      "vaddr": "0x00657914",
+      "size": 128,
+      "file_offset": "0x00657914",
+      "sha256": "d4fdb3614ec2ce867f1fc0904f98fdaa95457d10c782b4e9d599d7e5b0538cc5",
+      "verification": "SHA-256 over exact bytes read from APK ELF PT_LOAD mapping"
+    },
+    {
+      "name": "_GLOBAL__I_.._source_glitch_collada_CColladaResFileManager.cpp",
+      "symbol_or_listing_alias": "global constructor for Collada resource-manager TU",
+      "scope": "engine initialization",
+      "vaddr": "0x00657a24",
+      "size": 112,
+      "file_offset": "0x00657a24",
+      "sha256": "f2038c17ea1229829cb8e5f0a84e072d8845f4d17744188574b05177322b7098",
+      "verification": "SHA-256 over exact bytes read from APK ELF PT_LOAD mapping"
+    },
+    {
+      "name": "CResFileManager::get(IReadFile*, bool, bool)",
+      "symbol_or_listing_alias": "_ZN6glitch7collada15CResFileManager3getEPNS_2io9IReadFileEbb",
+      "scope": "engine",
+      "vaddr": "0x0065a748",
+      "size": 580,
+      "file_offset": "0x0065a748",
+      "sha256": "c0dd305b36a44df95c95e9d5655973254019f42bbff0f192de117015959288ed",
+      "verification": "SHA-256 over exact bytes read from APK ELF PT_LOAD mapping"
+    },
+    {
+      "name": "CResFileManager::load(IReadFile*, bool, callback, bool)",
+      "symbol_or_listing_alias": "_ZN6glitch7collada15CResFileManager4loadEPNS_2io9IReadFileEbPFvPKcPKNS0_8SColladaEEb",
+      "scope": "engine",
+      "vaddr": "0x0065a98c",
+      "size": 28,
+      "file_offset": "0x0065a98c",
+      "sha256": "0923a1253e7ceee85aa40f5ebf8e4d20972193b4b834a8e5538e5178baa0881d",
+      "verification": "SHA-256 over exact bytes read from APK ELF PT_LOAD mapping"
+    },
+    {
+      "name": "CResFileManager::postLoadProcess(CResFile*, IReadFile*)",
+      "symbol_or_listing_alias": "_ZN6glitch7collada15CResFileManager15postLoadProcessEPNS0_8CResFileEPNS_2io9IReadFileE",
+      "scope": "engine",
+      "vaddr": "0x00658c90",
+      "size": 2064,
+      "file_offset": "0x00658c90",
+      "sha256": "e85095e743755648b2ca68999ddaca7fa1155ab335ee435b585ad2b7a1b13ad2",
+      "verification": "SHA-256 over exact bytes read from APK ELF PT_LOAD mapping"
+    },
+    {
+      "name": "CResFactory::getTexture(CResFile*, string const&, IReadFile*, CTextureManager*, SImage*)",
+      "symbol_or_listing_alias": "_ZN6glitch7collada11CResFactory10getTextureEPNS0_8CResFileERKSbIcSt11char_traitsIcENS_4core10SAllocatorIcLNS_6memory13E_MEMORY_HINTE0EEEEPNS_2io9IReadFileEPNS_5video15CTextureManagerEPNS0_6SImageE",
+      "scope": "engine",
+      "vaddr": "0x00659704",
+      "size": 100,
+      "file_offset": "0x00659704",
+      "sha256": "84d25cb9863e2573bff254b129a726177a7386e65a9601c45d0fe6a71c0a086f",
+      "verification": "SHA-256 over exact bytes read from APK ELF PT_LOAD mapping"
+    },
+    {
+      "name": "CColladaBinaryFileLoader::createMesh(IReadFile*)",
+      "symbol_or_listing_alias": "_ZN6glitch5scene24CColladaBinaryFileLoader10createMeshEPNS_2io9IReadFileE",
+      "scope": "engine scene loader",
+      "vaddr": "0x006b9458",
+      "size": 224,
+      "file_offset": "0x006b9458",
+      "sha256": "08b1b58c80ad5dbe66221dd37d2e4daa4bcb83aabd46bee72fe2821415ec99f4",
+      "verification": "SHA-256 over exact bytes read from APK ELF PT_LOAD mapping"
+    }
+  ],
+  "data_ranges": [
+    {
+      "name": "CResFileManager::DefaultResFactory GOT entry",
+      "vaddr": "0x00996684",
+      "size": 4,
+      "file_offset": "0x00995684",
+      "sha256": "074b318a3dbf0614eeb07834209e5f48b415f32ae73cee46cb5922495def82d3",
+      "raw_hex": "18709f00",
+      "word_value": "0x009f7018",
+      "relocation": {
+        "section": ".rel.dyn",
+        "index": 45506,
+        "type": "R_ARM_RELATIVE",
+        "addend": "0x009f7018"
+      }
+    },
+    {
+      "name": "CResFileManager vtable GOT entry",
+      "vaddr": "0x00996cf0",
+      "size": 4,
+      "file_offset": "0x00995cf0",
+      "sha256": "cb5c7d0af35052198e12e37fa3f7839d5d89a1310cfcfb4c882429fad6fce401",
+      "raw_hex": "28309800",
+      "word_value": "0x00983028",
+      "relocation": {
+        "section": ".rel.dyn",
+        "index": 45916,
+        "type": "R_ARM_RELATIVE",
+        "addend": "0x00983028"
+      }
+    },
+    {
+      "name": "CResFactory vtable GOT entry",
+      "vaddr": "0x009978b8",
+      "size": 4,
+      "file_offset": "0x009968b8",
+      "sha256": "a4b35cb7e104754c8051bee00c7f269b3cc977af710861312ff6ed6a95a0109d",
+      "raw_hex": "40309800",
+      "word_value": "0x00983040",
+      "relocation": {
+        "section": ".rel.dyn",
+        "index": 46670,
+        "type": "R_ARM_RELATIVE",
+        "addend": "0x00983040"
+      }
+    },
+    {
+      "name": "CResFileManager::Inst GOT entry",
+      "vaddr": "0x00998ee0",
+      "size": 4,
+      "file_offset": "0x00997ee0",
+      "sha256": "ea3df4245f1fa6d41984bf5b6b4809c0e2dd314053133a8e9849fd17b30cdcbb",
+      "raw_hex": "1c709f00",
+      "word_value": "0x009f701c",
+      "relocation": {
+        "section": ".rel.dyn",
+        "index": 48083,
+        "type": "R_ARM_RELATIVE",
+        "addend": "0x009f701c"
+      }
+    },
+    {
+      "name": "CResFileManager vtable",
+      "vaddr": "0x00983028",
+      "size": 20,
+      "file_offset": "0x00982028",
+      "sha256": "6f46ae46e480a6629dc2aa9f0c115a57d812d44927bbca61f7e20fa9da707153",
+      "raw_hex": "0000000000000000c4826500a8836500ccd53100"
+    },
+    {
+      "name": "CResFactory vtable",
+      "vaddr": "0x00983040",
+      "size": 20,
+      "file_offset": "0x00982040",
+      "sha256": "87cb116a8176ecc5e4a4e6e653472e8b63deef1dd00ab277c57a4e4def8b5723",
+      "raw_hex": "000000000000000090786500087a650004976500"
+    },
+    {
+      "name": "CResFactory vtable getTexture virtual slot",
+      "vaddr": "0x00983050",
+      "size": 4,
+      "file_offset": "0x00982050",
+      "sha256": "978cdd7862e7eb3495b789fc6db40345cbca16f88bc703933515aff959597753",
+      "raw_hex": "04976500",
+      "word_value": "0x00659704",
+      "relocation": {
+        "section": ".rel.dyn",
+        "index": 31541,
+        "type": "R_ARM_RELATIVE",
+        "addend": "0x00659704"
+      }
+    },
+    {
+      "name": "init_array entry for Collada resource-manager TU global initializer",
+      "vaddr": "0x0095674c",
+      "size": 4,
+      "file_offset": "0x0095574c",
+      "sha256": "218c479176ecb85099ff99e40b4e01697d4e14ba3c8982d7ef855cdd862a698f",
+      "raw_hex": "247a6500",
+      "word_value": "0x00657a24",
+      "relocation": {
+        "section": ".rel.dyn",
+        "index": 391,
+        "type": "R_ARM_RELATIVE",
+        "addend": "0x00657a24"
+      }
+    }
+  ],
+  "symbols": [
+    {
+      "name": "_ZN6glitch7collada15CResFileManager17DefaultResFactoryE",
+      "demangled": "glitch::collada::CResFileManager::DefaultResFactory",
+      "vaddr": "0x009f7018",
+      "size": 4,
+      "section": ".bss",
+      "storage": "SHT_NOBITS; no file bytes to hash",
+      "interpretation": "static CResFactory object: its 4-byte storage receives CResFactory vptr in the registered TU initializer"
+    },
+    {
+      "name": "_ZN6glitch7collada15CResFileManager4InstE",
+      "demangled": "glitch::collada::CResFileManager::Inst",
+      "vaddr": "0x009f701c",
+      "size": 4,
+      "section": ".bss",
+      "storage": "SHT_NOBITS; no file bytes to hash",
+      "interpretation": "static CResFileManager* slot; manager constructor writes this here and CColladaBinaryFileLoader reads it"
+    },
+    {
+      "name": "_ZTVN6glitch7collada11CResFactoryE",
+      "demangled": "vtable for glitch::collada::CResFactory",
+      "vaddr": "0x00983040",
+      "size": 20,
+      "section": ".data.rel.ro",
+      "storage": "file-backed, separately hashed in data_ranges"
+    }
+  ],
+  "static_call_chain": [
+    {
+      "from": "glitch::scene::CColladaBinaryFileLoader::createMesh(IReadFile*)",
+      "at": "0x006b9494",
+      "to": "glitch::collada::CResFileManager::load(IReadFile*, bool, callback, bool)",
+      "target": "0x0065a98c",
+      "detail": "loads CResFileManager::Inst and passes bool r2=0"
+    },
+    {
+      "from": "CResFileManager::load(IReadFile*,...)",
+      "at": "0x0065a994",
+      "to": "CResFileManager::get(IReadFile*, bool, bool)",
+      "target": "0x0065a748",
+      "detail": "r2==0 branch reaches 0x65a9a0 then direct branch to 0x65a748"
+    },
+    {
+      "from": "CResFileManager::get(IReadFile*, bool, bool)",
+      "at": "0x0065a954",
+      "to": "CResFileManager::postLoadProcess(CResFile*, IReadFile*)",
+      "target": "0x00658c90",
+      "detail": "direct call after resource load/association path"
+    },
+    {
+      "from": "CResFileManager::postLoadProcess",
+      "at": "0x00658e58",
+      "to": "factory vtable slot",
+      "detail": "loads manager+0x24, then object vptr and dispatches [vptr+8]; default object vptr is 0x983048"
+    },
+    {
+      "from": "vtable for glitch::collada::CResFactory",
+      "at": "0x00983050",
+      "to": "CResFactory::getTexture(...)",
+      "target": "0x00659704",
+      "detail": "vtable symbol 0x983040, object vptr/address point is symbol+8, dispatched slot is address point+8"
+    }
+  ],
+  "verification": {
+    "apk_and_elf_hashes_match_known_source": true,
+    "function_and_data_hashes_computed_from_APK_member": true,
+    "relocations_cross_checked_against_recovered_relocations_csv": true,
+    "runtime_observed": false,
+    "builds_or_tests_run": false
+  }
+}

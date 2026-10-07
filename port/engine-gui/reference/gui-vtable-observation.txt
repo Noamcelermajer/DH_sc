@@ -1,0 +1,32 @@
+CGUIEnvironment vtable group: VA 0x0096cdc8, 496 bytes, PT_LOAD segment 2, file offset 0x96bdc8, SHA-256 20c0b078bacc979f9b9f2bb16937b0bc1669185858906ed87383c42fd144dcf9.
+Raw words below are read from that range. Slot names are checked against the ELF function symbols and `drawAll` call offsets.
+
+IGUIElement vtable group: VA 0x0096cb98, 208 bytes, PT_LOAD segment 2, file offset 0x96bb98, SHA-256 c914f93e0f57f5b0bb5e37ddcc7cb3232f2daaafead6dc9bfda82bc9bc44dd29.
+IGUIElement address point VA 0x0096cba8 (group + 0x10):
+  vptr+0x08 / table+0x018 VA 0x0096cbb0: 0x00534fe8  IGUIElement::onEvent
+  vptr+0x1c / table+0x02c VA 0x0096cbc4: 0x00534e90  IGUIElement::remove
+  vptr+0x20 / table+0x030 VA 0x0096cbc8: 0x00534eb8  IGUIElement::draw
+  vptr+0x68 / table+0x078 VA 0x0096cc10: 0x00535014  IGUIElement::getChildren
+
+Primary IGUIEnvironment address point VA 0x0096cdd8 (group + 0x10):
+  vptr+0x0c / table+0x01c VA 0x0096cde4: 0x00537648  CGUIEnvironment::drawAll
+  vptr+0x2c / table+0x03c VA 0x0096ce04: 0x00535658  CGUIEnvironment::clear
+  vptr+0x30 / table+0x040 VA 0x0096ce08: 0x00537c5c  CGUIEnvironment::postEventFromUser
+  vptr+0x74 / table+0x084 VA 0x0096ce4c: 0x00535c10  CGUIEnvironment::getRootGUIElement
+  vptr+0x108 / table+0x118 VA 0x0096cee0: 0x00535710  CGUIEnvironment::onEvent
+  vptr+0x10c / table+0x11c VA 0x0096cee4: 0x00537e7c  CGUIEnvironment::OnPostRender(unsigned int)
+
+IGUIElement secondary address point VA 0x0096cef8 (group + 0x130):
+  vptr+0x08 / table+0x138 VA 0x0096cf00: 0x00535708  non-virtual thunk to CGUIEnvironment::onEvent
+  vptr+0x0c / table+0x13c VA 0x0096cf04: 0x00534920  IGUIElement::updateAbsolutePosition
+  vptr+0x20 / table+0x150 VA 0x0096cf18: 0x00534eb8  IGUIElement::draw
+  vptr+0x24 / table+0x154 VA 0x0096cf1c: 0x00537e74  non-virtual thunk to CGUIEnvironment::OnPostRender(unsigned int)
+  vptr+0x64 / table+0x194 VA 0x0096cf5c: 0x00535d70  IGUIElement::bringToFront
+  vptr+0x68 / table+0x198 VA 0x0096cf60: 0x00535014  IGUIElement::getChildren
+
+Input trace slot checks from the same hashed groups:
+  CGUIEnvironment primary vptr+0x10 / table+0x020 VA 0x0096cde8: 0x005353c8  CGUIEnvironment::setFocus
+  IGUIElement base vptr+0x10 / table+0x020 VA 0x0096cbb8: 0x00534e48  IGUIElement::isPointInside
+  IGUIElement base vptr+0x28 / table+0x038 VA 0x0096cbd0: 0x00534f40  IGUIElement::move
+  IGUIElement base vptr+0x2c / table+0x03c VA 0x0096cbd4: 0x00534f90  IGUIElement::isVisible
+  IGUIElement base vptr+0x64 / table+0x074 VA 0x0096cc0c: 0x00535d70  IGUIElement::bringToFront

@@ -1,0 +1,364 @@
+{
+  "schema": "dh2-scene-attachment-factory-provenance-v1",
+  "source_apk": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "source_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "source_elf": "work/libDungeonHunter2.so",
+  "source_elf_size": 15938284,
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "hash_basis": "SHA-256 covers exact source ELF bytes through PT_LOAD mapping. Each listed full function range was compared byte-for-byte with its recovered original ARM listing, including mapped literal-pool bytes.",
+  "pt_load_mapping": [
+    {
+      "segment": 1,
+      "virtual_range": "0x00000000..0x0095512f",
+      "file_offset": "VA"
+    },
+    {
+      "segment": 2,
+      "virtual_range": "0x00956130..0x0099ab7b",
+      "file_offset": "VA - 0x1000"
+    }
+  ],
+  "functions": [
+    {
+      "demangled": "_GLOBAL__I_.._.._sources_Core_Irrlicht_ColladaFactory.cpp",
+      "elf_virtual_address": "0x3508f4",
+      "elf_file_offset": "0x3508f4",
+      "range_size": 284,
+      "mode": "arm",
+      "original_code_sha256": "1ad2d115173a9a02780dd1ea5c0de862773df3f870a612108bf03729b488004b",
+      "assembly_file": "global-functions-3d6ca95892b3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "App ColladaFactory global initializer; stores its vptr in ColladaFactory::s_factory."
+    },
+    {
+      "demangled": "SceneManager::LoadScene(char const*, char const*, bool, bool)",
+      "elf_virtual_address": "0x3596f8",
+      "elf_file_offset": "0x3596f8",
+      "range_size": 832,
+      "mode": "arm",
+      "original_code_sha256": "a3400f512e2359c9e9489575dc3b3ba5e4504c7a7737d52d9c5847950efe847e",
+      "assembly_file": "SceneManager-18f407ee92a7-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "SceneManager load path passes the s_factory address to CColladaDatabase::constructScene."
+    },
+    {
+      "demangled": "SceneManager::LoadFXLib(char const*, char const*)",
+      "elf_virtual_address": "0x3594a4",
+      "elf_file_offset": "0x3594a4",
+      "range_size": 596,
+      "mode": "arm",
+      "original_code_sha256": "2da05cee0090574f38c7d1182cf97e0e919e04bb4bec31ce9dfa0203fcd5935a",
+      "assembly_file": "SceneManager-18f407ee92a7-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "FX library load path passes the s_factory address to the CColladaDatabase constructor."
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::CColladaDatabase(char const*, glitch::collada::CColladaFactory*)",
+      "elf_virtual_address": "0x60f25c",
+      "elf_file_offset": "0x60f25c",
+      "range_size": 84,
+      "mode": "arm",
+      "original_code_sha256": "8c3c3ac060641caf088f0f3f103889456804ae41790bebc09907a87314d3c4b0",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "CColladaDatabase constructor stores the supplied factory pointer at database offset +4."
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::constructScene(glitch::video::IVideoDriver*, char const*, bool, glitch::collada::CColladaFactory*)",
+      "elf_virtual_address": "0x61bbd4",
+      "elf_file_offset": "0x61bbd4",
+      "range_size": 184,
+      "mode": "arm",
+      "original_code_sha256": "eccacb94336d0d5e6c394099341e90dc725750fa95c5118c2718137d4e52bf7a",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "Factory-taking scene construction overload reached by SceneManager::LoadScene."
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::constructScene(glitch::video::IVideoDriver*) const",
+      "elf_virtual_address": "0x61b9e8",
+      "elf_file_offset": "0x61b9e8",
+      "range_size": 212,
+      "mode": "arm",
+      "original_code_sha256": "f632c3e51c10a474b83195765435cbc4c622f13ad5ad3b53fffcea8cc1cfba6e",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "Walks root scene selectors and resolves tag-6 visual-scene names."
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::getVisualScene(char const*) const",
+      "elf_virtual_address": "0x61a690",
+      "elf_file_offset": "0x61a690",
+      "range_size": 96,
+      "mode": "arm",
+      "original_code_sha256": "81ca617bddf4b1f55186b62b5b917b758c0636b67cc21fb37f077cd15c9564d0",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "Looks up visual-scene descriptor by name in the root +0x98/+0x9c table."
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::constructVisualScene(glitch::video::IVideoDriver*, glitch::collada::SVisualScene*, glitch::collada::CRootSceneNode*) const",
+      "elf_virtual_address": "0x61b8bc",
+      "elf_file_offset": "0x61b8bc",
+      "range_size": 204,
+      "mode": "arm",
+      "original_code_sha256": "d35fbff3ca43ca621f9e4304b4370c9908131faf71e941f0ab75a22916482258",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "Walks SVisualScene node records with 0x50-byte stride."
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::constructNode(glitch::video::IVideoDriver*, glitch::collada::SNode*, glitch::collada::CRootSceneNode*) const",
+      "elf_virtual_address": "0x61b2f4",
+      "elf_file_offset": "0x61b2f4",
+      "range_size": 1480,
+      "mode": "arm",
+      "original_code_sha256": "9e047558fe98fb8d63868ffd99023086eaeab7284e550954810440da90d88b59",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "Attachment selector switch; cases 5\u20138 branch to loop increment; case 13 passes its second word to constructModularSkin."
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::constructModularSkin(glitch::collada::SInstanceModularSkin*, glitch::collada::CRootSceneNode*) const",
+      "elf_virtual_address": "0x60e6f0",
+      "elf_file_offset": "0x60e6f0",
+      "range_size": 108,
+      "mode": "arm",
+      "original_code_sha256": "bba4a2973ad8f8946483fb05eb7edc4bee2cd371944b5a6311af8f583c369785",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "Named modular-skin route; calls the CColladaFactory createModularSkin virtual."
+    },
+    {
+      "demangled": "glitch::collada::CColladaFactory::createModularSkin(glitch::collada::CColladaDatabase const&, glitch::collada::SInstanceModularSkin*, glitch::collada::CRootSceneNode*)",
+      "elf_virtual_address": "0x631560",
+      "elf_file_offset": "0x631560",
+      "range_size": 108,
+      "mode": "arm",
+      "original_code_sha256": "7c9060f8abc01e7f51409a29e6c16797f5c2375e10415fe79972d983182d109e",
+      "assembly_file": "glitch_collada_CColladaFactory-db06bc565b1a-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "Base CColladaFactory::createModularSkin implementation; constructs CModularSkinnedMesh."
+    },
+    {
+      "demangled": "glitch::collada::CModularSkinnedMesh::CModularSkinnedMesh(glitch::collada::CColladaDatabase const&, glitch::collada::SInstanceModularSkin*, glitch::collada::CRootSceneNode*, int, bool, glitch::video::IVideoDriver*)",
+      "elf_virtual_address": "0x649120",
+      "elf_file_offset": "0x649120",
+      "range_size": 364,
+      "mode": "arm",
+      "original_code_sha256": "1e1a0c7426d67b5ad7dc589e653dcf29c7e2e45097235ae0b5dc2491f6f7b799",
+      "assembly_file": "glitch_collada_CModularSkinnedMesh-4f66c8d0a36d-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "CModularSkinnedMesh constructor reads selected SInstanceModularSkin fields and a 16-byte-stride array."
+    },
+    {
+      "demangled": "glitch::collada::CModularSkinnedMesh::getModuleId(char const*) const",
+      "elf_virtual_address": "0x6474b8",
+      "elf_file_offset": "0x6474b8",
+      "range_size": 128,
+      "mode": "arm",
+      "original_code_sha256": "76dfab0751340fa8f016159801aa8af5e3dad129a9947f88251c2884662bbf93",
+      "assembly_file": "glitch_collada_CModularSkinnedMesh-4f66c8d0a36d-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "CModularSkinnedMesh::getModuleId(char const*) call target for each selected entry string."
+    },
+    {
+      "demangled": "ColladaFactory::createModularSkinNode(glitch::collada::CColladaDatabase const&, boost::intrusive_ptr<glitch::collada::IMesh> const&, void*)",
+      "elf_virtual_address": "0x350854",
+      "elf_file_offset": "0x350854",
+      "range_size": 40,
+      "mode": "arm",
+      "original_code_sha256": "285a623d0144d77434683b4f2f86cbedbd094862b1340b25567f43322c0f9d5a",
+      "assembly_file": "ColladaFactory-98195ab58b5b-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "Concrete app ColladaFactory::createModularSkinNode override; allocates ModularSkinnedMeshSceneNode."
+    },
+    {
+      "demangled": "ModularSkinnedMeshSceneNode::ModularSkinnedMeshSceneNode(boost::intrusive_ptr<glitch::collada::IMesh> const&)",
+      "elf_virtual_address": "0x35af00",
+      "elf_file_offset": "0x35af00",
+      "range_size": 136,
+      "mode": "arm",
+      "original_code_sha256": "77648e038a4f80f495167d9ea8a21334309598fdf766cf4ceb4ddd52be6957b4",
+      "assembly_file": "ModularSkinnedMeshSceneNode-c83582bceede-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_elf_range",
+      "use_in_analysis": "ModularSkinnedMeshSceneNode constructor called by the concrete factory override."
+    }
+  ],
+  "data_ranges": [
+    {
+      "name": "vtable for ColladaFactory",
+      "elf_virtual_address": "0x95cc90",
+      "elf_file_offset": "0x95bc90",
+      "range_size": 136,
+      "pt_load_segment_index": 2,
+      "data_bytes_sha256": "b8ab7f4feb86c5751d7e76af1fb9182f7be6821ec818fe6bdb194b2a333c1b39",
+      "raw_hex": "0000000000000000ac063500100a35000c073500f81a630004ff6200c41a6300a40635008c6c6300e00635002045630008ff620020ff620038ff6200940735006807350000186300bc073500d0176300a40835007c08350054083500cc0835003c07350060156300181563003c136300b80735007412630044126300381163001000630008006300",
+      "selected_entry": {
+        "name": "createModularSkinNode concrete override",
+        "elf_virtual_address": "0x95cce8",
+        "elf_file_offset": "0x95bce8",
+        "range_size": 4,
+        "pt_load_segment_index": 2,
+        "data_bytes_sha256": "2fb9ee80deae7046ea04b1020eefa08d55f124d64c7dbd4e839b6b5bf8e8167c",
+        "raw_hex": "54083500",
+        "table_offset": "0x58",
+        "raw_word": "0x350854",
+        "expected_target": "0x350854",
+        "vptr_address_point_offset": "0x8",
+        "call_offset_from_vptr": "0x50"
+      }
+    },
+    {
+      "name": "vtable for glitch::collada::CColladaFactory",
+      "elf_virtual_address": "0x97b7d8",
+      "elf_file_offset": "0x97a7d8",
+      "range_size": 136,
+      "pt_load_segment_index": 2,
+      "data_bytes_sha256": "17dca7963108524d43d33b02da98044bef665b1cecef8d4cb9f2cd653e69e1f7",
+      "raw_hex": "000000000000000000ff62004c076300281b6300f81a630004ff6200c41a6300a40635008c6c6300d02363002045630008ff620020ff620038ff620024196300c81863000018630030186300d017630050176300d01663005016630028166300cc15630060156300181563003c136300644c63007412630044126300381163001000630008006300",
+      "selected_entry": {
+        "name": "createModularSkin base implementation",
+        "elf_virtual_address": "0x97b83c",
+        "elf_file_offset": "0x97a83c",
+        "range_size": 4,
+        "pt_load_segment_index": 2,
+        "data_bytes_sha256": "7abc457e24039935375d10b3038bef29128ca8177d4a0e645b9e57204e0ffbce",
+        "raw_hex": "60156300",
+        "table_offset": "0x64",
+        "raw_word": "0x631560",
+        "expected_target": "0x631560",
+        "vptr_address_point_offset": "0x8",
+        "call_offset_from_vptr": "0x5c"
+      }
+    },
+    {
+      "name": "ColladaFactory inherited createModularSkin vtable entry",
+      "elf_virtual_address": "0x95ccf4",
+      "elf_file_offset": "0x95bcf4",
+      "range_size": 4,
+      "pt_load_segment_index": 2,
+      "data_bytes_sha256": "7abc457e24039935375d10b3038bef29128ca8177d4a0e645b9e57204e0ffbce",
+      "raw_hex": "60156300",
+      "selected_entry": {
+        "name": "createModularSkin inherited base implementation",
+        "elf_virtual_address": "0x95ccf4",
+        "elf_file_offset": "0x95bcf4",
+        "range_size": 4,
+        "pt_load_segment_index": 2,
+        "data_bytes_sha256": "7abc457e24039935375d10b3038bef29128ca8177d4a0e645b9e57204e0ffbce",
+        "raw_hex": "60156300",
+        "table_offset": "0x64",
+        "raw_word": "0x631560",
+        "expected_target": "0x631560",
+        "vptr_address_point_offset": "0x8",
+        "call_offset_from_vptr": "0x5c"
+      }
+    },
+    {
+      "name": "ColladaFactory vtable GOT slot",
+      "elf_virtual_address": "0x99547c",
+      "elf_file_offset": "0x99447c",
+      "range_size": 4,
+      "pt_load_segment_index": 2,
+      "data_bytes_sha256": "1a42f8f731e6f8d2bc83472fdb477686b35ac3dc5adebcd8006ec048bee1cdf2",
+      "raw_hex": "90cc9500",
+      "raw_word": "0x95cc90",
+      "resolved_target": "0x95cc90",
+      "symbol_or_object": "vtable for ColladaFactory",
+      "relocation": {
+        "section": ".rel.dyn",
+        "index": 44355,
+        "offset": 10048636,
+        "type_id": 23,
+        "type": "R_ARM_RELATIVE",
+        "symbol_index": 0,
+        "symbol_table": ".dynsym",
+        "symbol": "",
+        "demangled": "",
+        "addend": 9817232,
+        "addend_kind": "raw-word-at-relocation"
+      }
+    },
+    {
+      "name": "ColladaFactory::s_factory GOT slot",
+      "elf_virtual_address": "0x9957c4",
+      "elf_file_offset": "0x9947c4",
+      "range_size": 4,
+      "pt_load_segment_index": 2,
+      "data_bytes_sha256": "e2e0e2f80c0a9739beaa29a90d0702af622882d5b7fe846074bdf828ec233ce0",
+      "raw_hex": "d81e9a00",
+      "raw_word": "0x9a1ed8",
+      "resolved_target": "0x9a1ed8",
+      "symbol_or_object": "ColladaFactory::s_factory",
+      "relocation": {
+        "section": ".rel.dyn",
+        "index": 44564,
+        "offset": 10049476,
+        "type_id": 23,
+        "type": "R_ARM_RELATIVE",
+        "symbol_index": 0,
+        "symbol_table": ".dynsym",
+        "symbol": "",
+        "demangled": "",
+        "addend": 10100440,
+        "addend_kind": "raw-word-at-relocation"
+      }
+    }
+  ],
+  "static_objects": [
+    {
+      "symbol": "ColladaFactory::s_factory",
+      "elf_virtual_address": "0x009a1ed8",
+      "size": 8,
+      "section": ".bss",
+      "file_hash": "not_applicable_bss",
+      "evidence": "Global initializer range in functions[] writes the address point derived from ColladaFactory vtable into object +0 and clears byte +4; SceneManager GOT references pass this object address to the database APIs."
+    }
+  ],
+  "dynamic_call_resolution": [
+    {
+      "caller_function": "CColladaDatabase::constructModularSkin",
+      "callsite_va": "0x0060e724",
+      "instruction": "ldr pc, [ip, #0x5c]",
+      "vptr_relative_offset": "0x5c",
+      "vtable_table_offset": "0x64",
+      "target_vtable": "vtable for ColladaFactory",
+      "target_va": "0x00631560",
+      "target": "CColladaFactory::createModularSkin"
+    },
+    {
+      "caller_function": "CColladaDatabase::constructNode",
+      "callsite_va": "0x0061b598",
+      "instruction": "ldr pc, [ip, #0x50]",
+      "vptr_relative_offset": "0x50",
+      "vtable_table_offset": "0x58",
+      "target_vtable": "vtable for ColladaFactory",
+      "target_va": "0x00350854",
+      "target": "ColladaFactory::createModularSkinNode"
+    }
+  ],
+  "factory_registration_use": [
+    {
+      "caller": "SceneManager::LoadScene",
+      "callsite_va": "0x0035975c",
+      "target_va": "0x0061bbd4",
+      "argument_register": "r3",
+      "argument_source": "GOT slot 0x009957c4 -> ColladaFactory::s_factory at 0x009a1ed8"
+    },
+    {
+      "caller": "SceneManager::LoadFXLib",
+      "callsite_va": "0x003594ec",
+      "target_va": "0x0060f25c",
+      "argument_register": "r2",
+      "argument_source": "GOT slot 0x009957c4 -> ColladaFactory::s_factory at 0x009a1ed8"
+    },
+    {
+      "database_field": "CColladaDatabase+0x04",
+      "evidence_function": "CColladaDatabase::CColladaDatabase(char const*, CColladaFactory*)",
+      "evidence_va": "0x0060f25c",
+      "instruction_va": "0x0060f288",
+      "operation": "str r5, [r4, #4]"
+    }
+  ]
+}

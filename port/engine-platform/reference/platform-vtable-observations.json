@@ -1,0 +1,779 @@
+{
+  "source_elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "hash_basis": "Each vtable range SHA-256 is over the original ELF file bytes at the recorded ELF VA mapping; raw words were checked against those bytes.",
+  "tables": [
+    {
+      "symbol": "vtable for glitch::CAndroidOSDevice",
+      "mangled": "_ZTVN6glitch16CAndroidOSDeviceE",
+      "elf_va": "0x009858c0",
+      "range_size": 76,
+      "elf_file_offset": 9980096,
+      "bytes_sha256": "006fa47ea9caa2806a0c11eb7814866ff1026fa22343c8d823702d80823172e2",
+      "address_point_offset": 8,
+      "entries": [
+        {
+          "symbol_offset": 0,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 4,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 8,
+          "object_vptr_displacement": 0,
+          "raw_word": "0x006a0548",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::~CAndroidOSDevice()"
+          ]
+        },
+        {
+          "symbol_offset": 12,
+          "object_vptr_displacement": 4,
+          "raw_word": "0x006a05b0",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::~CAndroidOSDevice()"
+          ]
+        },
+        {
+          "symbol_offset": 16,
+          "object_vptr_displacement": 8,
+          "raw_word": "0x0031d5cc",
+          "target_symbols": [
+            "glitch::IReferenceCounted::onDelete()"
+          ]
+        },
+        {
+          "symbol_offset": 20,
+          "object_vptr_displacement": 12,
+          "raw_word": "0x006a02c0",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::yield()"
+          ]
+        },
+        {
+          "symbol_offset": 24,
+          "object_vptr_displacement": 16,
+          "raw_word": "0x006a0374",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::sleep(unsigned int, bool)"
+          ]
+        },
+        {
+          "symbol_offset": 28,
+          "object_vptr_displacement": 20,
+          "raw_word": "0x006a0348",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::getVideoModeList()"
+          ]
+        },
+        {
+          "symbol_offset": 32,
+          "object_vptr_displacement": 24,
+          "raw_word": "0x006a02c4",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::setWindowCaption(wchar_t const*)"
+          ]
+        },
+        {
+          "symbol_offset": 36,
+          "object_vptr_displacement": 28,
+          "raw_word": "0x006a02c8",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::isWindowActive() const"
+          ]
+        },
+        {
+          "symbol_offset": 40,
+          "object_vptr_displacement": 32,
+          "raw_word": "0x006a02d0",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::isWindowFocused() const"
+          ]
+        },
+        {
+          "symbol_offset": 44,
+          "object_vptr_displacement": 36,
+          "raw_word": "0x006a02d8",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::isWindowMinimized() const"
+          ]
+        },
+        {
+          "symbol_offset": 48,
+          "object_vptr_displacement": 40,
+          "raw_word": "0x00671494",
+          "target_symbols": [
+            "glitch::IDevice::isFullscreen() const"
+          ]
+        },
+        {
+          "symbol_offset": 52,
+          "object_vptr_displacement": 44,
+          "raw_word": "0x0067149c",
+          "target_symbols": [
+            "glitch::IDevice::getColorFormat() const"
+          ]
+        },
+        {
+          "symbol_offset": 56,
+          "object_vptr_displacement": 48,
+          "raw_word": "0x006a02a4",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::closeDevice()"
+          ]
+        },
+        {
+          "symbol_offset": 60,
+          "object_vptr_displacement": 52,
+          "raw_word": "0x006a0344",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::setResizeAble(bool)"
+          ]
+        },
+        {
+          "symbol_offset": 64,
+          "object_vptr_displacement": 56,
+          "raw_word": "0x00671438",
+          "target_symbols": [
+            "glitch::IDevice::setScreenCapture(bool)"
+          ]
+        },
+        {
+          "symbol_offset": 68,
+          "object_vptr_displacement": 60,
+          "raw_word": "0x0067142c",
+          "target_symbols": [
+            "glitch::IDevice::isExitRequested()"
+          ]
+        },
+        {
+          "symbol_offset": 72,
+          "object_vptr_displacement": 64,
+          "raw_word": "0x006a0440",
+          "target_symbols": [
+            "glitch::CAndroidOSDevice::runImpl()"
+          ]
+        }
+      ],
+      "raw_words_match_original_elf": true
+    },
+    {
+      "symbol": "vtable for TouchScreenBase",
+      "mangled": "_ZTV15TouchScreenBase",
+      "elf_va": "0x0095c3c8",
+      "range_size": 92,
+      "elf_file_offset": 9810888,
+      "bytes_sha256": "8988f060ce9dc976ad431d9a790d1469487ac1219dd652561ff34820c5be3f80",
+      "address_point_offset": 8,
+      "entries": [
+        {
+          "symbol_offset": 0,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 4,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 8,
+          "object_vptr_displacement": 0,
+          "raw_word": "0x0033be08",
+          "target_symbols": [
+            "TouchScreenBase::~TouchScreenBase()"
+          ]
+        },
+        {
+          "symbol_offset": 12,
+          "object_vptr_displacement": 4,
+          "raw_word": "0x0033be48",
+          "target_symbols": [
+            "TouchScreenBase::~TouchScreenBase()"
+          ]
+        },
+        {
+          "symbol_offset": 16,
+          "object_vptr_displacement": 8,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 20,
+          "object_vptr_displacement": 12,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 24,
+          "object_vptr_displacement": 16,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 28,
+          "object_vptr_displacement": 20,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 32,
+          "object_vptr_displacement": 24,
+          "raw_word": "0x0033aad8",
+          "target_symbols": [
+            "TouchScreenBase::getDimension() const"
+          ]
+        },
+        {
+          "symbol_offset": 36,
+          "object_vptr_displacement": 28,
+          "raw_word": "0x0033abbc",
+          "target_symbols": [
+            "TouchScreenBase::getDimension(Rct<short>&) const"
+          ]
+        },
+        {
+          "symbol_offset": 40,
+          "object_vptr_displacement": 32,
+          "raw_word": "0x0033ac24",
+          "target_symbols": [
+            "TouchScreenBase::touchBegan(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 44,
+          "object_vptr_displacement": 36,
+          "raw_word": "0x0033ad28",
+          "target_symbols": [
+            "TouchScreenBase::touchMoved(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 48,
+          "object_vptr_displacement": 40,
+          "raw_word": "0x0033aeb8",
+          "target_symbols": [
+            "TouchScreenBase::touchEnded(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 52,
+          "object_vptr_displacement": 44,
+          "raw_word": "0x0033ae3c",
+          "target_symbols": [
+            "TouchScreenBase::touchCancelled(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 56,
+          "object_vptr_displacement": 48,
+          "raw_word": "0x0033aebc",
+          "target_symbols": [
+            "TouchScreenBase::isRegionPressed(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 60,
+          "object_vptr_displacement": 52,
+          "raw_word": "0x0033b02c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDInitiatedInRegion(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 64,
+          "object_vptr_displacement": 56,
+          "raw_word": "0x0033b0e8",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDInRegion(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 68,
+          "object_vptr_displacement": 60,
+          "raw_word": "0x0033b1a4",
+          "target_symbols": [
+            "TouchScreenBase::getTouchPoint(long)"
+          ]
+        },
+        {
+          "symbol_offset": 72,
+          "object_vptr_displacement": 64,
+          "raw_word": "0x0033b1e0",
+          "target_symbols": [
+            "TouchScreenBase::getFirstTouchPoint(long)"
+          ]
+        },
+        {
+          "symbol_offset": 76,
+          "object_vptr_displacement": 68,
+          "raw_word": "0x0033b21c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchDisplacement(long) const"
+          ]
+        },
+        {
+          "symbol_offset": 80,
+          "object_vptr_displacement": 72,
+          "raw_word": "0x0033b2bc",
+          "target_symbols": [
+            "TouchScreenBase::getSwipeDirection(long) const"
+          ]
+        },
+        {
+          "symbol_offset": 84,
+          "object_vptr_displacement": 76,
+          "raw_word": "0x0033bd2c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDList() const"
+          ]
+        },
+        {
+          "symbol_offset": 88,
+          "object_vptr_displacement": 80,
+          "raw_word": "0x0033b2ec",
+          "target_symbols": [
+            "TouchScreenBase::hasTouch()"
+          ]
+        }
+      ],
+      "raw_words_match_original_elf": true
+    },
+    {
+      "symbol": "vtable for TouchScreenIPhone",
+      "mangled": "_ZTV17TouchScreenIPhone",
+      "elf_va": "0x0095c428",
+      "range_size": 92,
+      "elf_file_offset": 9810984,
+      "bytes_sha256": "ae5909db912783a934834e264c4ce3c342901f6b9c1bafffa9655d40ce95337b",
+      "address_point_offset": 8,
+      "entries": [
+        {
+          "symbol_offset": 0,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 4,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 8,
+          "object_vptr_displacement": 0,
+          "raw_word": "0x0033ccb0",
+          "target_symbols": [
+            "TouchScreenIPhone::~TouchScreenIPhone()"
+          ]
+        },
+        {
+          "symbol_offset": 12,
+          "object_vptr_displacement": 4,
+          "raw_word": "0x0033cce4",
+          "target_symbols": [
+            "TouchScreenIPhone::~TouchScreenIPhone()"
+          ]
+        },
+        {
+          "symbol_offset": 16,
+          "object_vptr_displacement": 8,
+          "raw_word": "0x0033cc58",
+          "target_symbols": [
+            "TouchScreenIPhone::getLeftBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 20,
+          "object_vptr_displacement": 12,
+          "raw_word": "0x0033cc64",
+          "target_symbols": [
+            "TouchScreenIPhone::getRightBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 24,
+          "object_vptr_displacement": 16,
+          "raw_word": "0x0033cc70",
+          "target_symbols": [
+            "TouchScreenIPhone::getTopBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 28,
+          "object_vptr_displacement": 20,
+          "raw_word": "0x0033cc7c",
+          "target_symbols": [
+            "TouchScreenIPhone::getBottomBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 32,
+          "object_vptr_displacement": 24,
+          "raw_word": "0x0033aad8",
+          "target_symbols": [
+            "TouchScreenBase::getDimension() const"
+          ]
+        },
+        {
+          "symbol_offset": 36,
+          "object_vptr_displacement": 28,
+          "raw_word": "0x0033abbc",
+          "target_symbols": [
+            "TouchScreenBase::getDimension(Rct<short>&) const"
+          ]
+        },
+        {
+          "symbol_offset": 40,
+          "object_vptr_displacement": 32,
+          "raw_word": "0x0033ac24",
+          "target_symbols": [
+            "TouchScreenBase::touchBegan(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 44,
+          "object_vptr_displacement": 36,
+          "raw_word": "0x0033ad28",
+          "target_symbols": [
+            "TouchScreenBase::touchMoved(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 48,
+          "object_vptr_displacement": 40,
+          "raw_word": "0x0033aeb8",
+          "target_symbols": [
+            "TouchScreenBase::touchEnded(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 52,
+          "object_vptr_displacement": 44,
+          "raw_word": "0x0033ae3c",
+          "target_symbols": [
+            "TouchScreenBase::touchCancelled(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 56,
+          "object_vptr_displacement": 48,
+          "raw_word": "0x0033ccac",
+          "target_symbols": [
+            "TouchScreenIPhone::isRegionPressed(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 60,
+          "object_vptr_displacement": 52,
+          "raw_word": "0x0033b02c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDInitiatedInRegion(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 64,
+          "object_vptr_displacement": 56,
+          "raw_word": "0x0033cca8",
+          "target_symbols": [
+            "TouchScreenIPhone::getTouchIDInRegion(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 68,
+          "object_vptr_displacement": 60,
+          "raw_word": "0x0033b1a4",
+          "target_symbols": [
+            "TouchScreenBase::getTouchPoint(long)"
+          ]
+        },
+        {
+          "symbol_offset": 72,
+          "object_vptr_displacement": 64,
+          "raw_word": "0x0033b1e0",
+          "target_symbols": [
+            "TouchScreenBase::getFirstTouchPoint(long)"
+          ]
+        },
+        {
+          "symbol_offset": 76,
+          "object_vptr_displacement": 68,
+          "raw_word": "0x0033b21c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchDisplacement(long) const"
+          ]
+        },
+        {
+          "symbol_offset": 80,
+          "object_vptr_displacement": 72,
+          "raw_word": "0x0033b2bc",
+          "target_symbols": [
+            "TouchScreenBase::getSwipeDirection(long) const"
+          ]
+        },
+        {
+          "symbol_offset": 84,
+          "object_vptr_displacement": 76,
+          "raw_word": "0x0033bd2c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDList() const"
+          ]
+        },
+        {
+          "symbol_offset": 88,
+          "object_vptr_displacement": 80,
+          "raw_word": "0x0033b2ec",
+          "target_symbols": [
+            "TouchScreenBase::hasTouch()"
+          ]
+        }
+      ],
+      "raw_words_match_original_elf": true
+    },
+    {
+      "symbol": "vtable for TouchScreenWin32",
+      "mangled": "_ZTV16TouchScreenWin32",
+      "elf_va": "0x0095c500",
+      "range_size": 116,
+      "elf_file_offset": 9811200,
+      "bytes_sha256": "69d4c4df5c11d8c71c6e3e8101fcbe507ab16cc40ff2845a98398d83012fc7bb",
+      "address_point_offset": 8,
+      "entries": [
+        {
+          "symbol_offset": 0,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 4,
+          "object_vptr_displacement": null,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 8,
+          "object_vptr_displacement": 0,
+          "raw_word": "0x0033d5d8",
+          "target_symbols": [
+            "TouchScreenWin32::~TouchScreenWin32()"
+          ]
+        },
+        {
+          "symbol_offset": 12,
+          "object_vptr_displacement": 4,
+          "raw_word": "0x0033d628",
+          "target_symbols": [
+            "TouchScreenWin32::~TouchScreenWin32()"
+          ]
+        },
+        {
+          "symbol_offset": 16,
+          "object_vptr_displacement": 8,
+          "raw_word": "0x0033d48c",
+          "target_symbols": [
+            "TouchScreenWin32::getLeftBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 20,
+          "object_vptr_displacement": 12,
+          "raw_word": "0x0033d494",
+          "target_symbols": [
+            "TouchScreenWin32::getRightBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 24,
+          "object_vptr_displacement": 16,
+          "raw_word": "0x0033d49c",
+          "target_symbols": [
+            "TouchScreenWin32::getTopBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 28,
+          "object_vptr_displacement": 20,
+          "raw_word": "0x0033d4a4",
+          "target_symbols": [
+            "TouchScreenWin32::getBottomBound() const"
+          ]
+        },
+        {
+          "symbol_offset": 32,
+          "object_vptr_displacement": 24,
+          "raw_word": "0x0033aad8",
+          "target_symbols": [
+            "TouchScreenBase::getDimension() const"
+          ]
+        },
+        {
+          "symbol_offset": 36,
+          "object_vptr_displacement": 28,
+          "raw_word": "0x0033abbc",
+          "target_symbols": [
+            "TouchScreenBase::getDimension(Rct<short>&) const"
+          ]
+        },
+        {
+          "symbol_offset": 40,
+          "object_vptr_displacement": 32,
+          "raw_word": "0x0033ac24",
+          "target_symbols": [
+            "TouchScreenBase::touchBegan(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 44,
+          "object_vptr_displacement": 36,
+          "raw_word": "0x0033ad28",
+          "target_symbols": [
+            "TouchScreenBase::touchMoved(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 48,
+          "object_vptr_displacement": 40,
+          "raw_word": "0x0033aeb8",
+          "target_symbols": [
+            "TouchScreenBase::touchEnded(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 52,
+          "object_vptr_displacement": 44,
+          "raw_word": "0x0033ae3c",
+          "target_symbols": [
+            "TouchScreenBase::touchCancelled(Point2D<short> const&, long)"
+          ]
+        },
+        {
+          "symbol_offset": 56,
+          "object_vptr_displacement": 48,
+          "raw_word": "0x0033aebc",
+          "target_symbols": [
+            "TouchScreenBase::isRegionPressed(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 60,
+          "object_vptr_displacement": 52,
+          "raw_word": "0x0033b02c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDInitiatedInRegion(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 64,
+          "object_vptr_displacement": 56,
+          "raw_word": "0x0033b0e8",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDInRegion(glitch::core::rect<float> const&) const"
+          ]
+        },
+        {
+          "symbol_offset": 68,
+          "object_vptr_displacement": 60,
+          "raw_word": "0x0033b1a4",
+          "target_symbols": [
+            "TouchScreenBase::getTouchPoint(long)"
+          ]
+        },
+        {
+          "symbol_offset": 72,
+          "object_vptr_displacement": 64,
+          "raw_word": "0x0033b1e0",
+          "target_symbols": [
+            "TouchScreenBase::getFirstTouchPoint(long)"
+          ]
+        },
+        {
+          "symbol_offset": 76,
+          "object_vptr_displacement": 68,
+          "raw_word": "0x0033b21c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchDisplacement(long) const"
+          ]
+        },
+        {
+          "symbol_offset": 80,
+          "object_vptr_displacement": 72,
+          "raw_word": "0x0033b2bc",
+          "target_symbols": [
+            "TouchScreenBase::getSwipeDirection(long) const"
+          ]
+        },
+        {
+          "symbol_offset": 84,
+          "object_vptr_displacement": 76,
+          "raw_word": "0x0033bd2c",
+          "target_symbols": [
+            "TouchScreenBase::getTouchIDList() const"
+          ]
+        },
+        {
+          "symbol_offset": 88,
+          "object_vptr_displacement": 80,
+          "raw_word": "0x0033b2ec",
+          "target_symbols": [
+            "TouchScreenBase::hasTouch()"
+          ]
+        },
+        {
+          "symbol_offset": 92,
+          "object_vptr_displacement": 84,
+          "raw_word": "0x0033d4b4",
+          "target_symbols": [
+            "TouchScreenWin32::onEvent(glitch::SEvent const&)"
+          ]
+        },
+        {
+          "symbol_offset": 96,
+          "object_vptr_displacement": 88,
+          "raw_word": "0xfffffe4c",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 100,
+          "object_vptr_displacement": 92,
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "symbol_offset": 104,
+          "object_vptr_displacement": 96,
+          "raw_word": "0x0033d5d0",
+          "target_symbols": [
+            "non-virtual thunk to TouchScreenWin32::~TouchScreenWin32()"
+          ]
+        },
+        {
+          "symbol_offset": 108,
+          "object_vptr_displacement": 100,
+          "raw_word": "0x0033d620",
+          "target_symbols": [
+            "non-virtual thunk to TouchScreenWin32::~TouchScreenWin32()"
+          ]
+        },
+        {
+          "symbol_offset": 112,
+          "object_vptr_displacement": 104,
+          "raw_word": "0x0033d4ac",
+          "target_symbols": [
+            "non-virtual thunk to TouchScreenWin32::onEvent(glitch::SEvent const&)"
+          ]
+        }
+      ],
+      "raw_words_match_original_elf": true
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "schema": "dh2-engine-scene-light-payload-provenance-v1",
+  "source_apk": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "source_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "source_elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "source_elf_size": 15938284,
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "elf_format": "ELF32 little-endian ARM",
+  "hash_basis": "SHA-256 covers exact bytes read from the APK's ELF member through PT_LOAD mapping. Each copied assembly range was byte-compared with those APK bytes.",
+  "pt_load_segments": [
+    {
+      "index": 1,
+      "offset": 0,
+      "vaddr": 0,
+      "filesz": 9785648
+    },
+    {
+      "index": 2,
+      "offset": 9785648,
+      "vaddr": 9789744,
+      "filesz": 300364
+    }
+  ],
+  "function_count": 6,
+  "functions": [
+    {
+      "demangled": "glitch::collada::CColladaDatabase::getLight(int) const",
+      "elf_virtual_address": "0x0060e3ac",
+      "elf_file_offset": "0x0060e3ac",
+      "range_size": 28,
+      "original_code_sha256": "c4cdfaa71b40f0c1fcc421d1c7bc3df5102c0602d726c3eaf3b8591fcf491cd8",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes",
+      "use_in_analysis": "Reads the light table base and indexes with a 0x18-byte row stride."
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::getLight(char const*) const",
+      "elf_virtual_address": "0x0061b1ec",
+      "elf_file_offset": "0x0061b1ec",
+      "range_size": 96,
+      "original_code_sha256": "f44de33060a133dacf3b906d34fc239db934e7c69b87e98a26a10e6a57104ae7",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes",
+      "use_in_analysis": "Reads light count/base at data-root +0x44/+0x48, compares row name pointers, advances rows by 0x18."
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::constructLight(char const*, glitch::collada::CRootSceneNode*) const",
+      "elf_virtual_address": "0x0061b24c",
+      "elf_file_offset": "0x0061b24c",
+      "range_size": 36,
+      "original_code_sha256": "f289edbad368e356e529b01d759577115f7ee8088f39eb96e7e76f6a02bb0ea7",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes",
+      "use_in_analysis": "Resolves the named light and delegates to constructLight(SLight*, root)."
+    },
+    {
+      "demangled": "glitch::collada::CColladaDatabase::constructLight(glitch::collada::SLight*, glitch::collada::CRootSceneNode*) const",
+      "elf_virtual_address": "0x00619404",
+      "elf_file_offset": "0x00619404",
+      "range_size": 76,
+      "original_code_sha256": "64849830e088c342060dd8ca0f5304741ff7e5ae59fbb2d7dcd9f2cf2682cee1",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes",
+      "use_in_analysis": "Calls the database's createLight virtual with the SLight pointer, then adds a non-null node to the root."
+    },
+    {
+      "demangled": "glitch::collada::CColladaFactory::createLight(glitch::collada::CColladaDatabase const&, glitch::collada::SLight*)",
+      "elf_virtual_address": "0x00631af8",
+      "elf_file_offset": "0x00631af8",
+      "range_size": 48,
+      "original_code_sha256": "eded0158e509d0d226686a0461faa302ae370c7eaea583a8aba7f755e463e6f2",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CColladaFactory-db06bc565b1a-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes",
+      "use_in_analysis": "Allocates a 0x16c-byte Collada light scene node and invokes its constructor."
+    },
+    {
+      "demangled": "glitch::collada::CLightSceneNode::CLightSceneNode(glitch::collada::CColladaDatabase const&, glitch::collada::SLight&) [C1]",
+      "elf_virtual_address": "0x006444ec",
+      "elf_file_offset": "0x006444ec",
+      "range_size": 704,
+      "original_code_sha256": "46078266bc7037632f2094e5582d6b62f7a09f704fb15577df05c53f269eec27",
+      "pt_load_segment_index": 1,
+      "mode": "arm",
+      "assembly_file": "glitch_collada_CLightSceneNode-67c6c0cb5046-001.asm",
+      "listing_byte_comparison": "exact_match_to_original_apk_elf_bytes",
+      "use_in_analysis": "Consumes SLight words/bytes at +0x08, +0x0c..+0x0f, +0x10, and conditionally through pointer +0x14."
+    }
+  ],
+  "linked_existing_range": {
+    "demangled": "glitch::collada::CColladaDatabase::constructNode(glitch::video::IVideoDriver*, glitch::collada::SNode*, glitch::collada::CRootSceneNode*) const",
+    "elf_virtual_address": "0x0061b2f4",
+    "elf_file_offset": "0x0061b2f4",
+    "range_size": 1480,
+    "original_code_sha256": "9e047558fe98fb8d63868ffd99023086eaeab7284e550954810440da90d88b59",
+    "pt_load_segment_index": 1,
+    "assembly_file": "glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+    "existing_manifest": "../serialization-ranges.json",
+    "listing_byte_comparison": "confirmed_against_original_apk_elf_bytes",
+    "use_in_analysis": "Existing verified selector switch: selector 4 follows attachment+4 -> instance+4, adds one to the name pointer, then calls constructLight(char const*, root)."
+  },
+  "supporting_data_ranges": [
+    {
+      "name": "ColladaFactory concrete vtable createLight slot",
+      "elf_virtual_address": "0x0095cca4",
+      "elf_file_offset": "0x0095bca4",
+      "range_size": 4,
+      "pt_load_segment_index": 2,
+      "data_bytes_sha256": "493e9e61b97e36cb555a6f6153431a134b61f8945306d069c0da8d1e96496444",
+      "raw_hex": "f81a6300",
+      "raw_word": "0x00631af8",
+      "table_offset_from_vtable_start": "0x14",
+      "call_offset_from_vptr_address_point": "0x0c",
+      "target_function": "CColladaFactory::createLight at 0x00631af8"
+    }
+  ]
+}

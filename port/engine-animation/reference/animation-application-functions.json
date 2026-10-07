@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "description": "Selected exact ARM function listings with original line ranges and hashes checked against original ELF function byte slices.",
+  "elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "elf_class": 32,
+    "endianness": "little",
+    "machine": 40
+  },
+  "assembly_excerpt": {
+    "path": "animation-application-functions.asm",
+    "sha256": "5d526b65fc99f315a736c037542f92f1ea5735a968650d99d5ac92456b5ceda0"
+  },
+  "functions": [
+    {
+      "name": "_ZNK6glitch7collada18SAnimationAccessor10applyValueEiiPvPNS0_15animation_track15CApplicatorInfoERib",
+      "claim": "SAnimationAccessor applyValue forwards indices and target through the runtime animator vtable",
+      "original_symbol": "_ZNK6glitch7collada18SAnimationAccessor10applyValueEiiPvPNS0_15animation_track15CApplicatorInfoERib",
+      "demangled": "glitch::collada::SAnimationAccessor::applyValue(int, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0066a010",
+      "elf_size_bytes": 88,
+      "elf_file_offset": "0x0066a010",
+      "function_slice_sha256": "c39284c6b1cf19214bda17b7139497f1cc5fca0895e80b04c2152bd8d340a714",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_SAnimationAccessor-dd6bb90af5fe-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 245,
+        "end": 271
+      },
+      "package_copy": "reference/animation-application-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 9,
+        "end": 35
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "_ZNK6glitch7collada17CAnimationTrackEx10applyValueERKNS0_18SAnimationAccessorEiPvPNS0_15animation_track15CApplicatorInfoERib",
+      "claim": "Normal CAnimationTrackEx applyValue searches key and fraction then selects direct-key or interpolated typed slots",
+      "original_symbol": "_ZNK6glitch7collada17CAnimationTrackEx10applyValueERKNS0_18SAnimationAccessorEiPvPNS0_15animation_track15CApplicatorInfoERib",
+      "demangled": "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006e2ad8",
+      "elf_size_bytes": 180,
+      "elf_file_offset": "0x006e2ad8",
+      "function_slice_sha256": "6348b84e8059a0b171d89f74e364c061b3ca0fcaf7d2563bd4f77565ef5602cd",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CAnimationTrackEx-3b337e928626-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 95,
+        "end": 144
+      },
+      "package_copy": "reference/animation-application-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 40,
+        "end": 89
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_23CSceneNodePositionMixinIfEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE",
+      "claim": "Position float3 direct-key virtual wrapper adapts arguments to CApplyValueEx",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_23CSceneNodePositionMixinIfEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00622d58",
+      "elf_size_bytes": 20,
+      "elf_file_offset": "0x00622d58",
+      "function_slice_sha256": "2f3926d2c059ae7061cd49b95cd9f528b15c8b3005ec47207ae78800ed7c22f7",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-7fbb0c924cf4-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 177,
+        "end": 186
+      },
+      "package_copy": "reference/animation-application-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 94,
+        "end": 103
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_23CSceneNodePositionMixinIfEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE",
+      "claim": "Position float3 interpolated virtual wrapper adapts arguments to CApplyValueEx",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_23CSceneNodePositionMixinIfEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00628810",
+      "elf_size_bytes": 36,
+      "elf_file_offset": "0x00628810",
+      "function_slice_sha256": "ee0724f4e95b9d2428a132e61278f4709cb3e2137ad2676bd32b535c9ee25e27",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-7fbb0c924cf4-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 289,
+        "end": 302
+      },
+      "package_copy": "reference/animation-application-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 108,
+        "end": 121
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core8vector3dIfEENS1_23CSceneNodePositionMixinIfEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE",
+      "claim": "Position float3 direct application reads sampler-zero key components and invokes an opaque target vtable slot",
+      "original_symbol": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core8vector3dIfEENS1_23CSceneNodePositionMixinIfEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE",
+      "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> >::applyKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00622ce8",
+      "elf_size_bytes": 112,
+      "elf_file_offset": "0x00622ce8",
+      "function_slice_sha256": "239b9d1a591793c09949e1a5c867e3bf59d9193cc58bab50934439cbb99b7fcc",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CApplyValueEx_glitch_core_vector3d_float_glitch_collada_ani-73236093daf0-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 37
+      },
+      "package_copy": "reference/animation-application-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 126,
+        "end": 158
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core8vector3dIfEENS1_23CSceneNodePositionMixinIfEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE",
+      "claim": "Position float3 interpolation delegates to typed interpreter then invokes an opaque target vtable slot",
+      "original_symbol": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core8vector3dIfEENS1_23CSceneNodePositionMixinIfEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE",
+      "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodePositionMixin<float> >::applyKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006287cc",
+      "elf_size_bytes": 68,
+      "elf_file_offset": "0x006287cc",
+      "function_slice_sha256": "8fed29827dd6e39030c481e67d4153efe7432f1991eb836cd17aeb6db696b427",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CApplyValueEx_glitch_core_vector3d_float_glitch_collada_ani-73236093daf0-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 175,
+        "end": 196
+      },
+      "package_copy": "reference/animation-application-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 163,
+        "end": 184
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "_ZN6glitch7collada15animation_track12CInterpreterINS1_6CMixinIfLi3ENS1_18SSceneNodePositionELin1EfEEfLi3ENS1_15SUseDefaultLerpIfEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv",
+      "claim": "Position track float3 interpreter reads sampler-zero adjacent keys into a three-component result",
+      "original_symbol": "_ZN6glitch7collada15animation_track12CInterpreterINS1_6CMixinIfLi3ENS1_18SSceneNodePositionELin1EfEEfLi3ENS1_15SUseDefaultLerpIfEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CMixin<float, 3, glitch::collada::animation_track::SSceneNodePosition, -1, float>, float, 3, glitch::collada::animation_track::SUseDefaultLerp<float> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006286cc",
+      "elf_size_bytes": 256,
+      "elf_file_offset": "0x006286cc",
+      "function_slice_sha256": "8920cd6b08b73f2b6cad5eda8d63a5ed82e03225340bef9b950ab5b9a7e52a55",
+      "original_assembly_listing": "../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreter_glitch_collada_animation_track_CMixin_float_3_-c90872d6cf77-001.asm",
+      "original_listing_lines_1_based_inclusive": {
+        "start": 42,
+        "end": 110
+      },
+      "package_copy": "reference/animation-application-functions.asm",
+      "package_copy_lines_1_based_inclusive": {
+        "start": 189,
+        "end": 257
+      },
+      "listing_bytes_match_elf_slice": true
+    }
+  ]
+}

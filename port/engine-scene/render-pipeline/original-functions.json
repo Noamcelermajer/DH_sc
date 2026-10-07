@@ -1,0 +1,280 @@
+{
+  "format": "DH_sc exact ARM range manifest",
+  "source": {
+    "apk": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+    "apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "library_size": 15938284,
+    "elf_class": "ELF32",
+    "endianness": "little",
+    "machine": "ARM",
+    "pt_load_segments": [
+      {
+        "index": 1,
+        "p_offset": 0,
+        "p_vaddr": 0,
+        "p_filesz": 9785648,
+        "p_memsz": 9785648,
+        "p_flags": 5,
+        "p_align": 4096
+      },
+      {
+        "index": 2,
+        "p_offset": 9785648,
+        "p_vaddr": 9789744,
+        "p_filesz": 300364,
+        "p_memsz": 914688,
+        "p_flags": 6,
+        "p_align": 4096
+      }
+    ]
+  },
+  "code_ranges": [
+    {
+      "label": "CSceneManager::drawAll(vector<ISceneNode*> const&)",
+      "scratch_listing": "work/scene_render_pipeline/drawall-vector.asm",
+      "va": "0x0058b728",
+      "size": "0x84",
+      "file_offset": "0x58b728",
+      "sha256": "3d19cf67c641a3b2141b1f965c5c341665f1ed7de4a78562663bcdf5eb254478",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZN6glitch5scene13CSceneManager7drawAllERKSt6vectorIPNS0_10ISceneNodeENS_4core10SAllocatorIS4_LNS_6memory13E_MEMORY_HINTE0EEEE"
+    },
+    {
+      "label": "CSceneManager::drawAll(ISceneNode*)",
+      "scratch_listing": "work/scene_render_pipeline/drawall-node.asm",
+      "va": "0x0058b7f4",
+      "size": "0x98",
+      "file_offset": "0x58b7f4",
+      "sha256": "f62f4b133640af42ad0bee80f1761278cb595589be3c3834fd83a1bf4c9452f2",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZN6glitch5scene13CSceneManager7drawAllEPNS0_10ISceneNodeE"
+    },
+    {
+      "label": "CSceneManager::collectAllNodes()",
+      "scratch_listing": "work/scene_render_pipeline/collect-all.asm",
+      "va": "0x0058b7ac",
+      "size": "0x48",
+      "file_offset": "0x58b7ac",
+      "sha256": "c8887e536311bb46728df14d858b4c73c4c8b0343cff362e0df783899790fbf8",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZN6glitch5scene13CSceneManager15collectAllNodesEv"
+    },
+    {
+      "label": "CSceneManager::drawInit(IVideoDriver*)",
+      "scratch_listing": "work/scene_render_pipeline/draw-init.asm",
+      "va": "0x00589e7c",
+      "size": "0x58",
+      "file_offset": "0x589e7c",
+      "sha256": "ca8d4976bf50a68d85a9107c95fdf63ffd5ba5ec92004815a3be1a5700648b35",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZN6glitch5scene13CSceneManager8drawInitEPNS_5video12IVideoDriverE"
+    },
+    {
+      "label": "CSceneManager::setupCamera()",
+      "scratch_listing": "work/scene_render_pipeline/setup-camera.asm",
+      "va": "0x00589e18",
+      "size": "0x64",
+      "file_offset": "0x589e18",
+      "sha256": "fabe351fb2362d9012fe95a0835597b06bd33811c9f20387c4412abd16b0ad01",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZN6glitch5scene13CSceneManager11setupCameraEv"
+    },
+    {
+      "label": "CSceneManager::setActiveCamera(ICameraSceneNode*)",
+      "scratch_listing": "work/scene_render_pipeline/set-active-camera.asm",
+      "va": "0x005890c0",
+      "size": "0x68",
+      "file_offset": "0x5890c0",
+      "sha256": "67a6893e847b8635e42d6da2ebc2770e5decd15e440df041501c09d6ba167df8",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZN6glitch5scene13CSceneManager15setActiveCameraEPNS0_16ICameraSceneNodeE"
+    },
+    {
+      "label": "CSceneManager::update(float,bool)",
+      "scratch_listing": "work/scene_render_pipeline/update.asm",
+      "va": "0x0058b9f0",
+      "size": "0xe8",
+      "file_offset": "0x58b9f0",
+      "sha256": "be322ddf11404f207d889ccd8de194ab1684d684255e3912d22eb67d27d29b21",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZN6glitch5scene13CSceneManager6updateEfb"
+    },
+    {
+      "label": "CSceneManager::registerSceneNodes(ISceneNode*)",
+      "scratch_listing": "work/scene_render_pipeline/register-nodes.asm",
+      "va": "0x0058b88c",
+      "size": "0x164",
+      "file_offset": "0x58b88c",
+      "sha256": "1e532fc25429277aa3db5f81a0422106096afee2d33c592ed13e7b7a8176bcd1",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZN6glitch5scene13CSceneManager18registerSceneNodesEPNS0_10ISceneNodeE"
+    },
+    {
+      "label": "CSceneManager::isCulled(ISceneNode const*)",
+      "scratch_listing": "work/scene_render_pipeline/is-culled.asm",
+      "va": "0x0058ab28",
+      "size": "0x184",
+      "file_offset": "0x58ab28",
+      "sha256": "5d91b83ecd749b2e80edae9b3854f8ef7a0d8b1d23135ae15d6465a474ce87bd",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZNK6glitch5scene13CSceneManager8isCulledEPKNS0_10ISceneNodeE"
+    },
+    {
+      "label": "CSceneManager::drawShadowReceivers()",
+      "scratch_listing": "work/scene_render_pipeline/shadow-receivers.asm",
+      "va": "0x0058b0a8",
+      "size": "0x2a8",
+      "file_offset": "0x58b0a8",
+      "sha256": "b791dc9abefea31882756ec5e2914da77c7d94547888ef4b2f8937793eaa7e54",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZN6glitch5scene13CSceneManager19drawShadowReceiversEv"
+    },
+    {
+      "label": "CSceneManager::renderLists(IVideoDriver*)",
+      "scratch_listing": "work/scene_render_pipeline/render-lists.asm",
+      "va": "0x00590660",
+      "size": "0x860",
+      "file_offset": "0x590660",
+      "sha256": "886e3c96171d8101ac328fc1dd48dfcb3c589a4adff44055fb474acea4ffe293",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZN6glitch5scene13CSceneManager11renderListsEPNS_5video12IVideoDriverE"
+    },
+    {
+      "label": "CSceneManager::renderList<SUnsortedNodeEntry>(...)",
+      "scratch_listing": "work/scene_render_pipeline/render-list-unsorted.asm",
+      "va": "0x0058aee4",
+      "size": "0x1c4",
+      "file_offset": "0x58aee4",
+      "sha256": "52a04f99135bd505673c75ea806cc19c60e6cc858298cea11d2dde0faf2c94ab",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "W _ZN6glitch5scene13CSceneManager10renderListINS1_18SUnsortedNodeEntryEEEvNS0_24E_SCENE_NODE_RENDER_PASSERSt6vectorIT_NS_4core10SAllocatorIS6_LNS_6memory13E_MEMORY_HINTE0EEEEbb"
+    },
+    {
+      "label": "ISceneNode::onRegisterSceneNode()",
+      "scratch_listing": "work/scene_render_pipeline/node-register.asm",
+      "va": "0x00596d08",
+      "size": "0x8",
+      "file_offset": "0x596d08",
+      "sha256": "007f34a6c3441b0240da53f253e513b959105da2d8803255e1856aa48f48db47",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZN6glitch5scene10ISceneNode19onRegisterSceneNodeEv"
+    },
+    {
+      "label": "CCameraSceneNode::onRegisterSceneNode()",
+      "scratch_listing": "work/scene_render_pipeline/camera-register.asm",
+      "va": "0x00583534",
+      "size": "0x68",
+      "file_offset": "0x583534",
+      "sha256": "e289962e0a84226603aea182d051b5816affb9f8a808fc8d176ddda02d7a3b4f",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZN6glitch5scene16CCameraSceneNode19onRegisterSceneNodeEv"
+    },
+    {
+      "label": "CCameraSceneNode::render(void*)",
+      "scratch_listing": "work/scene_render_pipeline/camera-render.asm",
+      "va": "0x005820e4",
+      "size": "0x4c",
+      "file_offset": "0x5820e4",
+      "sha256": "e7f1a9b25b8a791521cc3cb0d78cce7737eb6f1362f52fdf58018ceb8a49ac27",
+      "pt_load_index": 1,
+      "segment_p_offset": "0x0",
+      "segment_p_vaddr": "0x0",
+      "symbol": "T _ZN6glitch5scene16CCameraSceneNode6renderEPv"
+    }
+  ],
+  "data_ranges": [
+    {
+      "name": "CSceneManager vtable dispatch excerpt",
+      "va": "0x00976718",
+      "size": "0x2c",
+      "file_offset": "0x975718",
+      "sha256": "41faac77bab6291da17fab207863f72fde89fa1897a9f8cad8f4bceffb623732",
+      "pt_load_index": 2,
+      "segment_p_offset": "0x955130",
+      "segment_p_vaddr": "0x956130",
+      "words_le": [
+        "0x0058f348",
+        "0x0058b88c",
+        "0x00589128",
+        "0x00589fa4",
+        "0x00589168",
+        "0x0058b728",
+        "0x0058b7f4",
+        "0x00589e7c",
+        "0x00589e18",
+        "0x00590660",
+        "0x0058b0a8"
+      ],
+      "validated_slots": {
+        "+0x24": "0x0058f348",
+        "+0x28": "0x0058b88c",
+        "+0x2c": "0x00589128",
+        "+0x40": "0x00589e7c",
+        "+0x44": "0x00589e18",
+        "+0x48": "0x00590660",
+        "+0x4c": "0x0058b0a8"
+      }
+    },
+    {
+      "name": "CCameraSceneNode vtable dispatch excerpt",
+      "va": "0x0097542c",
+      "size": "0x10",
+      "file_offset": "0x97442c",
+      "sha256": "86d2ffc3cddae584d3d42a330e5ea3e6e89fddb52a19f3b80a925a3dcc96ae4c",
+      "pt_load_index": 2,
+      "segment_p_offset": "0x955130",
+      "segment_p_vaddr": "0x956130",
+      "words_le": [
+        "0x00583534",
+        "0x00596d6c",
+        "0x00596d10",
+        "0x005820e4"
+      ],
+      "validated_slots": {
+        "+0x10": "0x00583534",
+        "+0x1c": "0x005820e4"
+      }
+    }
+  ],
+  "verified": {
+    "apk_member_byte_identical_to_local_elf": true,
+    "code_ranges_inside_file_backed_pt_load": true,
+    "exact_disassembly_and_literal_pool_coverage_in_4_byte_words": true,
+    "disassembly_encodings_match_range_bytes": true,
+    "vtable_words_match_expected_dispatch_targets": true
+  },
+  "listing": {
+    "path": "reference/original-functions.asm",
+    "sha256": "e6a80d11d7a6c8a2b5e225dd713b88a0425725507d17ae8bd52417fd93e4e5bb"
+  }
+}

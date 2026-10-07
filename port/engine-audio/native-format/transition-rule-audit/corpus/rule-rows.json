@@ -1,0 +1,576 @@
+{
+  "schema": "dh-sc-native-audio-transition-rule-census-v1",
+  "corpus_root_as_observed": "C:\\Users\\NacWorkstation\\Documents\\Codex\\2026-10-03\\let\\work\\cache-recovery\\extracted\\com.gameloft.android.GAND.GloftD2SS\\files\\data\\sounds",
+  "files_scanned": 12,
+  "rows_scanned": 23,
+  "record_stride_bytes": 36,
+  "unique_raw_row_patterns": 2,
+  "raw_pattern_counts": [
+    {
+      "u32_words": [
+        0,
+        6,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4294967295
+      ],
+      "count": 1
+    },
+    {
+      "u32_words": [
+        1,
+        0,
+        0,
+        0,
+        1073741824,
+        1073741824,
+        1073741824,
+        0,
+        4294967295
+      ],
+      "count": 22
+    }
+  ],
+  "files": [
+    {
+      "file_name": "m_level_cathedral_sfx_catacomb.vxn",
+      "file_size_bytes": 10281472,
+      "file_sha256": "6c0236d19b66011d986a7fd31a332257d8f689ceea69e049abf90376d33ed909",
+      "rule_payload_offset": 112,
+      "rule_payload_length": 76,
+      "rule_payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+      "record_count": 2,
+      "record_stride_bytes": 36,
+      "rows": [
+        {
+          "row_index": 0,
+          "file_offset": 116,
+          "rule_payload_relative_offset": 4,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "row_index": 1,
+          "file_offset": 152,
+          "rule_payload_relative_offset": 40,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        }
+      ]
+    },
+    {
+      "file_name": "m_level_darkwood_sfx_darkwood.vxn",
+      "file_size_bytes": 11692544,
+      "file_sha256": "6e5cd6dba229f351bc3d23a65d5575637523a8d768607ab91b6c86cf7f4c78e0",
+      "rule_payload_offset": 112,
+      "rule_payload_length": 76,
+      "rule_payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+      "record_count": 2,
+      "record_stride_bytes": 36,
+      "rows": [
+        {
+          "row_index": 0,
+          "file_offset": 116,
+          "rule_payload_relative_offset": 4,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "row_index": 1,
+          "file_offset": 152,
+          "rule_payload_relative_offset": 40,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        }
+      ]
+    },
+    {
+      "file_name": "m_level_darkwood_sfx_void_maze.vxn",
+      "file_size_bytes": 11692544,
+      "file_sha256": "416ea9cb2dd9d4cbe865dd62a76e01b46ec94c24fca5e49dd09b2733dea2b2cc",
+      "rule_payload_offset": 112,
+      "rule_payload_length": 76,
+      "rule_payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+      "record_count": 2,
+      "record_stride_bytes": 36,
+      "rows": [
+        {
+          "row_index": 0,
+          "file_offset": 116,
+          "rule_payload_relative_offset": 4,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "row_index": 1,
+          "file_offset": 152,
+          "rule_payload_relative_offset": 40,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        }
+      ]
+    },
+    {
+      "file_name": "m_level_gothicus_no_ambiance.vxn",
+      "file_size_bytes": 9515520,
+      "file_sha256": "d87bd34a575f9043d96ef3fe24d062222ea3650d90136a108b830f26702ec1a5",
+      "rule_payload_offset": 112,
+      "rule_payload_length": 76,
+      "rule_payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+      "record_count": 2,
+      "record_stride_bytes": 36,
+      "rows": [
+        {
+          "row_index": 0,
+          "file_offset": 116,
+          "rule_payload_relative_offset": 4,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "row_index": 1,
+          "file_offset": 152,
+          "rule_payload_relative_offset": 40,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        }
+      ]
+    },
+    {
+      "file_name": "m_level_hell_sfx_dark.vxn",
+      "file_size_bytes": 8397312,
+      "file_sha256": "7f6a40dfd6dbcd9b0f2e6f1e970744bef99272259275605070db0ec8f800bf6c",
+      "rule_payload_offset": 112,
+      "rule_payload_length": 76,
+      "rule_payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+      "record_count": 2,
+      "record_stride_bytes": 36,
+      "rows": [
+        {
+          "row_index": 0,
+          "file_offset": 116,
+          "rule_payload_relative_offset": 4,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "row_index": 1,
+          "file_offset": 152,
+          "rule_payload_relative_offset": 40,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        }
+      ]
+    },
+    {
+      "file_name": "m_level_icy_cliff_sfx_ice_hub.vxn",
+      "file_size_bytes": 10463744,
+      "file_sha256": "b4e64c5a565ca357b1786f7a8ff138be87f4a3b5051f2feda888db096f47b6f0",
+      "rule_payload_offset": 112,
+      "rule_payload_length": 76,
+      "rule_payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+      "record_count": 2,
+      "record_stride_bytes": 36,
+      "rows": [
+        {
+          "row_index": 0,
+          "file_offset": 116,
+          "rule_payload_relative_offset": 4,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "row_index": 1,
+          "file_offset": 152,
+          "rule_payload_relative_offset": 40,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        }
+      ]
+    },
+    {
+      "file_name": "m_level_icy_cliff_sfx_wind.vxn",
+      "file_size_bytes": 10463744,
+      "file_sha256": "b084d32bc17a1cc76d80c6f820a68e4ba4e32a1e2a935eb406473cf983639a06",
+      "rule_payload_offset": 112,
+      "rule_payload_length": 76,
+      "rule_payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+      "record_count": 2,
+      "record_stride_bytes": 36,
+      "rows": [
+        {
+          "row_index": 0,
+          "file_offset": 116,
+          "rule_payload_relative_offset": 4,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "row_index": 1,
+          "file_offset": 152,
+          "rule_payload_relative_offset": 40,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        }
+      ]
+    },
+    {
+      "file_name": "m_level_red_desert_sfx_fire.vxn",
+      "file_size_bytes": 8946176,
+      "file_sha256": "ac3dd427a125fb57d05dc1b1a775f8318ff53759e059e69b48ed85afb955afb4",
+      "rule_payload_offset": 112,
+      "rule_payload_length": 76,
+      "rule_payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+      "record_count": 2,
+      "record_stride_bytes": 36,
+      "rows": [
+        {
+          "row_index": 0,
+          "file_offset": 116,
+          "rule_payload_relative_offset": 4,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "row_index": 1,
+          "file_offset": 152,
+          "rule_payload_relative_offset": 40,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        }
+      ]
+    },
+    {
+      "file_name": "m_level_red_desert_sfx_red_desert.vxn",
+      "file_size_bytes": 8946176,
+      "file_sha256": "76916ba242d32969211ef7db2912fdaf77046a623f659d6a4bd5dbe99a7ee3c2",
+      "rule_payload_offset": 112,
+      "rule_payload_length": 76,
+      "rule_payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+      "record_count": 2,
+      "record_stride_bytes": 36,
+      "rows": [
+        {
+          "row_index": 0,
+          "file_offset": 116,
+          "rule_payload_relative_offset": 4,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "row_index": 1,
+          "file_offset": 152,
+          "rule_payload_relative_offset": 40,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        }
+      ]
+    },
+    {
+      "file_name": "m_level_swamp_sfx_swamp.vxn",
+      "file_size_bytes": 12278272,
+      "file_sha256": "980137ac5b032e5cee50e3f8e6940d31dbd5e0fd0d70346a5167d3c00567e0a8",
+      "rule_payload_offset": 112,
+      "rule_payload_length": 76,
+      "rule_payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+      "record_count": 2,
+      "record_stride_bytes": 36,
+      "rows": [
+        {
+          "row_index": 0,
+          "file_offset": 116,
+          "rule_payload_relative_offset": 4,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "row_index": 1,
+          "file_offset": 152,
+          "rule_payload_relative_offset": 40,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        }
+      ]
+    },
+    {
+      "file_name": "m_level_swamp_sfx_water.vxn",
+      "file_size_bytes": 12278272,
+      "file_sha256": "d386f78bbf031117d2b99e458ca5b2ff88e6252b1b4ea349883b3159587b7172",
+      "rule_payload_offset": 112,
+      "rule_payload_length": 76,
+      "rule_payload_sha256": "199f5bae542f4a63d8d7be090f1452537db9897cfba406cfd5399b2d7c738521",
+      "record_count": 2,
+      "record_stride_bytes": 36,
+      "rows": [
+        {
+          "row_index": 0,
+          "file_offset": 116,
+          "rule_payload_relative_offset": 4,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        },
+        {
+          "row_index": 1,
+          "file_offset": 152,
+          "rule_payload_relative_offset": 40,
+          "raw_hex": "0100000000000000000000000000000000000040000000400000004000000000ffffffff",
+          "u32_words": [
+            1,
+            0,
+            0,
+            0,
+            1073741824,
+            1073741824,
+            1073741824,
+            0,
+            4294967295
+          ]
+        }
+      ]
+    },
+    {
+      "file_name": "m_title.vxn",
+      "file_size_bytes": 3837292,
+      "file_sha256": "6dcd53d955ab1c923ea0bb951ce9c5d21dbf086d64d43314002ebfe2c2cd6f4f",
+      "rule_payload_offset": 112,
+      "rule_payload_length": 40,
+      "rule_payload_sha256": "36ab377077031b9b6d09b6424000ca06c33f281d9ff3751eb82279dc88525143",
+      "record_count": 1,
+      "record_stride_bytes": 36,
+      "rows": [
+        {
+          "row_index": 0,
+          "file_offset": 116,
+          "rule_payload_relative_offset": 4,
+          "raw_hex": "0000000006000000000000000000000000000000000000000000000000000000ffffffff",
+          "u32_words": [
+            0,
+            6,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4294967295
+          ]
+        }
+      ]
+    }
+  ],
+  "method": "Read-only parsing of cached VoxN chunk headers. Rule location uses the APK-matched ParseFile chunk-window formula; each Rule body count and 36-byte row extent is checked before raw little-endian words are recorded."
+}

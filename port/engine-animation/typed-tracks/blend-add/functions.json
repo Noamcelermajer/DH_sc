@@ -1,0 +1,872 @@
+{
+  "schema_version": 1,
+  "description": "APK-backed ARM ranges for float scale-vector3 and float quaternion non-key blend/add reducers and apply routes.",
+  "apk": {
+    "sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200"
+  },
+  "elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "elf_class": 32,
+    "endianness": "little",
+    "machine": 40,
+    "load_segments": [
+      {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      {
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6",
+        "p_align": "0x1000"
+      }
+    ],
+    "file_offset_formula": "p_offset + (elf_virtual_address - p_vaddr)"
+  },
+  "functions": [
+    {
+      "name": "quaternion_blend_reducer",
+      "claim": "Reduces weighted quaternion contributors using the engine slerp path.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x006130d4",
+      "range_size": 448,
+      "elf_file_offset": "0x6130d4",
+      "range_sha256": "76547124667f91b7cd041af567af33bf673c552b465c4b04719ced469c6dd57b",
+      "declared_size": 448,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track8CBlenderINS_4core10quaternionELi1ES4_E17getBlendedValueExEPvPfiS6_",
+          "demangled": "glitch::collada::animation_track::CBlender<glitch::core::quaternion, 1, glitch::core::quaternion>::getBlendedValueEx(void*, float*, int, void*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CBlender<glitch::core::quaternion, 1, glitch::core::quaternion>",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CBlender_glitch_core_quaternion_1_glitch_core_quaternion-b2d3e105f638-001.asm"
+    },
+    {
+      "name": "quaternion_blend_vtable_wrapper",
+      "claim": "Virtual wrapper for the float quaternion blended-value slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00613300",
+      "range_size": 20,
+      "elf_file_offset": "0x613300",
+      "range_sha256": "2bb5d9c3116abdee9e2f62d94fddd036147d94f87d9484a0922e3d8e00c8c4c9",
+      "declared_size": 20,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEEEE15getBlendedValueEPvPfiSA_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float> > >::getBlendedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-7109fddbeaaf-001.asm"
+    },
+    {
+      "name": "quaternion_short_blend_vtable_wrapper",
+      "claim": "Virtual wrapper for the short quaternion blended-value slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00613314",
+      "range_size": 20,
+      "elf_file_offset": "0x613314",
+      "range_sha256": "0827ec1de21b5b1fe7b21e589acdacc51b7cc3f26cb7edcea08b23124a2cf8d6",
+      "declared_size": 20,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIsEEEEE15getBlendedValueEPvPfiSA_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<short> > >::getBlendedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<short> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-b9742f4f2120-001.asm"
+    },
+    {
+      "name": "quaternion_char_blend_vtable_wrapper",
+      "claim": "Virtual wrapper for the char quaternion blended-value slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00613328",
+      "range_size": 20,
+      "elf_file_offset": "0x613328",
+      "range_sha256": "981aa454105b2aef49a9f0da912c9ac4380fcf036f8fa5e1c854eb44066d3121",
+      "declared_size": 20,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIcEEEEE15getBlendedValueEPvPfiSA_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<char> > >::getBlendedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<char> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-0660af663ee6-001.asm"
+    },
+    {
+      "name": "quaternion_angle_float_blend_vtable_wrapper",
+      "claim": "Virtual wrapper for the float quaternion-angle blended-value slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x0061333c",
+      "range_size": 20,
+      "elf_file_offset": "0x61333c",
+      "range_sha256": "1ffbd07863a219d40ebb0eca184712ceaae70718ed0a02c9c6568c836173f2ef",
+      "declared_size": 20,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEE15getBlendedValueEPvPfiSA_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getBlendedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-c208f587cbc3-001.asm"
+    },
+    {
+      "name": "quaternion_angle_short_blend_vtable_wrapper",
+      "claim": "Virtual wrapper for the short quaternion-angle blended-value slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00613350",
+      "range_size": 20,
+      "elf_file_offset": "0x613350",
+      "range_sha256": "1bf1273e020c3a2b07fc5184196a5334eedfe63b76cde23630251f86d6a6f0a8",
+      "declared_size": 20,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEE15getBlendedValueEPvPfiSA_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getBlendedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-907653e2c2f0-001.asm"
+    },
+    {
+      "name": "quaternion_angle_char_blend_vtable_wrapper",
+      "claim": "Virtual wrapper for the char quaternion-angle blended-value slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00613364",
+      "range_size": 20,
+      "elf_file_offset": "0x613364",
+      "range_sha256": "9de9b23092c1ec89042523fe5f5ff8e0ce5bb9d4d94399058d62cfd69110883d",
+      "declared_size": 20,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEE15getBlendedValueEPvPfiSA_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getBlendedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-ff3f68d5b483-001.asm"
+    },
+    {
+      "name": "quaternion_add_reducer",
+      "claim": "Composes signed weighted quaternion contributors in input order.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00613378",
+      "range_size": 528,
+      "elf_file_offset": "0x613378",
+      "range_sha256": "6954c21242148cdff8e416377b81993c3e0082a4d5b1d7ec5e7f9d28a5a5ee4a",
+      "declared_size": 528,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track8CBlenderINS_4core10quaternionELi1ES4_E15getAddedValueExEPvPfiS6_",
+          "demangled": "glitch::collada::animation_track::CBlender<glitch::core::quaternion, 1, glitch::core::quaternion>::getAddedValueEx(void*, float*, int, void*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CBlender<glitch::core::quaternion, 1, glitch::core::quaternion>",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CBlender_glitch_core_quaternion_1_glitch_core_quaternion-b2d3e105f638-001.asm"
+    },
+    {
+      "name": "quaternion_add_vtable_wrapper",
+      "claim": "Virtual wrapper for the float quaternion added-value slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00613588",
+      "range_size": 20,
+      "elf_file_offset": "0x613588",
+      "range_sha256": "b49406fd54fd890b3abe5a331d0c6dc029a21f063cbfd7245d5a07a28f0002a6",
+      "declared_size": 20,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEEEE13getAddedValueEPvPfiSA_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float> > >::getAddedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-7109fddbeaaf-001.asm"
+    },
+    {
+      "name": "quaternion_short_add_vtable_wrapper",
+      "claim": "Virtual wrapper for the short quaternion added-value slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x0061359c",
+      "range_size": 20,
+      "elf_file_offset": "0x61359c",
+      "range_sha256": "a2f7d2501cec23c0dcb4f8892e7a5892d2fce6cb96b712de0867ec888e213cac",
+      "declared_size": 20,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIsEEEEE13getAddedValueEPvPfiSA_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<short> > >::getAddedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<short> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-b9742f4f2120-001.asm"
+    },
+    {
+      "name": "quaternion_char_add_vtable_wrapper",
+      "claim": "Virtual wrapper for the char quaternion added-value slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x006135b0",
+      "range_size": 20,
+      "elf_file_offset": "0x6135b0",
+      "range_sha256": "f64cc05ec450cb4826d9b900bfb23ab0518f6a0bde2dc9c6b8e4921b1833a1ef",
+      "declared_size": 20,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIcEEEEE13getAddedValueEPvPfiSA_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<char> > >::getAddedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<char> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-0660af663ee6-001.asm"
+    },
+    {
+      "name": "quaternion_angle_float_add_vtable_wrapper",
+      "claim": "Virtual wrapper for the float quaternion-angle added-value slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x006135c4",
+      "range_size": 20,
+      "elf_file_offset": "0x6135c4",
+      "range_sha256": "54ce5ef1d98998b37f4d2695b0d15a635560294cdc1f09cfb0b98b235331f173",
+      "declared_size": 20,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEE13getAddedValueEPvPfiSA_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getAddedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-c208f587cbc3-001.asm"
+    },
+    {
+      "name": "quaternion_angle_short_add_vtable_wrapper",
+      "claim": "Virtual wrapper for the short quaternion-angle added-value slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x006135d8",
+      "range_size": 20,
+      "elf_file_offset": "0x6135d8",
+      "range_sha256": "3ee1e852ad8950e6bd881e7ad7d58243bec3d2dbdbd38fa2888f0a640a580f53",
+      "declared_size": 20,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEE13getAddedValueEPvPfiSA_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getAddedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-907653e2c2f0-001.asm"
+    },
+    {
+      "name": "quaternion_angle_char_add_vtable_wrapper",
+      "claim": "Virtual wrapper for the char quaternion-angle added-value slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x006135ec",
+      "range_size": 20,
+      "elf_file_offset": "0x6135ec",
+      "range_sha256": "f9cddb3a6e6d64ed7a2adf303317a22e9177bd08812c45389d624e29e7d52d29",
+      "declared_size": 20,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEE13getAddedValueEPvPfiSA_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getAddedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-ff3f68d5b483-001.asm"
+    },
+    {
+      "name": "quaternion_apply_blended",
+      "claim": "Reduces blended quaternion values and dispatches through callback slot +0x9c.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620968",
+      "range_size": 76,
+      "elf_file_offset": "0x620968",
+      "range_sha256": "c9f237bb4ee0cc414db4c78a74a187ba369c5085c01ce8e3775e11f24d3f0008",
+      "declared_size": 76,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEE19applyBlendedValueExEPvPfiS8_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-a7e45a7b4f1b-001.asm"
+    },
+    {
+      "name": "quaternion_apply_blended_vtable_wrapper",
+      "claim": "Virtual wrapper for the float quaternion blended-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x006209b4",
+      "range_size": 28,
+      "elf_file_offset": "0x6209b4",
+      "range_sha256": "424f60c1602173553ffae84c460ff89535e6aece13f9ca02a4a00e787804613c",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEEEE17applyBlendedValueEPvPfiSA_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-7109fddbeaaf-001.asm"
+    },
+    {
+      "name": "quaternion_short_apply_blended",
+      "claim": "Uses the shared reducer then dispatches through callback slot +0x9c.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x006209d0",
+      "range_size": 76,
+      "elf_file_offset": "0x6209d0",
+      "range_sha256": "569dca05869d8d5b677cd2e624967a4a7bc05f2f3f49d11d8aadb0bbb2dea472",
+      "declared_size": 76,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIsEEE19applyBlendedValueExEPvPfiS8_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<short> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<short> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-ba196c72d7b1-001.asm"
+    },
+    {
+      "name": "quaternion_short_apply_blended_vtable_wrapper",
+      "claim": "Virtual wrapper for the short quaternion blended-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620a1c",
+      "range_size": 28,
+      "elf_file_offset": "0x620a1c",
+      "range_sha256": "424f60c1602173553ffae84c460ff89535e6aece13f9ca02a4a00e787804613c",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIsEEEEE17applyBlendedValueEPvPfiSA_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<short> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<short> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-b9742f4f2120-001.asm"
+    },
+    {
+      "name": "quaternion_char_apply_blended",
+      "claim": "Uses the shared reducer then dispatches through callback slot +0x9c.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620a38",
+      "range_size": 76,
+      "elf_file_offset": "0x620a38",
+      "range_sha256": "9aee2c539f30025ae34fe46b59087444a6b2c57647922ef8233664a3ecc86049",
+      "declared_size": 76,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIcEEE19applyBlendedValueExEPvPfiS8_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<char> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<char> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-a5b8b26ecf05-001.asm"
+    },
+    {
+      "name": "quaternion_char_apply_blended_vtable_wrapper",
+      "claim": "Virtual wrapper for the char quaternion blended-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620a84",
+      "range_size": 28,
+      "elf_file_offset": "0x620a84",
+      "range_sha256": "424f60c1602173553ffae84c460ff89535e6aece13f9ca02a4a00e787804613c",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIcEEEEE17applyBlendedValueEPvPfiSA_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<char> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-0660af663ee6-001.asm"
+    },
+    {
+      "name": "quaternion_angle_float_apply_blended",
+      "claim": "Uses the shared reducer then dispatches through callback slot +0x9c.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620aa0",
+      "range_size": 76,
+      "elf_file_offset": "0x620aa0",
+      "range_sha256": "2f1749da05916bdc691f9ba41c11f8589a3855172818ab409399864eb872b515",
+      "declared_size": 76,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEE19applyBlendedValueExEPvPfiS8_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-79d3c25aa4d7-001.asm"
+    },
+    {
+      "name": "quaternion_angle_float_apply_blended_vtable_wrapper",
+      "claim": "Virtual wrapper for the float quaternion-angle blended-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620aec",
+      "range_size": 28,
+      "elf_file_offset": "0x620aec",
+      "range_sha256": "424f60c1602173553ffae84c460ff89535e6aece13f9ca02a4a00e787804613c",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEE17applyBlendedValueEPvPfiSA_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-c208f587cbc3-001.asm"
+    },
+    {
+      "name": "quaternion_angle_short_apply_blended",
+      "claim": "Uses the shared reducer then dispatches through callback slot +0x9c.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620b08",
+      "range_size": 76,
+      "elf_file_offset": "0x620b08",
+      "range_sha256": "e9671cc28fd758aaaa0d919bff5ee07266dead929513fff2b0596c469635a2c0",
+      "declared_size": 76,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEE19applyBlendedValueExEPvPfiS8_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-183edbb4274f-001.asm"
+    },
+    {
+      "name": "quaternion_angle_short_apply_blended_vtable_wrapper",
+      "claim": "Virtual wrapper for the short quaternion-angle blended-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620b54",
+      "range_size": 28,
+      "elf_file_offset": "0x620b54",
+      "range_sha256": "424f60c1602173553ffae84c460ff89535e6aece13f9ca02a4a00e787804613c",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEE17applyBlendedValueEPvPfiSA_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-907653e2c2f0-001.asm"
+    },
+    {
+      "name": "quaternion_angle_char_apply_blended",
+      "claim": "Uses the shared reducer then dispatches through callback slot +0x9c.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620b70",
+      "range_size": 76,
+      "elf_file_offset": "0x620b70",
+      "range_sha256": "186ab521791f04a78eed15d877451ffe536abc2d72fa58d9fb3e66d4fa8d712b",
+      "declared_size": 76,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEE19applyBlendedValueExEPvPfiS8_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-e196565dcf80-001.asm"
+    },
+    {
+      "name": "quaternion_angle_char_apply_blended_vtable_wrapper",
+      "claim": "Virtual wrapper for the char quaternion-angle blended-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620bbc",
+      "range_size": 28,
+      "elf_file_offset": "0x620bbc",
+      "range_sha256": "424f60c1602173553ffae84c460ff89535e6aece13f9ca02a4a00e787804613c",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEE17applyBlendedValueEPvPfiSA_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-ff3f68d5b483-001.asm"
+    },
+    {
+      "name": "quaternion_apply_added",
+      "claim": "Reduces added quaternion values and dispatches through callback slot +0x9c.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620bd8",
+      "range_size": 76,
+      "elf_file_offset": "0x620bd8",
+      "range_sha256": "a45250ae73afa5351b0a7d83ac4a3bd0f9bb72f07ebabcbedb95f6f77cc0afbc",
+      "declared_size": 76,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEE17applyAddedValueExEPvPfiS8_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-a7e45a7b4f1b-001.asm"
+    },
+    {
+      "name": "quaternion_apply_added_vtable_wrapper",
+      "claim": "Virtual wrapper for the float quaternion added-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620c24",
+      "range_size": 28,
+      "elf_file_offset": "0x620c24",
+      "range_sha256": "424f60c1602173553ffae84c460ff89535e6aece13f9ca02a4a00e787804613c",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEEEE15applyAddedValueEPvPfiSA_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-7109fddbeaaf-001.asm"
+    },
+    {
+      "name": "quaternion_short_apply_added",
+      "claim": "Uses the shared reducer then dispatches through callback slot +0x9c.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620c40",
+      "range_size": 76,
+      "elf_file_offset": "0x620c40",
+      "range_sha256": "67963acab34a079d77bcd30e1f1085563472b7ef03f32ba339fee28b1306c1db",
+      "declared_size": 76,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIsEEE17applyAddedValueExEPvPfiS8_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<short> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<short> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-ba196c72d7b1-001.asm"
+    },
+    {
+      "name": "quaternion_short_apply_added_vtable_wrapper",
+      "claim": "Virtual wrapper for the short quaternion added-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620c8c",
+      "range_size": 28,
+      "elf_file_offset": "0x620c8c",
+      "range_sha256": "424f60c1602173553ffae84c460ff89535e6aece13f9ca02a4a00e787804613c",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIsEEEEE15applyAddedValueEPvPfiSA_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<short> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<short> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-b9742f4f2120-001.asm"
+    },
+    {
+      "name": "quaternion_char_apply_added",
+      "claim": "Uses the shared reducer then dispatches through callback slot +0x9c.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620ca8",
+      "range_size": 76,
+      "elf_file_offset": "0x620ca8",
+      "range_sha256": "ce6b0e5cf67d9dc44aa2aed40d16ffc5bb22267c7032737ea8a38ec716f045d3",
+      "declared_size": 76,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIcEEE17applyAddedValueExEPvPfiS8_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<char> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<char> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-a5b8b26ecf05-001.asm"
+    },
+    {
+      "name": "quaternion_char_apply_added_vtable_wrapper",
+      "claim": "Virtual wrapper for the char quaternion added-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620cf4",
+      "range_size": 28,
+      "elf_file_offset": "0x620cf4",
+      "range_sha256": "424f60c1602173553ffae84c460ff89535e6aece13f9ca02a4a00e787804613c",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIcEEEEE15applyAddedValueEPvPfiSA_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<char> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-0660af663ee6-001.asm"
+    },
+    {
+      "name": "quaternion_angle_float_apply_added",
+      "claim": "Uses the shared reducer then dispatches through callback slot +0x9c.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620d10",
+      "range_size": 76,
+      "elf_file_offset": "0x620d10",
+      "range_sha256": "1433bb1b5c8a639e803da59e387d3cf61bc1c34746b7c6716560d6487d264939",
+      "declared_size": 76,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEE17applyAddedValueExEPvPfiS8_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-79d3c25aa4d7-001.asm"
+    },
+    {
+      "name": "quaternion_angle_float_apply_added_vtable_wrapper",
+      "claim": "Virtual wrapper for the float quaternion-angle added-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620d5c",
+      "range_size": 28,
+      "elf_file_offset": "0x620d5c",
+      "range_sha256": "424f60c1602173553ffae84c460ff89535e6aece13f9ca02a4a00e787804613c",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEE15applyAddedValueEPvPfiSA_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-c208f587cbc3-001.asm"
+    },
+    {
+      "name": "quaternion_angle_short_apply_added",
+      "claim": "Uses the shared reducer then dispatches through callback slot +0x9c.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620d78",
+      "range_size": 76,
+      "elf_file_offset": "0x620d78",
+      "range_sha256": "17cc17842d837f7b09d331cedd1c401ee0266596da1c5db8e9946d102c9e0b4b",
+      "declared_size": 76,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEE17applyAddedValueExEPvPfiS8_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-183edbb4274f-001.asm"
+    },
+    {
+      "name": "quaternion_angle_short_apply_added_vtable_wrapper",
+      "claim": "Virtual wrapper for the short quaternion-angle added-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620dc4",
+      "range_size": 28,
+      "elf_file_offset": "0x620dc4",
+      "range_sha256": "424f60c1602173553ffae84c460ff89535e6aece13f9ca02a4a00e787804613c",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEE15applyAddedValueEPvPfiSA_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-907653e2c2f0-001.asm"
+    },
+    {
+      "name": "quaternion_angle_char_apply_added",
+      "claim": "Uses the shared reducer then dispatches through callback slot +0x9c.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620de0",
+      "range_size": 76,
+      "elf_file_offset": "0x620de0",
+      "range_sha256": "61bed9733e0f955a2f6281c7b8751f473e9cfba0b2d1d904e3d99e3f975476f4",
+      "declared_size": 76,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEE17applyAddedValueExEPvPfiS8_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-e196565dcf80-001.asm"
+    },
+    {
+      "name": "quaternion_angle_char_apply_added_vtable_wrapper",
+      "claim": "Virtual wrapper for the char quaternion-angle added-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x00620e2c",
+      "range_size": 28,
+      "elf_file_offset": "0x620e2c",
+      "range_sha256": "424f60c1602173553ffae84c460ff89535e6aece13f9ca02a4a00e787804613c",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEE15applyAddedValueEPvPfiSA_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-ff3f68d5b483-001.asm"
+    },
+    {
+      "name": "scale_float3_blend_vtable_method",
+      "claim": "Float3 scale weighted-sum implementation for getBlendedValue.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x006275fc",
+      "range_size": 228,
+      "elf_file_offset": "0x6275fc",
+      "range_sha256": "99516faa30b73dc450953a36cd8d409833e48ed36dfdeafaaa1bc974901aed7b",
+      "declared_size": 228,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_20CSceneNodeScaleMixinIfEEEEE15getBlendedValueEPvPfiSB_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float> > >::getBlendedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-635c82cbbd74-001.asm"
+    },
+    {
+      "name": "scale_float3_add_vtable_method",
+      "claim": "Float3 scale weighted-sum implementation for getAddedValue.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x0062b204",
+      "range_size": 228,
+      "elf_file_offset": "0x62b204",
+      "range_sha256": "036360026c2dec4f247924acd68c6baab4d1aefa380c321f3a1c7a648ce0d7d7",
+      "declared_size": 228,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_20CSceneNodeScaleMixinIfEEEEE13getAddedValueEPvPfiSB_",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float> > >::getAddedValue(void*, float*, int, void*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-635c82cbbd74-001.asm"
+    },
+    {
+      "name": "scale_float3_apply_blended",
+      "claim": "Reduces float3 values and dispatches through callback slot +0x94.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x0062d634",
+      "range_size": 248,
+      "elf_file_offset": "0x62d634",
+      "range_sha256": "ed52d7352a6ec987dd8dddca01b9b900adb1f97d7dac220ba4d65c338d00bd38",
+      "declared_size": 248,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core8vector3dIfEENS1_20CSceneNodeScaleMixinIfEEE19applyBlendedValueExEPvPfiS9_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float> >::applyBlendedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_vector3d_float_glitch_collada_ani-310f6e2779ce-001.asm"
+    },
+    {
+      "name": "scale_float3_apply_blended_vtable_wrapper",
+      "claim": "Virtual wrapper for the float3 scale blended-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x0062d72c",
+      "range_size": 28,
+      "elf_file_offset": "0x62d72c",
+      "range_sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_20CSceneNodeScaleMixinIfEEEEE17applyBlendedValueEPvPfiSB_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-635c82cbbd74-001.asm"
+    },
+    {
+      "name": "scale_float3_apply_added",
+      "claim": "Reduces float3 values and dispatches through callback slot +0x94.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x0062d748",
+      "range_size": 248,
+      "elf_file_offset": "0x62d748",
+      "range_sha256": "53c1ef542fc3bb382575935aa44d34f1794fb8a3aa4cb3bebb68018b809c5e23",
+      "declared_size": 248,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core8vector3dIfEENS1_20CSceneNodeScaleMixinIfEEE17applyAddedValueExEPvPfiS9_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float> >::applyAddedValueEx(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float> >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CApplyValueEx_glitch_core_vector3d_float_glitch_collada_ani-310f6e2779ce-001.asm"
+    },
+    {
+      "name": "scale_float3_apply_added_vtable_wrapper",
+      "claim": "Virtual wrapper for the float3 scale added-apply slot.",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "address": "0x0062d840",
+      "range_size": 28,
+      "elf_file_offset": "0x62d840",
+      "range_sha256": "e7ecfdacaee34dd6f39b726dc7b5ffcc3adf55e2c7037d1df0d3033e53eb0543",
+      "declared_size": 28,
+      "end_inferred": false,
+      "original_symbols": [
+        {
+          "name": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_20CSceneNodeScaleMixinIfEEEEE15applyAddedValueEPvPfiSB_PNS1_15CApplicatorInfoE",
+          "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+        }
+      ],
+      "symbol_index_class_group": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float> > >",
+      "symbol_index_assembly_file": "glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-635c82cbbd74-001.asm"
+    }
+  ]
+}

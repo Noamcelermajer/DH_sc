@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "title": "DH2 material vec4 to linked GLES uniform path",
+  "hash_basis": "Every listed function range and PLT stub was read from the APK member ELF through a file-backed PT_LOAD mapping. Selected assembly rows in reference/uniform-excerpts.asm were byte-compared with those mapped slices.",
+  "source_apk": {
+    "path": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+    "sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200"
+  },
+  "source_elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "load_segments": [
+      {
+        "index": 0,
+        "file_offset": 0,
+        "virtual_address": 0,
+        "file_size": 9785648,
+        "memory_size": 9785648,
+        "flags": 5,
+        "program_header_index": 1
+      },
+      {
+        "index": 1,
+        "file_offset": 9785648,
+        "virtual_address": 9789744,
+        "file_size": 300364,
+        "memory_size": 914688,
+        "flags": 6,
+        "program_header_index": 2
+      }
+    ]
+  },
+  "ranges": [
+    {
+      "kind": "function",
+      "key": "set_material_internal",
+      "symbol": "glitch::video::IVideoDriver::setMaterialInternal(glitch::video::CMaterial*, unsigned char, boost::intrusive_ptr<glitch::video::CVertexAttributeMap> const*)",
+      "elf_va": "0x005aa51c",
+      "range_size": 220,
+      "elf_file_offset": 5940508,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "61cffa8bfcae6766058f463220ebcc872577b9a6fd0c54a0649e2467eac0ecf3",
+      "source_assembly": "glitch_video_IVideoDriver-128257112762-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005aa52c",
+          "range_size": 16
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; excerpt instruction bytes checked individually"
+    },
+    {
+      "kind": "function",
+      "key": "linked_shader_uniform_reflection",
+      "symbol": "glitch::video::CGLSLShader::linkProgram()",
+      "elf_va": "0x006de9f8",
+      "range_size": 1444,
+      "elf_file_offset": 7203320,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "28361c0616a3366900ac7a3dc1c7b5bc77857fb68bb4a3ec4e55529bc4d1d830",
+      "source_assembly": "glitch_video_CGLSLShader-48e3be0db2af-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x006dece8",
+          "range_size": 284
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; excerpt instruction bytes checked individually"
+    },
+    {
+      "kind": "function",
+      "key": "cmaterial_vec4_parameter_write",
+      "symbol": "glitch::video::detail::IMaterialParameters<glitch::video::CMaterial, glitch::ISharedMemoryBlockHeader<glitch::video::CMaterial>>::setParameter<glitch::core::vector4d<float>>(unsigned short, glitch::core::vector4d<float> const*, int)",
+      "elf_va": "0x005c9d3c",
+      "range_size": 192,
+      "elf_file_offset": 6069564,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "7fed727a8f02868d8df63b07209917b62a7e0310de04564fc19589acf1e68344",
+      "source_assembly": "boost_enable_if_glitch_video_detail_SIsValidSetMaterialParamaterOverload_glitch_core_vecto-427b9132ac06-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005c9d3c",
+          "range_size": 192
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; excerpt instruction bytes checked individually"
+    },
+    {
+      "kind": "function",
+      "key": "current_material_commit",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::commitCurrentMaterialImpl(unsigned char)",
+      "elf_va": "0x005b74e8",
+      "range_size": 172,
+      "elf_file_offset": 5993704,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "48645ce24c2397c05e3c19b90479ac583f1446cd90b971d91beb58180f3e03f9",
+      "source_assembly": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-569492699322-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005b74e8",
+          "range_size": 172
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; excerpt instruction bytes checked individually"
+    },
+    {
+      "kind": "function",
+      "key": "cmaterial_parameter_uniform_commit",
+      "symbol": "glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>::commitCurrentMaterialParametersAux<glitch::video::CMaterial>(glitch::video::CGLSLShader const*, glitch::video::CMaterial const*, glitch::video::SShaderParameterBinding const*, glitch::video::SShaderParameterBinding const*)",
+      "elf_va": "0x005b4da0",
+      "range_size": 1440,
+      "elf_file_offset": 5983648,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "44379294a26e8941e0d0cbe2c25f3fb4fe968b65b5e1ab14aa5883e7d177217f",
+      "source_assembly": "void_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHandler-30fe099cd72a-001.asm",
+      "excerpt_ranges": [
+        {
+          "elf_va": "0x005b4da0",
+          "range_size": 528
+        }
+      ],
+      "byte_comparison": "full function range mapped through PT_LOAD and hashed; excerpt instruction bytes checked individually"
+    },
+    {
+      "kind": "plt_import_stub",
+      "name": "glGetActiveUniform",
+      "elf_va": "0x0030e6d0",
+      "range_size": 12,
+      "elf_file_offset": 3204816,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "6506da6956f6f13ed124eff516da4c67f3a7ab0d9d85a028277a5d9b4ab399bf",
+      "call_sites": [
+        "0x006ded0c"
+      ],
+      "byte_comparison": "12-byte PLT stub mapped through PT_LOAD and hashed"
+    },
+    {
+      "kind": "plt_import_stub",
+      "name": "glGetUniformLocation",
+      "elf_va": "0x0030e13c",
+      "range_size": 12,
+      "elf_file_offset": 3203388,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "44888879a57c56dd0abb34a9a3bcb16c18bae8921686b162d2735423a0da8324",
+      "call_sites": [
+        "0x006ded84"
+      ],
+      "byte_comparison": "12-byte PLT stub mapped through PT_LOAD and hashed"
+    },
+    {
+      "kind": "plt_import_stub",
+      "name": "glUseProgram",
+      "elf_va": "0x0030e8bc",
+      "range_size": 12,
+      "elf_file_offset": 3205308,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "4d700e6c625e9af4a5023ba243847dfcc00167e6f6ae14eb402b27223071738c",
+      "call_sites": [
+        "0x005b7548"
+      ],
+      "byte_comparison": "12-byte PLT stub mapped through PT_LOAD and hashed"
+    },
+    {
+      "kind": "plt_import_stub",
+      "name": "glUniform4fv",
+      "elf_va": "0x0030e9a0",
+      "range_size": 12,
+      "elf_file_offset": 3205536,
+      "pt_load_segment_index": 0,
+      "byte_sha256": "29f000c26f2c882335707cc47c4491322f255eed1e70d91fd941c1ec09544481",
+      "call_sites": [
+        "0x005b4fac"
+      ],
+      "byte_comparison": "12-byte PLT stub mapped through PT_LOAD and hashed"
+    }
+  ]
+}

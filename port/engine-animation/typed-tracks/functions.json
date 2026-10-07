@@ -1,0 +1,551 @@
+{
+  "schema_version": 1,
+  "description": "APK-backed ARM function ranges for float quaternion and scale-vector3 direct/interpolated typed tracks.",
+  "apk": {
+    "sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200"
+  },
+  "elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "elf_class": 32,
+    "endianness": "little",
+    "machine": 40,
+    "load_segments": [
+      {
+        "type": "PT_LOAD",
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5"
+      },
+      {
+        "type": "PT_LOAD",
+        "p_offset": "0x955130",
+        "p_vaddr": "0x956130",
+        "p_filesz": "0x4954c",
+        "p_memsz": "0xdf500",
+        "p_flags": "0x6"
+      }
+    ],
+    "file_offset_formula": "p_offset + (elf_virtual_address - p_vaddr)"
+  },
+  "factory_dispatch_reference": {
+    "manifest": "../reference/animation-binding-functions.json",
+    "function_name": "animation_track_factory",
+    "elf_virtual_address": "0x00611ae0",
+    "elf_file_offset": "0x00611ae0",
+    "elf_size_bytes": 1608,
+    "function_slice_sha256": "bb7590a23775d34fa5821fac78f1e6330a691b0c929b23cf1a3eedb733f37f72",
+    "selection_note": "Existing manifest carries the complete exact range; channel 5 selects quaternion, channel 10 selects scale vector3, and absent/discriminator-2 offset-scale selects float."
+  },
+  "functions": [
+    {
+      "name": "quaternion_float_get_direct",
+      "claim": "Direct float4 key getter copies one output record.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0061cf8c",
+      "elf_file_offset": "0x0061cf8c",
+      "elf_size_bytes": 76,
+      "function_slice_sha256": "1bcd2b99a2ce08b773e7c7b59f712e52afca9cd21cfdf168bb0b4e2d242f81fb",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_float_get_interpolation_wrapper",
+      "claim": "Address-point wrapper for interpolated float4 getter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006132e4",
+      "elf_file_offset": "0x006132e4",
+      "elf_size_bytes": 28,
+      "function_slice_sha256": "e0232aeb1a413f4ada1885116b42cd128be946b81bdd11a914b1df73513eb401",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_float_interpreter",
+      "claim": "Builds two weights and dispatches the pair to the quaternion blender.",
+      "original_symbol": "_ZN6glitch7collada15animation_track12CInterpreterINS1_25CSceneNodeQuaternionMixinIfEEfLi4ENS1_15SUseDefaultLerpIfEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>, float, 4, glitch::collada::animation_track::SUseDefaultLerp<float>>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00613294",
+      "elf_file_offset": "0x00613294",
+      "elf_size_bytes": 80,
+      "function_slice_sha256": "ed4eb477bd0056640b28e659de232b3f150e2adf48a2adb4b23cbeb4d6821e00",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_float_blender",
+      "claim": "Weighted quaternion blend implementation; calls the engine quaternion slerp.",
+      "original_symbol": "_ZN6glitch7collada15animation_track8CBlenderINS_4core10quaternionELi1ES4_E17getBlendedValueExEPvPfiS6_",
+      "demangled": "glitch::collada::animation_track::CBlender<glitch::core::quaternion, 1, glitch::core::quaternion>::getBlendedValueEx(void*, float*, int, void*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006130d4",
+      "elf_file_offset": "0x006130d4",
+      "elf_size_bytes": 448,
+      "function_slice_sha256": "76547124667f91b7cd041af567af33bf673c552b465c4b04719ced469c6dd57b",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_float_apply_direct_wrapper",
+      "claim": "Address-point wrapper for direct quaternion apply.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006208e4",
+      "elf_file_offset": "0x006208e4",
+      "elf_size_bytes": 20,
+      "function_slice_sha256": "23afc2c31ddc5267252711ec3682875f5399b9f91392ff32c034e0b9de41167c",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_float_apply_direct",
+      "claim": "Copies one quaternion key and calls the applicator vtable.",
+      "original_symbol": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE",
+      "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>::applyKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00620864",
+      "elf_file_offset": "0x00620864",
+      "elf_size_bytes": 128,
+      "function_slice_sha256": "b5c929e5a83095a78b86e6be36c99145fc28b528c29e30897f0e22565984e0f5",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_float_apply_interpolation_wrapper",
+      "claim": "Address-point wrapper for interpolated quaternion apply.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00620944",
+      "elf_file_offset": "0x00620944",
+      "elf_size_bytes": 36,
+      "function_slice_sha256": "5d2f3a2e13a9b59c9adf29f786e769e4ad146eba5226e1e196a38f8d3345bfd7",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_float_apply_interpolated",
+      "claim": "Calls the float4 quaternion interpreter, then the applicator vtable.",
+      "original_symbol": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE",
+      "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>::applyKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006208f8",
+      "elf_file_offset": "0x006208f8",
+      "elf_size_bytes": 76,
+      "function_slice_sha256": "ad1a4b9f36d9b3427cd81a4b13899abda52c4edb2f2c60ef7a7bf941874171cd",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_float_get_indexed_direct_wrapper",
+      "claim": "Wrapper for the separate two-index quaternion overload.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiiPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0061d0ec",
+      "elf_file_offset": "0x0061d0ec",
+      "elf_size_bytes": 20,
+      "function_slice_sha256": "e5de6b97ba9d48d8e6c4271a7dc3e2b4078b49b89756e901b4d8d57c278ad2e8",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_float_get_indexed_direct",
+      "claim": "Reads two quaternion records, conjugates one, and calls quaternion multiply.",
+      "original_symbol": "_ZN6glitch7collada15animation_track22CInterpreterQuaternionINS1_25CSceneNodeQuaternionMixinIfEEfE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiiPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternion<glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>, float>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, void*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0061cfd8",
+      "elf_file_offset": "0x0061cfd8",
+      "elf_size_bytes": 276,
+      "function_slice_sha256": "6c8abf322629349921da20a12bb9d0cf925fe2b3ae2dfcd122729e2d3934ef01",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_float_get_indexed_interpolation_wrapper",
+      "claim": "Wrapper for the separate three-index quaternion overload.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiiifPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0061d2a8",
+      "elf_file_offset": "0x0061d2a8",
+      "elf_size_bytes": 36,
+      "function_slice_sha256": "5c38c6f7b2cdc2deea015dbadd3b73454d9d6b5a1e8eb1d8813f91a53240e1ab",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_float_get_indexed_interpolated",
+      "claim": "Reads three indexed records, slerps one pair, conjugates another, and multiplies.",
+      "original_symbol": "_ZN6glitch7collada15animation_track22CInterpreterQuaternionINS1_25CSceneNodeQuaternionMixinIfEEfE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreterQuaternion<glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>, float>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0061d100",
+      "elf_file_offset": "0x0061d100",
+      "elf_size_bytes": 424,
+      "function_slice_sha256": "d2f2a02ecda98e1159e09c7e5545381ba4576c82803a1238e117c32ab65f5079",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "scale_float_get_direct",
+      "claim": "Direct float3 key getter copies one 12-byte output record.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_20CSceneNodeScaleMixinIfEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00612394",
+      "elf_file_offset": "0x00612394",
+      "elf_size_bytes": 72,
+      "function_slice_sha256": "de7f72557ebfa161b96ef1588378fc8e82a0a793a1a8c98160202bb1d274eb9c",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "scale_float_get_interpolation_wrapper",
+      "claim": "Address-point wrapper for interpolated scale getter.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_20CSceneNodeScaleMixinIfEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006289b8",
+      "elf_file_offset": "0x006289b8",
+      "elf_size_bytes": 28,
+      "function_slice_sha256": "400d3368b04a0571c9dc975f1980d6ae19a5463f24aa7a15c9485d413aec2fe5",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "scale_float_interpreter",
+      "claim": "Interpolates three adjacent-key float components.",
+      "original_symbol": "_ZN6glitch7collada15animation_track12CInterpreterINS1_20CSceneNodeScaleMixinIfEEfLi3ENS1_15SUseDefaultLerpIfEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv",
+      "demangled": "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeScaleMixin<float>, float, 3, glitch::collada::animation_track::SUseDefaultLerp<float>>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00628850",
+      "elf_file_offset": "0x00628850",
+      "elf_size_bytes": 256,
+      "function_slice_sha256": "6337fc51cd454293f3c78e0f932d498624fd4c2a3645c1418f785121b88a0b1c",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "scale_float_apply_direct_wrapper",
+      "claim": "Address-point wrapper for direct scale apply.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_20CSceneNodeScaleMixinIfEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x006239c4",
+      "elf_file_offset": "0x006239c4",
+      "elf_size_bytes": 20,
+      "function_slice_sha256": "2f3926d2c059ae7061cd49b95cd9f528b15c8b3005ec47207ae78800ed7c22f7",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "scale_float_apply_direct",
+      "claim": "Copies one float3 key and calls the applicator vtable.",
+      "original_symbol": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core8vector3dIfEENS1_20CSceneNodeScaleMixinIfEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE",
+      "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>::applyKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00623954",
+      "elf_file_offset": "0x00623954",
+      "elf_size_bytes": 112,
+      "function_slice_sha256": "1280ae739c78cd145a8037eea45cd9a1afbcf2da605a3b2b9f8f4facd1d46712",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "scale_float_apply_interpolation_wrapper",
+      "claim": "Address-point wrapper for interpolated scale apply.",
+      "original_symbol": "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_20CSceneNodeScaleMixinIfEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00628994",
+      "elf_file_offset": "0x00628994",
+      "elf_size_bytes": 36,
+      "function_slice_sha256": "ee0724f4e95b9d2428a132e61278f4709cb3e2137ad2676bd32b535c9ee25e27",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "scale_float_apply_interpolated",
+      "claim": "Calls the float3 interpreter, then the applicator vtable.",
+      "original_symbol": "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core8vector3dIfEENS1_20CSceneNodeScaleMixinIfEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE",
+      "demangled": "glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>::applyKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00628950",
+      "elf_file_offset": "0x00628950",
+      "elf_size_bytes": 68,
+      "function_slice_sha256": "36d724b84c1998045c0233b9e5584ca76482e821a91d2b716bb23b7829dad1fc",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_slerp_call_target",
+      "claim": "Engine quaternion spherical-interpolation routine called by the track blender.",
+      "original_symbol": "_ZN6glitch4core10quaternion5slerpES1_S1_f",
+      "demangled": "glitch::core::quaternion::slerp(glitch::core::quaternion, glitch::core::quaternion, float)",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00612d00",
+      "elf_file_offset": "0x00612d00",
+      "elf_size_bytes": 980,
+      "function_slice_sha256": "320c09ce496f978ca29941c242952215c5636791faebe2028c5623199a788c1b",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_multiply_call_target",
+      "claim": "Engine quaternion multiply routine called by the separate indexed overload.",
+      "original_symbol": "_ZNK6glitch4core10quaternionmlERKS1_",
+      "demangled": "glitch::core::quaternion::operator*(glitch::core::quaternion const&) const",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0060dd34",
+      "elf_file_offset": "0x0060dd34",
+      "elf_size_bytes": 448,
+      "function_slice_sha256": "8ccbd2df93a138f1b45ba1ebe938d4da7539c4ab0f0da00bff21da584fdd2ea2",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_float_singleton_initializer",
+      "claim": "Initializes the float quaternion CVirtualEx singleton.",
+      "original_symbol": "_ZN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_25CSceneNodeQuaternionMixinIfEEEEE11getInstanceEv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionMixin<float>>>::getInstance()",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x0060ff20",
+      "elf_file_offset": "0x0060ff20",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "8df3e509f1f03646025954e604f1d82c111e62c23894b73d2e111c1a470857ce",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "scale_float_singleton_initializer",
+      "claim": "Initializes the float scale CVirtualEx singleton.",
+      "original_symbol": "_ZN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core8vector3dIfEENS1_20CSceneNodeScaleMixinIfEEEEE11getInstanceEv",
+      "demangled": "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::vector3d<float>, glitch::collada::animation_track::CSceneNodeScaleMixin<float>>>::getInstance()",
+      "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+      "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+      "elf_virtual_address": "0x00610988",
+      "elf_file_offset": "0x00610988",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "a9970daa37c40a12a5c3b55827abb0180206c6afaf5144f45e0bc1347298d581",
+      "pt_load": {
+        "p_offset": "0x0",
+        "p_vaddr": "0x0",
+        "p_filesz": "0x955130",
+        "p_memsz": "0x955130",
+        "p_flags": "0x5",
+        "p_align": "0x1000"
+      },
+      "listing": "apk-arm-disassembly.asm",
+      "listing_bytes_match_elf_slice": true
+    }
+  ]
+}

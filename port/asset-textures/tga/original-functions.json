@@ -1,0 +1,54 @@
+{
+  "original_library": "libDungeonHunter2.so",
+  "apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "original_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "functions": [
+    {
+      "key": "tga_cpu_image_decode",
+      "symbol": "glitch::video::CImageLoaderTGA::loadImage(glitch::io::IReadFile*) const",
+      "elf_va": "0x00606368",
+      "file_offset": "0x00606368",
+      "size_bytes": 1040,
+      "sha256": "f8547b2cd74f9ae61c53ed00c49ef5ef34177ba66d90de3bfc5303212082a82f",
+      "scope": "Accepts 16/24/32-bit TGA type 2 or 10; 32-bit branch uses engine format 13."
+    },
+    {
+      "key": "pixel_format_convert",
+      "symbol": "glitch::video::pixel_format::convert(E_PIXEL_FORMAT, void const*, unsigned int, E_PIXEL_FORMAT, void*, unsigned int, unsigned int, unsigned int, bool)",
+      "elf_va": "0x005f95ac",
+      "file_offset": "0x005f95ac",
+      "size_bytes": 17128,
+      "sha256": "e7800d2f639bb3a99de3dfb52b86eb4f1123b75a0e4e503d5c8c7cae72ce376a",
+      "scope": "Equal source/destination formats dispatch to same-format copy."
+    },
+    {
+      "key": "pixel_format_same_format_copy",
+      "symbol": "glitch::video::pixel_format::{anonymous}::copy(E_PIXEL_FORMAT, void const*, unsigned int, void*, unsigned int, unsigned int, unsigned int, bool)",
+      "elf_va": "0x005ee40c",
+      "file_offset": "0x005ee40c",
+      "size_bytes": 476,
+      "sha256": "890100523a11918f23afa7206fb37cc35001792909890ed98c86ce33a13b499c",
+      "scope": "Same-format copy; optional vertical reversal, including the in-place path."
+    }
+  ],
+  "derived_tga_behavior": {
+    "image_types_supported_by_original_loader": [
+      2,
+      10
+    ],
+    "true_color_depths_supported_by_original_loader": [
+      16,
+      24,
+      32
+    ],
+    "type2_32_engine_format": 13,
+    "source_format_equals_destination_format": true,
+    "vertical_flip_argument": "(descriptor bit 5 == 0)",
+    "observed_descriptors": [
+      "0x08",
+      "0x28"
+    ],
+    "channel_order": "not named; byte order is copied unchanged for format 13"
+  },
+  "implementation_scope": "Cache-observed type-2, 32-bit, no-ID/no-color-map TGA subset only; not built or tested."
+}

@@ -1,0 +1,5 @@
+# Shader attribute reflection and binding
+
+This checkpoint traces active GLSL attribute names through engine-code classification, per-material vertex maps, and GLES array setup. Start with [`ANALYSIS.md`](ANALYSIS.md). The narrow ASCII alias-classifier port is [`attribute_aliases.hpp`](attribute_aliases.hpp). The 11 hashed ARM ranges are in [`attributes-functions.json`](attributes-functions.json) and [`reference/attributes-functions.asm`](reference/attributes-functions.asm). The 45 exact name/code pairs and their string hashes are in [`shader-attribute-aliases.json`](shader-attribute-aliases.json).
+
+The recovered numeric values are the engine's `E_VERTEX_ATTRIBUTE` values used by these runtime paths. The [serialized-remap audit](serialized-remap-audit/ANALYSIS.md) records nested table layout and pair roles, plus a corpus census; the wider producer paths and full enum meaning remain unresolved. This package does not reconstruct game shader source selection or execute a GLES context. The helper has not been built or tested and is not a full renderer implementation.

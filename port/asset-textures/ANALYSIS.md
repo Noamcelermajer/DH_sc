@@ -1,0 +1,23 @@
+# PVR loading and pixel conversion trace
+
+## Evidence identity and address mapping
+
+This trace uses `lib/armeabi-v7a/libDungeonHunter2.so` from the supplied APK. APK SHA-256: `32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200`. ELF SHA-256: `36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80`.
+
+All ranges listed in `original-functions.json` and excerpted in [texture-load-path.asm](reference/texture-load-path.asm) were mapped through the executable `PT_LOAD` with `p_vaddr=0`, `p_offset=0`, and `p_filesz=0x955130`. Each range was checked to fit entirely within that segment; its file offset is calculated as `p_offset + (VA - p_vaddr)`. Hashes are over exactly the listed number of bytes at that file offset.
+
+## Recovered path
+
+1. `CImageLoaderPVR::loadTextureData` (`0x0060623c`, 184 bytes) parses the PVR header, constructs its loader data-info record, and calls `IImageLoader::loadData` at `0x006083d0`. The PVR data-info methods already listed in `original-functions.json` report the declared data length, pitch zero, little-endian true, and no flip.
+2. The common `IImageLoader::loadData` path (`0x006083d0`, 1,152 bytes) constructs an `ITextureDataLoading` helper and calls its `load` method at `0x00607a64` (`BL` at `0x006085b8`).
+3. `ITextureDataLoading::load` (`0x00607a64`, 696 bytes) iterates the texture levels/surfaces. For each item it invokes its read path and then calls `pixel_format::convert` at `0x005f95ac` (`BL` at `0x00607c18`). The existing PVR range checkpoint records face-outer/mip-inner order for the generic loop.
+4. `pixel_format::convert` (`0x005f95ac`, 17,128 bytes) compares the source and destination `E_PIXEL_FORMAT` values. When they match, its branch calls the engine's `pixel_format::copy` helper at `0x005ee40c`; the PVR data-info reports no row flip, so this path copies the encoded rows/blocks to supplied output memory. For other pairs, it follows the pixel-format table flags and can call `pixel_format::decompress` at `0x005fd894`.
+5. `pixel_format::decompress` (`0x005fd894`, 468 bytes) has two direct paths to the embedded `PVRTCDecompress` routine (`0x0069f768`, 2,172 bytes), at `0x005fd924` and `0x005fd9ec`. Engine formats 24/25 select PVRTC mode 1; formats 26/27 select mode 0. The recovered caller uses 8-by-4 compressed blocks for mode 1 and 4-by-4 blocks for mode 0, with 8 compressed bytes per block. It decodes to a 4-byte-per-pixel intermediate in engine format 14. When the requested destination is format 14 with the matching pitch, that buffer is the output; otherwise the routine converts from the intermediate into a width-times-height-times-four temporary and frees that temporary after conversion. The PVR header mapping recorded in the existing checkpoint maps low-byte type `0x18` to engine format 24 or 25 according to its alpha-variant flag, and type `0x19` to formats 26 or 27. Both PVR types therefore have a reachable CPU PVRTC-decompression path when the common converter selects this source-format route.
+
+This demonstrates both a byte-copy route for matching format IDs and a conditional CPU decompression route for engine formats 24–27. It does not establish that every PVR asset is decompressed: selection depends on the source/destination formats and the pixel-format table. The detailed block-addressing, twiddle, color-interpolation, and endpoint behavior of `PVRTCDecompress` is documented in [the PVRTC call-path note](pvrtc/ANALYSIS.md), with a bounded source port in [the decoder subdirectory](pvrtc/decoder/README.md). The PVR header/range parser itself still does not decode pixels.
+
+## Boundary and remaining unknowns
+
+The trace confirms that the PVR loader is not only a structural header reader: its shared data path can perform format conversion and PVRTC decompression. The same-format branch copies encoded rows/blocks into supplied output memory. The sibling [loader dispatch and GLES boundary note](loaders/ANALYSIS.md) traces the next stage from the texture CPU buffer through the GLES upload calls. The [texture lifetime note](lifetime/ANALYSIS.md) adds the manager's name cache, reference-count gate, CPU backing release, driver texture-unit clearing, and GL-name deletion paths. Other compressed-format conversions, each runtime asset's selected path, all gameplay-side texture holders, and complete platform/context shutdown ordering remain unresolved. The PVR header/range parser does not decode pixels; a bounded PVRTC source port is documented separately and is not runtime-validated.
+
+No tests or builds were added or run. Verification here was limited to APK/ELF identity, executable-segment mapping, symbol-range sizes, and exact range-byte hashes.

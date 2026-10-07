@@ -1,0 +1,24 @@
+# Quaternion-angle animation channels 6–9
+
+## Recovered route
+
+The supplied ELF is `lib/armeabi-v7a/libDungeonHunter2.so`, 15,938,284 bytes, SHA-256 `36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80`; the containing APK SHA-256 is `32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200`. Function addresses, ELF offsets, byte-range SHA-256 values, and vtable words are in [quaternion-angle-functions.json](reference/quaternion-angle-functions.json). The selected original ARM blocks are copied to [quaternion-angle-functions.asm](reference/quaternion-angle-functions.asm). Each selected function listing byte sequence was checked against the mapped ELF range; all 36 function ranges match.
+
+`CColladaDatabase::getAnimationTrackEx` at `0x00611ae0` reads the first channel code and dispatches codes `6`, `7`, `8`, and `9` through the same branch at `0x00611d78`. The track is `CApplyValueEx<quaternion, CSceneNodeQuaternionAngleMixin<T>>`. Its scalar template is `float` when there is no offset/scale record or its discriminator is `2`, `char` for discriminator `0`, and `short` for discriminator `1`; other discriminator values return no track. The exact factory range is already in the parent [animation binding manifest](../../reference/animation-binding-functions.json), and the focused copy is included in this module's excerpt.
+
+The three initialized `CVirtualEx<CApplyValueEx<quaternion, CSceneNodeQuaternionAngleMixin<T>>>` objects point to three distinct, APK-hashed track vtables. Their full-table slots `+0x30` and `+0x28` enter the direct-key and interpolated-key virtual wrappers. Those wrappers forward to the scalar-specific `CInterpreterQuaternionAngle` methods. The corresponding apply slots are `+0x50` and `+0x48`; they forward to `CApplyValueEx` direct and interpolated functions.
+
+For the ordinary direct path, each `CInterpreterQuaternionAngle` specialization calls its matching generic `CInterpreter<..., SUseDefaultValues<3,T>>` method. With an accessor default present, the generic interpreter reads the three default-axis lanes and the sampled angle, then the quaternion-angle wrapper calls `quaternion::fromAngleAxis(float, vector3d const&)` at `0x0060cdbc`. In the two-key path, the matching generic interpreter preserves the same default axis and interpolates the two sampled angle values as `first + fraction * (second - first)` before the same conversion. The float-template assembly shows the separate subtract, multiply, and add operations; char/short template paths also call their scalar conversion helpers before blending.
+
+The direct and interpolated `CApplyValueEx` functions pass the resulting 16-byte quaternion to the target object's vtable slot `+0x9c`. For the recovered `CSceneNode` primary vptr, the address point is vtable symbol `+0x1c`; object slot `+0x9c` therefore selects vtable symbol offset `+0xb8`, VA `0x00983678`. The APK word there targets `glitch::scene::ISceneNode::setRotation(glitch::core::quaternion const&)` at `0x005970f4`. The constructor/address-point evidence is in the neighboring [target-resolution manifest](../../targets/target-resolution-functions.json).
+
+The bounded source helper [quaternion_angle.hpp](quaternion_angle.hpp) mirrors only the already-decoded float input portion: direct angle-axis construction and the observed difference-form interpolation. It requires a valid three-float default axis and key values already converted to float. It delegates to the existing [engine-math angle-axis helper](../../../engine-math/math.hpp).
+
+## Boundaries and open cases
+
+- The factory groups channel codes `6`–`9`, but this trace does not recover how every serialized channel's semantic component is selected or prove that all four channel codes occur in runtime data.
+- The [false-default/index audit](index-audit/ANALYSIS.md) shows that the typed sampler writes only output word 0 when no default exists, while each quaternion-angle wrapper initializes only xyz and then reads word 3 as the angle. The code therefore feeds an uninitialized stack lane to `fromAngleAxis`. This path is absent from the recovered type-6-through-9 corpus, so runtime behavior is unobserved. The helper continues to require the three default-axis values to be supplied.
+- Char and short scalar conversion helpers are present in the ARM path, but this module's source helper does not port their BRES/offset/scale decoding or default-axis conversion.
+- The [false-default/index audit](index-audit/ANALYSIS.md) maps the quaternion-angle indexed overloads as relative rotations over key positions from output sampler 0; those extra integers are key positions, not sampler-array indices. Other indexed quaternion callers, blend/add operations, and the full serialized channel-to-sampler contract remain outside this bounded helper.
+
+No build or tests were run.

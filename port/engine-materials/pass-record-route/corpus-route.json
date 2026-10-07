@@ -1,0 +1,89 @@
+{
+  "source": {
+    "relative_to_recovered_files_data": "3d/animateddecors/castle/chandelier_castle.bdae",
+    "size_bytes": 31252,
+    "sha256": "84098bbb6d5daac56fcd84c4a0e1248924a068da29bc436ac1f859d73997c9e8",
+    "fixup_count": 1205,
+    "root_offset": "0x238c"
+  },
+  "table_bounds": {
+    "effect_count": 2,
+    "effect_base_offset": "0x3070",
+    "effect_record_stride": "0x74",
+    "material_count": 6,
+    "material_base_offset": "0x43f0",
+    "material_record_stride": "0x24"
+  },
+  "material": {
+    "index": 1,
+    "record_offset": "0x4414",
+    "record_bytes_sha256": "e511119e7a1a528ae6795c26a7179e8d48d2564ceb31efbb3176150b21ad1706",
+    "key": {
+      "target_offset": "0x1ce8",
+      "value": "Material__13",
+      "nul_terminated_bytes_sha256": "49446c5d67967c37a113d84c1f4fb679c383e320b17a2f13ba10a2c95d59c600"
+    },
+    "effect_name_field_plus_0c": {
+      "target_offset": "0x1cfc",
+      "value": "#ProfileCOMMON_Material__13-fx1302961533_chandelier_castle",
+      "nul_terminated_bytes_sha256": "5936c91b11ec785e22b8db01a5babe911215e8ea97059349aaff50e13141f385"
+    },
+    "raw_effect_index_at_plus_18": 0,
+    "resolved_effect_record_offset": "0x3070"
+  },
+  "effect": {
+    "index": 0,
+    "record_offset": "0x3070",
+    "record_bytes_sha256": "9510b19a77aaf76c990061ee24b7c77ce03fddee172808dd53291e9fd3a9eed8",
+    "key": {
+      "target_offset": "0x1714",
+      "value": "ProfileCOMMON_Material__13-fx1302961533_chandelier_castle",
+      "nul_terminated_bytes_sha256": "afd16a81f272a81dac807a263dd038e2e1015954de14b3a6bd66213b19c2d107"
+    },
+    "field_plus_20_raw_word": "0x00000004",
+    "field_plus_20_low_30_bit_iteration_bound": 4,
+    "field_plus_24_fixup_target": "0x3640",
+    "selected_table_row": {
+      "index": 0,
+      "offset": "0x3640",
+      "bytes_sha256": "a872fea8a5fdde83626f23b74170f46b348742f0407cbecabe368bb9441ea154",
+      "name": {
+        "target_offset": "0x1774",
+        "value": "default",
+        "nul_terminated_bytes_sha256": "bb9a03f3423c2a644548ee5be69db77f3e2537b93e0f79e6787c39435bacc386"
+      },
+      "word_plus_04_pass_count": 1,
+      "field_plus_08_fixup_target_pass_array": "0x3670"
+    },
+    "selected_pass": {
+      "index": 0,
+      "offset": "0x3670",
+      "stride": "0x74",
+      "bytes_sha256": "dc8484fa6925c7690870ab84173a5d2460d3a764a450d9a730edbd6f167d89a2",
+      "strings_at_offsets_read_by_SProfileGLES2Traits_createShader": {
+        "component_1": {
+          "target_offset": "0x183c",
+          "value": "ProfileCOMMON_emul_VS.glsl",
+          "nul_terminated_bytes_sha256": "e0463ff861853907a11e41f8f0673329ce53536489f446c7180ad22bd86dc84e"
+        },
+        "component_2": {
+          "target_offset": "0x1868",
+          "value": "#define TEXTURED\n",
+          "nul_terminated_bytes_sha256": "e54a4e06df4b5533a22d65c9e0abcf47d107dda8d9b8dcef6764ed68e795e92d"
+        },
+        "component_3": {
+          "target_offset": "0x1880",
+          "value": "ProfileCOMMON_emul_FS.glsl",
+          "nul_terminated_bytes_sha256": "b20e0ddefa68b71d30180f5a34dd239380dc25f65dd63c21266f2190d87a80e8"
+        },
+        "component_4": {
+          "target_offset": "0x18a0",
+          "value": "#define TEXTURED\n#define ADDITIVEBLEND\n ",
+          "nul_terminated_bytes_sha256": "43597be90c89ce9d8ab3cd084a72a48c902db331cac8c0b1d0d64918981d4ee9"
+        }
+      },
+      "word_plus_1c_raw_hex_unassigned": "0xff001111"
+    }
+  },
+  "interpretation_boundary": "BRES offsets, fixups, record bytes, and strings are direct corpus observations. Field roles come only from the hashed native consumers listed in native_ranges.json. The selected row is not evidence that this asset was rendered in a particular session."
+}

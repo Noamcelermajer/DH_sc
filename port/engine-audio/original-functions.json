@@ -1,0 +1,891 @@
+{
+  "schema": "dh2-engine-audio-provenance-v1",
+  "hash_basis": "SHA-256 covers exactly range_size bytes beginning at elf_va in the original ELF32 little-endian PT_LOAD file mapping. For all selected VAs below 0x955130, file offset equals elf_va. Copied listing byte rows were compared byte-for-byte with those APK ELF bytes.",
+  "source_apk": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "source_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "source_elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "source_elf_size": 15938284,
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "functions": [
+    {
+      "key": "vox_engine_initialize",
+      "symbol": "vox::VoxEngine::Initialize()",
+      "mangled": "_ZN3vox9VoxEngine10InitializeEv",
+      "elf_va": "0x00862d10",
+      "range_size": 352,
+      "elf_file_offset": 8793360,
+      "function_bytes_sha256": "5eea97fb7c6d0efc860651175dc9a0e4e465655577143d930735577079df6e68",
+      "source_assembly": "vox_VoxEngine-d5560c86480d-001.asm",
+      "source_listing_lines": [
+        2058,
+        2137
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "vox_internal_initialize",
+      "symbol": "vox::VoxEngineInternal::Initialize()",
+      "mangled": "_ZN3vox17VoxEngineInternal10InitializeEv",
+      "elf_va": "0x0086934c",
+      "range_size": 40,
+      "elf_file_offset": 8819532,
+      "function_bytes_sha256": "d92db80e280461ce46e295891914b6588818373e3c05f8eb2ae6025ace55e2a4",
+      "source_assembly": "vox_VoxEngineInternal-87edcdaf697c-001.asm",
+      "source_listing_lines": [
+        2791,
+        2800
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "create_driver_android",
+      "symbol": "vox::CreateDriver()",
+      "mangled": "_ZN3vox12CreateDriverEv",
+      "elf_va": "0x0088fac4",
+      "range_size": 32,
+      "elf_file_offset": 8977092,
+      "function_bytes_sha256": "bd4449abd412eb5366ea05b10947fdcbdae9c889c775820a0eb04e86cc0db270",
+      "source_assembly": "vox-b675469b940b-001.asm",
+      "source_listing_lines": [
+        123,
+        130
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "driver_android_init",
+      "symbol": "vox::DriverAndroid::Init(void*)",
+      "mangled": "_ZN3vox13DriverAndroid4InitEPv",
+      "elf_va": "0x0088f9a0",
+      "range_size": 76,
+      "elf_file_offset": 8976800,
+      "function_bytes_sha256": "1235af33f258d6e2f71768190881012063b6110d1bbb9c4c9586438828804d28",
+      "source_assembly": "vox_DriverAndroid-34a0f8ecbdd8-001.asm",
+      "source_listing_lines": [
+        749,
+        767
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "driver_android_init_audio_track",
+      "symbol": "vox::DriverAndroid::_InitAT(void*)",
+      "mangled": "_ZN3vox13DriverAndroid7_InitATEPv",
+      "elf_va": "0x0088f660",
+      "range_size": 832,
+      "elf_file_offset": 8975968,
+      "function_bytes_sha256": "c40bcc143dcbba6f8d202276c10d4a40b6c3a9fa86ea44e66b0a4e3f23d0b518",
+      "source_assembly": "vox_DriverAndroid-34a0f8ecbdd8-001.asm",
+      "source_listing_lines": [
+        555,
+        742
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "driver_android_audio_callback",
+      "symbol": "vox::DriverAndroid::DoCallbackAT(_jarray*&)",
+      "mangled": "_ZN3vox13DriverAndroid12DoCallbackATERP7_jarray",
+      "elf_va": "0x0088f14c",
+      "range_size": 476,
+      "elf_file_offset": 8974668,
+      "function_bytes_sha256": "6b657d01ba0d183f72b0cffc2278ede0a7c8920d85a45ac21f5df871f47929e9",
+      "source_assembly": "vox_DriverAndroid-34a0f8ecbdd8-001.asm",
+      "source_listing_lines": [
+        211,
+        324
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "driver_android_update_audio_thread",
+      "symbol": "vox::DriverAndroid::UpdateThreadedAT(void*)",
+      "mangled": "_ZN3vox13DriverAndroid16UpdateThreadedATEPv",
+      "elf_va": "0x0088f328",
+      "range_size": 628,
+      "elf_file_offset": 8975144,
+      "function_bytes_sha256": "e0654d26aaa865f7b296f54289445ef81175d6d2645b6775de0073d34ec1e9c6",
+      "source_assembly": "vox_DriverAndroid-34a0f8ecbdd8-001.asm",
+      "source_listing_lines": [
+        331,
+        481
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "driver_android_init_opensl_stub",
+      "symbol": "vox::DriverAndroid::_InitOSL(void*)",
+      "mangled": "_ZN3vox13DriverAndroid8_InitOSLEPv",
+      "elf_va": "0x0088ee5c",
+      "range_size": 4,
+      "elf_file_offset": 8973916,
+      "function_bytes_sha256": "379bec29dccd0a93c94826144d7ef6e42fab64ef195a3b8313a16926f66f388f",
+      "source_assembly": "vox_DriverAndroid-34a0f8ecbdd8-001.asm",
+      "source_listing_lines": [
+        10,
+        10
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "driver_android_shutdown_opensl_stub",
+      "symbol": "vox::DriverAndroid::_ShutdownOSL()",
+      "mangled": "_ZN3vox13DriverAndroid12_ShutdownOSLEv",
+      "elf_va": "0x0088ee60",
+      "range_size": 4,
+      "elf_file_offset": 8973920,
+      "function_bytes_sha256": "379bec29dccd0a93c94826144d7ef6e42fab64ef195a3b8313a16926f66f388f",
+      "source_assembly": "vox_DriverAndroid-34a0f8ecbdd8-001.asm",
+      "source_listing_lines": [
+        17,
+        17
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "driver_android_suspend_opensl_stub",
+      "symbol": "vox::DriverAndroid::_SuspendOSL()",
+      "mangled": "_ZN3vox13DriverAndroid11_SuspendOSLEv",
+      "elf_va": "0x0088ee64",
+      "range_size": 4,
+      "elf_file_offset": 8973924,
+      "function_bytes_sha256": "379bec29dccd0a93c94826144d7ef6e42fab64ef195a3b8313a16926f66f388f",
+      "source_assembly": "vox_DriverAndroid-34a0f8ecbdd8-001.asm",
+      "source_listing_lines": [
+        24,
+        24
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "driver_android_resume_opensl_stub",
+      "symbol": "vox::DriverAndroid::_ResumeOSL()",
+      "mangled": "_ZN3vox13DriverAndroid10_ResumeOSLEv",
+      "elf_va": "0x0088ee68",
+      "range_size": 4,
+      "elf_file_offset": 8973928,
+      "function_bytes_sha256": "379bec29dccd0a93c94826144d7ef6e42fab64ef195a3b8313a16926f66f388f",
+      "source_assembly": "vox_DriverAndroid-34a0f8ecbdd8-001.asm",
+      "source_listing_lines": [
+        31,
+        31
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "driver_android_update_opensl_stub",
+      "symbol": "vox::DriverAndroid::_UpdateOSL(float)",
+      "mangled": "_ZN3vox13DriverAndroid10_UpdateOSLEf",
+      "elf_va": "0x0088ee74",
+      "range_size": 4,
+      "elf_file_offset": 8973940,
+      "function_bytes_sha256": "379bec29dccd0a93c94826144d7ef6e42fab64ef195a3b8313a16926f66f388f",
+      "source_assembly": "vox_DriverAndroid-34a0f8ecbdd8-001.asm",
+      "source_listing_lines": [
+        52,
+        52
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "callback_mixer_fill_buffer",
+      "symbol": "vox::DriverCallbackInterface::_FillBuffer(short*, int)",
+      "mangled": "_ZN3vox23DriverCallbackInterface11_FillBufferEPsi",
+      "elf_va": "0x00890548",
+      "range_size": 344,
+      "elf_file_offset": 8979784,
+      "function_bytes_sha256": "364158e08c2be052a7273e3888037cc55065f80d6632e0293c333f49191ffa68",
+      "source_assembly": "vox_DriverCallbackInterface-c5e710cbfcc1-001.asm",
+      "source_listing_lines": [
+        168,
+        253
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "callback_source_get_work_data",
+      "symbol": "vox::DriverCallbackSourceInterface::GetWorkData(unsigned char*, int, int)",
+      "mangled": "_ZN3vox29DriverCallbackSourceInterface11GetWorkDataEPhii",
+      "elf_va": "0x008915c0",
+      "range_size": 672,
+      "elf_file_offset": 8984000,
+      "function_bytes_sha256": "1c4932db192e394de943b3921e0dfadc1326c4df4fce90fe3dec85aba7869c57",
+      "source_assembly": "vox_DriverCallbackSourceInterface-530254aaed21-001.asm",
+      "source_listing_lines": [
+        1304,
+        1471
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "callback_source_fill_stereo16",
+      "symbol": "vox::DriverCallbackSourceInterface::FillBufferStereo16(int*, int)",
+      "mangled": "_ZN3vox29DriverCallbackSourceInterface18FillBufferStereo16EPii",
+      "elf_va": "0x00891860",
+      "range_size": 800,
+      "elf_file_offset": 8984672,
+      "function_bytes_sha256": "c5f6abcf3d58f02d2925392cf7340de81f57d97cb5c146604329f73e1aa74c43",
+      "source_assembly": "vox_DriverCallbackSourceInterface-530254aaed21-001.asm",
+      "source_listing_lines": [
+        1478,
+        1677
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "callback_source_upload_data",
+      "symbol": "vox::DriverCallbackSourceInterface::UploadData(void*, int)",
+      "mangled": "_ZN3vox29DriverCallbackSourceInterface10UploadDataEPvi",
+      "elf_va": "0x00890d40",
+      "range_size": 204,
+      "elf_file_offset": 8981824,
+      "function_bytes_sha256": "20481fe8db6cd69ef1ad4aa090864247db5f1af4e3f7da1fe9834c7d8f915167",
+      "source_assembly": "vox_DriverCallbackSourceInterface-530254aaed21-001.asm",
+      "source_listing_lines": [
+        881,
+        931
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "callback_source_need_data",
+      "symbol": "vox::DriverCallbackSourceInterface::NeedData()",
+      "mangled": "_ZN3vox29DriverCallbackSourceInterface8NeedDataEv",
+      "elf_va": "0x00890e0c",
+      "range_size": 128,
+      "elf_file_offset": 8982028,
+      "function_bytes_sha256": "f02f8db79c9f380943fb6fbd6d3125fa35bbb3ec6499de8ea801c095293ab837",
+      "source_assembly": "vox_DriverCallbackSourceInterface-530254aaed21-001.asm",
+      "source_listing_lines": [
+        938,
+        969
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "callback_source_get_state",
+      "symbol": "vox::DriverCallbackSourceInterface::GetState()",
+      "mangled": "_ZN3vox29DriverCallbackSourceInterface8GetStateEv",
+      "elf_va": "0x00890e8c",
+      "range_size": 92,
+      "elf_file_offset": 8982156,
+      "function_bytes_sha256": "48fdc87f113646a1236a9b3d5c69117ab4ba8b5c7416b88371dc292bf6a2a775",
+      "source_assembly": "vox_DriverCallbackSourceInterface-530254aaed21-001.asm",
+      "source_listing_lines": [
+        976,
+        998
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "callback_source_reset",
+      "symbol": "vox::DriverCallbackSourceInterface::Reset()",
+      "mangled": "_ZN3vox29DriverCallbackSourceInterface5ResetEv",
+      "elf_va": "0x00890ee8",
+      "range_size": 96,
+      "elf_file_offset": 8982248,
+      "function_bytes_sha256": "174be986e6ff4575503d3666ec474bd6e4d02c47a3a8250bb64269b54fe07a9e",
+      "source_assembly": "vox_DriverCallbackSourceInterface-530254aaed21-001.asm",
+      "source_listing_lines": [
+        1005,
+        1028
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "callback_source_pause",
+      "symbol": "vox::DriverCallbackSourceInterface::Pause()",
+      "mangled": "_ZN3vox29DriverCallbackSourceInterface5PauseEv",
+      "elf_va": "0x00890f48",
+      "range_size": 60,
+      "elf_file_offset": 8982344,
+      "function_bytes_sha256": "7ffcfc86d6518194e669f467505e49be0bb430cfffe9b0a69678189e0742dbe8",
+      "source_assembly": "vox_DriverCallbackSourceInterface-530254aaed21-001.asm",
+      "source_listing_lines": [
+        1035,
+        1049
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "callback_source_stop",
+      "symbol": "vox::DriverCallbackSourceInterface::Stop()",
+      "mangled": "_ZN3vox29DriverCallbackSourceInterface4StopEv",
+      "elf_va": "0x00890f84",
+      "range_size": 76,
+      "elf_file_offset": 8982404,
+      "function_bytes_sha256": "8d7a992039ce5e625390250611d72d725832572a71bc08d2e32cc9280ca5c28a",
+      "source_assembly": "vox_DriverCallbackSourceInterface-530254aaed21-001.asm",
+      "source_listing_lines": [
+        1056,
+        1074
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "callback_source_play",
+      "symbol": "vox::DriverCallbackSourceInterface::Play()",
+      "mangled": "_ZN3vox29DriverCallbackSourceInterface4PlayEv",
+      "elf_va": "0x00890fd0",
+      "range_size": 48,
+      "elf_file_offset": 8982480,
+      "function_bytes_sha256": "b731dd9c0c010d2aab0c524a0e80d60bceb062fed061b8e14456c7bf1d605559",
+      "source_assembly": "vox_DriverCallbackSourceInterface-530254aaed21-001.asm",
+      "source_listing_lines": [
+        1081,
+        1092
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "engine_load_source_async",
+      "symbol": "vox::VoxEngineInternal::LoadDataSourceAsync(int, void*, int, void*, int, vox::VoxSourceLoadingFlags)",
+      "mangled": "_ZN3vox17VoxEngineInternal19LoadDataSourceAsyncEiPviS1_iNS_21VoxSourceLoadingFlagsE",
+      "elf_va": "0x0086aee8",
+      "range_size": 604,
+      "elf_file_offset": 8826600,
+      "function_bytes_sha256": "a5359574fb3f38e4155149ee30e9b8c8dd60c7d79ddbb9ec3e5bb58d52266247",
+      "source_assembly": "vox_VoxEngineInternal-87edcdaf697c-001.asm",
+      "source_listing_lines": [
+        3920,
+        4068
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "engine_load_source_sync",
+      "symbol": "vox::VoxEngineInternal::LoadDataSource(int, void*, int, void*, int)",
+      "mangled": "_ZN3vox17VoxEngineInternal14LoadDataSourceEiPviS1_i",
+      "elf_va": "0x0086b144",
+      "range_size": 732,
+      "elf_file_offset": 8827204,
+      "function_bytes_sha256": "b2a23c2be622b7c15acb48530c93798f75d7856f370231af3820a992f46c4da2",
+      "source_assembly": "vox_VoxEngineInternal-87edcdaf697c-001.asm",
+      "source_listing_lines": [
+        4075,
+        4255
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "factory_stream_c_file",
+      "symbol": "vox::StreamCFileFactory(void*)",
+      "mangled": "_ZN3vox18StreamCFileFactoryEPv",
+      "elf_va": "0x00888f98",
+      "range_size": 40,
+      "elf_file_offset": 8949656,
+      "function_bytes_sha256": "23b8894a833a2a8f4f4baa7a9a5a12024f2ede745f3554731660cedecadca0e2",
+      "source_assembly": "vox-b675469b940b-001.asm",
+      "source_listing_lines": [
+        91,
+        100
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "factory_stream_memory",
+      "symbol": "vox::StreamMemoryBufferFactory(void*)",
+      "mangled": "_ZN3vox25StreamMemoryBufferFactoryEPv",
+      "elf_va": "0x008891dc",
+      "range_size": 40,
+      "elf_file_offset": 8950236,
+      "function_bytes_sha256": "b69ee93a8e6e8875c19ce2a8f50770aa2398e82cbe02e5bf7326e5fc691c2e1f",
+      "source_assembly": "vox-b675469b940b-001.asm",
+      "source_listing_lines": [
+        107,
+        116
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "factory_decoder_raw",
+      "symbol": "vox::DecoderRawFactory(void*)",
+      "mangled": "_ZN3vox17DecoderRawFactoryEPv",
+      "elf_va": "0x00874e2c",
+      "range_size": 40,
+      "elf_file_offset": 8867372,
+      "function_bytes_sha256": "3de8864244fe4cd128260ddf64854156643da0cc04966e83d57d64408ffe48fd",
+      "source_assembly": "vox-b675469b940b-001.asm",
+      "source_listing_lines": [
+        54,
+        63
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "factory_decoder_wav",
+      "symbol": "vox::DecoderMSWavFactory(void*)",
+      "mangled": "_ZN3vox19DecoderMSWavFactoryEPv",
+      "elf_va": "0x008709b8",
+      "range_size": 32,
+      "elf_file_offset": 8849848,
+      "function_bytes_sha256": "2edb14acbd8a5d014b39b2cbc2ed760062d7bd80afce5c12427d8e1f0c9e80af",
+      "source_assembly": "vox-b675469b940b-001.asm",
+      "source_listing_lines": [
+        26,
+        33
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "factory_decoder_vorbis",
+      "symbol": "vox::DecoderStbVorbisFactory(void*)",
+      "mangled": "_ZN3vox23DecoderStbVorbisFactoryEPv",
+      "elf_va": "0x008753d8",
+      "range_size": 60,
+      "elf_file_offset": 8868824,
+      "function_bytes_sha256": "64bb953a2501eeb4e79eae85dbfa9ca3db6a327cf6d70a632c0f9eedd1adbc99",
+      "source_assembly": "vox-b675469b940b-001.asm",
+      "source_listing_lines": [
+        70,
+        84
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "factory_decoder_mpc8",
+      "symbol": "vox::DecoderMPC8Factory(void*)",
+      "mangled": "_ZN3vox18DecoderMPC8FactoryEPv",
+      "elf_va": "0x008704dc",
+      "range_size": 40,
+      "elf_file_offset": 8848604,
+      "function_bytes_sha256": "9123535df06df8d1a264e22eee810b10508c760f97d46a4a5f6c6cf9f1af4f29",
+      "source_assembly": "vox-b675469b940b-001.asm",
+      "source_listing_lines": [
+        10,
+        19
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "factory_decoder_native",
+      "symbol": "vox::DecoderNativeFactory(void*)",
+      "mangled": "_ZN3vox20DecoderNativeFactoryEPv",
+      "elf_va": "0x00872b78",
+      "range_size": 32,
+      "elf_file_offset": 8858488,
+      "function_bytes_sha256": "b48f880c946e5c8c1b2f5a161c6b58cc73bff6a25acdaf2f382dba6636fadab2",
+      "source_assembly": "vox-b675469b940b-001.asm",
+      "source_listing_lines": [
+        40,
+        47
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "raw_decode_ref",
+      "symbol": "vox::DecoderRawCursor::DecodeRef(void*&, int)",
+      "mangled": "_ZN3vox16DecoderRawCursor9DecodeRefERPvi",
+      "elf_va": "0x00874b84",
+      "range_size": 192,
+      "elf_file_offset": 8866692,
+      "function_bytes_sha256": "17b3fde5a4bf552631b3ebba7b9d525223b9a7fe06dbebad797521d43b039161",
+      "source_assembly": "vox_DecoderRawCursor-22c58dafbacf-001.asm",
+      "source_listing_lines": [
+        96,
+        143
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "raw_decode_copy",
+      "symbol": "vox::DecoderRawCursor::Decode(void*, int)",
+      "mangled": "_ZN3vox16DecoderRawCursor6DecodeEPvi",
+      "elf_va": "0x00874c44",
+      "range_size": 172,
+      "elf_file_offset": 8866884,
+      "function_bytes_sha256": "cc356e9f8ef1462499d2b2f30e3d4b449444a72585b04d29848a3a6df3b12423",
+      "source_assembly": "vox_DecoderRawCursor-22c58dafbacf-001.asm",
+      "source_listing_lines": [
+        150,
+        192
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "wav_parse_chunks",
+      "symbol": "vox::DecoderMSWavCursor::ParseFile()",
+      "mangled": "_ZN3vox18DecoderMSWavCursor9ParseFileEv",
+      "elf_va": "0x00870610",
+      "range_size": 936,
+      "elf_file_offset": 8848912,
+      "function_bytes_sha256": "6db3c5b5905b71fe4facb7f5b79991383eff03dc8af695610045993394faa29e",
+      "source_assembly": "vox_DecoderMSWavCursor-19d5e4f075fa-001.asm",
+      "source_listing_lines": [
+        71,
+        302
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "wav_constructor_codec_dispatch",
+      "symbol": "vox::DecoderMSWavCursor::DecoderMSWavCursor(vox::DecoderInterface*, vox::StreamCursorInterface*)",
+      "mangled": "_ZN3vox18DecoderMSWavCursorC2EPNS_16DecoderInterfaceEPNS_21StreamCursorInterfaceE",
+      "elf_va": "0x00870c98",
+      "range_size": 416,
+      "elf_file_offset": 8850584,
+      "function_bytes_sha256": "00b654dfabcdd09c40eb9bc8e17e7bbf0fd88e74882f2c8f48e54ee393d08964",
+      "source_assembly": "vox_DecoderMSWavCursor-19d5e4f075fa-001.asm",
+      "source_listing_lines": [
+        484,
+        585
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "wav_pcm_decode",
+      "symbol": "vox::VoxMSWavSubDecoderPCM::Decode(void*, int)",
+      "mangled": "_ZN3vox21VoxMSWavSubDecoderPCM6DecodeEPvi",
+      "elf_va": "0x00875fd0",
+      "range_size": 408,
+      "elf_file_offset": 8871888,
+      "function_bytes_sha256": "0727c1166d0e56a3c707c6233d53ad41dfcafb2572ca4191dc791fe9d3ab2aba",
+      "source_assembly": "vox_VoxMSWavSubDecoderPCM-8207487971b4-001.asm",
+      "source_listing_lines": [
+        147,
+        248
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "wav_ima_adpcm_decode",
+      "symbol": "vox::VoxMSWavSubDecoderIMAADPCM::Decode(void*, int)",
+      "mangled": "_ZN3vox26VoxMSWavSubDecoderIMAADPCM6DecodeEPvi",
+      "elf_va": "0x00875cc8",
+      "range_size": 348,
+      "elf_file_offset": 8871112,
+      "function_bytes_sha256": "96537cbbf4277fb43d19ab5972e0ccdaad0eed0e77c248e914e722b3586d5af8",
+      "source_assembly": "vox_VoxMSWavSubDecoderIMAADPCM-e5f4552dc727-001.asm",
+      "source_listing_lines": [
+        608,
+        694
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "wav_ima_adpcm_decode_block",
+      "symbol": "vox::VoxMSWavSubDecoderIMAADPCM::DecodeBlock(void*)",
+      "mangled": "_ZN3vox26VoxMSWavSubDecoderIMAADPCM11DecodeBlockEPv",
+      "elf_va": "0x008758d8",
+      "range_size": 860,
+      "elf_file_offset": 8870104,
+      "function_bytes_sha256": "81a2c965bda8ca625dbd7cdaa676a9482f54b6e5f2ad54328a6d3ea326773b9f",
+      "source_assembly": "vox_VoxMSWavSubDecoderIMAADPCM-e5f4552dc727-001.asm",
+      "source_listing_lines": [
+        345,
+        558
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "vorbis_cursor_constructor",
+      "symbol": "vox::DecoderStbVorbisCursor::DecoderStbVorbisCursor(vox::DecoderInterface*, vox::StreamCursorInterface*)",
+      "mangled": "_ZN3vox22DecoderStbVorbisCursorC1EPNS_16DecoderInterfaceEPNS_21StreamCursorInterfaceE",
+      "elf_va": "0x008751fc",
+      "range_size": 192,
+      "elf_file_offset": 8868348,
+      "function_bytes_sha256": "fcfc33fb3211872eae3e76ece4d37e1fe712a5fe1ac487d03f86136962147133",
+      "source_assembly": "vox_DecoderStbVorbisCursor-b8ac654d0639-001.asm",
+      "source_listing_lines": [
+        187,
+        234
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "vorbis_decode",
+      "symbol": "vox::DecoderStbVorbisCursor::Decode(void*, int)",
+      "mangled": "_ZN3vox22DecoderStbVorbisCursor6DecodeEPvi",
+      "elf_va": "0x00874fec",
+      "range_size": 216,
+      "elf_file_offset": 8867820,
+      "function_bytes_sha256": "92d98c1dddceb27eb5b889460de63ade6b19f0ce7ce673ae689e38176e8cf3c3",
+      "source_assembly": "vox_DecoderStbVorbisCursor-b8ac654d0639-001.asm",
+      "source_listing_lines": [
+        70,
+        123
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "mpc8_cursor_constructor",
+      "symbol": "vox::DecoderMPC8Cursor::DecoderMPC8Cursor(vox::DecoderInterface*, vox::StreamCursorInterface*)",
+      "mangled": "_ZN3vox17DecoderMPC8CursorC1EPNS_16DecoderInterfaceEPNS_21StreamCursorInterfaceE",
+      "elf_va": "0x0087018c",
+      "range_size": 400,
+      "elf_file_offset": 8847756,
+      "function_bytes_sha256": "a30b38956ca4ef13fcb50bb43b68dedeb3f5d9d1932d83f4ab3f00c0e4865aa1",
+      "source_assembly": "vox_DecoderMPC8Cursor-8c6baaf1ac2d-001.asm",
+      "source_listing_lines": [
+        328,
+        422
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "mpc8_decode",
+      "symbol": "vox::DecoderMPC8Cursor::Decode(void*, int)",
+      "mangled": "_ZN3vox17DecoderMPC8Cursor6DecodeEPvi",
+      "elf_va": "0x0086fe38",
+      "range_size": 620,
+      "elf_file_offset": 8846904,
+      "function_bytes_sha256": "54017a66c69ab95463c60c360ca89508884a7c921f09e7665358cc1539e190b3",
+      "source_assembly": "vox_DecoderMPC8Cursor-8c6baaf1ac2d-001.asm",
+      "source_listing_lines": [
+        102,
+        256
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "native_parse",
+      "symbol": "vox::DecoderNativeCursor::ParseFile()",
+      "mangled": "_ZN3vox19DecoderNativeCursor9ParseFileEv",
+      "elf_va": "0x008738bc",
+      "range_size": 2616,
+      "elf_file_offset": 8861884,
+      "function_bytes_sha256": "db37531fce39bdf9c8d2a98084ddb31360fb81ddae015d34a1474f5d9b294674",
+      "source_assembly": "vox_DecoderNativeCursor-d698012fa4b6-001.asm",
+      "source_listing_lines": [
+        577,
+        1230
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "native_subdecoder_decode",
+      "symbol": "vox::VoxNativeSubDecoder::Decode(void*, int)",
+      "mangled": "_ZN3vox19VoxNativeSubDecoder6DecodeEPvi",
+      "elf_va": "0x00885c1c",
+      "range_size": 296,
+      "elf_file_offset": 8936476,
+      "function_bytes_sha256": "a3de1e57db993e85cc4f46c895e5e1670be2a01c19c217ea6d8cbdbfa1cac579",
+      "source_assembly": "vox_VoxNativeSubDecoder-445e1a438638-001.asm",
+      "source_listing_lines": [
+        1779,
+        1852
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "c_file_stream_read",
+      "symbol": "vox::StreamCFileCursor::Read(unsigned char*, int)",
+      "mangled": "_ZN3vox17StreamCFileCursor4ReadEPhi",
+      "elf_va": "0x0088885c",
+      "range_size": 356,
+      "elf_file_offset": 8947804,
+      "function_bytes_sha256": "2ed63277aed897b755353380e1a3e6a6f6b8c73a7a3204987444d5e62f1b3650",
+      "source_assembly": "vox_StreamCFileCursor-01879ad8bca1-001.asm",
+      "source_listing_lines": [
+        67,
+        155
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "c_file_stream_seek",
+      "symbol": "vox::StreamCFileCursor::Seek(int, int)",
+      "mangled": "_ZN3vox17StreamCFileCursor4SeekEii",
+      "elf_va": "0x00888db8",
+      "range_size": 352,
+      "elf_file_offset": 8949176,
+      "function_bytes_sha256": "db26c75a7c6d6d72751d02454ac81911e9e2208512b52c32c43d29880622101b",
+      "source_assembly": "vox_StreamCFileCursor-01879ad8bca1-001.asm",
+      "source_listing_lines": [
+        270,
+        357
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "memory_stream_seek",
+      "symbol": "vox::StreamMemoryBufferCursor::Seek(int, int)",
+      "mangled": "_ZN3vox24StreamMemoryBufferCursor4SeekEii",
+      "elf_va": "0x008892f0",
+      "range_size": 164,
+      "elf_file_offset": 8950512,
+      "function_bytes_sha256": "e9537124522b6b3ba813705184389c69935c08f95b70b3022e190a26d40010f0",
+      "source_assembly": "vox_StreamMemoryBufferCursor-80c958f8cc33-001.asm",
+      "source_listing_lines": [
+        73,
+        113
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "memory_stream_read_ref",
+      "symbol": "vox::StreamMemoryBufferCursor::ReadRef(unsigned char*&, int)",
+      "mangled": "_ZN3vox24StreamMemoryBufferCursor7ReadRefERPhi",
+      "elf_va": "0x00889394",
+      "range_size": 116,
+      "elf_file_offset": 8950676,
+      "function_bytes_sha256": "15f5cb96498f8f90935e1fbfe02c993c7e5f7ece839f671e04b0917d3155cba7",
+      "source_assembly": "vox_StreamMemoryBufferCursor-80c958f8cc33-001.asm",
+      "source_listing_lines": [
+        120,
+        148
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "memory_stream_read",
+      "symbol": "vox::StreamMemoryBufferCursor::Read(unsigned char*, int)",
+      "mangled": "_ZN3vox24StreamMemoryBufferCursor4ReadEPhi",
+      "elf_va": "0x00889408",
+      "range_size": 136,
+      "elf_file_offset": 8950792,
+      "function_bytes_sha256": "2ab31eaf8a13e584557df188330d8fa7cf13c3783855c9a80b206c25490b8c10",
+      "source_assembly": "vox_StreamMemoryBufferCursor-80c958f8cc33-001.asm",
+      "source_listing_lines": [
+        155,
+        188
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "vox_engine_load_source_async_api",
+      "symbol": "vox::VoxEngine::LoadDataSourceAsync(int, void*, int, void*, int, vox::VoxSourceLoadingFlags)",
+      "mangled": "_ZN3vox9VoxEngine19LoadDataSourceAsyncEiPviS1_iNS_21VoxSourceLoadingFlagsE",
+      "elf_va": "0x00862760",
+      "range_size": 128,
+      "elf_file_offset": 8791904,
+      "function_bytes_sha256": "96acb800663c41d573f2a48b75bba878b4de774ae7b01e4222be4be5ec5758c7",
+      "source_assembly": "vox_VoxEngine-d5560c86480d-001.asm",
+      "source_listing_lines": [
+        1618,
+        1649
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "vox_engine_load_source_sync_api",
+      "symbol": "vox::VoxEngine::LoadDataSource(int, void*, int, void*, int)",
+      "mangled": "_ZN3vox9VoxEngine14LoadDataSourceEiPviS1_i",
+      "elf_va": "0x008627e0",
+      "range_size": 120,
+      "elf_file_offset": 8792032,
+      "function_bytes_sha256": "e612bb6951c83da9d19d27aa97a06af53ac2b235e015791d2f7213503cd9c7b2",
+      "source_assembly": "vox_VoxEngine-d5560c86480d-001.asm",
+      "source_listing_lines": [
+        1656,
+        1685
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "vox_engine_register_decoder_api",
+      "symbol": "vox::VoxEngine::RegisterDecoderType(vox::DecoderInterface* (*)(void*))",
+      "mangled": "_ZN3vox9VoxEngine19RegisterDecoderTypeEPFPNS_16DecoderInterfaceEPvE",
+      "elf_va": "0x00862898",
+      "range_size": 48,
+      "elf_file_offset": 8792216,
+      "function_bytes_sha256": "ae2140739e6cc14757f4032d48af80d07cdc112908c55b8434a3d83fe8aa88e8",
+      "source_assembly": "vox_VoxEngine-d5560c86480d-001.asm",
+      "source_listing_lines": [
+        1714,
+        1725
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "vox_engine_register_stream_api",
+      "symbol": "vox::VoxEngine::RegisterStreamType(vox::StreamInterface* (*)(void*))",
+      "mangled": "_ZN3vox9VoxEngine18RegisterStreamTypeEPFPNS_15StreamInterfaceEPvE",
+      "elf_va": "0x008628c8",
+      "range_size": 48,
+      "elf_file_offset": 8792264,
+      "function_bytes_sha256": "81c15da184be25e5e095e5d01a453b83541a2c34e5be2db7093714b009e5852d",
+      "source_assembly": "vox_VoxEngine-d5560c86480d-001.asm",
+      "source_listing_lines": [
+        1732,
+        1743
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "internal_register_stream_factory",
+      "symbol": "vox::VoxEngineInternal::RegisterStreamType(vox::StreamInterface* (*)(void*))",
+      "mangled": "_ZN3vox17VoxEngineInternal18RegisterStreamTypeEPFPNS_15StreamInterfaceEPvE",
+      "elf_va": "0x00862e70",
+      "range_size": 36,
+      "elf_file_offset": 8793712,
+      "function_bytes_sha256": "c4407fe73a7b7035cc0eb66a7d0c7e83edb1d7fe9b84f1483e621640cf16d1c2",
+      "source_assembly": "vox_VoxEngineInternal-87edcdaf697c-001.asm",
+      "source_listing_lines": [
+        10,
+        18
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "internal_register_decoder_factory",
+      "symbol": "vox::VoxEngineInternal::RegisterDecoderType(vox::DecoderInterface* (*)(void*))",
+      "mangled": "_ZN3vox17VoxEngineInternal19RegisterDecoderTypeEPFPNS_16DecoderInterfaceEPvE",
+      "elf_va": "0x00862e94",
+      "range_size": 40,
+      "elf_file_offset": 8793748,
+      "function_bytes_sha256": "94392e480cec1df9377f1d7e1ed930b0d94f2a9f32103e2212b55c32e27e8fec",
+      "source_assembly": "vox_VoxEngineInternal-87edcdaf697c-001.asm",
+      "source_listing_lines": [
+        25,
+        34
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    }
+  ]
+}

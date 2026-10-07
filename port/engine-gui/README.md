@@ -1,0 +1,5 @@
+# GUI runtime trace
+
+This package records a bounded `glitch::gui` runtime trace from the supplied APK's `libDungeonHunter2.so`: environment creation and retained dependencies, the embedded root element, clear/child ownership behavior, numeric input-event routing, and the root draw walk.
+
+The package is static analysis only. It adds no replacement GUI ABI or portable rendering implementation. Environment creation, hover routing, and drawing are documented in [ANALYSIS.md](ANALYSIS.md); the expanded mouse, focus, keyboard, hit-test, and parent-event trace is in [input/ANALYSIS.md](input/ANALYSIS.md). Selected generic widget, skin, bitmap-font, and 2D-to-GLES paths are in [rendering/ANALYSIS.md](rendering/ANALYSIS.md), with the separate TrueType face/glyph/cache path in [ttf/ANALYSIS.md](ttf/ANALYSIS.md). Hashes and PT_LOAD mappings are in the respective `*-functions.json` manifests. Selected disassembly and vtable slot evidence are copied under `reference/`, `input/reference/`, `rendering/reference/`, and `ttf/reference/`.

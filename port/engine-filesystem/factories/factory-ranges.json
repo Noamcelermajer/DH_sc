@@ -1,0 +1,267 @@
+{
+  "original_engine_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "apk_elf_entry": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "elf_format": "ELF32 little-endian ARM",
+  "pt_load_mapping": [
+    {
+      "segment_index": 1,
+      "p_offset": "0x00000000",
+      "p_vaddr": "0x00000000",
+      "p_filesz": 9785648,
+      "file_offset_formula": "p_offset + (elf_address - p_vaddr)"
+    },
+    {
+      "segment_index": 2,
+      "p_offset": "0x00955130",
+      "p_vaddr": "0x00956130",
+      "p_filesz": 300364,
+      "file_offset_formula": "p_offset + (elf_address - p_vaddr)"
+    }
+  ],
+  "verification_basis": "Each range is SHA-256 checked over its PT_LOAD-mapped ELF bytes; code listings are byte-for-byte emitted from the same mapped ranges. The extracted ELF and APK hashes match the known source identities.",
+  "port_module": "engine-filesystem/factories",
+  "functions": [
+    {
+      "elf_address": "0x0056c0f8",
+      "size": 284,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io11CFileSystem29createAndOpenFileFromArchivesEPKc",
+      "demangled": "glitch::io::CFileSystem::createAndOpenFileFromArchives(char const*)",
+      "range_sha256": "8b140d1dcd3d6e3a951be56bb55269e194975dcb77d0a0b2ffcba7bb10e765de",
+      "elf_file_offset": "0x0056c0f8",
+      "pt_load_segment_index": 1,
+      "scope": "archive vector order; first nonnull virtual result"
+    },
+    {
+      "elf_address": "0x0056ca70",
+      "size": 264,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io11CFileSystem17addPakFileArchiveEPKcbb",
+      "demangled": "glitch::io::CFileSystem::addPakFileArchive(char const*, bool, bool)",
+      "range_sha256": "2a4725a4db79ccdae2499b05481a971a7807b5cf2a5f04ddc2631512e081b64a",
+      "elf_file_offset": "0x0056ca70",
+      "pt_load_segment_index": 1,
+      "scope": "PAK input acquisition, allocation, construction, list registration and caller stream drop"
+    },
+    {
+      "elf_address": "0x0056d180",
+      "size": 320,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io11CFileSystem20addFolderFileArchiveEPKcbb",
+      "demangled": "glitch::io::CFileSystem::addFolderFileArchive(char const*, bool, bool)",
+      "range_sha256": "fe8247e6fd3f61eb4e75eaf51cefe719daf997bc2b1ee001474764064cbd3d8b",
+      "elf_file_offset": "0x0056d180",
+      "pt_load_segment_index": 1,
+      "scope": "folder duplicate-path scan and CUnZipReader registration"
+    },
+    {
+      "elf_address": "0x0056f6f4",
+      "size": 72,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io10CPakReaderD1Ev",
+      "demangled": "glitch::io::CPakReader::~CPakReader()",
+      "range_sha256": "3fda106835372b80828a467072c8558e46f9128a69c86c1180d441e81d7e20df",
+      "elf_file_offset": "0x0056f6f4",
+      "pt_load_segment_index": 1,
+      "scope": "drop stored input stream and destroy entry vector"
+    },
+    {
+      "elf_address": "0x0056f784",
+      "size": 80,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io10CPakReader8openFileEi",
+      "demangled": "glitch::io::CPakReader::openFile(int)",
+      "range_sha256": "277917c9d0b9a12f8c5ebc526a2b1bebed18b79a96eb8bc8e05106e8a7aa892c",
+      "elf_file_offset": "0x0056f784",
+      "pt_load_segment_index": 1,
+      "scope": "seek to indexed entry offset and create bounded read view"
+    },
+    {
+      "elf_address": "0x0056fcec",
+      "size": 344,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io10CPakReader15extractFilenameEPNS0_13SPakFileEntryE",
+      "demangled": "glitch::io::CPakReader::extractFilename(glitch::io::SPakFileEntry*)",
+      "range_sha256": "c51011808b5fc46297df12c62eea6245e62fc09bccd0ed4036a879a154304d54",
+      "elf_file_offset": "0x0056fcec",
+      "pt_load_segment_index": 1,
+      "scope": "entry-name normalization and index-key construction"
+    },
+    {
+      "elf_address": "0x0056fe44",
+      "size": 488,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io10CPakReader15scanLocalHeaderEv",
+      "demangled": "glitch::io::CPakReader::scanLocalHeader()",
+      "range_sha256": "ecdb9cff2f9f4bd7eb6c2c0ae5c96c6d333408c8ec05f1e19cb47a83257d9195",
+      "elf_file_offset": "0x0056fe44",
+      "pt_load_segment_index": 1,
+      "scope": "PA header check, index seek/read loop, 64-byte on-disk records"
+    },
+    {
+      "elf_address": "0x0057002c",
+      "size": 152,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io10CPakReaderC1EPNS0_9IReadFileEbb",
+      "demangled": "glitch::io::CPakReader::CPakReader(glitch::io::IReadFile*, bool, bool)",
+      "range_sha256": "26eae1a4c3775effe32b33116718ff04d8918f9a4421c4c634c684eaecaaee2e",
+      "elf_file_offset": "0x0057002c",
+      "pt_load_segment_index": 1,
+      "scope": "reference-count initialization, stream retain, scan and sort"
+    },
+    {
+      "elf_address": "0x005702b4",
+      "size": 260,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io10CPakReader8findFileEPKc",
+      "demangled": "glitch::io::CPakReader::findFile(char const*)",
+      "range_sha256": "5e17f4b0ad08096b75e3ee808c8d3da309413380f58682ce5d29686295eb1311",
+      "elf_file_offset": "0x005702b4",
+      "pt_load_segment_index": 1,
+      "scope": "query normalization and binary search"
+    },
+    {
+      "elf_address": "0x005703b8",
+      "size": 44,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io10CPakReader8openFileEPKc",
+      "demangled": "glitch::io::CPakReader::openFile(char const*)",
+      "range_sha256": "003c72811527f45e3b71071ad57f0c8e5dd88ebf01a06a05a26fdc3bb2cbed8e",
+      "elf_file_offset": "0x005703b8",
+      "pt_load_segment_index": 1,
+      "scope": "find then indexed open or null"
+    },
+    {
+      "elf_address": "0x005707b4",
+      "size": 84,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io14createReadFileEPKc",
+      "demangled": "glitch::io::createReadFile(char const*)",
+      "range_sha256": "b353d74ff93a4ce64acc549e7156a7930e6966b8f7e0fbf6a55590b994b0fdcb",
+      "elf_file_offset": "0x005707b4",
+      "pt_load_segment_index": 1,
+      "scope": "disk IReadFile factory and validation/drop path"
+    },
+    {
+      "elf_address": "0x00570874",
+      "size": 128,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io9CReadFileC2EPKcb",
+      "demangled": "glitch::io::CReadFile::CReadFile(char const*, bool)",
+      "range_sha256": "e205783a64c5315c1ece4fa0d6ca115cdac9aed236721b55837cc298c0a6cc06",
+      "elf_file_offset": "0x00570874",
+      "pt_load_segment_index": 1,
+      "scope": "set initial reference count and open the combined folder path"
+    },
+    {
+      "elf_address": "0x005773c8",
+      "size": 28,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io14CUnzipReadFileD1Ev",
+      "demangled": "glitch::io::CUnzipReadFile::~CUnzipReadFile()",
+      "range_sha256": "6b863d3e8873803ad0737a4fa143d5c581007819fc5427a2b6c5e7897753e24a",
+      "elf_file_offset": "0x005773c8",
+      "pt_load_segment_index": 1,
+      "scope": "folder result wrapper destruction"
+    },
+    {
+      "elf_address": "0x00577534",
+      "size": 84,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io12CUnZipReaderD1Ev",
+      "demangled": "glitch::io::CUnZipReader::~CUnZipReader()",
+      "range_sha256": "7f497f3d618896206c8004b96abb7534fc757e3724316394c52059ed65f9ba53",
+      "elf_file_offset": "0x00577534",
+      "pt_load_segment_index": 1,
+      "scope": "clear directory-prefix string and destroy base ZIP-reader storage"
+    },
+    {
+      "elf_address": "0x005779cc",
+      "size": 124,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io14CUnzipReadFileC1ERKSbIcSt11char_traitsIcENS_4core10SAllocatorIcLNS_6memory13E_MEMORY_HINTE0EEEEPKc",
+      "demangled": "glitch::io::CUnzipReadFile::CUnzipReadFile(std::basic_string<char, std::char_traits<char>, glitch::core::SAllocator<char, (glitch::memory::E_MEMORY_HINT)0>> const&, char const*)",
+      "range_sha256": "76304689f275b8db0c5504e4404bb9ebcb83aa8bf78700ca15b5bfd46edb7c3d",
+      "elf_file_offset": "0x005779cc",
+      "pt_load_segment_index": 1,
+      "scope": "folder result construction"
+    },
+    {
+      "elf_address": "0x00576dc0",
+      "size": 4,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io12CUnZipReader14buildDirectoryEv",
+      "demangled": "glitch::io::CUnZipReader::buildDirectory()",
+      "range_sha256": "379bec29dccd0a93c94826144d7ef6e42fab64ef195a3b8313a16926f66f388f",
+      "elf_file_offset": "0x00576dc0",
+      "pt_load_segment_index": 1,
+      "scope": "four-byte no-op stub; folder lookup is path-based"
+    },
+    {
+      "elf_address": "0x00576dc4",
+      "size": 44,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io12CUnZipReader8findFileEPKc",
+      "demangled": "glitch::io::CUnZipReader::findFile(char const*)",
+      "range_sha256": "fa7e0f46dd65e6dabec9bb401d6d76c2eecd8a9268364c052ad46ad9cd4ba1bd",
+      "elf_file_offset": "0x00576dc4",
+      "pt_load_segment_index": 1,
+      "scope": "open candidate then drop it on success; return 1 or -1"
+    },
+    {
+      "elf_address": "0x00577a48",
+      "size": 264,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io12CUnZipReader8openFileEPKc",
+      "demangled": "glitch::io::CUnZipReader::openFile(char const*)",
+      "range_sha256": "f537a787ec665d16d848c1c83625d5eae0cc8a5b34e9bf0cd4ac4aea9be3f9ea",
+      "elf_file_offset": "0x00577a48",
+      "pt_load_segment_index": 1,
+      "scope": "join registered folder prefix and member; allocate and validate CUnzipReadFile"
+    },
+    {
+      "elf_address": "0x005780fc",
+      "size": 184,
+      "mode": "arm",
+      "original_symbol": "_ZN6glitch2io12CUnZipReaderC1EPNS0_11IFileSystemEPKcbb",
+      "demangled": "glitch::io::CUnZipReader::CUnZipReader(glitch::io::IFileSystem*, char const*, bool, bool)",
+      "range_sha256": "c1e33530dcfe7695f9c6b916dafdab523b7425b36a6abfd478122afd2b2c614a",
+      "elf_file_offset": "0x005780fc",
+      "pt_load_segment_index": 1,
+      "scope": "initialize ZIP-reader base with null stream and store folder prefix"
+    }
+  ],
+  "data_ranges": [
+    {
+      "elf_address": "0x00974340",
+      "size": 116,
+      "mode": "data",
+      "original_symbol": "vtable for glitch::io::CFileSystem",
+      "range_sha256": "dfaaf3b3344a14fefb2ccea25782c59002276b0e95a1b2ffe4246086f4884005",
+      "elf_file_offset": "0x00973340",
+      "pt_load_segment_index": 2,
+      "scope": "Full CFileSystem table; address point is symbol+8; createAndOpenFile is slot +0x0c and addZip/addFolder/addPak are slots +0x18/+0x1c/+0x20."
+    },
+    {
+      "elf_address": "0x00974488",
+      "size": 24,
+      "mode": "data",
+      "original_symbol": "vtable for glitch::io::CPakReader",
+      "range_sha256": "7c6c5b668e4e736781be48da9a42dd55d9a52a1f5353dbfef82f201dc4e6165f",
+      "elf_file_offset": "0x00973488",
+      "pt_load_segment_index": 2,
+      "scope": "CPakReader address point is symbol+8; virtual slot +0x0c is openFile(char const*) at 0x005703b8."
+    },
+    {
+      "elf_address": "0x009747e0",
+      "size": 24,
+      "mode": "data",
+      "original_symbol": "vtable for glitch::io::CUnZipReader",
+      "range_sha256": "c3eb16b0bca88be750ba3b544a57a8d199d561ef49dc1acd11d7d16d7fe49556",
+      "elf_file_offset": "0x009737e0",
+      "pt_load_segment_index": 2,
+      "scope": "CUnZipReader address point is symbol+8; virtual slot +0x0c is openFile(char const*) at 0x00577a48."
+    }
+  ]
+}

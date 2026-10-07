@@ -1,0 +1,594 @@
+{
+  "schema_version": 1,
+  "title": "GLSL shader path provenance",
+  "hash_basis": "Every listed function excerpt, PLT stub, and extracted embedded GLSL byte string was compared byte-for-byte with the exact virtual-address range in lib/armeabi-v7a/libDungeonHunter2.so extracted from the identified APK. SHA-256 values hash those exact ranges; PT_LOAD mapping is recorded below.",
+  "apk": {
+    "path": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+    "sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200"
+  },
+  "elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "elf_class": 32,
+    "endianness": "little",
+    "machine": "EM_ARM",
+    "load_segments": [
+      {
+        "index": 0,
+        "file_offset": 0,
+        "virtual_address": 0,
+        "file_size": 9785648,
+        "memory_size": 9785648,
+        "flags": "5"
+      },
+      {
+        "index": 1,
+        "file_offset": 9785648,
+        "virtual_address": 9789744,
+        "file_size": 300364,
+        "memory_size": 914688,
+        "flags": "6"
+      }
+    ]
+  },
+  "functions": [
+    {
+      "symbol": "_ZNK6glitch5video15CGLSLShaderCode13compileShaderEv",
+      "demangled": "glitch::video::CGLSLShaderCode::compileShader() const",
+      "elf_va": "0x006df3c0",
+      "range_size": 416,
+      "elf_file_offset": 7205824,
+      "byte_sha256": "e25befd1ba0df38d5a28a316a77b78c821261c86d779e766f3607acf7be3ec3e",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        4,
+        110
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_CGLSLShaderCode-fab44f6a8cf4-001.asm",
+      "source_function_header_line": 19,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 416,
+      "index_range_size": 416
+    },
+    {
+      "symbol": "_ZN6glitch5video15CGLSLShaderCode12createShaderEiPPKci",
+      "demangled": "glitch::video::CGLSLShaderCode::createShader(int, char const**, int)",
+      "elf_va": "0x006df560",
+      "range_size": 68,
+      "elf_file_offset": 7206240,
+      "byte_sha256": "6cf7ea98ed920510e7394877e59a8127de72f30063da0a490f15610de6e584a6",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        111,
+        134
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_CGLSLShaderCode-fab44f6a8cf4-001.asm",
+      "source_function_header_line": 125,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 68,
+      "index_range_size": 68
+    },
+    {
+      "symbol": "_ZN6glitch5video15CGLSLShaderCodeC1EPKcPS3_NS0_13E_SHADER_TYPEEPNS0_21CProgrammableGLDriverINS0_18CGLSLShaderHandlerEEEb",
+      "demangled": "glitch::video::CGLSLShaderCode::CGLSLShaderCode(char const*, char const**, glitch::video::E_SHADER_TYPE, glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>*, bool)",
+      "elf_va": "0x006df738",
+      "range_size": 320,
+      "elf_file_offset": 7206712,
+      "byte_sha256": "ef95c09ebcd8fc44d05aa15f36c1f1bb326460de11700f7cbe0fda0d315f90c5",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        135,
+        221
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_CGLSLShaderCode-fab44f6a8cf4-001.asm",
+      "source_function_header_line": 283,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 320,
+      "index_range_size": 320
+    },
+    {
+      "symbol": "_ZN6glitch5video15CGLSLShaderCodeD1Ev",
+      "demangled": "glitch::video::CGLSLShaderCode::~CGLSLShaderCode()",
+      "elf_va": "0x006df5d4",
+      "range_size": 80,
+      "elf_file_offset": 7206356,
+      "byte_sha256": "ade8e61eb08470e737def51f89a80f423354cf27eb83d1924cc8410eb1c74471",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        222,
+        248
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_CGLSLShaderCode-fab44f6a8cf4-001.asm",
+      "source_function_header_line": 166,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 80,
+      "index_range_size": 80
+    },
+    {
+      "symbol": "_ZN6glitch5video11CGLSLShader13createProgramEv",
+      "demangled": "glitch::video::CGLSLShader::createProgram()",
+      "elf_va": "0x006de8e0",
+      "range_size": 24,
+      "elf_file_offset": 7203040,
+      "byte_sha256": "32321f8835fa9eed1a4432bb3c7f87f42a3c231c74ce957fe940f3dce33d9985",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        249,
+        261
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_CGLSLShader-48e3be0db2af-001.asm",
+      "source_function_header_line": 41,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 24,
+      "index_range_size": 24
+    },
+    {
+      "symbol": "_ZN6glitch5video11CGLSLShader11linkProgramEv",
+      "demangled": "glitch::video::CGLSLShader::linkProgram()",
+      "elf_va": "0x006de9f8",
+      "range_size": 1444,
+      "elf_file_offset": 7203320,
+      "byte_sha256": "28361c0616a3366900ac7a3dc1c7b5bc77857fb68bb4a3ec4e55529bc4d1d830",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        262,
+        628
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_CGLSLShader-48e3be0db2af-001.asm",
+      "source_function_header_line": 129,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 1444,
+      "index_range_size": 1444
+    },
+    {
+      "symbol": "_ZN6glitch5video11CGLSLShader14compileAndLinkEv",
+      "demangled": "glitch::video::CGLSLShader::compileAndLink()",
+      "elf_va": "0x006def9c",
+      "range_size": 36,
+      "elf_file_offset": 7204764,
+      "byte_sha256": "90825517229e1fa31333cd3c3118d5821269f13f214ff311dac54635d124e37e",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        629,
+        644
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_CGLSLShader-48e3be0db2af-001.asm",
+      "source_function_header_line": 495,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 36,
+      "index_range_size": 36
+    },
+    {
+      "symbol": "_ZN6glitch5video11CGLSLShaderC1EtPKcRKN5boost13intrusive_ptrINS0_15CGLSLShaderCodeEEES9_PNS0_21CProgrammableGLDriverINS0_18CGLSLShaderHandlerEEEb",
+      "demangled": "glitch::video::CGLSLShader::CGLSLShader(unsigned short, char const*, boost::intrusive_ptr<glitch::video::CGLSLShaderCode> const&, boost::intrusive_ptr<glitch::video::CGLSLShaderCode> const&, glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>*, bool)",
+      "elf_va": "0x006df1f0",
+      "range_size": 212,
+      "elf_file_offset": 7205360,
+      "byte_sha256": "d9403fed719868720939c4bc26773221147dccdc5a7988bdbe558a803131e4fe",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        645,
+        704
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_CGLSLShader-48e3be0db2af-001.asm",
+      "source_function_header_line": 684,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 212,
+      "index_range_size": 212
+    },
+    {
+      "symbol": "_ZN6glitch5video18CGLSLShaderManager20createShaderInternalEPKcN5boost13intrusive_ptrINS0_15CGLSLShaderCodeEEES7_",
+      "demangled": "glitch::video::CGLSLShaderManager::createShaderInternal(char const*, boost::intrusive_ptr<glitch::video::CGLSLShaderCode>, boost::intrusive_ptr<glitch::video::CGLSLShaderCode>)",
+      "elf_va": "0x006dfd8c",
+      "range_size": 220,
+      "elf_file_offset": 7208332,
+      "byte_sha256": "158e18e5bd6416fdd26818a1882be923b99e81e2baa170ca30ade647c2cd2ab5",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        705,
+        766
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_CGLSLShaderManager-621667ac5b7a-001.asm",
+      "source_function_header_line": 27,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 220,
+      "index_range_size": 220
+    },
+    {
+      "symbol": "_ZN6glitch5video18CGLSLShaderManager16createShaderCodeEPKcNS0_13E_SHADER_TYPEES3_PNS_2io9IReadFileE",
+      "demangled": "glitch::video::CGLSLShaderManager::createShaderCode(char const*, glitch::video::E_SHADER_TYPE, char const*, glitch::io::IReadFile*)",
+      "elf_va": "0x006dfe68",
+      "range_size": 844,
+      "elf_file_offset": 7208552,
+      "byte_sha256": "2fc259ff52a2b2287740bc95ff033c95f37c0b396b7a9998df6657576cdc813d",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        767,
+        976
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_CGLSLShaderManager-621667ac5b7a-001.asm",
+      "source_function_header_line": 88,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 844,
+      "index_range_size": 844
+    },
+    {
+      "symbol": "_ZN6glitch5video18CGLSLShaderManager12createShaderEPKcS3_S3_S3_S3_PNS_2io9IReadFileES6_",
+      "demangled": "glitch::video::CGLSLShaderManager::createShader(char const*, char const*, char const*, char const*, char const*, glitch::io::IReadFile*, glitch::io::IReadFile*)",
+      "elf_va": "0x006e01b4",
+      "range_size": 404,
+      "elf_file_offset": 7209396,
+      "byte_sha256": "b53f059259f1e2b65fd6dac8e81801c9d07a8b159bd13dfc949c6693b2163b66",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        977,
+        1084
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_CGLSLShaderManager-621667ac5b7a-001.asm",
+      "source_function_header_line": 297,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 404,
+      "index_range_size": 404
+    },
+    {
+      "symbol": "_ZN6glitch5video18CGLSLShaderManager12createShaderEPKcN5boost13intrusive_ptrINS0_15CGLSLShaderCodeEEES7_",
+      "demangled": "glitch::video::CGLSLShaderManager::createShader(char const*, boost::intrusive_ptr<glitch::video::CGLSLShaderCode>, boost::intrusive_ptr<glitch::video::CGLSLShaderCode>)",
+      "elf_va": "0x006e0348",
+      "range_size": 288,
+      "elf_file_offset": 7209800,
+      "byte_sha256": "5c272542d16b985d635a8026867c9d0174d04546c79d8085b4a519e3e7c08c1b",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        1085,
+        1163
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_CGLSLShaderManager-621667ac5b7a-001.asm",
+      "source_function_header_line": 404,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 288,
+      "index_range_size": 288
+    },
+    {
+      "symbol": "_ZN6glitch5video18ICodeShaderManager18makeShaderCodeNameEPKcjS3_jS3_jPj",
+      "demangled": "glitch::video::ICodeShaderManager::makeShaderCodeName(char const*, unsigned int, char const*, unsigned int, char const*, unsigned int, unsigned int*)",
+      "elf_va": "0x006e0b64",
+      "range_size": 172,
+      "elf_file_offset": 7211876,
+      "byte_sha256": "dc1ae7101343e01a8e5f14383a9d89e697a8c20e4afa4aafa4d2130730dbb80e",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        1164,
+        1213
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_ICodeShaderManager-07df1a801a95-001.asm",
+      "source_function_header_line": 85,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 172,
+      "index_range_size": 172
+    },
+    {
+      "symbol": "_ZN6glitch5video18ICodeShaderManager18makeShaderCodeNameEPKcS3_S3_Pj",
+      "demangled": "glitch::video::ICodeShaderManager::makeShaderCodeName(char const*, char const*, char const*, unsigned int*)",
+      "elf_va": "0x006e0c10",
+      "range_size": 148,
+      "elf_file_offset": 7212048,
+      "byte_sha256": "2fff2062e1c50d4b24d06161bd15c5d5356d4c3d138b4438ee5c32fae4bc7281",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        1214,
+        1257
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_ICodeShaderManager-07df1a801a95-001.asm",
+      "source_function_header_line": 134,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 148,
+      "index_range_size": 148
+    },
+    {
+      "symbol": "_ZNK6glitch5video18ICodeShaderManager13getShaderCodeEPKc",
+      "demangled": "glitch::video::ICodeShaderManager::getShaderCode(char const*) const",
+      "elf_va": "0x006e1b08",
+      "range_size": 128,
+      "elf_file_offset": 7215880,
+      "byte_sha256": "b02a54795e93a66a7cc8b938911762db7e6fcf8b93001c0fdc10f003b3380a1f",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        1258,
+        1296
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_ICodeShaderManager-07df1a801a95-001.asm",
+      "source_function_header_line": 292,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 128,
+      "index_range_size": 128
+    },
+    {
+      "symbol": "_ZN6glitch5video18ICodeShaderManager13addShaderCodeERKN5boost13intrusive_ptrINS0_11IShaderCodeEEE",
+      "demangled": "glitch::video::ICodeShaderManager::addShaderCode(boost::intrusive_ptr<glitch::video::IShaderCode> const&)",
+      "elf_va": "0x006e1d70",
+      "range_size": 24,
+      "elf_file_offset": 7216496,
+      "byte_sha256": "e601c4f31dd4060793b5926cdc2e71aaa462336091eccee700d2d3c09794e0e4",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        1297,
+        1309
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_ICodeShaderManager-07df1a801a95-001.asm",
+      "source_function_header_line": 330,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 24,
+      "index_range_size": 24
+    },
+    {
+      "symbol": "_ZN6glitch5video24CMaterialRendererManager25createPinkWireFrameShaderEv",
+      "demangled": "glitch::video::CMaterialRendererManager::createPinkWireFrameShader()",
+      "elf_va": "0x005d9bd8",
+      "range_size": 480,
+      "elf_file_offset": 6134744,
+      "byte_sha256": "6c351a204ba6ab3f108d143f811b6afd0c32e536902c1c410dfc295f396fde85",
+      "copied_excerpt": "reference/original-functions.asm",
+      "copied_excerpt_lines": [
+        1310,
+        1428
+      ],
+      "source_assembly": "../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_video_CMaterialRendererManager-a4bf824a9f3f-001.asm",
+      "source_function_header_line": 249,
+      "byte_comparison": "copied listing bytes exactly match original APK ELF range",
+      "index_declared_size": 480,
+      "index_range_size": 480
+    }
+  ],
+  "embedded_glsl_sources": [
+    {
+      "stage": "vertex",
+      "elf_va": "0x008e0b20",
+      "elf_file_offset": 9308960,
+      "length_bytes": 155,
+      "byte_sha256": "9ea25e749cd6fb993fb449767a89d1c2744677e0f300015c6dd49b7c4fb2c737",
+      "filename_literal_va": "0x008e0bc0",
+      "filename": "PinkBadShaderVS.glsl",
+      "path": "fallback/PinkBadShaderVS.glsl",
+      "evidence_function": "_ZN6glitch5video24CMaterialRendererManager25createPinkWireFrameShaderEv",
+      "byte_comparison": "file bytes exactly match the literal bytes passed by the recovered constructor path; trailing NUL excluded"
+    },
+    {
+      "stage": "fragment",
+      "elf_va": "0x008e0bd8",
+      "elf_file_offset": 9309144,
+      "length_bytes": 65,
+      "byte_sha256": "70e1801ff78201dabfd8a91c5a283374ef8c98f0d1cf5c6f6e03beb1c52e38d7",
+      "filename_literal_va": "0x008e0c20",
+      "filename": "PinkBadShaderFS.glsl",
+      "path": "fallback/PinkBadShaderFS.glsl",
+      "evidence_function": "_ZN6glitch5video24CMaterialRendererManager25createPinkWireFrameShaderEv",
+      "byte_comparison": "file bytes exactly match the literal bytes passed by the recovered constructor path; trailing NUL excluded"
+    }
+  ],
+  "imported_gl_functions": [
+    {
+      "name": "glGetShaderInfoLog",
+      "plt_va": "0x0030dfbc",
+      "range_size": 12,
+      "elf_file_offset": 3203004,
+      "byte_sha256": "41e5947c7e7ce026bf4f10dd7233de3f459f291086077e5588de1bdce51b4b90",
+      "call_sites": [
+        "0x006df4d4"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetShaderInfoLog@plt"
+    },
+    {
+      "name": "glGetProgramInfoLog",
+      "plt_va": "0x0030e214",
+      "range_size": 12,
+      "elf_file_offset": 3203604,
+      "byte_sha256": "52b797c8d3136a498069731019e494c7bb7ed217de06426fb9f498adedcea549",
+      "call_sites": [
+        "0x006df444",
+        "0x006dea60",
+        "0x006dead8"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetProgramInfoLog@plt"
+    },
+    {
+      "name": "glGetActiveAttrib",
+      "plt_va": "0x0030e01c",
+      "range_size": 12,
+      "elf_file_offset": 3203100,
+      "byte_sha256": "cde7b382263e63496528dfc688758b0fbcfcd737c41c5b22ebcdcdade8c40c3d",
+      "call_sites": [
+        "0x006dec00"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetActiveAttrib@plt"
+    },
+    {
+      "name": "glDeleteProgram",
+      "plt_va": "0x0030e0a0",
+      "range_size": 12,
+      "elf_file_offset": 3203232,
+      "byte_sha256": "cceaa686936ab2964c023f98294e49ee55f3878d46c8c09198c255aac5806fc6",
+      "call_sites": [
+        "0x006de90c",
+        "0x006df1e4",
+        "0x006df2ac"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glDeleteProgram@plt"
+    },
+    {
+      "name": "glGetUniformLocation",
+      "plt_va": "0x0030e13c",
+      "range_size": 12,
+      "elf_file_offset": 3203388,
+      "byte_sha256": "44888879a57c56dd0abb34a9a3bcb16c18bae8921686b162d2735423a0da8324",
+      "call_sites": [
+        "0x006ded84"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetUniformLocation@plt"
+    },
+    {
+      "name": "glGetProgramiv",
+      "plt_va": "0x0030e28c",
+      "range_size": 12,
+      "elf_file_offset": 3203724,
+      "byte_sha256": "3db4917e3b69d3ea11710b7317f799306f8fbd4e2ab332b4d8f8b42d546b65ad",
+      "call_sites": [
+        "0x006dea20",
+        "0x006dea40",
+        "0x006deab0",
+        "0x006deb00",
+        "0x006deb14",
+        "0x006deb30",
+        "0x006deb60"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetProgramiv@plt"
+    },
+    {
+      "name": "glCompileShader",
+      "plt_va": "0x0030e46c",
+      "range_size": 12,
+      "elf_file_offset": 3204204,
+      "byte_sha256": "697c116426ee3ce6b2cf283d56da92d12be283d9f7d573263cf5d8feb1111b3e",
+      "call_sites": [
+        "0x006df3e8"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glCompileShader@plt"
+    },
+    {
+      "name": "glCreateShader",
+      "plt_va": "0x0030e538",
+      "range_size": 12,
+      "elf_file_offset": 3204408,
+      "byte_sha256": "6a291cf621a9bbf37570d4980e08a89a89f037bae22c95b1d7d8174aaf96640f",
+      "call_sites": [
+        "0x006df584"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glCreateShader@plt"
+    },
+    {
+      "name": "glDeleteShader",
+      "plt_va": "0x0030e628",
+      "range_size": 12,
+      "elf_file_offset": 3204648,
+      "byte_sha256": "d6c2e0668d0be45f034c692950c12ae79c34b22d7ad98df219a0591955ba2835",
+      "call_sites": [
+        "0x006df608"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glDeleteShader@plt"
+    },
+    {
+      "name": "glGetActiveUniform",
+      "plt_va": "0x0030e6d0",
+      "range_size": 12,
+      "elf_file_offset": 3204816,
+      "byte_sha256": "6506da6956f6f13ed124eff516da4c67f3a7ab0d9d85a028277a5d9b4ab399bf",
+      "call_sites": [
+        "0x006ded0c"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetActiveUniform@plt"
+    },
+    {
+      "name": "glGetAttribLocation",
+      "plt_va": "0x0030e73c",
+      "range_size": 12,
+      "elf_file_offset": 3204924,
+      "byte_sha256": "333ba8aec01675bee34f1088c1fff4b6d8563abf4794b87ae12b1602431a7a61",
+      "call_sites": [
+        "0x006dec20"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetAttribLocation@plt"
+    },
+    {
+      "name": "glAttachShader",
+      "plt_va": "0x0030ebf8",
+      "range_size": 12,
+      "elf_file_offset": 3206136,
+      "byte_sha256": "ed882102c72d187d09a2a514f80dcd9e0e28728040e5face3e2771f91e63dfac",
+      "call_sites": [
+        "0x006df274",
+        "0x006df284"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glAttachShader@plt"
+    },
+    {
+      "name": "glCreateProgram",
+      "plt_va": "0x0030ec1c",
+      "range_size": 12,
+      "elf_file_offset": 3206172,
+      "byte_sha256": "7d354761688da2ec623345176b0e1d3143c19e9055b6d7f29faa5c1e550b8377",
+      "call_sites": [
+        "0x006de8e8"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glCreateProgram@plt"
+    },
+    {
+      "name": "glGetShaderiv",
+      "plt_va": "0x0030ed54",
+      "range_size": 12,
+      "elf_file_offset": 3206484,
+      "byte_sha256": "9db9ff836647179831e6c4df38ba73d7b9a709dda3a6796bcf521b6a0bf4f786",
+      "call_sites": [
+        "0x006df3fc",
+        "0x006df410",
+        "0x006df454",
+        "0x006df4e4"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glGetShaderiv@plt"
+    },
+    {
+      "name": "glLinkProgram",
+      "plt_va": "0x0030ed78",
+      "range_size": 12,
+      "elf_file_offset": 3206520,
+      "byte_sha256": "37edee1e059da44ccfecccf9d1a9bd6be0fd268d8c2c1b0cbaf2e6dc387ac42a",
+      "call_sites": [
+        "0x006dea08"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glLinkProgram@plt"
+    },
+    {
+      "name": "glShaderSource",
+      "plt_va": "0x0030ed84",
+      "range_size": 12,
+      "elf_file_offset": 3206532,
+      "byte_sha256": "330cc20a8ca59b504a6a23468629c719810ec06f943fac7f2d02b11a44f2fe00",
+      "call_sites": [
+        "0x006df5a0"
+      ],
+      "copied_excerpt": "reference/gl-imports.asm",
+      "byte_comparison": "reconstructed stub bytes exactly match original APK ELF range",
+      "objdump_label": "glShaderSource@plt"
+    }
+  ],
+  "recovery_root_relative_to_repo": "../recovery/dh2-reconstruction/recovered/native"
+}

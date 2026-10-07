@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "hash_basis": "Full native-range SHA-256 values cover exactly the mapped ELF bytes. The selected instruction excerpt is decoded with llvm-objdump and every emitted ARM word is compared with its file-backed ELF bytes.",
+  "apk": {
+    "member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200"
+  },
+  "elf": {
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80"
+  },
+  "native_ranges": [
+    {
+      "name": "CResFileManager::postLoadProcess",
+      "elf_va": "0x00658c90",
+      "range_size_bytes": 2064,
+      "elf_file_offset": 6655120,
+      "pt_load_program_header_index": 1,
+      "sha256": "e85095e743755648b2ca68999ddaca7fa1155ab335ee435b585ad2b7a1b13ad2"
+    },
+    {
+      "name": "CColladaFactory::createMaterial",
+      "elf_va": "0x006323d0",
+      "range_size_bytes": 244,
+      "elf_file_offset": 6497232,
+      "pt_load_program_header_index": 1,
+      "sha256": "dc3090658f74e4ff70633a92030aab1b739e3b836e2ed704418ca6af4aed0b51"
+    },
+    {
+      "name": "SEffectList::SEffectList(CColladaDatabase const&, SEffect*)",
+      "elf_va": "0x006319d8",
+      "range_size_bytes": 164,
+      "elf_file_offset": 6494680,
+      "pt_load_program_header_index": 1,
+      "sha256": "8d99a67a34b516ce7d46844975e5b8f69d3b62ecb3a05ee67a5bfb40314a7496"
+    },
+    {
+      "name": "CColladaFactory::createMaterialRenderer(effect overload)",
+      "elf_va": "0x00636c8c",
+      "range_size_bytes": 412,
+      "elf_file_offset": 6515852,
+      "pt_load_program_header_index": 1,
+      "sha256": "0fc31372fb7aa16156c948b5f666b3d54bc155f8dba05407c55f6d597fb8a8ee"
+    },
+    {
+      "name": "glitch::collada::createMaterialRenderer",
+      "elf_va": "0x00636b6c",
+      "range_size_bytes": 288,
+      "elf_file_offset": 6515564,
+      "pt_load_program_header_index": 1,
+      "sha256": "94555b9fdd3e893068015ce232a9120be2ec265f6ddf476aac184649a7e220ea"
+    },
+    {
+      "name": "createMaterialRendererForProfile<SProfileGLES2Traits>",
+      "elf_va": "0x006361e8",
+      "range_size_bytes": 2436,
+      "elf_file_offset": 6513128,
+      "pt_load_program_header_index": 1,
+      "sha256": "3669e766eac04456a732fe9a392b2df6d711dce39992a2e692ae7743fc339e3c"
+    },
+    {
+      "name": "SProfileGLES2Traits::createShader",
+      "elf_va": "0x00634b30",
+      "range_size_bytes": 308,
+      "elf_file_offset": 6507312,
+      "pt_load_program_header_index": 1,
+      "sha256": "b8c161d864042f4f4e74803848cb6f907b69b3ceeebae5aa25bb994cd1669684"
+    },
+    {
+      "name": "CGLSLShaderManager::createShader",
+      "elf_va": "0x006e01b4",
+      "range_size_bytes": 404,
+      "elf_file_offset": 7209396,
+      "pt_load_program_header_index": 1,
+      "sha256": "b53f059259f1e2b65fd6dac8e81801c9d07a8b159bd13dfc949c6693b2163b66"
+    },
+    {
+      "name": "CGLSLShaderManager::createShaderCode",
+      "elf_va": "0x006dfe68",
+      "range_size_bytes": 844,
+      "elf_file_offset": 7208552,
+      "pt_load_program_header_index": 1,
+      "sha256": "2fc259ff52a2b2287740bc95ff033c95f37c0b396b7a9998df6657576cdc813d"
+    }
+  ],
+  "focused_excerpt": {
+    "path": "reference/pass-table-route.asm",
+    "start_va": "0x0063631c",
+    "end_va_exclusive": "0x006364c8",
+    "byte_count": 428,
+    "sha256": "0fd7b1909adbc4e6a42c61420a7470c0ac611efa8c4047f7aef89cdd61559325",
+    "decoded_instruction_rows": 107,
+    "all_rows_byte_compared": true
+  }
+}

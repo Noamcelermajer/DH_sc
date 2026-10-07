@@ -1,0 +1,345 @@
+{
+  "schema_version": 1,
+  "source": {
+    "apk_path": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+    "apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+    "elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "elf_size": 15938284,
+    "elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "elf_class": "ELF32",
+    "machine": "ARM",
+    "endianness": "little"
+  },
+  "pt_load_segments": [
+    {
+      "ordinal": 0,
+      "phdr_index": 1,
+      "offset": 0,
+      "vaddr": 0,
+      "filesz": 9785648,
+      "memsz": 9785648
+    },
+    {
+      "ordinal": 1,
+      "phdr_index": 2,
+      "offset": 9785648,
+      "vaddr": 9789744,
+      "filesz": 300364,
+      "memsz": 914688
+    }
+  ],
+  "ranges": [
+    {
+      "id": "linkProgram",
+      "symbol": "CGLSLShader::linkProgram",
+      "source_listing": "glitch_video_CGLSLShader-48e3be0db2af-001.asm",
+      "va": "0x006de9f8",
+      "size": 1444,
+      "file_offset": 7203320,
+      "pt_load_ordinal": 0,
+      "sha256": "28361c0616a3366900ac7a3dc1c7b5bc77857fb68bb4a3ec4e55529bc4d1d830"
+    },
+    {
+      "id": "materialTextureSetter",
+      "symbol": "IMaterialParameters<CMaterial>::setParameter<intrusive_ptr<ITexture>>(unsigned short, unsigned int, intrusive_ptr<ITexture> const&)",
+      "source_listing": "boost_enable_if_glitch_video_detail_SIsValidSetMaterialParamaterOverload_boost_intrusive_p-5cb47434a3d8-001.asm",
+      "va": "0x005cd324",
+      "size": 200,
+      "file_offset": 6083364,
+      "pt_load_ordinal": 0,
+      "sha256": "1cdb1278f304ed9960a2935ad5df29cf2fdc210697598937783aba69cf4ec464"
+    },
+    {
+      "id": "commitParameterAux",
+      "symbol": "CProgrammableGLDriver<CGLSLShaderHandler>::commitCurrentMaterialParametersAux<CMaterial>",
+      "source_listing": "void_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHandler-30fe099cd72a-001.asm",
+      "va": "0x005b4da0",
+      "size": 1440,
+      "file_offset": 5983648,
+      "pt_load_ordinal": 0,
+      "sha256": "44379294a26e8941e0d0cbe2c25f3fb4fe968b65b5e1ab14aa5883e7d177217f"
+    },
+    {
+      "id": "getTextureParameter",
+      "symbol": "video::detail::getTextureParameter(unsigned char const*, SShaderParameterDef const&, IVideoDriver const*)",
+      "source_listing": "glitch_video_detail-b90f24d45438-001.asm",
+      "va": "0x005b2558",
+      "size": 140,
+      "file_offset": 5973336,
+      "pt_load_ordinal": 0,
+      "sha256": "46f153f05af45ff6a951693daef9dcd54c6202e16ecd05044442f20ea9b14b1a"
+    },
+    {
+      "id": "setTexture",
+      "symbol": "CCommonGLDriver<...>::setTexture(unsigned int, ITexture*, E_TEXTURE_TYPE)",
+      "source_listing": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-569492699322-001.asm",
+      "va": "0x005b26f0",
+      "size": 284,
+      "file_offset": 5973744,
+      "pt_load_ordinal": 0,
+      "sha256": "85d6ebbdbc330b962a3201f760cfa8e6ea8d3f350b99f8cf1e328055266dbd2f"
+    },
+    {
+      "id": "ITextureBind",
+      "symbol": "ITexture::bind(bool)",
+      "source_listing": "glitch_video_ITexture-82f18e316b5f-001.asm",
+      "va": "0x005fde9c",
+      "size": 140,
+      "file_offset": 6282908,
+      "pt_load_ordinal": 0,
+      "sha256": "f3215d62e8ed4e4ce31be910dbd61352c38aa2527d285fe2fe941ee031788013"
+    },
+    {
+      "id": "CTextureBindImpl",
+      "symbol": "CCommonGLDriver<...>::CTexture::bindImpl(bool)",
+      "source_listing": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-8ceb812a790b-001.asm",
+      "va": "0x005b5610",
+      "size": 768,
+      "file_offset": 5985808,
+      "pt_load_ordinal": 0,
+      "sha256": "f686f404818da4866c94754a34882a1c5eb299e3f03959314317261ea7b496f0"
+    },
+    {
+      "id": "getPlaceHolder",
+      "symbol": "CTextureManager::getPlaceHolder(E_PLACE_HOLDER, E_TEXTURE_TYPE)",
+      "source_listing": "glitch_video_CTextureManager-c45d9c0c5ad5-001.asm",
+      "va": "0x005ec1b8",
+      "size": 680,
+      "file_offset": 6209976,
+      "pt_load_ordinal": 0,
+      "sha256": "10747033434ebfd49ac4537143194a6ff2c37fc05f3bc74260ba51630dc796bc"
+    },
+    {
+      "id": "plt_glActiveTexture",
+      "symbol": "glActiveTexture@plt",
+      "source_listing": "llvm-objdump -d over APK ELF",
+      "va": "0x0030e1e4",
+      "size": 12,
+      "file_offset": 3203556,
+      "pt_load_ordinal": 0,
+      "sha256": "142a6d9f3c244902484feeaed69c377fec66a47b810716b2769c5a7e555cea7a",
+      "call_sites": [
+        "0x005b2750"
+      ]
+    },
+    {
+      "id": "plt_glBindTexture",
+      "symbol": "glBindTexture@plt",
+      "source_listing": "llvm-objdump -d over APK ELF",
+      "va": "0x0030e7c0",
+      "size": 12,
+      "file_offset": 3205056,
+      "pt_load_ordinal": 0,
+      "sha256": "3ed850d3c30e24623c9ae16f4e13b26b9016e397d4340c6e62e63852f0caa61f",
+      "call_sites": [
+        "0x005b569c",
+        "0x005b5794"
+      ]
+    },
+    {
+      "id": "plt_glUniform1i",
+      "symbol": "glUniform1i@plt",
+      "source_listing": "llvm-objdump -d over APK ELF",
+      "va": "0x0030e9f4",
+      "size": 12,
+      "file_offset": 3205620,
+      "pt_load_ordinal": 0,
+      "sha256": "3b0686d06edc6dbd90d465cba1df76afcd34ad1d7892842749624eb4e3f841f3",
+      "call_sites": [
+        "0x005b5058"
+      ]
+    }
+  ],
+  "excerpts": [
+    {
+      "id": "reflection_sampler_2d",
+      "description": "GL_SAMPLER_2D enum comparison and internal code 12",
+      "source_listing": "glitch_video_CGLSLShader-48e3be0db2af-001.asm",
+      "va": "0x006def24",
+      "size": 20,
+      "file_offset": 7204644,
+      "pt_load_ordinal": 0,
+      "sha256": "cbede8decedb9794e8b68538e44bcfa0e23194118f4c04cea0cc2f6b64b34011",
+      "listing_rows": 5,
+      "listing_byte_count": 20,
+      "listing_matches_elf": true
+    },
+    {
+      "id": "reflection_sampler_kinds",
+      "description": "Other reflected sampler enum branches, codes 13-15",
+      "source_listing": "glitch_video_CGLSLShader-48e3be0db2af-001.asm",
+      "va": "0x006def10",
+      "size": 88,
+      "file_offset": 7204624,
+      "pt_load_ordinal": 0,
+      "sha256": "4b3383119f9604f1cb63a2b3a64247d2ab8350a72643fab3229a206eae349710",
+      "listing_rows": 22,
+      "listing_byte_count": 88,
+      "listing_matches_elf": true
+    },
+    {
+      "id": "reflection_record_store",
+      "description": "Stores reflected type byte, array length and location into the 16-byte shader record",
+      "source_listing": "glitch_video_CGLSLShader-48e3be0db2af-001.asm",
+      "va": "0x006dedb4",
+      "size": 56,
+      "file_offset": 7204276,
+      "pt_load_ordinal": 0,
+      "sha256": "ba8b49b28e1c197cdc397e2204d9abe5c3698dd489aef7d0fc7510dfd537b918",
+      "listing_rows": 14,
+      "listing_byte_count": 56,
+      "listing_matches_elf": true
+    },
+    {
+      "id": "typed_material_texture_setter",
+      "description": "Typed CMaterial texture parameter setter, indexed array element path",
+      "source_listing": "boost_enable_if_glitch_video_detail_SIsValidSetMaterialParamaterOverload_boost_intrusive_p-5cb47434a3d8-001.asm",
+      "va": "0x005cd324",
+      "size": 196,
+      "file_offset": 6083364,
+      "pt_load_ordinal": 0,
+      "sha256": "6bdff79c5dc14c06dbf839108e7a933d17baaf474beaed1067dad0926bff73ba",
+      "listing_rows": 49,
+      "listing_byte_count": 196,
+      "listing_matches_elf": true
+    },
+    {
+      "id": "binding_record_selection",
+      "description": "Pass binding loop selects material and shader records and dispatches on material descriptor kind",
+      "source_listing": "void_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHandler-30fe099cd72a-001.asm",
+      "va": "0x005b4df8",
+      "size": 80,
+      "file_offset": 5983736,
+      "pt_load_ordinal": 0,
+      "sha256": "be2c2dda08291e0b80b8fb17e773a03bf79f6a128f1772e9d73a14a97b9024c3",
+      "listing_rows": 20,
+      "listing_byte_count": 80,
+      "listing_matches_elf": true
+    },
+    {
+      "id": "sampler_commit_loop",
+      "description": "Sampler kinds fetch texture, call setTexture, then glUniform1i(location, unit) per element",
+      "source_listing": "void_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHandler-30fe099cd72a-001.asm",
+      "va": "0x005b4ff0",
+      "size": 176,
+      "file_offset": 5984240,
+      "pt_load_ordinal": 0,
+      "sha256": "72e26dfcb44f86638d638571c9ff8e7e4648fb779fcdba3af46b75484d95205d",
+      "listing_rows": 44,
+      "listing_byte_count": 176,
+      "listing_matches_elf": true
+    },
+    {
+      "id": "texture_parameter_resolution",
+      "description": "Reads ITexture pointer from CMaterial data; may select a placeholder through texture manager",
+      "source_listing": "glitch_video_detail-b90f24d45438-001.asm",
+      "va": "0x005b2558",
+      "size": 140,
+      "file_offset": 5973336,
+      "pt_load_ordinal": 0,
+      "sha256": "46f153f05af45ff6a951693daef9dcd54c6202e16ecd05044442f20ea9b14b1a",
+      "listing_rows": 35,
+      "listing_byte_count": 140,
+      "listing_matches_elf": true
+    },
+    {
+      "id": "texture_unit_binding",
+      "description": "Tracks unit state, selects GL_TEXTURE0+unit, and calls ITexture::bind",
+      "source_listing": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-569492699322-001.asm",
+      "va": "0x005b26f0",
+      "size": 280,
+      "file_offset": 5973744,
+      "pt_load_ordinal": 0,
+      "sha256": "9148c023c42f11fd61b686bfb0c8ca157bc96216ed120ff0f53a01b4e4bb996b",
+      "listing_rows": 70,
+      "listing_byte_count": 280,
+      "listing_matches_elf": true
+    },
+    {
+      "id": "texture_virtual_bind",
+      "description": "ITexture::bind dispatches bind implementation through vtable slot +0xc",
+      "source_listing": "glitch_video_ITexture-82f18e316b5f-001.asm",
+      "va": "0x005fde9c",
+      "size": 140,
+      "file_offset": 6282908,
+      "pt_load_ordinal": 0,
+      "sha256": "f3215d62e8ed4e4ce31be910dbd61352c38aa2527d285fe2fe941ee031788013",
+      "listing_rows": 35,
+      "listing_byte_count": 140,
+      "listing_matches_elf": true
+    },
+    {
+      "id": "concrete_gl_bind",
+      "description": "Loads texture target and GL name; calls glBindTexture",
+      "source_listing": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-8ceb812a790b-001.asm",
+      "va": "0x005b5680",
+      "size": 36,
+      "file_offset": 5985920,
+      "pt_load_ordinal": 0,
+      "sha256": "cf0803e3ac03aa20ee22440c1d59bce89da1c4d3393661270352f05a1f6924e2",
+      "listing_rows": 9,
+      "listing_byte_count": 36,
+      "listing_matches_elf": true
+    },
+    {
+      "id": "placeholder_lookup_entry",
+      "description": "Named placeholder lookup and initial indexed access",
+      "source_listing": "glitch_video_CTextureManager-c45d9c0c5ad5-001.asm",
+      "va": "0x005ec1b8",
+      "size": 96,
+      "file_offset": 6209976,
+      "pt_load_ordinal": 0,
+      "sha256": "a3588aed3f22acd6ec7e4962277bfa0773eec1e2c53a49aa324457d4bbd13cac",
+      "listing_rows": 24,
+      "listing_byte_count": 96,
+      "listing_matches_elf": true
+    },
+    {
+      "id": "plt_glActiveTexture",
+      "description": "glActiveTexture@plt stub bytes; symbol label from llvm-objdump -d",
+      "source_listing": "llvm-objdump -d plus ELF bytes",
+      "va": "0x0030e1e4",
+      "size": 12,
+      "file_offset": 3203556,
+      "pt_load_ordinal": 0,
+      "sha256": "142a6d9f3c244902484feeaed69c377fec66a47b810716b2769c5a7e555cea7a",
+      "listing_rows": 3,
+      "listing_byte_count": 12,
+      "listing_matches_elf": true
+    },
+    {
+      "id": "plt_glBindTexture",
+      "description": "glBindTexture@plt stub bytes; symbol label from llvm-objdump -d",
+      "source_listing": "llvm-objdump -d plus ELF bytes",
+      "va": "0x0030e7c0",
+      "size": 12,
+      "file_offset": 3205056,
+      "pt_load_ordinal": 0,
+      "sha256": "3ed850d3c30e24623c9ae16f4e13b26b9016e397d4340c6e62e63852f0caa61f",
+      "listing_rows": 3,
+      "listing_byte_count": 12,
+      "listing_matches_elf": true
+    },
+    {
+      "id": "plt_glUniform1i",
+      "description": "glUniform1i@plt stub bytes; symbol label from llvm-objdump -d",
+      "source_listing": "llvm-objdump -d plus ELF bytes",
+      "va": "0x0030e9f4",
+      "size": 12,
+      "file_offset": 3205620,
+      "pt_load_ordinal": 0,
+      "sha256": "3b0686d06edc6dbd90d465cba1df76afcd34ad1d7892842749624eb4e3f841f3",
+      "listing_rows": 3,
+      "listing_byte_count": 12,
+      "listing_matches_elf": true
+    }
+  ],
+  "verification": {
+    "method": "Mapped each VA through the containing file-backed PT_LOAD (p_offset + VA - p_vaddr); SHA-256 computed over the mapped bytes. Every selected listing row byte sequence was concatenated and compared byte-for-byte with its mapped ELF excerpt.",
+    "functions_and_stubs_verified": 11,
+    "excerpts_verified": 14,
+    "assembly_excerpt_file": "reference/sampler-excerpts.asm",
+    "assembly_excerpt_sha256": "341438804a3d98500ff1912ad78f020620f71d65cd94eb5023e9d017f3122706",
+    "assembly_excerpt_line_count": 367
+  }
+}

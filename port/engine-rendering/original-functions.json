@@ -1,0 +1,417 @@
+{
+  "schema": "dh2-engine-rendering-provenance-v1",
+  "hash_basis": "SHA-256 computed over exactly range_size bytes sliced from the original ELF32 little-endian PT_LOAD file mapping at elf_va; byte-bearing rows in each copied assembly function block were compared byte-for-byte against those same original ELF bytes.",
+  "source_apk": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "source_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "source_elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "source_elf_size": 15938284,
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "functions": [
+    {
+      "key": "texture_manager_file_path",
+      "symbol": "glitch::video::CTextureManager::loadTextureFromFile(glitch::io::IReadFile*, char const*, glitch::video::E_PIXEL_FORMAT&, bool)",
+      "mangled": "_ZN6glitch5video15CTextureManager19loadTextureFromFileEPNS_2io9IReadFileEPKcRNS0_14E_PIXEL_FORMATEb",
+      "elf_va": "0x005ecba4",
+      "range_size": 912,
+      "elf_file_offset": 6212516,
+      "function_bytes_sha256": "a9e7f7832a24494797f70dfa627227c1794bacdc63f1934279211fcc50f55577",
+      "source_assembly": "glitch_video_CTextureManager-c45d9c0c5ad5-001.asm",
+      "source_listing_lines": [
+        3451,
+        3684
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "pvr_texture_data_bridge",
+      "symbol": "glitch::video::CImageLoaderPVR::loadTextureData(glitch::io::IReadFile*, boost::intrusive_ptr<glitch::video::ITexture> const&, glitch::video::STextureDesc const&) const",
+      "mangled": "_ZNK6glitch5video15CImageLoaderPVR15loadTextureDataEPNS_2io9IReadFileERKN5boost13intrusive_ptrINS0_8ITextureEEERKNS0_12STextureDescE",
+      "elf_va": "0x0060623c",
+      "range_size": 184,
+      "elf_file_offset": 6316604,
+      "function_bytes_sha256": "e5af95a50b3121c0c1f5c10031da8ddce27c5fc599e3ee142618a0a1eec87e76",
+      "source_assembly": "glitch_video_CImageLoaderPVR-700fdada5af7-001.asm",
+      "source_listing_lines": [
+        568,
+        618
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "generic_image_loader_data",
+      "symbol": "glitch::video::IImageLoader::loadData(glitch::io::IReadFile*, glitch::video::IImageLoader::IDataInfo const&, glitch::video::STextureDesc const&, boost::intrusive_ptr<glitch::video::ITexture> const&)",
+      "mangled": "_ZN6glitch5video12IImageLoader8loadDataEPNS_2io9IReadFileERKNS1_9IDataInfoERKNS0_12STextureDescERKN5boost13intrusive_ptrINS0_8ITextureEEE",
+      "elf_va": "0x006083d0",
+      "range_size": 1152,
+      "elf_file_offset": 6325200,
+      "function_bytes_sha256": "b859a6cdf1dce67aabf17db5f04e4bd62a7c02c458872f6bfdc13db2930867a3",
+      "source_assembly": "glitch_video_IImageLoader-c3d38a88a2be-001.asm",
+      "source_listing_lines": [
+        47,
+        334
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "driver_texture_factory",
+      "symbol": "glitch::video::IVideoDriver::createTexture(char const*, glitch::video::STextureDesc const&)",
+      "mangled": "_ZN6glitch5video12IVideoDriver13createTextureEPKcRKNS0_12STextureDescE",
+      "elf_va": "0x005aa5f8",
+      "range_size": 680,
+      "elf_file_offset": 5940728,
+      "function_bytes_sha256": "f851d23b2102d8a619fc358a889fefe0ad601cf10fb88af71265921ae1748160",
+      "source_assembly": "glitch_video_IVideoDriver-128257112762-001.asm",
+      "source_listing_lines": [
+        1340,
+        1510
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "common_gl_texture_factory",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::createTextureImpl(char const*, glitch::video::STextureDesc const&)",
+      "mangled": "_ZN6glitch5video15CCommonGLDriverINS0_21CProgrammableGLDriverINS0_18CGLSLShaderHandlerEEENS0_6detail33CProgrammableGLFunctionPointerSetEE17createTextureImplEPKcRKNS0_12STextureDescE",
+      "elf_va": "0x005b5f6c",
+      "range_size": 1032,
+      "elf_file_offset": 5988204,
+      "function_bytes_sha256": "34ada247cda6dda00ce33a20d1d0df65b708a6c2d404fb11d24b41b40983321a",
+      "source_assembly": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-569492699322-001.asm",
+      "source_listing_lines": [
+        3644,
+        3895
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "texture_bind_lazy_gl_name",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::CTexture::bindImpl(bool)",
+      "mangled": "_ZN6glitch5video15CCommonGLDriverINS0_21CProgrammableGLDriverINS0_18CGLSLShaderHandlerEEENS0_6detail33CProgrammableGLFunctionPointerSetEE8CTexture8bindImplEb",
+      "elf_va": "0x005b5610",
+      "range_size": 768,
+      "elf_file_offset": 5985808,
+      "function_bytes_sha256": "f686f404818da4866c94754a34882a1c5eb299e3f03959314317261ea7b496f0",
+      "source_assembly": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-8ceb812a790b-001.asm",
+      "source_listing_lines": [
+        682,
+        876
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "texture_upload_dirty_mips",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::CTexture::updateData(bool) const",
+      "mangled": "_ZNK6glitch5video15CCommonGLDriverINS0_21CProgrammableGLDriverINS0_18CGLSLShaderHandlerEEENS0_6detail33CProgrammableGLFunctionPointerSetEE8CTexture10updateDataEb",
+      "elf_va": "0x005afff0",
+      "range_size": 1116,
+      "elf_file_offset": 5963760,
+      "function_bytes_sha256": "9fb09ee2dfd6c052dc1e900ea57542c33b89ed0404e9a4a3ce6642571a500f00",
+      "source_assembly": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-8ceb812a790b-001.asm",
+      "source_listing_lines": [
+        177,
+        459
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "texture_unbind_and_delete_gl_name",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::CTexture::unbindImpl()",
+      "mangled": "_ZN6glitch5video15CCommonGLDriverINS0_21CProgrammableGLDriverINS0_18CGLSLShaderHandlerEEENS0_6detail33CProgrammableGLFunctionPointerSetEE8CTexture10unbindImplEv",
+      "elf_va": "0x005b28dc",
+      "range_size": 340,
+      "elf_file_offset": 5974236,
+      "function_bytes_sha256": "b99488f7c3180c602928e577f73c0059cbfbc288f254c4db61706b3753875420",
+      "source_assembly": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-8ceb812a790b-001.asm",
+      "source_listing_lines": [
+        544,
+        634
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "texture_destructor",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::CTexture::~CTexture()",
+      "mangled": "_ZN6glitch5video15CCommonGLDriverINS0_21CProgrammableGLDriverINS0_18CGLSLShaderHandlerEEENS0_6detail33CProgrammableGLFunctionPointerSetEE8CTextureD1Ev",
+      "elf_va": "0x005b2a30",
+      "range_size": 116,
+      "elf_file_offset": 5974576,
+      "function_bytes_sha256": "3a65be36d24ca668b798f550ce2e52f9c18166f7ab32c6d0e01362c63bc22aa9",
+      "source_assembly": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-8ceb812a790b-001.asm",
+      "source_listing_lines": [
+        635,
+        668
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "effect_to_renderer_factory",
+      "symbol": "glitch::collada::CColladaFactory::createMaterialRenderer(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, glitch::collada::SEffect*, char const*, char const*, glitch::collada::CRootSceneNode*)",
+      "mangled": "_ZN6glitch7collada15CColladaFactory22createMaterialRendererERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverEPNS0_7SEffectEPKcSB_PNS0_14CRootSceneNodeE",
+      "elf_va": "0x00636c8c",
+      "range_size": 412,
+      "elf_file_offset": 6515852,
+      "function_bytes_sha256": "0fc31372fb7aa16156c948b5f666b3d54bc155f8dba05407c55f6d597fb8a8ee",
+      "source_assembly": "glitch_collada_CColladaFactory-db06bc565b1a-001.asm",
+      "source_listing_lines": [
+        1824,
+        1929
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "renderer_profile_dispatch",
+      "symbol": "glitch::collada::createMaterialRenderer(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, char const*, glitch::collada::SEffectList const&, glitch::collada::CRootSceneNode*)",
+      "mangled": "_ZN6glitch7collada22createMaterialRendererERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverEPKcRKNS0_11SEffectListEPNS0_14CRootSceneNodeE",
+      "elf_va": "0x00636b6c",
+      "range_size": 288,
+      "elf_file_offset": 6515564,
+      "function_bytes_sha256": "94555b9fdd3e893068015ce232a9120be2ec265f6ddf476aac184649a7e220ea",
+      "source_assembly": "glitch_collada-f9638587a0e2-001.asm",
+      "source_listing_lines": [
+        519,
+        596
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "gles2_profile_renderer",
+      "symbol": "boost::intrusive_ptr<glitch::video::CMaterialRenderer> glitch::collada::createMaterialRendererForProfile<glitch::collada::SProfileGLES2Traits>(glitch::collada::CColladaDatabase const&, glitch::video::IVideoDriver*, char const*, glitch::collada::SEffectList const&, glitch::collada::CRootSceneNode*)",
+      "mangled": "_ZN6glitch7collada32createMaterialRendererForProfileINS0_19SProfileGLES2TraitsEEEN5boost13intrusive_ptrINS_5video17CMaterialRendererEEERKNS0_16CColladaDatabaseEPNS5_12IVideoDriverEPKcRKNS0_11SEffectListEPNS0_14CRootSceneNodeE",
+      "elf_va": "0x006361e8",
+      "range_size": 2436,
+      "elf_file_offset": 6513128,
+      "function_bytes_sha256": "3669e766eac04456a732fe9a392b2df6d711dce39992a2e692ae7743fc339e3c",
+      "source_assembly": "boost_intrusive_ptr_glitch_video_CMaterialRenderer_glitch_collada-103a5e550bf3-001.asm",
+      "source_listing_lines": [
+        664,
+        1275
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "set_material",
+      "symbol": "glitch::video::IVideoDriver::setMaterial(boost::intrusive_ptr<glitch::video::CMaterial> const&, unsigned char, boost::intrusive_ptr<glitch::video::CVertexAttributeMap> const*)",
+      "mangled": "_ZN6glitch5video12IVideoDriver11setMaterialERKN5boost13intrusive_ptrINS0_9CMaterialEEEhPKNS3_INS0_19CVertexAttributeMapEEE",
+      "elf_va": "0x005ad368",
+      "range_size": 588,
+      "elf_file_offset": 5952360,
+      "function_bytes_sha256": "34c84934214549d3739fb6de51f5502828b0de0bfce586c053e3c9814a14702a",
+      "source_assembly": "glitch_video_IVideoDriver-128257112762-001.asm",
+      "source_listing_lines": [
+        3768,
+        3920
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "set_material_internal",
+      "symbol": "glitch::video::IVideoDriver::setMaterialInternal(glitch::video::CMaterial*, unsigned char, boost::intrusive_ptr<glitch::video::CVertexAttributeMap> const*)",
+      "mangled": "_ZN6glitch5video12IVideoDriver19setMaterialInternalEPNS0_9CMaterialEhPKN5boost13intrusive_ptrINS0_19CVertexAttributeMapEEE",
+      "elf_va": "0x005aa51c",
+      "range_size": 220,
+      "elf_file_offset": 5940508,
+      "function_bytes_sha256": "61cffa8bfcae6766058f463220ebcc872577b9a6fd0c54a0649e2467eac0ecf3",
+      "source_assembly": "glitch_video_IVideoDriver-128257112762-001.asm",
+      "source_listing_lines": [
+        1279,
+        1339
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "commit_material_renderer",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::commitMaterialRenderer(glitch::video::CMaterialRenderer*)",
+      "mangled": "_ZN6glitch5video15CCommonGLDriverINS0_21CProgrammableGLDriverINS0_18CGLSLShaderHandlerEEENS0_6detail33CProgrammableGLFunctionPointerSetEE22commitMaterialRendererEPNS0_17CMaterialRendererE",
+      "elf_va": "0x005b739c",
+      "range_size": 68,
+      "elf_file_offset": 5993372,
+      "function_bytes_sha256": "579322fe203168fb545b4d31ca48ddb5c983188622beafc2b828d9a2ef8dce63",
+      "source_assembly": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-569492699322-001.asm",
+      "source_listing_lines": [
+        4382,
+        4404
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "commit_current_material_impl",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::commitCurrentMaterialImpl(unsigned char)",
+      "mangled": "_ZN6glitch5video15CCommonGLDriverINS0_21CProgrammableGLDriverINS0_18CGLSLShaderHandlerEEENS0_6detail33CProgrammableGLFunctionPointerSetEE25commitCurrentMaterialImplEh",
+      "elf_va": "0x005b74e8",
+      "range_size": 172,
+      "elf_file_offset": 5993704,
+      "function_bytes_sha256": "48645ce24c2397c05e3c19b90479ac583f1446cd90b971d91beb58180f3e03f9",
+      "source_assembly": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-569492699322-001.asm",
+      "source_listing_lines": [
+        4405,
+        4453
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "submit_mesh_buffer",
+      "symbol": "glitch::video::IVideoDriver::drawMeshBuffer(boost::intrusive_ptr<glitch::scene::CMeshBuffer const> const&)",
+      "mangled": "_ZN6glitch5video12IVideoDriver14drawMeshBufferERKN5boost13intrusive_ptrIKNS_5scene11CMeshBufferEEE",
+      "elf_va": "0x0035ebd0",
+      "range_size": 96,
+      "elf_file_offset": 3533776,
+      "function_bytes_sha256": "a3231d4e55f82fef057c82464d5b2193f4b82ed21bb1dd76b2ede928531731ec",
+      "source_assembly": "glitch_video_IVideoDriver-128257112762-001.asm",
+      "source_listing_lines": [
+        43,
+        72
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "draw_mesh_buffer_virtual",
+      "symbol": "glitch::video::IVideoDriver::draw(boost::intrusive_ptr<glitch::video::CVertexStreams const> const&, glitch::video::CPrimitiveStream const&, glitch::video::CDriverBinding**, boost::intrusive_ptr<glitch::scene::CMeshBuffer const> const&)",
+      "mangled": "_ZN6glitch5video12IVideoDriver4drawERKN5boost13intrusive_ptrIKNS0_14CVertexStreamsEEERKNS0_16CPrimitiveStreamEPPNS0_14CDriverBindingERKNS3_IKNS_5scene11CMeshBufferEEE",
+      "elf_va": "0x005adfa8",
+      "range_size": 56,
+      "elf_file_offset": 5955496,
+      "function_bytes_sha256": "8759f549895af320ff70cdb172a6bfd4a847471f05422d6ce48fee0240d3c816",
+      "source_assembly": "glitch_video_IVideoDriver-128257112762-001.asm",
+      "source_listing_lines": [
+        4581,
+        4600
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "gles2_driver_draw_impl",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::drawImpl(boost::intrusive_ptr<glitch::video::CVertexStreams const> const&, glitch::video::CPrimitiveStream const&, glitch::video::CDriverBinding**)",
+      "mangled": "_ZN6glitch5video15CCommonGLDriverINS0_21CProgrammableGLDriverINS0_18CGLSLShaderHandlerEEENS0_6detail33CProgrammableGLFunctionPointerSetEE8drawImplERKN5boost13intrusive_ptrIKNS0_14CVertexStreamsEEERKNS0_16CPrimitiveStreamEPPNS0_14CDriverBindingE",
+      "elf_va": "0x005b8bc8",
+      "range_size": 448,
+      "elf_file_offset": 5999560,
+      "function_bytes_sha256": "dfcb26685c696eaf6be64f6c911ed5adb7b12dd5ad0911a489b3e7c9bf899363",
+      "source_assembly": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-569492699322-001.asm",
+      "source_listing_lines": [
+        4497,
+        4613
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "primitive_gl_submission",
+      "symbol": "bool glitch::video::detail::drawPrimitives<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler> >(glitch::video::CPrimitiveStream const&, glitch::video::E_POLYGON_MODE, unsigned char const*)",
+      "mangled": "_ZN6glitch5video6detail14drawPrimitivesINS0_21CProgrammableGLDriverINS0_18CGLSLShaderHandlerEEEEEbRKNS0_16CPrimitiveStreamENS0_14E_POLYGON_MODEEPKh",
+      "elf_va": "0x005b09c8",
+      "range_size": 212,
+      "elf_file_offset": 5966280,
+      "function_bytes_sha256": "b3d74f710f772035cc917c97bdcaa01168c008fc2b6ae04028d0eef025c2f11f",
+      "source_assembly": "bool_glitch_video_detail-e8dbf8a2ae8e-001.asm",
+      "source_listing_lines": [
+        253,
+        310
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "texture_loader_selection",
+      "symbol": "glitch::video::CTextureManager::getImageLoader(glitch::io::IReadFile*) const",
+      "mangled": "_ZNK6glitch5video15CTextureManager14getImageLoaderEPNS_2io9IReadFileE",
+      "elf_va": "0x005e8144",
+      "range_size": 284,
+      "elf_file_offset": 6193476,
+      "function_bytes_sha256": "1dc678331e1264fc6776fb40bc0990b8f4372da74b2b9e959257592726b1cdec",
+      "source_assembly": "glitch_video_CTextureManager-c45d9c0c5ad5-001.asm",
+      "source_listing_lines": [
+        75,
+        151
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "pvr_header_to_texture_desc",
+      "symbol": "glitch::video::CImageLoaderPVR::loadTextureHeader(glitch::io::IReadFile*, glitch::video::STextureDesc&) const",
+      "mangled": "_ZNK6glitch5video15CImageLoaderPVR17loadTextureHeaderEPNS_2io9IReadFileERNS0_12STextureDescE",
+      "elf_va": "0x00605b10",
+      "range_size": 1056,
+      "elf_file_offset": 6314768,
+      "function_bytes_sha256": "f6d8f0103f81bbff0162ed3206a344ffe240f19a6eb53f7007af64d6e4bb973b",
+      "source_assembly": "glitch_video_CImageLoaderPVR-700fdada5af7-001.asm",
+      "source_listing_lines": [
+        116,
+        383
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "pvr_header_reader",
+      "symbol": "glitch::video::(anonymous namespace)::readPVRHeader(glitch::io::IReadFile*, glitch::video::(anonymous namespace)::SPVRHeader&, bool&)",
+      "mangled": "_ZN6glitch5video12_GLOBAL__N_113readPVRHeaderEPNS_2io9IReadFileERNS1_10SPVRHeaderERb",
+      "elf_va": "0x006058a4",
+      "range_size": 620,
+      "elf_file_offset": 6314148,
+      "function_bytes_sha256": "37b97d8ece5f06d3799bcc5283ad8e279dca9ee4bfa24db0124a96e3d4835b3e",
+      "source_assembly": "glitch_video-aadc65bf0959-001.asm",
+      "source_listing_lines": [
+        5223,
+        5381
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "texture_update_dispatch",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::CTexture::update(bool) const",
+      "mangled": "_ZNK6glitch5video15CCommonGLDriverINS0_21CProgrammableGLDriverINS0_18CGLSLShaderHandlerEEENS0_6detail33CProgrammableGLFunctionPointerSetEE8CTexture6updateEb",
+      "elf_va": "0x005b044c",
+      "range_size": 76,
+      "elf_file_offset": 5964876,
+      "function_bytes_sha256": "ae5c1bb5165c65806b5cf8b2bafbe3e06d7e94762c76a1279164906bf1856004",
+      "source_assembly": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-8ceb812a790b-001.asm",
+      "source_listing_lines": [
+        460,
+        484
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    },
+    {
+      "key": "commit_current_material_wrapper",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::commitCurrentMaterial()",
+      "mangled": "_ZN6glitch5video15CCommonGLDriverINS0_21CProgrammableGLDriverINS0_18CGLSLShaderHandlerEEENS0_6detail33CProgrammableGLFunctionPointerSetEE21commitCurrentMaterialEv",
+      "elf_va": "0x005b7594",
+      "range_size": 8,
+      "elf_file_offset": 5993876,
+      "function_bytes_sha256": "9b967887ce10137530b4c9062dc7355cf54f9cdf8f5e36fbdd7b82a7b520abbf",
+      "source_assembly": "glitch_video_CCommonGLDriver_glitch_video_CProgrammableGLDriver_glitch_video_CGLSLShaderHa-569492699322-001.asm",
+      "source_listing_lines": [
+        4454,
+        4461
+      ],
+      "listing_byte_comparison": "exact_match_to_original_elf_bytes",
+      "copy_included_in": "reference/original-functions.asm"
+    }
+  ],
+  "related_evidence": {
+    "vtable": "reference/vtable-observations.json (derived from original vtables-001.json)",
+    "gl_imports": "reference/gl-imports.json (derived from original imports.csv)",
+    "material_record_field_limits": "../engine-materials/ANALYSIS.md",
+    "pvr_cpu_parser": "../asset-textures/README.md"
+  }
+}

@@ -1,0 +1,190 @@
+{
+  "component": "legacy PVR v2 and BTEX metadata/range port with verified engine loading and conversion trace",
+  "original_apk": "Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "original_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "original_library": "libDungeonHunter2.so",
+  "original_library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "hash_assumption": "Function hashes are SHA-256 over the exact original ELF bytes in the stated ELF virtual-address range; verify the whole-library hash before relying on them. APK and library hashes match the repo's documented original inputs.",
+  "assembly_evidence": "reference/original-functions.asm and reference/texture-load-path.asm contain selected exact ARM listings; function-byte hashes use PT_LOAD-mapped bytes from the verified APK ELF.",
+  "functions": [
+    {
+      "symbol": "glitch::video::(anonymous namespace)::readPVRHeader(glitch::io::IReadFile*, SPVRHeader&, bool&)",
+      "elf_address": "0x006058a4",
+      "size": 620,
+      "sha256": "37b97d8ece5f06d3799bcc5283ad8e279dca9ee4bfa24db0124a96e3d4835b3e",
+      "scope": "BTEX marker and legacy header read; header length/tag and complete-chain checks"
+    },
+    {
+      "symbol": "glitch::video::CImageLoaderPVR::loadTextureHeader(glitch::io::IReadFile*, STextureDesc&) const",
+      "elf_address": "0x00605b10",
+      "size": 1056,
+      "sha256": "f6d8f0103f81bbff0162ed3206a344ffe240f19a6eb53f7007af64d6e4bb973b",
+      "scope": "aggregate payload length, cubemap multiplier, PVR type mapping and twiddled-format acceptance"
+    },
+    {
+      "symbol": "glitch::video::CImageLoaderPVR::loadImage(glitch::io::IReadFile*) const",
+      "elf_address": "0x00605f80",
+      "size": 564,
+      "sha256": "db1bb1f548ef0cd4614f1e47662951970174b29dd1ea419df5af7361ce24b811",
+      "scope": "narrow CPU image-loader pixel-type switch summarized by dh2_pvr_load_image_supported"
+    },
+    {
+      "symbol": "glitch::video::CImageLoaderPVR::loadTextureData(...) const",
+      "elf_address": "0x0060623c",
+      "size": 184,
+      "sha256": "e5af95a50b3121c0c1f5c10031da8ddce27c5fc599e3ee142618a0a1eec87e76",
+      "scope": "texture data loading entry; GPU work intentionally not ported"
+    },
+    {
+      "symbol": "glitch::video::CImageLoaderPVR::CDataInfo::getFileDataSize() const",
+      "elf_address": "0x00605720",
+      "size": 8,
+      "sha256": "687b83fbb1b1084c4b61325547b5f8fadfb354f0d8aa39fcef5ecb6ba6b86ed1",
+      "scope": "reports the supplied PVR data length"
+    },
+    {
+      "symbol": "glitch::video::CImageLoaderPVR::CDataInfo::getFilePitch(unsigned char) const",
+      "elf_address": "0x00605728",
+      "size": 8,
+      "sha256": "6dcd5e75586fe6683156c0d559d4827b73bd48d501fa5781a1c6099aacd7c877",
+      "scope": "returns zero"
+    },
+    {
+      "symbol": "glitch::video::CImageLoaderPVR::CDataInfo::isLittleEndian() const",
+      "elf_address": "0x00605730",
+      "size": 8,
+      "sha256": "007f34a6c3441b0240da53f253e513b959105da2d8803255e1856aa48f48db47",
+      "scope": "returns true"
+    },
+    {
+      "symbol": "glitch::video::CImageLoaderPVR::CDataInfo::needsFlip() const",
+      "elf_address": "0x00605738",
+      "size": 8,
+      "sha256": "6dcd5e75586fe6683156c0d559d4827b73bd48d501fa5781a1c6099aacd7c877",
+      "scope": "returns false"
+    },
+    {
+      "symbol": "glitch::video::IImageLoader::ITextureDataLoading::getSourceStep(unsigned char) const",
+      "elf_address": "0x00607898",
+      "size": 132,
+      "sha256": "26cc0fca9160c4ca7a77ac168173f1ddd8f5c40e16c5eac35c5e067ae8d46004",
+      "scope": "per-level source byte-size calculation"
+    },
+    {
+      "symbol": "glitch::video::IImageLoader::ITextureDataLoading::load(...) ",
+      "elf_address": "0x00607a64",
+      "size": 696,
+      "sha256": "b3aa301c33744d0019faec4ad01502bce30c64c08dfc83f0f9e2d70be788ee1b",
+      "scope": "assembly shows surfaces outer and mip levels inner; code-byte hash not included in this checkpoint",
+      "file_offset": "0x607a64"
+    },
+    {
+      "symbol": "glitch::video::pixel_format::computePitch(E_PIXEL_FORMAT, unsigned int)",
+      "elf_address": "0x005edaec",
+      "size": 92,
+      "sha256": "e2b7a0ea171a2ae34e8e7a2f57004e69b3c4fa063575799f2ed4e3520e2c4eb5",
+      "scope": "linear and block-row pitch arithmetic"
+    },
+    {
+      "symbol": "glitch::video::pixel_format::computeSizeInBytes(E_PIXEL_FORMAT, unsigned int, unsigned int)",
+      "elf_address": "0x005edb48",
+      "size": 112,
+      "sha256": "8432dbf3eb6df3fbb7bebd6c53d80ecfa02b2562bb4d7d4e727c5275e73d64f5",
+      "scope": "block rows and minimum byte size"
+    },
+    {
+      "symbol": "glitch::video::pixel_format::computeSizeInBytes(E_PIXEL_FORMAT, unsigned int, unsigned int, unsigned int)",
+      "elf_address": "0x005edbb8",
+      "size": 20,
+      "sha256": "b9267fa5be164099c5429f5d0a706f1c60bc351f4cfbe2c3ae9f76604ed922cc",
+      "scope": "2D size multiplied by depth"
+    },
+    {
+      "symbol": "glitch::video::pixel_format::computeMipmapSizeInBytes(E_PIXEL_FORMAT, unsigned int, unsigned int, unsigned char, bool)",
+      "elf_address": "0x005edbcc",
+      "size": 32,
+      "sha256": "5051807414abb0b5bd1a62bf8223a7e0413b2fab43ec94b04ead7d36eaf94fc2",
+      "scope": "shifted/clamped 2D mip dimensions"
+    },
+    {
+      "symbol": "glitch::video::pixel_format::computeMipmapSizeInBytes(E_PIXEL_FORMAT, unsigned int, unsigned int, unsigned int, unsigned char, bool)",
+      "elf_address": "0x005edbec",
+      "size": 44,
+      "sha256": "8b25414aef573444c66b0d9d14c08cbf7c7fe0b9aa6000877591e502f26562ba",
+      "scope": "shifted/clamped 3D mip dimensions"
+    },
+    {
+      "symbol": "glitch::video::IImageLoader::loadData(IReadFile*, IDataInfo const&, STextureDesc const&, intrusive_ptr<ITexture> const&)",
+      "elf_address": "0x006083d0",
+      "file_offset": "0x6083d0",
+      "size": 1152,
+      "sha256": "b859a6cdf1dce67aabf17db5f04e4bd62a7c02c458872f6bfdc13db2930867a3",
+      "scope": "Common image-loader path; checks loader/format compatibility and invokes ITextureDataLoading::load."
+    },
+    {
+      "symbol": "glitch::video::IImageLoader::ITextureDataLoading::read(void*, unsigned int)",
+      "elf_address": "0x00607d1c",
+      "file_offset": "0x607d1c",
+      "size": 196,
+      "sha256": "21048108da413bb0cf5adfe74b5725525bf59f9abe027524593f5b01fa26d8c6",
+      "scope": "Per-block/level read path used before format conversion."
+    },
+    {
+      "symbol": "glitch::video::pixel_format::convert(E_PIXEL_FORMAT, void const*, unsigned int, E_PIXEL_FORMAT, void*, unsigned int, unsigned int, unsigned int, bool)",
+      "elf_address": "0x005f95ac",
+      "file_offset": "0x5f95ac",
+      "size": 17128,
+      "sha256": "e7800d2f639bb3a99de3dfb52b86eb4f1123b75a0e4e503d5c8c7cae72ce376a",
+      "scope": "Format-pair dispatch; same-format copy path and source-format decompression route."
+    },
+    {
+      "symbol": "glitch::video::pixel_format::{anonymous}::decompress(E_PIXEL_FORMAT, void const*, unsigned int, E_PIXEL_FORMAT, void*, unsigned int, unsigned int, unsigned int, bool)",
+      "elf_address": "0x005fd894",
+      "file_offset": "0x5fd894",
+      "size": 468,
+      "sha256": "800536a512b212ff52f18c2f3f0dc77a4ed87d75fcfbe4182bb6b0d5f5d306c9",
+      "scope": "Conversion helper; engine pixel formats 24 and 25 reach PVRTCDecompress."
+    },
+    {
+      "symbol": "PVRTCDecompress(void const*, int, int, int, unsigned char*)",
+      "elf_address": "0x0069f768",
+      "file_offset": "0x69f768",
+      "size": 2172,
+      "sha256": "ffd425909204ffb18696405f325e67f1e67d2698ed92599b7c0d4c7b3278c3b8",
+      "scope": "Embedded PVRTC decoder called from pixel_format::decompress at two direct call sites."
+    },
+    {
+      "symbol": "glitch::video::pixel_format::{anonymous}::copy(E_PIXEL_FORMAT, void const*, unsigned int, void*, unsigned int, unsigned int, unsigned int, bool)",
+      "elf_address": "0x005ee40c",
+      "file_offset": "0x5ee40c",
+      "size": 476,
+      "sha256": "890100523a11918f23afa7206fb37cc35001792909890ed98c86ce33a13b499c",
+      "scope": "Copy helper reached by pixel_format::convert when source and destination format IDs match."
+    }
+  ],
+  "tables": [
+    {
+      "symbol": "glitch::video::pixel_format::detail::PFDTable",
+      "elf_address": "0x008e36c0",
+      "size": 1600,
+      "sha256": "bda688cac2f815440b823e5c327d0cfdfe0843ae3240fc7a810d4663b0f5b0f4",
+      "scope": "selected pixel-format row fields copied into pvr.cpp"
+    }
+  ],
+  "uncertainty": [
+    "The meanings 'block width', 'block height', 'bytes per block', and 'minimum bytes' are inferred from PFDTable offsets and computePitch/computeSizeInBytes use; recovered declarations were not available.",
+    "Flag names are inferred from branch behavior. The code records observed bits and loader decisions, not a full external PVR v2 specification interpretation.",
+    "Range offsets follow the generic loader's observed face-outer/mip-inner iteration. Combined cube-plus-volume data is accepted structurally when aggregate length matches but range description is intentionally unsupported.",
+    "The size model is a metadata estimate. It does not decode or validate texel values, twiddled ordering, padding conventions, or visual orientation."
+  ],
+  "trace_evidence": {
+    "apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+    "library_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "executable_pt_load": {
+      "p_vaddr": "0x0",
+      "p_offset": "0x0",
+      "p_filesz": "0x955130"
+    },
+    "mapping_note": "Every range in this addendum lies wholly inside this executable PT_LOAD; file offset is computed as p_offset + (ELF VA - p_vaddr), yielding file offset equal to VA for these ranges."
+  }
+}

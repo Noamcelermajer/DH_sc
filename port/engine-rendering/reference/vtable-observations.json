@@ -1,0 +1,49 @@
+{
+  "source": "symbols/libDungeonHunter2.so/vtables-001.json",
+  "vtable_demangled": "vtable for glitch::video::COpenGLES2Driver",
+  "vtable_elf_va": "0x00977b18",
+  "size_bytes": 548,
+  "layout_note": "Catalog offsets are measured from the vtable symbol. Its first two 32-bit header words precede the object vptr address point, so ARM virtual-call displacements equal vtable_symbol_offset minus 8.",
+  "entries": [
+    {
+      "vtable_symbol_offset": "0x60",
+      "object_vptr_slot_offset": "0x58",
+      "target_symbols": [
+        "glitch::video::IVideoDriver::draw(boost::intrusive_ptr<glitch::video::CVertexStreams const> const&, glitch::video::CPrimitiveStream const&, glitch::video::CDriverBinding**, boost::intrusive_ptr<glitch::scene::CMeshBuffer const> const&)"
+      ],
+      "raw_word": 5955496
+    },
+    {
+      "vtable_symbol_offset": "0x208",
+      "object_vptr_slot_offset": "0x200",
+      "target_symbols": [
+        "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::drawImpl(boost::intrusive_ptr<glitch::video::CVertexStreams const> const&, glitch::video::CPrimitiveStream const&, glitch::video::CDriverBinding**)"
+      ],
+      "raw_word": 5999560
+    },
+    {
+      "vtable_symbol_offset": "0x20c",
+      "object_vptr_slot_offset": "0x204",
+      "target_symbols": [
+        "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::createTextureImpl(char const*, glitch::video::STextureDesc const&)"
+      ],
+      "raw_word": 5988204
+    },
+    {
+      "vtable_symbol_offset": "0x210",
+      "object_vptr_slot_offset": "0x208",
+      "target_symbols": [
+        "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::commitCurrentMaterial()"
+      ],
+      "raw_word": 5993876
+    },
+    {
+      "vtable_symbol_offset": "0x214",
+      "object_vptr_slot_offset": "0x20c",
+      "target_symbols": [
+        "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::commitMaterialRenderer(glitch::video::CMaterialRenderer*)"
+      ],
+      "raw_word": 5993372
+    }
+  ]
+}

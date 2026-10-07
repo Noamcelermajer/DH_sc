@@ -1,0 +1,169 @@
+{
+  "schema": "dh2-gles-context-lifecycle-v1",
+  "source_apk": "C:\\Users\\NacWorkstation\\Downloads\\Dungeon-Hunter-2-HD-v1-0-2.apk",
+  "source_apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "source_elf_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+  "source_elf_size": 15938284,
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "hash_basis": "SHA-256 covers exactly range_size bytes from the APK-matched ELF file-backed PT_LOAD mapping at elf_va. Function addresses and sizes come from the APK ELF symbol table. Vtable observations hash each raw little-endian pointer word.",
+  "pt_load_segments": [
+    {
+      "p_offset": 0,
+      "p_vaddr": 0,
+      "p_filesz": 9785648,
+      "p_memsz": 9785648
+    },
+    {
+      "p_offset": 9785648,
+      "p_vaddr": 9789744,
+      "p_filesz": 300364,
+      "p_memsz": 914688
+    }
+  ],
+  "functions": [
+    {
+      "key": "renderer_native_init",
+      "symbol": "Java_com_gameloft_android_GAND_GloftD2SS_GameRenderer_nativeInit",
+      "elf_va": "0x005311c8",
+      "range_size": 76,
+      "elf_file_offset": 5444040,
+      "range_sha256": "108813528c1cbb7e997a0e158ea82c6aa3f231e33f4f8225be093214981f90d9"
+    },
+    {
+      "key": "common_gl_reinit_driver",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::ReinitDriver()",
+      "elf_va": "0x005b1b10",
+      "range_size": 200,
+      "elf_file_offset": 5970704,
+      "range_sha256": "a451a65ed13f1e51792991187640f68de14295d66ba4080ba0b475e62f37cb4e"
+    },
+    {
+      "key": "common_gl_reload_shaders",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::reloadShaders()",
+      "elf_va": "0x005b15f0",
+      "range_size": 324,
+      "elf_file_offset": 5969392,
+      "range_sha256": "c59508df30084d08aa1de1b963632019c01f048970bafda15ed4eed265c3653e"
+    },
+    {
+      "key": "common_gl_reload_textures",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::reloadTexturesData()",
+      "elf_va": "0x005b1fe4",
+      "range_size": 608,
+      "elf_file_offset": 5971940,
+      "range_sha256": "1c957b39d8f281f5a6d0ff23769c973305fd45a69cba183e8133eadcbd9356e3"
+    },
+    {
+      "key": "programmable_driver_init",
+      "symbol": "glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>::driverInit(glitch::core::dimension2d<int> const&)",
+      "elf_va": "0x005b1ab4",
+      "range_size": 92,
+      "elf_file_offset": 5970612,
+      "range_sha256": "c809e4a84d5afbdfe2baf6e3052f7b8abda01906e07768f5bcc198c8de25b548"
+    },
+    {
+      "key": "generic_driver_init",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::genericDriverInit(glitch::core::dimension2d<int> const&, bool)",
+      "elf_va": "0x005b3afc",
+      "range_size": 4772,
+      "elf_file_offset": 5978876,
+      "range_sha256": "c54197b31e4dfd4a8dedfeb47f96c1210ea9c6ffc6e4b4e8fbd679be6b6e9b20"
+    },
+    {
+      "key": "glsl_shader_regenerate",
+      "symbol": "glitch::video::CGLSLShader::rmRegenerateShader(glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>*)",
+      "elf_va": "0x006df18c",
+      "range_size": 100,
+      "elf_file_offset": 7205260,
+      "range_sha256": "462859c6d646532b84b090884621dbe7399ad2c3aa533d7658982a0ebdc52054"
+    },
+    {
+      "key": "glsl_shader_code_recompile",
+      "symbol": "glitch::video::CGLSLShaderCode::rmRecompileShader()",
+      "elf_va": "0x006df5a4",
+      "range_size": 48,
+      "elf_file_offset": 7206308,
+      "range_sha256": "8e259969284f2caa1d41e54ed5871ace9de100fda0775c4f60820bd924bccba2"
+    },
+    {
+      "key": "texture_manager_reload_data",
+      "symbol": "glitch::video::CTextureManager::rmReloadDataTexture(glitch::video::CTextureManager::SIterator, char const*)",
+      "elf_va": "0x005ed380",
+      "range_size": 1476,
+      "elf_file_offset": 6214528,
+      "range_sha256": "3e0021ea705a7ed2457a7eec8bba5eb16142d73b3a1b067465830ffb8f3a98fd"
+    },
+    {
+      "key": "texture_unbind",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::CTexture::unbindImpl()",
+      "elf_va": "0x005b28dc",
+      "range_size": 340,
+      "elf_file_offset": 5974236,
+      "range_sha256": "b99488f7c3180c602928e577f73c0059cbfbc288f254c4db61706b3753875420"
+    },
+    {
+      "key": "texture_bind",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::CTexture::bindImpl(bool)",
+      "elf_va": "0x005b5610",
+      "range_size": 768,
+      "elf_file_offset": 5985808,
+      "range_sha256": "f686f404818da4866c94754a34882a1c5eb299e3f03959314317261ea7b496f0"
+    },
+    {
+      "key": "buffer_unbind",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::CBuffer::unbindImpl()",
+      "elf_va": "0x005b051c",
+      "range_size": 120,
+      "elf_file_offset": 5965084,
+      "range_sha256": "fa285897a978d3c111826437f0c917ec0af64e1b97a4c9ebed4390964fe308d6"
+    },
+    {
+      "key": "buffer_bind",
+      "symbol": "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::CBuffer::bindImpl(bool)",
+      "elf_va": "0x005b67b0",
+      "range_size": 528,
+      "elf_file_offset": 5990320,
+      "range_sha256": "0afdd4bd3d7a48b5cd79a25a8e114e41a54817769a9024828e563dc54b3f5228"
+    }
+  ],
+  "vtable": {
+    "symbol": "vtable for glitch::video::COpenGLES2Driver",
+    "elf_va": "0x00977b18",
+    "range_size": 548,
+    "elf_file_offset": 9923352,
+    "range_sha256": "3ee899300ad15dba9f7f8549088d5a0511052bd0c8f394d07dd34202a35996b5",
+    "address_point_offset_from_symbol": 8,
+    "slots": [
+      {
+        "key": "reinit_driver",
+        "object_vptr_displacement": "+0x38",
+        "elf_va": "0x00977b58",
+        "range_size": 4,
+        "elf_file_offset": 9923416,
+        "raw_word_le": "0x005b1b10",
+        "target_function": "common_gl_reinit_driver",
+        "range_sha256": "f0a3b9b8270010ace8af62822beb24ca7edefcd64f8508e6b2624aacb20e166f"
+      },
+      {
+        "key": "reload_textures",
+        "object_vptr_displacement": "+0x3c",
+        "elf_va": "0x00977b5c",
+        "range_size": 4,
+        "elf_file_offset": 9923420,
+        "raw_word_le": "0x005b1fe4",
+        "target_function": "common_gl_reload_textures",
+        "range_sha256": "a0d45808f6d616170bbe1bb5aaeac6374b9b2090f37485b97d147ec372bc272b"
+      },
+      {
+        "key": "reload_shaders",
+        "object_vptr_displacement": "+0x40",
+        "elf_va": "0x00977b60",
+        "range_size": 4,
+        "elf_file_offset": 9923424,
+        "raw_word_le": "0x005b15f0",
+        "target_function": "common_gl_reload_shaders",
+        "range_sha256": "7f3988fb4b1055d97d079160297343f7c801c67f691a11eedd5815c78f45537a"
+      }
+    ]
+  }
+}

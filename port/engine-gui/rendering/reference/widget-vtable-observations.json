@@ -1,0 +1,934 @@
+{
+  "schema": "dh2-gui-rendering-vtable-observations-v1",
+  "source_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "vtable_addresspoint_notes": {
+    "CGUIEnvironment": "Call displacements +0x20 and +0x38 resolve to getVideoDriver and getSkin in its catalog.",
+    "CGUISkin": "Call displacements +0x10, +0x28, +0x40, +0x44, and +0x4c resolve to getColor, getFont, standard/pressed button panes, and window background using the CGUISkin address point.",
+    "COpenGLES2Driver": "The renderer catalog defines its two-word vtable header: object displacements +0x34, +0x58, and +0x200 reach symbol offsets +0x3c (draw2DRectangle), +0x60 (IVideoDriver::draw), and +0x208 (CCommonGLDriver::drawImpl)."
+  },
+  "vtables": [
+    {
+      "vtable_symbol": "vtable for glitch::gui::CGUIEnvironment",
+      "elf_va": "0x0096cdc8",
+      "size_bytes": 496,
+      "data_bytes_sha256": "20c0b078bacc979f9b9f2bb16937b0bc1669185858906ed87383c42fd144dcf9",
+      "selected_entries": [
+        {
+          "vtable_symbol_offset": "0x30",
+          "raw_word": "0x00535640",
+          "target_symbols": [
+            "glitch::gui::CGUIEnvironment::getVideoDriver() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x48",
+          "raw_word": "0x00535770",
+          "target_symbols": [
+            "glitch::gui::CGUIEnvironment::getSkin() const"
+          ]
+        }
+      ]
+    },
+    {
+      "vtable_symbol": "vtable for glitch::gui::CGUISkin",
+      "elf_va": "0x009700b8",
+      "size_bytes": 164,
+      "data_bytes_sha256": "79ef6b9a085d36c8b161ca6dc47817283b09d43219427621d1f5f025c4be8762",
+      "selected_entries": [
+        {
+          "vtable_symbol_offset": "0x2c",
+          "raw_word": "0x0054aa24",
+          "target_symbols": [
+            "glitch::gui::CGUISkin::getColor(glitch::gui::EGUI_DEFAULT_COLOR) const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x44",
+          "raw_word": "0x0054aac4",
+          "target_symbols": [
+            "glitch::gui::CGUISkin::getFont(glitch::gui::EGUI_DEFAULT_FONT) const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x5c",
+          "raw_word": "0x0054cd44",
+          "target_symbols": [
+            "glitch::gui::CGUISkin::draw3DButtonPaneStandard(glitch::gui::IGUIElement*, glitch::core::rect<int> const&, glitch::core::rect<int> const*)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x60",
+          "raw_word": "0x0054caa8",
+          "target_symbols": [
+            "glitch::gui::CGUISkin::draw3DButtonPanePressed(glitch::gui::IGUIElement*, glitch::core::rect<int> const&, glitch::core::rect<int> const*)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x64",
+          "raw_word": "0x0054b53c",
+          "target_symbols": [
+            "glitch::gui::CGUISkin::draw3DSunkenPane(glitch::gui::IGUIElement*, glitch::video::SColor, bool, bool, glitch::core::rect<int> const&, glitch::core::rect<int> const*)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x68",
+          "raw_word": "0x0054c40c",
+          "target_symbols": [
+            "glitch::gui::CGUISkin::draw3DWindowBackground(glitch::gui::IGUIElement*, bool, glitch::video::SColor, glitch::core::rect<int> const&, glitch::core::rect<int> const*)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x80",
+          "raw_word": "0x0054b078",
+          "target_symbols": [
+            "glitch::gui::CGUISkin::draw2DRectangle(glitch::gui::IGUIElement*, glitch::video::SColor const&, glitch::core::rect<int> const&, glitch::core::rect<int> const*)"
+          ]
+        }
+      ]
+    },
+    {
+      "vtable_symbol": "vtable for glitch::gui::CGUIFont",
+      "elf_va": "0x0096d678",
+      "size_bytes": 88,
+      "data_bytes_sha256": "cf5212302690c6ae5b6afede22ccb8461dcb5c5d2ff2ad214297a519aa4a13bc",
+      "selected_entries": [
+        {
+          "vtable_symbol_offset": "0x14",
+          "raw_word": "0x0053e038",
+          "target_symbols": [
+            "glitch::gui::CGUIFont::draw(wchar_t const*, glitch::core::rect<int> const&, glitch::video::SColor, bool, bool, glitch::core::rect<int> const*)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x18",
+          "raw_word": "0x0053dbdc",
+          "target_symbols": [
+            "glitch::gui::CGUIFont::draw(char const*, glitch::core::rect<int> const&, glitch::video::SColor, bool, bool, glitch::core::rect<int> const*)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x24",
+          "raw_word": "0x0053df5c",
+          "target_symbols": [
+            "glitch::gui::CGUIFont::getDimension(wchar_t const*) const"
+          ]
+        }
+      ]
+    },
+    {
+      "vtable_symbol": "vtable for glitch::gui::IGUIFont",
+      "elf_va": "0x0096d628",
+      "size_bytes": 80,
+      "data_bytes_sha256": "db8316ad61a11582737082cae0c4c486b30fb72bc7290eab029c2be137061d4d",
+      "selected_entries": [
+        {
+          "vtable_symbol_offset": "0x8",
+          "raw_word": "0x0053dc20",
+          "target_symbols": [
+            "glitch::gui::IGUIFont::~IGUIFont()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xc",
+          "raw_word": "0x0053eb20",
+          "target_symbols": [
+            "glitch::gui::IGUIFont::~IGUIFont()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x10",
+          "raw_word": "0x0031d5cc",
+          "target_symbols": [
+            "glitch::IReferenceCounted::onDelete()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x30",
+          "raw_word": "0x0053dbcc",
+          "target_symbols": [
+            "glitch::gui::IGUIFont::getType() const"
+          ]
+        }
+      ]
+    },
+    {
+      "vtable_symbol": "vtable for glitch::gui::CGUISpriteBank",
+      "elf_va": "0x009707d8",
+      "size_bytes": 48,
+      "data_bytes_sha256": "e3fdf2351bc5863bf1eaeb6fd7a5e5730be629c97fe17bf60664dcb04214353b",
+      "selected_entries": [
+        {
+          "vtable_symbol_offset": "0x2c",
+          "raw_word": "0x0054f930",
+          "target_symbols": [
+            "glitch::gui::CGUISpriteBank::draw2DSprite(unsigned int, glitch::core::position2d<int> const&, glitch::core::rect<int> const*, glitch::video::SColor const&, unsigned int, unsigned int, bool, bool)"
+          ]
+        }
+      ]
+    },
+    {
+      "vtable_symbol": "vtable for glitch::video::COpenGLES2Driver",
+      "elf_va": "0x00977b18",
+      "size_bytes": 548,
+      "data_bytes_sha256": "3ee899300ad15dba9f7f8549088d5a0511052bd0c8f394d07dd34202a35996b5",
+      "selected_entries": [
+        {
+          "vtable_symbol_offset": "0x14",
+          "raw_word": "0x005b1860",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::beginScene()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x18",
+          "raw_word": "0x005b1838",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::endScene()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1c",
+          "raw_word": "0x005b1734",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::beginScene2D()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x20",
+          "raw_word": "0x005af2d8",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::endScene2D()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x3c",
+          "raw_word": "0x005b2244",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::draw2DRectangle(glitch::core::rect<int> const&, glitch::core::rect<int> const&, glitch::video::SColor const*, glitch::core::rect<int> const*)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x40",
+          "raw_word": "0x005b1b10",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::ReinitDriver()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x44",
+          "raw_word": "0x005b1fe4",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::reloadTexturesData()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x48",
+          "raw_word": "0x005b15f0",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::reloadShaders()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x4c",
+          "raw_word": "0x005af1dc",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::resetTexturesLoader()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x50",
+          "raw_word": "0x005b5be4",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::registerBufferMap(unsigned int, unsigned int, unsigned int, unsigned int, void const*)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x54",
+          "raw_word": "0x005b0594",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::ReloadbufferMap()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x58",
+          "raw_word": "0x005b1f5c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::unregisterBufferMap(unsigned int)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x5c",
+          "raw_word": "0x005b35d8",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::clearBufferMap()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x60",
+          "raw_word": "0x005adfa8",
+          "target_symbols": [
+            "glitch::video::IVideoDriver::draw(boost::intrusive_ptr<glitch::video::CVertexStreams const> const&, glitch::video::CPrimitiveStream const&, glitch::video::CDriverBinding**, boost::intrusive_ptr<glitch::scene::CMeshBuffer const> const&)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x68",
+          "raw_word": "0x005af1fc",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::getMaximalPrimitiveCount() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x70",
+          "raw_word": "0x006dcdcc",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getColorFormat() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x78",
+          "raw_word": "0x006dcdd4",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getTransform(glitch::video::E_TRANSFORMATION_STATE) const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x80",
+          "raw_word": "0x005b13f4",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::createBuffer(glitch::video::E_BUFFER_TYPE, glitch::video::E_BUFFER_USAGE, unsigned int, void*, bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x88",
+          "raw_word": "0x005b5390",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::createRenderBuffer(glitch::core::dimension2d<int> const&, glitch::video::E_PIXEL_FORMAT)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x8c",
+          "raw_word": "0x005b388c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::createRenderTarget(boost::intrusive_ptr<glitch::video::ITexture> const&, unsigned int)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x90",
+          "raw_word": "0x005b1190",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::createMultipleRenderTarget()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xa0",
+          "raw_word": "0x005b1c48",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::createScreenShot()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xa4",
+          "raw_word": "0x005af204",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::captureFramebufferImpl(boost::intrusive_ptr<glitch::video::ITexture> const&, glitch::core::position2d<int> const&, glitch::core::rect<int> const&, unsigned char, glitch::video::E_TEXTURE_CUBE_MAP_FACE, bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xac",
+          "raw_word": "0x005af20c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::swapBuffers(int)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xb0",
+          "raw_word": "0x005b0f38",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::clearBuffers(int)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xb8",
+          "raw_word": "0x006dcde8",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getBlendEnable() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xbc",
+          "raw_word": "0x005b7080",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setBlendEnable(bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xc0",
+          "raw_word": "0x006dcdf0",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getBlendColor() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xc4",
+          "raw_word": "0x005af574",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setBlendColor(glitch::video::SColor)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xc8",
+          "raw_word": "0x006dce24",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getBlendEquation() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xcc",
+          "raw_word": "0x005af3b4",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setBlendEquation(glitch::video::E_BLEND_EQUATION)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xd0",
+          "raw_word": "0x006dce2c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getBlendFunc(glitch::video::E_BLEND_FACTOR&, glitch::video::E_BLEND_FACTOR&) const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xd4",
+          "raw_word": "0x005af35c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setBlendFunc(glitch::video::E_BLEND_FACTOR, glitch::video::E_BLEND_FACTOR)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xd8",
+          "raw_word": "0x006dce40",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getColorMask(bool&, bool&, bool&, bool&) const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xdc",
+          "raw_word": "0x005b0cec",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setColorMask(bool, bool, bool, bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xe0",
+          "raw_word": "0x006dce68",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getClearColor() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xe4",
+          "raw_word": "0x005b0d4c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setClearColor(glitch::video::SColor)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xe8",
+          "raw_word": "0x006dce9c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getCullFaceEnable() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xec",
+          "raw_word": "0x005b7034",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setCullFaceEnable(bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xf0",
+          "raw_word": "0x006dcea4",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getCullFace() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xf4",
+          "raw_word": "0x005af6b8",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setCullFace(glitch::video::E_FACE_SIDE)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xf8",
+          "raw_word": "0x006dceac",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getFrontFace() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0xfc",
+          "raw_word": "0x005afc78",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setFrontFace(glitch::video::E_FACE_WINDING)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x100",
+          "raw_word": "0x006dceb4",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getDepthTestEnable() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x104",
+          "raw_word": "0x005b6fe8",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setDepthTestEnable(bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x108",
+          "raw_word": "0x006dcebc",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getDepthFunc() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x10c",
+          "raw_word": "0x005af760",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setDepthFunc(glitch::video::E_COMPARE_FUNC)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x110",
+          "raw_word": "0x006dcec4",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getDepthMask() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x114",
+          "raw_word": "0x005afccc",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setDepthMask(bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x118",
+          "raw_word": "0x006dcecc",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getClearDepth() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x11c",
+          "raw_word": "0x005b0e94",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setClearDepth(float)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x120",
+          "raw_word": "0x006dced4",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getDepthRange(float&, float&) const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x124",
+          "raw_word": "0x005b0ed4",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setDepthRange(float, float)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x128",
+          "raw_word": "0x006dcee8",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getDitherEnable() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x12c",
+          "raw_word": "0x005b6f9c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setDitherEnable(bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x130",
+          "raw_word": "0x006dcef0",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getLineWidth() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x134",
+          "raw_word": "0x005afd00",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setLineWidth(float)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x138",
+          "raw_word": "0x006dcef8",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getPointSize() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x13c",
+          "raw_word": "0x005af220",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setPointSize(float)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x140",
+          "raw_word": "0x006dcf00",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getPolygonModeFront() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x144",
+          "raw_word": "0x005af258",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setPolygonModeFront(glitch::video::E_POLYGON_MODE)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x148",
+          "raw_word": "0x006dcf08",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getPolygonModeBack() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x14c",
+          "raw_word": "0x005af284",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setPolygonModeBack(glitch::video::E_POLYGON_MODE)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x150",
+          "raw_word": "0x006dcf10",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getPolygonOffsetFillEnable() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x154",
+          "raw_word": "0x005b6f50",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setPolygonOffsetFillEnable(bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x158",
+          "raw_word": "0x006dcf18",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getPolygonOffsetLineEnable() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x15c",
+          "raw_word": "0x005af2b0",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setPolygonOffsetLineEnable(bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x160",
+          "raw_word": "0x006dcf20",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getPolygonOffsetPointEnable() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x164",
+          "raw_word": "0x005af2b4",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setPolygonOffsetPointEnable(bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x168",
+          "raw_word": "0x006dcf28",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getPolygonOffset(float&, float&) const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x16c",
+          "raw_word": "0x005af828",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setPolygonOffset(float, float)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x170",
+          "raw_word": "0x006dcf3c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getSampleAlphaToCoverageEnable() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x174",
+          "raw_word": "0x005b6f04",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setSampleAlphaToCoverageEnable(bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x178",
+          "raw_word": "0x006dcf44",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getSampleCoverageEnable() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x17c",
+          "raw_word": "0x005b6eb8",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setSampleCoverageEnable(bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x180",
+          "raw_word": "0x006dcf4c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getSampleCoverageInvert() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x184",
+          "raw_word": "0x005af93c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setSampleCoverageInvert(bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x188",
+          "raw_word": "0x006dcf54",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getSampleCoverageValue() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x18c",
+          "raw_word": "0x005af8f8",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setSampleCoverageValue(float)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x190",
+          "raw_word": "0x006dcf5c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getScissorEnable() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x194",
+          "raw_word": "0x005b6e6c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setScissorEnable(bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x198",
+          "raw_word": "0x006dcf64",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getScissor() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x19c",
+          "raw_word": "0x005b0bec",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setScissor(glitch::core::rect<int> const&)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1a0",
+          "raw_word": "0x006dcf6c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getStencilTestEnable() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1a4",
+          "raw_word": "0x005b6e20",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setStencilTestEnable(bool)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1a8",
+          "raw_word": "0x006dcf74",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getStencilFunc() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1ac",
+          "raw_word": "0x005afa24",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setStencilFunc(glitch::video::E_COMPARE_FUNC)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1b0",
+          "raw_word": "0x006dcf7c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getStencilFuncRef(bool*) const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1b4",
+          "raw_word": "0x005af9cc",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setStencilFuncRef(unsigned char)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1b8",
+          "raw_word": "0x006dcf84",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getStencilFuncMask(bool*) const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1bc",
+          "raw_word": "0x005af974",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setStencilFuncMask(unsigned char)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1c0",
+          "raw_word": "0x006dcf8c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getStencilOpFail() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1c4",
+          "raw_word": "0x005afc14",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setStencilOpFail(glitch::video::E_STENCIL_OP)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1c8",
+          "raw_word": "0x006dcf94",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getStencilOpZFail() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1cc",
+          "raw_word": "0x005afbb0",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setStencilOpZFail(glitch::video::E_STENCIL_OP)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1d0",
+          "raw_word": "0x006dcf9c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getStencilOpZPass() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1d4",
+          "raw_word": "0x005afb4c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setStencilOpZPass(glitch::video::E_STENCIL_OP)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1d8",
+          "raw_word": "0x006dcfa4",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getStencilMask(bool*) const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1dc",
+          "raw_word": "0x005b0e2c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setStencilMask(unsigned char)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1e0",
+          "raw_word": "0x006dcfac",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getClearStencil() const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1e4",
+          "raw_word": "0x005b0e60",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setClearStencil(unsigned char)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1e8",
+          "raw_word": "0x006dd0ac",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriverBase::getRenderState(glitch::video::detail::driver::SRenderState&) const"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1ec",
+          "raw_word": "0x005b7898",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setRenderState(glitch::video::detail::driver::SRenderState const&)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x1f0",
+          "raw_word": "0x005b0a9c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::setViewportImpl(glitch::core::rect<int> const&)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x208",
+          "raw_word": "0x005b8bc8",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::drawImpl(boost::intrusive_ptr<glitch::video::CVertexStreams const> const&, glitch::video::CPrimitiveStream const&, glitch::video::CDriverBinding**)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x20c",
+          "raw_word": "0x005b5f6c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::createTextureImpl(char const*, glitch::video::STextureDesc const&)"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x210",
+          "raw_word": "0x005b7594",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::commitCurrentMaterial()"
+          ]
+        },
+        {
+          "vtable_symbol_offset": "0x214",
+          "raw_word": "0x005b739c",
+          "target_symbols": [
+            "glitch::video::CCommonGLDriver<glitch::video::CProgrammableGLDriver<glitch::video::CGLSLShaderHandler>, glitch::video::detail::CProgrammableGLFunctionPointerSet>::commitMaterialRenderer(glitch::video::CMaterialRenderer*)"
+          ]
+        }
+      ]
+    }
+  ]
+}

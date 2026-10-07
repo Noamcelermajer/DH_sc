@@ -1,0 +1,1776 @@
+{
+  "schema_version": 1,
+  "description": "Exact APK-backed ARM and vtable evidence for Collada transform animation channel codes 6-9, their quaternion-angle sampling and application path.",
+  "apk_sha256": "32c2d027b585a42547311cd95da6a3975fdb3174e663e513d42a7f49d1a4c200",
+  "elf": {
+    "apk_member": "lib/armeabi-v7a/libDungeonHunter2.so",
+    "size_bytes": 15938284,
+    "sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+    "elf_class": 32,
+    "endianness": "little",
+    "machine": 40,
+    "file_offset_formula": "VA for first PT_LOAD; VA - 0x1000 for the second PT_LOAD"
+  },
+  "assembly_excerpt": {
+    "path": "quaternion-angle-functions.asm",
+    "sha256": "7ae48fd1f330e9444bb5e47057484262744cb4a0589410a233df19c940644749"
+  },
+  "factory_dispatch": {
+    "function": "animation_track_factory",
+    "source_manifest": "../../../reference/animation-binding-functions.json",
+    "source_assembly": "../../../reference/animation-binding-functions.asm",
+    "elf_virtual_address": "0x00611ae0",
+    "elf_size_bytes": 1608,
+    "function_slice_sha256": "bb7590a23775d34fa5821fac78f1e6330a691b0c929b23cf1a3eedb733f37f72",
+    "channel_codes": [
+      6,
+      7,
+      8,
+      9
+    ],
+    "dispatch_table_entries": [
+      {
+        "channel_type": 6,
+        "entry_va": "0x00611b20",
+        "branch_target": "0x00611d78"
+      },
+      {
+        "channel_type": 7,
+        "entry_va": "0x00611b24",
+        "branch_target": "0x00611d78"
+      },
+      {
+        "channel_type": 8,
+        "entry_va": "0x00611b28",
+        "branch_target": "0x00611d78"
+      },
+      {
+        "channel_type": 9,
+        "entry_va": "0x00611b2c",
+        "branch_target": "0x00611d78"
+      }
+    ],
+    "offset_scale_rule": {
+      "record_absent": "float",
+      "type_0": "char",
+      "type_1": "short",
+      "type_2": "float",
+      "other": "null track"
+    },
+    "handler_va": "0x00611d78"
+  },
+  "functions": [
+    {
+      "name": "animation_track_factory",
+      "claim": "The transform-track factory selects the quaternion-angle singleton for channel codes 6-9 and dispatches its scalar variant from the animation offset/scale record.",
+      "original_symbols": [
+        "_ZN6glitch7collada16CColladaDatabase19getAnimationTrackExEPKNS0_10SAnimationE"
+      ],
+      "demangled": [
+        "glitch::collada::CColladaDatabase::getAnimationTrackEx(glitch::collada::SAnimation const*)"
+      ],
+      "elf_virtual_address": "0x00611ae0",
+      "elf_file_offset": "0x00611ae0",
+      "elf_size_bytes": 1608,
+      "function_slice_sha256": "bb7590a23775d34fa5821fac78f1e6330a691b0c929b23cf1a3eedb733f37f72",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_CColladaDatabase-f458595c81f3-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 1062,
+        "end": 1464
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_angle_singleton_float",
+      "claim": "Initializes the quaternion-angle CApplyValueEx singleton/vtable for the float scalar template.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEE11getInstanceEv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getInstance()"
+      ],
+      "elf_virtual_address": "0x006100dc",
+      "elf_file_offset": "0x006100dc",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "0082e79234aebffe20c5e8c2ad3d5d00da68252be30b30bf386b970760dfee5f",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-c208f587cbc3-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 44,
+        "end": 83
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_angle_singleton_short",
+      "claim": "Initializes the quaternion-angle CApplyValueEx singleton/vtable for the short scalar template.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEE11getInstanceEv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getInstance()"
+      ],
+      "elf_virtual_address": "0x00610170",
+      "elf_file_offset": "0x00610170",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "820c34defacd7e41fdc5b94fde0cb809a050d2a185d1d796c4ecc05bbedd32ef",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-907653e2c2f0-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 44,
+        "end": 83
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_angle_singleton_char",
+      "claim": "Initializes the quaternion-angle CApplyValueEx singleton/vtable for the char scalar template.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEE11getInstanceEv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getInstance()"
+      ],
+      "elf_virtual_address": "0x00610204",
+      "elf_file_offset": "0x00610204",
+      "elf_size_bytes": 148,
+      "function_slice_sha256": "ed49a1bb55f215c4a0b4ace1c9dc8101627b084d44ddde4f8c6ad0fb348ed8a2",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-ff3f68d5b483-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 44,
+        "end": 83
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "axis_angle_sampler_float_direct",
+      "claim": "Reads a direct sampled angle and, when present, the three default-axis lanes for the float default-value template.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track12CInterpreterINS1_30CSceneNodeQuaternionAngleMixinIfEEfLi4ENS1_17SUseDefaultValuesILi3EfEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float>, float, 4, glitch::collada::animation_track::SUseDefaultValues<3, float> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*)"
+      ],
+      "elf_virtual_address": "0x0061f51c",
+      "elf_file_offset": "0x0061f51c",
+      "elf_size_bytes": 120,
+      "function_slice_sha256": "818eba0e8e6db29d0f6ad1221623d64aba7e5a1e3b14ba0696c06cb6f47d0ec6",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreter_glitch_collada_animation_track_CSceneNodeQuate-c540273080cb-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 40
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "axis_angle_sampler_float_interpolated",
+      "claim": "Interpolates the sampled angle between two keys and copies the three default-axis lanes for the float default-value template.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track12CInterpreterINS1_30CSceneNodeQuaternionAngleMixinIfEEfLi4ENS1_17SUseDefaultValuesILi3EfEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float>, float, 4, glitch::collada::animation_track::SUseDefaultValues<3, float> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)"
+      ],
+      "elf_virtual_address": "0x0061f898",
+      "elf_file_offset": "0x0061f898",
+      "elf_size_bytes": 180,
+      "function_slice_sha256": "6aa7dedfa2327301558a6c41701b4adcac43fe973b33d8f73e40078e88275225",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreter_glitch_collada_animation_track_CSceneNodeQuate-c540273080cb-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 41,
+        "end": 90
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "axis_angle_sampler_short_direct",
+      "claim": "Reads a direct sampled angle and, when present, the three default-axis lanes for the short default-value template.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track12CInterpreterINS1_30CSceneNodeQuaternionAngleMixinIsEEfLi4ENS1_17SUseDefaultValuesILi3EsEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short>, float, 4, glitch::collada::animation_track::SUseDefaultValues<3, short> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*)"
+      ],
+      "elf_virtual_address": "0x00614a90",
+      "elf_file_offset": "0x00614a90",
+      "elf_size_bytes": 168,
+      "function_slice_sha256": "eb24cf7c7c497647b81ab93baec6ecf3c890b269a191544f6c12af6da11a2b90",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreter_glitch_collada_animation_track_CSceneNodeQuate-80dfc3c90e55-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 52
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "axis_angle_sampler_short_interpolated",
+      "claim": "Interpolates the sampled angle between two keys and copies the three default-axis lanes for the short default-value template.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track12CInterpreterINS1_30CSceneNodeQuaternionAngleMixinIsEEfLi4ENS1_17SUseDefaultValuesILi3EsEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short>, float, 4, glitch::collada::animation_track::SUseDefaultValues<3, short> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)"
+      ],
+      "elf_virtual_address": "0x00614b38",
+      "elf_file_offset": "0x00614b38",
+      "elf_size_bytes": 268,
+      "function_slice_sha256": "c2db42ba5be189ac42e5f51ad0c6dbd620da26e24c82c627b97bbd680ddb35f9",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreter_glitch_collada_animation_track_CSceneNodeQuate-80dfc3c90e55-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 53,
+        "end": 124
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "axis_angle_sampler_char_direct",
+      "claim": "Reads a direct sampled angle and, when present, the three default-axis lanes for the char default-value template.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track12CInterpreterINS1_30CSceneNodeQuaternionAngleMixinIcEEfLi4ENS1_17SUseDefaultValuesILi3EcEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char>, float, 4, glitch::collada::animation_track::SUseDefaultValues<3, char> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*)"
+      ],
+      "elf_virtual_address": "0x00614c44",
+      "elf_file_offset": "0x00614c44",
+      "elf_size_bytes": 164,
+      "function_slice_sha256": "8f6b53b01c84e31a43617cd972f39d9562ffad32e351381f6424af138bff2da5",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreter_glitch_collada_animation_track_CSceneNodeQuate-9edcf0855c7e-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 51
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "axis_angle_sampler_char_interpolated",
+      "claim": "Interpolates the sampled angle between two keys and copies the three default-axis lanes for the char default-value template.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track12CInterpreterINS1_30CSceneNodeQuaternionAngleMixinIcEEfLi4ENS1_17SUseDefaultValuesILi3EcEEE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CInterpreter<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char>, float, 4, glitch::collada::animation_track::SUseDefaultValues<3, char> >::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)"
+      ],
+      "elf_virtual_address": "0x00614ce8",
+      "elf_file_offset": "0x00614ce8",
+      "elf_size_bytes": 260,
+      "function_slice_sha256": "230115bbe7b6a936bddbfc581a690715f78a2a46d81ebbf8ea5d080cf9071138",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreter_glitch_collada_animation_track_CSceneNodeQuate-9edcf0855c7e-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 52,
+        "end": 121
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_angle_to_quaternion_float_direct",
+      "claim": "Runs the generic direct sampler, then calls quaternion::fromAngleAxis on its axis-angle intermediate.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIfEEfE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float>, float>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*)"
+      ],
+      "elf_virtual_address": "0x0061f594",
+      "elf_file_offset": "0x0061f594",
+      "elf_size_bytes": 64,
+      "function_slice_sha256": "fdcb584ddc8ab6a4153f1005f960e281db5be103f2f580cb64b23875f1a9f1e2",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-bc0a4b32386a-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 26
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_angle_to_quaternion_float_interpolated",
+      "claim": "Runs the generic two-key sampler, then calls quaternion::fromAngleAxis on its axis-angle intermediate.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIfEEfE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float>, float>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)"
+      ],
+      "elf_virtual_address": "0x0061f94c",
+      "elf_file_offset": "0x0061f94c",
+      "elf_size_bytes": 60,
+      "function_slice_sha256": "a4c2e45853ee6bef19b40c856c9422603fe9f5359793471012187d9987d5b1ad",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-bc0a4b32386a-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 198,
+        "end": 217
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_angle_to_quaternion_short_direct",
+      "claim": "Runs the generic direct sampler, then calls quaternion::fromAngleAxis on its axis-angle intermediate.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIsEEsE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short>, short>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*)"
+      ],
+      "elf_virtual_address": "0x00618064",
+      "elf_file_offset": "0x00618064",
+      "elf_size_bytes": 64,
+      "function_slice_sha256": "55a8d64059a1b5b3e85be0c826d31973b5f9bff3deb82d9263d6a380c0e806bb",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-7a07b83b2ec9-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 26
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_angle_to_quaternion_short_interpolated",
+      "claim": "Runs the generic two-key sampler, then calls quaternion::fromAngleAxis on its axis-angle intermediate.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIsEEsE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short>, short>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)"
+      ],
+      "elf_virtual_address": "0x006180b4",
+      "elf_file_offset": "0x006180b4",
+      "elf_size_bytes": 60,
+      "function_slice_sha256": "9f3dd17bf407cb6551918808b0ae15e6af9e9ada6ead0b96865448e4a6064ac7",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-7a07b83b2ec9-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 27,
+        "end": 47
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_angle_to_quaternion_char_direct",
+      "claim": "Runs the generic direct sampler, then calls quaternion::fromAngleAxis on its axis-angle intermediate.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIcEEcE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char>, char>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*)"
+      ],
+      "elf_virtual_address": "0x006183c0",
+      "elf_file_offset": "0x006183c0",
+      "elf_size_bytes": 64,
+      "function_slice_sha256": "537f6818bbdf4f1ac0d9011fc87386862516b569aae6e934abe86d195dfa3bd8",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-90365ac1a7c5-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 26
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_angle_to_quaternion_char_interpolated",
+      "claim": "Runs the generic two-key sampler, then calls quaternion::fromAngleAxis on its axis-angle intermediate.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track27CInterpreterQuaternionAngleINS1_30CSceneNodeQuaternionAngleMixinIcEEcE18getKeyBasedValueExERKNS0_18SAnimationAccessorEiifPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CInterpreterQuaternionAngle<glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char>, char>::getKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*)"
+      ],
+      "elf_virtual_address": "0x00618410",
+      "elf_file_offset": "0x00618410",
+      "elf_size_bytes": 60,
+      "function_slice_sha256": "e021b4f5c592079d08116ca2721c9ced211e1c1ca2d4c5be3fab3505221e9c84",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CInterpreterQuaternionAngle_glitch_collada_animation_track_-90365ac1a7c5-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 27,
+        "end": 47
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "apply_quaternion_angle_float_direct",
+      "claim": "Builds the direct quaternion value, then calls the target vtable at object slot +0x9c.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> >::applyKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ],
+      "elf_virtual_address": "0x00620fe8",
+      "elf_file_offset": "0x00620fe8",
+      "elf_size_bytes": 76,
+      "function_slice_sha256": "d62eb98c6274b97001706c42332757c6ea07a40d036ef07e0b5b9d1a22a2ec71",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-79d3c25aa4d7-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 55,
+        "end": 79
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "apply_quaternion_angle_float_interpolated",
+      "claim": "Builds the interpolated quaternion value, then calls the target vtable at object slot +0x9c.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> >::applyKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ],
+      "elf_virtual_address": "0x00621048",
+      "elf_file_offset": "0x00621048",
+      "elf_size_bytes": 76,
+      "function_slice_sha256": "9736e617a10bbfcfcd70e394b99569baffa485414019ecb566ead04b605da9ae",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-79d3c25aa4d7-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 80,
+        "end": 103
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "apply_quaternion_angle_short_direct",
+      "claim": "Builds the direct quaternion value, then calls the target vtable at object slot +0x9c.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> >::applyKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ],
+      "elf_virtual_address": "0x006210b8",
+      "elf_file_offset": "0x006210b8",
+      "elf_size_bytes": 76,
+      "function_slice_sha256": "a49b92fca0a9a55542e4b0093977c37813af034ad8541c9d196d81f3b891d588",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-183edbb4274f-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 55,
+        "end": 79
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "apply_quaternion_angle_short_interpolated",
+      "claim": "Builds the interpolated quaternion value, then calls the target vtable at object slot +0x9c.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> >::applyKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ],
+      "elf_virtual_address": "0x00621118",
+      "elf_file_offset": "0x00621118",
+      "elf_size_bytes": 76,
+      "function_slice_sha256": "8da8598706a5ed9e02ee2624b03fe36fa3ce4521a03e6f7a298d5691975d5daa",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-183edbb4274f-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 80,
+        "end": 103
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "apply_quaternion_angle_char_direct",
+      "claim": "Builds the direct quaternion value, then calls the target vtable at object slot +0x9c.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> >::applyKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ],
+      "elf_virtual_address": "0x00621188",
+      "elf_file_offset": "0x00621188",
+      "elf_size_bytes": 76,
+      "function_slice_sha256": "39d698a528eb13b13ee80d01f9a58d6827764ad2bf3160612cbbde8b99efed50",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-e196565dcf80-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 80,
+        "end": 103
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "apply_quaternion_angle_char_interpolated",
+      "claim": "Builds the interpolated quaternion value, then calls the target vtable at object slot +0x9c.",
+      "original_symbols": [
+        "_ZN6glitch7collada15animation_track13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEE20applyKeyBasedValueExERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> >::applyKeyBasedValueEx(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*)"
+      ],
+      "elf_virtual_address": "0x0061844c",
+      "elf_file_offset": "0x0061844c",
+      "elf_size_bytes": 76,
+      "function_slice_sha256": "96b386eb9ebc07319a98d30bf29f4fc79214d0ca933140030e05f8474a99f5a7",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CApplyValueEx_glitch_core_quaternion_glitch_collada_animati-e196565dcf80-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 5,
+        "end": 29
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "quaternion_from_angle_axis",
+      "claim": "Converts the angle and three-vector axis into the quaternion passed to the scene node.",
+      "original_symbols": [
+        "_ZN6glitch4core10quaternion13fromAngleAxisEfRKNS0_8vector3dIfEE"
+      ],
+      "demangled": [
+        "glitch::core::quaternion::fromAngleAxis(float, glitch::core::vector3d<float> const&)"
+      ],
+      "elf_virtual_address": "0x0060cdbc",
+      "elf_file_offset": "0x0060cdbc",
+      "elf_size_bytes": 104,
+      "function_slice_sha256": "3ae64c6b78e7a3d2cd026ecacdf872bd935963315dc6afc9a767cba667a9883a",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_core_quaternion-0c307365cc58-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 831,
+        "end": 862
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "iscenenode_set_rotation",
+      "claim": "The CSceneNode vtable entry reached by quaternion-angle application stores the quaternion as the scene node rotation.",
+      "original_symbols": [
+        "_ZN6glitch5scene10ISceneNode11setRotationERKNS_4core10quaternionE"
+      ],
+      "demangled": [
+        "glitch::scene::ISceneNode::setRotation(glitch::core::quaternion const&)"
+      ],
+      "elf_virtual_address": "0x005970f4",
+      "elf_file_offset": "0x005970f4",
+      "elf_size_bytes": 48,
+      "function_slice_sha256": "77ec1d7c1d6ce26615e9282492d5be9f47746fd4a0a584068e6de661cad521d6",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_scene_ISceneNode-7824e152fc5a-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 446,
+        "end": 463
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "float_get_key_interpolated_virtual_wrapper",
+      "claim": "Vtable slot 0x28 adapts to the float quaternion-angle interpreter/application method.",
+      "original_symbols": [
+        "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiifPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+      ],
+      "elf_virtual_address": "0x0061f988",
+      "elf_file_offset": "0x0061f988",
+      "elf_size_bytes": 28,
+      "function_slice_sha256": "6dfa0260c36ac388d53404a08def588dc50f91f91b919769b766f8851ddc54ee",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-c208f587cbc3-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 163,
+        "end": 175
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "float_get_key_direct_virtual_wrapper",
+      "claim": "Vtable slot 0x30 adapts to the float quaternion-angle interpreter/application method.",
+      "original_symbols": [
+        "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+      ],
+      "elf_virtual_address": "0x0061f5d4",
+      "elf_file_offset": "0x0061f5d4",
+      "elf_size_bytes": 16,
+      "function_slice_sha256": "5e24842f36a7c9b96f3d001f34482217c95e56f4d239853342eccda97519ae29",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-c208f587cbc3-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 127,
+        "end": 136
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "float_apply_key_interpolated_virtual_wrapper",
+      "claim": "Vtable slot 0x48 adapts to the float quaternion-angle interpreter/application method.",
+      "original_symbols": [
+        "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ],
+      "elf_virtual_address": "0x00621094",
+      "elf_file_offset": "0x00621094",
+      "elf_size_bytes": 36,
+      "function_slice_sha256": "5d2f3a2e13a9b59c9adf29f786e769e4ad146eba5226e1e196a38f8d3345bfd7",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-c208f587cbc3-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 225,
+        "end": 238
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "float_apply_key_direct_virtual_wrapper",
+      "claim": "Vtable slot 0x50 adapts to the float quaternion-angle interpreter/application method.",
+      "original_symbols": [
+        "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ],
+      "elf_virtual_address": "0x00621034",
+      "elf_file_offset": "0x00621034",
+      "elf_size_bytes": 20,
+      "function_slice_sha256": "6595079380076527b9d55f3eca0b5e2631d6e516121c8b00ef6309a2df202d5d",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-c208f587cbc3-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 214,
+        "end": 224
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "short_get_key_interpolated_virtual_wrapper",
+      "claim": "Vtable slot 0x28 adapts to the short quaternion-angle interpreter/application method.",
+      "original_symbols": [
+        "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiifPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+      ],
+      "elf_virtual_address": "0x006180f0",
+      "elf_file_offset": "0x006180f0",
+      "elf_size_bytes": 28,
+      "function_slice_sha256": "6dfa0260c36ac388d53404a08def588dc50f91f91b919769b766f8851ddc54ee",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-907653e2c2f0-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 116,
+        "end": 128
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "short_get_key_direct_virtual_wrapper",
+      "claim": "Vtable slot 0x30 adapts to the short quaternion-angle interpreter/application method.",
+      "original_symbols": [
+        "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+      ],
+      "elf_virtual_address": "0x006180a4",
+      "elf_file_offset": "0x006180a4",
+      "elf_size_bytes": 16,
+      "function_slice_sha256": "5e24842f36a7c9b96f3d001f34482217c95e56f4d239853342eccda97519ae29",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-907653e2c2f0-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 106,
+        "end": 115
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "short_apply_key_interpolated_virtual_wrapper",
+      "claim": "Vtable slot 0x48 adapts to the short quaternion-angle interpreter/application method.",
+      "original_symbols": [
+        "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ],
+      "elf_virtual_address": "0x00621164",
+      "elf_file_offset": "0x00621164",
+      "elf_size_bytes": 36,
+      "function_slice_sha256": "5d2f3a2e13a9b59c9adf29f786e769e4ad146eba5226e1e196a38f8d3345bfd7",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-907653e2c2f0-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 225,
+        "end": 238
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "short_apply_key_direct_virtual_wrapper",
+      "claim": "Vtable slot 0x50 adapts to the short quaternion-angle interpreter/application method.",
+      "original_symbols": [
+        "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ],
+      "elf_virtual_address": "0x00621104",
+      "elf_file_offset": "0x00621104",
+      "elf_size_bytes": 20,
+      "function_slice_sha256": "6595079380076527b9d55f3eca0b5e2631d6e516121c8b00ef6309a2df202d5d",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-907653e2c2f0-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 214,
+        "end": 224
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "char_get_key_interpolated_virtual_wrapper",
+      "claim": "Vtable slot 0x28 adapts to the char quaternion-angle interpreter/application method.",
+      "original_symbols": [
+        "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiifPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+      ],
+      "elf_virtual_address": "0x006184bc",
+      "elf_file_offset": "0x006184bc",
+      "elf_size_bytes": 28,
+      "function_slice_sha256": "268e659419961d748570cdfdf6883254b8147c06e2f4d63e54cfe968c8cf4555",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-ff3f68d5b483-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 131,
+        "end": 143
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "char_get_key_direct_virtual_wrapper",
+      "claim": "Vtable slot 0x30 adapts to the char quaternion-angle interpreter/application method.",
+      "original_symbols": [
+        "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEE16getKeyBasedValueERKNS0_18SAnimationAccessorEiPv"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+      ],
+      "elf_virtual_address": "0x00618400",
+      "elf_file_offset": "0x00618400",
+      "elf_size_bytes": 16,
+      "function_slice_sha256": "5e24842f36a7c9b96f3d001f34482217c95e56f4d239853342eccda97519ae29",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-ff3f68d5b483-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 106,
+        "end": 115
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "char_apply_key_interpolated_virtual_wrapper",
+      "claim": "Vtable slot 0x48 adapts to the char quaternion-angle interpreter/application method.",
+      "original_symbols": [
+        "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiifPvPNS1_15CApplicatorInfoE"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ],
+      "elf_virtual_address": "0x00618498",
+      "elf_file_offset": "0x00618498",
+      "elf_size_bytes": 36,
+      "function_slice_sha256": "5d2f3a2e13a9b59c9adf29f786e769e4ad146eba5226e1e196a38f8d3345bfd7",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-ff3f68d5b483-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 116,
+        "end": 130
+      },
+      "listing_bytes_match_elf_slice": true
+    },
+    {
+      "name": "char_apply_key_direct_virtual_wrapper",
+      "claim": "Vtable slot 0x50 adapts to the char quaternion-angle interpreter/application method.",
+      "original_symbols": [
+        "_ZNK6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEE18applyKeyBasedValueERKNS0_18SAnimationAccessorEiPvPNS1_15CApplicatorInfoE"
+      ],
+      "demangled": [
+        "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+      ],
+      "elf_virtual_address": "0x006211d4",
+      "elf_file_offset": "0x006211d4",
+      "elf_size_bytes": 20,
+      "function_slice_sha256": "6595079380076527b9d55f3eca0b5e2631d6e516121c8b00ef6309a2df202d5d",
+      "source_assembly_listing": "../../../../../../recovery/dh2-reconstruction/recovered/native/assembly/libDungeonHunter2.so/glitch_collada_animation_track_CVirtualEx_glitch_collada_animation_track_CApplyValueEx_gli-ff3f68d5b483-001.asm",
+      "source_listing_lines_1_based_inclusive": {
+        "start": 229,
+        "end": 238
+      },
+      "listing_bytes_match_elf_slice": true
+    }
+  ],
+  "track_vtables": [
+    {
+      "scalar_variant": "float",
+      "symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIfEEEEEE",
+      "demangled": "vtable for glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >",
+      "elf_virtual_address": "0x00978d28",
+      "elf_file_offset": "0x00977d28",
+      "elf_size_bytes": 152,
+      "vtable_slice_sha256": "b96a066370f1520f4c5e3948fd62de31913e0df2352442582c21f6208962b9ff",
+      "address_point_offset_from_symbol": "0x08",
+      "key_interpolated_slot_full_vtable_offset": "0x28",
+      "key_direct_slot_full_vtable_offset": "0x30",
+      "apply_interpolated_slot_full_vtable_offset": "0x48",
+      "apply_direct_slot_full_vtable_offset": "0x50",
+      "entries": [
+        {
+          "offset_from_symbol": "0x00",
+          "entry_va": "0x00978d28",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset_from_symbol": "0x04",
+          "entry_va": "0x00978d2c",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset_from_symbol": "0x08",
+          "entry_va": "0x00978d30",
+          "raw_word": "0x0060ed1c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::~CVirtualEx()"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x0c",
+          "entry_va": "0x00978d34",
+          "raw_word": "0x0060f534",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::~CVirtualEx()"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x10",
+          "entry_va": "0x00978d38",
+          "raw_word": "0x0060f07c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getValueSize() const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x14",
+          "entry_va": "0x00978d3c",
+          "raw_word": "0x0060f084",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getIdentityValue(void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x18",
+          "entry_va": "0x00978d40",
+          "raw_word": "0x0061333c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getBlendedValue(void*, float*, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x1c",
+          "entry_va": "0x00978d44",
+          "raw_word": "0x006135c4",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getAddedValue(void*, float*, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x20",
+          "entry_va": "0x00978d48",
+          "raw_word": "0x00620aec",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x24",
+          "entry_va": "0x00978d4c",
+          "raw_word": "0x00620d5c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x28",
+          "entry_va": "0x00978d50",
+          "raw_word": "0x0061f988",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x2c",
+          "entry_va": "0x00978d54",
+          "raw_word": "0x0061f874",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x30",
+          "entry_va": "0x00978d58",
+          "raw_word": "0x0061f5d4",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x34",
+          "entry_va": "0x00978d5c",
+          "raw_word": "0x0061f6e0",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x38",
+          "entry_va": "0x00978d60",
+          "raw_word": "0x0060df00",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getBlendedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x3c",
+          "entry_va": "0x00978d64",
+          "raw_word": "0x0060df04",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getAddedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x40",
+          "entry_va": "0x00978d68",
+          "raw_word": "0x0060df08",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x44",
+          "entry_va": "0x00978d6c",
+          "raw_word": "0x0060df0c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x48",
+          "entry_va": "0x00978d70",
+          "raw_word": "0x00621094",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x4c",
+          "entry_va": "0x00978d74",
+          "raw_word": "0x0060df3c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x50",
+          "entry_va": "0x00978d78",
+          "raw_word": "0x00621034",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x54",
+          "entry_va": "0x00978d7c",
+          "raw_word": "0x0060df84",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x58",
+          "entry_va": "0x00978d80",
+          "raw_word": "0x0060dfa8",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x5c",
+          "entry_va": "0x00978d84",
+          "raw_word": "0x0060dfac",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x60",
+          "entry_va": "0x00978d88",
+          "raw_word": "0x0060dfb0",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x64",
+          "entry_va": "0x00978d8c",
+          "raw_word": "0x0060dfb4",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x68",
+          "entry_va": "0x00978d90",
+          "raw_word": "0x006e307c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x6c",
+          "entry_va": "0x00978d94",
+          "raw_word": "0x006e2f3c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x70",
+          "entry_va": "0x00978d98",
+          "raw_word": "0x006e2c40",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x74",
+          "entry_va": "0x00978d9c",
+          "raw_word": "0x006e2ad8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x78",
+          "entry_va": "0x00978da0",
+          "raw_word": "0x00620804",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::applyValue(void*, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x7c",
+          "entry_va": "0x00978da4",
+          "raw_word": "0x006e2dbc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x80",
+          "entry_va": "0x00978da8",
+          "raw_word": "0x006e2fdc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, float, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x84",
+          "entry_va": "0x00978dac",
+          "raw_word": "0x006e2b8c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x88",
+          "entry_va": "0x00978db0",
+          "raw_word": "0x006e2ce8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x8c",
+          "entry_va": "0x00978db4",
+          "raw_word": "0x006e2e90",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x90",
+          "entry_va": "0x00978db8",
+          "raw_word": "0x006e2a18",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x94",
+          "entry_va": "0x00978dbc",
+          "raw_word": "0x0061cbf4",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<float> > >::retrieveValue(void*, void*) const"
+          ]
+        }
+      ]
+    },
+    {
+      "scalar_variant": "short",
+      "symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIsEEEEEE",
+      "demangled": "vtable for glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >",
+      "elf_virtual_address": "0x00978dc0",
+      "elf_file_offset": "0x00977dc0",
+      "elf_size_bytes": 152,
+      "vtable_slice_sha256": "20c6807a459ac702574dab50d1fa629284d648cc49dee91d9ee75eeaeda117eb",
+      "address_point_offset_from_symbol": "0x08",
+      "key_interpolated_slot_full_vtable_offset": "0x28",
+      "key_direct_slot_full_vtable_offset": "0x30",
+      "apply_interpolated_slot_full_vtable_offset": "0x48",
+      "apply_direct_slot_full_vtable_offset": "0x50",
+      "entries": [
+        {
+          "offset_from_symbol": "0x00",
+          "entry_va": "0x00978dc0",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset_from_symbol": "0x04",
+          "entry_va": "0x00978dc4",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset_from_symbol": "0x08",
+          "entry_va": "0x00978dc8",
+          "raw_word": "0x0060ed20",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::~CVirtualEx()"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x0c",
+          "entry_va": "0x00978dcc",
+          "raw_word": "0x0060f548",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::~CVirtualEx()"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x10",
+          "entry_va": "0x00978dd0",
+          "raw_word": "0x0060f058",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getValueSize() const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x14",
+          "entry_va": "0x00978dd4",
+          "raw_word": "0x0060f060",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getIdentityValue(void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x18",
+          "entry_va": "0x00978dd8",
+          "raw_word": "0x00613350",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getBlendedValue(void*, float*, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x1c",
+          "entry_va": "0x00978ddc",
+          "raw_word": "0x006135d8",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getAddedValue(void*, float*, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x20",
+          "entry_va": "0x00978de0",
+          "raw_word": "0x00620b54",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x24",
+          "entry_va": "0x00978de4",
+          "raw_word": "0x00620dc4",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x28",
+          "entry_va": "0x00978de8",
+          "raw_word": "0x006180f0",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x2c",
+          "entry_va": "0x00978dec",
+          "raw_word": "0x0061839c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x30",
+          "entry_va": "0x00978df0",
+          "raw_word": "0x006180a4",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x34",
+          "entry_va": "0x00978df4",
+          "raw_word": "0x00618208",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x38",
+          "entry_va": "0x00978df8",
+          "raw_word": "0x0060df00",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getBlendedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x3c",
+          "entry_va": "0x00978dfc",
+          "raw_word": "0x0060df04",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getAddedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x40",
+          "entry_va": "0x00978e00",
+          "raw_word": "0x0060df08",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x44",
+          "entry_va": "0x00978e04",
+          "raw_word": "0x0060df0c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x48",
+          "entry_va": "0x00978e08",
+          "raw_word": "0x00621164",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x4c",
+          "entry_va": "0x00978e0c",
+          "raw_word": "0x0060df3c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x50",
+          "entry_va": "0x00978e10",
+          "raw_word": "0x00621104",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x54",
+          "entry_va": "0x00978e14",
+          "raw_word": "0x0060df84",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x58",
+          "entry_va": "0x00978e18",
+          "raw_word": "0x0060dfa8",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x5c",
+          "entry_va": "0x00978e1c",
+          "raw_word": "0x0060dfac",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x60",
+          "entry_va": "0x00978e20",
+          "raw_word": "0x0060dfb0",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x64",
+          "entry_va": "0x00978e24",
+          "raw_word": "0x0060dfb4",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x68",
+          "entry_va": "0x00978e28",
+          "raw_word": "0x006e307c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x6c",
+          "entry_va": "0x00978e2c",
+          "raw_word": "0x006e2f3c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x70",
+          "entry_va": "0x00978e30",
+          "raw_word": "0x006e2c40",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x74",
+          "entry_va": "0x00978e34",
+          "raw_word": "0x006e2ad8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x78",
+          "entry_va": "0x00978e38",
+          "raw_word": "0x006207ec",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::applyValue(void*, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x7c",
+          "entry_va": "0x00978e3c",
+          "raw_word": "0x006e2dbc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x80",
+          "entry_va": "0x00978e40",
+          "raw_word": "0x006e2fdc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, float, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x84",
+          "entry_va": "0x00978e44",
+          "raw_word": "0x006e2b8c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x88",
+          "entry_va": "0x00978e48",
+          "raw_word": "0x006e2ce8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x8c",
+          "entry_va": "0x00978e4c",
+          "raw_word": "0x006e2e90",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x90",
+          "entry_va": "0x00978e50",
+          "raw_word": "0x006e2a18",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x94",
+          "entry_va": "0x00978e54",
+          "raw_word": "0x0061cbb8",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<short> > >::retrieveValue(void*, void*) const"
+          ]
+        }
+      ]
+    },
+    {
+      "scalar_variant": "char",
+      "symbol": "_ZTVN6glitch7collada15animation_track10CVirtualExINS1_13CApplyValueExINS_4core10quaternionENS1_30CSceneNodeQuaternionAngleMixinIcEEEEEE",
+      "demangled": "vtable for glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >",
+      "elf_virtual_address": "0x00978e58",
+      "elf_file_offset": "0x00977e58",
+      "elf_size_bytes": 152,
+      "vtable_slice_sha256": "8709d6b337e065f488172778bb5702a3728c99c4f62bba5df20ce8967248c30b",
+      "address_point_offset_from_symbol": "0x08",
+      "key_interpolated_slot_full_vtable_offset": "0x28",
+      "key_direct_slot_full_vtable_offset": "0x30",
+      "apply_interpolated_slot_full_vtable_offset": "0x48",
+      "apply_direct_slot_full_vtable_offset": "0x50",
+      "entries": [
+        {
+          "offset_from_symbol": "0x00",
+          "entry_va": "0x00978e58",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset_from_symbol": "0x04",
+          "entry_va": "0x00978e5c",
+          "raw_word": "0x00000000",
+          "target_symbols": []
+        },
+        {
+          "offset_from_symbol": "0x08",
+          "entry_va": "0x00978e60",
+          "raw_word": "0x0060ed24",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::~CVirtualEx()"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x0c",
+          "entry_va": "0x00978e64",
+          "raw_word": "0x0060f55c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::~CVirtualEx()"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x10",
+          "entry_va": "0x00978e68",
+          "raw_word": "0x0060f034",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getValueSize() const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x14",
+          "entry_va": "0x00978e6c",
+          "raw_word": "0x0060f03c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getIdentityValue(void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x18",
+          "entry_va": "0x00978e70",
+          "raw_word": "0x00613364",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getBlendedValue(void*, float*, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x1c",
+          "entry_va": "0x00978e74",
+          "raw_word": "0x006135ec",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getAddedValue(void*, float*, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x20",
+          "entry_va": "0x00978e78",
+          "raw_word": "0x00620bbc",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x24",
+          "entry_va": "0x00978e7c",
+          "raw_word": "0x00620e2c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x28",
+          "entry_va": "0x00978e80",
+          "raw_word": "0x006184bc",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x2c",
+          "entry_va": "0x00978e84",
+          "raw_word": "0x00618768",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x30",
+          "entry_va": "0x00978e88",
+          "raw_word": "0x00618400",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x34",
+          "entry_va": "0x00978e8c",
+          "raw_word": "0x006185d4",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x38",
+          "entry_va": "0x00978e90",
+          "raw_word": "0x0060df00",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getBlendedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x3c",
+          "entry_va": "0x00978e94",
+          "raw_word": "0x0060df04",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getAddedValue(void*, float*, int, void*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x40",
+          "entry_va": "0x00978e98",
+          "raw_word": "0x0060df08",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x44",
+          "entry_va": "0x00978e9c",
+          "raw_word": "0x0060df0c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::getKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x48",
+          "entry_va": "0x00978ea0",
+          "raw_word": "0x00618498",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x4c",
+          "entry_va": "0x00978ea4",
+          "raw_word": "0x0060df3c",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, int, float, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x50",
+          "entry_va": "0x00978ea8",
+          "raw_word": "0x006211d4",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x54",
+          "entry_va": "0x00978eac",
+          "raw_word": "0x0060df84",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, void*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x58",
+          "entry_va": "0x00978eb0",
+          "raw_word": "0x0060dfa8",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyBlendedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x5c",
+          "entry_va": "0x00978eb4",
+          "raw_word": "0x0060dfac",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyAddedValue(void*, float*, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x60",
+          "entry_va": "0x00978eb8",
+          "raw_word": "0x0060dfb0",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, int, float, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x64",
+          "entry_va": "0x00978ebc",
+          "raw_word": "0x0060dfb4",
+          "target_symbols": [
+            "glitch::collada::IAnimationTrackEx::applyKeyBasedValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x68",
+          "entry_va": "0x00978ec0",
+          "raw_word": "0x006e307c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x6c",
+          "entry_va": "0x00978ec4",
+          "raw_word": "0x006e2f3c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x70",
+          "entry_va": "0x00978ec8",
+          "raw_word": "0x006e2c40",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x74",
+          "entry_va": "0x00978ecc",
+          "raw_word": "0x006e2ad8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x78",
+          "entry_va": "0x00978ed0",
+          "raw_word": "0x006207d4",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::applyValue(void*, void*, glitch::collada::animation_track::CApplicatorInfo*) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x7c",
+          "entry_va": "0x00978ed4",
+          "raw_word": "0x006e2dbc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, int, void*, int&, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x80",
+          "entry_va": "0x00978ed8",
+          "raw_word": "0x006e2fdc",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, float, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x84",
+          "entry_va": "0x00978edc",
+          "raw_word": "0x006e2b8c",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::getValue(glitch::collada::SAnimationAccessor const&, int, void*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x88",
+          "entry_va": "0x00978ee0",
+          "raw_word": "0x006e2ce8",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x8c",
+          "entry_va": "0x00978ee4",
+          "raw_word": "0x006e2e90",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, float, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x90",
+          "entry_va": "0x00978ee8",
+          "raw_word": "0x006e2a18",
+          "target_symbols": [
+            "glitch::collada::CAnimationTrackEx::applyValue(glitch::collada::SAnimationAccessor const&, int, void*, glitch::collada::animation_track::CApplicatorInfo*, int&, float, bool) const"
+          ]
+        },
+        {
+          "offset_from_symbol": "0x94",
+          "entry_va": "0x00978eec",
+          "raw_word": "0x0061cb7c",
+          "target_symbols": [
+            "glitch::collada::animation_track::CVirtualEx<glitch::collada::animation_track::CApplyValueEx<glitch::core::quaternion, glitch::collada::animation_track::CSceneNodeQuaternionAngleMixin<char> > >::retrieveValue(void*, void*) const"
+          ]
+        }
+      ]
+    }
+  ],
+  "scene_rotation_dispatch": {
+    "symbol": "_ZTVN6glitch7collada10CSceneNodeE",
+    "demangled": "vtable for glitch::collada::CSceneNode",
+    "elf_virtual_address": "0x009835c0",
+    "elf_file_offset": "0x009825c0",
+    "elf_size_bytes": 304,
+    "vtable_slice_sha256": "7052ff2507ff1b462435f94327fe1d7570506be366bb67603644562be73fdd7f",
+    "primary_address_point_offset_from_symbol": "0x1c",
+    "target_object_slot_offset": "0x9c",
+    "target_entry_offset_from_symbol": "0xb8",
+    "target_entry_va": "0x00983678",
+    "target_entry_raw_word": "0x005970f4",
+    "target_entry_sha256": "88c70c0c0bfdbe9a364ff90e169c188fabe02d6033e40f8f4078018155717ca5",
+    "target_symbol": [
+      "glitch::scene::ISceneNode::setRotation(glitch::core::quaternion const&)"
+    ]
+  },
+  "external_cross_references": [
+    {
+      "path": "../../ANALYSIS.md",
+      "claim": "Typed transform tracks and CAnimationTrackEx direct/interpolated key dispatch"
+    },
+    {
+      "path": "../../../bindings/ANALYSIS.md",
+      "claim": "Animation-set channel binding and runtime target pointer path"
+    },
+    {
+      "path": "../../../targets/target-resolution-functions.json",
+      "claim": "CSceneNode constructor primary address point and complete vtable provenance"
+    },
+    {
+      "path": "../../../../engine-math/original-functions.json",
+      "claim": "quaternion::fromAngleAxis ARM provenance and bounded port entrypoint"
+    }
+  ],
+  "verification": {
+    "function_ranges": 36,
+    "function_listing_ranges_byte_match": true,
+    "vtable_words_checked_against_elf": true,
+    "scene_rotation_slot_checked_against_setRotation_symbol": true,
+    "apk_extracted_elf_rehashed": true
+  }
+}

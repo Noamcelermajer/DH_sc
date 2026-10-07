@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "method": "Read-only scan of printable targets for exact BRES fixups at image-row offsets +0x00, +0x04, and +0x08.",
+  "source_root_label": "recovered game cache files/data",
+  "bdae_files_encountered": 2900,
+  "valid_bres_files": 2900,
+  "distinct_plus_04_strings": 377,
+  "counts": {
+    "field_00_fixups": 3662,
+    "field_00_printable_strings": 3662,
+    "field_04_exact_dot_to_underscore_aliases": 3662,
+    "field_04_fixups": 3662,
+    "field_04_printable_strings": 3662,
+    "field_08_fixups": 3662,
+    "field_08_printable_strings": 3662,
+    "image_rows": 3662
+  },
+  "examples": [
+    {
+      "file": "3d/animateddecors/candle_flame.bdae",
+      "row_index": 0,
+      "row_offset": 7604,
+      "key_plus_00": "Map__756__env_crypt_spec.tga_",
+      "companion_plus_04": "Map__756__env_crypt_spec_tga_",
+      "path_plus_08": "q:/data/iphone/3d/textures/env_crypt_spec.tga"
+    },
+    {
+      "file": "3d/animateddecors/candle_flame.bdae",
+      "row_index": 1,
+      "row_offset": 7624,
+      "key_plus_00": "Map__759__env_crypt_alpha.tga_",
+      "companion_plus_04": "Map__759__env_crypt_alpha_tga_",
+      "path_plus_08": "q:/data/iphone/3d/textures/env_crypt_alpha.tga"
+    },
+    {
+      "file": "3d/animateddecors/candle_flame.bdae",
+      "row_index": 2,
+      "row_offset": 7644,
+      "key_plus_00": "env_crypt.tga",
+      "companion_plus_04": "env_crypt_tga",
+      "path_plus_08": "q:/data/iphone/3d/textures/env_crypt.tga"
+    },
+    {
+      "file": "3d/animateddecors/castle/biblio_throneroom.bdae",
+      "row_index": 0,
+      "row_offset": 7400,
+      "key_plus_00": "Map__0__env_castle.tga_",
+      "companion_plus_04": "Map__0__env_castle_tga_",
+      "path_plus_08": "q:/data/iphone/3d/textures/env_castle.tga"
+    },
+    {
+      "file": "3d/animateddecors/castle/chandelier_castle.bdae",
+      "row_index": 0,
+      "row_offset": 12340,
+      "key_plus_00": "Map__431__env_castle.tga_",
+      "companion_plus_04": "Map__431__env_castle_tga_",
+      "path_plus_08": "q:/data/iphone/3d/textures/env_castle.tga"
+    },
+    {
+      "file": "3d/animateddecors/castle/chandelier_castle.bdae",
+      "row_index": 1,
+      "row_offset": 12360,
+      "key_plus_00": "Map__432__env_castle_spec.tga_",
+      "companion_plus_04": "Map__432__env_castle_spec_tga_",
+      "path_plus_08": "q:/data/iphone/3d/textures/env_castle_spec.tga"
+    },
+    {
+      "file": "3d/animateddecors/castle/chandelier_castle.bdae",
+      "row_index": 2,
+      "row_offset": 12380,
+      "key_plus_00": "Map__435__env_castle_alpha.tga_",
+      "companion_plus_04": "Map__435__env_castle_alpha_tga_",
+      "path_plus_08": "q:/data/iphone/3d/textures/env_castle_alpha.tga"
+    },
+    {
+      "file": "3d/animateddecors/castle/lustre_castle.bdae",
+      "row_index": 0,
+      "row_offset": 27484,
+      "key_plus_00": "Map__431__env_castle.tga_",
+      "companion_plus_04": "Map__431__env_castle_tga_",
+      "path_plus_08": "q:/data/iphone/3d/textures/env_castle.tga"
+    }
+  ],
+  "interpretation_limit": "The +0x04 relationship is a corpus pattern, not proof of its native consumer or purpose. The +0x08 path field's native forwarding is documented in ANALYSIS.md; path resolution and cache-key semantics remain open."
+}

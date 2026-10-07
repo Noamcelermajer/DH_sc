@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "recovered_cache_root": "work/cache-recovery/extracted/com.gameloft.android.GAND.GloftD2SS",
+  "recursive_regular_files_scanned": 5839,
+  "bmp_suffix_files": 0,
+  "files_with_bmp_signature_at_byte_zero": 0,
+  "signature_rule": "first two bytes equal ASCII BM (0x42 0x4d)",
+  "signature_rule_matches": "CImageLoaderBMP::isALoadableFileFormat reads two bytes and compares the little-endian 16-bit value with 0x4d42",
+  "bmp_suffix_rule": "case-sensitive substring tests for .bmp and .BMP; not suffix-only",
+  "scope_note": "This census covers only regular files under the recovered cache extraction root. It does not establish that no other BMP data exists in unextracted containers or outside this cache."
+}
