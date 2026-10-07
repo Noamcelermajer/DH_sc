@@ -1,4 +1,5 @@
 #include "character_state.hpp"
+#include "character_skill_state_dispatch_v1.hpp"
 #include <cmath>
 #include <cstring>
 namespace {
@@ -70,6 +71,26 @@ void focus(State& s,const Facts& f,int prior,std::uint64_t payload,const Service
 int transition(State& s,const Facts& f,int next,int event,std::uint64_t payload,const Services& c){
  const int prior=s.current;blur(s,f,c);s.current=next;if(prior!=next)s.elapsed_ms=0;
  focus(s,f,prior,payload,c);call(s,c,raise_event,0x1d,prior,0,0,std::uint64_t(std::int64_t(prior)));
+ (void)event;return 1;
+}
+bool skill_id(int value){return id(value)||value==6;}
+int skill_transition(State& s,const Facts& f,
+ dh2::character_skill_state_dispatch_v1::Projection& projection,
+ int next,int event,std::uint64_t payload,const Services& c){
+ namespace skill=dh2::character_skill_state_dispatch_v1;
+ const int prior=s.current;
+ if(prior==6){
+  skill::Result callback{};
+  if(skill::callback(&projection,dh2::character_skill_fsm_callbacks_v1::Callback::blur,
+                     &callback)!=skill::Status::complete)return -1;
+ }else blur(s,f,c);
+ s.current=next;if(prior!=next)s.elapsed_ms=0;
+ if(next==6){
+  skill::Result callback{};
+  if(skill::callback(&projection,dh2::character_skill_fsm_callbacks_v1::Callback::focus,
+                     &callback)!=skill::Status::complete)return -1;
+ }else focus(s,f,prior,payload,c);
+ call(s,c,raise_event,0x1d,prior,0,0,std::uint64_t(std::int64_t(prior)));
  (void)event;return 1;
 }
 bool spawn_state_id(int value){return value==-1||value==0||value==1||value==3||value==17;}
@@ -195,6 +216,20 @@ extern "C" int dh2_character_state_update(dh2::character::State* s,const dh2::ch
   if(!(std::fabs(f->walk_speed-s->cached_speed)<0.0001f))speed(*s,*c,f->walk_speed);
  }else if(s->current==5){call(*s,*c,look_at,0,0,0,0,f->target);if(!(std::fabs(f->attack_speed-s->cached_speed)<0.0001f))speed(*s,*c,f->attack_speed);}
  return 1;
+}
+extern "C" int dh2_character_skill_state_transition(dh2::character::State* s,
+ const dh2::character::Facts* f,
+ dh2::character_skill_state_dispatch_v1::Projection* projection,
+ std::int32_t next,std::int32_t event,std::uint64_t payload,
+ const dh2::character::Services* c){
+ using namespace dh2::character;
+ if(!valid_base(s,f,c)||!projection||projection->machine!=s||
+    !skill_id(s->current)||next==-1||!skill_id(next))return -1;
+ // State 6's registered graph only connects to the selected states below.
+ // Entry is selected from Move/Attack/Idle (3/4/5) by C355.
+ if((next==6&&s->current!=3&&s->current!=4&&s->current!=5&&s->current!=6)||
+    (s->current==6&&next!=3&&next!=4&&next!=5&&next!=6&&next!=12))return -1;
+ return skill_transition(*s,*f,*projection,next,event,payload,*c);
 }
 extern "C" int dh2_character_attack_speed(float* out,const std::int32_t* properties){
  if(!out||!properties)return -1;

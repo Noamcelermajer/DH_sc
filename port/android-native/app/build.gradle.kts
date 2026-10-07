@@ -11,7 +11,10 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
-val dh2SourceRoot = rootProject.file("reconstruction-source").takeIf { it.exists() }
+val configuredDh2SourceRoot = providers.gradleProperty("dh2SourceRoot")
+    .orNull?.let { file(it) }?.takeIf { it.exists() }
+val dh2SourceRoot = configuredDh2SourceRoot
+    ?: rootProject.file("reconstruction-source").takeIf { it.exists() }
     ?: rootProject.file("../..")
 
 android {
@@ -33,6 +36,7 @@ android {
         externalNativeBuild {
             cmake {
                 arguments += "-DDH2_SOURCE_DIR=${dh2SourceRoot.invariantSeparatorsPath}"
+                arguments += "-DCMAKE_OBJECT_PATH_MAX=200"
             }
         }
     }

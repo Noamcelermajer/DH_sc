@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+namespace dh2::character_skill_state_dispatch_v1 { struct Projection; }
 namespace dh2::character {
 // Logical projection of Character and CharStateMachine, never an ARM32 overlay.
 struct State {
@@ -97,6 +98,12 @@ int dh2_character_state_event(dh2::character::State*,const dh2::character::Facts
 // machine stun/scare enforcement and general timers/AI are outside this API.
 int dh2_character_state_update(dh2::character::State*,const dh2::character::Facts*,
  std::uint32_t dt_ms,const dh2::character::Services*);
+// Coordinator-only CSSkill transition path. The projection borrows this same
+// State and the captured callback graph; the original State/Facts/Services
+// layouts and ordinary state entry points remain unchanged.
+int dh2_character_skill_state_transition(dh2::character::State*,const dh2::character::Facts*,
+ dh2::character_skill_state_dispatch_v1::Projection*,std::int32_t next,
+ std::int32_t event,std::uint64_t payload,const dh2::character::Services*);
 // Source-backed Limbus(0), Spawn(1), and existing Idle(3) transitions. The
 // original SpawnCharacter script and Limbus respawn timer both arrive here.
 int dh2_character_spawn_transition(dh2::character::State*,const dh2::character::Facts*,

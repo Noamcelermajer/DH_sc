@@ -11,6 +11,7 @@ unsigned apply(dh2::data::MonsterApplication* out,const dh2::data::MonsterApplic
  if(result.amount>0){
   volatile float per_damage=float(attacker.resolved[204])*.00390625f;
   volatile float damage=float(result.amount)*.00390625f;next.threat=per_damage*damage;
+  if(request->before_hit)request->before_hit(request->before_hit_context,next.threat);
   ds.push_death=(result.outcomes&128)?((result.mask>>20)&1):0;
   HealthRequest hit{&defender,std::uint32_t(result.amount),(player_defender?health_player:health_monster)|health_game_present|health_main_player_present|(ds.dead?health_dead:0u),0,ds.low_health_armed};
   dh2_health_hit(&next.health,&hit);next.hit_called=1;ds.low_health_armed=next.health.low_health_armed;

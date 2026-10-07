@@ -5,9 +5,9 @@ Updated: 2026-10-07. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest build checkpoint APK:** [Android 17 equipment-driven actor facts](https://github.com/Noamcelermajer/DH_sc/releases/download/native-equipment-stance-2026-10-07/app-debug.apk).
-APK: 153,913,584 bytes; SHA-256 `5773CB5DC6BBE7F66AF85BEB94F0C0DB198227B9E6A1609D6ECE43F332830F87`.
-Android target SDK 37 build passed for ARM64 and x86_64 at code commit `d0f62da0`; APK signature and 16 KiB ZIP alignment pass. Player damage, stance and ranged queries read the canonical V4 inventory. This checkpoint has build/package checks only; equipment mutation/UI, equipped attacks, loot and pickup remain unverified.
+**Latest build checkpoint APK:** [Android 17 combat and class-selection checkpoint](https://github.com/Noamcelermajer/DH_sc/releases/download/native-combat-class-2026-10-07/app-debug.apk). Source tag: `native-combat-class-2026-10-07` on this reconstruction branch.
+APK: 147,588,416 bytes; SHA-256 `01E91C988095CCC9DC4E92BFC312ECEBD7CA495525FA1F3531F6F59247BA4854`.
+API 37 ARM64/x86_64 build, APK signature and 16 KiB ZIP alignment pass. This adds source-order aggro before HitFor and fixes class-specific draw selection. No emulator or gameplay test was run; equipment mutation/UI, full Kill rewards, skills and pickup remain open. On this long Windows checkout, build with `-Pdh2SourceRoot=<short mapped checkout>`; Gradle sets CMake's object-path cap to 200.
 
 Prior live evidence applies to the previous APK from [commit `d4142762`](https://github.com/Noamcelermajer/DH_sc/commit/d4142762): API37/16KiB emulator tests passed all three class create/reopen/Back/Home-resume flows. A bounded Crypt smoke verified six player hit events with enemy AI disabled. A separate live exchange verified touch movement, seven enemy hits, and a 57-damage ordinary player attack. Neither run tested loot or progression. [Live exchange](../port/android-native/reports/live-crypt-ai-player-combat-62557f03.json), [menu](../port/android-native/reports/menu-ui-runtime-smoke-62557f03.json), [combat](../port/android-native/reports/character-combat-smoke-62557f03.json).
 
@@ -180,6 +180,9 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
   bounded fixtures; this is not live loot or player gameplay. See the
   [selected-library host report](../reports/branch-audit-2026-10-05/adam-integrated-host.json).
 - [x] Select borrowing equipment requirements/recalculation services over the same V4 inventory and buff-aware properties; 7,451 selected-host checks and both Android ABIs pass. Review fixed retirement before item deletion. Native Skin/text/HUD and final teardown remain open.
+- [x] Parse the Prince modular BRES catalog into the selected engine-skinning library: 4 categories, 172 modules, 10 exact starter mappings and exact placeholder/naked fallback; focused target host audit passes. This resolves assets only.
+- [x] Pass the selected Player `ClassID` (263/290/325) to class-specific world draw selection, distinct from the character-table row index. API37 ARM64/x86_64 compilation passes; no visual playtest.
+- [ ] Add lifecycle-owned modular draw batches over the existing `current_scene` pose and canonical V4 equipment changes; then Android-compile and visually check equip/unequip. No second scene or pose owner.
 - [x] Route saved PROP into the same gameplay Save and PlayerCombat PropertyRules/PropertyState: 753 selected-host checks, 26 saved fields, no generic fallback, and reached-prefix retention on truncation. Live InitPost remains unbound.
 - [ ] Complete Character construction, all property sheet/buff/gear ownership and lifecycle phases.
 - [x] Select Adam's V5 item presentation on existing item identities/table authority; 4,031 presentation and 1,119 power-instance gold replays pass. Native text/localization remains open.
@@ -290,9 +293,10 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Connect source equipped-faery ID/level wrappers to that same save/VM: 49 host checks, 130 ARM comparisons and complete native faery updates; no invented unlock/grant.
 - [x] Adapt one source buff owner to current properties/Coordinator and run actual Celest resistance live across reload/rotation. 40 whole-state ARM and 40 same-VM host updates pass; FX and live timed expiry remain open.
 - [x] Select CSSkill Focus/Blur and state6 event projection over borrowed Coordinator fields; 214 new ARM comparisons, 60 host cases and both Android ABIs pass. Native activation remains open.
+- [x] Compose CSSkill state 6 into the same Character Coordinator: C355 entry, event28, source Focus/Blur ordering, elapsed reset, and close event22. Focused `character_coordinator_audit` builds/runs in the target checkout. Android does not bind the optional projection or issue skill commands yet.
 - [ ] Complete nonempty skills for all classes through full Player AIS construction,
   saved skill levels, `LuaManager::AddFile` and lifecycle ownership.
-- [ ] Connect real Arguments/ReturnValues ownership, skill update/check/use callbacks and Lua errors.
+- [ ] Bind profile/equipment skill slots before preparation, then Android Begin/End input and CharAI skill-machine fields to `_InitSkillsSlots` and the existing `AI_BeginSkill`/`AI_UseSkill` kernels, using the same Coordinator state 6 and sole VM. Route authored animation event 42 to `OnSkill`; playback already forwards close event `0x22`. Then bind source target search/LookAt/ClearTarget and exact `SkillCombatRoll` Arguments. Mana/cooldown owners already exist; no starter grant or damaging cast is wired.
 - [ ] Complete all 265 original Character bindings and every actually used game/engine service.
 - [ ] Connect native Ghost acquisition and pursuit through real frame/path/body services.
 - [ ] Bind positive Player DoT attack/application and Ghost AI/DoT providers; Ghost timers remain paused.
@@ -325,6 +329,8 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Retry failed one-shot death-loot continuations from the world update; retire partial V4 staging by retained item identity before rerolling. Compile both Android ABIs; no live loot claim.
 - [x] Feed player melee and actor stance/ranged facts from the canonical V4 inventory. IDA `F_MeleeAttack` confirms slots 1/2 and item word 37; `HasRangedWeapon` uses word 22 types 4/5. API37 ARM64/x86_64 build/package passes. Inventory UI/equip mutations and gameplay remain open.
 - [ ] Live-test the guarded kill → BDAE model/sensor → deferred MoveOn pickup path. The build is available; gameplay and pickup are not verified.
+- [x] Align the three current direct melee directions with positive-amount `AI_AddAggro` before `HitFor` through the existing reciprocal aggro tables; `combat_application_order_audit` passes nonlethal, lethal, no-hit and rejected cases.
+- [ ] Route one enemy Kill episode through `DropLoot(victim,killer)`, event4/player credit and then outer event2 using the same ObjectActor. Reuse current V4/V5/V7 loot owners. Ordinary enemy AIS initialization, PlayerManager/XP and EventManager quest providers are still absent; do not claim complete Kill rewards.
 - [ ] Complete all CalculateResult/ApplyResult dependencies, effects, notifications and actor ownership.
 - [ ] Connect melee/ranged/spell combat, skills, criticals, resistances and status effects in the final runtime.
 - [ ] Complete player damage/death, attacker/killer credit, resurrection and respawn.

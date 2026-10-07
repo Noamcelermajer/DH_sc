@@ -2186,6 +2186,16 @@ void add_combat_threat(AggroStorage& owner,AggroStorage& target,std::uint64_t ow
  owner.out_count=outgoing.count;target.in_count=incoming.count;
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Combat aggression | owner %llu | target %llu | amount bits %08x | delta bits %08x | outgoing %u | incoming %u | requests %u | callback services pending",static_cast<unsigned long long>(owner_id),static_cast<unsigned long long>(target_id),bits,result.returned_bits,owner.out_count,target.in_count,result.requests);
 }
+struct CombatAggroBeforeHit {
+ AggroStorage* owner;
+ AggroStorage* target;
+ std::uint64_t owner_id,target_id;
+ unsigned facts;
+};
+void add_combat_threat_before_hit(void* context,float amount){
+ auto* request=static_cast<CombatAggroBeforeHit*>(context);
+ if(request&&request->owner&&request->target)add_combat_threat(*request->owner,*request->target,request->owner_id,request->target_id,amount,request->facts);
+}
 dh2::data::AiRangeResult actor_player_range(const ObjectActor& actor){
  const auto* npc=dh2::data::ai_props(actor_ai_tables,actor.properties.resolved[1]);const auto* prince=dh2::data::ai_props(actor_ai_tables,prince_combat.properties.resolved[1]);dh2::data::AiRangeResult result{};if(!npc||!prince)return result;
  const dh2::data::AiRangeRequest request{{actor.position[0],actor.position[1],actor.position[2]},{actor_position[0],actor_position[1],actor_position[2]},npc->melee_radius,prince->melee_radius,npc->view_radius};dh2_ai_range(&result,&request);return result;
@@ -2223,10 +2233,11 @@ void apply_actor_to_player(ObjectActor& attacker,const dh2::data::CombatEventAct
  // merely because movement input is held. Full original FSM producers remain pending.
  const bool idle=dh2_character_state_is_idle(prince_state.current,0)==1;
  dh2::data::CombatantView av{attacker.properties.resolved.data(),-1,-1,0,0,0,5,attacker.combat_state.combo_hits},dv{prince_combat.properties.resolved.data(),-1,-1,0,0,0,prince_state.current,prince_combat.life.combo_hits};
- dh2::data::CombatResult result;dh2::data::MonsterApplication applied;auto ap=dh2::data::property_view(actor_property_rules,attacker.properties),dp=dh2::data::property_view(actor_property_rules,prince_combat.properties);const dh2::data::MonsterApplicationRequest request{&result,&ap,&dp,&attacker.combat_state,&prince_combat.life};
+ dh2::data::CombatResult result;dh2::data::MonsterApplication applied;auto ap=dh2::data::property_view(actor_property_rules,attacker.properties),dp=dh2::data::property_view(actor_property_rules,prince_combat.properties);
  const unsigned aggro_facts=dh2::data::aggro_owner_player|(attacker.combat_state.dead?dh2::data::aggro_target_dead:0u);
+ CombatAggroBeforeHit aggro{&prince_combat.aggro,&attacker.aggro,prince_character.identity(),attacker.identity,aggro_facts};
+ const dh2::data::MonsterApplicationRequest request{&result,&ap,&dp,&attacker.combat_state,&prince_combat.life,&add_combat_threat_before_hit,&aggro};
  if(dh2_combat_melee(&result,&av,&dv,&combat_random,action.offhand,0)||dh2_combat_apply_monster_to_player(&applied,&request,idle)){__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Player defender application failed");enabled=false;return;}
- if(applied.hit_called)add_combat_threat(prince_combat.aggro,attacker.aggro,prince_character.identity(),attacker.identity,applied.threat,aggro_facts);
  ++combat_hits;++prince_combat.received;
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Prince damage received | attacker %s | attempt %u | result %d %d %d %d %d %d %u %u %d %d | HP %d %d | dead %u | combo %u | RNG %u %u | statuses %u | low health armed %u | cue %u | checksum %016llx",attacker.name.c_str(),prince_combat.received,result.amount,result.dot_element,result.dot_duration,result.dot_amount,result.hp_leech,result.mp_leech,result.outcomes,result.mask,result.weapon_category,result.element,applied.health.before,applied.health.after,prince_combat.life.dead,attacker.combat_state.combo_hits,combat_random.seed,combat_random.calls,applied.status_requests,prince_combat.life.low_health_armed,applied.health.low_health_cue,static_cast<unsigned long long>(snapshot_checksum(prince_combat.properties.resolved)));
  if(applied.health.low_health_cue)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Player low health request | HP %d | maximum %d | audio pending",applied.health.after,prince_combat.properties.resolved[38]);
@@ -2243,10 +2254,10 @@ void apply_actor_attack(ObjectActor& attacker,const dh2::data::CombatEventAction
  dh2::data::CombatantView av{attacker.properties.resolved.data(),-1,-1,0,0,0,5,attacker.combat_state.combo_hits},dv{defender->properties.resolved.data(),-1,-1,0,0,0,defender->state=="Attack"?5:-1,defender->combat_state.combo_hits};
  dh2::data::CombatResult result;dh2::data::MonsterApplication applied;
  auto ap=dh2::data::property_view(actor_property_rules,attacker.properties),dp=dh2::data::property_view(actor_property_rules,defender->properties);
- const dh2::data::MonsterApplicationRequest request{&result,&ap,&dp,&attacker.combat_state,&defender->combat_state};
  const unsigned aggro_facts=(defender->combat_state.dead?dh2::data::aggro_owner_dead:0u)|(attacker.combat_state.dead?dh2::data::aggro_target_dead:0u);
+ CombatAggroBeforeHit aggro{&defender->aggro,&attacker.aggro,defender->identity,attacker.identity,aggro_facts};
+ const dh2::data::MonsterApplicationRequest request{&result,&ap,&dp,&attacker.combat_state,&defender->combat_state,&add_combat_threat_before_hit,&aggro};
  if(dh2_combat_melee(&result,&av,&dv,&combat_random,action.offhand,0)||dh2_combat_apply_monster(&applied,&request)){__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Native combat application failed");enabled=false;return;}
- if(applied.hit_called)add_combat_threat(defender->aggro,attacker.aggro,defender->identity,attacker.identity,applied.threat,aggro_facts);
  ++combat_hits;
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native combat hit | %s | target %s | hit %u | result %d %d %d %d %d %d %u %u %d %d | HP %d %d | dead %u | combo %u | RNG %u %u | statuses %u | threat %.9g",attacker.name.c_str(),defender->name.c_str(),combat_hits,result.amount,result.dot_element,result.dot_duration,result.dot_amount,result.hp_leech,result.mp_leech,result.outcomes,result.mask,result.weapon_category,result.element,applied.health.before,applied.health.after,defender->combat_state.dead,attacker.combat_state.combo_hits,combat_random.seed,combat_random.calls,applied.status_requests,double(applied.threat));
  if(applied.status_requests)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Combat status services pending | %s | requests %u",defender->name.c_str(),applied.status_requests);
@@ -2300,10 +2311,10 @@ void player_authored_event(const dh2::animation::TriggeredEvent& event,int clip)
  dh2::data::PlayerEquipmentQueriesLiveV1 equipment(*prince_combat.inventory,ap);std::string equipment_error;
  if(!equipment.combat_view(av,equipment_error))throw std::runtime_error("Player combat equipment query failed: "+equipment_error);
  dh2::data::CombatResult result;dh2::data::MonsterApplication applied;
- const dh2::data::MonsterApplicationRequest request{&result,&ap,&dp,&prince_combat.life,&target->combat_state};
  const unsigned aggro_facts=(target->combat_state.dead?dh2::data::aggro_owner_dead:0u)|(prince_combat.life.dead?dh2::data::aggro_target_dead:0u);
+ CombatAggroBeforeHit aggro{&target->aggro,&prince_combat.aggro,target->identity,prince_character.identity(),aggro_facts};
+ const dh2::data::MonsterApplicationRequest request{&result,&ap,&dp,&prince_combat.life,&target->combat_state,&add_combat_threat_before_hit,&aggro};
  if(dh2_combat_melee(&result,&av,&dv,&combat_random,action.offhand,0)||dh2_combat_apply_player_to_monster(&applied,&request))throw std::runtime_error("Player combat application failed");
- if(applied.hit_called)add_combat_threat(target->aggro,prince_combat.aggro,target->identity,prince_character.identity(),applied.threat,aggro_facts);
  ++combat_hits;++prince_combat.attempts;
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Prince combat hit | target %s | attempt %u | result %d %d %d %d %d %d %u %u %d %d | HP %d %d | dead %u | combo %u | RNG %u %u | statuses %u",target->name.c_str(),prince_combat.attempts,result.amount,result.dot_element,result.dot_duration,result.dot_amount,result.hp_leech,result.mp_leech,result.outcomes,result.mask,result.weapon_category,result.element,applied.health.before,applied.health.after,target->combat_state.dead,prince_combat.life.combo_hits,combat_random.seed,combat_random.calls,applied.status_requests);
  if(applied.health.kill_requested){
@@ -3176,7 +3187,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     fresh_player.player_class_id=*selected_player_class_id;
     if(restore&&prince_combat.character_class!=fresh_player.character_class)throw std::runtime_error("Retained gameplay class differs from its saved profile");
     if(restore&&prince_combat.player_class_id!=fresh_player.player_class_id)throw std::runtime_error("Retained Player ClassID differs from its saved profile");
-    requested_player_class=fresh_player.character_class;
+    requested_player_class=fresh_player.player_class_id;
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native gameplay class | slot %d | class %d | preset %s | player queries %u | mask1 calls %u | publications %u | own Save %zu | profile %zu",menu_gameplay_slot,class_result.value,character_table.names.at(class_result.value).c_str(),class_result.player_queries,class_result.load_calls,class_result.property_publications,std::size_t(gameplay_save),std::size_t(fresh_player.save_profile->identity));
     dh2::data::reset_properties(property_rules,fresh_player.properties,&character_table.rows.at(fresh_player.character_class));
     fresh_player.aggro.initialize(object_records.size()+1);

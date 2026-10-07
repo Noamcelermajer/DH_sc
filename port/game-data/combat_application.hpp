@@ -11,6 +11,12 @@ struct MonsterApplicationRequest {
  CombatResult* result;
  PropertyView *attacker,*defender;
  CombatActorState *attacker_state,*defender_state;
+ // Optional source-order seam: called for a positive-damage hit after the
+ // threat value is known and immediately before HitFor mutates defender HP.
+ // The callback is synchronous, non-failing, and must not mutate these views
+ // or actor states. Null preserves the offline kernel's standalone contract.
+ void (*before_hit)(void*,float)=nullptr;
+ void* before_hit_context=nullptr;
 };
 enum CombatStatusRequests : std::uint32_t {
  request_dot=1,request_dodge=2,request_block=4,request_hurt=8,
