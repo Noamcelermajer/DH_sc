@@ -333,7 +333,8 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [ ] Live-test the guarded kill → BDAE model/sensor → deferred MoveOn pickup path. The build is available; gameplay and pickup are not verified.
 - [x] Align the three current direct melee directions with positive-amount `AI_AddAggro` before `HitFor` through the existing reciprocal aggro tables; `combat_application_order_audit` passes nonlethal, lethal, no-hit and rejected cases.
 - [x] Carry active Player killer identity through loot retries and require the source dead/HP-zero Kill prefix before V4 DropLootTable staging; the Android API 37 ARM64/x86_64 build passes. Event4, XP, quests and outer event2 remain open.
-- [ ] Route one enemy Kill episode through `DropLoot(victim,killer)`, event4/player credit and then outer event2 using the same ObjectActor. Reuse current V4/V5/V7 loot owners. Ordinary enemy AIS initialization, PlayerManager/XP and EventManager quest providers are still absent; do not claim complete Kill rewards.
+- [ ] For the supported Player aggro entry, dispatch event4 through the existing dispatcher, deliver Player AIS `OnKill` when present, and update properties 23/24 in the same Save/PropertyState.
+- [ ] Complete general enemy `Character::Kill`: aggro-gated XP/stat updates, asynchronous kill/clear quest callbacks, then outer event2/`OnDied`/FSM on the same actor. Enemy Character/CharAI/AIS/FSM, PlayerManager, PlayerStatManager and EventManager owners remain open; do not fabricate them.
 - [ ] Complete all CalculateResult/ApplyResult dependencies, effects, notifications and actor ownership.
 - [ ] Connect melee/ranged/spell combat, skills, criticals, resistances and status effects in the final runtime.
 - [ ] Complete player damage/death, attacker/killer credit, resurrection and respawn.
