@@ -442,7 +442,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 ## Immediate work order
 
 1. Start the current APK once and confirm the ten imported SWAMP Decor instances render at their source placements; the build and resource audits pass, but runtime rendering is not yet verified.
-2. Complete one live Crypt Ghost event-9 pursuit using its existing VM, shared target, and path/root-motion owner. Then wire event 17 with Stop/Attack and preserve the skill-tree branch before replacing the five-row DACT projection with full Character lifecycle, Monster combat, death and loot.
+2. Complete one live Crypt Ghost event-9 pursuit using its existing VM, shared target, and path/root-motion owner. Then wire event 17 to the verified `Stop(); Attack(GetTarget());` callback before replacing the five-row DACT projection with full Character lifecycle, Monster combat, death and loot.
 3. Import the remaining source MGP/MVP records and conditions through bounded source adapters, then connect the full object factory/lifecycle path.
 4. Apply canonical Save spawn-clear/save-before-load effects and connect the typed request to source `Application::LoadLevel`/`GSLevel`; run Player Character InitPost with real profile/level, Skin lifetime and AddLoot providers.
 5. Connect skills, existing-profile save writers and LevelUp; finish campaign content/UI/audio/saves/mod examples, play an original level to its exit, then run clean and physical ARM64 release validation.
