@@ -18,6 +18,7 @@
 #include "../../../../../../port/level-world/crypt_generated_spawnpoints_v1.hpp"
 #include "../../../../../../port/level-world/crypt_generated_source_dact_v1.hpp"
 #include "../../../../../../port/level-world/crypt_generated_mvp_v1.hpp"
+#include "../../../../../level-world/player_skill_progression_v1.hpp"
 #include "../../../../../../port/level-world/source_handle_ledger_v1.hpp"
 #include "../../../../../../port/random-level/crypt_module_catalog_v1.hpp"
 #include "../../../../../../port/random-level/crypt_level_generator_v1.hpp"
@@ -1004,6 +1005,11 @@ struct NativeLootAdapterV1 {
       }};dh2::player_manager_friendly_v1::Result result{};
      if(dh2::player_manager_friendly_v1::get_num_players(&native_host.registry,&services,&result)!=dh2::player_manager_friendly_v1::Status::complete){error="Native PlayerManager player-count query failed";return false;}
      response.value=result.value;error.clear();return true;}
+   case Operation::gold_notifications:
+    // AddGold's source notification tail is an achievement-manager boundary.
+    // The offline reconstruction has no achievements owner yet; preserve the
+    // actual gold mutation and let the inventory/UI action finish.
+    error.clear();return true;
    case Operation::update_name:
     if(!request.item){error="Item name update has no live Item";return false;}
     return dh2::data::item_update_name_v5(*request.item,self.text_services(),error);
@@ -3648,7 +3654,8 @@ bool ui_player_train_skill(std::uintptr_t identity,std::uint32_t skill_index,boo
 }
 bool ui_player_skill(std::uintptr_t identity,std::uint32_t index,UiSkillReadV1& out,std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
- if(identity!=current||!prince_combat.savegame->skills_initialized()||!actor_skill_catalogue||!actor_skill_catalogue->tables){
+ if(identity!=current||!prince_combat.savegame||!prince_combat.savegame->skills_initialized()||
+    !actor_skill_catalogue||!actor_skill_catalogue->tables||native_save_difficulty<0||native_save_difficulty>2){
   error="Gameplay skill-detail read requires the active Save and decoded SkillTables";return false;
  }
  const auto& tables=actor_skill_catalogue->tables->skills();
@@ -3669,7 +3676,74 @@ bool ui_player_skill(std::uintptr_t identity,std::uint32_t index,UiSkillReadV1& 
  value.character_level=raw_level>=0?raw_level/256:-static_cast<std::int32_t>((-std::int64_t(raw_level)+255)/256);
  value.name_text=row.skill_name;value.description_text=row.skill_description;
  value.current_text=row.skill_curr_level;value.next_text=row.skill_next_level;
+ // NativeGetSkillDetails calls SG_GetGameDifficultyUnlocked for the maximum
+ // skill level constants, which is distinct from the selected Save difficulty
+ // used by SG_GetCurrentFaerieId.
+ value.difficulty=prince_combat.savegame->unlocked_difficulty();
+ value.faerie_dependent_text=row.fairie_dependant_text;
+ const auto property_view=dh2::data::property_view(actor_property_rules,prince_combat.properties);
+ const auto increment=dh2::player_skill_progression_v1::can_increment_skill(
+     &property_view,&tables,prince_combat.savegame.get(),identity,index);
+ if(increment.status!=dh2::player_skill_progression_v1::PredicateStatus::evaluated){
+  error="Character::CanIncrementSkill did not produce a source-backed UI result";return false;
+ }
+ value.can_increment=increment.value!=0;
+ if(row.fairie_dependant_text){
+  const auto& faery_tables=actor_skill_catalogue->tables->faeries();
+  auto faery_list=prince_combat.properties.resolved[29];
+  if(faery_list<0||std::size_t(faery_list)>=faery_tables.faery_lists.size())faery_list=0;
+  if(std::size_t(faery_list)>=faery_tables.faery_lists.size()){
+   error="Character::GetCharFaeryListId fallback row is unavailable";return false;
+  }
+  const auto current_faery=prince_combat.savegame->current_faery(std::uint32_t(native_save_difficulty));
+  const auto& members=faery_tables.faery_lists[std::size_t(faery_list)].members;
+  if(current_faery<0||std::size_t(current_faery)>=members.size()){
+   error="Character::GetCharFaery source index is outside the selected FaeryList";return false;
+  }
+  const auto faery_row=members[std::size_t(current_faery)];
+  if(faery_row<0||std::size_t(faery_row)>=faery_tables.faeries.size()){
+   error="Character::GetCharFaery selected row is outside the decoded FaeryTable";return false;
+  }
+  // NativeGetSkillDetails reads FaeryTable+8 when FairieDependantText is set.
+  // The serialized table's third source field is ModelFile at this offset.
+  value.faerie_text_offset=faery_tables.faeries[std::size_t(faery_row)].model_file;
+ }
  value.assignable=row.skill_assignable;value.icon=row.skill_icon;out=std::move(value);error.clear();return true;
+}
+bool ui_player_skill_display_properties(std::uintptr_t identity,std::uint32_t index,
+                                       std::int32_t level,std::vector<std::int32_t>& out,
+                                       std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.savegame||!prince_combat.savegame->skills_initialized()||
+    !actor_skill_catalogue||!actor_skill_catalogue->tables||!prince_skills||!prince_skills->initialized()){
+  error="Skill detail projection requires the active Save, decoded SkillTables and canonical Player skill VM";return false;
+ }
+ const auto& tables=actor_skill_catalogue->tables->skills();
+ auto selector=prince_combat.properties.resolved[28];
+ if(selector<0||std::size_t(selector)>=tables.skill_lists.size())selector=3;
+ if(std::size_t(selector)>=tables.skill_lists.size()||index>=tables.skill_lists[std::size_t(selector)].members.size()){
+  error="Selected Character SkillTree has no requested SkillInfo slot";return false;
+ }
+ const auto row_id=tables.skill_lists[std::size_t(selector)].members[index];
+ if(row_id<0||std::size_t(row_id)>=tables.skills.size()){
+  error="Selected Character SkillTree SkillInfo row is outside the decoded SkillTable";return false;
+ }
+ std::vector<std::int32_t> shared_temp;
+ const auto status=prince_skills->skill_info(index,level,shared_temp,error);
+ if(status<0)return false;
+ out.clear();
+ // Source Lua errors/null prepared instances leave the shared temp sheet as-is;
+ // there is no formatted property payload for this level in that case.
+ if(status>0){error.clear();return true;}
+ const auto& display_props=tables.skills[std::size_t(row_id)].display_props;
+ out.reserve(display_props.size());
+ for(const auto property:display_props){
+  if(property<0||std::size_t(property)>=shared_temp.size()){
+   error="Skill DisplayProps index is outside the shared Character property temp sheet";return false;
+  }
+  out.push_back(shared_temp[std::size_t(property)]);
+ }
+ error.clear();return true;
 }
 bool ui_player_equip_skill(std::uintptr_t identity,std::int32_t slot,std::int32_t skill_index,std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
@@ -3866,6 +3940,56 @@ bool ui_player_inventory_item_details(std::uintptr_t identity,std::int32_t reque
   }
  }
  out=std::move(value);error.clear();return true;
+}
+namespace {
+std::int32_t menu_signed_word(std::uint32_t value){std::int32_t out;std::memcpy(&out,&value,sizeof(out));return out;}
+std::int32_t menu_mul32(std::int32_t a,std::int32_t b){
+ return menu_signed_word(std::uint32_t(a)*std::uint32_t(b));
+}
+std::int32_t menu_asr32(std::int32_t value,unsigned shift){
+ const auto bits=std::uint32_t(value);
+ return menu_signed_word((bits>>shift)|(value<0?(~0u<<(32-shift)):0u));
+}
+std::int32_t menu_transmute_value(std::int32_t item_value,std::int32_t raw_bonus,
+                                 std::uint32_t multiplier_bits){
+ const auto multiplier=menu_signed_word(multiplier_bits);
+ const auto bonus=menu_signed_word(std::uint32_t(raw_bonus)+256u);
+ const auto fixed_value=menu_signed_word(std::uint32_t(item_value)<<8);
+ const auto product=menu_mul32(fixed_value,bonus);
+ const auto scaled=menu_asr32(product,8);
+ const auto result=menu_asr32(menu_mul32(multiplier,scaled),16);
+ return result<1?1:result;
+}
+}
+bool ui_player_transmute_item(std::uintptr_t identity,std::int32_t requested,
+                              std::uint32_t multiplier,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.inventory||!prince_combat.item_presentation||
+    !player_equipment_native||!player_equipment_native->services||
+    &player_equipment_native->services->inventory()!=prince_combat.inventory.get()||
+    prince_combat.inventory->character()!=identity){
+  error="Inventory transmute requires the active Player, canonical V4 Item graph and V6-backed equipment services";return false;
+ }
+ auto& inventory=*prince_combat.inventory;
+ const auto index=std::uint32_t(requested); // NativeInvTransmuteItem forwards source ToInt to unsigned ItemIndex.
+ if(index>=inventory.items().size()||!inventory.items()[index]||!inventory.items()[index]->item){
+  error="NativeInvTransmuteItem source Item slot is unavailable";return false;
+ }
+ auto& item=*inventory.items()[index]->item;
+ const auto value=menu_transmute_value(item.value,prince_combat.properties.resolved[197],multiplier);
+ auto services=player_equipment_native->inventory_adapter.inventory_services();
+ try{
+  if(item.signed_quantity()>1){
+   if(!inventory.add_quantity_to_item(item,-1,error))return false;
+  }else if(!inventory.remove_inventory_item(index,services,error))return false;
+  if(!inventory.add_gold(value,services,error))return false;
+ }catch(const std::exception& failure){error=failure.what();return false;}
+ auto& view=player_equipment_native->properties;
+ if(dh2_property_add(&view,213,256)){
+  error="Source transmute counter property 213 rejected its increment";return false;
+ }
+ if(!player_equipment_native->services->skin_only(error))return false;
+ error.clear();return true;
 }
 bool ui_player_equipped_item(std::uintptr_t identity,std::int32_t requested,UiEquippedItemReadV1& out,bool& present,std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
@@ -4549,12 +4673,13 @@ void advance_native_actor(unsigned dt_ms){
  dh2::actor::RuntimeResult result{};
  if(dh2::actor::update_actor(result,request,error))throw std::runtime_error(error);
  prince_state.heading_active=prince_runtime.controller.heading.active;
- const float dx=prince_runtime.subobjects.position[0]-actor_position[0],dy=prince_runtime.subobjects.position[1]-actor_position[1];
+ const float dx=prince_runtime.subobjects.position[0]-actor_position[0],dy=prince_runtime.subobjects.position[1]-actor_position[1],dz=prince_runtime.subobjects.position[2]-actor_position[2];
  if(moving){if(dx*dx+dy*dy>0.000001f)++movement_steps;else ++blocked_steps;++native_heading_updates;}
  std::copy(prince_runtime.subobjects.position,prince_runtime.subobjects.position+3,actor_position.begin());heading=prince_runtime.subobjects.rotation;
+ const bool player_displaced=dh2::native::crypt_camera_frame_v1::player_displaced_enough_for_forward_anchor({dx,dy,dz});
  if(!dh2::native::crypt_camera_frame_v1::update_forward_anchor(
       &prince_camera_anchor,heading,prince_state.current==4||prince_state.current==5,
-      dx*dx+dy*dy>0.05f))
+      player_displaced))
   throw std::runtime_error("Source player camera anchor rejected runtime state");
  // TriggerZone contact consumes the updated absolute GameObject bounds.
  update_crypt_contact();

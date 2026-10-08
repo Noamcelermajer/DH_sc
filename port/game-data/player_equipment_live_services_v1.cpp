@@ -94,6 +94,7 @@ bool PlayerEquipmentLiveServicesV1::prune(std::string& e,unsigned depth){
 }
 bool PlayerEquipmentLiveServicesV1::refresh_impl(bool requirements,std::string& e){return gear_.update_properties(e)&&(!requirements||prune(e))&&skin(e)&&gear_.validate_hp_mp(e);}
 bool PlayerEquipmentLiveServicesV1::refresh(bool requirements,std::string& e){if(!begin(e))return false;Running guard{running_};return deliver([&]{return refresh_impl(requirements,e);},e);}
+bool PlayerEquipmentLiveServicesV1::skin_only(std::string& e){if(!begin(e))return false;Running guard{running_};return deliver([&]{return skin(e);},e);}
 bool PlayerEquipmentLiveServicesV1::equip(std::uint32_t slot,std::uint32_t index,std::string& e){if(!begin(e))return false;Running guard{running_};return deliver([&]{return inventory_->equip_to_slot(slot,index,false,services(),e)&&refresh_impl(true,e);},e);}
 bool PlayerEquipmentLiveServicesV1::unequip(std::uint32_t slot,std::string& e){if(!begin(e))return false;Running guard{running_};return deliver([&]{return inventory_->unequip_from_slot(slot,-1,services(),e)&&refresh_impl(true,e);},e);}
 bool PlayerEquipmentLiveServicesV1::swap(std::string& e){if(!begin(e))return false;Running guard{running_};inventory_->swap_equipment();return deliver([&]{return refresh_impl(true,e);},e);}

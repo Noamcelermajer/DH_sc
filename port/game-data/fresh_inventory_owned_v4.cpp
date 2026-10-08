@@ -232,7 +232,38 @@ bool FreshInventoryOwnedV4::split_item(ItemInstanceV1& original,std::int32_t amo
 }
 bool FreshInventoryOwnedV4::is_equipped(std::uint32_t index,bool& out,std::string& e)const{if(index>=items_.size()||!items_[index]||!items_[index]->item){e="Equipped query requires original valid slot";return false;}auto* p=metadata(items_[index]->item.get(),e);if(!p)return false;auto slot=p->record.words[26];auto set=slot>=0||slot<-4?set_for_slot(slot):slot==-2?set_for_slot(5):slot==-1?set_for_slot(-1):set_for_slot(1);out=items_[index]->slots[set]!=-1;e.clear();return true;}
 bool FreshInventoryOwnedV4::has_like(const ItemInstanceV1* p,std::uint32_t& index,bool& found,std::string& e)const{found=false;for(std::size_t i=0;i<items_.size();++i){auto* candidate=items_[i]->item.get();if(candidate&&candidate!=p&&equal(*candidate,*p)){bool equipped;if(!is_equipped(std::uint32_t(i),equipped,e))return false;if(!equipped){index=std::uint32_t(i);found=true;break;}}}return true;}
-bool FreshInventoryOwnedV4::delete_instance(ItemInstanceV1* p,const OwnedInventoryServicesV4& s,std::string& e){if(potion_==p)potion_=nullptr;for(std::size_t i=0;i<items_.size();++i)if(items_[i]->item.get()==p){for(const auto& set:equipment_)for(auto* cell:set)if(cell==items_[i].get()){e="Source invalid deletion of a still-equipped slot";return false;}if(!s.observe_storage&&!s.stateless_temporaries){e="Required Item retirement provider unavailable at "+std::to_string(0x3fe838);return false;}observe(s,OwnedInventoryOperationV4::destroy_item,0x3fe838,p,0,std::uint32_t(i));items_.erase(items_.begin()+std::ptrdiff_t(i));e.clear();return true;}e.clear();return true;}
+bool FreshInventoryOwnedV4::delete_instance(ItemInstanceV1* p,const OwnedInventoryServicesV4& s,std::string& e,std::uint32_t source_caller){if(potion_==p)potion_=nullptr;for(std::size_t i=0;i<items_.size();++i)if(items_[i]->item.get()==p){for(const auto& set:equipment_)for(auto* cell:set)if(cell==items_[i].get()){e="Source invalid deletion of a still-equipped slot";return false;}if(!s.observe_storage&&!s.stateless_temporaries){e="Required Item retirement provider unavailable at "+std::to_string(source_caller);return false;}observe(s,OwnedInventoryOperationV4::destroy_item,source_caller,p,0,std::uint32_t(i));items_.erase(items_.begin()+std::ptrdiff_t(i));e.clear();return true;}e.clear();return true;}
+bool FreshInventoryOwnedV4::add_quantity_to_item(ItemInstanceV1& instance,std::int32_t amount,std::string& e){
+ if(!mutation_allowed(e))return false;
+ const auto found=std::any_of(items_.begin(),items_.end(),[&](const auto& slot){return slot&&slot->item.get()==&instance;});
+ if(!found){e="Quantity item does not belong to this inventory";return false;}
+ return add_quantity(instance,amount,e);
+}
+bool FreshInventoryOwnedV4::remove_inventory_item(std::uint32_t index,const OwnedInventoryServicesV4& s,std::string& e){
+ if(!mutation_allowed(e))return false;
+ if(index>=items_.size()||!items_[index]||!items_[index]->item){e="RemoveItem assertion domain unsupported";return false;}
+ auto* cell=items_[index].get();auto* instance=cell->item.get();auto* info=metadata(instance,e);if(!info)return false;
+ auto target=info->record.words[26];if(target==-4||target==-3)target=1;else if(target==-2)target=5;
+ const auto original_selection=selected_;
+ auto clear_selected=[&](){
+  bool equipped;if(!is_equipped(index,equipped,e))return false;if(!equipped)return true;
+  const auto set=(target<0||target==1||target==2)?std::uint32_t(selected_):0u;
+  const auto slot=cell->slots[set];
+  if(slot<0||slot>=9){e="Invalid RemoveItem equipment slot byte";return false;}
+  equipment_[set][std::uint32_t(slot)]=nullptr;
+  return true;
+ };
+ if(!clear_selected())return false;
+ selected_=std::uint8_t(original_selection^1u);
+ const bool second_cleared=clear_selected();
+ selected_=original_selection;
+ if(!second_cleared)return false;
+ // RemoveItem clears the potion alias and then retires the source Item. The
+ // observer must succeed while that exact Item remains alive; only then does
+ // delete_instance erase its owning slot.
+ if(potion_==instance)potion_=nullptr;
+ return delete_instance(instance,s,e,0x3fe558);
+}
 bool FreshInventoryOwnedV4::set_gold(std::int32_t value,const OwnedInventoryServicesV4& s,std::string& e){if(!mutation_allowed(e))return false;if(value<0){e="Negative SetGold requires original assertion continuation";return false;}gold_=value<=gold_limit_?value:gold_limit_;OwnedInventoryResponseV4 out;if(!deliver(s,OwnedInventoryOperationV4::gold_notifications,0x3fdfd8,nullptr,nullptr,0,0,out,e))return false;e.clear();return true;}
 bool FreshInventoryOwnedV4::add_gold(std::int32_t amount,const OwnedInventoryServicesV4& s,std::string& e){if(!mutation_allowed(e))return false;if(amount<0){auto neg=wrap32(0u-std::uint32_t(amount));if(gold_<neg)amount=wrap32(0u-std::uint32_t(gold_));}if(amount>0){auto room=wrap32(std::uint32_t(gold_limit_)-std::uint32_t(gold_));if(amount>room)amount=room<0?0:room;}return set_gold(wrap32(std::uint32_t(gold_)+std::uint32_t(amount)),s,e);}
 bool FreshInventoryOwnedV4::add_item(std::unique_ptr<ItemInstanceV1>& incoming,bool force,bool convert_gold,std::int32_t& index,const OwnedInventoryServicesV4& s,std::string& e){if(!mutation_allowed(e))return false;auto* info=metadata(incoming.get(),e);if(!info)return false;auto* p=incoming.get();index=-1;if(potion_capacity_==0&&item_type(*info)==14)return destroy(incoming,s,0x3ff70c,e);if(!potion_&&item_type(*info)==14)potion_=p;if(convert_gold&&item_type(*info)==13){if(!add_gold(p->value,s,e))return false;return destroy(incoming,s,0x3ff744,e);}if(std::uint8_t(info->record.words[7])&&!force){for(std::size_t i=0;i<items_.size();++i){auto* candidate=items_[i]->item.get();if(!candidate)continue;bool equipped;if(!is_equipped(std::uint32_t(i),equipped,e))return false;if(equipped||!equal(*candidate,*p))continue;auto qty=p->signed_quantity();info=metadata(p,e);if(!info)return false;if(item_type(*info)==14){auto room=wrap32(std::uint32_t(std::int32_t(potion_capacity_))-std::uint32_t(candidate->signed_quantity()));if(room<qty)qty=room<0?0:room;}if(!add_quantity(*candidate,qty,e))return false;index=std::int32_t(i);return destroy(incoming,s,0x3ff794,e);}}auto slot=std::make_unique<OwnedItemSlotV4>();slot->item=std::move(incoming);items_.push_back(std::move(slot));auto i=std::uint32_t(items_.size()-1);bool full;observe(s,OwnedInventoryOperationV4::inventory_full,0x3ff6c4,p,0,i);if(!is_full(full,s,e))return false;if(full){OwnedInventoryResponseV4 r;if(!deliver(s,OwnedInventoryOperationV4::full_notifications,0x3ff7a8,p,nullptr,0,i,r,e))return false;}index=std::int32_t(items_.size()-1);e.clear();return true;}

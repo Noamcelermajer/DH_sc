@@ -710,6 +710,44 @@ struct Runtime::Impl {
   }
   source_return=result.source_return;return true;
  }
+ int skill_info(std::uint32_t skill_index,std::int32_t level,
+                std::vector<std::int32_t>& output,std::string& output_error){
+  output.clear();output_error.clear();
+  if(!initialized||update_blocked||!session||!preparation||!bindings.shared_property_temp||
+     session->character_identity()!=bindings.character||
+     session->stage()!=dh2::player_skill_session_v1::Stage::character_bound){
+   output_error="Native Player skill-info owners are unavailable or blocked";return -1;
+  }
+  using List=dh2::character_ai_set_skills_and_spells::List;
+  const auto& slots=preparation->slots(List::skill);
+  if(skill_index>=slots.size()){
+   output_error="Source AI_SkillInfo skill-list index is outside the prepared vector";return -1;
+  }
+  if(!slots[skill_index])return 1; // Source null-instance early exit; no sheet write.
+  const auto* instance=preparation->instance(slots[skill_index]);
+  if(!instance||!instance->script_name||!*instance->script_name){
+   output_error="Source AI_SkillInfo prepared instance is unavailable";return -1;
+  }
+  // Adam's GetInfo kernel confirms the source sequence: select this exact
+  // retained script/instance, then call OnSkillInfo(level). Both calls use the
+  // sole Player VM, and Character GetProp/SetProp already target shared_temp.
+  dh2_script_value arguments[2]{};
+  arguments[0].type=DH2_SCRIPT_STRING;
+  arguments[0].text=instance->script_name;
+  arguments[0].text_bytes=std::strlen(instance->script_name);
+  number(arguments[1],static_cast<float>(instance->skill_index_14));
+  const auto discard=[](void*,const dh2_script_first_return_v1*,char*,std::size_t){return 0;};
+  int status=session->call("SetSkill",arguments,2,0,discard,nullptr,output_error);
+  if(status<0){if(output_error.empty())output_error="Source skill SetSkill provider failed";return -1;}
+  if(status>0)return 1; // Original Lua error is an ordinary source result.
+  dh2_script_value level_argument{};
+  number(level_argument,static_cast<float>(level));
+  status=session->call("OnSkillInfo",&level_argument,1,0,discard,nullptr,output_error);
+  if(status<0){if(output_error.empty())output_error="Source skill OnSkillInfo provider failed";return -1;}
+  if(status>0)return 1;
+  output.assign(bindings.shared_property_temp->begin(),bindings.shared_property_temp->end());
+  return 0;
+ }
  void update(){
   if(!initialized||update_blocked||!updates)return;
   std::string ignored;update_after_saved_skill_slot_write(ignored);
@@ -852,6 +890,10 @@ bool Runtime::update_after_source_skill_inputs_changed(std::string& error){
 bool Runtime::train_skill(std::uint32_t skill_index,bool test_only,data::FreshInventoryOwnedV4& inventory,
                           std::uint32_t& source_return,std::string& error){
  return impl_->train_skill(skill_index,test_only,inventory,source_return,error);
+}
+int Runtime::skill_info(std::uint32_t skill_index,std::int32_t level,
+                        std::vector<std::int32_t>& shared_temp,std::string& error){
+ return impl_->skill_info(skill_index,level,shared_temp,error);
 }
 void Runtime::state_service(std::uint32_t service){
  auto& s=*impl_;if(!s.focus_services)throw std::runtime_error("Native Character cleanup owner unavailable");

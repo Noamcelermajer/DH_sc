@@ -86,9 +86,9 @@ bool ui_player_stats(std::uintptr_t,UiPlayerStatsReadV1&,std::string&);
 bool ui_player_assign_stat(std::uintptr_t,std::uint32_t,std::string&);
 struct UiSkillReadV1 {
  std::int32_t id{-1},level{-1},slot{-1},required_level{-1};
- std::int32_t character_level{};
+ std::int32_t character_level{},difficulty{},faerie_text_offset{};
  std::int32_t name_text{-1},description_text{-1},current_text{-1},next_text{-1};
- bool assignable{};std::string icon;
+ bool assignable{},faerie_dependent_text{},can_increment{};std::string icon;
 };
 struct UiInventoryItemReadV1 {
  std::int32_t id{-1},index{-1},quantity{},slot{-1};std::string name;
@@ -105,6 +105,8 @@ struct UiItemDetailsReadV1 {
 bool ui_player_skill_slots(std::uintptr_t,std::array<std::int32_t,3>&,std::string&);
 bool ui_player_skill_points(std::uintptr_t,std::int32_t&,std::string&);
 bool ui_player_skill(std::uintptr_t,std::uint32_t,UiSkillReadV1&,std::string&);
+bool ui_player_skill_display_properties(std::uintptr_t,std::uint32_t,std::int32_t,
+                                       std::vector<std::int32_t>&,std::string&);
 bool ui_player_train_skill(std::uintptr_t,std::uint32_t,bool,std::uint32_t&,std::int32_t&,std::string&);
 bool ui_player_equip_skill(std::uintptr_t,std::int32_t slot,std::int32_t skill_index,std::string&);
 bool ui_player_active_faery(std::uintptr_t,std::int32_t&,std::int32_t&,std::string&);
@@ -113,6 +115,7 @@ bool ui_player_faery_unlocked(std::uintptr_t,std::uint32_t,bool&,std::string&);
 bool ui_player_inventory_gold(std::uintptr_t,std::int32_t&,std::string&);
 bool ui_player_inventory_slot(std::uintptr_t,std::int32_t,std::vector<UiInventoryItemReadV1>&,std::string&);
 bool ui_player_inventory_item_details(std::uintptr_t,std::int32_t,UiItemDetailsReadV1&,std::string&);
+bool ui_player_transmute_item(std::uintptr_t,std::int32_t,std::uint32_t,std::string&);
 bool ui_player_equipped_item(std::uintptr_t,std::int32_t,UiEquippedItemReadV1&,bool&,std::string&);
 bool ui_player_equip_item(std::uintptr_t,std::int32_t item_index,std::int32_t equipment_slot,std::string&);
 bool ui_player_unequip_item(std::uintptr_t,std::int32_t equipment_slot,std::string&);

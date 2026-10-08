@@ -83,6 +83,9 @@ public:
  // Properties -> optional recursive requirement pruning -> Skin -> HP/MP.
  // Failure keeps the reached source prefix; no rollback or inferred producer.
  bool refresh(bool check_requirements,std::string&);
+ // Character::Skin after a menu transmute. Runs the same bound V5 visual
+ // provider and source Item identities without refreshing gear/vitals again.
+ bool skin_only(std::string&);
  bool equip(std::uint32_t slot,std::uint32_t index,std::string&);
  bool unequip(std::uint32_t slot,std::string&);
  bool swap(std::string&);

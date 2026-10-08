@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstdio>
+#include <limits>
 
 using namespace dh2::native::crypt_camera_frame_v1;
 
@@ -53,6 +54,16 @@ int main() {
     const Vec3 forward_anchor = player_camera_anchor({1.0f, 2.0f, 3.0f}, 0.0f, 256.0f);
     if (!expect(near(forward_anchor[0], 1.0f) && near(forward_anchor[1], -254.0f) &&
                 near(forward_anchor[2], 3.0f), "camera anchor uses GameObject::GetLookAtVec orientation")) return 26;
+    if (!expect(!player_displaced_enough_for_forward_anchor({0.2f, 0.0f, 0.0f}) &&
+                player_displaced_enough_for_forward_anchor({0.0f, 0.0f, 0.23f}),
+                "AnchorForward displacement threshold includes vertical movement")) return 27;
+    ForwardAnchorState threshold_turn{320.0f, 0.0f, true};
+    if (!expect(update_forward_anchor(&threshold_turn, 1.0f, true, true) &&
+                near(threshold_turn.distance, 337.0f),
+                "one-radian source turn threshold does not trigger retreat")) return 28;
+    if (!expect(!player_displaced_enough_for_forward_anchor(
+                    {0.0f, 0.0f, std::numeric_limits<float>::infinity()}),
+                "nonfinite displacement cannot expand camera anchor")) return 29;
 
     float clip[4]{};
     transform(frame.view_projection, frame.target, clip);

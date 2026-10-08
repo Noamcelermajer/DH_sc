@@ -81,6 +81,13 @@ public:
     bool train_skill(std::uint32_t skill_index,bool test_only,
                      data::FreshInventoryOwnedV4&,std::uint32_t& source_return,
                      std::string& error);
+    // Source AI_SkillInfo on the retained preparation instance. This executes
+    // SetSkill(script,index) and OnSkillInfo(level) on the same Player VM, then
+    // snapshots the already-shared Character property temp sheet for UI text.
+    // Returns 0 when delivered, 1 for an empty slot/ordinary Lua error, -1 for
+    // a required owner/provider failure. No VM, sheet, or timer owner is made.
+    int skill_info(std::uint32_t skill_index,std::int32_t level,
+                   std::vector<std::int32_t>& shared_temp,std::string& error);
     // Source CharAI::OnDied only. Character::Kill/rewards/event2 caller is a
     // separate integration boundary; this retains the same AIS and VM.
     void died(std::uintptr_t killer);

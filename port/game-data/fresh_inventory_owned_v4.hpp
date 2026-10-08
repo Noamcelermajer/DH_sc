@@ -61,7 +61,7 @@ class FreshInventoryOwnedV4 {
  std::int8_t& slot_for_set(OwnedItemSlotV4&,std::uint32_t)noexcept;
  bool destroy(std::unique_ptr<ItemInstanceV1>&,const OwnedInventoryServicesV4&,std::uint32_t,std::string&);
  bool is_full(bool&,const OwnedInventoryServicesV4&,std::string&);
- bool delete_instance(ItemInstanceV1*,const OwnedInventoryServicesV4&,std::string&);
+ bool delete_instance(ItemInstanceV1*,const OwnedInventoryServicesV4&,std::string&,std::uint32_t source_caller=0x3fe838);
  bool has_like(const ItemInstanceV1*,std::uint32_t&,bool&,std::string&)const;
  bool add_quantity(ItemInstanceV1&,std::int32_t,std::string&);
  bool lifetime_slot(RetainedItemSlotV4,const ItemInstanceV1*,std::string&)const;
@@ -101,6 +101,12 @@ public:
  // Required synchronous retirement precedes reset; rejection/exception keeps
  // the caller's actual Item and full Presentation state in the same slot.
  bool retire_item(RetainedItemSlotV4,const OwnedInventoryServicesV4&,std::string&);
+ // Source Character menu mutations on this same authoritative inventory.
+ // Removal clears the source equipment pointers directly (it does not call
+ // UnEquipSlot and therefore cannot merge a stack) before synchronously
+ // retiring presentation attached to the actual Item and erasing its slot.
+ bool remove_inventory_item(std::uint32_t,const OwnedInventoryServicesV4&,std::string&);
+ bool add_quantity_to_item(ItemInstanceV1&,std::int32_t,std::string&);
  // Source AddItemInstance owns input only after delivered storage/merge/delete.
  // Prefix is retained on required effect failure; caller retains unconsumed input.
  bool add_item(std::unique_ptr<ItemInstanceV1>&,bool force,bool convert_gold,std::int32_t& index,const OwnedInventoryServicesV4&,std::string&);

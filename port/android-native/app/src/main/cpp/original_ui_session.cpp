@@ -714,6 +714,14 @@ struct OriginalUiSession::Impl {
             ParseContext parse{self,{}};const ui::HudTextServicesV1 services{&parse,parsed_text};
             return ui::swf_menu_parsed_string_v1(fn,self.localization,self.text_services(),services,launch,error);
         }
+        if(!std::strcmp(name,"NativeSetMultitouch")){
+            // Native source writes MenuManager+0x110. The retained SWF input
+            // host currently exposes one pointer, so accept its exact
+            // down/up/cancel calls (including source to_bool conversion) but
+            // do not claim or emulate multi-pointer mode without that owner.
+            if(fn.nargs==1)(void)fn.arg(0).to_bool();
+            return true;
+        }
         if(!std::strcmp(name,"NativeSkillGetEquipedSkillsIDs")){
             if((fn.nargs!=2&&fn.nargs!=3)||!fn.arg(0).is_object()||!fn.arg(1).is_number()||
                (fn.nargs==3&&!fn.arg(2).is_undefined()&&!fn.arg(2).is_bool()))return true;
@@ -930,18 +938,75 @@ struct OriginalUiSession::Impl {
                 return self.localization.string_id(std::uint32_t(id),self.text_services(),output,error);
             };
             if(!read_string(skill.name_text,skill_name)||!read_string(skill.description_text,description))return false;
+            std::string current_pattern,next_pattern,current_level,next_level;
+            std::vector<ui::HudTextVariantV1> current_arguments,next_arguments;
+            ParseContext parse{self,{}};
+            const ui::HudTextServicesV1 text_services{&parse,parsed_text};
+            const auto localized_constant=[&](const char* key,std::string& output){
+                std::uint32_t text_id=0;
+                return constant(&self,"StrID",key,text_id,error)&&
+                    self.localization.string_id(text_id,self.text_services(),output,error);
+            };
+            const auto signed_word=[](std::uint32_t bits){
+                std::int32_t value=0;std::memcpy(&value,&bits,sizeof(value));return value;
+            };
+            const auto skill_text_id=[&](std::int32_t base,std::int32_t& result){
+                result=base;
+                if(base!=-1&&skill.faerie_dependent_text)
+                    result=signed_word(std::uint32_t(base)+std::uint32_t(skill.faerie_text_offset));
+                return true;
+            };
+            if(skill.character_level<skill.required_level){
+                if(!localized_constant("GAMEPLAYMENUS_SKILL_UNLOCK_AT_LEVEL",current_pattern))return false;
+                current_arguments.push_back({static_cast<float>(skill.required_level),skill.required_level,nullptr});
+            }else{
+                if(skill.level>0){
+                    std::int32_t text_id=0;skill_text_id(skill.current_text,text_id);
+                    if(!read_string(text_id,current_pattern))return false;
+                }else if(!localized_constant("GAMEPLAYMENUS_NEEDS_SKILL_POINTS",current_pattern))return false;
+
+                const char* maximum_key=skill.difficulty==1?"MaxSkillLevelCHard":
+                    skill.difficulty==2?"MaxSkillLevelDVeryHard":"MaxSkillLevelBNormal";
+                std::uint32_t maximum_bits=0;
+                if(!constant(&self,"CharacterDesign",maximum_key,maximum_bits,error))return false;
+                const auto maximum_level=signed_word(maximum_bits);
+                if(maximum_level<=skill.level){
+                    if(!localized_constant("GAMEPLAYMENUS_MAX_SKILL_LEVEL",next_pattern))return false;
+                }else if(!skill.can_increment){
+                    if(!localized_constant("GAMEPLAYMENUS_SKILL_MAXIMUM_LEVEL_TRAINING",next_pattern))return false;
+                }else{
+                    std::int32_t text_id=0;skill_text_id(skill.next_text,text_id);
+                    if(!read_string(text_id,next_pattern))return false;
+                }
+
+                const auto append_properties=[&](std::int32_t level,
+                                                  std::vector<ui::HudTextVariantV1>& arguments){
+                    std::vector<std::int32_t> properties;
+                    if(!model_renderer::ui_player_skill_display_properties(identity,
+                        std::uint32_t(raw_index),level,properties,error))return false;
+                    arguments.reserve(properties.size());
+                    for(const auto value:properties){
+                        arguments.push_back({static_cast<float>(value)*0.0039062f,
+                            value>>8,nullptr});
+                    }
+                    return true;
+                };
+                if(!append_properties(skill.level,current_arguments)||
+                   !append_properties(signed_word(std::uint32_t(skill.level)+1u),next_arguments))return false;
+            }
+            bool current_changed=false,next_changed=false;
+            if(!ui::hud_text_parse_ex_v1(current_pattern.c_str(),current_arguments.data(),
+                    current_arguments.size(),text_services,current_level,current_changed,error)||
+               !ui::hud_text_parse_ex_v1(next_pattern.c_str(),next_arguments.data(),
+                    next_arguments.size(),text_services,next_level,next_changed,error))return false;
             const auto assign=[&](const char* key,const gameswf::as_value& value){
                 if(object->set_member(key,value))return true;error=std::string("Skill detail object rejected ")+key;return false;
             };
-            // Static row fields and saved progression are real owners. The
-            // source current/next templates require SkillInfo plus its full
-            // CharProperties/parseEx chain, so expose them as empty until that
-            // provider is connected instead of leaking raw template IDs.
-            const bool unlocked=skill.required_level<=0||skill.character_level>=skill.required_level;
+            const bool unlocked=skill.character_level>=skill.required_level;
             if(!assign("SkillName",gameswf::as_value(skill_name.c_str()))||
                !assign("SkillDescription",gameswf::as_value(description.c_str()))||
-               !assign("SkillCurrLevel",gameswf::as_value(""))||
-               !assign("SkillNextLevel",gameswf::as_value(""))||
+               !assign("SkillCurrLevel",gameswf::as_value(current_level.c_str()))||
+               !assign("SkillNextLevel",gameswf::as_value(next_level.c_str()))||
                !assign("SkillAssignable",gameswf::as_value(skill.assignable))||
                !assign("SkillIcon",gameswf::as_value(skill.icon.c_str()))||
                !assign("SkillLevel",gameswf::as_value(skill.level))||
@@ -1069,6 +1134,17 @@ struct OriginalUiSession::Impl {
             }
             if(fn.result)fn.result->set_bool(present);
             return true;
+        }
+        if(!std::strcmp(name,"NativeInvTransmuteItem")){
+            // Packaged SWF calls [inventoryItemIndex, playerIndex]; the
+            // source callback has no return assignment and ignores its value.
+            if(fn.nargs!=2||!fn.arg(0).is_number()||!fn.arg(1).is_number())return true;
+            const auto item_index=fn.arg(0).to_int();std::uintptr_t identity=0;
+            if(!local_character(fn.arg(1).to_int(),false,identity))return false;
+            if(!identity)return true;
+            std::uint32_t multiplier=0;
+            if(!constant(&self,"CharacterDesign","TransmuteMultiplier",multiplier,error))return false;
+            return model_renderer::ui_player_transmute_item(identity,item_index,multiplier,error);
         }
         if(!std::strcmp(name,"NativeInvGetHasOffHandWeapon")||
            !std::strcmp(name,"NativeInvGetHasTwoHandedWeapon")){
@@ -1456,10 +1532,11 @@ struct OriginalUiSession::Impl {
         if(front_screen=="main"||live_player)services.native_actions.emplace_back("NativeGetParsedString");
         if(live_player)for(const auto* action:{"NativeScreenIsBlack","NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
             "NativeSkillsGetSkillPointsLeft","NativeSkillsTrainSkill","NativeEquipSkill","NativeGetPlayerStats","NativeStatsAssignPoint",
+            "NativeSetMultitouch",
             "NativeGetCharMenuTutorialMessage","NativeSkipCharMenuTutorialMessage","NativeHUDGetActiveFaery","NativeHUDGetIsFaeryUnlocked",
             "NativeHUDSetActiveFaery",
             "NativeInvEquipItem","NativeInvUnequipItem","NativeInvAutoEquipSlot","NativeSwapEquipment","NativeInvGetItemsListForSlot","NativeInvGetItemDetails","NativeInvGetEquipedItem",
-            "NativeInvGetHasOffHandWeapon","NativeInvGetHasTwoHandedWeapon","NativeInvGetPlayerGold",
+            "NativeInvTransmuteItem","NativeInvGetHasOffHandWeapon","NativeInvGetHasTwoHandedWeapon","NativeInvGetPlayerGold",
             "NativeGetNumPotions","NativeGetStringNumPotions","NativeChangeRolloverInputBehavior"})services.native_actions.emplace_back(action);
         if(front_screen=="main")for(const auto* action:{"NativeGetOptionParameters","NativeSetOptions","NativeLoadSettings","NativeSaveSettings","NativeEnterOptionMenu","NativeRefreshHudManager","NativeChangeRolloverInputBehavior","NativeIsJapaneseVersion","NativeIsKorean"})services.native_actions.emplace_back(action);
         services.context=this;services.read=movie_read;services.texture=texture;services.image=image;
