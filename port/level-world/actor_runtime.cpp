@@ -70,6 +70,28 @@ struct Bridge {
 int update_actor(RuntimeResult& out,const RuntimeRequest& r,std::string& error){
  if(!r.state||!r.geometry||!r.registry||!r.motion_policy||!r.workspace||!r.resolved224||!r.policy||!r.services||!r.services->invoke||!r.key||bool(r.binding)!=bool(r.scene)||overlaps(&out,sizeof out,r.state,sizeof(*r.state))||overlaps(&out,sizeof out,&r,sizeof r)||overlaps(&r,sizeof r,r.state,sizeof(*r.state))||overlaps(r.policy,sizeof(*r.policy),r.state,sizeof(*r.state))){error="Malformed actor request";return 1;}
  auto& s=*r.state;const auto& policy=*r.policy;
+ if(r.source_game_object_moving){
+  const auto* moving=r.source_game_object_moving;
+  if(*moving>1||
+     overlaps(&out,sizeof out,moving,sizeof(*moving))||
+     overlaps(&r,sizeof r,moving,sizeof(*moving))||
+     overlaps(&s,sizeof s,moving,sizeof(*moving))||
+     overlaps(r.policy,sizeof(*r.policy),moving,sizeof(*moving))||
+     (r.native_body&&overlaps(r.native_body,sizeof(*r.native_body),moving,sizeof(*moving)))||
+     (r.binding&&overlaps(r.binding,sizeof(*r.binding),moving,sizeof(*moving)))||
+     (r.scene&&overlaps(r.scene,sizeof(*r.scene),moving,sizeof(*moving)))||
+     overlaps(r.geometry,sizeof(*r.geometry),moving,sizeof(*moving))||
+     overlaps(r.graph,sizeof(*r.graph),moving,sizeof(*moving))||
+     overlaps(r.registry,sizeof(*r.registry),moving,sizeof(*moving))||
+     overlaps(r.motion_policy,sizeof(*r.motion_policy),moving,sizeof(*moving))||
+     overlaps(r.workspace,sizeof(*r.workspace),moving,sizeof(*moving))||
+     overlaps(r.resolved224,sizeof(std::int32_t)*224,moving,sizeof(*moving))||
+     overlaps(r.services,sizeof(*r.services),moving,sizeof(*moving))||
+     (r.avoidance&&overlaps(r.avoidance,sizeof(*r.avoidance),moving,sizeof(*moving)))||
+     (r.target_absolute_position&&overlaps(r.target_absolute_position,sizeof(float)*3,moving,sizeof(*moving)))){
+   error="Malformed GameObject moving-byte projection";return 1;
+  }
+ }
  if(policy.path.update_path>1||policy.path.avoid_obstacles>1||policy.path.debug_skip_boundary>1||policy.path.update_physics>1||policy.validating_camera>1||policy.has_auxiliary>1||!std::isfinite(policy.virtual_speed)||s.body.flags>65535||s.rotation.reserved||s.rotation.turn_positive>1||s.object.reserved||s.path.reserved||s.path.count>s.path.capacity||(s.path.capacity&&!s.path.segments)||s.path.owned>1||s.path.owned>s.path.count||s.controller.path_requested>1||s.controller.validate_boundary>1||s.controller.heading.active>1||s.controller.heading.reserved||r.workspace->reserved0||r.workspace->reserved1||r.workspace->reserved2||!finite(s.subobjects.position,3)||!finite(s.subobjects.destination,3)||!finite(s.path.target,3)||!finite(s.rotation.rotation,3)||!finite(s.controller.heading.direction,3)||!std::isfinite(s.controller.heading.angle)||(r.target_absolute_position&&!finite(r.target_absolute_position,3))||(r.native_body&&(!r.native_body->body||r.native_body->pinned>1))||(r.binding&&(r.binding->animated_node()<0||unsigned(r.binding->animated_node())>=r.scene->graph.size()||(r.binding->root.presence&~3u)))){error="Malformed actor state or policy";return 1;}
  if(r.avoidance){
   if(r.avoidance->reserved||(r.avoidance->count&&(!r.avoidance->actors||!r.avoidance->keys))){error="Malformed actor avoidance scene";return 1;}
@@ -88,7 +110,7 @@ int update_actor(RuntimeResult& out,const RuntimeRequest& r,std::string& error){
  navigation::AvoidanceActor self{};self.object=s.object;self.physical.present=bool(r.native_body);const std::uint64_t self_key=r.key;
  const navigation::AvoidanceScene fallback_scene{r.registry,&self,&self_key,1,0};
  const auto* avoidance=r.avoidance?r.avoidance:&fallback_scene;
- const navigation::ControllerRequest path_request{&s.controller,&s.path,&s.object,r.geometry,r.graph,avoidance,&path_policy,r.workspace,r.key};
+ const navigation::ControllerRequest path_request{&s.controller,&s.path,&s.object,r.geometry,r.graph,avoidance,&path_policy,r.workspace,r.key,r.source_game_object_moving};
  const int path_status=dh2_nav_update_path(&result.path,&path_request);
  if(path_status){out=result;error="Actor path update failed";return path_status;}
  std::memcpy(s.subobjects.destination,s.controller.destination,12);std::memcpy(s.subobjects.heading,s.controller.heading.direction,12);

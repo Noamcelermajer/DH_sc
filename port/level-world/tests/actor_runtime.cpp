@@ -49,9 +49,9 @@ int main(int argc,char** argv){
   b2AABB bounds;bounds.lowerBound.Set(-2000,-2000);bounds.upperBound.Set(2000,2000);b2World physics(bounds,b2Vec2(0,0),true);
   b2BodyDef definition;definition.position.Set(level.spawn[0]*.01f,level.spawn[1]*.01f);definition.fixedRotation=true;definition.isBullet=true;
   auto* body=physics.CreateBody(&definition);b2CircleDef circle;circle.radius=.36f;circle.density=1;body->CreateShape(&circle);body->SetMassFromShapes();physical::NativeBody native{body,.36f,0};
-  Services service_context;const subobjects::Services services{&service_context,Services::invoke};std::int32_t properties[224]{};
+  Services service_context;const subobjects::Services services{&service_context,Services::invoke};std::int32_t properties[224]{};std::uint8_t source_moving=0;
   RuntimePolicy policy{{0,0,0,1},1,0,0,0,base_virtual_speed};
-  float target[3]{91,92,93};RuntimeRequest request{&state,&native,&binding,&scene,&floor.collision_world,&floor.graph,&registry,&motion,&workspace,nullptr,properties,&policy,&services,target,1,0x23c1,16};RuntimeResult result{};
+  float target[3]{91,92,93};RuntimeRequest request{&state,&native,&binding,&scene,&floor.collision_world,&floor.graph,&registry,&motion,&workspace,nullptr,properties,&policy,&services,target,1,0x23c1,16,&source_moving};RuntimeResult result{};
   if(!binding.sample(scene,clip,clip.start,1,true,error))throw std::runtime_error(error);
   unsigned steps=0,frames=0;float traveled=0;
   for(unsigned tick=1;tick<=12;++tick){
@@ -61,6 +61,7 @@ int main(int argc,char** argv){
    const float before[3]{state.subobjects.position[0],state.subobjects.position[1],state.subobjects.position[2]};
    const float previous_angle=state.subobjects.rotation;
    if(update_actor(result,request,error))throw std::runtime_error(error);
+   require(source_moving==1,"Source UpdatePath did not publish GameObject moving byte");
    ++frames;
    require(result.phase==completed&&!result.failed_event&&result.visual_rotation_requested,"Actor phase/result ordering failed");
    require(!std::memcmp(state.previous_position,before,12)&&state.previous_rotation[2]==previous_angle,"Pre-frame snapshot did not precede actor work");
@@ -75,6 +76,8 @@ int main(int argc,char** argv){
    traveled+=std::hypot(state.subobjects.position[0]-before[0],state.subobjects.position[1]-before[1]);
   }
   require(traveled>80,"Authored walk root motion did not move actor");
+  request.character_flags=0x2341;require(update_actor(result,request,error)==0,"Attack-policy actor update failed");++frames;
+  require(source_moving==1,"Disabled source UpdatePath changed GameObject moving byte");request.character_flags=0x23c1;
   unsigned absent_camera_queries=0;for(auto event:service_context.events)absent_camera_queries+=event==subobjects::camera_get;
   require(absent_camera_queries==frames,"Explicit absent-camera service did not run before trailing floor validation");
   request.target_absolute_position=nullptr;const float retained_target[3]{state.target_position[0],state.target_position[1],state.target_position[2]};
@@ -83,11 +86,13 @@ int main(int argc,char** argv){
   if(update_actor(result,request,error))throw std::runtime_error(error);
   ++frames;require(body->GetLinearVelocity().x==base_virtual_speed&&body->GetLinearVelocity().y==0,"Explicit original base virtual speed did not reach real body");
   const auto before_step=body->GetPosition();require(before_step.x==state.subobjects.position[0]*.01f,"Actor coordinator advanced an unrequested physics Step");physics.Step(.016f,10);++steps;require(body->GetPosition().x>before_step.x,"Caller physics Step did not advance source velocity");
-  // Source Stop requires path_requested and arrival, then true physics policy.
+  // Source Stop uses the separately owned GameObject byte at arrival; the
+  // 32-bit PathController::path_requested projection is deliberately clear.
   state.subobjects.position[0]=body->GetPosition().x*100;state.subobjects.position[1]=body->GetPosition().y*100;
-  std::memcpy(state.subobjects.destination,state.subobjects.position,12);std::memcpy(state.path.target,state.subobjects.position,12);state.controller.path_requested=1;
+  std::memcpy(state.subobjects.destination,state.subobjects.position,12);std::memcpy(state.path.target,state.subobjects.position,12);state.controller.path_requested=0;
   body->ApplyForce(b2Vec2(10,3),body->GetWorldCenter());if(update_actor(result,request,error))throw std::runtime_error(error);++frames;
-  require(result.path.stopped&&result.path.physical_stop_requested&&result.physical_stop_applied&&body->IsSleeping(),"Controller-requested Stop did not reach genuine body");
+  require(result.path.stopped&&result.path.physical_stop_requested&&result.physical_stop_applied&&body->IsSleeping(),"GameObject moving-byte Stop did not reach genuine body");
+  require(source_moving==0,"Source GameObject Stop did not clear moving byte");
   require(body->GetLinearVelocity().x==0&&body->GetLinearVelocity().y==0&&!state.controller.path_requested&&!state.controller.heading.active,"Stop physical/logical state failed");
   require(!std::memcmp(state.target_position,retained_target,12),"Absent target node overwrote target cache");
   body->WakeUp();physics.Step(.016f,10);++steps;require(body->GetLinearVelocity().x==0&&body->GetLinearVelocity().y==0,"Genuine Stop did not clear accumulated force");
@@ -99,6 +104,6 @@ int main(int argc,char** argv){
   policy.validating_camera=2;reject();policy=valid_policy;
   state.rotation.reserved=1;reject();state.rotation.reserved=0;
   service_context.fail_event=subobjects::visual_update;request.character_flags=0x23c1;require(update_actor(result,request,error)==3&&result.phase==subobjects_phase&&result.failed_event==subobjects::visual_update,"Explicit virtual service failure was not reported");
-  std::cout<<"{\"actor_frames\":"<<frames<<",\"caller_world_steps\":"<<steps<<",\"crypt_graph_nodes\":"<<floor.graph.node_count<<",\"crypt_graph_edges\":"<<floor.graph.edge_count<<",\"prince_scene_nodes\":"<<scene.graph.size()<<",\"root_motion_distance\":"<<traveled<<",\"floor_registry_verified\":true,\"path_rotation_subobjects_order_verified\":true,\"controller_requested_genuine_stop\":true,\"explicit_absent_camera_queries\":"<<absent_camera_queries<<",\"atomic_rejection_checks\":"<<atomic<<",\"explicit_service_failure_checks\":1,\"mismatches\":0}\n";
+  std::cout<<"{\"actor_frames\":"<<frames<<",\"caller_world_steps\":"<<steps<<",\"crypt_graph_nodes\":"<<floor.graph.node_count<<",\"crypt_graph_edges\":"<<floor.graph.edge_count<<",\"prince_scene_nodes\":"<<scene.graph.size()<<",\"root_motion_distance\":"<<traveled<<",\"floor_registry_verified\":true,\"path_rotation_subobjects_order_verified\":true,\"controller_requested_genuine_stop\":true,\"source_moving_transitions_verified\":true,\"explicit_absent_camera_queries\":"<<absent_camera_queries<<",\"atomic_rejection_checks\":"<<atomic<<",\"explicit_service_failure_checks\":1,\"mismatches\":0}\n";
  }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 3;}
 }

@@ -10,20 +10,13 @@ namespace dh2::ui::original_menu_viewport_v1 {
 inline constexpr std::int32_t stage_width_twips = 9600;
 inline constexpr std::int32_t stage_height_twips = 6400;
 
-// The native 3D menu backdrop can fill the display independently of the
-// authored SWF stage. Use the real surface ratio for its camera projection;
-// the front UI continues to use fit() below.
+// The original front menu and its backdrop share the same 3:2 presentation
+// frame. Keep black pillarboxes outside that frame on wider modern displays.
 inline float surface_aspect(std::int32_t surface_width,
                             std::int32_t surface_height) noexcept {
     if (surface_width <= 0 || surface_height <= 0)
         return static_cast<float>(stage_width_twips) / stage_height_twips;
     return static_cast<float>(surface_width) / surface_height;
-}
-
-inline std::array<std::int32_t, 4> background_viewport(
-        std::int32_t surface_width, std::int32_t surface_height) noexcept {
-    if (surface_width <= 0 || surface_height <= 0) return {};
-    return {0, 0, surface_width, surface_height};
 }
 
 // Center the original stage in a modern surface without stretching/cropping it.
@@ -49,6 +42,13 @@ inline std::array<std::int32_t, 4> fit(std::int32_t surface_width,
             static_cast<std::int32_t>((sh - height) / 2),
             static_cast<std::int32_t>(width),
             static_cast<std::int32_t>(height)};
+}
+
+// The backdrop is part of the same authored stage, so use the exact fitted
+// rectangle that the SWF hit-test and display bounds use.
+inline std::array<std::int32_t, 4> background_viewport(
+        std::int32_t surface_width, std::int32_t surface_height) noexcept {
+    return fit(surface_width, surface_height);
 }
 
 }  // namespace dh2::ui::original_menu_viewport_v1

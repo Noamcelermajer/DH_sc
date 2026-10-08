@@ -39,10 +39,11 @@ int main() {
           "portrait viewport must center the source stage without cropping");
     check(fit(0, 720) == std::array<std::int32_t, 4>{},
           "invalid surface must produce an empty rectangle");
-    check(background_viewport(1280, 720) == std::array<std::int32_t, 4>{0, 0, 1280, 720},
-          "16:9 menu background must fill the display behind the fitted source UI");
-    check(std::fabs(surface_aspect(1280, 720) - 16.0f / 9.0f) < 1e-6f,
-          "wide background camera must use the physical surface ratio to preserve perspective");
+    const auto background = background_viewport(2400, 1080);
+    check(background == std::array<std::int32_t, 4>{390, 0, 1620, 1080},
+          "20:9 menu background must share the centered source-stage rectangle");
+    check(std::fabs(surface_aspect(background[2], background[3]) - 1.5f) < 1e-6f,
+          "menu camera must use the fitted source-stage ratio behind the SWF");
     check(std::fabs(surface_aspect(0, 720) - 1.5f) < 1e-6f,
           "invalid camera bounds must fall back to the authored UI stage ratio");
 

@@ -17,6 +17,9 @@ class NativePlayerCharacterOwnerV1 final : public Coordinator {
     data::PlayerSavegameV1* save_ = nullptr;
     data::PropertyState* properties_ = nullptr;
     data::FreshInventoryOwnedV4* inventory_ = nullptr;
+    // Typed projection of GameObject+0x1b4. GameObject::UpdatePath owns its
+    // transitions; this is not a byte overlay on the ARM32 Character object.
+    std::uint8_t game_object_moving_ = 0;
 
 public:
     NativePlayerCharacterOwnerV1();
@@ -26,6 +29,15 @@ public:
     std::uintptr_t identity() const noexcept {
         return reinterpret_cast<std::uintptr_t>(this);
     }
+
+    std::uint8_t* game_object_moving_storage() noexcept {
+        return &game_object_moving_;
+    }
+    std::uint8_t game_object_moving() const noexcept {
+        return game_object_moving_;
+    }
+    // Called after the synchronous DropPath and destination copy in Stop.
+    void stop_game_object_moving() noexcept { game_object_moving_ = 0; }
 
     // Publication occurs only after these existing owners are ready. Inventory
     // is optional while its production Android owner is still disconnected.

@@ -32,6 +32,7 @@
 #include "item_power_tables_v5.hpp"
 #include "loot_power_resources_v7.hpp"
 #include "fresh_inventory_owned_v4.hpp"
+#include "character_inventory_selection_v1.hpp"
 #include "player_savegame_v1.hpp"
 #include "player_saved_skill_slots_v1.hpp"
 #include "savegame_options_v1.hpp"
@@ -3752,17 +3753,14 @@ bool ui_player_inventory_slot(std::uintptr_t identity,std::int32_t requested,std
   const auto* definition=dh2::data::item(prince_combat.inventory->table(),slot->item->id);
   if(!definition){error="Gameplay inventory item has no decoded ItemTable row";return false;}
   const auto item_slot=definition->record.words[26];
-  const bool all_items=requested==9;
-  const bool paired_hand=(requested==1||requested==2)&&item_slot==-3;
-  const bool paired_ring=(requested==5||requested==6)&&item_slot==-2;
-  const bool two_hand=(requested==1||requested==2)&&item_slot==-4;
-  if(!all_items&&item_slot!=requested&&!paired_hand&&!paired_ring&&!two_hand)continue;
+  if(!dh2::data::inventory_slot_matches_v1(definition->record,
+       prince_combat.properties.resolved,std::uint32_t(requested)))continue;
   bool equipped=false;
   if(!prince_combat.inventory->is_equipped(std::uint32_t(index),equipped,error))return false;
   UiInventoryItemReadV1 value;value.id=slot->item->id;value.index=std::int32_t(index);
   value.quantity=slot->item->signed_quantity();value.slot=item_slot;
   value.name=slot->item->name.empty()?definition->name:slot->item->name;value.equipped=equipped;
-  value.equippable=requested==9;
+  value.equippable=false;
   if(requested!=9&&!inventory_item_equippable_by_player(definition->record,value.equippable,error))return false;
   const auto set=std::size_t(prince_combat.inventory->current_equipment());
   const auto& equipment=prince_combat.inventory->equipment();
@@ -4020,11 +4018,15 @@ void character_service(void*,dh2::character::State* state,const dh2::character::
   prince_skills->state_service(request->service);break;
  case stop:{
   dh2::move::Policy policy{};dh2_move_policy(&policy,&state->flags);
-  if(prince_body.body&&policy.position_from_physics&&dh2_native_body_stop(&prince_body,prince_runtime.subobjects.position))throw std::runtime_error("Character Stop body failed");
-  dh2_nav_drop_path(&prince_runtime.path);
+  if(dh2_nav_drop_path(&prince_runtime.path))throw std::runtime_error("Character Stop path release failed");
   std::copy(prince_runtime.subobjects.position,prince_runtime.subobjects.position+3,prince_runtime.subobjects.destination);
+  prince_character.stop_game_object_moving();
   prince_runtime.controller.path_requested=0;prince_runtime.controller.heading.active=0;
-  std::fill(prince_runtime.controller.heading.direction,prince_runtime.controller.heading.direction+3,0);state->heading_active=0;refresh_prince_facts();break;
+  std::fill(prince_runtime.controller.heading.direction,prince_runtime.controller.heading.direction+3,0);
+  std::fill(prince_runtime.subobjects.heading,prince_runtime.subobjects.heading+3,0);
+  state->heading_active=0;refresh_prince_facts();
+  if(prince_body.body&&policy.position_from_physics&&dh2_native_body_stop(&prince_body,prince_runtime.subobjects.position))throw std::runtime_error("Character Stop body failed");
+  break;
  }
  case pin:if(prince_body.body&&dh2_native_body_pin(&prince_body))throw std::runtime_error("Character pin failed");break;
  case unpin:if(prince_body.body&&dh2_native_body_unpin(&prince_body))throw std::runtime_error("Character unpin failed");break;
@@ -4208,7 +4210,7 @@ void initialize_native_actor(AAssetManager* assets,bool restore){
  if(dh2_character_visual_scale(mesh_input.placement.scale,prince_combat.properties.base.data()+12))throw std::runtime_error("Original character visual scale rejected");
  dh2::physical::DecorSceneOutput mesh;
  if(dh2_character_mesh_box(&mesh,&mesh_input))throw std::runtime_error("Native player mesh bounds rejected");
- prince_runtime={};std::copy(actor_position.begin(),actor_position.end(),prince_runtime.subobjects.position);
+ prince_runtime={};prince_character.stop_game_object_moving();std::copy(actor_position.begin(),actor_position.end(),prince_runtime.subobjects.position);
  std::copy(actor_position.begin(),actor_position.end(),prince_runtime.subobjects.destination);
  dh2::physical::CharacterOwnerBoundsInput owner_input{};
  std::copy(mesh.mesh_box,mesh.mesh_box+6,owner_input.mesh_box);std::copy(actor_position.begin(),actor_position.end(),owner_input.position);
@@ -4393,9 +4395,10 @@ void advance_native_actor(unsigned dt_ms){
  // boundaries. The floor/path/root/body coordinators execute genuine source.
  const dh2::actor::RuntimePolicy policy{{1,0,0,decoded.position_from_physics},1,0,0,0,dh2::actor::base_virtual_speed};
  const dh2::subobjects::Services services{nullptr,actor_virtual_service};
- const dh2::actor::RuntimeRequest request{&prince_runtime,prince_body.body?&prince_body:nullptr,&prince_visual,&current_scene,&level.native_floor->collision_world,&level.native_floor->graph,&live_registry,&live_motion_policy,&live_workspace,nullptr,prince_combat.properties.resolved.data(),&policy,&services,nullptr,prince_character.identity(),prince_flags,dt_ms};
+ const dh2::actor::RuntimeRequest request{&prince_runtime,prince_body.body?&prince_body:nullptr,&prince_visual,&current_scene,&level.native_floor->collision_world,&level.native_floor->graph,&live_registry,&live_motion_policy,&live_workspace,nullptr,prince_combat.properties.resolved.data(),&policy,&services,nullptr,prince_character.identity(),prince_flags,dt_ms,prince_character.game_object_moving_storage()};
  dh2::actor::RuntimeResult result{};
  if(dh2::actor::update_actor(result,request,error))throw std::runtime_error(error);
+ prince_state.heading_active=prince_runtime.controller.heading.active;
  const float dx=prince_runtime.subobjects.position[0]-actor_position[0],dy=prince_runtime.subobjects.position[1]-actor_position[1];
  if(moving){if(dx*dx+dy*dy>0.000001f)++movement_steps;else ++blocked_steps;++native_heading_updates;}
  std::copy(prince_runtime.subobjects.position,prince_runtime.subobjects.position+3,actor_position.begin());heading=prince_runtime.subobjects.rotation;

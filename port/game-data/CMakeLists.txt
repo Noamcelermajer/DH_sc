@@ -29,6 +29,7 @@ target_sources(dh2_game_data PRIVATE quest_objective_factory_v1.cpp quest_reward
 target_sources(dh2_game_data PRIVATE quest_condition_eval_v1.cpp quest_reward_execution_v1.cpp)
 target_sources(dh2_game_data PRIVATE quest_objective_payload_v1.cpp quest_stream_read_v1.cpp quest_compile_v1.cpp)
 target_sources(dh2_game_data PRIVATE player_equipment_queries_live_v1.cpp)
+target_sources(dh2_game_data PRIVATE character_inventory_selection_v1.cpp)
 set_source_files_properties(item_gear_properties_v5.cpp item_power_tables_v5.cpp
  loot_power_resources_v7.cpp item_instance.cpp loot_tables_v2.cpp
  fresh_inventory_owned_v4.cpp player_gear_effects_v5.cpp item_presentation_v5.cpp
@@ -66,6 +67,8 @@ else()
  target_link_libraries(player_gear_effects_v5_audit PRIVATE dh2_game_data)
  add_executable(data_audit tests/audit.cpp)
  target_link_libraries(data_audit PRIVATE dh2_game_data)
+ add_executable(character_inventory_selection_v1_audit tests/character_inventory_selection_v1.cpp)
+ target_link_libraries(character_inventory_selection_v1_audit PRIVATE dh2_game_data)
  add_executable(animation_bank_audit tests/animation_bank.cpp)
  target_link_libraries(animation_bank_audit PRIVATE dh2_game_data)
  add_executable(animation_tables_audit tests/animation_tables.cpp)

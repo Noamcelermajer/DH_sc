@@ -39,6 +39,10 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
         super(context, attrs);
         this.onFinished = onFinished;
         setOpaque(true);
+        // Keep the native menu visible while MediaPlayer prepares the movie.
+        // An opaque TextureView otherwise covers the already-rendered menu
+        // with an empty black buffer for several seconds on a cold launch.
+        setAlpha(0f);
         setContentDescription("Opening cinematic. Tap to skip.");
         setSurfaceTextureListener(this);
         setOnClickListener(v -> finish());
@@ -97,6 +101,9 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
 
     private void startIfReady() {
         if (!requested || finished || player != null || !isAvailable()) return;
+        // Surface recreation can leave the old opaque frame in the view while
+        // a new decoder is preparing. Re-hide it until the new first frame.
+        setAlpha(0f);
         try {
             AssetFileDescriptor source = getContext().getAssets().openFd(ASSET);
             MediaPlayer candidate = new MediaPlayer();
@@ -112,6 +119,16 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
                 videoWidth = width;
                 videoHeight = height;
                 fitVideo();
+            });
+            candidate.setOnInfoListener((mp, what, extra) -> {
+                if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START && !finished && player == mp) {
+                    // Reveal the overlay on the first rendered video frame,
+                    // not merely when prepareAsync reports the track size.
+                    post(() -> {
+                        if (!finished && player == mp) setAlpha(1f);
+                    });
+                }
+                return false;
             });
             candidate.setOnPreparedListener(mp -> {
                 if (finished || player != mp) return;
@@ -212,6 +229,7 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
             try {
                 old.setOnCompletionListener(null);
                 old.setOnErrorListener(null);
+                old.setOnInfoListener(null);
                 old.setOnPreparedListener(null);
                 old.setOnVideoSizeChangedListener(null);
                 old.setOnSeekCompleteListener(null);

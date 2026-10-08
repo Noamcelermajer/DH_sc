@@ -49,6 +49,16 @@ int main(int argc, char** argv) {
             identity == reinterpret_cast<std::uintptr_t>(&owner) &&
             owner.owner() == identity,
             "native object address is not the Coordinator identity");
+    auto* game_object_moving = owner.game_object_moving_storage();
+    require(game_object_moving && !owner.game_object_moving() &&
+            *game_object_moving == 0,
+            "canonical Player GameObject moving projection did not start clear");
+    *game_object_moving = 1;
+    require(owner.game_object_moving() == 1,
+            "canonical Player GameObject moving projection is not owned storage");
+    owner.stop_game_object_moving();
+    require(!owner.game_object_moving(),
+            "canonical Player Stop did not clear moving projection");
     save.set_character(identity);
 
     require(owner.bind_session(&character_660, save, properties, nullptr, error),
@@ -116,7 +126,7 @@ int main(int argc, char** argv) {
             "retired Character still resolves borrowed owners");
     require(owner.unbind_session(error), "empty retirement was not idempotent");
 
-    std::cout << "{\"validation\":\"PASS\",\"checks\":20,"
+    std::cout << "{\"validation\":\"PASS\",\"checks\":23,"
                  "\"identity_is_native_object_address\":true,"
                  "\"coordinator_save_properties_inventory_single_owner\":true,"
                  "\"inventory_attached_after_character_publish\":true,"
