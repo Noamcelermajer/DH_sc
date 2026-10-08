@@ -39,6 +39,21 @@ int main() {
     if (!expect(near(frame.input_pitch, input_pitch_radians(), 1e-6f) && frame.input_pitch > 0.89f,
                 "movement pitch follows source eye elevation")) return 8;
 
+    ForwardAnchorState anchor{};
+    if (!expect(update_forward_anchor(&anchor, 0.0f, false, false) &&
+                near(anchor.distance, 0.0f), "idle camera anchor starts at the character")) return 21;
+    if (!expect(update_forward_anchor(&anchor, 0.0f, true, true) &&
+                near(anchor.distance, 320.0f), "AnchorForward reaches its half-distance startup ramp")) return 22;
+    if (!expect(update_forward_anchor(&anchor, 0.0f, true, true) &&
+                near(anchor.distance, 337.0f), "AnchorForward advances by its source frame increment")) return 23;
+    if (!expect(update_forward_anchor(&anchor, 1.570796327f, true, true) &&
+                near(anchor.distance, 332.75f), "sharp facing turn retreats the source anchor")) return 24;
+    if (!expect(update_forward_anchor(&anchor, 1.570796327f, false, false) &&
+                near(anchor.distance, kForwardAnchorIdleCap), "idle anchor retains only 40 percent of maximum")) return 25;
+    const Vec3 forward_anchor = player_camera_anchor({1.0f, 2.0f, 3.0f}, 0.0f, 256.0f);
+    if (!expect(near(forward_anchor[0], 1.0f) && near(forward_anchor[1], -254.0f) &&
+                near(forward_anchor[2], 3.0f), "camera anchor uses GameObject::GetLookAtVec orientation")) return 26;
+
     float clip[4]{};
     transform(frame.view_projection, frame.target, clip);
     if (!expect(std::fabs(clip[0] / clip[3]) < 1e-5f && std::fabs(clip[1] / clip[3]) < 1e-5f,

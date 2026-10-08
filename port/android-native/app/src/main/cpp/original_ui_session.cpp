@@ -793,6 +793,64 @@ struct OriginalUiSession::Impl {
                !assign("Stat_Endurance",gameswf::as_value(stats.endurance))||
                !assign("Stat_Energy",gameswf::as_value(stats.energy))||
                !assign("Stat_Points",gameswf::as_value(stats.points)))return false;
+            const auto set_number=[&](const char* key,std::int32_t value){
+                return assign(key,gameswf::as_value(value));
+            };
+            const auto set_flag=[&](const char* key,bool value){
+                return assign(key,gameswf::as_value(value));
+            };
+            if(!set_number("Rating_Attack",stats.rating_attack)||
+               !set_number("Rating_Critical",stats.rating_critical)||
+               !set_number("Rating_Defense",stats.rating_defense)||
+               !set_number("Rating_Dodge",stats.rating_dodge)||
+               !set_number("Rating_Block",stats.rating_block)||
+               !set_number("Resistance_Fire",stats.resistance_fire)||
+               !set_number("Resistance_Earth",stats.resistance_earth)||
+               !set_number("Resistance_Water",stats.resistance_water)||
+               !set_number("Resistance_Air",stats.resistance_air)||
+               !set_number("Resistance_Lightning",stats.resistance_lightning)||
+               !set_number("Damage_Min_Main_Hand",stats.damage_min_main_hand)||
+               !set_number("Damage_Max_Main_Hand",stats.damage_max_main_hand)||
+               !set_number("Damage_Elemental_Min_Main_Hand",stats.damage_elemental_min_main_hand)||
+               !set_number("Damage_Elemental_Max_Main_Hand",stats.damage_elemental_max_main_hand)||
+               !set_number("Damage_Elemental_Type_Main_Hand",stats.damage_elemental_type_main_hand)||
+               !set_number("Damage_Min_Off_Hand",stats.damage_min_off_hand)||
+               !set_number("Damage_Max_Off_Hand",stats.damage_max_off_hand)||
+               !set_number("Damage_Elemental_Min_Off_Hand",stats.damage_elemental_min_off_hand)||
+               !set_number("Damage_Elemental_Max_Off_Hand",stats.damage_elemental_max_off_hand)||
+               !set_number("Damage_Elemental_Type_Off_Hand",stats.damage_elemental_type_off_hand)||
+               !set_number("Damage_Fire_Min_Main_Hand",stats.damage_fire_min_main_hand)||
+               !set_number("Damage_Fire_Max_Main_Hand",stats.damage_fire_max_main_hand)||
+               !set_number("Damage_Water_Min_Main_Hand",stats.damage_water_min_main_hand)||
+               !set_number("Damage_Water_Max_Main_Hand",stats.damage_water_max_main_hand)||
+               !set_number("Damage_Lightning_Min_Main_Hand",stats.damage_lightning_min_main_hand)||
+               !set_number("Damage_Lightning_Max_Main_Hand",stats.damage_lightning_max_main_hand)||
+               !set_number("Damage_Air_Min_Main_Hand",stats.damage_air_min_main_hand)||
+               !set_number("Damage_Air_Max_Main_Hand",stats.damage_air_max_main_hand)||
+               !set_number("Damage_Earth_Min_Main_Hand",stats.damage_earth_min_main_hand)||
+               !set_number("Damage_Earth_Max_Main_Hand",stats.damage_earth_max_main_hand)||
+               !set_flag("IsWeaponTwoHanded",stats.is_weapon_two_handed)||
+               !set_flag("HasOffHandWeapon",stats.has_off_hand_weapon)||
+               !set_flag("HasStaff",stats.has_staff)||
+               !set_flag("HasBow",stats.has_bow)||
+               !set_number("Menu_Average_Melee_To_Hit",stats.menu_average_melee_to_hit)||
+               !set_number("Physical_Armor",stats.physical_armor)||
+               !set_number("Spell_Rating_Dodge",stats.spell_rating_dodge)||
+               !set_number("Menu_Melee_Damage_Reduction",stats.menu_melee_damage_reduction)||
+               !set_number("Spell_Rating_Critical",stats.spell_rating_critical)||
+               !set_number("Menu_Average_Spell_To_Hit",stats.menu_average_spell_to_hit)||
+               !set_number("Spell_Damage_Bonus_Fire",stats.spell_damage_bonus_fire)||
+               !set_number("Spell_Damage_Bonus_Earth",stats.spell_damage_bonus_earth)||
+               !set_number("Spell_Damage_Bonus_Water",stats.spell_damage_bonus_water)||
+               !set_number("Spell_Damage_Bonus_Air",stats.spell_damage_bonus_air)||
+               !set_number("Spell_Damage_Bonus_Lightning",stats.spell_damage_bonus_lightning)||
+               !set_number("Regen_HP",stats.regen_hp)||
+               !set_number("Regen_MP",stats.regen_mp)||
+               !set_number("Leech_HP",stats.leech_hp)||
+               !set_number("Leech_MP",stats.leech_mp)||
+               !set_number("Special_Loot_Gold_Multiplier",stats.special_loot_gold_multiplier)||
+               !set_number("Special_Loot_Magical_Chance",stats.special_loot_magical_chance)||
+               !set_number("Stun_Resist_Chance",stats.stun_resist_chance))return false;
             if(fn.result)fn.result->set_as_object(object);
             return true;
         }
@@ -909,6 +967,22 @@ struct OriginalUiSession::Impl {
             if(!local_character(fn.arg(1).to_int(),false,identity))return false;
             if(!identity){error="NativeInvUnequipItem requires the attached local Player Character";return false;}
             return model_renderer::ui_player_unequip_item(identity,slot,error);
+        }
+        if(!std::strcmp(name,"NativeInvAutoEquipSlot")){
+            if(fn.nargs!=2||!fn.arg(0).is_number()||!fn.arg(1).is_number())return true;
+            const auto slot=fn.arg(0).to_int();
+            if(slot!=-1&&(slot<0||slot>=9))return true;
+            std::uintptr_t identity=0;
+            if(!local_character(fn.arg(1).to_int(),false,identity))return false;
+            if(!identity)return true;
+            return model_renderer::ui_player_auto_equip_slot(identity,slot,error);
+        }
+        if(!std::strcmp(name,"NativeSwapEquipment")){
+            if(fn.nargs!=1||!fn.arg(0).is_number())return true;
+            std::uintptr_t identity=0;
+            if(!local_character(fn.arg(0).to_int(),false,identity))return false;
+            if(!identity)return true;
+            return model_renderer::ui_player_swap_equipment(identity,error);
         }
         if(!std::strcmp(name,"NativeInvGetItemsListForSlot")){
             if(fn.nargs!=3||!fn.arg(0).is_number()||!fn.arg(1).is_object()||!fn.arg(2).is_number())return true;
@@ -1295,6 +1369,18 @@ struct OriginalUiSession::Impl {
         if(!callable){error="Authored main menu onShow missing";return false;}
         return true;
     }
+    static bool select_native_skill_menu_runtime(void*,ui::SwfAsGraph& graph,std::string& error){
+        // dqcharmenu_droid.swf's SpriteID 496 installs hardcoded demo arrays
+        // unless `_global.$version` is exactly `gameSWF`. Seed the native
+        // runtime identity before the first frame advance so its existing
+        // registered skill callbacks remain authoritative.
+        ui::SwfAsValue global;
+        if(!graph.global_value(global,error))return false;
+        bool accepted=false;
+        if(!graph.set_member(global,"$version",ui::SwfAsValue::text("gameSWF"),accepted,error))return false;
+        if(!accepted){error="Character menu global rejected the native skill runtime version";return false;}
+        return true;
+    }
     static bool probe_main_background(void*,ui::SwfAsGraph& graph,std::string& error){
         ui::SwfAsValue root;if(!graph.root_value(root,error))return false;
         for(const char* path:{"menu_bg","menu_bg.BrownBG","menu_bg.RenderedBG","menu_bg.TitleGraphic"}){
@@ -1372,9 +1458,9 @@ struct OriginalUiSession::Impl {
             "NativeSkillsGetSkillPointsLeft","NativeSkillsTrainSkill","NativeEquipSkill","NativeGetPlayerStats","NativeStatsAssignPoint",
             "NativeGetCharMenuTutorialMessage","NativeSkipCharMenuTutorialMessage","NativeHUDGetActiveFaery","NativeHUDGetIsFaeryUnlocked",
             "NativeHUDSetActiveFaery",
-            "NativeInvEquipItem","NativeInvUnequipItem","NativeInvGetItemsListForSlot","NativeInvGetItemDetails","NativeInvGetEquipedItem",
+            "NativeInvEquipItem","NativeInvUnequipItem","NativeInvAutoEquipSlot","NativeSwapEquipment","NativeInvGetItemsListForSlot","NativeInvGetItemDetails","NativeInvGetEquipedItem",
             "NativeInvGetHasOffHandWeapon","NativeInvGetHasTwoHandedWeapon","NativeInvGetPlayerGold",
-            "NativeGetNumPotions","NativeGetStringNumPotions"})services.native_actions.emplace_back(action);
+            "NativeGetNumPotions","NativeGetStringNumPotions","NativeChangeRolloverInputBehavior"})services.native_actions.emplace_back(action);
         if(front_screen=="main")for(const auto* action:{"NativeGetOptionParameters","NativeSetOptions","NativeLoadSettings","NativeSaveSettings","NativeEnterOptionMenu","NativeRefreshHudManager","NativeChangeRolloverInputBehavior","NativeIsJapaneseVersion","NativeIsKorean"})services.native_actions.emplace_back(action);
         services.context=this;services.read=movie_read;services.texture=texture;services.image=image;
         services.draw=draw;services.stencil=stencil;services.native_call=native;services.diagnostic=diagnostic;
@@ -1480,6 +1566,7 @@ struct OriginalUiSession::Impl {
             character_services.graph_start=character_graph_start;
             if(!character_menu_movie->load({"data/menus/dqshared_droid.swf"},
                 "data/menus/dqcharmenu_droid.swf",character_services,error))return false;
+            if(!character_menu_movie->action_script(this,select_native_skill_menu_runtime,error))return false;
             const ui::ViewportState64 character_seed{{0,9600,0,6400},{0,0,480,320},{0,0,480,320},1.f,0,0};
             std::vector<std::string> character_states;
             if(!character_menu_movie->connect_viewport(character_seed,{this,orientation,dimensions},error)||

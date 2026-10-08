@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <string_view>
@@ -21,6 +22,15 @@ inline constexpr float kVerticalFovRadians = 0.429630011f;
 inline constexpr float kNearPlane = 900.0f;
 inline constexpr float kFarPlane = 5000.0f;
 inline constexpr float kInputYawRadians = -0.7853981633974483f;
+// Character::InitCam constructs AnchorForward from the three
+// CharacterDesign/ForwardCamera_* constants. AnchorForward::Update advances
+// its look-ahead by Distance_PerSec per source frame, caps it at Max_Distance
+// while moving, and caps the retained distance at 40% while idle.
+inline constexpr float kForwardAnchorMaxDistance = 640.0f;
+inline constexpr float kForwardAnchorDistancePerFrame = 17.0f;
+inline constexpr float kForwardAnchorIdleCap = kForwardAnchorMaxDistance * 0.4f;
+inline constexpr float kForwardAnchorTurnThresholdRadians = 1.0f;
+inline constexpr float kForwardAnchorTurnRetreat = kForwardAnchorDistancePerFrame * 0.25f;
 inline float input_pitch_radians() noexcept {
     const float horizontal = std::hypot(kEyeFromTarget[0], kEyeFromTarget[1]);
     return std::atan2(kEyeFromTarget[2], horizontal);
@@ -39,6 +49,58 @@ struct Frame {
     float input_yaw{};
     float input_pitch{};
 };
+
+struct ForwardAnchorState {
+    float distance{};
+    float previous_heading{};
+    bool has_previous_heading{};
+};
+
+// Bounded Character::InitCam/AnchorForward projection. The original anchor
+// updates before CameraLevel consumes CameraTarget each frame. Its exact
+// CameraLevel animation, multiplayer branch, and damped target transition are
+// separate providers; this reproduces the single-player forward-distance
+// state and GameObject::GetLookAtVec orientation used by the player anchor.
+inline bool update_forward_anchor(ForwardAnchorState* state, float heading,
+                                  bool moving_or_attacking,
+                                  bool translated_this_frame) noexcept {
+    if (!state || !std::isfinite(heading) || !std::isfinite(state->distance) ||
+        state->distance < 0.0f || state->distance > kForwardAnchorMaxDistance) return false;
+    if (moving_or_attacking) {
+        float turn = 0.0f;
+        if (state->has_previous_heading) {
+            const float delta = std::remainder(heading - state->previous_heading,
+                                               6.2831853071795864769f);
+            turn = std::fabs(delta);
+        }
+        if (turn > kForwardAnchorTurnThresholdRadians) {
+            state->distance = std::max(0.0f, state->distance - kForwardAnchorTurnRetreat);
+        } else {
+            const float limit = translated_this_frame
+                ? kForwardAnchorMaxDistance : kForwardAnchorMaxDistance * 0.5f;
+            if (state->distance < kForwardAnchorMaxDistance * 0.5f) {
+                state->distance = kForwardAnchorMaxDistance * 0.5f;
+            } else {
+                state->distance = std::min(limit,
+                    state->distance + kForwardAnchorDistancePerFrame);
+            }
+        }
+    } else {
+        state->distance = std::min(state->distance, kForwardAnchorIdleCap);
+    }
+    state->previous_heading = heading;
+    state->has_previous_heading = true;
+    return true;
+}
+
+// GameObject::GetLookAtVec writes (sin(rotation), -cos(rotation), 0).
+inline Vec3 player_camera_anchor(Vec3 actor_position, float heading,
+                                 float distance) noexcept {
+    if (!std::isfinite(heading) || !std::isfinite(distance)) return actor_position;
+    return {actor_position[0] + std::sin(heading) * distance,
+            actor_position[1] - std::cos(heading) * distance,
+            actor_position[2]};
+}
 
 inline Vec3 add(Vec3 a, Vec3 b) noexcept {
     return {a[0] + b[0], a[1] + b[1], a[2] + b[2]};

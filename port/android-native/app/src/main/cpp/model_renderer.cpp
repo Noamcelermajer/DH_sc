@@ -1,5 +1,6 @@
 #include "model_renderer.hpp"
 #include "character_menu_stats_owner_v1.hpp"
+#include "character_menu_inventory_order_v1.hpp"
 #include "original_menu_viewport_v1.hpp"
 #include "frustum_runtime.hpp"
 #include "mod_assets.hpp"
@@ -1126,6 +1127,7 @@ bool enabled=false;float center[3]{},radius=1,yaw=-1.57f,pitch=.35f,zoom=1;
 dh2::scene::Scene current_scene;dh2::animation::Player player;
 dh2::animation::Player walk_player;dh2::world::Level level;dh2::world::Point actor_position{};
 bool world_mode=false,walking=false,resume_world=false;float move_x=0,move_y=0,heading=0;
+dh2::native::crypt_camera_frame_v1::ForwardAnchorState prince_camera_anchor{};
 bool verified_crypt_camera_route() noexcept {
  return world_mode&&dh2::native::crypt_camera_frame_v1::verified_crypt_route(
      active_level_assets.name,active_level_assets.level_file);
@@ -2439,7 +2441,8 @@ Matrix camera(int width,int height){
 Matrix crypt_source_camera(int width,int height){
  using namespace dh2::native::crypt_camera_frame_v1;
  Frame frame{};
- const Vec3 target{actor_position[0],actor_position[1],actor_position[2]};
+  const Vec3 actor_target{actor_position[0],actor_position[1],actor_position[2]};
+  const Vec3 target=player_camera_anchor(actor_target,heading,prince_camera_anchor.distance);
  if(!build(active_level_assets.name,active_level_assets.level_file,target,width,height,&frame))
   throw std::runtime_error("Verified Crypt source camera frame rejected its route/viewport/actor");
  std::memcpy(source_camera.matrix.elements,frame.view_projection.data(),sizeof(source_camera.matrix.elements));
@@ -3032,7 +3035,7 @@ void deactivate(){
  prince_retained_pose.clear();prince_locomotion=dh2::actor::BlendedPlayback{};
  prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;
  active_native_start_plan.reset();pending_menu_start={};active_level_assets=RuntimeLevelAssets{};
- enabled=false;world_mode=false;resume_world=false;move_x=move_y=0;
+ enabled=false;world_mode=false;resume_world=false;move_x=move_y=0;prince_camera_anchor={};
  const auto remaining=std::count_if(retired.begin(),retired.end(),[](const auto& owner){return !owner.expired();});
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native terminal world discard | Ghost references %zu | remaining %zu | groups %zu | saved actors %zu | catalogue %u",retired.size(),std::size_t(remaining),object_groups.size(),saved_actors.size(),unsigned(bool(actor_skill_catalogue)));
 }
@@ -3509,13 +3512,30 @@ bool ui_player_name(std::uintptr_t identity,std::string& name,std::string& error
 bool ui_player_stats(std::uintptr_t identity,UiPlayerStatsReadV1& out,std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
  if(identity!=current||!prince_combat.profile_characters||prince_combat.character_class<0||
-    std::size_t(prince_combat.character_class)>=prince_combat.profile_characters->names.size()){
-  error="Character stats require the active Character, Save and selected class row";return false;
+    std::size_t(prince_combat.character_class)>=prince_combat.profile_characters->names.size()||
+    !prince_combat.inventory||prince_combat.inventory->character()!=identity){
+  error="Character stats require the active Character, Save, selected class row and its canonical inventory";return false;
  }
- auto property_int=[](std::size_t index){
-  const auto raw=prince_combat.properties.resolved[index];
+ auto fixed_int=[](std::int32_t raw){
   return raw>=0?raw/256:-static_cast<std::int32_t>((-std::int64_t(raw)+255)/256);
  };
+ auto property_int=[&](std::size_t index){return fixed_int(prince_combat.properties.resolved[index]);};
+ auto signed_add=[](std::int32_t a,std::int32_t b){
+  const std::uint32_t raw=std::uint32_t(a)+std::uint32_t(b);std::int32_t result;
+  std::memcpy(&result,&raw,sizeof(result));return result;
+ };
+ auto raw_property=[](std::size_t index){return prince_combat.properties.resolved[index];};
+ auto property_view=dh2::data::property_view(actor_property_rules,prince_combat.properties);
+ dh2::data::PlayerEquipmentQueriesLiveV1 equipment(*prince_combat.inventory,property_view);
+ dh2::data::CombatantView combat{};
+ if(!equipment.combat_view(combat,error))return false;
+ dh2::data::EquipmentWeaponFacts12V1 weapon_facts{};
+ if(!equipment.facts(weapon_facts,error))return false;
+ std::int32_t main_damage_bonus=0,off_damage_bonus=0;
+ if(dh2_combat_bonus(&combat,0,&main_damage_bonus)||dh2_combat_bonus(&combat,1,&off_damage_bonus)){
+  error="Character stats weapon damage bonus projection failed";return false;
+ }
+ bool two_handed=false;if(!prince_combat.inventory->has_two_hander(false,two_handed,error))return false;
  UiPlayerStatsReadV1 value;value.name=prince_combat.savegame->name();
  value.class_name=prince_combat.profile_characters->names[std::size_t(prince_combat.character_class)];
  switch(prince_combat.player_class_id){
@@ -3528,6 +3548,47 @@ bool ui_player_stats(std::uintptr_t identity,UiPlayerStatsReadV1& out,std::strin
  value.max_mp=property_int(43);value.xp=property_int(33);value.max_xp=property_int(34);
  value.strength=property_int(149);value.dexterity=property_int(150);
  value.endurance=property_int(151);value.energy=property_int(152);value.points=property_int(148);
+ const auto attack_bonus=combat.main_damage_class<0?0:
+     fixed_int(signed_add(raw_property(51+std::size_t(combat.main_damage_class)),
+                          combat.dual_wield?raw_property(58):0));
+ const auto critical_bonus=combat.main_damage_class<0?0:
+     property_int(63+1+std::size_t(combat.main_damage_class));
+ value.rating_attack=signed_add(property_int(50),attack_bonus);
+ value.rating_critical=signed_add(property_int(63),critical_bonus);
+ value.rating_defense=property_int(59);value.rating_dodge=property_int(60);
+ value.rating_block=property_int(61);
+ value.resistance_fire=property_int(74);value.resistance_earth=property_int(77);
+ value.resistance_water=property_int(75);value.resistance_air=property_int(78);
+ value.resistance_lightning=property_int(76);
+ value.damage_min_main_hand=signed_add(property_int(79),fixed_int(main_damage_bonus));
+ value.damage_max_main_hand=signed_add(property_int(80),fixed_int(main_damage_bonus));
+ value.damage_elemental_min_main_hand=property_int(95);
+ value.damage_elemental_max_main_hand=property_int(96);
+ value.damage_elemental_type_main_hand=property_int(97);
+ value.damage_min_off_hand=signed_add(property_int(81),fixed_int(off_damage_bonus));
+ value.damage_max_off_hand=signed_add(property_int(82),fixed_int(off_damage_bonus));
+ value.damage_elemental_min_off_hand=property_int(98);
+ value.damage_elemental_max_off_hand=property_int(99);
+ value.damage_elemental_type_off_hand=property_int(100);
+ value.damage_fire_min_main_hand=property_int(101);value.damage_fire_max_main_hand=property_int(102);
+ value.damage_water_min_main_hand=property_int(105);value.damage_water_max_main_hand=property_int(106);
+ value.damage_lightning_min_main_hand=property_int(109);value.damage_lightning_max_main_hand=property_int(110);
+ value.damage_air_min_main_hand=property_int(117);value.damage_air_max_main_hand=property_int(118);
+ value.damage_earth_min_main_hand=property_int(113);value.damage_earth_max_main_hand=property_int(114);
+ value.is_weapon_two_handed=two_handed;
+ value.has_off_hand_weapon=(weapon_facts.flags&dh2::data::weapon_dual)!=0;
+ value.has_staff=(weapon_facts.flags&dh2::data::weapon_staff)!=0;
+ value.has_bow=(weapon_facts.flags&dh2::data::weapon_bow)!=0;
+ value.menu_average_melee_to_hit=property_int(207);value.physical_armor=property_int(71);
+ value.spell_rating_dodge=property_int(164);value.menu_melee_damage_reduction=property_int(209);
+ value.spell_rating_critical=property_int(165);value.menu_average_spell_to_hit=property_int(208);
+ value.spell_damage_bonus_fire=property_int(166);value.spell_damage_bonus_earth=property_int(169);
+ value.spell_damage_bonus_water=property_int(167);value.spell_damage_bonus_air=property_int(170);
+ value.spell_damage_bonus_lightning=property_int(168);
+ value.regen_hp=property_int(39);value.regen_mp=property_int(44);
+ value.leech_hp=property_int(132);value.leech_mp=property_int(133);
+ value.special_loot_gold_multiplier=property_int(195);
+ value.special_loot_magical_chance=property_int(196);value.stun_resist_chance=property_int(138);
  out=std::move(value);error.clear();return true;
 }
 bool ui_player_assign_stat(std::uintptr_t identity,std::uint32_t stat,std::string& error){
@@ -3840,6 +3901,84 @@ bool ui_player_equip_item(std::uintptr_t identity,std::int32_t item_index,
        std::uint32_t(item_index),error))return false;
  error.clear();return true;
 }
+bool ui_player_auto_equip(std::uintptr_t identity,std::int32_t item_index,
+                          std::int32_t& result,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!player_equipment_native||!player_equipment_native->services||
+    !prince_combat.inventory||!prince_combat.item_power_tables||
+    &player_equipment_native->services->inventory()!=prince_combat.inventory.get()||
+    prince_combat.inventory->character()!=identity){
+  error="Inventory auto-equip requires the active canonical V4 and V6-backed equipment services";return false;
+ }
+ if(item_index<0||std::size_t(item_index)>=prince_combat.inventory->items().size()){
+  error="Inventory auto-equip index is outside the source Item vector";return false;
+ }
+ if(!player_equipment_native->services->auto_equip(std::uint32_t(item_index),result,error))return false;
+ error.clear();return true;
+}
+bool ui_player_auto_equip_slot(std::uintptr_t identity,std::int32_t equipment_slot,
+                               std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!player_equipment_native||!player_equipment_native->services||
+    !prince_combat.inventory||!prince_combat.item_power_tables||
+    &player_equipment_native->services->inventory()!=prince_combat.inventory.get()||
+    prince_combat.inventory->character()!=identity){
+  error="Inventory slot auto-equip requires the active canonical V4 and V6-backed equipment services";return false;
+ }
+ if(equipment_slot!=-1&&(equipment_slot<0||equipment_slot>=9)){
+  error="Inventory slot auto-equip expects -1 or an EquipmentSlots value from 0 through 8";return false;
+ }
+ auto& inventory=*prince_combat.inventory;
+ auto& equipment=*player_equipment_native->services;
+ auto auto_slot=[&](std::uint32_t slot){
+  struct Candidate {std::uint32_t index;const dh2::data::ItemInstanceV1* item;const dh2::data::ItemRecord164* row;};
+  std::vector<Candidate> candidates;
+  for(std::size_t i=0;i<inventory.items().size();++i){
+   const auto* cell=inventory.items()[i].get();if(!cell||!cell->item)continue;
+   const auto* definition=dh2::data::item(inventory.table(),cell->item->id);
+   if(!definition){error="Source automatic-slot ItemTable metadata unavailable";return false;}
+   if(dh2::ui::character_menu_slot_candidate_v1(*cell->item,definition->record,
+       prince_combat.properties.resolved,slot))
+    candidates.push_back({static_cast<std::uint32_t>(i),cell->item.get(),&definition->record});
+  }
+  std::sort(candidates.begin(),candidates.end(),[](const Candidate& a,const Candidate& b){
+   return dh2::ui::character_menu_item_value_less_v1(*a.item,*a.row,*b.item,*b.row,
+       prince_combat.character_class);
+  });
+  for(const auto& candidate:candidates){
+   bool available=false;
+   if(!inventory_item_equippable_by_player(*candidate.row,available,error))return false;
+   if(!available)continue;
+   bool already_equipped=false;
+   if(!inventory.is_equipped(candidate.index,already_equipped,error))return false;
+   if(already_equipped)continue;
+   return equipment.equip(slot,candidate.index,error);
+  }
+  const auto set=slot==1||slot==2?inventory.current_equipment():0;
+  if(inventory.equipment()[std::size_t(set)][slot]){
+   error="Source empty automatic-slot continuation projection mismatch";return false;
+  }
+  // Adam's source query owner reaches the normal unequip action for an empty
+  // slot, preserving the same Character refresh/effect path as a real equip.
+  return equipment.unequip(slot,error);
+ };
+ if(equipment_slot>=0){
+  if(!equipment.unequip(std::uint32_t(equipment_slot),error))return false;
+  if(!auto_slot(std::uint32_t(equipment_slot)))return false;
+  error.clear();return true;
+ }
+ for(std::uint32_t slot=0;slot<9;++slot)
+  if(!equipment.unequip(slot,error))return false;
+ for(std::uint32_t cursor=9;cursor>0;--cursor)
+  if(!auto_slot(cursor-1))return false;
+ for(std::uint32_t cursor=9;cursor>0;--cursor){
+  const auto slot=cursor-1;
+  const auto set=slot==1||slot==2?inventory.current_equipment():0;
+  if(!inventory.equipment()[std::size_t(set)][slot]&&slot!=1&&slot!=2&&
+     !auto_slot(slot))return false;
+ }
+ error.clear();return true;
+}
 bool ui_player_unequip_item(std::uintptr_t identity,std::int32_t equipment_slot,
                             std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
@@ -3851,6 +3990,17 @@ bool ui_player_unequip_item(std::uintptr_t identity,std::int32_t equipment_slot,
   error="Inventory unequip slot is outside the source EquipmentSlots range";return false;
  }
  if(!player_equipment_native->services->unequip(std::uint32_t(equipment_slot),error))return false;
+ error.clear();return true;
+}
+bool ui_player_swap_equipment(std::uintptr_t identity,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!player_equipment_native||!player_equipment_native->services||
+    !prince_combat.inventory||!prince_combat.item_power_tables||
+    &player_equipment_native->services->inventory()!=prince_combat.inventory.get()||
+    prince_combat.inventory->character()!=identity){
+  error="Inventory set swap requires the active canonical V4 and V6-backed equipment services";return false;
+ }
+ if(!player_equipment_native->services->swap(error))return false;
  error.clear();return true;
 }
 bool ui_player_weapon_flags(std::uintptr_t identity,bool& offhand,bool& two_handed,std::string& error){
@@ -4402,6 +4552,10 @@ void advance_native_actor(unsigned dt_ms){
  const float dx=prince_runtime.subobjects.position[0]-actor_position[0],dy=prince_runtime.subobjects.position[1]-actor_position[1];
  if(moving){if(dx*dx+dy*dy>0.000001f)++movement_steps;else ++blocked_steps;++native_heading_updates;}
  std::copy(prince_runtime.subobjects.position,prince_runtime.subobjects.position+3,actor_position.begin());heading=prince_runtime.subobjects.rotation;
+ if(!dh2::native::crypt_camera_frame_v1::update_forward_anchor(
+      &prince_camera_anchor,heading,prince_state.current==4||prince_state.current==5,
+      dx*dx+dy*dy>0.05f))
+  throw std::runtime_error("Source player camera anchor rejected runtime state");
  // TriggerZone contact consumes the updated absolute GameObject bounds.
  update_crypt_contact();
  sync_search_world();
@@ -5427,7 +5581,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     }
     level=std::move(candidate);player=std::move(candidate_idle);walk_player=std::move(candidate_walk);current_scene=std::move(rest);
     active_crypt_module_bounds=std::move(candidate_crypt_module_bounds);
-    actor_position=restore?previous:level.spawn;
+    actor_position=restore?previous:level.spawn;prince_camera_anchor={};
     world_mode=true;resume_world=false;walking=false;move_x=move_y=0;heading=restore?previous_heading:source_spawn_heading;movement_steps=blocked_steps=0;
     radius=350;yaw=-1.57f;pitch=.75f;zoom=1;object_epoch=epoch=last_frame=std::chrono::steady_clock::now();sampled_ms=0;frozen=restore?previous_frozen:false;
     if(!initialize_player_equipment_native(assets,prince,error))

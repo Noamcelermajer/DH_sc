@@ -60,6 +60,27 @@ struct UiPlayerStatsReadV1 {
  std::string name,class_name;std::int32_t icon{},level{},hp{},hp_bonus{},max_hp{};
  std::int32_t mp{},mp_bonus{},max_mp{},xp{},max_xp{},strength{},dexterity{};
  std::int32_t endurance{},energy{},points{};
+ // Remaining NativeGetPlayerStats fields read by the authored character
+ // sheet. Values are projected from the same resolved Character properties
+ // and live inventory/equipment owners as combat; no second stats store.
+ std::int32_t rating_attack{},rating_critical{},rating_defense{},rating_dodge{},rating_block{};
+ std::int32_t resistance_fire{},resistance_earth{},resistance_water{},resistance_air{},resistance_lightning{};
+ std::int32_t damage_min_main_hand{},damage_max_main_hand{};
+ std::int32_t damage_elemental_min_main_hand{},damage_elemental_max_main_hand{},damage_elemental_type_main_hand{};
+ std::int32_t damage_min_off_hand{},damage_max_off_hand{};
+ std::int32_t damage_elemental_min_off_hand{},damage_elemental_max_off_hand{},damage_elemental_type_off_hand{};
+ std::int32_t damage_fire_min_main_hand{},damage_fire_max_main_hand{};
+ std::int32_t damage_water_min_main_hand{},damage_water_max_main_hand{};
+ std::int32_t damage_lightning_min_main_hand{},damage_lightning_max_main_hand{};
+ std::int32_t damage_air_min_main_hand{},damage_air_max_main_hand{};
+ std::int32_t damage_earth_min_main_hand{},damage_earth_max_main_hand{};
+ bool is_weapon_two_handed{},has_off_hand_weapon{},has_staff{},has_bow{};
+ std::int32_t menu_average_melee_to_hit{},physical_armor{},spell_rating_dodge{};
+ std::int32_t menu_melee_damage_reduction{},spell_rating_critical{},menu_average_spell_to_hit{};
+ std::int32_t spell_damage_bonus_fire{},spell_damage_bonus_earth{},spell_damage_bonus_water{};
+ std::int32_t spell_damage_bonus_air{},spell_damage_bonus_lightning{};
+ std::int32_t regen_hp{},regen_mp{},leech_hp{},leech_mp{};
+ std::int32_t special_loot_gold_multiplier{},special_loot_magical_chance{},stun_resist_chance{};
 };
 bool ui_player_stats(std::uintptr_t,UiPlayerStatsReadV1&,std::string&);
 bool ui_player_assign_stat(std::uintptr_t,std::uint32_t,std::string&);
@@ -95,6 +116,9 @@ bool ui_player_inventory_item_details(std::uintptr_t,std::int32_t,UiItemDetailsR
 bool ui_player_equipped_item(std::uintptr_t,std::int32_t,UiEquippedItemReadV1&,bool&,std::string&);
 bool ui_player_equip_item(std::uintptr_t,std::int32_t item_index,std::int32_t equipment_slot,std::string&);
 bool ui_player_unequip_item(std::uintptr_t,std::int32_t equipment_slot,std::string&);
+bool ui_player_auto_equip(std::uintptr_t,std::int32_t item_index,std::int32_t& result,std::string&);
+bool ui_player_auto_equip_slot(std::uintptr_t,std::int32_t equipment_slot,std::string&);
+bool ui_player_swap_equipment(std::uintptr_t,std::string&);
 bool ui_player_weapon_flags(std::uintptr_t,bool&,bool&,std::string&);
 bool ui_player_potions(std::uintptr_t,std::int32_t&,std::int32_t&,std::string&);
 struct LootStagingResultV1 {std::size_t first_world_item{},item_count{};};
