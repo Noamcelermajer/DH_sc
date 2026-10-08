@@ -170,6 +170,10 @@ public:
                          std::uint32_t difficulty, std::string& error);
     bool set_faery_state(std::uint32_t id, std::int32_t value,
                          std::uint32_t difficulty, std::string& error);
+    // Character::SG_SetCurrentFaerie writes the selected faery index in the
+    // requested difficulty's existing Save. This does not grant/unlock it.
+    bool set_current_faery(std::uint32_t id, std::uint32_t difficulty,
+                           std::string& error);
     std::int32_t faery_level(std::uint32_t id,
                              std::uint32_t difficulty) const noexcept;
     std::int32_t current_faery(std::uint32_t difficulty) const noexcept;

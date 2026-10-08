@@ -3634,6 +3634,21 @@ bool ui_player_active_faery(std::uintptr_t identity,std::int32_t& id,std::int32_
  level=id>=0?prince_combat.savegame->faery_level(std::uint32_t(id),std::uint32_t(native_save_difficulty)):-1;
  error.clear();return true;
 }
+bool ui_player_set_active_faery(std::uintptr_t identity,std::uint32_t id,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||native_save_difficulty<0||native_save_difficulty>2||
+    !prince_combat.savegame||!prince_combat.savegame->faeries_initialized()[std::size_t(native_save_difficulty)]||
+    !prince_skills||!prince_skills->initialized()){
+  error="Faery selection requires the active Save, difficulty and retained Player skill owner";return false;
+ }
+ const auto difficulty=std::uint32_t(native_save_difficulty);
+ // Character::ChangeFaery asserts that the row is in range, mutates the
+ // difficulty-specific Save first, and then calls CharAI::UpdateAllSkills.
+ // The fixed Save row is five entries, established by source _InitFaeries.
+ if(!prince_combat.savegame->set_current_faery(id,difficulty,error))return false;
+ if(!prince_skills->update_after_source_skill_inputs_changed(error))return false;
+ error.clear();return true;
+}
 bool ui_player_faery_unlocked(std::uintptr_t identity,std::uint32_t id,bool& unlocked,std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
  if(identity!=current||native_save_difficulty<0||native_save_difficulty>2||id>=5||!native_debug){

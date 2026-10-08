@@ -152,6 +152,9 @@ struct OriginalUiSession::Impl {
     std::array<std::int32_t,4> front_rectangle()const{
         return ui::original_menu_viewport_v1::fit(driver_width,driver_height);
     }
+    std::array<std::int32_t,4> viewport_rectangle()const{
+        return {0,0,driver_width,driver_height};
+    }
     static bool input_accepts(void*,ui::SwfEvent48&,bool& accepted,std::string&){
         // MenuBase::CanHandleEvent, 0x41f3fc, returns true.
         accepted=true;return true;
@@ -739,6 +742,16 @@ struct OriginalUiSession::Impl {
             if(fn.result)fn.result->set_as_object(object);
             return true;
         }
+        if(!std::strcmp(name,"NativeHUDSetActiveFaery")){
+            if(fn.nargs!=2||!fn.arg(0).is_number()||!fn.arg(1).is_number())return true;
+            // IDA: NativeHUDSetActiveFaery calls NativeGetPlayerChar(arg0, 0),
+            // then Character::ChangeFaery(arg1).
+            std::uintptr_t identity=0;if(!local_character(fn.arg(0).to_int(),false,identity))return false;
+            if(!identity)return true;
+            const auto raw_id=fn.arg(1).to_int();
+            if(raw_id<0){error="NativeHUDSetActiveFaery received a negative faery index";return false;}
+            return model_renderer::ui_player_set_active_faery(identity,std::uint32_t(raw_id),error);
+        }
         if(!std::strcmp(name,"NativeHUDGetIsFaeryUnlocked")){
             if(fn.nargs!=2||!fn.arg(0).is_number()||!fn.arg(1).is_number())return true;
             const auto id=fn.arg(0).to_int();std::uintptr_t identity=0;
@@ -978,6 +991,11 @@ struct OriginalUiSession::Impl {
                 return true;
             }
             error="BackToHud requires the attached gameplay level owner";return false;
+        }
+        if(!std::strcmp(name,"NativeScreenIsBlack")){
+            // IDA 0x439fa4: offline is a no-op; only the unavailable online
+            // PlayerManager branch advances its screen state from 1 to 2.
+            return true;
         }
         if(!std::strcmp(name,"NativePopAllMenus")){
             if(self.live_player&&self.front_screen.empty()){
@@ -1245,8 +1263,9 @@ struct OriginalUiSession::Impl {
         services.native_actions={"NativePlaySoundFX","NativePushMenu","NativePopMenu","NativePopAllAbove","NativePopAllMenus","NativeGetCreditMovement","NativeBackToHud"};services.native_action=native_action;
         if(front_screen=="main")for(const auto* action:{"NativeGetSaveSlotDetails","NativeCreateSaveSlot","NativeAssignSaveSlotToPlayer","NativeSetSaveSlotIDToMainMenu","NativeStartGame"})services.native_actions.emplace_back(action);
         if(front_screen=="main"||live_player)services.native_actions.emplace_back("NativeGetParsedString");
-        if(live_player)for(const auto* action:{"NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
+        if(live_player)for(const auto* action:{"NativeScreenIsBlack","NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
             "NativeSkillsGetSkillPointsLeft","NativeSkillsTrainSkill","NativeEquipSkill","NativeGetPlayerStats","NativeHUDGetActiveFaery","NativeHUDGetIsFaeryUnlocked",
+            "NativeHUDSetActiveFaery",
             "NativeInvEquipItem","NativeInvUnequipItem","NativeInvGetItemsListForSlot","NativeInvGetItemDetails","NativeInvGetEquipedItem",
             "NativeInvGetHasOffHandWeapon","NativeInvGetHasTwoHandedWeapon","NativeInvGetPlayerGold",
             "NativeGetNumPotions","NativeGetStringNumPotions"})services.native_actions.emplace_back(action);
@@ -1331,7 +1350,7 @@ struct OriginalUiSession::Impl {
             hud_input.can_handle_event=input_accepts;hud_input.native_event=input_native_event;hud_input.advance=input_advance;
             if(!movie->connect_input("_root.menu_HUD_0",frame_owner->history,0x84,
                 frame_owner->input_selection,{this,orientation,dimensions},hud_input,error)||
-               !movie->input_rectangle(front_rectangle().data(),error))return false;
+               !movie->input_rectangle(viewport_rectangle().data(),error))return false;
             frame_owner->main_events.render_bound=true;
 
             character_frame_owner=std::make_shared<FrameOwner>();
@@ -1407,14 +1426,14 @@ bool OriginalUiSession::touch(float x,float y,int action,std::string& error){
     const bool gameplay=impl_->front_screen.empty()&&impl_->live_player;
     if(!impl_->selected||!impl_->loaded||(!front&&!gameplay)){error.clear();return true;}
     if(action<0||action>3||!std::isfinite(x)||!std::isfinite(y)){error="Malformed native UI touch";return false;}
-    const auto rectangle=impl_->front_rectangle();
-    if(!impl_->movie->input_rectangle(rectangle.data(),error))return false;
-    if(gameplay&&impl_->character_menu_movie&&!impl_->character_menu_movie->input_rectangle(rectangle.data(),error))return false;
+    const bool character_menu=gameplay&&!impl_->game_menu_stack.empty();
+    const auto rectangle=(front||character_menu)?impl_->front_rectangle():impl_->viewport_rectangle();
+    auto* selected=front?impl_->active_menu_movie():
+        character_menu?impl_->character_menu_movie.get():impl_->movie.get();
+    if(!selected){error="Native UI renderer unavailable for touch";return false;}
+    if(!selected->input_rectangle(rectangle.data(),error))return false;
     // Cancellation must clear a held touch without producing onRelease.
     // Android DOWN/MOVE retain the source cursor button; UP clears it.
-    auto* selected=front?impl_->active_menu_movie():
-        !impl_->game_menu_stack.empty()?impl_->character_menu_movie.get():impl_->movie.get();
-    if(!selected){error="Native UI renderer unavailable for touch";return false;}
     auto owner=selected==impl_->character_menu_movie.get()?impl_->character_frame_owner:
                selected==impl_->shared_menu_movie.get()?impl_->shared_frame_owner:impl_->frame_owner;
     if(!owner){error="Native UI touch frame owner unavailable";return false;}
@@ -1679,9 +1698,10 @@ bool OriginalUiSession::render_player(int width,int height,const std::int32_t* s
                 dispatch{self,self.input_dispatch_movie,self.input_dispatch_frames};
             self.input_dispatch_movie=active;self.input_dispatch_frames=&active_owner->frames;
             if(!active->input_advance(milliseconds,error))throw std::runtime_error(error);
-            const auto rectangle=self.front_rectangle();
-            if(!self.movie->input_rectangle(rectangle.data(),error)||
-               !self.character_menu_movie->input_rectangle(rectangle.data(),error))throw std::runtime_error(error);
+            const auto hud_rectangle=self.viewport_rectangle();
+            const auto menu_rectangle=self.front_rectangle();
+            if(!self.movie->input_rectangle(hud_rectangle.data(),error)||
+               !self.character_menu_movie->input_rectangle(menu_rectangle.data(),error))throw std::runtime_error(error);
         }
         if(!self.status->update(sheet,count,character,error)||
            !self.movie->display_source_clip(status_panel,error)||

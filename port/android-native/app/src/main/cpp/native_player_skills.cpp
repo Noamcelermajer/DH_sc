@@ -846,6 +846,9 @@ void Runtime::update(){impl_->update();}
 bool Runtime::update_after_saved_skill_slot_write(std::string& error){
  return impl_->update_after_saved_skill_slot_write(error);
 }
+bool Runtime::update_after_source_skill_inputs_changed(std::string& error){
+ return impl_->update_after_saved_skill_slot_write(error);
+}
 bool Runtime::train_skill(std::uint32_t skill_index,bool test_only,data::FreshInventoryOwnedV4& inventory,
                           std::uint32_t& source_return,std::string& error){
  return impl_->train_skill(skill_index,test_only,inventory,source_return,error);

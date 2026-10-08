@@ -38,7 +38,8 @@ void write_u32(std::FILE* file, std::uint32_t value) {
 unsigned policy_checks() {
     unsigned checks = 0;
     const auto check = [&](bool value) {
-        require(value, "FAES native policy check failed");
+        if (!value) throw std::runtime_error(
+            "FAES native policy check failed #" + std::to_string(checks + 1));
         ++checks;
     };
     std::string error;
@@ -76,6 +77,14 @@ unsigned policy_checks() {
     check(consumed == 8 && mismatch &&
           initialized.current_faery(0) == 0x34 &&
           initialized.current_faery(1) == 0);
+
+    check(initialized.set_current_faery(4, 1, error));
+    check(initialized.current_faery(1) == 4 && initialized.current_faery(0) == 0x34);
+    check(!initialized.set_current_faery(5, 1, error));
+    check(initialized.current_faery(1) == 4);
+    check(!initialized.set_current_faery(0, 3, error));
+    PlayerSavegameV1 uninitialized;
+    check(!uninitialized.set_current_faery(0, 0, error));
     return checks;
 }
 }  // namespace

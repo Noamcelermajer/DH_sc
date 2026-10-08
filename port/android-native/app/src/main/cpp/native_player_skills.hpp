@@ -73,6 +73,9 @@ public:
     // CharAI::UpdateSkills. This invokes that tail through the retained Player
     // VM/update owner and reports failure to the synchronous UI action.
     bool update_after_saved_skill_slot_write(std::string& error);
+    // Character::ChangeFaery and other source skill-input mutations converge
+    // on the same CharAI::UpdateAllSkills owner.
+    bool update_after_source_skill_inputs_changed(std::string& error);
     // Source Character::IncSkill over the same retained Save, skill VM,
     // property/buff view and caller-supplied canonical V4 inventory.
     bool train_skill(std::uint32_t skill_index,bool test_only,

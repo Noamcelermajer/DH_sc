@@ -650,6 +650,23 @@ bool PlayerSavegameV1::set_faery_state(std::uint32_t id, std::int32_t value,
     return true;
 }
 
+bool PlayerSavegameV1::set_current_faery(std::uint32_t id,
+                                         std::uint32_t difficulty,
+                                         std::string& error) {
+    if (difficulty >= current_faery_.size() ||
+        !faeries_initialized_[difficulty]) {
+        error = "source current-faery Save storage unavailable";
+        return false;
+    }
+    if (id >= faeries_[difficulty].size()) {
+        error = "source current-faery index exceeds the initialized Save row count";
+        return false;
+    }
+    current_faery_[difficulty] = static_cast<std::int32_t>(id);
+    error.clear();
+    return true;
+}
+
 std::int32_t PlayerSavegameV1::faery_level(std::uint32_t id,
                                            std::uint32_t difficulty) const noexcept {
     return difficulty < 3 && id < 5 && faeries_initialized_[difficulty]
