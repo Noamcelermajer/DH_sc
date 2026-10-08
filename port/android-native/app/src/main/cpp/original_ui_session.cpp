@@ -11,6 +11,10 @@ extern "C" {
 #include "swf_input_history.hpp"
 #include "swf_frame_connection.hpp"
 #include "player_status_hud.hpp"
+#include "authored_gameplay_hud_v1.hpp"
+#include "gameplay_menu_stack_v1.hpp"
+#include "authored_joystick_v1.hpp"
+#include "authored_hud_edge_layout_v6.hpp"
 #include "textures.hpp"
 #include "original_menu_sound_data.hpp"
 #include "swf_menu_sound.hpp"
@@ -41,6 +45,7 @@ extern "C" {
 #include <cstring>
 #include <limits>
 #include <map>
+#include <sstream>
 #include <stdexcept>
 #include <utility>
 #include <chrono>
@@ -52,7 +57,6 @@ namespace dh2::android_ui {
 namespace {
 constexpr const char* tag="DH2Native";
 constexpr const char* panel="_root.menu_HUD_0.HUDelements.HealthBars.player";
-constexpr const char* status_panel="_root.menu_HUD_0.HUDelements.HealthBars";
 constexpr const char* hud_sha="a4ffacd1abdf7c9b2ba19c46ebb81c60c100458731a4cdba5880391b9c11b238";
 struct AssetClose {void operator()(AAsset* value)const{if(value)AAsset_close(value);}};
 }
@@ -101,6 +105,10 @@ struct OriginalUiSession::Impl {
     // event has unwound, so the HUD input graph is never re-entered recursively.
     bool gameplay_hud_active=true;
     bool gameplay_hud_input_reset_pending=false;
+    std::int32_t hud_style=-1;
+    model_renderer::UiPlayerHudProjectionV1 gameplay_hud_state{};
+    std::chrono::steady_clock::time_point gameplay_hud_usable_refresh{};
+    bool gameplay_hud_projection_warned=false;
     std::uintptr_t gameplay_character_button{};
     bool gameplay_character_button_pressed=false;
     std::string active_menu_path()const{return "_root."+(menu_stack.empty()?std::string("menu_MainMenu"):menu_stack.back());}
@@ -158,6 +166,57 @@ struct OriginalUiSession::Impl {
     std::unique_ptr<ui::SwfMovie> shared_menu_movie;
     std::unique_ptr<ui::SwfMovie> character_menu_movie;
     std::unique_ptr<ui::PlayerStatusHud> status;
+    // The gameplay HUD adapter borrows the existing dqhud movie and the
+    // current authored player; it creates no second SWF/player owner.
+    std::unique_ptr<ui::AuthoredGameplayHudV1> gameplay_hud;
+    bool gameplay_hud_bound=false;
+    int gameplay_hud_pointer=-1;
+    ui::AuthoredJoystickStateV1 authored_joystick{};
+    bool authored_joystick_ready=false;
+    std::string status_panel_path()const{
+        return gameplay_hud&&gameplay_hud_bound?gameplay_hud->elements_path()+".HealthBars":
+            std::string("_root.menu_HUD_0.HUDelements.HealthBars");
+    }
+    std::string status_player_path()const{
+        return gameplay_hud&&gameplay_hud_bound?status_panel_path()+".player":std::string(panel);
+    }
+    static bool authored_joystick_position(void* context,std::int32_t x,std::int32_t y,std::string& error){
+        auto& self=*static_cast<Impl*>(context);
+        if(!self.gameplay_hud||!self.gameplay_hud_bound){error="Authored gameplay HUD joystick owner unavailable";return false;}
+        return self.gameplay_hud->joystick_stick_position(x,y,error);
+    }
+    static bool authored_joystick_controller_allowed(void*,bool& allowed,std::string& error){
+        // Query the same live Character controller gate as the source
+        // HUDControls owner. The authored command then enters HeadTowards
+        // directly, without the Android gamepad/camera adapter a second time.
+        std::uintptr_t identity=0;
+        if(!model_renderer::ui_player_identity(identity,error))return false;
+        if(identity==0){allowed=false;error.clear();return true;}
+        return model_renderer::ui_player_controller_allowed(identity,allowed,error);
+    }
+    static bool authored_joystick_rotate(void*,const float base[3],float degrees,float out[3],std::string& error){
+        if(!base||!out||!std::isfinite(degrees)){error="Malformed authored joystick direction";return false;}
+        const float length=std::sqrt(base[0]*base[0]+base[1]*base[1]+base[2]*base[2]);
+        if(!std::isfinite(length)||length<=0.f){error="Authored joystick direction has zero length";return false;}
+        constexpr float radians_per_degree=0.01745329251994329577f;
+        const float angle=degrees*radians_per_degree,c=std::cos(angle),s=std::sin(angle);
+        const float x=base[0]/length,y=base[1]/length;
+        out[0]=x*c-y*s;out[1]=x*s+y*c;out[2]=base[2]/length;
+        return true;
+    }
+    static bool authored_joystick_head_towards(void*,const float direction[3],std::string& error){
+        if(!direction||!std::isfinite(direction[0])||!std::isfinite(direction[1])||!std::isfinite(direction[2])){
+            error="Malformed authored joystick movement vector";return false;
+        }
+        // Source Joystick.Update already rotates/scales this vector. Preserve
+        // it for Character::HeadTowards instead of reapplying camera mapping.
+        return model_renderer::authored_hud_command(direction,false,error);
+    }
+    static bool authored_joystick_stop(void*,std::string& error){return model_renderer::authored_hud_command(nullptr,true,error);}
+    ui::AuthoredJoystickServicesV1 authored_joystick_services(){
+        return {this,authored_joystick_position,authored_joystick_controller_allowed,
+            authored_joystick_rotate,authored_joystick_head_towards,authored_joystick_stop};
+    }
     std::array<std::int32_t,4> front_rectangle()const{
         return ui::original_menu_viewport_v1::fit(driver_width,driver_height);
     }
@@ -218,55 +277,34 @@ struct OriginalUiSession::Impl {
         return delivered;
     }
 
-    struct HudCharacterHit {Impl* self;float x,y;bool hit=false,shape_hit=false,bounds_hit=false,visible=false;float local_x=0,local_y=0;float bounds[4]{};};
-    struct HudCharacterBinding {std::uintptr_t* identity;};
+    struct HudCharacterBinding {Impl* self;std::uintptr_t* identity;};
     static bool bind_hud_character_button(void* context,ui::SwfAsGraph& graph,std::string& error){
         auto& binding=*static_cast<HudCharacterBinding*>(context);ui::SwfAsValue root,target;
-        if(!graph.root_value(root,error)||!graph.find_target(root,"menu_HUD_0.HUDelements.btn_charactermenu",target,error))return false;
+        if(!binding.self->gameplay_hud){error="Authored gameplay HUD binding unavailable";return false;}
+        const auto path=binding.self->gameplay_hud->control_path(ui::AuthoredHudControlV1::character);
+        if(!graph.root_value(root,error)||!graph.find_target(root,path.c_str(),target,error))return false;
         if(!target.identity()){error="Required authored gameplay character-menu button identity";return false;}
         *binding.identity=target.identity();return true;
     }
-    static bool hit_hud_character_button(void* context,ui::SwfAsGraph& graph,std::string& error){
-        auto& q=*static_cast<HudCharacterHit*>(context);ui::SwfAsValue root,target;gameswf::as_object* object{};
-        if(!graph.root_value(root,error)||!graph.find_target(root,"menu_HUD_0.HUDelements.btn_charactermenu",target,error)||
-           !graph.borrow_object(target,object,error))return false;
-        if(!object||!object->is(gameswf::character::m_class_id)){
-            error="Required authored gameplay character-menu button character";return false;
-        }
-        auto* button=static_cast<gameswf::character*>(object);
-        // The authored HUD timeline may replace this instance while advancing.
-        // Follow the exact path again each time and refresh its retained identity.
-        q.self->gameplay_character_button=reinterpret_cast<std::uintptr_t>(button);
-        gameswf::rect bounds;button->get_bound(&bounds);
-        auto* parent=button->get_parent();
-        if(parent)parent->get_world_matrix().transform(&bounds);
-        q.bounds[0]=bounds.m_x_min;q.bounds[1]=bounds.m_x_max;
-        q.bounds[2]=bounds.m_y_min;q.bounds[3]=bounds.m_y_max;
-        gameswf::point local;
-        button->get_world_matrix().transform_by_inverse(&local,gameswf::point(q.x,q.y));
-        q.local_x=local.m_x;q.local_y=local.m_y;
-        gameswf::point parent_point(q.x,q.y);
-        if(parent)parent->get_world_matrix().transform_by_inverse(&parent_point,gameswf::point(q.x,q.y));
-        gameswf::character* topmost=nullptr;
-        q.shape_hit=button->get_topmost_mouse_entity(topmost,parent_point.m_x,parent_point.m_y);
-        // This authored HUD control has a live display bound but no mouse
-        // shape record in the packaged SWF. Preserve normal shape hits, then
-        // use the exact current clip bound as the fallback release region.
-        q.bounds_hit=q.x>=q.bounds[0]&&q.x<=q.bounds[1]&&
-                     q.y>=q.bounds[2]&&q.y<=q.bounds[3];
-        q.visible=button->get_visible();
-        q.hit=(q.shape_hit||q.bounds_hit)&&q.visible;
-        return true;
-    }
     bool gameplay_character_button_hit(ui::SwfMovie& source,float x,float y,bool& hit,std::string& error){
+        if(!gameplay_hud||!gameplay_hud_bound){error="Selected authored gameplay HUD unavailable for hit testing";return false;}
+        HudCharacterBinding binding{this,&gameplay_character_button};
+        if(!source.action_script(&binding,bind_hud_character_button,error))return false;
+        ui::AuthoredHudGeometryV1 geometry;
+        if(!gameplay_hud->geometry(ui::AuthoredHudControlV1::character,x,y,geometry,error))return false;
         float logical[2]{x,y};
         if(!source.screen_to_logical(logical,error))return false;
-        HudCharacterHit query{this,logical[0]*20.f,logical[1]*20.f};
-        if(!source.action_script(&query,hit_hud_character_button,error))return false;
-        hit=query.hit;
+        const float stage_x=logical[0]*20.f,stage_y=logical[1]*20.f;
+        const bool bounds_hit=stage_x>=geometry.bounds[0]&&stage_x<=geometry.bounds[1]&&
+                              stage_y>=geometry.bounds[2]&&stage_y<=geometry.bounds[3];
+        ui::SwfClipInfo state;
+        const auto path=gameplay_hud->control_path(ui::AuthoredHudControlV1::character);
+        if(!source.clip(path.c_str(),state,error))return false;
+        const bool visible=state.visible;
+        hit=visible&&(geometry.hit||bounds_hit);
         if(x<600.f&&y<400.f)__android_log_print(ANDROID_LOG_INFO,tag,
-            "Authored HUD character-menu geometry | screen %.1f %.1f | stage-twips %.1f %.1f | local-twips %.1f %.1f | bounds %.1f %.1f %.1f %.1f | shape %d | bounds-hit %d | visible %d | hit %d",
-            x,y,query.x,query.y,query.local_x,query.local_y,query.bounds[0],query.bounds[1],query.bounds[2],query.bounds[3],query.shape_hit,query.bounds_hit,query.visible,query.hit);
+            "Authored HUD character-menu geometry | style %d | screen %.1f %.1f | stage-twips %.1f %.1f | local-twips %.1f %.1f | bounds %.1f %.1f %.1f %.1f | shape %d | bounds-hit %d | visible %d | hit %d",
+            hud_style,x,y,stage_x,stage_y,geometry.local[0],geometry.local[1],geometry.bounds[0],geometry.bounds[1],geometry.bounds[2],geometry.bounds[3],geometry.hit,bounds_hit,visible,hit);
         return true;
     }
 
@@ -696,7 +734,7 @@ struct OriginalUiSession::Impl {
     }
     struct CharacterReloadMenuLookup {Impl* self;std::uintptr_t identity{};};
     struct CharacterReloadPrompt {Impl* self;std::uintptr_t renderer,subject;
-        const char* path;const char* method;bool argument;std::int32_t* value;};
+        const char* path;const char* method;bool argument;};
     static bool reload_current_menu_fx(void* raw,ui::SwfAsGraph& graph,std::string& error){
         auto& lookup=*static_cast<CharacterReloadMenuLookup*>(raw);
         if(!lookup.self||!lookup.self->live_player||!lookup.self->character_menu_movie){
@@ -726,10 +764,10 @@ struct OriginalUiSession::Impl {
            !menu.identity()||menu.identity()!=prompt.renderer||
            !graph.invoke(menu,menu,prompt.method,{ui::SwfAsValue::boolean(prompt.argument)},
                          result,callable,error))return false;
-        if(!callable){error="Current CharacterMenu IsSpecTime callback is absent";return false;}
-        bool source_result=false;
-        if(!graph.to_boolean(result,source_result,error))return false;
-        if(prompt.value)*prompt.value=source_result?1:0;
+        // Character::ReloadSkills calls the void RenderFX::InvokeASCallback
+        // wrapper and discards its AS result. That wrapper also silently
+        // accepts a missing RenderFX::Find target, so an absent optional
+        // IsSpecTime method must not reject the required skill reload prefix.
         error.clear();return true;
     }
     static int character_reload_menu_service(void* raw,std::uint32_t service,
@@ -744,7 +782,7 @@ struct OriginalUiSession::Impl {
             identity=lookup.identity;return identity?0:-1;
         }
         if(service==ui::reload_spec_prompt_v1){
-            CharacterReloadPrompt prompt{self,0,subject,path,callback,argument!=0,&value};
+            CharacterReloadPrompt prompt{self,0,subject,path,callback,argument!=0};
             // Re-resolve the current clip inside the same movie scope and
             // require it to still be the RenderFX identity read immediately
             // before the source Invoke call.
@@ -1324,8 +1362,31 @@ struct OriginalUiSession::Impl {
         }
         for(const auto* action:{"NativeGetOptionParameters","NativeSetOptions","NativeLoadSettings","NativeSaveSettings","NativeEnterOptionMenu","NativeRefreshHudManager","NativeChangeRolloverInputBehavior","NativeIsJapaneseVersion","NativeIsKorean"})
             if(!std::strcmp(name,action))return ui::swf_menu_settings_action(name,fn,self.option_services(),error);
+        if(!std::strcmp(name,"NativeUseIpodPlayer")){
+            // Original Android isSupportMM returns -1 for this build; the
+            // source wrapper exposes true only for result == 1.
+            if(!fn.result){error="NativeUseIpodPlayer requires its source boolean result";return false;}
+            fn.result->set_bool(false);return true;
+        }
+        if(!std::strcmp(name,"NativeUpdateOrientation")){
+            if(!self.settings){error="NativeUpdateOrientation lost the retained Application settings";return false;}
+            // MainActivity already owns sensor-landscape orientation for this
+            // game, so the source refresh observes the requested orientation.
+            __android_log_print(ANDROID_LOG_INFO,tag,"Authored HUD orientation refresh | existing sensor-landscape Activity owner");
+            return true;
+        }
+        if(!std::strcmp(name,"NativePauseAllSounds")){
+            // FrontAudio is the only app-level media owner currently active.
+            self.menu_audio.emplace_back("pause-all");return true;
+        }
         const ui::SwfMenuNavigationServicesV1 navigation{context,push_menu,pop_menu,pop_top_menu,pop_above_menu};
-        if(!std::strcmp(name,"NativePushMenu"))return ui::swf_menu_push(fn,navigation,error);
+        if(!std::strcmp(name,"NativePushMenu")){
+            __android_log_print(ANDROID_LOG_INFO,tag,
+                "NativePushMenu dispatch entry | nargs %d | live player %d | front screen %s | gameplay depth %zu",
+                fn.nargs,self.live_player,self.front_screen.empty()?"<empty>":self.front_screen.c_str(),
+                self.game_menu_stack.size());
+            return ui::swf_menu_push(fn,navigation,error);
+        }
         if(!std::strcmp(name,"NativePopMenu"))return ui::swf_menu_pop(fn,navigation,error);
         if(!std::strcmp(name,"NativePopAllAbove"))return ui::swf_menu_pop_above(fn,navigation,error);
         if(!std::strcmp(name,"NativeGetCreditMovement")){
@@ -1386,7 +1447,8 @@ struct OriginalUiSession::Impl {
         }
         return true;
     }
-    struct MenuChange {Impl* self;std::string name;bool show,pushed;};
+    enum class MenuChangeAction { cover, hide, show };
+    struct MenuChange {Impl* self;std::string name;MenuChangeAction action;bool pushed;};
     static bool render_class_scene(void*,int width,int height,std::string& error){
         try{model_renderer::draw_class_scene(width,height);return true;}
         catch(const std::exception& e){error=e.what();return false;}
@@ -1429,8 +1491,9 @@ struct OriginalUiSession::Impl {
         ui::SwfAsValue root,menu,result;bool callable=false,accepted=false;
         if(!graph.root_value(root,error)||!graph.find_target(root,change.name.c_str(),menu,error))return false;
         if(!menu.identity()){error="Required authored navigation clip absent";return false;}
-        if(!change.show){
+        if(change.action!=MenuChangeAction::show){
             if(!graph.invoke(menu,menu,"onHide",{},result,callable,error))return false;
+            if(change.action==MenuChangeAction::cover)return true;
             return graph.set_member(menu,"_visible",ui::SwfAsValue::boolean(false),accepted,error);
         }
         if(!graph.set_member(menu,"_visible",ui::SwfAsValue::boolean(true),accepted,error)||
@@ -1453,12 +1516,12 @@ struct OriginalUiSession::Impl {
             }
             return true;
         }
-        if(!graph.invoke(menu,menu,"onShow",{},result,callable,error))return false;
         if(change.pushed&&!graph.invoke(menu,menu,"onPush",{},result,callable,error))return false;
+        if(!graph.invoke(menu,menu,"onShow",{},result,callable,error))return false;
         return true;
     }
     bool transition_menu(const std::string& previous,const std::string& next,bool pushed,std::string& error){
-        MenuChange hide{this,previous,false,false},show{this,next,true,pushed};
+        MenuChange hide{this,previous,MenuChangeAction::hide,false},show{this,next,MenuChangeAction::show,pushed};
         if(!menu_movie(previous)->menu_action_script(&hide,change_menu,error)||
            !menu_movie(next)->menu_action_script(&show,change_menu,error))return false;
         __android_log_print(ANDROID_LOG_INFO,tag,"Owned menu renderer selected | name %s | renderer %s",next.c_str(),shared_state(next)?"shared":"main");
@@ -1466,13 +1529,11 @@ struct OriginalUiSession::Impl {
     }
     bool transition_game_menu(const std::string& previous,const std::string& next,bool pushed,std::string& error){
         if(!character_menu_movie){error="Original character-menu renderer unavailable";return false;}
-        if(!previous.empty()){
-            MenuChange hide{this,previous,false,false};
-            if(!character_menu_movie->menu_action_script(&hide,change_menu,error))return false;
-        }
-        if(!next.empty()){
-            MenuChange show{this,next,true,pushed};
-            if(!character_menu_movie->menu_action_script(&show,change_menu,error))return false;
+        for(const auto& event:ui::gameplay_menu_transition_plan_v1(previous,next,pushed)){
+            const auto action=event.action==ui::GameplayMenuTransitionActionV1::cover?MenuChangeAction::cover:
+                event.action==ui::GameplayMenuTransitionActionV1::hide?MenuChangeAction::hide:MenuChangeAction::show;
+            MenuChange change{this,event.menu,action,event.pushed};
+            if(!character_menu_movie->menu_action_script(&change,change_menu,error))return false;
         }
         __android_log_print(ANDROID_LOG_INFO,tag,"Original gameplay menu selected | previous %s | current %s | depth %zu",
             previous.empty()?"<hud>":previous.c_str(),next.empty()?"<hud>":next.c_str(),game_menu_stack.size());
@@ -1485,7 +1546,20 @@ struct OriginalUiSession::Impl {
             __android_log_print(ANDROID_LOG_WARN,tag,"Gameplay menu push not connected | requested %s",name);
             error=std::string("Gameplay menu state is not connected: ")+name;return false;
         }
-        if(std::find(self.game_menu_stack.begin(),self.game_menu_stack.end(),name)!=self.game_menu_stack.end())return true;
+        const auto duplicate=std::find(self.game_menu_stack.begin(),self.game_menu_stack.end(),name);
+        std::ostringstream stack;
+        for(std::size_t i=0;i<self.game_menu_stack.size();++i){if(i)stack<<" > ";stack<<self.game_menu_stack[i];}
+        const auto stack_text=stack.str();
+        __android_log_print(ANDROID_LOG_INFO,tag,
+            "Original gameplay menu push request | requested %s | depth %zu | stack %s | duplicate %d",
+            name,self.game_menu_stack.size(),stack_text.empty()?"<empty>":stack_text.c_str(),
+            duplicate!=self.game_menu_stack.end());
+        if(duplicate!=self.game_menu_stack.end()){
+            __android_log_print(ANDROID_LOG_WARN,tag,
+                "Original gameplay menu push suppressed | requested %s already at stack index %zu",
+                name,static_cast<std::size_t>(duplicate-self.game_menu_stack.begin()));
+            return true;
+        }
         const auto previous=self.game_menu_stack.empty()?std::string():self.game_menu_stack.back();
         self.game_menu_stack.emplace_back(name);
         if(!self.transition_game_menu(previous,name,true,error)){self.game_menu_stack.pop_back();return false;}
@@ -1526,10 +1600,10 @@ struct OriginalUiSession::Impl {
     static bool pop_menu(void* context,const char* name,std::string& error){
         auto& self=*static_cast<Impl*>(context);
         if(self.live_player&&self.front_screen.empty()){
-            if(!self.game_menu_stack.empty()&&name&&self.game_menu_stack.back()==name)return pop_top_menu(context,error);
+            if(name&&ui::gameplay_menu_named_pop_requested_v1(self.game_menu_stack,name))return pop_top_menu(context,error);
             return true;
         }
-        if(!self.menu_stack.empty()&&name&&self.menu_stack.back()==name)return pop_top_menu(context,error);
+        if(name&&ui::gameplay_menu_named_pop_requested_v1(self.menu_stack,name))return pop_top_menu(context,error);
         return true;
     }
     static bool pop_above_menu(void* context,const char* name,std::string& error){
@@ -1640,7 +1714,7 @@ struct OriginalUiSession::Impl {
         services.native_actions={"NativePlaySoundFX","NativePushMenu","NativePopMenu","NativePopAllAbove","NativePopAllMenus","NativeGetCreditMovement","NativeBackToHud","NativeAwayFromHud"};services.native_action=native_action;
         if(front_screen=="main")for(const auto* action:{"NativeGetSaveSlotDetails","NativeCreateSaveSlot","NativeAssignSaveSlotToPlayer","NativeSetSaveSlotIDToMainMenu","NativeStartGame"})services.native_actions.emplace_back(action);
         if(front_screen=="main"||live_player)services.native_actions.emplace_back("NativeGetParsedString");
-        if(live_player)for(const auto* action:{"NativeScreenIsBlack","NativeGetPossibleClassSpec","NativeTouchToMove","NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
+        if(live_player)for(const auto* action:{"NativeGetOptionParameters","NativeUseIpodPlayer","NativeUpdateOrientation","NativePauseAllSounds","NativeScreenIsBlack","NativeGetPossibleClassSpec","NativeTouchToMove","NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
             "NativeSkillsGetSkillPointsLeft","NativeSkillsTrainSkill","NativeEquipSkill","NativeGetPlayerStats","NativeStatsAssignPoint",
             "NativeReloadSkills",
             "NativeSetMultitouch",
@@ -1719,33 +1793,54 @@ struct OriginalUiSession::Impl {
             }
             loaded=true;menu_clock.reset();frame_time=std::chrono::steady_clock::now();return true;
         }
-        ui::SwfClipInfo clip;
-        if(!movie->clip(panel,clip,error)||clip.id!=157){error="Required original health/mana parent differs";return false;}
+        if(!live_player){error="Gameplay HUD load requires the attached player";return false;}
+        if(!settings||!settings->has_option("HUDStyle")){
+            error="Original gameplay HUD requires the retained Application HUDStyle option";return false;
+        }
+        hud_style=settings->option("HUDStyle");
+        if(hud_style<0||hud_style>3){error="Saved HUDStyle is outside the four authored Android layouts";return false;}
         if(!font_failure.empty()){error=font_failure;return false;}
+        gameplay_hud=std::make_unique<ui::AuthoredGameplayHudV1>(*movie);
+        gameplay_hud_bound=false;gameplay_hud_pointer=-1;
+        // DisplayRightHud performs the original selected-HUD onPush then
+        // onShow sequence, including the skill/faery refresh. Do not call
+        // refresh_skills() again: it would replay onPush outside that order.
+        // DisplayRightHud runs selected-HUD onPush then onShow and performs the
+        // real skill/faery refresh; do not replay onPush outside source order.
+        if(!gameplay_hud->bind(hud_style,error))return false;
+        gameplay_hud_bound=true;
+        float joystick_width=0.f;
+        if(!gameplay_hud->joystick_background_width(joystick_width,error)||
+           !ui::authored_joystick_initialize_v1(authored_joystick,joystick_width,error))return false;
+        authored_joystick_ready=true;
+        ui::SwfClipInfo clip;
+        const auto selected_panel=gameplay_hud->elements_path()+".HealthBars.player";
+        if(!movie->clip(selected_panel.c_str(),clip,error)||!clip.id){error="Required saved-style original health/mana parent differs";return false;}
         status=std::make_unique<ui::PlayerStatusHud>(*movie);
-        if(!status->bind(hud_sha,error))return false;
+        if(!status->bind(hud_sha,gameplay_hud->menu_path().c_str(),error))return false;
         if(live_player){
             ui::SwfInputCoreServices hud_input;hud_input.owner=frame_owner;hud_input.context=this;
             hud_input.native_receiver=reinterpret_cast<std::uintptr_t>(&frame_owner->main_events);
             hud_input.can_handle_event=input_accepts;hud_input.native_event=input_native_event;hud_input.advance=input_advance;
-            if(!movie->connect_input("_root.menu_HUD_0",frame_owner->history,0x84,
+            if(!movie->connect_input(gameplay_hud->menu_path().c_str(),frame_owner->history,0x84,
                 frame_owner->input_selection,{this,orientation,dimensions},hud_input,error)||
                !movie->input_rectangle(viewport_rectangle().data(),error))return false;
             frame_owner->main_events.render_bound=true;
-            for(const char* path:{"_root.menu_HUD_0.HUDelements.btn_charactermenu"}){
+            const auto character_path=gameplay_hud->control_path(ui::AuthoredHudControlV1::character);
+            {
                 ui::SwfClipInfo state;std::string probe_error;
-                if(movie->clip(path,state,probe_error)){
+                if(movie->clip(character_path.c_str(),state,probe_error)){
                     __android_log_print(ANDROID_LOG_INFO,tag,
                         "Gameplay HUD input clip | path %s | id %d | depth %d | visible %d | frame %d/%d | matrix %.4f %.4f %.4f %.4f %.4f %.4f",
-                        path,state.id,state.depth,state.visible,state.frame,state.frames,
+                        character_path.c_str(),state.id,state.depth,state.visible,state.frame,state.frames,
                         state.world.value[0],state.world.value[1],state.world.value[2],
                         state.world.value[3],state.world.value[4],state.world.value[5]);
-                }else __android_log_print(ANDROID_LOG_INFO,tag,"Gameplay HUD input clip absent | path %s | reason %s",path,probe_error.c_str());
+                }else __android_log_print(ANDROID_LOG_INFO,tag,"Gameplay HUD input clip absent | path %s | reason %s",character_path.c_str(),probe_error.c_str());
             }
-            HudCharacterBinding hud_button{&gameplay_character_button};
+            HudCharacterBinding hud_button{this,&gameplay_character_button};
             if(!movie->action_script(&hud_button,bind_hud_character_button,error))return false;
-            __android_log_print(ANDROID_LOG_INFO,tag,"Gameplay authored character-menu target bound | identity %zx | SWF clip id 163 | path _root.menu_HUD_0.HUDelements.btn_charactermenu",
-                gameplay_character_button);
+            __android_log_print(ANDROID_LOG_INFO,tag,"Gameplay authored HUD bound | style %d | character-menu target %zx | path %s | retained Application settings and same dqhud movie",
+                hud_style,gameplay_character_button,character_path.c_str());
 
             character_frame_owner=std::make_shared<FrameOwner>();
             character_menu_movie=std::make_unique<ui::SwfMovie>();
@@ -1774,6 +1869,11 @@ struct OriginalUiSession::Impl {
             if(!character_menu_movie->clip("_root.menu_CharacterMenu",character_root,error)||!character_root.id){
                 error="Original character menu root clip unavailable";return false;
             }
+            // DisplayRightHud runs the selected HUD's source onPush/onShow
+            // callbacks, including NativeReloadSkills. Load and bind the one
+            // CharacterMenu movie first because Character::ReloadSkills
+            // synchronously asks its RenderFX menu for IsSpecTime.
+            if(!gameplay_hud->activate(error))return false;
             game_menu_stack.clear();game_menu_clock.reset();game_menu_frame_time=std::chrono::steady_clock::now();
             __android_log_print(ANDROID_LOG_INFO,tag,
                 "Original gameplay menu renderer loaded | source dqcharmenu_droid.swf | screens %zu | separate HUD and character menu players | inventory/skills/faery callbacks remain owner-bound",
@@ -1782,7 +1882,8 @@ struct OriginalUiSession::Impl {
         loaded=true;return true;
     }
     bool reset_failed(std::string& error) {
-        gpu.abort();status.reset();character_menu_movie.reset();shared_menu_movie.reset();movie.reset();
+        gpu.abort();gameplay_hud.reset();gameplay_hud_bound=false;gameplay_hud_pointer=-1;authored_joystick={};authored_joystick_ready=false;
+        status.reset();character_menu_movie.reset();shared_menu_movie.reset();movie.reset();
         character_frame_owner.reset();shared_frame_owner.reset();frame_owner.reset();fonts.reset();loaded=false;selected=false;
         last_width=last_height=0;loading_bitmap_reported=false;reported_frames={{-1,-1,-1,-1,-1}};
         leases.clear();exports.clear();font_failure.clear();provider_failure.clear();
@@ -1846,6 +1947,74 @@ bool OriginalUiSession::touch(float x,float y,int action,std::string& error){
         if(!cleared)return false;
         impl_->gameplay_hud_input_reset_pending=false;
     }
+    // The source HUD's Attack and Joystick artwork is the input surface once
+    // its Android overlays are hidden. Use the same retained SWF geometry and
+    // player movement owner for down/move/up; all other buttons keep normal
+    // authored GameSWF cursor dispatch below.
+    if(gameplay&&!character_menu&&impl_->gameplay_hud&&impl_->gameplay_hud_bound&&impl_->authored_joystick_ready){
+        using Control=ui::AuthoredHudControlV1;
+        const int attack=static_cast<int>(Control::attack),joystick=static_cast<int>(Control::joystick);
+        if(action==3&&impl_->gameplay_hud_pointer>=0){
+            if(impl_->gameplay_hud_pointer==joystick){
+                std::uintptr_t identity=0;std::string owner_error;
+                const bool has_player=model_renderer::ui_player_identity(identity,owner_error)&&identity!=0;
+                if(!ui::authored_joystick_release_v1(impl_->authored_joystick,has_player,
+                    impl_->authored_joystick_services(),error))return false;
+            }
+            impl_->gameplay_hud_pointer=-1;error.clear();return true;
+        }
+        if(action==0&&impl_->gameplay_hud_pointer<0){
+            for(const auto control:{Control::attack,Control::joystick}){
+                ui::AuthoredHudGeometryV1 geometry;
+                if(!impl_->gameplay_hud->geometry(control,x,y,geometry,error))return false;
+                if(!geometry.hit)continue;
+                impl_->gameplay_hud_pointer=static_cast<int>(control);
+                if(control==Control::joystick){
+                    const bool pressed=ui::with_authored_hud_edge_layout_v6(*impl_->movie,*impl_->gameplay_hud,
+                        [&](std::string& nested){
+                            ui::AuthoredHudGeometryV1 receiver;
+                            return impl_->gameplay_hud->joystick_receiver_geometry(x,y,receiver,nested)&&
+                                ui::authored_joystick_press_v1(impl_->authored_joystick,
+                                    receiver.local[0],receiver.local[1],nested);
+                        },error);
+                    if(!pressed){impl_->gameplay_hud_pointer=-1;return false;}
+                }
+                __android_log_print(ANDROID_LOG_INFO,tag,"Authored HUD pointer captured | control %d | style %d | source shape %d | %.1f %.1f",
+                    impl_->gameplay_hud_pointer,impl_->hud_style,geometry.character_id,x,y);
+                return true;
+            }
+        }
+        if(impl_->gameplay_hud_pointer==joystick&&action==2){
+            return ui::with_authored_hud_edge_layout_v6(*impl_->movie,*impl_->gameplay_hud,
+                [&](std::string& nested){
+                    ui::AuthoredHudGeometryV1 receiver;
+                    if(!impl_->gameplay_hud->joystick_receiver_geometry(x,y,receiver,nested))return false;
+                    return ui::authored_joystick_drag_v1(impl_->authored_joystick,
+                        receiver.local[0],receiver.local[1],receiver.local_matrix[2],receiver.local_matrix[5],
+                        impl_->authored_joystick_services(),nested);
+                },error);
+        }
+        if(impl_->gameplay_hud_pointer>=0&&action==1){
+            const int held=impl_->gameplay_hud_pointer;impl_->gameplay_hud_pointer=-1;
+            if(held==joystick){
+                std::uintptr_t identity=0;std::string owner_error;
+                const bool has_player=model_renderer::ui_player_identity(identity,owner_error)&&identity!=0;
+                const bool released=ui::authored_joystick_release_v1(impl_->authored_joystick,has_player,
+                    impl_->authored_joystick_services(),error);
+                return released;
+            }
+            ui::AuthoredHudGeometryV1 geometry;
+            if(!impl_->gameplay_hud->geometry(Control::attack,x,y,geometry,error))return false;
+            if(geometry.hit){
+                const auto report=model_renderer::player_attack(-1);
+                __android_log_print(ANDROID_LOG_INFO,tag,"Authored HUD attack release | %s",report.c_str());
+            }
+            error.clear();return true;
+        }
+        // Continue a held attack as a press without sending it through the
+        // SWF cursor; the source attack operation is release-only.
+        if(impl_->gameplay_hud_pointer==attack&&action==2)return true;
+    }
     if(gameplay&&!character_menu&&impl_->gameplay_character_button){
         if(action==3)impl_->gameplay_character_button_pressed=false;
         else if(action==0){
@@ -1861,16 +2030,21 @@ bool OriginalUiSession::touch(float x,float y,int action,std::string& error){
         dispatch{*impl_,impl_->input_dispatch_movie,impl_->input_dispatch_frames};
     impl_->input_dispatch_movie=selected;
     impl_->input_dispatch_frames=&owner->frames;
-    if(action==3)return selected->input_cancel(x,y,error);
-    if(!selected->input_cursor({x,y,0.f,(action==0||action==2)?1:0},error))return false;
-    if(gameplay&&!character_menu&&action==1&&impl_->gameplay_character_button_pressed){
-        bool hit=false;
-        if(!impl_->gameplay_character_button_hit(*impl_->movie,x,y,hit,error))return false;
-        impl_->gameplay_character_button_pressed=false;
-        if(hit&&impl_->game_menu_stack.empty())
-            return Impl::push_game_menu(impl_.get(),"menu_CharacterMenu",error);
-    }
-    return true;
+    const auto dispatch_cursor=[&](std::string& nested){
+        if(action==3)return selected->input_cancel(x,y,nested);
+        if(!selected->input_cursor({x,y,0.f,(action==0||action==2)?1:0},nested))return false;
+        if(gameplay&&!character_menu&&action==1&&impl_->gameplay_character_button_pressed){
+            bool hit=false;
+            if(!impl_->gameplay_character_button_hit(*impl_->movie,x,y,hit,nested))return false;
+            impl_->gameplay_character_button_pressed=false;
+            if(hit&&impl_->game_menu_stack.empty())
+                return Impl::push_game_menu(impl_.get(),"menu_CharacterMenu",nested);
+        }
+        return true;
+    };
+    if(gameplay&&!character_menu&&impl_->gameplay_hud&&impl_->gameplay_hud_bound)
+        return ui::with_authored_hud_edge_layout_v6(*impl_->movie,*impl_->gameplay_hud,dispatch_cursor,error);
+    return dispatch_cursor(error);
 }
 std::string OriginalUiSession::consume_menu_sound(){
     auto& queue=impl_->menu_sounds;
@@ -2097,9 +2271,27 @@ bool OriginalUiSession::overlays_player() const{return impl_->selected&&impl_->l
 void OriginalUiSession::deactivate(){impl_->selected=false;}
 
 bool OriginalUiSession::attach_player(const std::string& directory,std::string& error){
-    if(!impl_->front_screen.empty()){if(!impl_->reset_failed(error))return false;impl_->front_screen.clear();}
+    if(!impl_->front_screen.empty()){
+        // Application settings survive the menu→level renderer handoff in
+        // source. Keep the existing owners while retiring the menu SWF; the
+        // settings object still borrows Impl::option_table, which reset_failed
+        // deliberately leaves intact. No second settings/option owner is made.
+        auto retained_settings=std::move(impl_->settings);
+        auto retained_files=std::move(impl_->settings_files);
+        const bool reset=impl_->reset_failed(error);
+        impl_->settings=std::move(retained_settings);
+        impl_->settings_files=std::move(retained_files);
+        if(!reset)return false;
+        impl_->front_screen.clear();
+    }
     if(directory.empty()||directory.front()!='/'){error="Required private HUD directory unavailable";return false;}
+    if(!impl_->settings||!impl_->settings->has_option("HUDStyle")){
+        error="Gameplay HUD requires the retained Application settings owner and HUDStyle";return false;
+    }
+    impl_->hud_style=impl_->settings->option("HUDStyle");
+    if(impl_->hud_style<0||impl_->hud_style>3){error="Saved HUDStyle is outside the four authored Android layouts";return false;}
     impl_->directory=directory;impl_->live_player=true;impl_->selected=true;impl_->report_frame=true;
+    impl_->gameplay_hud_bound=false;impl_->gameplay_hud_pointer=-1;
     error.clear();return true;
 }
 bool OriginalUiSession::render_player(int width,int height,const std::int32_t* sheet,std::size_t count,
@@ -2131,13 +2323,56 @@ bool OriginalUiSession::render_player(int width,int height,const std::int32_t* s
                !self.character_menu_movie->input_rectangle(menu_rectangle.data(),error))throw std::runtime_error(error);
         }
         if(!self.status->update(sheet,count,character,error))throw std::runtime_error(error);
+        if(self.gameplay_hud_active&&self.gameplay_hud_bound&&self.authored_joystick_ready){
+            // render_player is called only for the attached local player in
+            // the active level. Keep joystick Update on the source HUDControls
+            // cadence and use the same Character owner as the status panel.
+            std::uintptr_t identity=0;
+            if(!model_renderer::ui_player_identity(identity,error))throw std::runtime_error(error);
+            if(identity!=character){
+                std::ostringstream out;out<<"Authored HUD player identity changed | status "<<character<<" | movement "<<identity;
+                throw std::runtime_error(out.str());
+            }
+            if(!ui::authored_joystick_update_v1(self.authored_joystick,self.authored_joystick_services(),error))
+                throw std::runtime_error(error);
+        }
+        if(self.gameplay_hud_active&&self.gameplay_hud_bound&&self.gameplay_hud){
+            std::uintptr_t identity=0;
+            if(!model_renderer::ui_player_identity(identity,error))throw std::runtime_error(error);
+            if(identity!=character){
+                std::ostringstream out;out<<"Authored HUD state identity changed | status "<<character<<" | projection "<<identity;
+                throw std::runtime_error(out.str());
+            }
+            const auto now=std::chrono::steady_clock::now();
+            const bool refresh_usable=self.gameplay_hud_usable_refresh.time_since_epoch().count()==0||
+                now-self.gameplay_hud_usable_refresh>=std::chrono::milliseconds(500);
+            auto projection=self.gameplay_hud_state;
+            std::string projection_error;
+            if(!model_renderer::ui_player_hud_projection(identity,refresh_usable,projection,projection_error)){
+                if(!self.gameplay_hud_projection_warned){
+                    __android_log_print(ANDROID_LOG_WARN,tag,
+                        "Authored HUD live state projection unavailable | character %p | %s",
+                        reinterpret_cast<void*>(identity),projection_error.c_str());
+                    self.gameplay_hud_projection_warned=true;
+                }
+            }else{
+                const bool dpad=self.settings&&self.settings->saved_option("DPad")!=0;
+                if(!self.gameplay_hud->update(projection.infos,projection.class_id,dpad,error))
+                    throw std::runtime_error(error);
+                self.gameplay_hud_state=projection;
+                if(refresh_usable)self.gameplay_hud_usable_refresh=now;
+                self.gameplay_hud_projection_warned=false;
+            }
+        }
         if(self.gameplay_hud_active&&
-           (!self.movie->display_source_clip(status_panel,error)||
+           (!self.gameplay_hud||!self.gameplay_hud_bound||!self.gameplay_hud->display(error)||
             !self.movie->display_source_clip("_root.HurtCorners",error)))throw std::runtime_error(error);
         if(!self.game_menu_stack.empty()){
-            const auto& name=self.game_menu_stack.back();
             const auto rectangle=self.front_rectangle();
-            if(!self.character_menu_movie->display_clip(("_root."+name).c_str(),rectangle[0],rectangle[1],rectangle[2],rectangle[3],error))
+            if(!ui::gameplay_menu_draw_stack_v1(self.game_menu_stack,[&](const std::string& name){
+                return self.character_menu_movie->display_clip(("_root."+name).c_str(),
+                    rectangle[0],rectangle[1],rectangle[2],rectangle[3],error);
+            }))
                 throw std::runtime_error(error);
         }
         const auto frames=self.status->frames();

@@ -49,6 +49,17 @@ inline bool verified_crypt_route(std::string_view level_name,
     return level_name == kLevelName && level_file == kLevelFile;
 }
 
+// This projection receipt and the authored camera-rig handoff are only
+// verified for Crypt. Other levels may expose clip-plane fields without
+// providing the matching CameraLevel FOV/target path.
+inline bool source_player_camera_route_ready(std::string_view level_name,
+                                             std::string_view level_file,
+                                             bool level_projection_ready,
+                                             bool authored_rig_ready) noexcept {
+    return verified_crypt_route(level_name, level_file) &&
+           level_projection_ready && authored_rig_ready;
+}
+
 struct Frame {
     Vec3 eye{};
     Vec3 target{};
@@ -282,15 +293,20 @@ inline Matrix multiply(const Matrix& a, const Matrix& b) noexcept {
     return result;
 }
 
-// Build the GLES matrix from the recovered CameraBase look-at and perspective
-// conventions, then apply the original driver projection fixup. Aspect follows
-// the current surface as an explicit modern display policy.
-inline bool build(std::string_view level_name, std::string_view level_file,
-                  Vec3 target, int width, int height, Frame* out,
-                  Vec3 eye_from_target = kEyeFromTarget,
-                  Vec3 up_direction = Vec3{0.0f, 0.0f, 1.0f},
-                  Vec3 target_from_anchor = Vec3{0.0f, 0.0f, 0.0f}) noexcept {
-    if (!out || !verified_crypt_route(level_name, level_file) || width <= 1 || height <= 1)
+// Build from the shared authored player-camera rig and a level's runtime
+// projection. Level::_LoadCamera supplies the FOV; LevelConfig supplies the
+// clip planes. Aspect follows the current surface as the modern display policy.
+inline bool build_player_frame(Vec3 target, int width, int height, Frame* out,
+                               float vertical_fov_radians, float near_plane,
+                               float far_plane,
+                               Vec3 eye_from_target,
+                               Vec3 up_direction,
+                               Vec3 target_from_anchor = Vec3{0.0f, 0.0f, 0.0f}) noexcept {
+    if (!out || width <= 1 || height <= 1 ||
+        !std::isfinite(vertical_fov_radians) ||
+        !(vertical_fov_radians > 0.0f && vertical_fov_radians < 3.14159265358979323846f) ||
+        !std::isfinite(near_plane) || !std::isfinite(far_plane) ||
+        !(near_plane > 0.0f && far_plane > near_plane))
         return false;
     for (float value : target) if (!std::isfinite(value)) return false;
     for (float value : eye_from_target) if (!std::isfinite(value)) return false;
@@ -307,22 +323,22 @@ inline bool build(std::string_view level_name, std::string_view level_file,
 
     Vec3 forward = subtract(frame.target, frame.eye);
     if (!normalize(forward)) return false;
-    // Camera look-at v8: side = up × forward, vertical = -forward × side.
-    // The source uses a positive-forward camera basis; do not substitute the
-    // conventional negative-Z OpenGL look-at, which flips the screen axes.
+    // Keep the recovered positive-forward side axis (forward × up), then adapt
+    // its vertical axis for this GLES projection: positive clip Y must follow
+    // the authored up direction. The engine's positive-forward matrix stores
+    // the opposite vertical sign, so use side × forward at this GL boundary.
     if (!normalize(up_direction)) return false;
-    Vec3 side = cross(up_direction, forward);
+    Vec3 side = cross(forward, up_direction);
     if (!normalize(side)) return false;
-    const Vec3 vertical = cross({-forward[0], -forward[1], -forward[2]}, side);
+    const Vec3 vertical = cross(side, forward);
     const Matrix view{
         side[0], vertical[0], forward[0], 0.0f,
         side[1], vertical[1], forward[1], 0.0f,
         side[2], vertical[2], forward[2], 0.0f,
         -dot(side, frame.eye), -dot(vertical, frame.eye), -dot(forward, frame.eye), 1.0f};
 
-    const float tangent = std::tan(kVerticalFovRadians * 0.5f);
+    const float tangent = std::tan(vertical_fov_radians * 0.5f);
     if (!(tangent > 0.0f) || !std::isfinite(tangent)) return false;
-    const float near_plane = kNearPlane, far_plane = kFarPlane;
     // Source perspective v8 followed by CCommonGLDriverBase::fixUpProjection:
     // m10 = 2*far/(far-near)-1, m11 stays +1, m14 doubles.
     const Matrix projection{
@@ -334,6 +350,19 @@ inline bool build(std::string_view level_name, std::string_view level_file,
     for (float value : frame.view_projection) if (!std::isfinite(value)) return false;
     *out = frame;
     return true;
+}
+
+// Crypt's verified route wrapper retains the original source-specific
+// projection receipt for callers which do not have LevelConfig available.
+inline bool build(std::string_view level_name, std::string_view level_file,
+                  Vec3 target, int width, int height, Frame* out,
+                  Vec3 eye_from_target = kEyeFromTarget,
+                  Vec3 up_direction = Vec3{0.0f, 0.0f, 1.0f},
+                  Vec3 target_from_anchor = Vec3{0.0f, 0.0f, 0.0f}) noexcept {
+    if (!verified_crypt_route(level_name, level_file)) return false;
+    return build_player_frame(target, width, height, out, kVerticalFovRadians,
+                              kNearPlane, kFarPlane, eye_from_target,
+                              up_direction, target_from_anchor);
 }
 
 } // namespace dh2::native::crypt_camera_frame_v1

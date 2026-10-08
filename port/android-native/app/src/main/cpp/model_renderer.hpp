@@ -40,6 +40,12 @@ std::string load_world(const std::uint8_t*,std::size_t,AAssetManager*,
                        const std::uint8_t* generated_spawnpoints=nullptr,
                        std::size_t generated_spawnpoints_size=0);
 void move_axis(float x,float y);
+// Authored HUD joystick already produces the source-rotated direction and
+// magnitude. It enters the existing Player controller directly, bypassing the
+// Android touch/gamepad deadzone and camera remapping. stop=true schedules the
+// source Cmd_Stop path; a zero non-stop vector remains HeadTowards(0).
+bool authored_hud_command(const float* direction,bool stop,std::string& error);
+bool ui_player_controller_allowed(std::uintptr_t character,bool& allowed,std::string& error);
 void focus_object(int index);
 std::string set_object_state(int index,const std::string& state);
 std::string spawn_character(const std::string& exact_name);
@@ -93,6 +99,17 @@ struct UiPlayerStatsReadV1 {
  std::int32_t regen_hp{},regen_mp{},leech_hp{},leech_mp{};
  std::int32_t special_loot_gold_multiplier{},special_loot_magical_chance{},stun_resist_chance{};
 };
+// Read-only values consumed by the authored gameplay HUD. The prior value is
+// passed back in so source usability checks can retain their 500 ms cadence;
+// timers, potion count, points and the one selected class/faery stay live.
+struct UiPlayerHudProjectionV1 {
+ std::uintptr_t character{};
+ std::int32_t class_id{-1},faery_id{-1};
+ std::array<std::int32_t,3> skill_slots{-1,-1,-1};
+ std::array<std::int32_t,17> infos{};
+};
+bool ui_player_hud_projection(std::uintptr_t,bool refresh_usable,
+                              UiPlayerHudProjectionV1&,std::string&);
 bool ui_player_stats(std::uintptr_t,UiPlayerStatsReadV1&,std::string&);
 bool ui_player_assign_stat(std::uintptr_t,std::uint32_t,std::string&);
 struct UiSkillReadV1 {

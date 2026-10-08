@@ -61,6 +61,7 @@
 #include "navigation_producers.hpp"
 #include "navigation_heading.hpp"
 #include "native_camera_input_v1.hpp"
+#include "native_level_camera_config_v1.hpp"
 #include "native_character_controller_v1.hpp"
 #include "native_character_stop.hpp"
 #include "native_camera_crypt_frame_v1.hpp"
@@ -348,6 +349,8 @@ struct PendingMenuStart {std::int32_t slot=-1;bool has_numeric_difficulty=false;
 struct RuntimeLevelAssets {
  std::int32_t row=-1;std::string name="GOTHICUS_CRYPT_01",level_file="007_crypt_01.rule.xml";
  std::string descriptor="crypt01.dwld",bres="crypt.bdae",spawns="crypt01.spwn",objects="crypt01.dact";
+ float camera_near_clip=0.0f,camera_far_clip=0.0f;
+ bool source_player_camera_enabled=false;
  // Application::LoadLevel's chosen local seed is distinct from Random's
  // process-global GSInit state and seeds a fresh RandomGenerator per level.
  std::uint32_t source_load_seed=0,source_load_synchronized_seed=0;
@@ -1137,17 +1140,14 @@ bool enabled=false;float center[3]{},radius=1,yaw=-1.57f,pitch=.35f,zoom=1;
 dh2::scene::Scene current_scene;dh2::animation::Player player;
 dh2::animation::Player walk_player;dh2::world::Level level;dh2::world::Point actor_position{};
 bool world_mode=false,walking=false,resume_world=false;float move_x=0,move_y=0,heading=0;
+float authored_hud_direction[3]{};bool authored_hud_command_active=false,authored_hud_stop_pending=false;
 dh2::native::crypt_camera_frame_v1::ForwardAnchorState prince_camera_anchor{};
-std::unique_ptr<dh2::player_camera_rig_v1::Rig> crypt_player_camera_rig;
-AAssetManager* crypt_camera_asset_manager=nullptr;
-bool crypt_camera_rig_load_attempted=false;
-std::chrono::steady_clock::time_point crypt_camera_rig_epoch;
-float crypt_camera_input_yaw=dh2::native::crypt_camera_frame_v1::kInputYawRadians;
-float crypt_camera_input_pitch=dh2::native::crypt_camera_frame_v1::input_pitch_radians();
-bool verified_crypt_camera_route() noexcept {
- return world_mode&&dh2::native::crypt_camera_frame_v1::verified_crypt_route(
-     active_level_assets.name,active_level_assets.level_file);
-}
+std::unique_ptr<dh2::player_camera_rig_v1::Rig> player_camera_rig;
+AAssetManager* player_camera_asset_manager=nullptr;
+bool player_camera_rig_load_attempted=false;
+std::chrono::steady_clock::time_point player_camera_rig_epoch;
+float player_camera_input_yaw=dh2::native::crypt_camera_frame_v1::kInputYawRadians;
+float player_camera_input_pitch=dh2::native::crypt_camera_frame_v1::input_pitch_radians();
 dh2::character::crypt_scripts::SpawnSession crypt_spawn_script;
 dh2_crypt_spawn_trigger::State crypt_trigger_state{};
 dh2_zone_contact::Vec3 crypt_trigger_position{},crypt_trigger_scale{};
@@ -2454,14 +2454,14 @@ Matrix camera(int width,int height){
   }
   return result;
 }
-bool ensure_crypt_player_camera_rig(){
- if(crypt_player_camera_rig)return true;
- if(crypt_camera_rig_load_attempted||!crypt_camera_asset_manager)return false;
- crypt_camera_rig_load_attempted=true;
+bool ensure_player_camera_rig(){
+ if(player_camera_rig)return true;
+ if(player_camera_rig_load_attempted||!player_camera_asset_manager)return false;
+ player_camera_rig_load_attempted=true;
  try{
-  const auto camera_scene=read(crypt_camera_asset_manager,
+  const auto camera_scene=read(player_camera_asset_manager,
       "data/3d/camera/playercamera.bdae","actors");
-  const auto idle_animation=read(crypt_camera_asset_manager,
+  const auto idle_animation=read(player_camera_asset_manager,
       "data/3d/camera/animations/common/camera_idle.bdae","actors");
   auto candidate=std::make_unique<dh2::player_camera_rig_v1::Rig>();
   std::string error;
@@ -2475,61 +2475,59 @@ bool ensure_crypt_player_camera_rig(){
       initial.camera[12]-initial.target[12],
       initial.camera[13]-initial.target[13],
       initial.camera[14]-initial.target[14]};
-  crypt_camera_input_yaw=std::atan2(eye_offset[1],eye_offset[0]);
-  crypt_camera_input_pitch=std::atan2(eye_offset[2],std::hypot(eye_offset[0],eye_offset[1]));
-  crypt_camera_rig_epoch=std::chrono::steady_clock::now();
-  crypt_player_camera_rig=std::move(candidate);
+  player_camera_input_yaw=std::atan2(eye_offset[1],eye_offset[0]);
+  player_camera_input_pitch=std::atan2(eye_offset[2],std::hypot(eye_offset[0],eye_offset[1]));
+  player_camera_rig_epoch=std::chrono::steady_clock::now();
+  player_camera_rig=std::move(candidate);
   __android_log_print(ANDROID_LOG_INFO,"DH2Native",
-      "Authored Crypt player camera rig loaded | tracks %u | clip %d..%d | fov %.4f | aspect %.4f | clip %.0f..%.0f | eye %.3f %.3f %.3f | target %.3f %.3f %.3f",
-      crypt_player_camera_rig->track_count(),crypt_player_camera_rig->animation_start(),
-      crypt_player_camera_rig->animation_end(),crypt_player_camera_rig->projection().source_fov_value,
-      crypt_player_camera_rig->projection().aspect_ratio,crypt_player_camera_rig->projection().near_clip,
-      crypt_player_camera_rig->projection().far_clip,initial.camera[12],initial.camera[13],initial.camera[14],
+      "Shared authored player camera rig loaded | tracks %u | clip %d..%d | BRES fov/aspect/clips %.4f/%.4f/%.0f..%.0f | runtime FOV from Level::_LoadCamera | eye %.3f %.3f %.3f | target %.3f %.3f %.3f",
+      player_camera_rig->track_count(),player_camera_rig->animation_start(),
+      player_camera_rig->animation_end(),player_camera_rig->projection().source_fov_value,
+      player_camera_rig->projection().aspect_ratio,player_camera_rig->projection().near_clip,
+      player_camera_rig->projection().far_clip,initial.camera[12],initial.camera[13],initial.camera[14],
       initial.target[12],initial.target[13],initial.target[14]);
   return true;
  }catch(const std::exception& error){
-  __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Authored Crypt player camera rig unavailable: %s",error.what());
+  __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Shared authored player camera rig unavailable: %s",error.what());
   return false;
  }
 }
-bool sample_crypt_player_camera_rig(dh2::player_camera_rig_v1::Pose& pose){
- if(!ensure_crypt_player_camera_rig())return false;
- const auto start=crypt_player_camera_rig->animation_start();
- const auto duration=std::max(1,crypt_player_camera_rig->animation_end()-start);
+bool sample_player_camera_rig(dh2::player_camera_rig_v1::Pose& pose){
+ if(!ensure_player_camera_rig())return false;
+ const auto start=player_camera_rig->animation_start();
+ const auto duration=std::max(1,player_camera_rig->animation_end()-start);
  const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(
-     std::chrono::steady_clock::now()-crypt_camera_rig_epoch).count();
+     std::chrono::steady_clock::now()-player_camera_rig_epoch).count();
  const auto offset=static_cast<std::int32_t>(elapsed%duration);
  std::string error;
- if(!crypt_player_camera_rig->sample(start+offset,&pose,error)){
-  __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Authored Crypt player camera sample failed: %s",error.c_str());
+ if(!player_camera_rig->sample(start+offset,&pose,error)){
+  __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Shared authored player camera sample failed: %s",error.c_str());
   return false;
  }
  return true;
 }
-Matrix crypt_source_camera(int width,int height){
+Matrix source_player_camera(int width,int height){
  using namespace dh2::native::crypt_camera_frame_v1;
  Frame frame{};
  dh2::player_camera_rig_v1::Pose pose{};
- Vec3 authored_eye_offset=kEyeFromTarget;
- Vec3 authored_up{0.0f,0.0f,1.0f};
- Vec3 authored_target_offset{};
- if(sample_crypt_player_camera_rig(pose)){
-  authored_target_offset={pose.target[12],pose.target[13],pose.target[14]};
-  authored_eye_offset={pose.camera[12]-pose.target[12],
-                       pose.camera[13]-pose.target[13],
-                       pose.camera[14]-pose.target[14]};
-  authored_up={pose.up_vector[12]-pose.camera[12],
-               pose.up_vector[13]-pose.camera[13],
-               pose.up_vector[14]-pose.camera[14]};
-  crypt_camera_input_yaw=std::atan2(authored_eye_offset[1],authored_eye_offset[0]);
-  crypt_camera_input_pitch=std::atan2(authored_eye_offset[2],
-      std::hypot(authored_eye_offset[0],authored_eye_offset[1]));
- }
+ if(!sample_player_camera_rig(pose))
+  throw std::runtime_error("Shared player camera rig sample unavailable");
+ const Vec3 authored_target_offset{pose.target[12],pose.target[13],pose.target[14]};
+ const Vec3 authored_eye_offset{pose.camera[12]-pose.target[12],
+                                pose.camera[13]-pose.target[13],
+                                pose.camera[14]-pose.target[14]};
+ const Vec3 authored_up{pose.up_vector[12]-pose.camera[12],
+                        pose.up_vector[13]-pose.camera[13],
+                        pose.up_vector[14]-pose.camera[14]};
+ player_camera_input_yaw=std::atan2(authored_eye_offset[1],authored_eye_offset[0]);
+ player_camera_input_pitch=std::atan2(authored_eye_offset[2],
+     std::hypot(authored_eye_offset[0],authored_eye_offset[1]));
  const Vec3 actor_target{actor_position[0],actor_position[1],actor_position[2]};
-  const Vec3 target=forward_anchor_target(&prince_camera_anchor,actor_target);
- if(!build(active_level_assets.name,active_level_assets.level_file,target,width,height,&frame,
+ const Vec3 target=forward_anchor_target(&prince_camera_anchor,actor_target);
+ if(!build_player_frame(target,width,height,&frame,kVerticalFovRadians,
+           active_level_assets.camera_near_clip,active_level_assets.camera_far_clip,
            authored_eye_offset,authored_up,authored_target_offset))
-  throw std::runtime_error("Verified Crypt source camera frame rejected its route/viewport/actor");
+  throw std::runtime_error("Source player camera frame rejected level projection/viewport/actor");
  std::memcpy(source_camera.matrix.elements,frame.view_projection.data(),sizeof(source_camera.matrix.elements));
  std::memcpy(source_camera.frustum.position,frame.eye.data(),sizeof(source_camera.frustum.position));
  if(dh2::engine_camera::frustum_runtime::set_from(&source_camera.matrix,&source_camera.frustum)!=
@@ -2539,11 +2537,49 @@ Matrix crypt_source_camera(int width,int height){
  source_camera.width=width;source_camera.height=height;
  if((source_camera.frames++%128)==0||resized){
   __android_log_print(ANDROID_LOG_INFO,"DH2Native",
-    "Crypt source-framed camera | %dx%d | eye %.4f %.4f %.4f | target %.4f %.4f %.4f | fov %.9g aspect %.9g near %.0f far %.0f | input yaw %.6g pitch %.6g | authored camera rig",
+    "Source player camera frame | %s | %dx%d | eye %.4f %.4f %.4f | target %.4f %.4f %.4f | fov %.9g aspect %.9g near %.0f far %.0f | input yaw %.6g pitch %.6g | shared authored rig",
+    active_level_assets.name.c_str(),
     width,height,frame.eye[0],frame.eye[1],frame.eye[2],frame.target[0],frame.target[1],frame.target[2],
-    kVerticalFovRadians,frame.aspect,kNearPlane,kFarPlane,frame.input_yaw,frame.input_pitch);
+    kVerticalFovRadians,frame.aspect,active_level_assets.camera_near_clip,
+    active_level_assets.camera_far_clip,frame.input_yaw,frame.input_pitch);
  }
  return frame.view_projection;
+}
+bool load_source_level_camera_clip_planes(AAssetManager* assets,
+    RuntimeLevelAssets& level,std::string& error){
+ using dh2::native::level_camera_config_v1::ClipPlanes;
+ std::vector<std::uint8_t> bytes;
+ std::string_view xml;
+ std::string source_path;
+ try{
+  if(level.generated_crypt_layout&&!level.generated_crypt_source_xml.empty()){
+   xml=level.generated_crypt_source_xml;
+   source_path="generated Crypt LevelConfig";
+  }else if(level.name=="SWAMP"&&level.level_file=="001_swamp.mlx"){
+   bytes=read(assets,"data/scene/001_swamp.mlx","original-cache");
+   xml={reinterpret_cast<const char*>(bytes.data()),bytes.size()};
+   source_path="data/scene/001_swamp.mlx";
+  }else if(level.name=="GOTHICUS_CRYPT_01"&&level.level_file=="007_crypt_01.rule.xml"){
+   bytes=read(assets,"007_crypt_01.rule.xml","worlds");
+   xml={reinterpret_cast<const char*>(bytes.data()),bytes.size()};
+   source_path="007_crypt_01.rule.xml";
+  }else{
+   error="No source LevelConfig camera clip fields for "+level.name+" / "+level.level_file;
+   return false;
+  }
+  ClipPlanes planes{};
+  if(!dh2::native::level_camera_config_v1::parse_clip_planes(xml,&planes)){
+   error="Source LevelConfig camera clip fields rejected in "+source_path;
+   return false;
+  }
+  level.camera_near_clip=planes.near_clip;
+  level.camera_far_clip=planes.far_clip;
+  error.clear();
+  return true;
+ }catch(const std::exception& failure){
+  error="Source LevelConfig camera read failed for "+level.name+": "+failure.what();
+  return false;
+ }
 }
 #include "model_menu_scene_v69.hpp"
 }
@@ -3082,7 +3118,7 @@ if(active_crypt_room_runtime){
 }
 void deactivate(){
  clear_player_equipment_native(true);
- crypt_player_camera_rig.reset();crypt_camera_asset_manager=nullptr;crypt_camera_rig_load_attempted=false;
+ player_camera_rig.reset();player_camera_asset_manager=nullptr;player_camera_rig_load_attempted=false;
  source_camera={};
  release_class_previews();menu_background=false;class_scene=false;
  if(active_crypt_room_runtime){
@@ -3121,7 +3157,7 @@ void deactivate(){
  prince_retained_pose.clear();prince_locomotion=dh2::actor::BlendedPlayback{};
  prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;
  active_native_start_plan.reset();pending_menu_start={};active_level_assets=RuntimeLevelAssets{};
- enabled=false;world_mode=false;resume_world=false;move_x=move_y=0;prince_camera_anchor={};
+ enabled=false;world_mode=false;resume_world=false;move_x=move_y=0;authored_hud_direction[0]=authored_hud_direction[1]=authored_hud_direction[2]=0;authored_hud_command_active=authored_hud_stop_pending=false;prince_camera_anchor={};
  const auto remaining=std::count_if(retired.begin(),retired.end(),[](const auto& owner){return !owner.expired();});
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native terminal world discard | Ghost references %zu | remaining %zu | groups %zu | saved actors %zu | catalogue %u",retired.size(),std::size_t(remaining),object_groups.size(),saved_actors.size(),unsigned(bool(actor_skill_catalogue)));
 }
@@ -3320,6 +3356,14 @@ void move_axis(float x,float y){
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player position %.4f %.4f %.4f | moved %u | blocked %u",actor_position[0],actor_position[1],actor_position[2],movement_steps,blocked_steps);
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player facing | angle %.9g | native updates %u",heading,native_heading_updates);
   }
+}
+bool authored_hud_command(const float* direction,bool stop,std::string& error){
+ if(stop){authored_hud_command_active=false;authored_hud_stop_pending=true;authored_hud_direction[0]=authored_hud_direction[1]=authored_hud_direction[2]=0;move_x=move_y=0;error.clear();return true;}
+ if(!direction||!std::isfinite(direction[0])||!std::isfinite(direction[1])||!std::isfinite(direction[2])){
+  error="Authored joystick HeadTowards vector is absent or nonfinite";return false;
+ }
+ if(!world_mode||!native_actor_ready){error="Authored joystick command requires the active native Player world";return false;}
+ std::copy(direction,direction+3,authored_hud_direction);authored_hud_command_active=true;authored_hud_stop_pending=false;error.clear();return true;
 }
 void focus_object(int index){
   inspected_object=-1;
@@ -3588,6 +3632,12 @@ bool ui_player_identity(std::uintptr_t& identity,std::string& error){
   error="Gameplay UI requires the current Character and its associated Save";return false;
  }
  identity=prince_source_ai->character_identity;error.clear();return true;
+}
+bool ui_player_controller_allowed(std::uintptr_t character,bool& allowed,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(character!=current){error="Authored joystick controller gate requires the attached Player Character";return false;}
+ allowed=prince_controller_forced||(!controller_global_blocked&&!prince_state.controller_locked);
+ error.clear();return true;
 }
 bool ui_player_class_specialization_text_ids(std::uintptr_t identity,
  std::array<std::int32_t,4>& text_ids,std::string& error){
@@ -4326,6 +4376,64 @@ bool ui_player_potions(std::uintptr_t identity,std::int32_t& count,std::int32_t&
  capacity=static_cast<std::int8_t>(static_cast<std::uint8_t>(std::max(0,signed_capacity)));
  error.clear();return true;
 }
+bool ui_player_hud_projection(std::uintptr_t identity,bool refresh_usable,
+                              UiPlayerHudProjectionV1& out,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.inventory||
+    prince_combat.inventory->character()!=identity||!prince_combat.savegame||
+    prince_combat.savegame->character()!=identity||!prince_combat.savegame->skills_initialized()||
+    native_save_difficulty<0||native_save_difficulty>2||!prince_skills||
+    !prince_skills->initialized()){
+  error="Gameplay HUD projection requires the active Character, Save, V4 inventory and V3 skill owner";return false;
+ }
+ UiPlayerHudProjectionV1 value=out;
+ const bool identity_changed=value.character!=identity;
+ value.character=identity;value.class_id=prince_combat.savegame->class_id();
+ std::array<std::int32_t,3> slots{};
+ for(std::int32_t i=0;i<3;++i){
+  slots[std::size_t(i)]=prince_combat.savegame->skill_in_slot(i);
+  if(slots[std::size_t(i)] < -1){error="Saved HUD skill slot is outside the source empty-or-index domain";return false;}
+ }
+ const auto faery=prince_combat.savegame->current_faery(std::uint32_t(native_save_difficulty));
+ if(faery < -1){error="Saved HUD faery is outside the source empty-or-index domain";return false;}
+ const bool refresh=refresh_usable||identity_changed||value.skill_slots!=slots||value.faery_id!=faery;
+ value.skill_slots=slots;value.faery_id=faery;
+ auto percent=[](float fraction)->std::int32_t{
+  if(!std::isfinite(fraction))return 0;
+  volatile float raw=fraction*100.f;
+  if(raw>=2147483648.f)return std::numeric_limits<std::int32_t>::max();
+  if(raw<=-2147483648.f)return std::numeric_limits<std::int32_t>::min();
+  return static_cast<std::int32_t>(raw);
+ };
+ for(std::size_t slot=0;slot<slots.size();++slot){
+  auto& cooldown=value.infos[8+slot*2];auto& usable=value.infos[9+slot*2];
+  if(slots[slot]<0){cooldown=0;usable=0;continue;}
+  std::uint32_t source_usable=refresh?0u:static_cast<std::uint32_t>(usable!=0);
+  float fraction=0.f;
+  if(!prince_skills->hud_info(false,std::uint32_t(slots[slot]),refresh,
+       source_usable,fraction,error))return false;
+  cooldown=percent(fraction);
+  if(refresh)usable=source_usable?1:0;
+ }
+ if(faery<0){value.infos[6]=0;value.infos[7]=0;}
+ else{
+  bool unlocked=false;
+  if(!ui_player_faery_unlocked(identity,std::uint32_t(faery),unlocked,error))return false;
+  if(!unlocked){value.infos[6]=0;value.infos[7]=0;}
+  else{
+   std::uint32_t source_usable=refresh?0u:static_cast<std::uint32_t>(value.infos[7]!=0);
+   float fraction=0.f;
+   if(!prince_skills->hud_info(true,std::uint32_t(faery),refresh,
+        source_usable,fraction,error))return false;
+   value.infos[6]=percent(fraction);
+   if(refresh)value.infos[7]=(prince_state.current==6||prince_state.current==7)?0:(source_usable?1:0);
+  }
+ }
+ value.infos[14]=prince_combat.inventory->num_potions();
+ // Native HudManager tests Character property 148 for its level-up marker.
+ value.infos[15]=prince_combat.properties.resolved[148];
+ out=value;error.clear();return true;
+}
 namespace {
 void player_authored_event(const dh2::animation::TriggeredEvent& event,int clip){
  const auto& frames=prince_locomotion.scheduler.frames();
@@ -4853,12 +4961,15 @@ void advance_native_actor(unsigned dt_ms){
  // camera-relative angle before Character::Move. Keep this at the same per
  // actor-update point; the adapter reports the conditioned activity state.
  float input[3]{move_x,move_y,0};bool input_active=false;
- const bool source_crypt_camera=verified_crypt_camera_route();
- const float input_yaw=source_crypt_camera
-     ?crypt_camera_input_yaw:yaw;
- const float input_pitch=source_crypt_camera
-     ?crypt_camera_input_pitch:pitch;
- if(dh2::native::camera_input_v1::map_touch_ground_input(input,input_yaw,input_pitch,world_mode,&input_active))
+ const bool source_player_camera=world_mode&&
+     active_level_assets.source_player_camera_enabled&&player_camera_rig!=nullptr;
+ const float input_yaw=source_player_camera?player_camera_input_yaw:yaw;
+ const float input_pitch=source_player_camera?player_camera_input_pitch:pitch;
+ const bool authored_stop=authored_hud_stop_pending;authored_hud_stop_pending=false;
+ if(authored_stop){input[0]=input[1]=input[2]=0;input_active=false;}
+ else if(authored_hud_command_active){
+  std::copy(authored_hud_direction,authored_hud_direction+3,input);input_active=true;
+ }else if(dh2::native::camera_input_v1::map_touch_ground_input(input,input_yaw,input_pitch,world_mode,&input_active))
   throw std::runtime_error("Native camera-relative touch input rejected");
  const bool was_heading=prince_state.heading_active!=0;
  bool using_skill=false,casting=false;
@@ -5099,7 +5210,7 @@ std::string debug_player_death(){
 std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetManager* assets,
                        const std::uint8_t* generated_spawnpoints,
                        std::size_t generated_spawnpoints_size){
-  crypt_camera_asset_manager=assets;
+  player_camera_asset_manager=assets;
   std::vector<Draw> environment;std::vector<GLuint> textures;
   RuntimeLevelAssets level_assets=active_level_assets;
   if(!active_native_start_plan&&descriptor){
@@ -5111,9 +5222,6 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       active_level_assets=level_assets;
     }
   }
-  if(dh2::native::crypt_camera_frame_v1::verified_crypt_route(
-         level_assets.name,level_assets.level_file))
-    ensure_crypt_player_camera_rig();
   const bool source_static_level=!level_assets.development_layout&&level_assets.name=="SWAMP";
   dh2::objects::Resource candidate_itemdrops;
   std::vector<Draw> candidate_itemdrop_draws;
@@ -5126,6 +5234,36 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
   const bool previous_frozen=frozen;
   if(restore&&!object_groups.empty()){saved_actors.clear();for(const auto& group:object_groups)for(const auto& actor:group.instances)if(actor.kind==1)saved_actors.push_back(actor);}
   try{
+    std::string camera_config_error;
+    const bool source_clip_planes_loaded=
+        load_source_level_camera_clip_planes(assets,level_assets,camera_config_error);
+    const bool source_camera_route=dh2::native::crypt_camera_frame_v1::
+        verified_crypt_route(level_assets.name,level_assets.level_file);
+    const bool authored_camera_rig_loaded=source_clip_planes_loaded&&source_camera_route&&
+        ensure_player_camera_rig();
+    level_assets.source_player_camera_enabled=
+        dh2::native::crypt_camera_frame_v1::source_player_camera_route_ready(
+            level_assets.name,level_assets.level_file,source_clip_planes_loaded,
+            authored_camera_rig_loaded);
+    if(level_assets.source_player_camera_enabled){
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+        "Source player camera LevelConfig | %s / %s | near %.0f far %.0f | shared rig %u",
+        level_assets.name.c_str(),level_assets.level_file.c_str(),
+        level_assets.camera_near_clip,level_assets.camera_far_clip,
+        unsigned(level_assets.source_player_camera_enabled));
+    }else if(source_clip_planes_loaded){
+      __android_log_print(ANDROID_LOG_WARN,"DH2Native",
+        "Source player camera not enabled; route has no verified CameraLevel projection/target | %s / %s | preserving existing camera path",
+        level_assets.name.c_str(),level_assets.level_file.c_str());
+    }else{
+      __android_log_print(ANDROID_LOG_WARN,"DH2Native",
+        "Source player camera not enabled; preserving existing camera path | %s / %s | %s",
+        level_assets.name.c_str(),level_assets.level_file.c_str(),camera_config_error.c_str());
+    }
+    active_level_assets.camera_near_clip=level_assets.camera_near_clip;
+    active_level_assets.camera_far_clip=level_assets.camera_far_clip;
+    active_level_assets.source_player_camera_enabled=
+        level_assets.source_player_camera_enabled;
     if(!restore){
       std::uint32_t seed=0;
       if(!original_real_time_ms(seed))throw std::runtime_error("Original Random clock read failed");
@@ -5945,7 +6083,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     level=std::move(candidate);player=std::move(candidate_idle);walk_player=std::move(candidate_walk);current_scene=std::move(rest);
     active_crypt_module_bounds=std::move(candidate_crypt_module_bounds);
     actor_position=restore?previous:level.spawn;prince_camera_anchor={};
-    world_mode=true;resume_world=false;walking=false;move_x=move_y=0;heading=restore?previous_heading:source_spawn_heading;movement_steps=blocked_steps=0;
+    world_mode=true;resume_world=false;walking=false;move_x=move_y=0;authored_hud_direction[0]=authored_hud_direction[1]=authored_hud_direction[2]=0;authored_hud_command_active=authored_hud_stop_pending=false;heading=restore?previous_heading:source_spawn_heading;movement_steps=blocked_steps=0;
     radius=350;yaw=-1.57f;pitch=.75f;zoom=1;object_epoch=epoch=last_frame=std::chrono::steady_clock::now();sampled_ms=0;frozen=restore?previous_frozen:false;
     if(!initialize_player_equipment_native(assets,prince,error))
       throw std::runtime_error("Native player equipment initialization: "+error);
@@ -6485,7 +6623,8 @@ void draw(int width,int height){
   }
   if(class_scene&&animation_failed)throw std::runtime_error("Class scene animation sampling failed");
   const auto projection=class_scene?class_camera(width,height):menu_background?menu_camera(width,height):
-      verified_crypt_camera_route()?crypt_source_camera(width,height):camera(width,height);glUseProgram(program);
+      world_mode&&active_level_assets.source_player_camera_enabled&&player_camera_rig?
+        source_player_camera(width,height):camera(width,height);glUseProgram(program);
   if(world_mode&&active_crypt_room_runtime&&
      !active_crypt_room_runtime->update_frustum(actor_position))
     throw std::runtime_error("Source RoomZone frustum transition failed");

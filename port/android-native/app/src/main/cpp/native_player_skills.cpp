@@ -749,6 +749,56 @@ struct Runtime::Impl {
   output.assign(bindings.shared_property_temp->begin(),bindings.shared_property_temp->end());
   return 0;
  }
+ bool hud_info(bool faery,std::uint32_t index,bool refresh_usable,
+               std::uint32_t& usable,float& cooldown_fraction,
+               std::string& output_error){
+  cooldown_fraction=0.f;output_error.clear();
+  if(!initialized||update_blocked||!preparation||!uses||!timer_fields||
+     !bindings.savegame||bindings.savegame->character()!=bindings.character||
+     !bindings.coordinator||!session||session->character_identity()!=bindings.character){
+   output_error="HUD query requires the initialized same Character, Save, Player VM and timer-field lease";return false;
+  }
+  using List=dh2::character_ai_set_skills_and_spells::List;
+  using UseList=dh2::player_skill_use_session_v1::List;
+  using Check=dh2::player_skill_use_session_v1::Check;
+  const auto list=faery?List::faery:List::skill;
+  const auto use_list=faery?UseList::faery:UseList::skill;
+  const auto& prepared=preparation->slots(list);
+  if(index>=prepared.size()){
+   output_error="HUD query index is outside the retained prepared skill/faery vector";return false;
+  }
+  if(!prepared[index]){usable=0;return true;} // Original null script has no usable/cooldown state.
+  const auto* instance=preparation->instance(prepared[index]);
+  if(!instance||instance->character!=bindings.character||instance->identity!=prepared[index]){
+   output_error="HUD query prepared script no longer belongs to the active Character";return false;
+  }
+  if(refresh_usable){
+   dh2::player_skill_use_session_v1::Result check{};
+   if(uses->check(use_list,index,Check::usable,check,output_error)!=0){
+    if(output_error.empty())output_error="Same-VM HUD OnSkillCheck_Usable query failed";
+    return false;
+   }
+   usable=check.value?1u:0u;
+  }
+  dh2::character_player_skills_preparation_v3::Owner::TimerFieldSlot field{};
+  if(!timer_fields->slot(bindings.character,list,index,field)||field.instance!=prepared[index]||!field.field18){
+   output_error="HUD query could not borrow the same prepared instance timer field18";return false;
+  }
+  const auto timer_id=*field.field18;
+  if(timer_id<0){
+   if(timer_id!=-1){output_error="HUD query source cooldown field18 is outside the -1 sentinel domain";return false;}
+   return true;
+  }
+  std::uint32_t elapsed=0,duration=0;
+  const auto present=dh2_character_timer_time_left(&elapsed,&duration,&bindings.coordinator->timers(),
+                                                     static_cast<std::uint32_t>(timer_id));
+  if(present<0){output_error="HUD query failed to read the retained Character timer store";return false;}
+  if(present==1){
+   if(!duration){output_error="Active HUD cooldown timer has zero source duration";return false;}
+   cooldown_fraction=1.f-static_cast<float>(elapsed)/static_cast<float>(duration);
+  }
+  return true;
+ }
  void update(){
   if(!initialized||update_blocked||!updates)return;
   std::string ignored;update_after_saved_skill_slot_write(ignored);
@@ -984,6 +1034,11 @@ bool Runtime::train_skill(std::uint32_t skill_index,bool test_only,data::FreshIn
 int Runtime::skill_info(std::uint32_t skill_index,std::int32_t level,
                         std::vector<std::int32_t>& shared_temp,std::string& error){
  return impl_->skill_info(skill_index,level,shared_temp,error);
+}
+bool Runtime::hud_info(bool faery,std::uint32_t index,bool refresh_usable,
+                       std::uint32_t& usable,float& cooldown_fraction,
+                       std::string& error){
+ return impl_->hud_info(faery,index,refresh_usable,usable,cooldown_fraction,error);
 }
 void Runtime::state_service(std::uint32_t service){
  auto& s=*impl_;if(!s.focus_services)throw std::runtime_error("Native Character cleanup owner unavailable");

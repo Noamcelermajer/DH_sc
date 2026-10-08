@@ -49,6 +49,7 @@ set(DH2_MENU_UI_SOURCES gfnt.cpp swf_movie.cpp freetype_font.cpp
  menu_save_slot_projection_v1.cpp menu_manager_push_v1.cpp menu_native_event_v1.cpp
  renderfx_text_connection.cpp hud_startup_callbacks.cpp game_option_table_v1.cpp
  owned_hud_settings_v1.cpp settings_native_files_v1.cpp settings_language_scene_v1.cpp
+ authored_gameplay_hud_v1.cpp authored_hud_edge_layout_v6.cpp authored_joystick_v1.cpp
  hud_manager.cpp hud_manager_core.cpp text_layout_v1.cpp swf_text_layout_connection.cpp
  character_menu_stats_owner_v1.cpp
  character_menu_inventory_order_v1.cpp

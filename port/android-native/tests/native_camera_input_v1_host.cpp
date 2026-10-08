@@ -80,6 +80,29 @@ int main() {
           near(camera_relative[1],std::cos(pitch)/3.0f),
           "camera-relative stick mapping uses full pitch-aware look vector after radial curve");
 
+    // The shared playercamera.bdae camera-to-target offset is the live source
+    // camera basis on both supported gameplay routes. CameraBase input uses
+    // target-minus-eye, then unsigned Point3D::angle and rotateXY.
+    constexpr float rig_eye_offset[3]{1380.0f,-1180.46f,2551.55f};
+    const float rig_yaw=std::atan2(rig_eye_offset[1],rig_eye_offset[0]);
+    const float rig_pitch=std::atan2(rig_eye_offset[2],
+        std::hypot(rig_eye_offset[0],rig_eye_offset[1]));
+    float rig_look_at[3]{};
+    const float rig_length=std::sqrt(rig_eye_offset[0]*rig_eye_offset[0]+
+        rig_eye_offset[1]*rig_eye_offset[1]+rig_eye_offset[2]*rig_eye_offset[2]);
+    check(dh2::native::camera_input_v1::camera_look_at_from_orbit(
+              rig_yaw,rig_pitch,rig_look_at)==0&&
+          near(rig_look_at[0],-rig_eye_offset[0]/rig_length)&&
+          near(rig_look_at[1],-rig_eye_offset[1]/rig_length)&&
+          near(rig_look_at[2],-rig_eye_offset[2]/rig_length),
+          "shared authored eye offset reconstructs CameraBase target-minus-eye vector");
+    float rig_forward[3]{0.0f,1.0f,0.0f};
+    check(dh2::native::camera_input_v1::map_touch_ground_input(
+              rig_forward,rig_yaw,rig_pitch,true,&active)==0&&active&&
+          near(rig_forward[0],-std::sin(std::acos(rig_look_at[1])))&&
+          near(rig_forward[1],std::cos(std::acos(rig_look_at[1]))),
+          "player forward touch follows source Point3D angle/rotateXY for authored camera basis");
+
     // HeadTowards is a heading-only source command. It must not replace the
     // caller-owned route destination while publishing the new visual angle.
     dh2::navigation::HeadingState heading{{0,0,0},0.25f,0,0};

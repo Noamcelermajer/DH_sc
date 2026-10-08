@@ -22,6 +22,12 @@ final class FrontAudio {
     void control(String command){
         if(command.equals("resume")){resume();return;}
         if(command.equals("title")){title();return;}
+        if(command.equals("pause-all")){
+            stopEffects();
+            if(current!=null&&started&&current.isPlaying())current.pause();
+            Log.i("DH2Front","All active menu/game audio paused by native owner");
+            return;
+        }
         String[] fields=command.split(",");
         if(fields.length==3&&fields[0].equals("volume")){
             try {

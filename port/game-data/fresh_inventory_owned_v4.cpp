@@ -166,6 +166,51 @@ bool FreshInventoryOwnedV4::pickup_world_item(std::size_t index,std::int32_t& in
  gold_=old_gold;potion_=old_potion;if(merge_target)merge_target->quantity=merge_quantity;
  if(accepted)e="Source AddItem reported success without transferring the world item";return false;
 }
+bool FreshInventoryOwnedV4::drop_inventory_item_offline(std::uint32_t index,const OwnedInventoryServicesV4& inventory_services,const OfflineWorldItemDropServicesV4& drop_services,std::int32_t& world_index,std::string& e){
+ world_index=-1;if(!mutation_allowed(e))return false;
+ if(!drop_services.is_online){e="Required source online-session query unavailable for inventory drop";return false;}
+ bool online=false;bool queried=false;
+ try{++callback_depth_;struct Guard{std::uint32_t& depth;~Guard(){--depth;}}guard{callback_depth_};queried=drop_services.is_online(drop_services.context,online,e);}catch(const std::exception& x){e=x.what();}catch(...){e="Source online-session query threw during inventory drop";}
+ if(!queried){if(e.empty())e="Source online-session query failed during inventory drop";return false;}
+ if(online){e="Online inventory drop is unsupported until the source CMsgDropLoot provider is connected";return false;}
+ if(index>=items_.size()||!items_[index]||!items_[index]->item){e="Inventory drop source index is outside the retained Item domain";return false;}
+ auto* source=items_[index].get();auto* identity=source->item.get();const auto available=identity->signed_quantity();
+ if(available<0){e="Negative source Item quantity is outside the inventory-drop domain";return false;}
+ if(available==0){e.clear();return true;}
+ if(!drop_services.spawn_and_lock){e="Required source scatter/ItemManager/player-lock provider unavailable for offline inventory drop";return false;}
+ if(world_items_.size()>=std::size_t(INT32_MAX)){e="Retained world-item index exceeds source result domain";return false;}
+ world_items_.reserve(world_items_.size()+1);
+ if(available>1){
+  auto dropped=std::make_unique<OwnedItemSlotV4>();
+  if(!split_item(*identity,1,RetainedItemSlotV4{&dropped->item},inventory_services,e))return false;
+  if(!dropped->item){e="Source TransferItemTo split did not produce the requested one-item transfer";return false;}
+  world_items_.push_back(std::move(dropped));
+ }else{
+  // TransferItemTo first clears both equipment sets through the same owner;
+  // UnEquipSlot may consume a stack into an existing stack, so re-find by the
+  // exact Item/cell identity after each callback-capable operation.
+  for(std::uint32_t set=0;set<2;++set){
+   auto found=std::find_if(items_.begin(),items_.end(),[&](const auto& cell){return cell.get()==source;});
+   if(found==items_.end()||!source->item||source->item.get()!=identity){e="Source TransferItemTo unequip consumed its Item before world transfer";return false;}
+   const auto slot=source->slots[set];
+   if(slot==-1)continue;
+   if(slot<0||slot>=9){e="Invalid source equipment slot byte during world transfer";return false;}
+   if(!unequip_from_slot(std::uint32_t(slot),std::int32_t(set),inventory_services,e))return false;
+  }
+  auto found=std::find_if(items_.begin(),items_.end(),[&](const auto& cell){return cell.get()==source;});
+  if(found==items_.end()||!source->item||source->item.get()!=identity){e="Source TransferItemTo unequip consumed its Item before world transfer";return false;}
+  if(potion_==identity)potion_=nullptr;
+  const auto source_index=std::size_t(found-items_.begin());
+  world_items_.push_back(std::move(items_[source_index]));
+  items_.erase(items_.begin()+std::ptrdiff_t(source_index));
+ }
+ world_index=std::int32_t(world_items_.size()-1);
+ auto* dropped=world_items_[std::size_t(world_index)]->item.get();
+ bool spawned=false;
+ try{++callback_depth_;struct Guard{std::uint32_t& depth;~Guard(){--depth;}}guard{callback_depth_};spawned=drop_services.spawn_and_lock(drop_services.context,*this,std::size_t(world_index),dropped,e);}catch(const std::exception& x){e=x.what();}catch(...){e="Source offline world-drop provider threw after Item transfer";}
+ if(!spawned){if(e.empty())e="Source offline world-drop provider failed after Item transfer";return false;}
+ e.clear();return true;
+}
 bool FreshInventoryOwnedV4::retire_world_item(std::size_t index,const OwnedInventoryServicesV4& s,std::string& e){
  if(!mutation_allowed(e)||index>=world_items_.size()||!world_items_[index]||!world_items_[index]->item){e="Invalid retained world item retirement";return false;}
  if(!s.observe_storage){e="Retained world Item retirement provider unavailable";return false;}

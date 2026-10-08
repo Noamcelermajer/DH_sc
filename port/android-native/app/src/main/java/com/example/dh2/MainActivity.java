@@ -168,6 +168,8 @@ public final class MainActivity extends Activity {
                     }));}return;
                 }
                 NativeBridge.draw();
+                if("ui/original-main-menu".equals(loadedAsset)&&!frontMenuReady)
+                    runOnUiThread(()->{frontMenuReady=true;startTitleMusicIfReady();});
                 String audio=NativeBridge.consumeMenuAudio();
                 if(!audio.isEmpty()&&(introCinematic==null||audio.startsWith("volume,")))runOnUiThread(()->frontAudio.control(audio));
                 String effect;
@@ -187,22 +189,42 @@ public final class MainActivity extends Activity {
         final int basePadMargin=(int)(16*getResources().getDisplayMetrics().density);
         final int baseAttackMargin=(int)(24*getResources().getDisplayMetrics().density);
         final int overlayInsetCushion=(int)(8*getResources().getDisplayMetrics().density);
+        // The source UI renderer fits its authored 480x320 stage (3:2) inside
+        // the full GL surface. Keep native touch controls in that same stage;
+        // on wide phones the side gutters are not playable screen area.
+        final int[] safeInsets={0,0,0,0};
+        final Runnable positionGameplayOverlays=()->{
+            int width=viewport.getWidth(),height=viewport.getHeight();
+            if(width<=0||height<=0)return;
+            int stageWidth,stageHeight;
+            if((long)width*2<=(long)height*3){stageWidth=width;stageHeight=width*2/3;}
+            else{stageWidth=height*3/2;stageHeight=height;}
+            int stageLeft=(width-stageWidth)/2,stageTop=(height-stageHeight)/2;
+            int stageRight=width-stageLeft-stageWidth,stageBottom=height-stageTop-stageHeight;
+            int safeLeft=Math.max(0,safeInsets[0]-stageLeft);
+            int safeTop=Math.max(0,safeInsets[1]-stageTop);
+            int safeRight=Math.max(0,safeInsets[2]-stageRight);
+            int safeBottom=Math.max(0,safeInsets[3]-stageBottom);
+            FrameLayout.LayoutParams p=(FrameLayout.LayoutParams)movement.getLayoutParams();
+            p.leftMargin=stageLeft+Math.max(basePadMargin,safeLeft+overlayInsetCushion);
+            p.bottomMargin=stageBottom+Math.max(basePadMargin,safeBottom+overlayInsetCushion);
+            movement.setLayoutParams(p);
+            FrameLayout.LayoutParams a=(FrameLayout.LayoutParams)attack.getLayoutParams();
+            a.rightMargin=stageRight+Math.max(baseAttackMargin,safeRight+overlayInsetCushion);
+            a.bottomMargin=stageBottom+Math.max(baseAttackMargin,safeBottom+overlayInsetCushion);
+            attack.setLayoutParams(a);
+            FrameLayout.LayoutParams v=(FrameLayout.LayoutParams)vitals.getLayoutParams();
+            v.leftMargin=stageLeft+Math.max(basePadMargin,safeLeft+overlayInsetCushion);
+            v.topMargin=stageTop+Math.max(basePadMargin,safeTop+overlayInsetCushion);
+            vitals.setLayoutParams(v);
+        };
+        viewport.addOnLayoutChangeListener((view,left,top,right,bottom,oldLeft,oldTop,oldRight,oldBottom)->positionGameplayOverlays.run());
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(viewport,(view,insets)->{
             androidx.core.graphics.Insets safe=insets.getInsets(
                     androidx.core.view.WindowInsetsCompat.Type.displayCutout()|
                     androidx.core.view.WindowInsetsCompat.Type.systemGestures());
-            FrameLayout.LayoutParams p=(FrameLayout.LayoutParams)movement.getLayoutParams();
-            p.leftMargin=Math.max(basePadMargin,safe.left+overlayInsetCushion);
-            p.bottomMargin=Math.max(basePadMargin,safe.bottom+overlayInsetCushion);
-            movement.setLayoutParams(p);
-            FrameLayout.LayoutParams a=(FrameLayout.LayoutParams)attack.getLayoutParams();
-            a.rightMargin=Math.max(baseAttackMargin,safe.right+overlayInsetCushion);
-            a.bottomMargin=Math.max(baseAttackMargin,safe.bottom+overlayInsetCushion);
-            attack.setLayoutParams(a);
-            FrameLayout.LayoutParams v=(FrameLayout.LayoutParams)vitals.getLayoutParams();
-            v.leftMargin=Math.max(basePadMargin,safe.left+overlayInsetCushion);
-            v.topMargin=Math.max(basePadMargin,safe.top+overlayInsetCushion);
-            vitals.setLayoutParams(v);
+            safeInsets[0]=safe.left;safeInsets[1]=safe.top;safeInsets[2]=safe.right;safeInsets[3]=safe.bottom;
+            positionGameplayOverlays.run();
             return insets;
         });
         attack.setOnClickListener(v->surface.queueEvent(()->{String report=NativeBridge.playerAttack(-1);attackDisplayPending=report.equals("Attacking")||attackDisplayPending;Log.i("DH2Native","Player input | "+report);show(baseReport+"\n"+report);}));
@@ -399,13 +421,13 @@ public final class MainActivity extends Activity {
     private void loadSelected(boolean gameplayExit){
         String name=assets[selected];
         if(name.equals(loadedAsset))return;
-        runOnUiThread(()->{movement.setVisibility(name.startsWith("worlds/")?View.VISIBLE:View.GONE);vitals.setVisibility(name.startsWith("worlds/")?View.VISIBLE:View.GONE);attack.setVisibility(name.startsWith("worlds/")?View.VISIBLE:View.GONE);});
+        runOnUiThread(()->{boolean inspectionControls=inspectionMode&&name.startsWith("worlds/");movement.setVisibility(inspectionControls?View.VISIBLE:View.GONE);vitals.setVisibility(inspectionControls?View.VISIBLE:View.GONE);attack.setVisibility(inspectionControls?View.VISIBLE:View.GONE);});
         try{
             if(name.equals("ui/original-main-menu")){
                 menuGameplaySlot=-1;
                 String report=gameplayExit?NativeBridge.returnToMainMenu(getFilesDir().getAbsolutePath(),getAssets()):NativeBridge.loadFrontScreen(getFilesDir().getAbsolutePath(),getAssets());
                 loadedAsset=name;baseReport=report;Log.i("DH2Native",report);show(report);
-                runOnUiThread(()->{frontMenuReady=report.startsWith("Original menu ready");if(!frontMenuReady){titleMusicStarted=false;frontAudio.stop();}startTitleMusicIfReady();});return;
+                runOnUiThread(()->{frontMenuReady=false;if(!report.startsWith("Original menu ready")){titleMusicStarted=false;frontAudio.stop();}});return;
             }
             runOnUiThread(()->frontMenuReady=false);
             byte[] encoded=NativeBridge.readAsset(name,getAssets());
@@ -439,7 +461,7 @@ public final class MainActivity extends Activity {
         if(!isPlayableStart(report)){runOnUiThread(()->{status.setVisibility(View.VISIBLE);status.setText(report);});return;}
         menuGameplaySlot=slot;loadedAsset=report.startsWith("SWAMP |")?"worlds/001_swamp.dwld":"worlds/crypt01.dwld";baseReport=report;
         for(int i=0;i<assets.length;i++)if(assets[i].equals(loadedAsset)){selected=i;break;}
-        runOnUiThread(()->{frontMenuReady=false;titleMusicStarted=false;frontAudio.stop();movement.setVisibility(View.VISIBLE);attack.setVisibility(View.VISIBLE);vitals.setVisibility(inspectionMode?View.VISIBLE:View.GONE);status.setVisibility(inspectionMode?View.VISIBLE:View.GONE);});
+        runOnUiThread(()->{frontMenuReady=false;titleMusicStarted=false;frontAudio.stop();movement.setVisibility(inspectionMode?View.VISIBLE:View.GONE);attack.setVisibility(inspectionMode?View.VISIBLE:View.GONE);vitals.setVisibility(inspectionMode?View.VISIBLE:View.GONE);status.setVisibility(inspectionMode?View.VISIBLE:View.GONE);});
     }
     private static boolean isPlayableStart(String report){
         return report!=null&&(report.startsWith("Crypt |")||report.startsWith("SWAMP |"));

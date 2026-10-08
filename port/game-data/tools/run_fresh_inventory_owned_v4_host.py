@@ -21,6 +21,11 @@ SOURCE_FILES = [
     "port/game-data/item_instance.cpp",
     "port/game-data/items.hpp",
     "port/game-data/items.cpp",
+    "port/game-data/item_power_tables_v5.cpp",
+    "port/game-data/loot_power_resources_v7.cpp",
+    "port/game-data/loot_power_creation_v7.cpp",
+    "port/game-data/loot_entry_selection_v1.cpp",
+    "port/game-data/item_presentation_v5.cpp",
     "port/game-data/tests/fresh_inventory_owned_v4.cpp",
     "port/game-data/tests/fresh_inventory_owned_v4_original.py",
     "port/game-data/tests/fresh_inventory_v2_original.py",
@@ -42,12 +47,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--distro", default="Ubuntu-22.04")
     parser.add_argument("--random-only", action="store_true")
+    parser.add_argument("--world-transfer-only", action="store_true")
+    parser.add_argument("--cache", type=Path, default=ROOT / ".local-inputs/items-discovery")
     parser.add_argument(
         "--output",
         type=Path,
         default=ROOT / "port/game-data/reference/player-inventory-owned-v4/host-validation.json",
     )
     args = parser.parse_args()
+    cache_dir = args.cache.resolve()
     sources = {path: sha(ROOT / path) for path in SOURCE_FILES}
     inputs = {}
     if not args.random_only:
@@ -56,7 +64,7 @@ def main():
             for path in [
                 "port/game-data/reference/player-inventory-owned-v4/fixtures.bin",
                 "port/game-data/reference/player-creation-v2/fresh-fixtures.bin",
-                *CACHE_FILES,
+                *[str(cache_dir / Path(path).name) for path in CACHE_FILES],
                 ".local-inputs/libDungeonHunter2.so",
             ]
         }
@@ -66,6 +74,7 @@ def main():
     executable = ".local-inputs/player-inventory-owned-v4/host-audit"
     random_object = ".local-inputs/player-inventory-owned-v4/random.o"
     wsl_root = "/mnt/" + ROOT.drive[0].lower() + "/" + ROOT.as_posix()[3:]
+    wsl_cache = "/mnt/" + cache_dir.drive[0].lower() + "/" + cache_dir.as_posix()[3:]
     prefix = "cd " + shlex.quote(wsl_root) + " && "
     random_build = prefix + shlex.join([
         "gcc", "-std=c11", "-O1", "-g", "-Wall", "-Wextra", "-Werror",
@@ -81,18 +90,25 @@ def main():
         "port/game-data/loot_tables_v2.cpp",
         "port/game-data/item_instance.cpp",
         "port/game-data/items.cpp",
+        "port/game-data/item_power_tables_v5.cpp",
+        "port/game-data/loot_power_resources_v7.cpp",
+        "port/game-data/loot_power_creation_v7.cpp",
+        "port/game-data/loot_entry_selection_v1.cpp",
+        "port/game-data/item_presentation_v5.cpp",
         "port/game-data/tests/fresh_inventory_owned_v4.cpp",
         random_object, "-o", executable,
     ])
     subprocess.run(["wsl", "-d", args.distro, "-e", "bash", "-lc", build], check=True)
     if args.random_only:
         run_args = [executable, "--random-only"]
+    elif args.world_transfer_only:
+        run_args = [executable, "--world-transfer-only", wsl_cache]
     else:
         run_args = [
             executable,
             "port/game-data/reference/player-inventory-owned-v4/fixtures.bin",
             "port/game-data/reference/player-creation-v2/fresh-fixtures.bin",
-            ".local-inputs/items-discovery",
+            wsl_cache,
         ]
     command = prefix + "ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 " + shlex.join(run_args)
     result = subprocess.run(

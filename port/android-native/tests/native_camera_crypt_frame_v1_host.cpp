@@ -29,6 +29,13 @@ int main() {
     if (!expect(verified_crypt_route("GOTHICUS_CRYPT_01", "007_crypt_01.rule.xml"), "Crypt gate")) return 1;
     if (!expect(!verified_crypt_route("SWAMP", "001_swamp.mlx"), "SWAMP excluded")) return 2;
     if (!expect(!verified_crypt_route("GOTHICUS_CRYPT_01", "x07_crypt_backup.mlx"), "wrong route file excluded")) return 3;
+    if (!expect(source_player_camera_route_ready("GOTHICUS_CRYPT_01", "007_crypt_01.rule.xml", true, true),
+                "verified Crypt route enables the authored player camera only when both providers are ready")) return 48;
+    if (!expect(!source_player_camera_route_ready("SWAMP", "001_swamp.mlx", true, true),
+                "clip-plane availability alone does not enable unverified SWAMP camera/FOV/target data")) return 49;
+    if (!expect(!source_player_camera_route_ready("GOTHICUS_CRYPT_01", "007_crypt_01.rule.xml", false, true) &&
+                !source_player_camera_route_ready("GOTHICUS_CRYPT_01", "007_crypt_01.rule.xml", true, false),
+                "Crypt route remains disabled when either camera provider is unavailable")) return 50;
     if (!expect(near(kVerticalFovRadians, 0.42963001132011414f, 1e-8f) &&
                 kNearPlane == 900.0f && kFarPlane == 5000.0f,
                 "Crypt CameraBase::SetData projection override matches Level::_LoadCamera and rule XML")) return 45;
@@ -64,6 +71,13 @@ int main() {
                 near(authored_frame.input_pitch,std::atan2(authored_eye_offset[2],
                     std::hypot(authored_eye_offset[0],authored_eye_offset[1]))),
                 "movement basis follows authored rig eye offset")) return 43;
+    float clip[4]{};
+    const Vec3 authored_up_point{authored_frame.target[0]+authored_up[0],
+                                 authored_frame.target[1]+authored_up[1],
+                                 authored_frame.target[2]+authored_up[2]};
+    transform(authored_frame.view_projection,authored_up_point,clip);
+    if (!expect(clip[1] / clip[3] > 0.0f,
+                "authored camera up direction projects to positive GLES screen Y")) return 47;
 
     ForwardAnchorState anchor{};
     if (!expect(update_forward_anchor(&anchor, 0.0f, false, false) &&
@@ -133,7 +147,6 @@ int main() {
                      kForwardAnchorIdleCap),
                 "rendered camera consumes the retained source anchor target")) return 40;
 
-    float clip[4]{};
     transform(frame.view_projection, frame.target, clip);
     if (!expect(std::fabs(clip[0] / clip[3]) < 1e-5f && std::fabs(clip[1] / clip[3]) < 1e-5f,
                 "camera target projects to screen center")) return 9;
@@ -149,12 +162,15 @@ int main() {
                 near(movement_forward[1], forward[1], 1e-6f) &&
                 near(movement_forward[2], forward[2], 1e-6f),
                 "controller look vector matches recovered source camera forward")) return 12;
-    Vec3 side = cross({0.0f, 0.0f, 1.0f}, forward);
+    Vec3 side = cross(forward, {0.0f, 0.0f, 1.0f});
     if (!expect(normalize(side), "source side basis normalizes")) return 13;
-    Vec3 vertical = cross({-forward[0], -forward[1], -forward[2]}, side);
-    const Vec3 right_point{frame.target[0] + side[0] * 100.0f,
-                           frame.target[1] + side[1] * 100.0f,
-                           frame.target[2] + side[2] * 100.0f};
+    Vec3 vertical = cross(side, forward);
+    // For the default eye offset (+X,-Y,+Z) and world up (+Z), the GLES-facing
+    // up basis must point toward positive world Z after adapting the source
+    // positive-forward matrix convention.
+    const Vec3 right_point{frame.target[0] + 100.0f,
+                           frame.target[1] + 100.0f,
+                           frame.target[2]};
     transform(frame.view_projection, right_point, clip);
     if (!expect(clip[0] / clip[3] > 0.0f, "source camera side maps right on screen")) return 14;
     const Vec3 up_point{frame.target[0] + vertical[0] * 100.0f,
@@ -162,6 +178,10 @@ int main() {
                         frame.target[2] + vertical[2] * 100.0f};
     transform(frame.view_projection, up_point, clip);
     if (!expect(clip[1] / clip[3] > 0.0f, "source camera vertical maps up on screen")) return 15;
+    const Vec3 world_up_point{frame.target[0],frame.target[1],frame.target[2]+100.0f};
+    transform(frame.view_projection,world_up_point,clip);
+    if (!expect(clip[1] / clip[3] > 0.0f,
+                "authored world up must project to positive GLES screen Y")) return 46;
     const Vec3 near_point{frame.eye[0] + forward[0] * kNearPlane,
                           frame.eye[1] + forward[1] * kNearPlane,
                           frame.eye[2] + forward[2] * kNearPlane};

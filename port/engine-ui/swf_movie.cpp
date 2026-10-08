@@ -231,6 +231,15 @@ bool SwfMovie::screen_to_logical(float point[2],std::string&e){
  Impl::Scope scope(owner.get());if(!scope.entered){e="SWF core busy";return false;}
  return connection->screen_to_logical(point,e)&&owner->finish(e);
 }
+bool SwfMovie::source_display_rectangle(float rectangle[4],std::int32_t viewport[4],std::string&e){
+ auto owner=impl_;auto connection=viewport_;
+ if(!owner||!owner->root||!connection||!rectangle||!viewport){e="Required retained source viewport unavailable";return false;}
+ Impl::Scope scope(owner.get());if(!scope.entered){e="SWF core busy";return false;}
+ if(!connection->display_rectangle(rectangle,e))return false;
+ const auto& source=connection->state().viewport;
+ for(unsigned i=0;i<4;++i)viewport[i]=source[i];
+ return owner->finish(e);
+}
 bool SwfMovie::hud_bind(const char* path,const char* digest,SwfHudClip& handle,std::string&e){
  auto owner=impl_;if(!owner||!owner->root){e="SWF movie not loaded";return false;}
  Impl::Scope scope(owner.get());if(!scope.entered){e="SWF core busy";return false;}

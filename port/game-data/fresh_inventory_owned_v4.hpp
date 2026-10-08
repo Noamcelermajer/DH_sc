@@ -30,6 +30,16 @@ struct OwnedInventoryServicesV4 {
  // create no external per-Item state. Absence of retirement is not proof.
  bool stateless_temporaries=false;
 };
+// NativeInvDropItem needs a real online-state query and the complete original
+// offline ItemObject::DropInventory continuation. The latter must calculate
+// the source scatter point, spawn/InitAgain through the active ItemManager and
+// apply the 5000 ms/player-id lock to the resulting world object. This owner
+// deliberately has no default/fake provider for those world-runtime effects.
+struct OfflineWorldItemDropServicesV4 {
+ void* context{};
+ bool (*is_online)(void*,bool&,std::string&){};
+ bool (*spawn_and_lock)(void*,FreshInventoryOwnedV4&,std::size_t,ItemInstanceV1*,std::string&){};
+};
 // Optional AddLoot continuation. Values are explicit source caller inputs:
 // CalcLootItemValue bonus, AddLootItemPowers bonus/request count, and the live
 // character difficulty. Creation must borrow this inventory's same RNG and
@@ -88,6 +98,12 @@ public:
  bool add_world_loot_table(std::int32_t,const LootEntrySelectionContextV1&,RetainedItemSlotV4,const OwnedInventoryServicesV4&,const OwnedLootEffectsV7&,std::string&);
  bool pickup_world_item(std::size_t,std::int32_t&,const OwnedInventoryServicesV4&,std::string&);
  bool retire_world_item(std::size_t,const OwnedInventoryServicesV4&,std::string&);
+ // NativeInvDropItem's offline TransferItemTo(index,temp,1,false,false),
+ // represented in this same owner. Rejects online calls and missing source
+ // world providers before inventory mutation. If spawn_and_lock fails after
+ // transfer, the source prefix remains in world_items_ and world_index names
+ // that retained item so the caller can recover without losing ownership.
+ bool drop_inventory_item_offline(std::uint32_t,const OwnedInventoryServicesV4&,const OfflineWorldItemDropServicesV4&,std::int32_t& world_index,std::string&);
  // Source-invalid indices/negative assertions and destructive native reentry
  // reject explicitly; read-only queries and live cached-property/selection writes
  // remain available synchronously in effects. Partial source prefixes persist.

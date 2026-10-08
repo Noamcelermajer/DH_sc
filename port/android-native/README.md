@@ -2,10 +2,11 @@
 
 This project builds the current source reconstruction for Android. It is still
 an incomplete development game; see the [project checklist](../../docs/PROJECT-CHECKLIST.md)
-for verified systems and open work. The current debug APK is available from the
-[GitHub prerelease](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-ui-equipment-crypt-api37-2026-10-08).
-It builds ARM64 and x86_64; an API 37 x86_64 emulator smoke reached the opening
-cinematic, menu, Single Player and Crypt HUD. See the release notes for limits.
+for verified systems and open work. Download the current ARM64/x86_64 debug APK
+from the [GitHub prerelease](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-ui-movement-api37-2026-10-08).
+On API 37 x86_64/16 KiB, it reached SWAMP, opened Character/Inventory/Skills/
+Faeries screens by touch, and moved the player with the joystick. Skill save/
+confirmation and live item drop remain incomplete; see release notes.
 
 ## Build and install
 

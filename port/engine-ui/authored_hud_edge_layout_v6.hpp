@@ -1,0 +1,12 @@
+#pragma once
+// Authored edge placement adapted from AdamCelermajer/DH_sc commit
+// 11fa5242de525e0fd132d8019920baa862ef70d7.
+#include "authored_gameplay_hud_v1.hpp"
+#include <functional>
+namespace dh2::ui {
+// Modern wide/tall display policy. Temporarily translate actual authored HUD
+// groups to their screen edges, then restore their source matrices. The same
+// scoped translations serve rendering and original shape-based hit testing.
+bool with_authored_hud_edge_layout_v6(SwfMovie&,const AuthoredGameplayHudV1&,
+ const std::function<bool(std::string&)>& operation,std::string&);
+}

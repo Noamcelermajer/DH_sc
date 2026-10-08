@@ -120,6 +120,15 @@ int main(int argc,char** argv){try{
   const auto expected=(type&0x20)?std::int32_t(0x40000000+i):-7;stored+=(type&0x20)!=0;
   require(state.saved[i]==expected&&state.resolved[i]==-9);
  }require(stored>0);
+ // This gameplay-bound Transport has the seven metadata writers plus the
+ // reached PROP writer. Its metadata-only persistence API must reject the
+ // gameplay profile before touching the primary; it is not NativeSaveGame.
+ const auto primary_before_gameplay_save=read(primary);
+ const auto gameplay_slot_before_save=save.slot();save.set_slot(0);
+ require(!transport.save_existing_metadata(error));
+ require(error=="mask-1 metadata writer set required");
+ require(read(primary)==primary_before_gameplay_save);
+ save.set_slot(gameplay_slot_before_save);
  profile::TransportBindings incomplete{dir,&table,&difficulty,{}};incomplete.property_rules=&rules;
  require(!transport.bind(std::move(incomplete),error)&&error.find("must bind together")!=std::string::npos);
  write(dir/"dh2_005.savegame",campaign(*knight,prop));

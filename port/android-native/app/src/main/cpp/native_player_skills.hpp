@@ -97,6 +97,12 @@ public:
     // a required owner/provider failure. No VM, sheet, or timer owner is made.
     int skill_info(std::uint32_t skill_index,std::int32_t level,
                    std::vector<std::int32_t>& shared_temp,std::string& error);
+    // Read HUD usability and cooldown visuals from the same prepared Player
+    // script instance, Save slot and Coordinator timer store. This executes
+    // the retained OnSkillCheck query but creates no skill/timer/property owner.
+    bool hud_info(bool faery,std::uint32_t list_index,bool refresh_usable,
+                  std::uint32_t& usable,float& cooldown_fraction,
+                  std::string& error);
     // Source CharAI::OnDied only. Character::Kill/rewards/event2 caller is a
     // separate integration boundary; this retains the same AIS and VM.
     void died(std::uintptr_t killer);

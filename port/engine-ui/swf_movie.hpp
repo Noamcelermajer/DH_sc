@@ -95,6 +95,9 @@ class SwfMovie {
  bool update_viewport(FlashCamera40&,std::string&);
  bool display_source_clip(const char* path,std::string&);
  bool screen_to_logical(float point[2],std::string&);
+ // Retained source-stage projection and current renderer viewport, in the
+ // same coordinate order used by display_source_clip and pointer conversion.
+ bool source_display_rectangle(float rectangle[4],std::int32_t viewport[4],std::string&);
  bool hud_bind(const char* path,const char* verified_movie_sha256,SwfHudClip&,std::string&);
  bool hud_goto(const SwfHudClip&,std::int32_t,const HudSpriteCoreServices&,std::string&);
  bool hud_play(const SwfHudClip&,std::int32_t,const HudSpriteCoreServices&,std::string&);

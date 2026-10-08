@@ -1,0 +1,66 @@
+#include "../gameplay_menu_stack_v1.hpp"
+
+#include <iostream>
+#include <stdexcept>
+
+namespace {
+unsigned checks{};
+void require(bool ok, const char* message) {
+    ++checks;
+    if (!ok) throw std::runtime_error(message);
+}
+}
+
+int main() {
+    using namespace dh2::ui;
+    try {
+        const auto open = gameplay_menu_transition_plan_v1("", "menu_CharacterMenu", true);
+        require(open.size() == 1 && open[0].action == GameplayMenuTransitionActionV1::show &&
+                    open[0].menu == "menu_CharacterMenu" && open[0].pushed,
+                "opening the character menu should show its root");
+
+        const auto nested = gameplay_menu_transition_plan_v1(
+            "menu_CharacterMenu", "menu_CharacterSheetNew", true);
+        require(nested.size() == 2 && nested[0].action == GameplayMenuTransitionActionV1::cover &&
+                    nested[0].menu == "menu_CharacterMenu" &&
+                    nested[1].action == GameplayMenuTransitionActionV1::show &&
+                    nested[1].menu == "menu_CharacterSheetNew",
+                "pushing a child must send parent OnHide without hiding its tab-bearing clip");
+
+        const std::vector<std::string> stack{
+            "menu_CharacterMenu", "menu_CharacterSheetNew", "menu_CharacterSheetStats"};
+        std::vector<std::string> drawn;
+        require(gameplay_menu_draw_stack_v1(stack, [&](const std::string& menu) {
+                    drawn.push_back(menu);
+                    return true;
+                }),
+                "stack renderer rejected a menu");
+        require(drawn == stack, "visible menu stack must render parent before nested child panels");
+
+        require(gameplay_menu_named_pop_requested_v1(stack, "menu_CharacterMenu"),
+                "named NativePopMenu must pop current when the requested menu exists below it");
+        require(gameplay_menu_named_pop_requested_v1(stack, "menu_CharacterSheetStats"),
+                "named NativePopMenu must also accept the current menu name");
+        require(!gameplay_menu_named_pop_requested_v1(stack, "menu_Inventory"),
+                "named NativePopMenu must leave the stack untouched for an absent name");
+
+        const auto pop = gameplay_menu_transition_plan_v1(
+            "menu_CharacterSheetStats", "menu_CharacterSheetNew", false);
+        require(pop.size() == 2 && pop[0].action == GameplayMenuTransitionActionV1::hide &&
+                    pop[0].menu == "menu_CharacterSheetStats" &&
+                    pop[1].action == GameplayMenuTransitionActionV1::show &&
+                    pop[1].menu == "menu_CharacterSheetNew",
+                "popping a child must hide it and restore the parent");
+
+        const auto exit = gameplay_menu_transition_plan_v1("menu_CharacterMenu", "", false);
+        require(exit.size() == 1 && exit[0].action == GameplayMenuTransitionActionV1::hide &&
+                    exit[0].menu == "menu_CharacterMenu",
+                "returning to gameplay must hide the last menu");
+
+        std::cout << "PASS gameplay_menu_stack_v1 checks=" << checks << '\n';
+        return 0;
+    } catch (const std::exception& error) {
+        std::cerr << error.what() << '\n';
+        return 1;
+    }
+}
