@@ -4,9 +4,9 @@ This repository reconstructs the game as a native Android application and docume
 
 ## Current build
 
-The latest API 37 debug APK is published as a [GitHub prerelease](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-ui-inventory-camera-api37-2026-10-08). Download the [APK directly](https://github.com/Noamcelermajer/DH_sc/releases/download/native-ui-inventory-camera-api37-2026-10-08/Dungeon-Hunter-2-native-ui-inventory-camera-api37-debug.apk). It builds ARM64 and x86_64 and passes APK signature and 16 KiB alignment checks. This exact APK was launched on a generic Android 17/API 37 x86_64 emulator with 16 KiB pages, not Fold7; the intro, main menu and Single Player submenu rendered. The recent stats, inventory callback and camera-anchor changes compile, but their gameplay effects have not all been verified live.
+The latest API 37 debug APK is published as a [GitHub prerelease](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-ui-movement-api37-2026-10-08); download the [APK](https://github.com/Noamcelermajer/DH_sc/releases/download/native-ui-movement-api37-2026-10-08/Dungeon-Hunter-2-native-ui-movement-api37-debug.apk). It builds ARM64 and x86_64, passes APK signature and 16 KiB alignment checks, and was tested on an Android 17/API 37 x86_64 emulator: main menu, SWAMP, Character/Inventory/Skills/Faeries tabs, and joystick movement.
 
-The latest run did not enter gameplay. The build maps 69 character-stat fields, wires inventory auto-equip/swap callbacks, and includes a forward camera anchor, but full click-driven inventory, Talent/skill, Fairy and authored-camera behavior remain incomplete or unverified. Enemy AI, combat/loot, campaign progression and save restoration also remain incomplete.
+This is an unfinished reconstruction. A new save has no inventory items; skill persistence/confirmation and live item drop remain disconnected. Enemy AI, full combat/loot, campaign progression and save restoration are also incomplete.
 
 ## Work map
 
