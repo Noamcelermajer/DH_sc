@@ -60,7 +60,12 @@ public final class MainActivity extends Activity {
         boolean resumeOpeningCinematic=state!=null&&state.getBoolean("openingCinematicPending",false);
         int openingCinematicPositionMs=state!=null?state.getInt("openingCinematicPositionMs",0):0;
         boolean playOpeningCinematic=!inspectionMode&&(state==null||resumeOpeningCinematic)&&!getIntent().getBooleanExtra("skip_intro",false);
-        if(!inspectionMode){setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);}
+        if(!inspectionMode){
+            setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+            // Apply edge-to-edge before the first layout so the startup movie,
+            // menu stage, and GL surface agree on the same drawable bounds.
+            configureImmersiveLandscapeWindow();
+        }
         if(Build.VERSION.SDK_INT>=33)getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,this::handleBack);
         metadataSlot=state!=null?state.getInt("metadataSlot",-1):getIntent().getIntExtra("profile_slot",-1);
         LinearLayout layout=new LinearLayout(this);layout.setOrientation(LinearLayout.VERTICAL);
@@ -304,7 +309,7 @@ public final class MainActivity extends Activity {
     private void show(String text){runOnUiThread(()->status.setText(text));}
     @SuppressWarnings("deprecation")
     private void enterImmersiveLandscape(){
-        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(),false);
+        configureImmersiveLandscapeWindow();
         if(Build.VERSION.SDK_INT>=30){
             WindowInsetsController controller=getWindow().getInsetsController();
             if(controller!=null){
@@ -312,6 +317,16 @@ public final class MainActivity extends Activity {
                 controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
             }
         }else getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION|View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    }
+    private void configureImmersiveLandscapeWindow(){
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(),false);
+        if(Build.VERSION.SDK_INT>=28){
+            android.view.WindowManager.LayoutParams attributes=getWindow().getAttributes();
+            if(attributes.layoutInDisplayCutoutMode!=android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES){
+                attributes.layoutInDisplayCutoutMode=android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+                getWindow().setAttributes(attributes);
+            }
+        }
     }
     @Override public void onWindowFocusChanged(boolean hasFocus){
         super.onWindowFocusChanged(hasFocus);

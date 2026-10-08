@@ -62,6 +62,7 @@ struct UiPlayerStatsReadV1 {
  std::int32_t endurance{},energy{},points{};
 };
 bool ui_player_stats(std::uintptr_t,UiPlayerStatsReadV1&,std::string&);
+bool ui_player_assign_stat(std::uintptr_t,std::uint32_t,std::string&);
 struct UiSkillReadV1 {
  std::int32_t id{-1},level{-1},slot{-1},required_level{-1};
  std::int32_t character_level{};

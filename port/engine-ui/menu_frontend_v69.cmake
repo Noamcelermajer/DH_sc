@@ -50,6 +50,7 @@ set(DH2_MENU_UI_SOURCES gfnt.cpp swf_movie.cpp freetype_font.cpp
  renderfx_text_connection.cpp hud_startup_callbacks.cpp game_option_table_v1.cpp
  owned_hud_settings_v1.cpp settings_native_files_v1.cpp settings_language_scene_v1.cpp
  hud_manager.cpp hud_manager_core.cpp text_layout_v1.cpp swf_text_layout_connection.cpp
+ character_menu_stats_owner_v1.cpp
  swf_input_history.cpp swf_frame_schedule.cpp swf_frame_connection.cpp
  swf_drag_values.cpp swf_cursor_input.cpp swf_input_geometry.cpp swf_input_policy.cpp
  swf_input_connection.cpp swf_event_dispatch.cpp swf_event_core.cpp)

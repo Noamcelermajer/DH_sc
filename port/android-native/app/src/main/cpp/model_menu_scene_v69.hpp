@@ -1,4 +1,5 @@
 #pragma once
+
 // Adam791e961 verified-v69 scene rendering, included once inside the existing
 // renderer namespace. It shares that renderer's GPU/material/scene authority.
 bool menu_background=false,class_scene=false;
@@ -99,16 +100,19 @@ Matrix class_camera(int width,int height){
  Matrix projection{1/(tangent*aspect),0,0,0,0,1/tangent,0,0,0,0,-(far+near)/(far-near),-1,0,0,-2*far*near/(far-near),0};
  return dh2::scene::multiply(projection,view);
 }
-Matrix menu_camera(){
+Matrix menu_camera(int width,int height){
   // MenuMainMenu::CreateAvatarCamera, ARM 0x42bf68..0x42c0bc.
   // Position (0,-900,150), target (0,0,225), Z up; original camera
-  // setters specify aspect bits 0x3fd578e9 and FOV bits 0x3f3579c8.
+  // source camera specifies FOV bits 0x3f3579c8. Keep its vertical field of
+  // view fixed and derive horizontal projection from the live surface, so a
+  // 16:9 display reveals more of the 3D backdrop without stretching it.
   const std::array<float,3> eye{0,-900,150};
   std::array<float,3> f{0,900,75};normalize(f);
   auto s=cross(f,{0,0,1});normalize(s);auto u=cross(s,f);
   Matrix view{s[0],u[0],-f[0],0,s[1],u[1],-f[1],0,s[2],u[2],-f[2],0,-dot(s,eye),-dot(u,eye),dot(f,eye),1};
-  float aspect,fov;const std::uint32_t aspect_bits=0x3fd578e9,fov_bits=0x3f3579c8;
-  std::memcpy(&aspect,&aspect_bits,4);std::memcpy(&fov,&fov_bits,4);
+  float fov;const std::uint32_t fov_bits=0x3f3579c8;
+  std::memcpy(&fov,&fov_bits,4);
+  const float aspect=dh2::ui::original_menu_viewport_v1::surface_aspect(width,height);
   const float tangent=std::tan(fov*.5f),near=10,far=2000;
   const Matrix projection{1/(tangent*aspect),0,0,0,0,1/tangent,0,0,0,0,-(far+near)/(far-near),-1,0,0,-2*far*near/(far-near),0};
   return dh2::scene::multiply(projection,view);
@@ -178,9 +182,10 @@ std::string load_menu_background(AAssetManager* assets){
 }
 void draw_menu_background(int width,int height){
   if(!menu_background||!active())throw std::runtime_error("Menu swamp renderer unavailable");
-  const int w=std::min(width,height*3/2),h=std::min(height,width*2/3);
-  glViewport((width-w)/2,(height-h)/2,w,h);
-  draw(w,h);
+  const auto viewport=dh2::ui::original_menu_viewport_v1::background_viewport(width,height);
+  if(viewport[2]<=0||viewport[3]<=0)throw std::runtime_error("Menu background surface unavailable");
+  glViewport(viewport[0],viewport[1],viewport[2],viewport[3]);
+  draw(viewport[2],viewport[3]);
   glViewport(0,0,width,height);
 }
 namespace { // continue the renderer's unnamed namespace

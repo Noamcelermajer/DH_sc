@@ -1,4 +1,6 @@
 #include "model_renderer.hpp"
+#include "character_menu_stats_owner_v1.hpp"
+#include "original_menu_viewport_v1.hpp"
 #include "frustum_runtime.hpp"
 #include "mod_assets.hpp"
 #include "scene.hpp"
@@ -3527,6 +3529,34 @@ bool ui_player_stats(std::uintptr_t identity,UiPlayerStatsReadV1& out,std::strin
  value.endurance=property_int(151);value.energy=property_int(152);value.points=property_int(148);
  out=std::move(value);error.clear();return true;
 }
+bool ui_player_assign_stat(std::uintptr_t identity,std::uint32_t stat,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.profile_characters||
+    prince_combat.character_class<0||
+    std::size_t(prince_combat.character_class)>=prince_combat.profile_characters->rows.size()||
+    actor_class_rows.empty()||!native_debug){
+  error="Stat assignment requires the active Player, selected Character row, class formulas and DebugSwitches owner";return false;
+ }
+ auto view=dh2::data::property_view(actor_property_rules,prince_combat.properties);
+ dh2::ui::CharacterMenuStatGraphV1 graph{
+  &prince_combat.properties,&view,prince_combat.profile_characters.get(),
+  actor_class_rows.data(),std::uint32_t(actor_class_rows.size()),
+  prince_combat.character_class,{}, {}};
+ graph.debug_load=[](std::string& callback_error){
+  if(!native_debug){callback_error="Shared native DebugSwitches owner unavailable";return false;}
+  if(native_debug->runtime().load(native_debug->globals(),native_debug->services())!=
+     dh2::debug_switches::Status::complete){callback_error="Shared native DebugSwitches load failed";return false;}
+  return true;
+ };
+ graph.debug_query=[](const char* key,bool& result,std::string& callback_error){
+  if(!native_debug||!key){callback_error="Shared DebugSwitches query requires its owner and key";return false;}
+  std::uint8_t value=0;
+  if(native_debug->runtime().get_switch(key,native_debug->globals(),native_debug->services(),value)!=
+     dh2::debug_switches::Status::complete){callback_error="Shared native DebugSwitches query failed";return false;}
+  result=value!=0;return true;
+ };
+ return dh2::ui::character_menu_assign_stat_v1(graph,stat,error);
+}
 bool ui_player_skill_slots(std::uintptr_t identity,std::array<std::int32_t,3>& slots,std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
  if(identity!=current||!prince_combat.savegame->skills_initialized()){
@@ -5934,7 +5964,7 @@ void draw(int width,int height){
     if(world_mode&&!prince_visual.update_world(current_scene,error))throw std::runtime_error(error);
   }
   if(class_scene&&animation_failed)throw std::runtime_error("Class scene animation sampling failed");
-  const auto projection=class_scene?class_camera(width,height):menu_background?menu_camera():
+  const auto projection=class_scene?class_camera(width,height):menu_background?menu_camera(width,height):
       verified_crypt_camera_route()?crypt_source_camera(width,height):camera(width,height);glUseProgram(program);
   if(world_mode&&active_crypt_room_runtime&&
      !active_crypt_room_runtime->update_frustum(actor_position))

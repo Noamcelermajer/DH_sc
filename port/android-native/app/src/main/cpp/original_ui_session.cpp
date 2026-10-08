@@ -94,6 +94,11 @@ struct OriginalUiSession::Impl {
     // the gameplay HUD. Its screens borrow the live game owners through native
     // callbacks; this stack stores navigation only and owns no player data.
     std::vector<std::string> game_menu_stack;
+    // The original Level HUD-active flag is toggled by NativeAwayFromHud /
+    // NativeBackToHud. Its finger map reset is deferred until the current SWF
+    // event has unwound, so the HUD input graph is never re-entered recursively.
+    bool gameplay_hud_active=true;
+    bool gameplay_hud_input_reset_pending=false;
     std::string active_menu_path()const{return "_root."+(menu_stack.empty()?std::string("menu_MainMenu"):menu_stack.back());}
     static bool shared_state(const std::string& name){return name=="menu_HelpButtons"||name=="menu_Help"||name=="menu_About"||name=="menu_Options";}
     static bool character_menu_state(const std::string& name){
@@ -729,6 +734,18 @@ struct OriginalUiSession::Impl {
             if(fn.result)fn.result->set_as_object(object);
             return true;
         }
+        if(!std::strcmp(name,"NativeStatsAssignPoint")){
+            // IDA 0x43eb7c: two numeric arguments [playerIndex, statIndex],
+            // then Character::IncStat{Str,Dex,End,Nrg}; invalid arity/types or
+            // an unavailable remote player are source no-ops.
+            if(fn.nargs!=2||!fn.arg(0).is_number()||!fn.arg(1).is_number())return true;
+            const auto raw_stat=fn.arg(1).to_int();
+            if(raw_stat<0||raw_stat>3)return true;
+            std::uintptr_t identity=0;
+            if(!local_character(fn.arg(0).to_int(),false,identity))return false;
+            if(!identity)return true;
+            return model_renderer::ui_player_assign_stat(identity,std::uint32_t(raw_stat),error);
+        }
         if(!std::strcmp(name,"NativeHUDGetActiveFaery")){
             if(fn.nargs<1||fn.nargs>2||!fn.arg(0).is_number())return true;
             std::uintptr_t identity=0;if(!local_character(fn.arg(0).to_int(),false,identity))return false;
@@ -988,9 +1005,22 @@ struct OriginalUiSession::Impl {
             if(self.front_screen=="main"&&!self.live_player)return true;
             if(self.front_screen.empty()&&self.live_player){
                 while(!self.game_menu_stack.empty())if(!pop_top_menu(context,error))return false;
+                self.gameplay_hud_active=true;
+                self.gameplay_hud_input_reset_pending=true;
                 return true;
             }
             error="BackToHud requires the attached gameplay level owner";return false;
+        }
+        if(!std::strcmp(name,"NativeAwayFromHud")){
+            // IDA 0x43ab98: when a live Level exists, clear its HUD-active
+            // byte and reset ZoomHandler's finger map plus the menu cursor.
+            // The port's authoritative equivalent is the attached HUD owner;
+            // defer its cursor reset until the native SWF event returns.
+            if(self.front_screen.empty()&&self.live_player){
+                self.gameplay_hud_active=false;
+                self.gameplay_hud_input_reset_pending=true;
+            }
+            return true;
         }
         if(!std::strcmp(name,"NativeScreenIsBlack")){
             // IDA 0x439fa4: offline is a no-op; only the unavailable online
@@ -1260,11 +1290,11 @@ struct OriginalUiSession::Impl {
         movie=std::make_unique<ui::SwfMovie>();ui::SwfServices services;
         frame_owner=std::make_shared<FrameOwner>();
         services.native_owner=frame_owner;services.graph_start=graph_start;
-        services.native_actions={"NativePlaySoundFX","NativePushMenu","NativePopMenu","NativePopAllAbove","NativePopAllMenus","NativeGetCreditMovement","NativeBackToHud"};services.native_action=native_action;
+        services.native_actions={"NativePlaySoundFX","NativePushMenu","NativePopMenu","NativePopAllAbove","NativePopAllMenus","NativeGetCreditMovement","NativeBackToHud","NativeAwayFromHud"};services.native_action=native_action;
         if(front_screen=="main")for(const auto* action:{"NativeGetSaveSlotDetails","NativeCreateSaveSlot","NativeAssignSaveSlotToPlayer","NativeSetSaveSlotIDToMainMenu","NativeStartGame"})services.native_actions.emplace_back(action);
         if(front_screen=="main"||live_player)services.native_actions.emplace_back("NativeGetParsedString");
         if(live_player)for(const auto* action:{"NativeScreenIsBlack","NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
-            "NativeSkillsGetSkillPointsLeft","NativeSkillsTrainSkill","NativeEquipSkill","NativeGetPlayerStats","NativeHUDGetActiveFaery","NativeHUDGetIsFaeryUnlocked",
+            "NativeSkillsGetSkillPointsLeft","NativeSkillsTrainSkill","NativeEquipSkill","NativeGetPlayerStats","NativeStatsAssignPoint","NativeHUDGetActiveFaery","NativeHUDGetIsFaeryUnlocked",
             "NativeHUDSetActiveFaery",
             "NativeInvEquipItem","NativeInvUnequipItem","NativeInvGetItemsListForSlot","NativeInvGetItemDetails","NativeInvGetEquipedItem",
             "NativeInvGetHasOffHandWeapon","NativeInvGetHasTwoHandedWeapon","NativeInvGetPlayerGold",
@@ -1352,6 +1382,17 @@ struct OriginalUiSession::Impl {
                 frame_owner->input_selection,{this,orientation,dimensions},hud_input,error)||
                !movie->input_rectangle(viewport_rectangle().data(),error))return false;
             frame_owner->main_events.render_bound=true;
+            for(const char* path:{"_root.menu_HUD_0.btnBlocker","_root.menu_HUD_0.btn_charactermenu",
+                                  "_root.btnBlocker","_root.btn_charactermenu"}){
+                ui::SwfClipInfo state;std::string probe_error;
+                if(movie->clip(path,state,probe_error)){
+                    __android_log_print(ANDROID_LOG_INFO,tag,
+                        "Gameplay HUD input clip | path %s | id %d | depth %d | visible %d | frame %d/%d | matrix %.4f %.4f %.4f %.4f %.4f %.4f",
+                        path,state.id,state.depth,state.visible,state.frame,state.frames,
+                        state.world.value[0],state.world.value[1],state.world.value[2],
+                        state.world.value[3],state.world.value[4],state.world.value[5]);
+                }else __android_log_print(ANDROID_LOG_INFO,tag,"Gameplay HUD input clip absent | path %s | reason %s",path,probe_error.c_str());
+            }
 
             character_frame_owner=std::make_shared<FrameOwner>();
             character_menu_movie=std::make_unique<ui::SwfMovie>();
@@ -1394,6 +1435,7 @@ struct OriginalUiSession::Impl {
         menu_sounds.clear();
         menu_audio.clear();settings.reset();settings_files.reset();language_selection=-1;
         menu_stack.clear();game_menu_stack.clear();
+        gameplay_hud_active=true;gameplay_hud_input_reset_pending=false;
         launch_requests.clear();
         launch_delivered=false;
         input_dispatch_movie=nullptr;input_dispatch_frames=nullptr;last_menu_dt=0;
@@ -1425,6 +1467,7 @@ bool OriginalUiSession::touch(float x,float y,int action,std::string& error){
     const bool front=impl_->front_screen=="main";
     const bool gameplay=impl_->front_screen.empty()&&impl_->live_player;
     if(!impl_->selected||!impl_->loaded||(!front&&!gameplay)){error.clear();return true;}
+    if(gameplay&&!impl_->gameplay_hud_active&&impl_->game_menu_stack.empty()){error.clear();return true;}
     if(action<0||action>3||!std::isfinite(x)||!std::isfinite(y)){error="Malformed native UI touch";return false;}
     const bool character_menu=gameplay&&!impl_->game_menu_stack.empty();
     const auto rectangle=(front||character_menu)?impl_->front_rectangle():impl_->viewport_rectangle();
@@ -1437,6 +1480,17 @@ bool OriginalUiSession::touch(float x,float y,int action,std::string& error){
     auto owner=selected==impl_->character_menu_movie.get()?impl_->character_frame_owner:
                selected==impl_->shared_menu_movie.get()?impl_->shared_frame_owner:impl_->frame_owner;
     if(!owner){error="Native UI touch frame owner unavailable";return false;}
+    if(gameplay&&impl_->gameplay_hud_input_reset_pending&&impl_->movie&&impl_->frame_owner){
+        auto* previous_movie=impl_->input_dispatch_movie;
+        auto* previous_frames=impl_->input_dispatch_frames;
+        impl_->input_dispatch_movie=impl_->movie.get();
+        impl_->input_dispatch_frames=&impl_->frame_owner->frames;
+        const bool cleared=impl_->movie->input_cancel(x,y,error);
+        impl_->input_dispatch_movie=previous_movie;
+        impl_->input_dispatch_frames=previous_frames;
+        if(!cleared)return false;
+        impl_->gameplay_hud_input_reset_pending=false;
+    }
     struct Dispatch {Impl& self;ui::SwfMovie* previous_movie;ui::SwfFrameConnection* previous_frames;
         ~Dispatch(){self.input_dispatch_movie=previous_movie;self.input_dispatch_frames=previous_frames;}}
         dispatch{*impl_,impl_->input_dispatch_movie,impl_->input_dispatch_frames};
@@ -1703,9 +1757,10 @@ bool OriginalUiSession::render_player(int width,int height,const std::int32_t* s
             if(!self.movie->input_rectangle(hud_rectangle.data(),error)||
                !self.character_menu_movie->input_rectangle(menu_rectangle.data(),error))throw std::runtime_error(error);
         }
-        if(!self.status->update(sheet,count,character,error)||
-           !self.movie->display_source_clip(status_panel,error)||
-           !self.movie->display_source_clip("_root.HurtCorners",error))throw std::runtime_error(error);
+        if(!self.status->update(sheet,count,character,error))throw std::runtime_error(error);
+        if(self.gameplay_hud_active&&
+           (!self.movie->display_source_clip(status_panel,error)||
+            !self.movie->display_source_clip("_root.HurtCorners",error)))throw std::runtime_error(error);
         if(!self.game_menu_stack.empty()){
             const auto& name=self.game_menu_stack.back();
             const auto rectangle=self.front_rectangle();

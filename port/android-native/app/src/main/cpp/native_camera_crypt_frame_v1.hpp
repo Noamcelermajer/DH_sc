@@ -70,8 +70,9 @@ inline Matrix multiply(const Matrix& a, const Matrix& b) noexcept {
     return result;
 }
 
-// Build the GLES projection from the one source-observed Crypt camera pose.
-// Aspect follows the current surface as an explicit modern display policy.
+// Build the GLES matrix from the recovered CameraBase look-at and perspective
+// conventions, then apply the original driver projection fixup. Aspect follows
+// the current surface as an explicit modern display policy.
 inline bool build(std::string_view level_name, std::string_view level_file,
                   Vec3 target, int width, int height, Frame* out) noexcept {
     if (!out || !verified_crypt_route(level_name, level_file) || width <= 1 || height <= 1)
@@ -87,22 +88,28 @@ inline bool build(std::string_view level_name, std::string_view level_file,
 
     Vec3 forward = subtract(frame.target, frame.eye);
     if (!normalize(forward)) return false;
-    Vec3 right = cross(forward, {0.0f, 0.0f, 1.0f});
-    if (!normalize(right)) return false;
-    const Vec3 up = cross(right, forward);
+    // Camera look-at v8: side = up × forward, vertical = -forward × side.
+    // The source uses a positive-forward camera basis; do not substitute the
+    // conventional negative-Z OpenGL look-at, which flips the screen axes.
+    const Vec3 world_up{0.0f, 0.0f, 1.0f};
+    Vec3 side = cross(world_up, forward);
+    if (!normalize(side)) return false;
+    const Vec3 vertical = cross({-forward[0], -forward[1], -forward[2]}, side);
     const Matrix view{
-        right[0], up[0], -forward[0], 0.0f,
-        right[1], up[1], -forward[1], 0.0f,
-        right[2], up[2], -forward[2], 0.0f,
-        -dot(right, frame.eye), -dot(up, frame.eye), dot(forward, frame.eye), 1.0f};
+        side[0], vertical[0], forward[0], 0.0f,
+        side[1], vertical[1], forward[1], 0.0f,
+        side[2], vertical[2], forward[2], 0.0f,
+        -dot(side, frame.eye), -dot(vertical, frame.eye), -dot(forward, frame.eye), 1.0f};
 
     const float tangent = std::tan(kVerticalFovRadians * 0.5f);
     if (!(tangent > 0.0f) || !std::isfinite(tangent)) return false;
     const float near_plane = kNearPlane, far_plane = kFarPlane;
+    // Source perspective v8 followed by CCommonGLDriverBase::fixUpProjection:
+    // m10 = 2*far/(far-near)-1, m11 stays +1, m14 doubles.
     const Matrix projection{
         1.0f / (tangent * frame.aspect), 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f / tangent, 0.0f, 0.0f,
-        0.0f, 0.0f, -(far_plane + near_plane) / (far_plane - near_plane), -1.0f,
+        0.0f, 0.0f, (far_plane + near_plane) / (far_plane - near_plane), 1.0f,
         0.0f, 0.0f, -(2.0f * far_plane * near_plane) / (far_plane - near_plane), 0.0f};
     frame.view_projection = multiply(projection, view);
     for (float value : frame.view_projection) if (!std::isfinite(value)) return false;

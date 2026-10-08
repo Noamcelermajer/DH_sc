@@ -34,7 +34,7 @@ def main() -> int:
     ran = subprocess.run([str(output)], cwd=ROOT, capture_output=True, text=True)
     if ran.returncode:
         raise RuntimeError(ran.stdout + ran.stderr)
-    print("PASS: source-stage aspect fit, 3:2 display rectangle, and side-gutter hit mapping (7 assertions)")
+    print("PASS: fitted 3:2 UI, full-surface menu backdrop, camera aspect, and side-gutter hit mapping (10 assertions)")
     return 0
 
 

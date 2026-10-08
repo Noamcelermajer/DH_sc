@@ -28,6 +28,8 @@ bool inside_source_stage(const float point[2]) {
 
 int main() {
     using dh2::ui::original_menu_viewport_v1::fit;
+    using dh2::ui::original_menu_viewport_v1::background_viewport;
+    using dh2::ui::original_menu_viewport_v1::surface_aspect;
     const std::array<std::int32_t, 4> landscape{100, 0, 1080, 720};
     check(fit(1280, 720) == landscape,
           "16:9 rendering must center the 480x320 source stage without stretching");
@@ -37,6 +39,12 @@ int main() {
           "portrait viewport must center the source stage without cropping");
     check(fit(0, 720) == std::array<std::int32_t, 4>{},
           "invalid surface must produce an empty rectangle");
+    check(background_viewport(1280, 720) == std::array<std::int32_t, 4>{0, 0, 1280, 720},
+          "16:9 menu background must fill the display behind the fitted source UI");
+    check(std::fabs(surface_aspect(1280, 720) - 16.0f / 9.0f) < 1e-6f,
+          "wide background camera must use the physical surface ratio to preserve perspective");
+    check(std::fabs(surface_aspect(0, 720) - 1.5f) < 1e-6f,
+          "invalid camera bounds must fall back to the authored UI stage ratio");
 
     // Production passes this one fitted rectangle to both input_rectangle()
     // and display_clip(). Exercise the source viewport transform so taps in
@@ -62,5 +70,5 @@ int main() {
           !inside_source_stage(right_gutter),
           "tap on the right pillarbox boundary must map outside authored hit targets");
 
-    return checks == 7 ? 0 : 1;
+    return checks == 10 ? 0 : 1;
 }

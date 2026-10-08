@@ -45,13 +45,47 @@ int main() {
                 "camera target projects to screen center")) return 9;
     if (!expect(clip[3] > 0.0f, "target lies in front of camera")) return 10;
 
+    Vec3 forward = subtract(frame.target, frame.eye);
+    if (!expect(normalize(forward), "source forward basis normalizes")) return 11;
+    const Vec3 movement_forward{
+        -std::cos(frame.input_yaw) * std::cos(frame.input_pitch),
+        -std::sin(frame.input_yaw) * std::cos(frame.input_pitch),
+        -std::sin(frame.input_pitch)};
+    if (!expect(near(movement_forward[0], forward[0], 1e-6f) &&
+                near(movement_forward[1], forward[1], 1e-6f) &&
+                near(movement_forward[2], forward[2], 1e-6f),
+                "controller look vector matches recovered source camera forward")) return 12;
+    Vec3 side = cross({0.0f, 0.0f, 1.0f}, forward);
+    if (!expect(normalize(side), "source side basis normalizes")) return 13;
+    Vec3 vertical = cross({-forward[0], -forward[1], -forward[2]}, side);
+    const Vec3 right_point{frame.target[0] + side[0] * 100.0f,
+                           frame.target[1] + side[1] * 100.0f,
+                           frame.target[2] + side[2] * 100.0f};
+    transform(frame.view_projection, right_point, clip);
+    if (!expect(clip[0] / clip[3] > 0.0f, "source camera side maps right on screen")) return 14;
+    const Vec3 up_point{frame.target[0] + vertical[0] * 100.0f,
+                        frame.target[1] + vertical[1] * 100.0f,
+                        frame.target[2] + vertical[2] * 100.0f};
+    transform(frame.view_projection, up_point, clip);
+    if (!expect(clip[1] / clip[3] > 0.0f, "source camera vertical maps up on screen")) return 15;
+    const Vec3 near_point{frame.eye[0] + forward[0] * kNearPlane,
+                          frame.eye[1] + forward[1] * kNearPlane,
+                          frame.eye[2] + forward[2] * kNearPlane};
+    transform(frame.view_projection, near_point, clip);
+    if (!expect(near(clip[2] / clip[3], -1.0f, 1e-5f), "source near plane maps to GLES -1")) return 16;
+    const Vec3 far_point{frame.eye[0] + forward[0] * kFarPlane,
+                         frame.eye[1] + forward[1] * kFarPlane,
+                         frame.eye[2] + forward[2] * kFarPlane};
+    transform(frame.view_projection, far_point, clip);
+    if (!expect(near(clip[2] / clip[3], 1.0f, 1e-5f), "source far plane maps to GLES +1")) return 17;
+
     Frame swamp{};
     if (!expect(!build("SWAMP", "001_swamp.mlx", receipt_target, 2400, 1080, &swamp),
-                "Crypt frame builder refuses SWAMP")) return 11;
+                "Crypt frame builder refuses SWAMP")) return 18;
     Frame portrait{};
     if (!expect(build("GOTHICUS_CRYPT_01", "007_crypt_01.rule.xml", receipt_target, 1080, 2400, &portrait),
-                "build portrait Crypt frame")) return 12;
-    if (!expect(portrait.aspect < frame.aspect, "portrait aspect changes projection")) return 13;
+                "build portrait Crypt frame")) return 19;
+    if (!expect(portrait.aspect < frame.aspect, "portrait aspect changes projection")) return 20;
 
     std::printf("native_camera_crypt_frame_v1: %d assertions passed\n", checks);
 }

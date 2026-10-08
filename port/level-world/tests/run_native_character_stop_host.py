@@ -54,6 +54,8 @@ def main() -> None:
         MODULE / "character_coordinator.cpp",
         MODULE / "character_state.cpp",
         MODULE / "character_timers.cpp",
+        MODULE / "character_skill_state_dispatch_v1.cpp",
+        MODULE / "character_skill_fsm_callbacks_v1.cpp",
         MODULE / "tests/native_character_stop.cpp",
     ]
     box_sources = sorted((BOX2D / "Source").rglob("*.cpp"))
@@ -118,6 +120,8 @@ def main() -> None:
         NATIVE / "native_character_stop.hpp",
         MODULE / "actor_runtime.hpp", MODULE / "character_coordinator.hpp",
         MODULE / "character_state.hpp", MODULE / "character_timers.hpp",
+        MODULE / "character_skill_state_dispatch_v1.hpp",
+        MODULE / "character_skill_fsm_callbacks_v1.hpp",
         MODULE / "character_physics_position.hpp", MODULE / "move_state.hpp",
         MODULE / "game_object_stop.hpp", MODULE / "physical_controls.hpp",
         MODULE / "native_body.hpp", MODULE / "navigation_controller.hpp",
