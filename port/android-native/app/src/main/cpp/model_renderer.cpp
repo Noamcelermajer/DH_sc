@@ -318,6 +318,11 @@ struct PlayerCombat {
  std::unique_ptr<dh2::data::ItemPresentationOwnerV5> item_presentation;
  // Keep the presentation authority alive through V4 item retirement.
  std::unique_ptr<dh2::data::FreshInventoryOwnedV4> inventory;
+ // GEAR's temporary constructor slot is borrowed by the source reader. Its
+ // effects use the same retained NativeLootAdapter as the active V4 inventory.
+ std::unique_ptr<dh2::data::ItemInstanceV1> saved_inventory_incoming;
+ dh2::data::OwnedInventoryServicesV4 save_inventory_services{};
+ std::shared_ptr<void> save_inventory_services_owner;
  std::shared_ptr<dh2::data::PlayerSavegameV1> savegame;
  std::shared_ptr<dh2::data::PlayerSaveProfileV1> save_profile;
  std::shared_ptr<const dh2::data::CharacterTable> profile_characters;
@@ -5980,7 +5985,17 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       }
     }}else{combat_random={0xD22026u,0};combat_hits=0;}
     saved_actors.clear();
-    if(!restore){destroy_native_world_item_bodies();native_world_items.clear();prince_combat=std::move(fresh_player);}
+    if(!restore){
+      if(prince_combat.saved_inventory_incoming){
+        std::string retirement_error;
+        if(!prince_combat.inventory||!prince_combat.save_inventory_services.invoke||
+           !prince_combat.inventory->retire_item(
+             dh2::data::RetainedItemSlotV4{&prince_combat.saved_inventory_incoming},
+             prince_combat.save_inventory_services,retirement_error))
+          throw std::runtime_error("Previous GEAR load left a retained Item that could not be retired: "+retirement_error);
+      }
+      destroy_native_world_item_bodies();native_world_items.clear();prince_combat=std::move(fresh_player);
+    }
     auto* selected_record=native_host.record_for(native_host.host_projection());
     if(!selected_record||!prince_combat.savegame)
       throw std::runtime_error("Native registered PlayerInfo or gameplay Save owner unavailable");
@@ -6011,6 +6026,10 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       throw std::runtime_error("Retained Character inventory owner differs after Activity resume");
     }
     if(!restore){
+      auto saved_inventory_adapter=std::make_shared<NativeLootAdapterV1>(
+          NativeLootAdapterV1{prince_combat.item_text,prince_combat.item_presentation.get()});
+      prince_combat.save_inventory_services_owner=saved_inventory_adapter;
+      prince_combat.save_inventory_services=saved_inventory_adapter->inventory_services();
       dh2::native::player_profile::TransportBindings gameplay_bindings{runtime_root,
        prince_combat.profile_characters.get(),&native_save_difficulty,{},false,
        &actor_level_tables,&actor_world_map_tables,prince_combat.quests,&native_host.online};
@@ -6018,6 +6037,11 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
       gameplay_bindings.skill_tree_selector=&prince_combat.properties.resolved[28];
       gameplay_bindings.property_rules=&actor_property_rules;
       gameplay_bindings.properties=&prince_combat.properties;
+      gameplay_bindings.inventory=prince_combat.inventory.get();
+      gameplay_bindings.item_powers=prince_combat.item_power_tables->borrow();
+      gameplay_bindings.inventory_services=prince_combat.save_inventory_services;
+      gameplay_bindings.inventory_services_owner=prince_combat.save_inventory_services_owner;
+      gameplay_bindings.inventory_incoming=&prince_combat.saved_inventory_incoming;
       if(!prince_combat.save_transport->bind(std::move(gameplay_bindings),error))
         throw std::runtime_error("Native Player Save provider rebind: "+error);
       __android_log_print(ANDROID_LOG_INFO,"DH2Native",
@@ -6054,7 +6078,7 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
        source_save_association.mask4_calls!=1||!source_save_association.mask4_loaded)
      throw std::runtime_error("Native Player mask2/mask4 Save/embedded Quest identities differ");
     __android_log_print(ANDROID_LOG_INFO,"DH2Native",
-     "Native Player Save masks 2+4 | Character %zu | Save %zu | loader %zu | Quest118 %zu | QuestB8 %zu | calls %u/%u | retained %u | profile %zu | mask4 requests %u | InitPost effects/GEAR writer/persistence pending",
+     "Native Player Save masks 2+4 | Character %zu | Save %zu | loader %zu | Quest118 %zu | QuestB8 %zu | calls %u/%u | retained %u | profile %zu | mask4 requests %u | GEAR items %zu | gold %d | InitPost effects/GEAR save writer/persistence pending",
      std::size_t(source_save_association.character_identity),
      std::size_t(source_save_association.save_identity),
      std::size_t(source_save_association.loader_identity),
@@ -6062,7 +6086,9 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
      std::size_t(prince_combat.savegame->source_quest_log_b8().character_5c),
      source_save_association.mask2_calls,source_save_association.mask4_calls,unsigned(restore),
      std::size_t(source_save_association.mask4_profile_identity),
-     source_save_association.mask4_transport_requests);
+     source_save_association.mask4_transport_requests,
+     prince_combat.inventory?prince_combat.inventory->items().size():0,
+     prince_combat.inventory?prince_combat.inventory->gold():0);
     const auto& quest_receipt=prince_combat.quests->receipt();
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Quest startup | Save %zu | Character %zu | log b8 %u | log118 %u | constants %u | retained %u | Compile and quest gameplay pending",std::size_t(prince_combat.savegame.get()),std::size_t(prince_combat.savegame->character()),quest_receipt.published[0],quest_receipt.published[1],quest_receipt.constant_queries,unsigned(restore));
     if(!restore){

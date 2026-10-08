@@ -6,6 +6,7 @@
 #include "world_map_tables.hpp"
 #include "player_saved_level_states_v1.hpp"
 #include "player_saved_fast_travel_v1.hpp"
+#include "player_saved_inventory_v1.hpp"
 #include "native_quest_owner.hpp"
 #include "native_quest_cursor.hpp"
 #include "properties.hpp"
@@ -130,6 +131,45 @@ struct Transport::Impl {
    travel::Runtime reader(&save);travel::Result result;
    return reader.load(q.profile.campaign.payload(q.section),&result,error)==travel::Status::complete;
   }
+  if(q.operation==Op::load_section&&q.section&&!std::strcmp(q.section,"GEAR")){
+   if(!bindings.inventory||!bindings.item_powers||!bindings.inventory_services_owner||
+      !bindings.inventory_services.context||!bindings.inventory_services.invoke||
+      !bindings.inventory_services.observe_storage||!bindings.inventory_incoming||
+      !bindings.property_rules||!bindings.properties||
+      bindings.inventory->character()!=save.character()){
+    error="GEAR requires the same Character V4 inventory, item-power, property, effect and incoming-item owners";return false;
+   }
+   auto property_view=data::property_view(*bindings.property_rules,*bindings.properties);
+   player_saved_inventory_v1::Bindings input{
+    &save,bindings.inventory,&property_view,&bindings.inventory_services,
+    bindings.item_powers,bindings.inventory_incoming};
+   player_saved_inventory_v1::Runtime reader(std::move(input));
+   player_saved_inventory_v1::Result result{};
+   const auto status=reader.load(q.profile.campaign.payload(q.section),&result,error);
+   if(status!=player_saved_inventory_v1::Status::complete){
+    if(*bindings.inventory_incoming){
+     std::string retirement_error;
+     if(!bindings.inventory->retire_item(
+          data::RetainedItemSlotV4{bindings.inventory_incoming},
+          bindings.inventory_services,retirement_error)){
+      if(!error.empty())error+="; ";
+      error+="GEAR partial Item remains owned because source retirement failed: "+retirement_error;
+     }
+    }
+    if(error.empty())error="Source GEAR reader failed";
+    return false;
+   }
+   if(*bindings.inventory_incoming){
+    std::string retirement_error;
+    if(!bindings.inventory->retire_item(
+         data::RetainedItemSlotV4{bindings.inventory_incoming},
+         bindings.inventory_services,retirement_error)){
+     error="GEAR reader left an untransferred Item and source retirement failed: "+retirement_error;return false;
+    }
+    error="GEAR reader returned with an untransferred Item";return false;
+   }
+   error.clear();return true;
+  }
   if(bindings.levels&&bindings.world_map){
    if(q.operation==Op::init_levels){
     data::SavedLevelStateServicesV1 tables{this,
@@ -221,6 +261,16 @@ bool Transport::bind(TransportBindings bindings,std::string& error){
  if(bool(bindings.property_rules)!=bool(bindings.properties)){error="gameplay PropertyRules and PropertyState must bind together";return false;}
  if(bool(bindings.levels)!=bool(bindings.world_map)){error="campaign level and WorldMap owners must bind together";return false;}
  if(bindings.quests&&!bindings.quests->owns_save(&impl_->save)){error="Quest factory owner belongs to a different gameplay Save";return false;}
+ const bool any_gear_owner=bindings.inventory||bool(bindings.item_powers)||
+  bindings.inventory_services.context||bindings.inventory_services.invoke||
+  bindings.inventory_services.observe_storage||bindings.inventory_services_owner||
+  bindings.inventory_incoming;
+ if(any_gear_owner&&(!bindings.inventory||!bindings.item_powers||
+     !bindings.inventory_services.context||!bindings.inventory_services.invoke||
+     !bindings.inventory_services.observe_storage||!bindings.inventory_services_owner||
+     !bindings.inventory_incoming||bindings.inventory->character()!=impl_->save.character())){
+  error="GEAR provider bundle must bind the canonical Save Character, V4 inventory, power table, effect lease and incoming Item slot";return false;
+ }
  impl_->bindings=std::move(bindings);error.clear();return true;
 }
 bool Transport::save_all(std::string& error){

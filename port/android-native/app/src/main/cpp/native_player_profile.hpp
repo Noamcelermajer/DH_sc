@@ -1,5 +1,7 @@
 #pragma once
 #include "player_save_load_owner_v1.hpp"
+#include "fresh_inventory_owned_v4.hpp"
+#include "item_power_tables_v5.hpp"
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -57,6 +59,14 @@ struct TransportBindings {
   // at delivery; the transport retains neither a PropertyView nor property data.
   const data::PropertyRules* property_rules=nullptr;
   data::PropertyState* properties=nullptr;
+  // The mask-4 GEAR reader mutates this same Character inventory. Effects and
+  // the item-power snapshot are borrowed from the retained gameplay owners;
+  // the explicit lease keeps the callback context valid for later loads.
+  data::FreshInventoryOwnedV4* inventory=nullptr;
+  data::ItemPowerTablesV5::Borrow item_powers;
+  data::OwnedInventoryServicesV4 inventory_services{};
+  std::shared_ptr<void> inventory_services_owner;
+  std::unique_ptr<data::ItemInstanceV1>* inventory_incoming=nullptr;
 };
 // One retained LoadOwner over a caller's existing Save and canonical +8
 // profile slot. The transport owns I/O/callback backing only. It creates no
