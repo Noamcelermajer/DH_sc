@@ -29,6 +29,7 @@ extern "C" {
 #include "hud_text_format_v1.hpp"
 #include "item_text_varargs_v5.hpp"
 #include "swf_menu_launch_v1.hpp"
+#include "character_menu_reload_v1.hpp"
 #include "model_renderer.hpp"
 #include "gameswf/gameswf_as_classes/as_array.h"
 #include "gameswf/gameswf_function.h"
@@ -693,6 +694,72 @@ struct OriginalUiSession::Impl {
         __android_log_print(ANDROID_LOG_INFO,tag,"Authored NativeStartGame request queued | selected slot %d | numeric difficulty %d | requested difficulty %d | development handoff | delivery unwinds before world load",slot,numeric,difficulty);
         return true;
     }
+    struct CharacterReloadMenuLookup {Impl* self;std::uintptr_t identity{};};
+    struct CharacterReloadPrompt {Impl* self;std::uintptr_t renderer,subject;
+        const char* path;const char* method;bool argument;std::int32_t* value;};
+    static bool reload_current_menu_fx(void* raw,ui::SwfAsGraph& graph,std::string& error){
+        auto& lookup=*static_cast<CharacterReloadMenuLookup*>(raw);
+        if(!lookup.self||!lookup.self->live_player||!lookup.self->character_menu_movie){
+            error="Current gameplay CharacterMenu movie/renderer is unavailable";return false;
+        }
+        ui::SwfAsValue root,menu;
+        if(!graph.root_value(root,error)||
+           !graph.find_target(root,"_root.menu_CharacterMenu",menu,error)||!menu.identity()){
+            if(error.empty())error="Current CharacterMenu SWF target is absent";
+            return false;
+        }
+        // The retained AS clip is the actual current menu render target in this
+        // SWF facade; return its live graph identity without inventing another
+        // renderer or caching a replacement object.
+        lookup.identity=menu.identity();error.clear();return true;
+    }
+    static bool reload_invoke_spec_prompt(void* raw,ui::SwfAsGraph& graph,std::string& error){
+        auto& prompt=*static_cast<CharacterReloadPrompt*>(raw);
+        if(!prompt.self||!prompt.self->live_player||!prompt.self->character_menu_movie||
+           !prompt.renderer||prompt.renderer!=prompt.subject||!prompt.path||
+           std::strcmp(prompt.path,"_root.menu_CharacterMenu")||!prompt.method||
+           std::strcmp(prompt.method,"IsSpecTime")){
+            error="IsSpecTime requires the current CharacterMenu RenderFX identity and source path";return false;
+        }
+        ui::SwfAsValue root,menu,result;bool callable=false;
+        if(!graph.root_value(root,error)||!graph.find_target(root,prompt.path,menu,error)||
+           !menu.identity()||menu.identity()!=prompt.renderer||
+           !graph.invoke(menu,menu,prompt.method,{ui::SwfAsValue::boolean(prompt.argument)},
+                         result,callable,error))return false;
+        if(!callable){error="Current CharacterMenu IsSpecTime callback is absent";return false;}
+        bool source_result=false;
+        if(!graph.to_boolean(result,source_result,error))return false;
+        if(prompt.value)*prompt.value=source_result?1:0;
+        error.clear();return true;
+    }
+    static int character_reload_menu_service(void* raw,std::uint32_t service,
+        std::uint32_t argument,std::uintptr_t subject,const char* path,
+        const char* callback,std::uintptr_t& identity,std::int32_t& value,
+        std::string& error){
+        auto* self=static_cast<Impl*>(raw);identity=0;value=0;
+        if(!self||!self->character_menu_movie){error="Current CharacterMenu movie is unavailable";return -1;}
+        if(service==ui::reload_menu_fx_v1){
+            CharacterReloadMenuLookup lookup{self,0};
+            if(!self->character_menu_movie->menu_action_script(&lookup,reload_current_menu_fx,error))return -1;
+            identity=lookup.identity;return identity?0:-1;
+        }
+        if(service==ui::reload_spec_prompt_v1){
+            CharacterReloadPrompt prompt{self,0,subject,path,callback,argument!=0,&value};
+            // Re-resolve the current clip inside the same movie scope and
+            // require it to still be the RenderFX identity read immediately
+            // before the source Invoke call.
+            if(!self->character_menu_movie->menu_action_script(&prompt,
+                [](void* context,ui::SwfAsGraph& graph,std::string& nested_error){
+                    auto& call=*static_cast<CharacterReloadPrompt*>(context);
+                    CharacterReloadMenuLookup lookup{call.self,0};
+                    if(!reload_current_menu_fx(&lookup,graph,nested_error))return false;
+                    call.renderer=lookup.identity;
+                    return reload_invoke_spec_prompt(context,graph,nested_error);
+                },error))return -1;
+            return 0;
+        }
+        error="Unexpected non-menu service sent to CharacterMenu renderer";return -1;
+    }
     static bool native_action(void* context,const char* name,const gameswf::fn_call& fn,std::string& error) {
         auto& self=*static_cast<Impl*>(context);
         auto local_character=[&](std::int32_t index,bool remote,std::uintptr_t& identity)->bool{
@@ -710,9 +777,52 @@ struct OriginalUiSession::Impl {
             start.context=&self;start.eabi_integer=start_integer;start.request_start_game=start_request;
             return ui::swf_menu_start_game_development_v1(fn,start,error);
         }
+        if(!std::strcmp(name,"NativeGetPossibleClassSpec")){
+            if(fn.nargs!=1||!fn.arg(0).is_object())return true;
+            std::uintptr_t identity=0;if(!local_character(0,false,identity))return false;
+            if(!identity)return true;
+            std::array<std::int32_t,4> text_ids{};
+            if(!model_renderer::ui_player_class_specialization_text_ids(identity,text_ids,error))return false;
+            auto* object=fn.arg(0).to_object();
+            if(!object)return true;
+            std::array<std::string,4> text;
+            for(std::size_t i=0;i<text_ids.size();++i)
+                if(!self.localization.string_id(std::uint32_t(text_ids[i]),
+                    self.text_services(),text[i],error))return false;
+            if(!object->set_member("Class1Name",gameswf::as_value(text[0].c_str()))||
+               !object->set_member("Class1Desc",gameswf::as_value(text[1].c_str()))||
+               !object->set_member("Class2Name",gameswf::as_value(text[2].c_str()))||
+               !object->set_member("Class2Desc",gameswf::as_value(text[3].c_str()))){
+                error="NativeGetPossibleClassSpec object rejected source text IDs";return false;
+            }
+            if(fn.result)fn.result->set_as_object(object);
+            return true;
+        }
+        if(!std::strcmp(name,"NativeTouchToMove")){
+            // The original callback is an exact empty function (IDA: bx lr).
+            return true;
+        }
         if(!std::strcmp(name,"NativeGetParsedString")){
             ParseContext parse{self,{}};const ui::HudTextServicesV1 services{&parse,parsed_text};
             return ui::swf_menu_parsed_string_v1(fn,self.localization,self.text_services(),services,launch,error);
+        }
+        if(!std::strcmp(name,"NativeReloadSkills")){
+            // Preserve the source wrapper's default-index behavior. Exactly
+            // one argument is converted through the host's EABI boundary;
+            // other arities select PlayerInfo index zero without reading args.
+            std::int32_t index=0;
+            if(fn.nargs==1&&!start_integer(&self,fn.arg(0).to_number(),index,error))return false;
+            std::uintptr_t identity=0;
+            if(!local_character(index,false,identity))return false;
+            if(!identity)return true;
+            model_renderer::UiPlayerReloadResultV1 result{};
+            if(!model_renderer::ui_player_reload_skills(identity,&self,
+                    character_reload_menu_service,result,error)){
+                error="NativeReloadSkills failed at source phase "+std::to_string(result.phase)+
+                    " after "+std::to_string(result.calls)+" providers: "+error;
+                return false;
+            }
+            return true;
         }
         if(!std::strcmp(name,"NativeSetMultitouch")){
             // Native source writes MenuManager+0x110. The retained SWF input
@@ -1530,8 +1640,9 @@ struct OriginalUiSession::Impl {
         services.native_actions={"NativePlaySoundFX","NativePushMenu","NativePopMenu","NativePopAllAbove","NativePopAllMenus","NativeGetCreditMovement","NativeBackToHud","NativeAwayFromHud"};services.native_action=native_action;
         if(front_screen=="main")for(const auto* action:{"NativeGetSaveSlotDetails","NativeCreateSaveSlot","NativeAssignSaveSlotToPlayer","NativeSetSaveSlotIDToMainMenu","NativeStartGame"})services.native_actions.emplace_back(action);
         if(front_screen=="main"||live_player)services.native_actions.emplace_back("NativeGetParsedString");
-        if(live_player)for(const auto* action:{"NativeScreenIsBlack","NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
+        if(live_player)for(const auto* action:{"NativeScreenIsBlack","NativeGetPossibleClassSpec","NativeTouchToMove","NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
             "NativeSkillsGetSkillPointsLeft","NativeSkillsTrainSkill","NativeEquipSkill","NativeGetPlayerStats","NativeStatsAssignPoint",
+            "NativeReloadSkills",
             "NativeSetMultitouch",
             "NativeGetCharMenuTutorialMessage","NativeSkipCharMenuTutorialMessage","NativeHUDGetActiveFaery","NativeHUDGetIsFaeryUnlocked",
             "NativeHUDSetActiveFaery",

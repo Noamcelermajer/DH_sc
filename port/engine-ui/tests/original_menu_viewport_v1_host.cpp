@@ -35,6 +35,8 @@ int main() {
           "16:9 rendering must center the 480x320 source stage without stretching");
     check(fit(1280, 550) == std::array<std::int32_t, 4>{227, 0, 825, 550},
           "wide screenshot viewport must retain source 3:2 geometry");
+    check(fit(1280, 549) == std::array<std::int32_t, 4>{228, 0, 823, 549},
+          "provided 1280x549 menu reference must center the source 3:2 stage");
     check(fit(720, 1280) == std::array<std::int32_t, 4>{0, 400, 720, 480},
           "portrait viewport must center the source stage without cropping");
     check(fit(0, 720) == std::array<std::int32_t, 4>{},
@@ -71,5 +73,29 @@ int main() {
           !inside_source_stage(right_gutter),
           "tap on the right pillarbox boundary must map outside authored hit targets");
 
-    return checks == 10 ? 0 : 1;
+    const auto reference = fit(1280, 549);
+    dh2::ui::ViewportState64 reference_state{
+        {0.0f, 9600.0f, 0.0f, 6400.0f},
+        {reference[0], reference[1], reference[2], reference[3]},
+        {reference[0], reference[1], reference[2], reference[3]},
+        1.0f, 0, 0};
+    float reference_center[2]{reference[0] + reference[2] * 0.5f,
+                              reference[1] + reference[3] * 0.5f};
+    check(dh2_ui_screen_to_logical(&reference_state, reference_center, &services) == 0 &&
+          std::fabs(reference_center[0] - 240.0f) < 1e-4f &&
+          std::fabs(reference_center[1] - 160.0f) < 1e-5f &&
+          inside_source_stage(reference_center),
+          "reference screenshot center tap must map to the original stage center");
+    float reference_left_gutter[2]{reference[0] - 0.5f,
+                                   reference[1] + reference[3] * 0.5f};
+    check(dh2_ui_screen_to_logical(&reference_state, reference_left_gutter, &services) == 0 &&
+          !inside_source_stage(reference_left_gutter),
+          "reference screenshot left pillarbox tap must stay outside authored hit targets");
+    float reference_right_gutter[2]{reference[0] + reference[2] + 0.5f,
+                                    reference[1] + reference[3] * 0.5f};
+    check(dh2_ui_screen_to_logical(&reference_state, reference_right_gutter, &services) == 0 &&
+          !inside_source_stage(reference_right_gutter),
+          "reference screenshot right pillarbox tap must stay outside authored hit targets");
+
+    return checks == 14 ? 0 : 1;
 }

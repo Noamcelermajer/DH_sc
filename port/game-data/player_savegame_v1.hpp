@@ -128,6 +128,12 @@ public:
     // Kept as a narrow boundary for direct instruction-derived fixtures.
     bool initialize_skills_from_character_list(
         const std::vector<std::int32_t>& selected_ids, std::string& error);
+    // Character::SG_ReloadSkills' same-Save replacement: retire the previous
+    // row allocation, publish the null state, rebuild from the selected
+    // Character list, then clear both source slot maps. The caller delivers
+    // the subsequent SG_Load(8) through this Save's existing LoadOwner.
+    bool reload_skills_from_character_list(
+        const std::vector<std::int32_t>& selected_ids, std::string& error);
 
     // Reads only the original named Skills payload. No outer SG_Load/profile
     // lifecycle, disk I/O, or property/inventory copies are performed here.

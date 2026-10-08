@@ -12,6 +12,7 @@ namespace dh2::character {class Coordinator;struct Timer32;}
 namespace dh2::character_ai_initialization {struct State;}
 namespace dh2::object_update_culling {struct Object;}
 namespace dh2::data {class PlayerSavegameV1;struct AiProps;}
+namespace dh2::data {class PlayerSaveLoadOwnerV1;}
 namespace dh2::data {class FreshInventoryOwnedV4;}
 namespace dh2::data {struct AiTables;struct AnimationTables;}
 namespace dh2::data::savegame_options_v1 {class Owner;}
@@ -76,6 +77,14 @@ public:
     // Character::ChangeFaery and other source skill-input mutations converge
     // on the same CharAI::UpdateAllSkills owner.
     bool update_after_source_skill_inputs_changed(std::string& error);
+    // Exact AI_ReloadSkills middle phase: delete current nullable skill
+    // instances in place, reload rows through this same Save/LoadOwner, and
+    // rebuild only the skill vector in the same retained VM/preparation owner.
+    // UpdateSkills remains the following, separate source phase.
+    bool reload_skill_instances(data::PlayerSaveLoadOwnerV1&,std::string& error);
+    // NativeReloadSkills providers over the existing BuffOwner/property graph.
+    bool remove_all_buffs(std::string& error);
+    bool recalculate_properties(bool source_argument,std::string& error);
     // Source Character::IncSkill over the same retained Save, skill VM,
     // property/buff view and caller-supplied canonical V4 inventory.
     bool train_skill(std::uint32_t skill_index,bool test_only,

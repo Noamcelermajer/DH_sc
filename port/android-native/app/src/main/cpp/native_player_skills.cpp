@@ -8,6 +8,7 @@
 #include "ai.hpp"
 #include "player_skill_property_services_v1.hpp"
 #include "player_savegame_v1.hpp"
+#include "player_save_load_owner_v1.hpp"
 #include "savegame_options_v1.hpp"
 #include "character_mana_services_v1.hpp"
 #include "character_current_spell_v1.hpp"
@@ -886,6 +887,95 @@ bool Runtime::update_after_saved_skill_slot_write(std::string& error){
 }
 bool Runtime::update_after_source_skill_inputs_changed(std::string& error){
  return impl_->update_after_saved_skill_slot_write(error);
+}
+bool Runtime::reload_skill_instances(data::PlayerSaveLoadOwnerV1& save_loader,
+                                     std::string& error){
+ auto& s=*impl_;error.clear();
+ if(!s.initialized||s.update_blocked||!s.preparation||!s.session||!s.updates||
+    !s.bindings.savegame||&save_loader.save()!=s.bindings.savegame.get()||
+    save_loader.save().character()!=s.bindings.character||
+    !s.bindings.tables||!s.bindings.source_ai||
+    s.bindings.source_ai->active_ais_1c!=s.ais.ais){
+  error="AI_ReloadSkills requires the initialized same Player/Save/VM/preparation owner";
+  return false;
+ }
+ s.timer_fields.reset();
+ const auto restore_timer_lease=[&](){
+  if(s.timer_fields||!s.preparation)return;
+  auto lease=s.preparation->lease_timer_fields(s.bindings.character);
+  if(lease)s.timer_fields=std::move(*lease);
+ };
+ const auto skills_list=dh2::character_ai_set_skills_and_spells::List::skill;
+ try{
+  const auto count=s.preparation->slots(skills_list).size();
+  for(std::uint32_t i=0;i<count;++i){
+   const auto instance=s.preparation->slots(skills_list)[i];
+   if(instance&&!s.preparation->delete_skill_instance(i,instance,error)){
+    restore_timer_lease();error="AI_ReloadSkills deleting destructor failed at slot "+std::to_string(i)+": "+error;return false;
+   }
+  }
+  if(!s.preparation->reset_skill_end(error)){
+   restore_timer_lease();error="AI_ReloadSkills failed to publish skill end=begin: "+error;return false;
+  }
+  s.refresh_properties();
+  const auto* selected=s.bindings.tables->skill_list(s.property_view.resolved[28]);
+  if(!selected){restore_timer_lease();error="AI_ReloadSkills selected Character SkillList is unavailable";return false;}
+  if(!s.bindings.savegame->reload_skills_from_character_list(selected->members,error)){
+   restore_timer_lease();return false;
+  }
+  if(!save_loader.load(8,error)){restore_timer_lease();return false;}
+
+  s.refresh_properties();
+  dh2::character_ai_set_skills_and_spells::Result prepared{};
+  const auto status=s.preparation->prepare(&prepared);
+  s.prepared=prepared;
+  if(status!=dh2::character_ai_set_skills_and_spells::Status::complete){
+   const auto detail=s.session->last_error();
+   error="Same-VM skill preparation failed during AI_ReloadSkills";
+   if(!detail.empty())error += ": "+detail;
+   else error += " at a required source provider";
+   return false;
+  }
+  // Adam's AI_ReloadSkills V6 sequence ends with the same existing native
+  // skill update owner. NativeReloadSkills then has its distinct following
+  // UpdateSkills service, so keep that next coordinator phase separate.
+  if(!s.update_after_saved_skill_slot_write(error)){restore_timer_lease();return false;}
+  s.timer_fields=s.preparation->lease_timer_fields(s.bindings.character);
+  if(!s.timer_fields){error="AI_ReloadSkills rebuilt skills but could not reacquire the same timer-field lease";return false;}
+  error.clear();return true;
+ }catch(const std::exception& failure){
+  restore_timer_lease();error=std::string("Same-owner AI_ReloadSkills provider failed: ")+failure.what();return false;
+ }catch(...){
+  restore_timer_lease();error="Same-owner AI_ReloadSkills provider failed";return false;
+ }
+}
+bool Runtime::remove_all_buffs(std::string& error){
+ auto& s=*impl_;error.clear();
+ if(!s.initialized||!s.buffs||s.buffs->character_identity()!=s.bindings.character){
+  error="NativeReloadSkills RemoveAllBuffs requires the retained same-Character BuffOwner";return false;
+ }
+ try{s.refresh_properties();}catch(const std::exception& failure){error=failure.what();return false;}
+ dh2::character_player_buffs_v1::Result result{};
+ const auto status=s.buffs->remove_all(&result);
+ if(status!=dh2::character_player_buffs_v1::Status::complete){
+  error="Same-owner RemoveAllBuffs failed at provider operation "+std::to_string(std::uint32_t(result.last_operation));
+  return false;
+ }
+ error.clear();return true;
+}
+bool Runtime::recalculate_properties(bool source_argument,std::string& error){
+ auto& s=*impl_;error.clear();
+ if(!source_argument||!s.initialized||!s.bindings.classes||!s.bindings.properties||s.class_rows.empty()){
+  error="NativeReloadSkills requires RecalcProperties(true) on the same class/property owner";return false;
+ }
+ try{s.refresh_properties();s.refresh_class_rows();}
+ catch(const std::exception& failure){error=failure.what();return false;}
+ if(dh2_property_validate(&s.property_view)||
+    dh2_class_recalc_base(s.class_rows.data(),std::uint32_t(s.class_rows.size()),
+                          s.bindings.properties->base.data(),&s.property_view)!=0){
+  error="Same-owner Character RecalcProperties(true) failed";return false;
+ }
+ error.clear();return true;
 }
 bool Runtime::train_skill(std::uint32_t skill_index,bool test_only,data::FreshInventoryOwnedV4& inventory,
                           std::uint32_t& source_return,std::string& error){

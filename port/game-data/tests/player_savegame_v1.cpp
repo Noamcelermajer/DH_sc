@@ -384,6 +384,31 @@ int main(int argc, char** argv) {
         ++guards;
         require(mutation.skill_level(0) == 0);
         ++guards;
+        std::uint32_t reload_updates = 0;
+        const SavedSkillUpdateServicesV1 reload_update{
+            &reload_updates,
+            [](void* context, std::uintptr_t character, std::string& message) {
+                require(character == UINT64_C(0x1234567800000099));
+                ++*static_cast<std::uint32_t*>(context);
+                message.clear();
+                return true;
+            }};
+        require(mutation.set_skill_in_slot(4, 1, reload_update, error));
+        ++guards;
+        require(mutation.set_skill_level(1, 9, error));
+        ++guards;
+        const auto same_character = mutation.character();
+        require(mutation.reload_skills_from_character_list({7, 9, 11}, error));
+        ++guards;
+        require(mutation.character() == same_character && mutation.skills_initialized() &&
+                mutation.skills().size() == 3 && mutation.skill_id(0) == 7 &&
+                mutation.skill_id(1) == 9 && mutation.skill_id(2) == 11 &&
+                mutation.skill_level(0) == 0 && mutation.skill_level(1) == 0 &&
+                mutation.skill_level(2) == 0 && !mutation.has_skill_slots() &&
+                mutation.skill_slots()[0].empty() && mutation.skill_slots()[1].empty());
+        ++guards;
+        require(reload_updates == 1);
+        ++guards;
         std::uint32_t failing_updates = 0;
         const SavedSkillUpdateServicesV1 update_failure{
             &failing_updates,

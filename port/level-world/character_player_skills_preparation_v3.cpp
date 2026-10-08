@@ -334,6 +334,47 @@ source::Status Owner::prepare(source::Result* output) {
     impl_->prepared=status==source::Status::complete;
     return status;
 }
+bool Owner::delete_skill_instance(std::uint32_t index,std::uintptr_t identity,
+                                  std::string& error) {
+    error.clear();
+    if(!impl_||impl_->busy||impl_->active_timer_leases||!impl_->prepared||
+       !impl_->valid_vectors()||impl_->current.owner!=impl_->inputs.character||
+       !identity||index>=impl_->skill_slots.size()||
+       impl_->skill_slots[index]!=identity||
+       std::find(impl_->faery_slots.begin(),impl_->faery_slots.end(),identity)!=impl_->faery_slots.end()) {
+        error="AI_ReloadSkills delete requires the exact active skill slot and an unleased same-Character owner";
+        return false;
+    }
+    auto found=impl_->instances.find(identity);
+    if(found==impl_->instances.end()||!found->second||
+       found->second->state.identity!=identity||
+       found->second->state.character!=impl_->inputs.character||
+       found->second->state.dispatch_table!=constructor::DispatchTable::char_ai_skill_script||
+       found->second->arguments.identity!=identity+0x0cu) {
+        error="AI_ReloadSkills deleting destructor received an unowned skill instance";
+        return false;
+    }
+    // The source deleting destructor releases the instance and embedded
+    // Arguments before AI_ReloadSkills publishes nullptr into the captured
+    // slot. Keep vector begin/end/capacity stable across this operation.
+    impl_->instances.erase(found);
+    impl_->skill_slots[index]=0;
+    impl_->sync(source::List::skill);
+    return true;
+}
+bool Owner::reset_skill_end(std::string& error) {
+    error.clear();
+    if(!impl_||impl_->busy||impl_->active_timer_leases||!impl_->prepared||
+       !impl_->valid_vectors()||impl_->current.owner!=impl_->inputs.character||
+       std::any_of(impl_->skill_slots.begin(),impl_->skill_slots.end(),
+                   [](std::uintptr_t value){return value!=0;})) {
+        error="AI_ReloadSkills end reset requires all exact skill instances deleted";
+        return false;
+    }
+    impl_->skill_slots.clear();
+    impl_->sync(source::List::skill);
+    return true;
+}
 source::State& Owner::state(){return impl_->current;}
 const std::vector<std::uintptr_t>& Owner::slots(source::List list)const {
     if(list==source::List::skill)return impl_->skill_slots;

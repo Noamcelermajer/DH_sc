@@ -29,6 +29,9 @@ int main() {
     if (!expect(verified_crypt_route("GOTHICUS_CRYPT_01", "007_crypt_01.rule.xml"), "Crypt gate")) return 1;
     if (!expect(!verified_crypt_route("SWAMP", "001_swamp.mlx"), "SWAMP excluded")) return 2;
     if (!expect(!verified_crypt_route("GOTHICUS_CRYPT_01", "x07_crypt_backup.mlx"), "wrong route file excluded")) return 3;
+    if (!expect(near(kVerticalFovRadians, 0.42963001132011414f, 1e-8f) &&
+                kNearPlane == 900.0f && kFarPlane == 5000.0f,
+                "Crypt CameraBase::SetData projection override matches Level::_LoadCamera and rule XML")) return 45;
 
     const Vec3 receipt_target{-2227.77f, 1220.93f, 842.364f};
     Frame frame{};
@@ -39,6 +42,28 @@ int main() {
     if (!expect(near(frame.input_yaw, -0.78539816f, 1e-6f), "movement yaw follows source eye azimuth")) return 7;
     if (!expect(near(frame.input_pitch, input_pitch_radians(), 1e-6f) && frame.input_pitch > 0.89f,
                 "movement pitch follows source eye elevation")) return 8;
+    const Vec3 authored_eye_offset{1380.0f,-1180.46f,2551.55f};
+    // The BDAE upvector node is authored as a point beside the camera node.
+    // Its vector therefore starts at the eye, not at the look-at target.
+    const Vec3 authored_up{-404.008f,345.604f,378.41f};
+    const Vec3 authored_target_offset{2.0f,-3.0f,4.0f};
+    Frame authored_frame{};
+    if (!expect(build("GOTHICUS_CRYPT_01", "007_crypt_01.rule.xml", receipt_target,
+                      2400,1080,&authored_frame,authored_eye_offset,authored_up,
+                      authored_target_offset),
+                "build frame from authored camera rig vectors")) return 41;
+    if (!expect(near(authored_frame.target[0],receipt_target[0]+authored_target_offset[0]) &&
+                near(authored_frame.target[1],receipt_target[1]+authored_target_offset[1]) &&
+                near(authored_frame.target[2],receipt_target[2]+authored_target_offset[2]),
+                "camera rig target transform is applied to the player anchor")) return 44;
+    if (!expect(near(authored_frame.eye[0],authored_frame.target[0]+authored_eye_offset[0]) &&
+                near(authored_frame.eye[1],authored_frame.target[1]+authored_eye_offset[1]) &&
+                near(authored_frame.eye[2],authored_frame.target[2]+authored_eye_offset[2]),
+                "authored rig eye offset positions Crypt camera")) return 42;
+    if (!expect(near(authored_frame.input_yaw,std::atan2(authored_eye_offset[1],authored_eye_offset[0])) &&
+                near(authored_frame.input_pitch,std::atan2(authored_eye_offset[2],
+                    std::hypot(authored_eye_offset[0],authored_eye_offset[1]))),
+                "movement basis follows authored rig eye offset")) return 43;
 
     ForwardAnchorState anchor{};
     if (!expect(update_forward_anchor(&anchor, 0.0f, false, false) &&
@@ -64,6 +89,49 @@ int main() {
     if (!expect(!player_displaced_enough_for_forward_anchor(
                     {0.0f, 0.0f, std::numeric_limits<float>::infinity()}),
                 "nonfinite displacement cannot expand camera anchor")) return 29;
+    ForwardAnchorState look_at_gate{};
+    if (!expect(update_forward_anchor(&look_at_gate,{10.0f,20.0f,30.0f},
+                                     {1.0f,0.0f,0.0f},{0.0f,1.0f,0.0f},
+                                     true,true,false) && near(look_at_gate.distance,320.0f),
+                "source zero-initialized look-at keeps first active frame finite and ramps to half distance")) return 34;
+    if (!expect(update_forward_anchor(&look_at_gate,{10.0f,21.0f,30.0f},
+                                     {0.0f,1.0f,0.0f},{0.0f,1.0f,0.0f},
+                                     true,true,false) && near(look_at_gate.distance,337.0f) &&
+                near(look_at_gate.target[0],10.0f) && near(look_at_gate.target[1],358.0f),
+                "turn gate uses prior actor look-at and advances the active camera target")) return 35;
+    ForwardAnchorState look_at_turn{};
+    look_at_turn.distance=320.0f;look_at_turn.previous_actor_look_at={1.0f,0.0f,0.0f};
+    look_at_turn.previous_actor_position={0.0f,0.0f,0.0f};
+    look_at_turn.target={0.0f,320.0f,0.0f};look_at_turn.has_target=true;
+    if (!expect(update_forward_anchor(&look_at_turn,{0.0f,1.0f,0.0f},
+                                     {0.0f,1.0f,0.0f},{0.0f,1.0f,0.0f},
+                                     true,true,false) && near(look_at_turn.distance,315.75f) &&
+                near(look_at_turn.target[1],316.75f),
+                "source turn retreats against stored look-at while preserving actor offset")) return 36;
+    ForwardAnchorState look_at_threshold{};
+    look_at_threshold.distance=320.0f;look_at_threshold.previous_actor_look_at={1.0f,0.0f,0.0f};
+    look_at_threshold.target={0.0f,320.0f,0.0f};look_at_threshold.has_target=true;
+    const Vec3 exactly_one_radian{std::cos(1.0f),std::sin(1.0f),0.0f};
+    if (!expect(update_forward_anchor(&look_at_threshold,{0.0f,1.0f,0.0f},
+                                     exactly_one_radian,{0.0f,1.0f,0.0f},
+                                     true,true,false) && near(look_at_threshold.distance,337.0f),
+                "source strict one-radian angle threshold does not retreat")) return 37;
+    ForwardAnchorState stopped{};
+    stopped.distance=320.0f;stopped.previous_actor_look_at={0.0f,1.0f,0.0f};
+    stopped.previous_actor_position={0.0f,0.0f,0.0f};
+    if (!expect(update_forward_anchor(&stopped,{2.0f,0.0f,0.0f},{0.0f,0.0f,0.0f},
+                                     {0.0f,1.0f,0.0f},false,false,false) &&
+                near(stopped.distance,kForwardAnchorIdleCap) &&
+                near(stopped.target[0],2.0f) && near(stopped.target[1],kForwardAnchorIdleCap),
+                "Stop with zero source heading idles on the retained facing vector")) return 38;
+    ForwardAnchorState attacking{};
+    if (!expect(update_forward_anchor(&attacking,{1.0f,0.0f,0.0f},{1.0f,0.0f,0.0f},
+                                     {0.0f,1.0f,0.0f},true,false,true) &&
+                near(attacking.distance,kForwardAnchorMaxDistance*0.5f),
+                "attack root motion never takes the moving-only full-distance branch")) return 39;
+    if (!expect(near(forward_anchor_target(&stopped,{2.0f,0.0f,0.0f})[1],
+                     kForwardAnchorIdleCap),
+                "rendered camera consumes the retained source anchor target")) return 40;
 
     float clip[4]{};
     transform(frame.view_projection, frame.target, clip);

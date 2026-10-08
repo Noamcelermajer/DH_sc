@@ -1,4 +1,4 @@
-"""Build and run the source-stage aspect-fit and hit-rectangle audit."""
+"""Build and run the focused Character HeadTowards/controller-state audit."""
 from __future__ import annotations
 
 import argparse
@@ -8,16 +8,16 @@ import shutil
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[3]
-ENGINE_UI = ROOT / "port/engine-ui"
-SOURCE = ENGINE_UI / "tests/original_menu_viewport_v1_host.cpp"
+LEVEL = ROOT / "port/level-world"
+SOURCE = ROOT / "port/android-native/tests/native_character_controller_v1_host.cpp"
+HEADING = LEVEL / "navigation_heading.cpp"
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--compiler", help="C++ compiler (defaults to CXX, g++, or clang++)")
-    parser.add_argument(
-        "--output", type=Path,
-        default=ROOT / "port/android-native/build/original-menu-viewport-v1/original_menu_viewport_v1_host")
+    parser.add_argument("--output", type=Path,
+                        default=ROOT / "port/android-native/build/character-controller/native_character_controller_v1_host")
     args = parser.parse_args()
     compiler = args.compiler or os.environ.get("CXX") or shutil.which("g++") or shutil.which("clang++")
     if not compiler:
@@ -26,15 +26,16 @@ def main() -> int:
     if os.name == "nt" and not output.suffix:
         output = output.with_suffix(".exe")
     output.parent.mkdir(parents=True, exist_ok=True)
-    command = [compiler, "-std=c++17", "-O1", "-Wall", "-Wextra", "-Werror", "-pedantic",
-               "-I", str(ENGINE_UI), str(ENGINE_UI / "viewport.cpp"), str(SOURCE), "-o", str(output)]
+    command = [compiler, "-std=c++17", "-O1", "-Wall", "-Wextra", "-Werror",
+               "-pedantic", "-fno-fast-math", "-ffp-contract=off", "-I", str(LEVEL),
+               str(HEADING), str(SOURCE), "-o", str(output)]
     built = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
     if built.returncode:
         raise RuntimeError(built.stdout + built.stderr)
     ran = subprocess.run([str(output)], cwd=ROOT, capture_output=True, text=True)
     if ran.returncode:
         raise RuntimeError(ran.stdout + ran.stderr)
-    print("PASS: fitted 3:2 menu UI/backdrop, camera aspect, and side-gutter hit mapping (14 assertions)")
+    print(ran.stdout.strip())
     return 0
 
 

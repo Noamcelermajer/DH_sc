@@ -56,6 +56,17 @@ std::array<int,7> player_vitals();
 // associated Save name. Requires the attached world; creates no profile owner.
 bool ui_player_identity(std::uintptr_t&,std::string&);
 bool ui_player_name(std::uintptr_t,std::string&,std::string&);
+bool ui_player_class_specialization_text_ids(std::uintptr_t,
+ std::array<std::int32_t,4>&,std::string&);
+struct UiPlayerReloadResultV1 {std::uint32_t phase{},calls{},specialization{};};
+// The current retained character-menu movie supplies the two final AS menu
+// operations; all earlier phases run through the same live Player owners.
+using UiPlayerReloadMenuServiceV1 = int (*)(void*,std::uint32_t service,
+    std::uint32_t argument,std::uintptr_t subject,const char* path,
+    const char* callback,std::uintptr_t& identity,std::int32_t& value,
+    std::string& error);
+bool ui_player_reload_skills(std::uintptr_t,void*,UiPlayerReloadMenuServiceV1,
+                             UiPlayerReloadResultV1&,std::string&);
 struct UiPlayerStatsReadV1 {
  std::string name,class_name;std::int32_t icon{},level{},hp{},hp_bonus{},max_hp{};
  std::int32_t mp{},mp_bonus{},max_mp{},xp{},max_xp{},strength{},dexterity{};

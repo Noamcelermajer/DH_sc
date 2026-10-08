@@ -69,6 +69,13 @@ public:
     Owner(const Owner&)=delete;Owner& operator=(const Owner&)=delete;
     Owner(Owner&&)=delete;Owner& operator=(Owner&&)=delete;
     source::Status prepare(source::Result*);
+    // Narrow AI_ReloadSkills storage operations over the existing preparation
+    // owner. Deletion releases only the exact owned skill instance and then
+    // nulls its stable slot; reset publishes end=begin while retaining vector
+    // capacity. Faery slots, VM and owner identities are left in place.
+    bool delete_skill_instance(std::uint32_t index,std::uintptr_t identity,
+                               std::string& error);
+    bool reset_skill_end(std::string& error);
     std::optional<TimerFieldLease> lease_timer_fields(std::uintptr_t character) noexcept;
     // Provider may update the source owner/active-AIS/assert facts. Vector and
     // faery-binding storage are owned here and must not be replaced or freed.

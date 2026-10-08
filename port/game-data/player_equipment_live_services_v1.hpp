@@ -80,6 +80,9 @@ public:
  // when reached. V4 retains all original partial prefixes and mutation guards.
  OwnedInventoryServicesV4 services() noexcept;
  bool meets_requirements(const ItemInstanceV1*,bool&,std::string&);
+ // Character::CheckItems requirement-pruning phase only. This deliberately
+ // does not substitute the broader properties/skin/vitals refresh path.
+ bool check_item_requirements(std::string&);
  // Properties -> optional recursive requirement pruning -> Skin -> HP/MP.
  // Failure keeps the reached source prefix; no rollback or inferred producer.
  bool refresh(bool check_requirements,std::string&);

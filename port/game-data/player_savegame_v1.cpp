@@ -287,6 +287,34 @@ bool PlayerSavegameV1::initialize_skills_from_character_list(
     }
 }
 
+bool PlayerSavegameV1::reload_skills_from_character_list(
+    const std::vector<std::int32_t>& ids, std::string& error) {
+    if (!character_ || ids.size() > std::numeric_limits<std::uint32_t>::max()) {
+        error = "same-Save skill reload requires its Character and a valid selected list";
+        return false;
+    }
+
+    // Match the source order: delete the previous array, publish it as null,
+    // allocate and fill the newly selected list, then clear slot sets 0 and 1.
+    // Swapping with an empty vector releases the old row allocation while
+    // preserving this PlayerSavegame owner and all of its other fields.
+    std::vector<SavedSkill8V1>().swap(skills_);
+    skills_initialized_ = false;
+    try {
+        skills_.resize(ids.size());
+    } catch (...) {
+        error = "same-Save skill row allocation failed";
+        return false;
+    }
+    skills_initialized_ = true;
+    for (std::size_t i = 0; i < ids.size(); ++i)
+        skills_[i] = {ids[i], 0, 0, 0};
+    slots_[0].clear();
+    slots_[1].clear();
+    error.clear();
+    return true;
+}
+
 int PlayerSavegameV1::load_skills(Bytes bytes, const SkillTables& tables,
                                   std::size_t& consumed,
                                   std::string& error) {
