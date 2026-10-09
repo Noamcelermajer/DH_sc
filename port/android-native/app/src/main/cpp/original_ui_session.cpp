@@ -1567,6 +1567,13 @@ struct OriginalUiSession::Impl {
             if(fn.nargs>0)(void)fn.arg(0).to_bool();
             return true;
         }
+        if(!std::strcmp(name,"NativeShowMinimapLegend")){
+            // IDA 0x43aa58 stores arg0 in MenuCharMenu_Map+0x1e4. No reads
+            // of that byte exist in the map class; the authored SWF owns the
+            // LegendPopup show/hide timeline, so do not add a second flag.
+            if(fn.nargs>0)(void)fn.arg(0).to_bool();
+            return true;
+        }
         if(!std::strcmp(name,"NativeScreenIsBlack")){
             // IDA 0x439fa4: offline is a no-op; only the unavailable online
             // PlayerManager branch advances its screen state from 1 to 2.
@@ -1987,6 +1994,7 @@ struct OriginalUiSession::Impl {
         if(live_player)for(const auto* action:{"NativeGetOptionParameters","NativeUseIpodPlayer","NativeUpdateOrientation","NativePauseAllSounds","NatvieResumeAllSounds","NativePauseMusic","NativeScreenIsBlack","NativeGetPossibleClassSpec","NativeTouchToMove","NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
             "NativeSkillsGetSkillPointsLeft","NativeSkillsTrainSkill","NativeEquipSkill","NativeGetPlayerStats","NativeStatsAssignPoint","NativeSaveGame","NativeSetCurrentQuest","NativeIsMultiplayerGame",
             "NativeShowStatusBar",
+            "NativeShowMinimapLegend",
             "NativeReloadSkills",
             "NativeSetMultitouch",
             "NativeGetCharMenuTutorialMessage","NativeSkipCharMenuTutorialMessage","NativeHUDGetActiveFaery","NativeHUDGetIsFaeryUnlocked",
