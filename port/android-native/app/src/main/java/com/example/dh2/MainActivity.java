@@ -61,6 +61,9 @@ public final class MainActivity extends Activity {
         int openingCinematicPositionMs=state!=null?state.getInt("openingCinematicPositionMs",0):0;
         boolean playOpeningCinematic=!inspectionMode&&(state==null||resumeOpeningCinematic)&&!getIntent().getBooleanExtra("skip_intro",false);
         if(!inspectionMode){
+            // This is a landscape game. Android 17 keeps orientation requests
+            // available to apps explicitly categorized as games; retain the
+            // source layout instead of rotating a SurfaceView into portrait.
             setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
             // Apply edge-to-edge before the first layout so the startup movie,
             // menu stage, and GL surface agree on the same drawable bounds.
@@ -191,7 +194,7 @@ public final class MainActivity extends Activity {
         final int overlayInsetCushion=(int)(8*getResources().getDisplayMetrics().density);
         // The source UI renderer fits its authored 480x320 stage (3:2) inside
         // the full GL surface. Keep native touch controls in that same stage;
-        // on wide phones the side gutters are not playable screen area.
+        // on wide landscape displays the side gutters are not playable area.
         final int[] safeInsets={0,0,0,0};
         final Runnable positionGameplayOverlays=()->{
             int width=viewport.getWidth(),height=viewport.getHeight();
@@ -354,9 +357,20 @@ public final class MainActivity extends Activity {
         super.onWindowFocusChanged(hasFocus);
         if(hasFocus&&!inspectionMode)enterImmersiveLandscape();
     }
+    @Override public void onConfigurationChanged(android.content.res.Configuration configuration){
+        super.onConfigurationChanged(configuration);
+        if(!inspectionMode){
+            enterImmersiveLandscape();
+            // Let GLSurfaceView deliver its normal onSurfaceChanged callback.
+            // That callback updates the native viewport before the next frame,
+            // so touch remains in the same local-pixel space as rendered UI.
+            if(surface!=null)surface.requestLayout();
+        }
+    }
     private boolean forwardUiTouch(View view,float x,float y,int action,boolean recoverMenuOnError){
-        // These are GLSurfaceView-local physical pixels (top-left origin); the
-        // native UI session maps them against the current full-screen viewport.
+        // Keep input in GLSurfaceView-local pixels. Native input_rectangle is
+        // refreshed from the fitted 480x320 stage after every surface resize,
+        // and SwfMovie applies the inverse viewport transform to these points.
         surface.queueEvent(()->{
             String reply=NativeBridge.menuTouch(x,y,action);
             if(reply!=null&&!reply.isEmpty()){

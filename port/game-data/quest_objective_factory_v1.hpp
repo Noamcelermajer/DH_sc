@@ -1,8 +1,10 @@
 #pragma once
 #include "quest_objective_list_v1.hpp"
+#include "player_save_section_writers_v1.hpp"
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <string>
 #include <variant>
 extern "C" {
 #include "../pydata-constants/constants.h"
@@ -31,7 +33,7 @@ struct Record {
  explicit Record(std::uintptr_t identity):ref{{identity,&fields.character_10},&fields}{}
  Record(const Record&)=delete;Record& operator=(const Record&)=delete;
 };
-enum class Operation:std::uint32_t {none,allocate,default_fields,base_construct,get_constant,construct,destruct,deallocate,complete};
+enum class Operation:std::uint32_t {none,allocate,default_fields,base_construct,get_constant,construct,destruct,deallocate,complete,save_data};
 enum class Status:std::uint32_t {complete,invalid_argument,service_unavailable,service_failed,source_fault,reentrant,projection_changed};
 struct Result {Status status=Status::complete;Operation last_operation=Operation::none;Record* record=nullptr;std::uint32_t service_calls=0,field_stores=0,logical_bytes=0;};
 struct Services {
@@ -60,6 +62,11 @@ public:
  Status create(std::int32_t source_type,Result*);
  Status construct_base(Record&,Result*);
  Status destroy(Record&,bool deleting,Result*);
+ // Executes the original Objective::_saveData or Objective_SavedQty::_saveData
+ // virtual body over this factory's already-owned Record. The sink receives
+ // synchronous byte spans through the canonical source stream service.
+ Status save_data(const Record&,const player_save_section_writers_v1::WriteServicesV1&,
+                  Result*,std::string& error);
 };
 // Whole13 factory callers, baseC1/C2 and base/derivedD1/D0. Each Record owns
 // the exact ObjectiveFields shared by the sole ObjectiveList and Quest actions.

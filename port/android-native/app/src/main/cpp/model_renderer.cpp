@@ -2523,9 +2523,20 @@ void normalize(std::array<float,3>& a){float n=std::sqrt(a[0]*a[0]+a[1]*a[1]+a[2
 float dot(const std::array<float,3>& a,const std::array<float,3>& b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
 Matrix camera(int width,int height){
   const float aspect=float(width)/height,tan=.41421356f;
+  std::array<float,3> target{center[0],center[1],center[2]};
+  if(world_mode){
+    // Level::_LoadCamera targets the local Player; CameraTarget::GetTargetPosition
+    // resolves that GameObject's camera anchor. Follow the already source-updated
+    // AnchorForward target while retaining this level's generic fallback optics.
+    const dh2::native::crypt_camera_frame_v1::Vec3 actor_target{
+        actor_position[0],actor_position[1],actor_position[2]};
+    const auto anchor=dh2::native::crypt_camera_frame_v1::forward_anchor_target(
+        &prince_camera_anchor,actor_target);
+    target={anchor[0],anchor[1],anchor[2]};
+  }
   const float distance=radius*1.15f*std::sqrt(1+1/(tan*tan*std::min(1.f,aspect)*std::min(1.f,aspect)))*zoom;
-  std::array<float,3> eye{center[0]+distance*std::cos(yaw)*std::cos(pitch),center[1]+distance*std::sin(yaw)*std::cos(pitch),center[2]+distance*std::sin(pitch)};
-  std::array<float,3> f{center[0]-eye[0],center[1]-eye[1],center[2]-eye[2]};normalize(f);
+  std::array<float,3> eye{target[0]+distance*std::cos(yaw)*std::cos(pitch),target[1]+distance*std::sin(yaw)*std::cos(pitch),target[2]+distance*std::sin(pitch)};
+  std::array<float,3> f{target[0]-eye[0],target[1]-eye[1],target[2]-eye[2]};normalize(f);
   auto s=cross(f,{0,0,1});normalize(s);auto u=cross(s,f);
   Matrix view{s[0],u[0],-f[0],0,s[1],u[1],-f[1],0,s[2],u[2],-f[2],0,-dot(s,eye),-dot(u,eye),dot(f,eye),1};
   const float near=world_mode?50.f:std::max(.01f,distance-radius*1.5f),far=world_mode?12000.f:distance+radius*3;

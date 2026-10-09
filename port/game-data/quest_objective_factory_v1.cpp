@@ -84,4 +84,61 @@ Status Runtime::destroy(Record& q,bool deleting,Result* out){
  else if(call.destroy(q,deleting))call.result.last_operation=Operation::complete;
  *out=call.result;return out->status;
 }
+Status Runtime::save_data(const Record& q,
+ const player_save_section_writers_v1::WriteServicesV1& stream,
+ Result* out,std::string& error){
+ if(!output(this,out,&q)||overlap(out,sizeof(*out),&stream,sizeof(stream))||
+    overlap(&error,sizeof(error),this,sizeof(*this))||
+    overlap(&error,sizeof(error),&q,sizeof(q))||
+    overlap(&error,sizeof(error),out,sizeof(*out))||
+    overlap(&error,sizeof(error),&stream,sizeof(stream)))return Status::invalid_argument;
+ if(busy_)return Status::reentrant;
+ busy_=true;Guard guard{busy_};
+ Result result{};result.record=const_cast<Record*>(&q);result.last_operation=Operation::save_data;
+ error.clear();
+ if(!coherent(q))result.status=Status::projection_changed;
+ else if(!stream.write)result.status=Status::service_unavailable;
+ else {
+  bool saved_quantity=false;
+  switch(q.dispatch_0){
+   case Dispatch::kill_enemies:case Dispatch::talk_to_npc:
+   case Dispatch::open_game_object:case Dispatch::kill_enemy_template:
+    saved_quantity=true;break;
+   case Dispatch::move_in_zone:case Dispatch::automatic:
+    saved_quantity=false;break;
+   default:result.status=Status::source_fault;break;
+  }
+  if(result.status==Status::complete){
+   // _saveData loads this stored bool with LDRB and passes that byte through
+   // writeAs<bool>; the ARM body does not canonicalize nonzero values.
+   const std::uint8_t done=q.done_14;
+   bool failed=false;
+   try{
+    ++result.service_calls;
+    if(!stream.write(stream.context,{&done,1},error)){
+     if(error.empty())error="source Objective completion write failed";
+     failed=true;
+    }
+    if(saved_quantity){
+     // SavedQty ignores the base writer's return and always performs this
+     // second virtual write. Read quantity only after the first callback.
+     const auto value=q.quantity_20;
+     const std::uint8_t bytes[]{std::uint8_t(value),std::uint8_t(value>>8),
+       std::uint8_t(value>>16),std::uint8_t(value>>24)};
+     ++result.service_calls;
+     if(!stream.write(stream.context,{bytes,sizeof(bytes)},error)){
+      if(error.empty())error="source Objective saved quantity write failed";
+      failed=true;
+     }
+    }
+    if(failed)result.status=Status::service_failed;
+   }catch(...){
+    if(error.empty())error="source Objective stream writer threw";
+    result.status=Status::service_failed;
+   }
+  }
+ }
+ if(result.status==Status::complete)result.last_operation=Operation::complete;
+ *out=result;return result.status;
+}
 }
