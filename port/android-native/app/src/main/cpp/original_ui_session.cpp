@@ -1555,16 +1555,24 @@ struct OriginalUiSession::Impl {
             }
             return true;
         }
+        if(!std::strcmp(name,"NativeShowStatusBar")){
+            // IDA 0x43aa18 converts the authored visibility argument and calls
+            // Application::ShowStatubBar (0x31f668), which is a source no-op.
+            // Keep the menu's onShow transition successful without inventing
+            // a second status-bar owner.
+            if(fn.nargs>0)(void)fn.arg(0).to_bool();
+            return true;
+        }
         if(!std::strcmp(name,"NativeScreenIsBlack")){
             // IDA 0x439fa4: offline is a no-op; only the unavailable online
             // PlayerManager branch advances its screen state from 1 to 2.
             return true;
         }
         if(!std::strcmp(name,"NativeIsMultiplayerEnabled")||
+           !std::strcmp(name,"NativeIsMultiplayerGame")||
            !std::strcmp(name,"NativeHasPushNotification")){
-            // This reconstruction has no multiplayer, Game Center, or push
-            // notification provider. Return the explicit single-player build
-            // capability, not the original device/driver predicate.
+            // NativeIsMultiplayerGame reads GetOnline()+5 (IDA 0x439fe8);
+            // all three services are unavailable in this offline build.
             if(fn.result)fn.result->set_bool(false);
             return true;
         }
