@@ -50,9 +50,9 @@ struct Run {
         status=call(Operation::raise_event,character.identity,0x1e);if(status!=Status::complete)return status;
         status=call(Operation::set_animation,character.machine,UINT32_MAX);if(status!=Status::complete)return status;
         status=call(Operation::set_speed,character.animator,0x3f800000);if(status!=Status::complete)return status;
-        *character.heading_enabled_412=0;out.heading_cleared=1;
+        *character.ooi_intent_412=0;out.ooi_intent_cleared=1;
         status=call(Operation::cancel_sneaking,character.identity);if(status!=Status::complete)return status;
-        const auto moving=*character.moving_554;const auto physical=*character.physical_2dc;out.physical=physical;
+        const auto moving=*character.machine_moving_58;const auto physical=*character.physical_2dc;out.physical=physical;
         if(moving){*character.flags_528|=0x100u;++out.flags_written;}
         if(physical){status=call(Operation::unpin,physical);if(status!=Status::complete)return status;out.physical_called=1;}
         return classification(false);
@@ -79,7 +79,7 @@ Status execute(State* state,Callback callback,const Globals* globals,const Servi
     const auto character=*state->character;
     if(!character.identity || !character.ai || !character.machine || !character.animator || !character.timers || !globals->debug_switches ||
        !append(character.flags_520,ranges,count) || !append(character.flags_528,ranges,count) ||
-       !append(character.heading_enabled_412,ranges,count) || !append(character.moving_554,ranges,count) ||
+       !append(character.ooi_intent_412,ranges,count) || !append(character.machine_moving_58,ranges,count) ||
        !append(character.physical_2dc,ranges,count))return Status::invalid_argument;
     Run run{state,character,globals->debug_switches,*services,*out};*out={};out->character=character.identity;out->debug=run.debug;
     auto status=callback==Callback::focus?run.focus():run.blur();if(status==Status::complete)out->complete=1;return status;

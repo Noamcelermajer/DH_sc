@@ -59,6 +59,12 @@ int main(int argc, char** argv) {
     owner.stop_game_object_moving();
     require(!owner.game_object_moving(),
             "canonical Player Stop did not clear moving projection");
+    auto* ooi_intent=owner.ooi_intent_storage();
+    require(ooi_intent && owner.ooi_intent()==0 && *ooi_intent==0,
+            "Character OOI interaction intent did not start clear");
+    *ooi_intent=1;
+    require(owner.ooi_intent()==1,
+            "Character OOI interaction intent is not canonical owned storage");
     save.set_character(identity);
 
     require(owner.bind_session(&character_660, save, properties, nullptr, error),
@@ -71,6 +77,8 @@ int main(int argc, char** argv) {
             "initial session binding did not validate");
     require(owner.bind_session(&character_660, save, properties, nullptr, error),
             "same live session was not idempotent");
+    require(owner.ooi_intent()==1 && owner.ooi_intent_storage()==ooi_intent,
+            "idempotent session binding replaced active OOI intent storage");
 
     data::FreshInventoryOwnedV4 inventory(identity, loot_tables.borrow(),
                                            {nullptr, inventory_random}, 10,
@@ -121,12 +129,18 @@ int main(int argc, char** argv) {
 
     require(owner.unbind_session(error) && character_660 == 0,
             "terminal Character retirement did not clear Character660");
+    require(owner.ooi_intent()==0 && owner.ooi_intent_storage()==ooi_intent,
+            "terminal Character retirement did not clear canonical OOI intent");
     require(!owner.save_for(identity) && !owner.properties_for(identity) &&
             !owner.inventory_for(identity),
             "retired Character still resolves borrowed owners");
     require(owner.unbind_session(error), "empty retirement was not idempotent");
 
-    std::cout << "{\"validation\":\"PASS\",\"checks\":23,"
+    *ooi_intent=1;
+    require(owner.unbind_session(error) && owner.ooi_intent()==0,
+            "empty retirement did not keep OOI intent clear");
+
+    std::cout << "{\"validation\":\"PASS\",\"checks\":28,"
                  "\"identity_is_native_object_address\":true,"
                  "\"coordinator_save_properties_inventory_single_owner\":true,"
                  "\"inventory_attached_after_character_publish\":true,"

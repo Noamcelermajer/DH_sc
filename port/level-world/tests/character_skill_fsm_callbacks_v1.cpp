@@ -14,10 +14,10 @@ constexpr std::uintptr_t C=0x100000001ull,D=0x200000001ull,D2=0x200000002ull,P=0
 void require(bool value,const char* message){if(!value)throw std::runtime_error(message);}
 struct Fixture {
     std::uint32_t flags=0,gate=0,other_flags=0x11223344,other_gate=0x55667788;
-    std::uint8_t heading=0xaa,moving=0,other_heading=7,other_moving=8;
+    std::uint8_t ooi_intent=0xaa,moving=0,other_ooi_intent=7,other_moving=8;
     std::uintptr_t physical=P,other_physical=P2,target=0x500000001ull,last_target=0;
-    k::Character character{C,C+0x3c8,C+0x4fc,C+0x49c,C+0x3b4,&flags,&gate,&heading,&moving,&physical};
-    k::Character alternate{C+0x1000,C+0x13c8,C+0x14fc,C+0x149c,C+0x13b4,&other_flags,&other_gate,&other_heading,&other_moving,&other_physical};
+    k::Character character{C,C+0x3c8,C+0x4fc,C+0x49c,C+0x3b4,&flags,&gate,&ooi_intent,&moving,&physical};
+    k::Character alternate{C+0x1000,C+0x13c8,C+0x14fc,C+0x149c,C+0x13b4,&other_flags,&other_gate,&other_ooi_intent,&other_moving,&other_physical};
     k::State state{&character};k::Globals globals{D};
     std::uint32_t monster=1,mini=0,boss=0,query_word=0,mutation=0;int failure=-1;
     bool throws=false,string_live=false,zero_string=false,nest=false,nested_completed=false;
@@ -47,7 +47,7 @@ struct Fixture {
         if(mutation==4 && q.operation==k::Operation::string_destroy){gate=0xfffffff0;moving=255;physical=P2;}
         if(mutation==5 && q.operation==k::Operation::raise_event){gate^=0x100;physical=P2;flags=0x87650000;}
         if(mutation==6 && q.operation==k::Operation::set_animation){flags=0xfedcba98;moving=0;}
-        if(mutation==7 && q.operation==k::Operation::set_speed)heading=255;
+        if(mutation==7 && q.operation==k::Operation::set_speed)ooi_intent=255;
         if(mutation==8 && q.operation==k::Operation::cancel_sneaking){moving=255;physical=P2;gate=0x55550040;}
         if(mutation==9 && q.operation==k::Operation::sync_last_target){gate^=0x100;physical=P2;}
         if(mutation==10 && q.operation==k::Operation::stop){gate^=0x100;physical=P2;}
@@ -65,7 +65,7 @@ struct Fixture {
         case k::Operation::debug_query:require(q.subject==entered_debug && q.string==T && string_live,"debug query owner/string capture lost");out.word=query_word;break;
         case k::Operation::string_destroy:require(q.subject==T && string_live,"string destructor identity changed");string_live=false;break;
         case k::Operation::sync_last_target:require(q.subject==character.ai,"AI receiver changed");last_target=target;break;
-        case k::Operation::stop:require(q.subject==C,"Stop owner changed");heading=0;moving=0;++stops;break;
+        case k::Operation::stop:require(q.subject==C,"Stop owner changed");moving=0;++stops;break;
         case k::Operation::raise_event:
             require(q.subject==C && (q.argument0==0x1e || q.argument0==0x1f),"source event changed");
             if(nest){nest=false;auto services=this->services();k::Result nested{};nested_completed=k::execute(owner,k::Callback::blur,&globals,&services,&nested)==k::Status::complete;}
@@ -87,14 +87,14 @@ struct Fixture {
     }
     k::Services services(){return {this,invoke};}
     void print(k::Status status)const {
-        std::cout<<"{\"status\":"<<int(status)<<",\"flags\":"<<flags<<",\"gate\":"<<gate<<",\"heading\":"<<unsigned(heading)<<",\"moving\":"<<unsigned(moving)
+        std::cout<<"{\"status\":"<<int(status)<<",\"flags\":"<<flags<<",\"gate\":"<<gate<<",\"ooi_intent\":"<<unsigned(ooi_intent)<<",\"moving\":"<<unsigned(moving)
                  <<",\"physical\":"<<tag(physical)<<",\"debug_selection\":"<<(globals.debug_switches==D?6:7)<<",\"live_string\":"<<int(string_live)<<",\"trace\":[";
         for(std::size_t i=0;i<trace.size();++i){if(i)std::cout<<',';std::cout<<'[';for(unsigned n=0;n<6;++n){if(n)std::cout<<',';std::cout<<trace[i][n];}std::cout<<']';}std::cout<<"]}\n";
     }
 };
 std::uint32_t number(const char* p){return std::uint32_t(std::stoull(p));}
 int oracle(int argc,char** argv){
-    require(argc==13,"oracle args missing");Fixture f;const auto callback=number(argv[2]);f.flags=number(argv[3]);f.gate=number(argv[4]);f.heading=std::uint8_t(number(argv[5]));f.moving=std::uint8_t(number(argv[6]));
+    require(argc==13,"oracle args missing");Fixture f;const auto callback=number(argv[2]);f.flags=number(argv[3]);f.gate=number(argv[4]);f.ooi_intent=std::uint8_t(number(argv[5]));f.moving=std::uint8_t(number(argv[6]));
     f.physical=number(argv[7])?P:0;f.monster=number(argv[8]);f.mini=number(argv[9]);f.boss=number(argv[10]);f.query_word=number(argv[11]);f.mutation=number(argv[12]);
     auto services=f.services();k::Result out{};auto status=k::execute(&f.state,static_cast<k::Callback>(callback),&f.globals,&services,&out);f.print(status);return 0;
 }
@@ -128,7 +128,7 @@ int main(int argc,char** argv){try{
     for(auto callback:{k::Callback::focus,k::Callback::blur})for(auto moving:{0u,1u,255u})for(bool physical:{false,true})for(auto classification:{0u,1u,2u}){
         Fixture f;f.flags=0xffffffff;f.gate=moving?0x140:0x40;f.moving=std::uint8_t(moving);f.physical=physical?P:0;f.monster=classification;auto services=f.services();k::Result out{};
         require(k::execute(&f.state,callback,&f.globals,&services,&out)==k::Status::complete && out.complete && !f.string_live,"functional callbacks failed");
-        if(callback==k::Callback::focus)require(f.flags==(classification?0x16341u:0x6341u) && f.gate==(moving?0x100u:0u) && !f.heading,"source Focus flags/heading differs");
+        if(callback==k::Callback::focus)require(f.flags==(classification?0x16341u:0x6341u) && f.gate==(moving?0x100u:0u) && !f.ooi_intent,"source Focus flags/OOI intent differs");
         else require(f.flags==(classification?0xfffeffffu:0xffffffffu) && out.timer_attempted==bool(moving) && f.last_target==f.target,"source Blur timer/classification/sync differs");
         ++functional;
     }
@@ -147,7 +147,7 @@ int main(int argc,char** argv){try{
         auto unchanged=[&](k::Status status){require(status==k::Status::invalid_argument && !std::memcmp(&out,&before,sizeof(out)) && f.trace.empty(),"guard changed output/source");++guards;};
         unchanged(k::execute(nullptr,k::Callback::focus,&f.globals,&services,&out));unchanged(k::execute(&f.state,static_cast<k::Callback>(9),&f.globals,&services,&out));
         f.character.flags_528=&f.flags;unchanged(k::execute(&f.state,k::Callback::focus,&f.globals,&services,&out));f.character.flags_528=&f.gate;
-        f.character.heading_enabled_412=reinterpret_cast<std::uint8_t*>(&out);unchanged(k::execute(&f.state,k::Callback::focus,&f.globals,&services,&out));f.character.heading_enabled_412=&f.heading;
+        f.character.ooi_intent_412=reinterpret_cast<std::uint8_t*>(&out);unchanged(k::execute(&f.state,k::Callback::focus,&f.globals,&services,&out));f.character.ooi_intent_412=&f.ooi_intent;
         f.character.flags_520=reinterpret_cast<std::uint32_t*>(reinterpret_cast<std::uintptr_t>(&f.flags)+1);unchanged(k::execute(&f.state,k::Callback::focus,&f.globals,&services,&out));f.character.flags_520=&f.flags;
         f.character.physical_2dc=reinterpret_cast<const std::uintptr_t*>(UINTPTR_MAX-3);unchanged(k::execute(&f.state,k::Callback::focus,&f.globals,&services,&out));f.character.physical_2dc=&f.physical;
         f.state.character=nullptr;unchanged(k::execute(&f.state,k::Callback::focus,&f.globals,&services,&out));f.state.character=&f.character;

@@ -42,8 +42,8 @@ def oracle(original,exe,env,m):
     rng=random.Random(0x3c4480)
     for _ in range(24):scenarios.append([rng.randrange(2),rng.getrandbits(32),rng.getrandbits(32),rng.randrange(256),rng.randrange(256),rng.randrange(2),*rng.choice(classes),rng.getrandbits(32),rng.randrange(15)])
     for row in scenarios:
-        cb,flags,gate,heading,moving,present,monster,mini,boss,query,mut=row
-        cpu.uc.mem_write(C,bytes(0x600));store(C+0x520,flags);store(C+0x528,gate);cpu.uc.mem_write(C+0x412,bytes([heading]));cpu.uc.mem_write(C+0x554,bytes([moving]));store(C+0x2dc,P if present else 0);store(0x99531c,D)
+        cb,flags,gate,ooi_intent,moving,present,monster,mini,boss,query,mut=row
+        cpu.uc.mem_write(C,bytes(0x600));store(C+0x520,flags);store(C+0x528,gate);cpu.uc.mem_write(C+0x412,bytes([ooi_intent]));cpu.uc.mem_write(C+0x554,bytes([moving]));store(C+0x2dc,P if present else 0);store(0x99531c,D)
         store(C+0x3c8+0x40,target);store(C+0x3c8+0x44,0);trace=[];string_at=[0];live=[False]
         def mutate(op):
             if mut==1 and op==0:store(0x99531c,D2)
@@ -88,7 +88,7 @@ def oracle(original,exe,env,m):
         h=cpu.uc.hook_add(UC_HOOK_CODE,hook)
         try:cpu.invoke(0x3c4480 if not cb else 0x3c434c,[0,0,C,0])
         finally:cpu.uc.hook_del(h)
-        expected={'status':0,'flags':word(C+0x520),'gate':word(C+0x528),'heading':byte(C+0x412),'moving':byte(C+0x554),'physical':tag(word(C+0x2dc)),'debug_selection':tag(word(0x99531c)),'live_string':int(live[0]),'trace':trace}
+        expected={'status':0,'flags':word(C+0x520),'gate':word(C+0x528),'ooi_intent':byte(C+0x412),'moving':byte(C+0x554),'physical':tag(word(C+0x2dc)),'debug_selection':tag(word(0x99531c)),'live_string':int(live[0]),'trace':trace}
         actual=json.loads(run([exe,'--oracle',*row],env));assert actual==expected,(row,expected,actual)
         if cb:assert word(C+0x3c8+0x44)==target
         records.append({'input':row,'original':expected,'compiled':actual})

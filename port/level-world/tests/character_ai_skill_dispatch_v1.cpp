@@ -1,6 +1,7 @@
 #include "../character_ai_skill_dispatch_v1.hpp"
 #include "../character_coordinator.hpp"
 #include "../player_skill_use_session_v1.hpp"
+#include "../player_hud_skill_slot_resolution_v1.hpp"
 #define main retained_session_fixture_main
 #include "player_skill_session_v1.cpp"
 #undef main
@@ -105,8 +106,55 @@ struct RealDispatch {
         r->word=out.value;return status;
     }
 };
+void hud_skill_slot_resolution_regression(){
+    using namespace dh2::player_hud_skill_slot_resolution_v1;
+    constexpr std::uintptr_t character=0x600000001ull;
+    dh2::data::SkillTables tables;
+    tables.skill_lists.resize(2);
+    tables.skill_lists[0].members={4,5,6};
+    tables.skill_lists[1].members={17,23,29};
+    tables.skills.resize(30);
+    tables.skills[23].table_name="SelectedSkill23";
+    dh2::data::PlayerSavegameV1 save;
+    save.set_character(character);
+    std::string error;
+    check(save.initialize_skills_from_character_list(tables.skill_lists[1].members,error),
+          "HUD resolver Save rows failed to initialize");
+    const dh2::data::SavedSkillUpdateServicesV1 update{
+        nullptr,[](void*,std::uintptr_t owner,std::string&){return owner==character;}};
+    check(save.set_skill_in_slot(2,1,update,error),"HUD resolver Save slot failed to initialize");
+    const std::vector<std::uintptr_t> scripts{0x710000001ull,0x710000002ull,0x710000003ull};
+    Result resolved{};
+    check(resolve(save,character,2,1,tables,&scripts,&resolved)==Status::complete&&
+          resolved.hud_slot==2&&resolved.skill_index==1&&resolved.skill_id==23&&
+          resolved.skill_row==&tables.skills[23]&&resolved.script_identity==scripts[1],
+          "HUD argument did not resolve through Save row to the matching selected skill/script");
+
+    const auto unchanged=resolved;
+    check(resolve(save,character,1,1,tables,&scripts,&resolved)==Status::empty_hud_slot&&
+          resolved.script_identity==unchanged.script_identity,
+          "unassigned HUD slot fabricated a skill or changed output");
+    check(resolve(save,character,2,0,tables,&scripts,&resolved)==Status::missing_skill_row&&
+          resolved.script_identity==unchanged.script_identity,
+          "mismatched selected SkillList/Save row was accepted");
+    check(resolve(save,character,2,2,tables,&scripts,&resolved)==Status::invalid_source_fact,
+          "invalid explicit source SkillList selector was accepted");
+    check(resolve(save,character+1,2,1,tables,&scripts,&resolved)==Status::invalid_source_fact,
+          "different Character Save was accepted");
+    check(resolve(save,character,2,1,tables,nullptr,&resolved)==Status::missing_prepared_script,
+          "missing prepared vector fabricated a script");
+    const std::vector<std::uintptr_t> short_scripts{scripts[0]};
+    check(resolve(save,character,2,1,tables,&short_scripts,&resolved)==Status::missing_prepared_script,
+          "short prepared vector was indexed out of range");
+    auto null_scripts=scripts;null_scripts[1]=0;
+    check(resolve(save,character,2,1,tables,&null_scripts,&resolved)==Status::missing_prepared_script,
+          "null prepared script was accepted");
+    check(resolve(save,character,-1,1,tables,&scripts,&resolved)==Status::invalid_argument,
+          "negative NativeHUDSkill argument was accepted");
+}
 int main(int argc,char** argv){try{
     if(argc>1 && std::string(argv[1])=="--oracle")return dispatch_oracle(argc,argv);
+    hud_skill_slot_resolution_regression();
     check(argc==3,"cache/debug args required");unsigned functional=0,guards=0,failures=0,actual=0;
     for(auto id:{-1,0,3,6,7,42})for(auto phase:{-1,0,5,6,7,8})for(auto flags:{0u,0x8000u}){
         DispatchFixture f;f.id=id;f.phase=phase;f.flags=flags;f.tail=0xdeadbeef;f.real_queries=true;auto services=f.services();x::Result r{};

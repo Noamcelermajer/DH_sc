@@ -15,10 +15,10 @@ void require(bool value, const char* message) {
 }
 struct Fixture {
     dh2::character::Coordinator coordinator{C};
-    std::uint8_t heading = 255, moving = 1;
+    std::uint8_t ooi_intent = 255, moving = 1;
     std::uintptr_t physical = P;
     f::Character character{C,C+0x3c8,C+0x4fc,C+0x49c,C+0x3b4,
-        &coordinator.state.flags,&coordinator.state.attack_gate,&heading,&moving,&physical};
+        &coordinator.state.flags,&coordinator.state.attack_gate,&ooi_intent,&moving,&physical};
     f::State callback_state{&character}; f::Globals globals{D};
     f::Services services{this,invoke};
     k::Projection projection{&coordinator.state,&callback_state,&globals,&services};
@@ -54,7 +54,7 @@ struct Fixture {
             self.coordinator.state.current_animation=self.coordinator.state.animation_override;
             self.coordinator.state.animation_override=-1; ++self.animation_calls; break;
         case f::Operation::set_speed: require(q->argument0==0x3f800000,"source skill speed differs"); break;
-        case f::Operation::stop: self.heading=0; self.moving=0; ++self.stops; break;
+        case f::Operation::stop: self.moving=0; ++self.stops; break;
         case f::Operation::start_timer:
             require(q->argument0==10 && !q->argument1 && q->argument2==0x30 && !q->payload,"source Blur timer differs");
             self.timer_id=self.coordinator.start_timer(q->argument0,0,std::int32_t(q->argument2),0);
@@ -110,7 +110,7 @@ int main(int argc,char** argv) { try {
         Fixture self;self.coordinator.state.animation_override=0x12345678;
         self.coordinator.state.attack_gate=0x140;self.monster=2;k::Result result{};
         require(k::callback(&self.projection,f::Callback::focus,&result)==k::Status::complete && result.callback.complete,"delegated Focus failed");
-        require(self.coordinator.state.current==6 && self.coordinator.state.flags==0x16341 && self.coordinator.state.attack_gate==0x100 && !self.heading && self.pre==1 && self.animation_calls==1 && self.coordinator.state.current_animation==0x12345678 && self.coordinator.state.animation_override==-1,"Focus did not borrow single FSM/animation fields");
+        require(self.coordinator.state.current==6 && self.coordinator.state.flags==0x16341 && self.coordinator.state.attack_gate==0x100 && !self.ooi_intent && self.pre==1 && self.animation_calls==1 && self.coordinator.state.current_animation==0x12345678 && self.coordinator.state.animation_override==-1,"Focus did not borrow single FSM/animation fields");
         require(k::callback(&self.projection,f::Callback::blur,&result)==k::Status::complete && self.post==1 && self.stops==1 && self.timer_id==0 && self.coordinator.timers().count==1,"Blur did not use single timer owner");
         const auto& timer=self.coordinator.timers().slots[0];
         require(timer.duration_ms==10 && timer.event==0x30 && !timer.repeat && !timer.user_ref && timer.active,"real timer fields differ");
@@ -132,7 +132,7 @@ int main(int argc,char** argv) { try {
         unchanged(k::event(nullptr,0x28,"is_stoppable",&result));
         unchanged(k::event(&self.coordinator.state,0x28,nullptr,&result));
         unchanged(k::event(&self.coordinator.state,0x28,reinterpret_cast<const char*>(&result),&result));
-        self.character.moving_554=reinterpret_cast<const std::uint8_t*>(&result);
+        self.character.machine_moving_58=reinterpret_cast<const std::uint8_t*>(&result);
         unchanged(k::callback(&self.projection,f::Callback::focus,&result));
     }
     std::cout<<"{\"validation\":\"PASS\",\"functional_cases\":"<<functional

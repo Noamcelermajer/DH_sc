@@ -20,6 +20,10 @@ class NativePlayerCharacterOwnerV1 final : public Coordinator {
     // Typed projection of GameObject+0x1b4. GameObject::UpdatePath owns its
     // transitions; this is not a byte overlay on the ARM32 Character object.
     std::uint8_t game_object_moving_ = 0;
+    // Character+0x412: OOI interaction intent. UseOOI/ForceUseOOI set it;
+    // skill/cast focus and target-range callbacks clear it. It is separate
+    // from both GameObject movement and Coordinator flags.
+    std::uint8_t ooi_intent_412_ = 0;
 
 public:
     NativePlayerCharacterOwnerV1();
@@ -38,6 +42,8 @@ public:
     }
     // Called after the synchronous DropPath and destination copy in Stop.
     void stop_game_object_moving() noexcept { game_object_moving_ = 0; }
+    std::uint8_t* ooi_intent_storage() noexcept { return &ooi_intent_412_; }
+    std::uint8_t ooi_intent() const noexcept { return ooi_intent_412_; }
 
     // Publication occurs only after these existing owners are ready. Inventory
     // is optional while its production Android owner is still disconnected.

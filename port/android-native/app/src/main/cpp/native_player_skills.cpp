@@ -20,6 +20,7 @@
 #include "fresh_inventory_owned_v4.hpp"
 #include "character_skill_cooldown_services.hpp"
 #include "character_coordinator.hpp"
+#include "character_ai_skill_commands_v1.hpp"
 #include "player_ais_lifecycle_v1.hpp"
 #include "ais_external_init_callbacks.hpp"
 #include "player_ai_timer_events_v1.hpp"
@@ -1044,6 +1045,87 @@ const std::vector<std::uintptr_t>* Runtime::prepared_skill_scripts()const noexce
  const auto& s=*impl_;
  if(!s.initialized||s.update_blocked||!s.preparation)return nullptr;
  return &s.preparation->slots(dh2::character_ai_set_skills_and_spells::List::skill);
+}
+bool Runtime::resolve_hud_skill_slot(std::int32_t hud_slot,
+    std::int32_t skill_list_selector,
+    player_hud_skill_slot_resolution_v1::Result& output,
+    std::string& error)const{
+ auto& s=*impl_;error.clear();
+ if(!s.initialized||s.update_blocked||!s.preparation||!s.bindings.tables||
+    !s.bindings.savegame||!s.bindings.savegame->skills_initialized()||
+    s.bindings.savegame->character()!=s.bindings.character||!s.session||
+    s.session->character_identity()!=s.bindings.character||
+    !s.bindings.coordinator||s.bindings.coordinator->owner()!=s.bindings.character||
+    !s.bindings.source_ai||s.bindings.source_ai->owner_04!=s.bindings.character||
+    s.bindings.source_ai->active_ais_1c!=s.ais.ais){
+  error="NativeHUDSkill resolution requires the initialized same Character, Save, AIS, Coordinator and retained Player VM";
+  return false;
+ }
+ const auto& scripts=s.preparation->slots(
+     dh2::character_ai_set_skills_and_spells::List::skill);
+ player_hud_skill_slot_resolution_v1::Result value{};
+ const auto status=player_hud_skill_slot_resolution_v1::resolve(
+     *s.bindings.savegame,s.bindings.character,hud_slot,skill_list_selector,
+     s.bindings.tables->skills(),&scripts,&value);
+ if(status!=player_hud_skill_slot_resolution_v1::Status::complete){
+  error="NativeHUDSkill source slot could not resolve to a prepared selected-skill script (status "+
+        std::to_string(static_cast<std::int32_t>(status))+")";
+  return false;
+ }
+ const auto* instance=s.preparation->instance(value.script_identity);
+ if(!instance||instance->character!=s.bindings.character||
+    instance->identity!=value.script_identity){
+  error="NativeHUDSkill prepared script no longer belongs to the active Player Character";
+  return false;
+ }
+ output=value;error.clear();return true;
+}
+bool Runtime::resolve_hud_skill_slot(std::int32_t hud_slot,
+    player_hud_skill_slot_resolution_v1::Result& output,
+    std::string& error)const{
+ auto& s=*impl_;error.clear();
+ if(!s.bindings.tables){
+  error="NativeHUDSkill resolution requires the active retained SkillTables";
+  return false;
+ }
+ auto selector=s.property_view.resolved[28];
+ if(selector<0||std::size_t(selector)>=s.bindings.tables->skills().skill_lists.size())
+  selector=3;
+ if(std::size_t(selector)>=s.bindings.tables->skills().skill_lists.size()){
+  error="NativeHUDSkill source fallback SkillList 3 is unavailable";
+  return false;
+ }
+ return resolve_hud_skill_slot(hud_slot,selector,output,error);
+}
+bool Runtime::resolve_character_skill_row(std::uint32_t skill_index,
+    std::int32_t skill_list_selector,
+    character_ai_skill_commands_v1::SkillRow& output,
+    std::string& error)const{
+ auto& s=*impl_;error.clear();
+ if(!s.initialized||s.update_blocked||!s.bindings.tables||
+    !s.bindings.character||!s.bindings.savegame||
+    s.bindings.savegame->character()!=s.bindings.character||!s.session||
+    s.session->character_identity()!=s.bindings.character||
+    !s.bindings.source_ai||s.bindings.source_ai->owner_04!=s.bindings.character||
+    s.bindings.source_ai->active_ais_1c!=s.ais.ais){
+  error="Character::GetCharSkill row requires the active same Character, AIS and retained SkillTables";
+  return false;
+ }
+ const auto* row=s.bindings.tables->skill(skill_list_selector,skill_index);
+ if(!row){
+  error="Character::GetCharSkill index is outside its selected SkillList or SkillTable";
+  return false;
+ }
+ character_ai_skill_commands_v1::SkillRow value{};
+ value.identity=reinterpret_cast<std::uintptr_t>(row);
+ value.animation_04=&row->anim;
+ value.moving_08=&row->anim_is_moving;
+ value.type_48=&row->type;
+ if(!value.identity||!value.animation_04||!value.moving_08||!value.type_48){
+  error="Character::GetCharSkill decoded SkillRow projection is incomplete";
+  return false;
+ }
+ output=value;error.clear();return true;
 }
 int Runtime::skill_check(std::uint32_t skill_slot,bool active,
                          std::uint32_t& value,std::string& error){

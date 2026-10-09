@@ -3,12 +3,14 @@
 #include "player_skill_tables_adapter.hpp"
 #include "player_ai_death_v1.hpp"
 #include "player_enemy_kill_credit_v1.hpp"
+#include "player_hud_skill_slot_resolution_v1.hpp"
 #include <memory>
 #include <vector>
 #include <string>
 struct AAssetManager;
 struct dh2_pycst_view;
 namespace dh2::character {class Coordinator;struct Timer32;}
+namespace dh2::character_ai_skill_commands_v1 {struct SkillRow;}
 namespace dh2::character_ai_initialization {struct State;}
 namespace dh2::object_update_culling {struct Object;}
 namespace dh2::data {class PlayerSavegameV1;struct AiProps;}
@@ -112,6 +114,27 @@ public:
     // retained Player preparation. The view is valid only until source
     // UpdateSkills/reload changes it; cast dispatch refreshes it per call.
     const std::vector<std::uintptr_t>* prepared_skill_scripts()const noexcept;
+    // Resolve NativeHUDSkill's HUD slot through the canonical Save map to its
+    // selected SkillList/Save row and same-index retained Player script. The
+    // SkillList selector is explicit so this does not infer a Character field.
+    bool resolve_hud_skill_slot(std::int32_t hud_slot,
+        std::int32_t skill_list_selector,
+        player_hud_skill_slot_resolution_v1::Result&,
+        std::string& error)const;
+    // Production selector path: use the active resolved Character SkillTree
+    // property and the source Character fallback row 3 when that value is
+    // outside the decoded SkillList table.
+    bool resolve_hud_skill_slot(std::int32_t hud_slot,
+        player_hud_skill_slot_resolution_v1::Result&,
+        std::string& error)const;
+    // Source Character::GetCharSkill over the existing immutable SkillTables.
+    // The caller supplies the Character's captured SkillList selector; this
+    // returns borrowed fields from the exact selected member row and creates
+    // no Skill, VM, Save row, or state-machine owner.
+    bool resolve_character_skill_row(std::uint32_t skill_index,
+        std::int32_t skill_list_selector,
+        character_ai_skill_commands_v1::SkillRow&,
+        std::string& error)const;
     // CharAI::AI_IsSkillCheck_Usable/Active over that same vector and retained
     // VM. The caller owns source ordering; this does not begin a cast.
     int skill_check(std::uint32_t skill_slot,bool active,std::uint32_t& value,

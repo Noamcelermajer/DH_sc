@@ -8,8 +8,11 @@ struct Character {
     std::uintptr_t identity,ai,machine,animator,timers;
     std::uint32_t* flags_520;
     std::uint32_t* flags_528;
-    std::uint8_t* heading_enabled_412;
-    const std::uint8_t* moving_554;
+    // Character+0x412 is the OOI interaction-intent byte (set by
+    // Character::UseOOI/ForceUseOOI; cleared when target handling completes).
+    std::uint8_t* ooi_intent_412;
+    // Character+0x554 aliases the embedded CharStateMachine+0x58 moving byte.
+    const std::uint8_t* machine_moving_58;
     const std::uintptr_t* physical_2dc;
 };
 struct State {Character* character;};
@@ -41,7 +44,7 @@ struct Services {
 struct Result {
     std::uintptr_t character,debug,string,physical;
     std::uint32_t calls,debug_constructed,debug_destroyed,flags_written,
-                  heading_cleared,physical_called,timer_attempted,complete;
+                  ooi_intent_cleared,physical_called,timer_attempted,complete;
     Operation last_operation;
 };
 enum class Status : std::int32_t {

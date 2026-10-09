@@ -39,8 +39,8 @@ bool projection(const Projection* p, const Result* out) {
     // remaining producer fields against this wrapper's extra controls before
     // invoking it; its temporary Result cannot cover the caller's Result.
     Range fields[3]{};
-    if (!object(c.heading_enabled_412, fields[0]) ||
-        !object(c.moving_554, fields[1]) ||
+    if (!object(c.ooi_intent_412, fields[0]) ||
+        !object(c.machine_moving_58, fields[1]) ||
         !object(c.physical_2dc, fields[2])) return false;
     for (const auto field : fields) {
         if (overlaps(field, owner)) return false;
