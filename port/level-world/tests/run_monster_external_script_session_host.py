@@ -80,7 +80,7 @@ def main() -> int:
     if result.returncode:
         return result.returncode
     host = json.loads(result.stdout)
-    assert host["monster_external_session_cases"] == 39 and host["mismatches"] == 0, host
+    assert host["monster_external_session_cases"] == 40 and host["mismatches"] == 0, host
     for key in ("unchanged_original_scripts_executed", "spotted_callback_order", "idle_path_short_circuit",
                 "fresh_target_after_path_query", "opaque_64bit_identity_tables", "service_lifetime_and_reentry",
                 "failure_preserves_prior_effects", "unknown_callbacks_rejected"):
@@ -93,6 +93,7 @@ def main() -> int:
     assert host["same_vm_post_final_callbacks"] is True and host["post_discarded_return_updates_final_alias"] is True
     assert host["death_callback_same_vm"] is True
     assert host["death_killer_identity_and_nil"] is True
+    assert host["combat_callback_two_character_abi"] is True
     assert host["stop_attack_callbacks"] is True
     assert host["native_wired"] is False
     dependencies = c_sources + cpp_sources + [MODULE / "monster_external_script_session.hpp",

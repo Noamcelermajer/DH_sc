@@ -11,6 +11,12 @@ namespace dh2::player_camera_rig_v1 {
 namespace {
 using Matrix=std::array<float,16>;
 
+std::int32_t signed_time(std::uint32_t value) noexcept {
+    std::int32_t result{};
+    std::memcpy(&result,&value,sizeof(result));
+    return result;
+}
+
 struct Reader {
     const resources::BresView& image;
     const std::uint8_t* at(std::uint64_t offset,std::uint64_t size) const {
@@ -236,6 +242,36 @@ bool Rig::sample(std::int32_t milliseconds,Pose* out,std::string& error) {
     for(float value:candidate.target)if(!std::isfinite(value)){error="Nonfinite target pose";return false;}
     for(float value:candidate.up_vector)if(!std::isfinite(value)){error="Nonfinite up-vector pose";return false;}
     *out=candidate;return true;
+}
+
+bool Playback::start(const Rig& rig,std::string& error) {
+    error.clear();started_=false;source_clock_ms_=0;timeline_={};
+    if(rig.track_count()==0||rig.animation_end()<=rig.animation_start()){
+        error="Camera idle timeline has no supported animation range";return false;
+    }
+    // IDA: Level::_LoadCamera calls CameraLevel::PlayAnim(idle, 0, 0).
+    // AnimSetController::PlayClip forwards loop=false and sets scale=1.
+    if(dh2_timeline_clip(&timeline_,0,rig.animation_start(),rig.animation_end())||
+       dh2_timeline_loop(&timeline_,0)||dh2_timeline_scale(&timeline_,1.0f)){
+        error="Camera idle source timeline rejected its clip range";timeline_={};return false;
+    }
+    // Prime the source timeline at the PlayClip start timestamp. This makes
+    // the next game-frame delta advance the clip immediately, as the native
+    // timeline does from its play-time baseline.
+    if(dh2_timeline_update(&timeline_,signed_time(source_clock_ms_),nullptr)){
+        error="Camera idle source timeline rejected its initial timestamp";timeline_={};return false;
+    }
+    started_=true;return true;
+}
+
+bool Playback::advance(Rig& rig,std::uint32_t dt_ms,Pose* out,std::string& error) {
+    error.clear();
+    if(!started_||!out){error="Camera idle playback is not started or pose output is null";return false;}
+    source_clock_ms_+=dt_ms;
+    if(dh2_timeline_update(&timeline_,signed_time(source_clock_ms_),nullptr)){
+        error="Camera idle source timeline update rejected its timestamp";return false;
+    }
+    return rig.sample(timeline_.current_ms,out,error);
 }
 
 } // namespace dh2::player_camera_rig_v1

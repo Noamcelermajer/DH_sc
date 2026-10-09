@@ -18,6 +18,13 @@ void require(bool condition,const char* message) {
     if(!condition)throw std::runtime_error(message);
 }
 bool close(float a,float b,float epsilon=0.001f) { return std::abs(a-b)<=epsilon; }
+bool same_pose(const dh2::player_camera_rig_v1::Pose& a,
+               const dh2::player_camera_rig_v1::Pose& b) {
+    for(unsigned i=0;i<16;++i)
+        if(!close(a.camera[i],b.camera[i])||!close(a.target[i],b.target[i])||
+           !close(a.up_vector[i],b.up_vector[i]))return false;
+    return true;
+}
 }
 
 int main(int argc,char** argv) {
@@ -59,13 +66,36 @@ int main(int argc,char** argv) {
         float pose_delta=0.0f;
         for(unsigned i=0;i<16;++i)pose_delta+=std::abs(first.camera[i]-middle.camera[i])
             +std::abs(first.target[i]-middle.target[i])+std::abs(first.up_vector[i]-middle.up_vector[i]);
+        dh2::player_camera_rig_v1::Playback playback;
+        require(playback.start(rig,error),error.c_str());
+        dh2::player_camera_rig_v1::Pose playback_pose{},terminal_pose{},expected_terminal{};
+        require(playback.advance(rig,0,&playback_pose,error),error.c_str());
+        require(playback.current_time_ms()==rig.animation_start()&&!playback.completed(),
+                "Camera idle timeline did not start at the authored clip start");
+        require(playback.advance(rig,16,&playback_pose,error),error.c_str());
+        require(playback.current_time_ms()==rig.animation_start()+16&&same_pose(playback_pose,middle),
+                "Camera idle timeline did not follow the supplied game-frame delta");
+        require(playback.advance(rig,17,&playback_pose,error),error.c_str());
+        require(playback.current_time_ms()==rig.animation_end()&&!playback.completed(),
+                "Camera idle timeline did not retain the exact terminal boundary");
+        require(playback.advance(rig,1,&terminal_pose,error),error.c_str());
+        require(playback.current_time_ms()==rig.animation_end()&&playback.completed(),
+                "Non-looping CameraLevel idle did not complete at its authored end");
+        require(rig.sample(rig.animation_end(),&expected_terminal,error),error.c_str());
+        require(same_pose(terminal_pose,expected_terminal),
+                "Camera idle completion did not retain the authored terminal pose");
+        require(playback.advance(rig,250,&terminal_pose,error),error.c_str());
+        require(playback.current_time_ms()==rig.animation_end()&&playback.completed()&&
+                same_pose(terminal_pose,expected_terminal),
+                "Completed non-looping camera idle wrapped back to the beginning");
         std::cout<<"camera rig loaded; tracks="<<rig.track_count()<<" range="
                  <<rig.animation_start()<<".."<<rig.animation_end()<<"; eye0="
                  <<first.camera[12]<<","<<first.camera[13]<<","<<first.camera[14]
                  <<" target0="<<first.target[12]<<","<<first.target[13]<<","<<first.target[14]
                  <<" up0="<<first.up_vector[12]<<","<<first.up_vector[13]<<","<<first.up_vector[14]
                  <<"; eyeMid="<<middle.camera[12]<<","<<middle.camera[13]<<","<<middle.camera[14]
-                 <<" poseDelta="<<pose_delta<<"\n";
+                 <<" poseDelta="<<pose_delta<<"; timeline=game-delta,once,terminal="
+                 <<playback.current_time_ms()<<"\n";
         return 0;
     } catch(const std::exception& e) { std::cerr<<e.what()<<"\n";return 1; }
 }

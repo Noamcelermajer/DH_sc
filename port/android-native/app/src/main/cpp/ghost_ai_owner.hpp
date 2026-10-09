@@ -147,6 +147,9 @@ public:
     Status reset(std::string& error);
     bool ready() const noexcept;
     monster_external_script::Statistics script_statistics() const noexcept;
+    Status dispatch_combat_result(monster_external_script::Event,
+                                  std::uintptr_t attacker, std::uintptr_t defender,
+                                  std::string& error);
 
     Status tick(const FrameInput&, FrameResult*);
 

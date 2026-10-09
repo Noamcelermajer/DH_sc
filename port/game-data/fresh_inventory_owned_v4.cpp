@@ -59,6 +59,16 @@ bool FreshInventoryOwnedV4::has_quest_gathering_item_id(std::int32_t item_id,boo
  }
  e.clear();return true;
 }
+bool FreshInventoryOwnedV4::quest_gathering_item_quantity(std::int32_t item_id,bool& found,std::int32_t& quantity,std::string& e)const{
+ found=false;quantity=0;
+ if(item_id<0||std::size_t(item_id)>=tables_.items().rows.size()){
+  e="GatherLoot quantity query is outside the retained ItemTable";return false;
+ }
+ for(const auto& slot:items_)if(slot&&slot->item&&slot->item->id==item_id){
+  found=true;quantity=slot->item->signed_quantity();e.clear();return true;
+ }
+ e.clear();return true;
+}
 bool FreshInventoryOwnedV4::invoke_loot_power_bridge(void* context,const LootPowerRequestV7& q,std::int32_t& result,std::string& e){
  auto& bridge=*static_cast<LootPowerBridgeV4*>(context);OwnedInventoryResponseV4 out;
  auto op=static_cast<OwnedInventoryOperationV4>(q.operation);
@@ -219,6 +229,40 @@ bool FreshInventoryOwnedV4::pickup_world_item(std::size_t index,std::int32_t& in
  // retryable world item after applying its value/quantity to inventory.
  gold_=old_gold;potion_=old_potion;if(merge_target)merge_target->quantity=merge_quantity;
  if(accepted)e="Source AddItem reported success without transferring the world item";return false;
+}
+WorldItemTransferResultV4 FreshInventoryOwnedV4::transfer_world_item_for_auto_transmute(
+    std::size_t index,std::int32_t& inventory_index,std::uintptr_t& destination_identity,
+    const OwnedInventoryServicesV4& s,std::string& e){
+ inventory_index=-1;destination_identity=0;
+ if(!mutation_allowed(e)||index>=world_items_.size()||!world_items_[index]||!world_items_[index]->item){
+  e="Invalid retained world Item AutoTransmute transfer";return WorldItemTransferResultV4::not_applied;
+ }
+ const auto* info=metadata(world_items_[index]->item.get(),e);if(!info)return WorldItemTransferResultV4::not_applied;
+ if(item_type(*info)==14){e="Source AutoTransmute branch excludes potion Items";return WorldItemTransferResultV4::not_applied;}
+ auto* source=world_items_[index]->item.get();
+ ItemInstanceV1* merge_target=nullptr;std::uint16_t merge_quantity=0;
+ if(item_type(*info)!=13&&std::uint8_t(info->record.words[7])){
+  std::uint32_t candidate=0;bool found=false;if(!has_like(source,candidate,found,e))return WorldItemTransferResultV4::not_applied;
+  if(found){merge_target=items_[candidate]->item.get();merge_quantity=merge_target->quantity;}
+ }
+ const auto old_gold=gold_;auto* old_potion=potion_;bool accepted=false;
+ try{accepted=add_item(world_items_[index]->item,false,true,inventory_index,s,e);}
+ catch(const std::exception& x){e=x.what();}catch(...){e="AutoTransmute V4 Item transfer callback threw";}
+ if(!world_items_[index]->item){
+  if(!accepted&&inventory_index<0)for(std::size_t i=0;i<items_.size();++i)
+   if(items_[i]&&items_[i]->item.get()==source){inventory_index=std::int32_t(i);break;}
+  if(inventory_index>=0&&std::size_t(inventory_index)<items_.size()&&items_[std::size_t(inventory_index)]&&items_[std::size_t(inventory_index)]->item)
+   destination_identity=reinterpret_cast<std::uintptr_t>(items_[std::size_t(inventory_index)]->item.get());
+  world_items_.erase(world_items_.begin()+std::ptrdiff_t(index));
+  if(!accepted||!destination_identity){if(e.empty())e="AutoTransmute transfer changed ownership without a retained destination Item";return WorldItemTransferResultV4::indeterminate;}
+  e.clear();return WorldItemTransferResultV4::committed;
+ }
+ // AddItem rejected before source ownership moved: restore any synchronous
+ // gold/merge prefix just as the normal pickup owner does, leaving the world
+ // Item available for ordinary pickup.
+ gold_=old_gold;potion_=old_potion;if(merge_target)merge_target->quantity=merge_quantity;
+ if(accepted)e="AutoTransmute AddItem reported success without transferring its source Item";
+ return WorldItemTransferResultV4::not_applied;
 }
 bool FreshInventoryOwnedV4::drop_inventory_item_offline(std::uint32_t index,const OwnedInventoryServicesV4& inventory_services,const OfflineWorldItemDropServicesV4& drop_services,std::int32_t& world_index,std::string& e){
  world_index=-1;if(!mutation_allowed(e))return false;

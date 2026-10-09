@@ -35,6 +35,7 @@
 #include "item_power_tables_v5.hpp"
 #include "loot_power_resources_v7.hpp"
 #include "fresh_inventory_owned_v4.hpp"
+#include "item_auto_transmute_v1.hpp"
 #include "../../../../../game-data/player_add_loot_v1.hpp"
 #include "../../../../../level-world/player_initial_equipment_v1.hpp"
 #include "../../../../../level-world/loot_pickup_quest_tail_v10.hpp"
@@ -58,6 +59,7 @@
 #include "../../../../../game-data/player_equipment_live_services_v1.hpp"
 #include "health.hpp"
 #include "combat_application.hpp"
+#include "../../../../../../port/level-world/ais_combat_result_dispatch_v1.hpp"
 #include "ai.hpp"
 #include "aggro.hpp"
 #include "navigation_objects.hpp"
@@ -102,6 +104,7 @@
 #include "native_ghost_skills.hpp"
 #include "native_ghost_script_queries.hpp"
 #include "native_player_skills.hpp"
+#include "native_trophy_runtime.hpp"
 #include "object_update_culling.hpp"
 #include "character_ai_update_all_skills.hpp"
 #include "character_skill_state_queries.hpp"
@@ -162,6 +165,7 @@ NativeSourceCamera source_camera;
 using Vertex=dh2::objects::Vertex;
 std::string mod_root;
 std::string runtime_root;
+dh2::native::trophies::OwnerV1 app_trophy_runtime;
 void* item_text_services_context=nullptr;
 model_renderer::ItemTextServicesFactoryV5 item_text_services_factory=nullptr;
 struct Draw{GLuint vertices=0,indices=0,diffuse=0,alpha=0;GLsizei count=0;unsigned node=0;dh2::scene::Material material;
@@ -231,6 +235,7 @@ struct MvpRenderInstance {
  bool packaged_actor_asset=false;
 };
 bool item_node_below(const dh2::objects::Resource&,unsigned,unsigned);
+bool unlock_source_trophy(const char*,const char*,std::string&);
 std::uint64_t snapshot_checksum(const dh2::data::PropertySheet& sheet){
  std::uint64_t result=14695981039346656037ull;for(auto value:sheet)for(unsigned i=0;i<4;++i){result^=(std::uint32_t(value)>>(8*i))&255;result*=1099511628211ull;}return result;
 }
@@ -1076,10 +1081,33 @@ struct NativeLootAdapterV1 {
       }};dh2::player_manager_friendly_v1::Result result{};
      if(dh2::player_manager_friendly_v1::get_num_players(&native_host.registry,&services,&result)!=dh2::player_manager_friendly_v1::Status::complete){error="Native PlayerManager player-count query failed";return false;}
      response.value=result.value;error.clear();return true;}
+   case Operation::full_notifications:
+    // ItemInventory::_AddItemInstance unlocks this row after inserting the
+    // item that makes the Character inventory full, for a local Player only.
+    {auto* record=native_host.record_for(native_host.host_projection());
+     if(!record||!record->character_660||record->character_660!=inventory.character()){
+      error="Source full-inventory trophy has no matching Player Character";return false;
+     }}
+    {using namespace dh2::player_locality_v1;
+     const auto queries=native_host.locality_services();Result locality{};
+     if(is_local_player(&native_host.registry,&queries,inventory.character(),&locality)!=Status::complete){
+      error="Source full-inventory trophy locality query failed";return false;
+     }
+     if(locality.value&&!unlock_source_trophy("full_inventory","ItemInventory::_AddItemInstance",error))return false;
+    }
+    error.clear();return true;
    case Operation::gold_notifications:
-    // AddGold's source notification tail is an achievement-manager boundary.
-    // The offline reconstruction has no achievements owner yet; preserve the
-    // actual gold mutation and let the inventory/UI action finish.
+    // ItemInventory::SetGold awards these exact source rows after applying the
+    // new balance, only for the local Player. This runtime owns the active
+    // Player inventory and a single app-wide TrophyManager; state is memory-only
+    // because the source achievements.savegame path is not mapped yet.
+    {auto* record=native_host.record_for(native_host.host_projection());
+     if(!record||!record->character_660||record->character_660!=inventory.character()){
+     error="Source SetGold trophy tail has no local Player identity";return false;
+     }}
+    if(inventory.gold()>9999&&!unlock_source_trophy("gear_10kgold","SetGold",error))return false;
+    if(inventory.gold()>99999&&!unlock_source_trophy("gear_100kgold","SetGold",error))return false;
+    if(inventory.gold()>999999&&!unlock_source_trophy("gear_1mgold","SetGold",error))return false;
     error.clear();return true;
    case Operation::update_name:
     if(!request.item){error="Item name update has no live Item";return false;}
@@ -1221,11 +1249,11 @@ void reset_source_camera_level_runtime(){
  source_camera_level_pan_offset={};
 }
 std::unique_ptr<dh2::player_camera_rig_v1::Rig> player_camera_rig;
+dh2::player_camera_rig_v1::Playback player_camera_playback;
 AAssetManager* player_camera_asset_manager=nullptr;
 bool player_camera_rig_load_attempted=false;
 std::string player_camera_rig_asset;
 float player_camera_rig_default_target_distance=0.0f;
-std::chrono::steady_clock::time_point player_camera_rig_epoch;
 float player_camera_input_yaw=dh2::native::crypt_camera_frame_v1::kInputYawRadians;
 float player_camera_input_pitch=dh2::native::crypt_camera_frame_v1::input_pitch_radians();
 dh2::character::crypt_scripts::SpawnSession crypt_spawn_script;
@@ -1293,6 +1321,7 @@ struct BodyOwner {
 };
 struct NativeWorldItem {
  dh2::data::ItemInstanceV1* item=nullptr;
+ dh2::data::AutoTransmuteContinuationV1 auto_transmute{};
  std::int32_t audio_visual_id=-1;
  unsigned visual_root=UINT32_MAX;
  std::array<float,3> position{};
@@ -2204,8 +2233,47 @@ std::vector<std::uint8_t> read(AAssetManager* assets,const std::string& name,con
   while(done<bytes.size()){const auto got=AAsset_read(a,bytes.data()+done,bytes.size()-done);if(got<=0){AAsset_close(a);throw std::runtime_error("Short asset read");}done+=got;}
   AAsset_close(a);return bytes;
 }
+void initialize_native_trophy_runtime(AAssetManager* assets){
+ if(app_trophy_runtime.initialized())return;
+ if(!assets)throw std::runtime_error("Native TrophyManager requires the app asset owner");
+ const auto records=read(assets,"original-cache/data/pydata/trophies_pyarray.bin","");
+ const auto names=read(assets,"original-cache/data/pydata/trophies_pyarraynames.bin","");
+ const auto fields=read(assets,"original-cache/data/pydata/trophies_pystructnames.bin","");
+ std::string error;
+ if(!app_trophy_runtime.initialize({records.data(),records.size()},
+       {names.data(),names.size()},{fields.data(),fields.size()},error))
+  throw std::runtime_error("Source TrophyTable initialization failed: "+error);
+ auto* manager=app_trophy_runtime.manager();
+ if(!manager||manager->size()!=69||manager->find_id_by_name("gear_10kgold")<0||
+    manager->find_id_by_name("gear_100kgold")<0||manager->find_id_by_name("gear_1mgold")<0||
+    manager->find_id_by_name("gear_transmute")<0||manager->find_id_by_name("epic_withskills")<0||
+    manager->find_id_by_name("use_100_potions")<0)
+  throw std::runtime_error("Source TrophyTable rows do not match the verified cache inventory");
+ __android_log_print(ANDROID_LOG_WARN,"DH2Native",
+   "TrophyManager initialized | %zu source rows | memory-only: achievements.savegame Android path is unproven | online providers unavailable",
+   manager->size());
+}
+bool unlock_source_trophy(const char* table_name,const char* caller,std::string& error){
+ auto* manager=app_trophy_runtime.manager();
+ if(!manager||!table_name||!caller){error="Source TrophyManager owner is uninitialized";return false;}
+ const auto id=manager->find_id_by_name(table_name);
+ if(id<0){error=std::string("Source TrophyTable row is missing: ")+table_name;return false;}
+ const auto status=manager->unlock(id);
+ if(status==dh2::data::TrophyUnlockStatusV1::completed){
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+    "Source trophy unlocked in memory | %s | id %d | %s | achievements.savegame persistence unavailable",
+    table_name,id,caller);
+  error.clear();return true;
+ }
+ if(status==dh2::data::TrophyUnlockStatusV1::already_unlocked||
+    status==dh2::data::TrophyUnlockStatusV1::already_unlocking){error.clear();return true;}
+ error=std::string("Source TrophyManager UnlockTrophy failed for ")+table_name+
+   " (status "+std::to_string(static_cast<int>(status))+")";
+ return false;
+}
 std::unique_ptr<dh2::native::player_skills::Runtime> prince_skills;
 void initialize_native_player_skills(AAssetManager* assets,bool restore){
+ initialize_native_trophy_runtime(assets);
  if(restore&&prince_skills){prince_skills->restore(assets,prince_source_ai.get(),actor_skill_catalogue.get());return;}
  if(!prince_source_ai||!actor_skill_catalogue)throw std::runtime_error("Native Player skill owners missing");
  if(!prince_combat.savegame){
@@ -2684,6 +2752,7 @@ bool ensure_player_camera_rig(const RuntimeLevelAssets& level){
  if(player_camera_rig&&player_camera_rig_asset==camera_path)return true;
  if(player_camera_rig_load_attempted&&player_camera_rig_asset==camera_path)return false;
  player_camera_rig.reset();player_camera_rig_asset=camera_path;
+ player_camera_playback=dh2::player_camera_rig_v1::Playback{};
  player_camera_rig_default_target_distance=0.0f;
  player_camera_rig_load_attempted=false;
  if(!player_camera_asset_manager)return false;
@@ -2697,6 +2766,9 @@ bool ensure_player_camera_rig(const RuntimeLevelAssets& level){
   if(!candidate->load({camera_scene.data(),camera_scene.size(),
                        idle_animation.data(),idle_animation.size()},error))
    throw std::runtime_error("Authored player camera rig rejected: "+error);
+  dh2::player_camera_rig_v1::Playback candidate_playback;
+  if(!candidate_playback.start(*candidate,error))
+   throw std::runtime_error("Authored player camera timeline rejected: "+error);
   dh2::player_camera_rig_v1::Pose initial{};
   if(!candidate->sample(candidate->animation_start(),&initial,error))
    throw std::runtime_error("Authored player camera initial pose rejected: "+error);
@@ -2711,8 +2783,8 @@ bool ensure_player_camera_rig(const RuntimeLevelAssets& level){
    throw std::runtime_error("Authored camera rig has no finite camera-to-target distance");
   player_camera_input_yaw=std::atan2(eye_offset[1],eye_offset[0]);
   player_camera_input_pitch=std::atan2(eye_offset[2],std::hypot(eye_offset[0],eye_offset[1]));
-  player_camera_rig_epoch=std::chrono::steady_clock::now();
   player_camera_rig=std::move(candidate);
+  player_camera_playback=std::move(candidate_playback);
   __android_log_print(ANDROID_LOG_INFO,"DH2Native",
       "Authored gameplay camera rig loaded | level %s | asset %s | tracks %u | clip %d..%d | BRES fov/aspect/clips %.4f/%.4f/%.0f..%.0f | runtime FOV from Level::_LoadCamera | eye %.3f %.3f %.3f | target %.3f %.3f %.3f",
       level.name.c_str(),camera_path.c_str(),
@@ -2727,15 +2799,10 @@ bool ensure_player_camera_rig(const RuntimeLevelAssets& level){
   return false;
  }
 }
-bool sample_player_camera_rig(dh2::player_camera_rig_v1::Pose& pose){
+bool sample_player_camera_rig(std::uint32_t dt_ms,dh2::player_camera_rig_v1::Pose& pose){
  if(!ensure_player_camera_rig(active_level_assets))return false;
- const auto start=player_camera_rig->animation_start();
- const auto duration=std::max(1,player_camera_rig->animation_end()-start);
- const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(
-     std::chrono::steady_clock::now()-player_camera_rig_epoch).count();
- const auto offset=static_cast<std::int32_t>(elapsed%duration);
  std::string error;
- if(!player_camera_rig->sample(start+offset,&pose,error)){
+ if(!player_camera_playback.advance(*player_camera_rig,dt_ms,&pose,error)){
   __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Authored gameplay camera sample failed: %s",error.c_str());
   return false;
  }
@@ -2746,7 +2813,7 @@ Matrix source_player_camera(int width,int height,std::uint32_t dt_ms){
  using namespace dh2::camera_level_runtime_v1;
  Frame frame{};
  dh2::player_camera_rig_v1::Pose pose{};
- if(!sample_player_camera_rig(pose)){
+ if(!sample_player_camera_rig(dt_ms,pose)){
   static bool warned=false;
   if(!warned){
    __android_log_print(ANDROID_LOG_WARN,"DH2Native",
@@ -3424,7 +3491,7 @@ if(active_crypt_room_runtime){
 }
 void deactivate(){
  clear_player_equipment_native(true);
- player_camera_rig.reset();player_camera_asset_manager=nullptr;player_camera_rig_load_attempted=false;player_camera_rig_asset.clear();player_camera_rig_default_target_distance=0.0f;
+ player_camera_rig.reset();player_camera_playback=dh2::player_camera_rig_v1::Playback{};player_camera_asset_manager=nullptr;player_camera_rig_load_attempted=false;player_camera_rig_asset.clear();player_camera_rig_default_target_distance=0.0f;
  source_camera={};
  release_class_previews();menu_background=false;class_scene=false;
  if(active_crypt_room_runtime){
@@ -4000,6 +4067,90 @@ void update_enemy(ObjectActor& actor,int table,unsigned dt_ms){
  // Character body/velocity, animation-driven locomotion, interaction-spot,
  // obstacle-avoidance and full Character FSM providers remain unsupported.
 }
+namespace {
+namespace combat_dispatch=dh2::ais_combat_result_dispatch_v1;
+struct NativeCombatDispatchContext {ObjectActor* attacker;ObjectActor* defender;};
+bool combat_actor(ObjectActor& actor,combat_dispatch::Actor& output,std::string& error){
+ output={actor.identity,0,nullptr};
+ if(!actor.native_ai)return true;
+ const auto active=actor.native_ai->state.active_ais_1c;
+ if(!active)return true; // CharAI's source virtual call is a no-op without active AIS.
+ const auto& owner=actor.native_ai->initialization;
+ if(!owner||!owner->initialized||!owner->vm.ready()||owner->lifecycle.active!=active||
+    owner->ais.identity!=active){error="active Monster AIS has no matching retained combat VM/VCB";return false;}
+ output.ais=active;output.flags_b8=&owner->ais.flags_b8;return true;
+}
+std::int32_t dispatch_native_combat_callback(void* raw,std::uintptr_t ais,
+    combat_dispatch::Callback callback,std::uintptr_t attacker,std::uintptr_t defender){
+ auto& context=*static_cast<NativeCombatDispatchContext*>(raw);
+ const auto name=callback==combat_dispatch::Callback::target_hit?"OnTargetHit":"OnTargetMissed";
+ std::uintptr_t player_ais=0;const std::uint32_t* player_flags=nullptr;
+ if(prince_source_ai&&prince_skills&&prince_source_ai->character_identity&&
+    (attacker==prince_source_ai->character_identity||defender==prince_source_ai->character_identity)&&
+    prince_skills->combat_owner(player_ais,player_flags)&&player_ais==ais&&player_flags){
+  std::string error;const int status=prince_skills->dispatch_combat_result(ais,callback,attacker,defender,error);
+  __android_log_print(status?ANDROID_LOG_ERROR:ANDROID_LOG_INFO,"DH2Native",
+   "AIS combat callback | Player | %s | attacker %zu | defender %zu | status %d | %s",
+   name,std::size_t(attacker),std::size_t(defender),status,error.c_str());
+  return status;
+ }
+ for(auto* actor:{context.attacker,context.defender})if(actor&&
+    (actor->identity==attacker||actor->identity==defender)&&actor->native_ai&&
+    actor->native_ai->state.active_ais_1c==ais){
+  const auto& owner=actor->native_ai->initialization;
+  if(!owner||!owner->initialized||!owner->vm.ready()||owner->lifecycle.active!=ais||owner->ais.identity!=ais){
+   __android_log_print(ANDROID_LOG_ERROR,"DH2Native","AIS combat callback owner mismatch | %s | %s | AIS %zu | retained Monster VM unavailable",actor->name.c_str(),name,std::size_t(ais));return -1;
+  }
+  std::string error;const auto event=callback==combat_dispatch::Callback::target_hit?
+      dh2::monster_external_script::Event::target_hit:dh2::monster_external_script::Event::target_missed;
+  const auto status=owner->vm.dispatch_combat_result(event,attacker,defender,error);
+  __android_log_print(status==dh2::monster_external_script::Status::complete?ANDROID_LOG_INFO:ANDROID_LOG_ERROR,
+   "DH2Native","AIS combat callback | %s | %s | attacker %zu | defender %zu | status %u | %s",
+   actor->name.c_str(),name,std::size_t(attacker),std::size_t(defender),unsigned(status),error.c_str());
+  return status==dh2::monster_external_script::Status::complete?0:-1;
+ }
+ __android_log_print(ANDROID_LOG_ERROR,"DH2Native","AIS combat callback owner not found | %s | AIS %zu | attacker %zu | defender %zu",
+  name,std::size_t(ais),std::size_t(attacker),std::size_t(defender));
+ return -1;
+}
+bool dispatch_combat_result(ObjectActor* attacker,ObjectActor* defender,
+    std::uintptr_t attacker_identity,std::uintptr_t defender_identity,
+    const dh2::data::CombatResult& result){
+ if(!attacker_identity||!defender_identity||attacker_identity==defender_identity)return false;
+ combat_dispatch::Actor a{attacker_identity,0,nullptr},d{defender_identity,0,nullptr};std::string error;
+ if(attacker&&!combat_actor(*attacker,a,error))goto failed;
+ if(defender&&!combat_actor(*defender,d,error))goto failed;
+ if(attacker_identity==prince_character.identity()){
+  const std::uint32_t* flags=nullptr;
+  if(!prince_skills||!prince_skills->combat_owner(a.ais,flags)||!flags){error="active Player AIS combat owner unavailable";goto failed;}
+  a.character=attacker_identity;a.flags_b8=flags;
+ }
+ if(defender_identity==prince_character.identity()){
+  const std::uint32_t* flags=nullptr;
+  if(!prince_skills||!prince_skills->combat_owner(d.ais,flags)||!flags){error="active Player AIS combat owner unavailable";goto failed;}
+  d.character=defender_identity;d.flags_b8=flags;
+ }
+ {
+  NativeCombatDispatchContext context{attacker,defender};
+  const combat_dispatch::Arguments arguments{&a,&d,&result};
+  const combat_dispatch::Services services{&context,dispatch_native_combat_callback};
+  combat_dispatch::Report report{};
+  const auto status=combat_dispatch::dispatch(&arguments,&services,&report);
+  if(status!=combat_dispatch::Status::complete){
+   error="source AIS combat dispatch failed (status "+std::to_string(int(status))+")";goto failed;
+  }
+  if(report.callbacks)__android_log_print(ANDROID_LOG_INFO,"DH2Native",
+   "Combat AIS result dispatched | callback %s | owners %u | outcomes %u | mask %08x",
+   report.selected==combat_dispatch::Callback::target_hit?"OnTargetHit":"OnTargetMissed",
+   report.callbacks,result.outcomes,result.mask);
+ }
+ return true;
+failed:
+ __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Combat AIS result dispatch failed after application | attacker %zu | defender %zu | %s",
+  std::size_t(attacker_identity),std::size_t(defender_identity),error.c_str());
+ return false;
+}
+}
 void apply_actor_to_player(ObjectActor& attacker,const dh2::data::CombatEventAction& action){
  if(prince_combat.life.dead)return;
  if(attacker.ai_attack&&enemy_ai_enabled&&!actor_player_range(attacker).melee)return;
@@ -4020,6 +4171,7 @@ void apply_actor_to_player(ObjectActor& attacker,const dh2::data::CombatEventAct
  dh2::data::melee_pipeline::Exchange exchange;
  if(dh2::data::melee_pipeline::monster_to_player(&request,&exchange)!=dh2::data::melee_pipeline::Status::complete){__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Player defender application failed");enabled=false;return;}
  auto& result=exchange.result;auto& applied=exchange.application;
+ if(!dispatch_combat_result(&attacker,nullptr,attacker.identity,prince_character.identity(),result)){enabled=false;return;}
  ++combat_hits;++prince_combat.received;
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Prince damage received | attacker %s | attempt %u | result %d %d %d %d %d %d %u %u %d %d | HP %d %d | dead %u | combo %u | RNG %u %u | statuses %u | low health armed %u | cue %u | checksum %016llx",attacker.name.c_str(),prince_combat.received,result.amount,result.dot_element,result.dot_duration,result.dot_amount,result.hp_leech,result.mp_leech,result.outcomes,result.mask,result.weapon_category,result.element,applied.health.before,applied.health.after,prince_combat.life.dead,attacker.combat_state.combo_hits,combat_random.seed,combat_random.calls,applied.status_requests,prince_combat.life.low_health_armed,applied.health.low_health_cue,static_cast<unsigned long long>(snapshot_checksum(prince_combat.properties.resolved)));
  if(applied.health.low_health_cue)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Player low health request | HP %d | maximum %d | audio pending",applied.health.after,prince_combat.properties.resolved[38]);
@@ -4040,6 +4192,7 @@ void apply_actor_attack(ObjectActor& attacker,const dh2::data::CombatEventAction
  CombatAggroBeforeHit aggro{&defender->aggro,&attacker.aggro,defender->identity,attacker.identity,aggro_facts};
  const dh2::data::MonsterApplicationRequest request{&result,&ap,&dp,&attacker.combat_state,&defender->combat_state,&add_combat_threat_before_hit,&aggro};
  if(dh2_combat_melee(&result,&av,&dv,&combat_random,action.offhand,0)||dh2_combat_apply_monster(&applied,&request)){__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Native combat application failed");enabled=false;return;}
+ if(!dispatch_combat_result(&attacker,defender,attacker.identity,defender->identity,result)){enabled=false;return;}
  ++combat_hits;
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native combat hit | %s | target %s | hit %u | result %d %d %d %d %d %d %u %u %d %d | HP %d %d | dead %u | combo %u | RNG %u %u | statuses %u | threat %.9g",attacker.name.c_str(),defender->name.c_str(),combat_hits,result.amount,result.dot_element,result.dot_duration,result.dot_amount,result.hp_leech,result.mp_leech,result.outcomes,result.mask,result.weapon_category,result.element,applied.health.before,applied.health.after,defender->combat_state.dead,attacker.combat_state.combo_hits,combat_random.seed,combat_random.calls,applied.status_requests,double(applied.threat));
  if(applied.status_requests)__android_log_print(ANDROID_LOG_INFO,"DH2Native","Combat status services pending | %s | requests %u",defender->name.c_str(),applied.status_requests);
@@ -4704,6 +4857,10 @@ bool ui_player_transmute_item(std::uintptr_t identity,std::int32_t requested,
  if(dh2_property_add(&view,213,256)){
   error="Source transmute counter property 213 rejected its increment";return false;
  }
+ // Character::INV_TransmuteItem checks the post-increment integer property
+ // and routes the source row through the app-wide TrophyManager.
+ if(prince_combat.properties.resolved[213]>=300*256&&
+    !unlock_source_trophy("gear_transmute","INV_TransmuteItem",error))return false;
  if(!player_equipment_native->services->skin_only(error))return false;
  error.clear();return true;
 }
@@ -4903,15 +5060,15 @@ bool ui_player_use_potion(std::uintptr_t identity,std::string& error){
        player_equipment_native->live_services,error))return false;
 
  // The Player branch increments Character property 219 before its optional
- // TrophyManager search for "use_100_potions". Preserve that counter on this
- // same owner. The achievement award itself remains an explicit seam because
- // this runtime has no canonical TrophyManager provider.
+ // TrophyManager search for "use_100_potions".
  auto property_view=dh2::data::property_view(actor_property_rules,prince_combat.properties);
  if(dh2_property_add(&property_view,219,1)){
   error="Potion consumed but Character property 219 update failed";return false;
  }
- if(prince_combat.properties.resolved[219]>99)
-  __android_log_print(ANDROID_LOG_WARN,"DH2Native","Potion achievement seam | source trophy use_100_potions is eligible; no canonical TrophyManager provider is attached");
+ if(prince_combat.properties.resolved[219]>99&&
+    !unlock_source_trophy("use_100_potions","Ctrl_UsePotion",error)){
+  error="Potion consumed and counter updated, but "+error;return false;
+ }
 
  // Character::Ctrl_UsePotion calls RegenHP(-1), then RegenMP(-1), after the
  // removal and Player achievement prefix. The existing vitals kernel owns the
@@ -4923,7 +5080,7 @@ bool ui_player_use_potion(std::uintptr_t identity,std::string& error){
  if(dh2_vitals_regen(&property_view,1,-1,&mp_change)){
   error="Potion consumed and HP regenerated, but source MP regeneration failed";return false;
  }
- __android_log_print(ANDROID_LOG_INFO,"DH2Native","Character::Ctrl_UsePotion source prefix | remaining %d | HP %d -> %d | MP %d -> %d | trophy manager unavailable",
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Character::Ctrl_UsePotion source prefix | remaining %d | HP %d -> %d | MP %d -> %d",
   prince_combat.inventory->num_potions(),hp_change.before,hp_change.after,mp_change.before,mp_change.after);
  error.clear();return true;
 }
@@ -5025,6 +5182,8 @@ void player_authored_event(const dh2::animation::TriggeredEvent& event,int clip)
  CombatAggroBeforeHit aggro{&target->aggro,&prince_combat.aggro,target->identity,prince_character.identity(),aggro_facts};
  const dh2::data::MonsterApplicationRequest request{&result,&ap,&dp,&prince_combat.life,&target->combat_state,&add_combat_threat_before_hit,&aggro};
  if(dh2_combat_melee(&result,&av,&dv,&combat_random,action.offhand,0)||dh2_combat_apply_player_to_monster(&applied,&request))throw std::runtime_error("Player combat application failed");
+ if(!dispatch_combat_result(nullptr,target,prince_character.identity(),target->identity,result))
+  throw std::runtime_error("Source AIS combat-result callback failed after Player attack application");
  ++combat_hits;++prince_combat.attempts;
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Prince combat hit | target %s | attempt %u | result %d %d %d %d %d %d %u %u %d %d | HP %d %d | dead %u | combo %u | RNG %u %u | statuses %u",target->name.c_str(),prince_combat.attempts,result.amount,result.dot_element,result.dot_duration,result.dot_amount,result.hp_leech,result.mp_leech,result.outcomes,result.mask,result.weapon_category,result.element,applied.health.before,applied.health.after,target->combat_state.dead,prince_combat.life.combo_hits,combat_random.seed,combat_random.calls,applied.status_requests);
  if(applied.health.kill_requested){
@@ -7235,6 +7394,156 @@ bool drop_actor_loot(ObjectActor& victim,std::uint64_t killer_identity,std::stri
   unsigned(selection.infinite_loot_drops));
  victim.loot_dropped=true;error.clear();return true;
 }
+struct NativeAutoTransmuteContextV1 {
+ NativeLootAdapterV1* adapter{};
+ NativeWorldItem* projection{};
+};
+bool native_auto_transmute_facts(NativeWorldItem& projection,
+    dh2::data::AutoTransmuteFactsV1& facts,std::string& error){
+ facts={};
+ if(!world_mode||!projection.item||!prince_combat.inventory){
+  error="AutoTransmute requires the live Character V4 inventory and world Item";return false;
+ }
+ const auto* row=dh2::data::item(prince_combat.inventory->table(),projection.item->id);
+ if(!row){error="AutoTransmute world Item has no retained ItemTable row";return false;}
+ dh2::data::savegame_options_v1::Application application{
+   native_application.identity,&native_saved_options};
+ std::int32_t saved_option=-1;
+ if(dh2::data::savegame_options_v1::get_saved_option(&application,"AutoTransmute",
+      &saved_option)!=dh2::data::savegame_options_v1::Status::complete||saved_option<0){
+  error="AutoTransmute SavedOption is unavailable from the bound Application settings owner";return false;
+ }
+ if(projection.item->powers.size()>std::size_t(INT32_MAX)){
+  error="AutoTransmute Item power count exceeds the source signed domain";return false;
+ }
+ facts.ready=true;facts.item_id=projection.item->id;
+ facts.item_type=dh2::data::item_type(*row);
+ facts.base_property=row->record.words[24];
+ facts.power_count=static_cast<std::int32_t>(projection.item->powers.size());
+ facts.saved_option=saved_option;
+ if(facts.item_type!=14&&facts.base_property!=-1&&facts.power_count<saved_option){
+  if(!player_equipment_native||!player_equipment_native->services||
+     !app_trophy_runtime.manager()||
+     prince_combat.inventory->properties()!=&prince_combat.properties||
+     player_equipment_native->properties.resolved!=prince_combat.properties.resolved.data()){
+   error="Eligible AutoTransmute requires the live PropertyView and initialized TrophyManager";return false;
+  }
+  dh2_pycst_result multiplier{};
+  constexpr char category[]="CharacterDesign",key[]="TransmuteMultiplier";
+  if(!actor_design.bytes||dh2_pycst_get(&actor_design,category,sizeof(category)-1,
+        key,sizeof(key)-1,&multiplier)||!multiplier.found){
+   error="CharacterDesign.TransmuteMultiplier is unavailable";return false;
+  }
+  facts.item_value=projection.item->value;
+  facts.transmute_bonus=prince_combat.properties.resolved[197];
+  facts.transmute_multiplier=static_cast<std::uint32_t>(multiplier.value);
+ }
+ error.clear();return true;
+}
+dh2::data::AutoTransmuteProviderResultV1 native_auto_transmute_transfer(
+    void* raw,std::size_t world_index,std::uintptr_t world_item_identity,
+    std::int32_t item_id,std::int32_t& inventory_index,
+    std::uintptr_t& inventory_item_identity,std::string& error){
+ auto& context=*static_cast<NativeAutoTransmuteContextV1*>(raw);
+ inventory_index=-1;inventory_item_identity=0;
+ if(!context.adapter||!context.projection||
+    reinterpret_cast<std::uintptr_t>(context.projection)!=world_item_identity||
+    !context.projection->item||context.projection->item->id!=item_id||
+    !prince_combat.inventory){
+  error="AutoTransmute transfer lost its stable world Item projection";
+  return dh2::data::AutoTransmuteProviderResultV1::not_applied;
+ }
+ const auto& world=prince_combat.inventory->world_items();
+ if(world_index>=world.size()||!world[world_index]||
+    world[world_index]->item.get()!=context.projection->item){
+  error="AutoTransmute world index no longer owns the projected Item";
+  return dh2::data::AutoTransmuteProviderResultV1::not_applied;
+ }
+ const auto result=prince_combat.inventory->transfer_world_item_for_auto_transmute(
+     world_index,inventory_index,inventory_item_identity,
+     context.adapter->inventory_services(),error);
+ using Result=dh2::data::WorldItemTransferResultV4;
+ if(result==Result::committed)return dh2::data::AutoTransmuteProviderResultV1::committed;
+ if(result==Result::not_applied)return dh2::data::AutoTransmuteProviderResultV1::not_applied;
+ return dh2::data::AutoTransmuteProviderResultV1::indeterminate;
+}
+dh2::data::AutoTransmuteProviderResultV1 native_auto_transmute_consume(
+    void* raw,std::int32_t inventory_index,std::uintptr_t inventory_item_identity,
+    std::int32_t item_id,std::int32_t payout,std::string& error){
+ auto& context=*static_cast<NativeAutoTransmuteContextV1*>(raw);
+ if(!context.adapter||!context.projection||!prince_combat.inventory||
+    !player_equipment_native||!player_equipment_native->services||
+    !app_trophy_runtime.manager()||
+    prince_combat.inventory->properties()!=&prince_combat.properties||
+    player_equipment_native->properties.resolved!=prince_combat.properties.resolved.data()||
+    inventory_index<0||std::size_t(inventory_index)>=prince_combat.inventory->items().size()){
+  error="AutoTransmute consume lacks its canonical inventory, properties or TrophyManager";
+  return dh2::data::AutoTransmuteProviderResultV1::indeterminate;
+ }
+ auto& inventory=*prince_combat.inventory;
+ auto& slot=inventory.items()[std::size_t(inventory_index)];
+ if(!slot||!slot->item||slot->item.get()!=reinterpret_cast<dh2::data::ItemInstanceV1*>(inventory_item_identity)||
+    slot->item->id!=item_id||slot->item->signed_quantity()<=0){
+  error="AutoTransmute consume destination identity does not match the retained V4 Item";
+  return dh2::data::AutoTransmuteProviderResultV1::indeterminate;
+ }
+ auto services=context.adapter->inventory_services();
+ try{
+  // INV_TransmuteItem(false): remove/decrement the exact transferred Item,
+  // then AddGold, then increment Character property 213 and check its trophy.
+  if(slot->item->signed_quantity()>1){
+   if(!inventory.add_quantity_to_item(*slot->item,-1,error))
+    return dh2::data::AutoTransmuteProviderResultV1::indeterminate;
+  }else if(!inventory.remove_inventory_item(std::uint32_t(inventory_index),services,error))
+   return dh2::data::AutoTransmuteProviderResultV1::indeterminate;
+  if(!inventory.add_gold(payout,services,error))
+   return dh2::data::AutoTransmuteProviderResultV1::indeterminate;
+  if(dh2_property_add(&player_equipment_native->properties,213,256)){
+   error="Source AutoTransmute property-213 increment failed after consuming the Item";
+   return dh2::data::AutoTransmuteProviderResultV1::indeterminate;
+  }
+  if(prince_combat.properties.resolved[213]>=300*256&&
+     !unlock_source_trophy("gear_transmute","ItemObject::Interact AutoTransmute",error))
+   return dh2::data::AutoTransmuteProviderResultV1::indeterminate;
+ }catch(const std::exception& failure){
+  error=failure.what();return dh2::data::AutoTransmuteProviderResultV1::indeterminate;
+ }catch(...){
+  error="AutoTransmute consume callback threw after a source mutation";
+  return dh2::data::AutoTransmuteProviderResultV1::indeterminate;
+ }
+ error.clear();return dh2::data::AutoTransmuteProviderResultV1::committed;
+}
+void native_record_normal_pickup_tail(std::int32_t item_id){
+ // ItemObject::Interact increments Character property 223 only after the
+ // ordinary ItemInventory::TransferInventoryTo path. AutoTransmute has its
+ // own source tail and must not pass through this counter.
+ if(!player_equipment_native||
+    prince_combat.inventory->properties()!=&prince_combat.properties||
+    player_equipment_native->properties.resolved!=prince_combat.properties.resolved.data()){
+  __android_log_print(ANDROID_LOG_WARN,"DH2Native",
+   "Source pickup counter skipped | Item %d | canonical PropertyView unavailable",item_id);
+  return;
+ }
+ if(dh2_property_add(&player_equipment_native->properties,223,256)){
+  __android_log_print(ANDROID_LOG_ERROR,"DH2Native",
+   "Source pickup counter property 223 failed after committed transfer | Item %d",item_id);
+  return;
+ }
+ if(prince_combat.properties.resolved[223]<300*256)return;
+ using namespace dh2::player_locality_v1;
+ const auto services=native_host.locality_services();
+ Result locality{};
+ if(is_local_player(&native_host.registry,&services,prince_character.owner(),&locality)!=Status::complete){
+  __android_log_print(ANDROID_LOG_WARN,"DH2Native",
+   "Source picked_up_300_drops locality query failed | Item %d",item_id);
+  return;
+ }
+ if(!locality.value)return;
+ std::string error;
+ if(!unlock_source_trophy("picked_up_300_drops","ItemObject::Interact",error))
+  __android_log_print(ANDROID_LOG_WARN,"DH2Native",
+   "Source picked_up_300_drops unlock failed | Item %d | %s",item_id,error.c_str());
+}
 void update_native_world_items_after_step(std::uint32_t dt_ms) {
  for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.loot_retry_pending){
   if(actor.loot_retry_delay_frames){--actor.loot_retry_delay_frames;continue;}
@@ -7264,7 +7573,36 @@ void update_native_world_items_after_step(std::uint32_t dt_ms) {
   if(found==items.end()){destroy_item_projection(i);continue;}
   const auto index=std::size_t(found-items.begin());
   NativeLootAdapterV1 adapter{prince_combat.item_text,prince_combat.item_presentation.get()};
-  std::int32_t inventory_index=-1;std::string error;
+  std::string error;
+  dh2::data::AutoTransmuteFactsV1 transmute_facts{};
+  if(!native_auto_transmute_facts(projection,transmute_facts,error)){
+   __android_log_print(ANDROID_LOG_WARN,"DH2Native",
+    "AutoTransmute ItemObject::Interact held fail-closed | Item %d | %s",
+    tracked_id,error.c_str());
+   ++i;continue;
+  }
+  NativeAutoTransmuteContextV1 transmute_context{&adapter,&projection};
+  const dh2::data::AutoTransmuteServicesV1 transmute_services{
+   &transmute_context,native_auto_transmute_transfer,native_auto_transmute_consume};
+  const auto transmute_status=dh2::data::auto_transmute_pickup_v1(
+      index,reinterpret_cast<std::uintptr_t>(&projection),tracked_id,
+      transmute_facts,transmute_services,projection.auto_transmute,error);
+  if(transmute_status!=dh2::data::AutoTransmuteStatusV1::normal_pickup){
+   const auto& after_transmute=prince_combat.inventory->world_items();
+   const bool still_world=std::any_of(after_transmute.begin(),after_transmute.end(),
+       [&](const auto& slot){return slot&&slot->item.get()==tracked;});
+   if(!still_world){
+    __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+     "Source AutoTransmute ItemObject::Interact finished transfer/consume prefix | Item %d | status %d | %s",
+     tracked_id,int(transmute_status),error.c_str());
+    destroy_item_projection(i);continue;
+   }
+   __android_log_print(ANDROID_LOG_WARN,"DH2Native",
+    "Source AutoTransmute ItemObject::Interact retained world Item | Item %d | status %d | %s",
+    tracked_id,int(transmute_status),error.c_str());
+   ++i;continue;
+  }
+  std::int32_t inventory_index=-1;
   const bool accepted=prince_combat.inventory->pickup_world_item(
       index,inventory_index,adapter.inventory_services(),error);
   const auto& after=prince_combat.inventory->world_items();
@@ -7272,9 +7610,10 @@ void update_native_world_items_after_step(std::uint32_t dt_ms) {
    return slot&&slot->item.get()==tracked;
   });
   if(!still_world){
+   native_record_normal_pickup_tail(tracked_id);
    __android_log_print(ANDROID_LOG_INFO,"DH2Native",
-    "Source MoveOn ItemObject::Interact accepted | Item %d | inventory index %d | V4 wallet/equipment/potion",
-    tracked_id,inventory_index);
+    "Source MoveOn ItemObject::Interact transfer committed | Item %d | inventory index %d | accepted %d | V4 wallet/equipment/potion",
+    tracked_id,inventory_index,int(accepted));
    destroy_item_projection(i);continue;
   }
   if(!accepted)

@@ -5,6 +5,7 @@
 #include "properties.hpp"
 #include "loot_power_creation_v7.hpp"
 #include <cstddef>
+#include <cstdint>
 namespace dh2::data {
 struct OwnedItemSlotV4 {std::unique_ptr<ItemInstanceV1> item;std::array<std::int8_t,2> slots{{-1,-1}};};
 struct QuestGatheringItemIdV4 {std::int32_t item_id{};std::uint8_t registrations{};};
@@ -35,6 +36,7 @@ struct OwnedInventoryServicesV4 {
  // failure preserves that source prefix; callers must not retry the pickup.
  bool (*after_world_pickup)(void*,std::uintptr_t character,std::int32_t item_id,std::string& error){};
 };
+enum class WorldItemTransferResultV4 : std::uint8_t {not_applied,committed,indeterminate};
 // NativeInvDropItem needs a real online-state query and the complete original
 // offline ItemObject::DropInventory continuation. The latter must calculate
 // the source scatter point, spawn/InitAgain through the active ItemManager and
@@ -105,6 +107,15 @@ public:
  // with the same V4 owner when source Interact succeeds.
  bool add_world_loot_table(std::int32_t,const LootEntrySelectionContextV1&,RetainedItemSlotV4,const OwnedInventoryServicesV4&,const OwnedLootEffectsV7&,std::string&);
  bool pickup_world_item(std::size_t,std::int32_t&,const OwnedInventoryServicesV4&,std::string&);
+ // ItemObject::Interact AutoTransmute prefix: transfer through this same V4
+ // owner but deliberately omit the ordinary GatherLoot/after_world_pickup tail.
+ // Returns the actual retained destination Item (which may be a merge target),
+ // separately from the stable world-item projection identity. Indeterminate
+ // means source ownership changed but AddItem's required callbacks did not all
+ // complete; callers must never retry the transfer or award against a guess.
+ WorldItemTransferResultV4 transfer_world_item_for_auto_transmute(
+     std::size_t,std::int32_t& inventory_index,std::uintptr_t& inventory_item_identity,
+     const OwnedInventoryServicesV4&,std::string&);
  bool retire_world_item(std::size_t,const OwnedInventoryServicesV4&,std::string&);
  // NativeInvDropItem's offline TransferItemTo(index,temp,1,false,false),
  // represented in this same owner. Rejects online calls and missing source
@@ -138,6 +149,10 @@ public:
  bool register_quest_gathering_item_id(std::int32_t,std::string&);
  bool unregister_quest_gathering_item_id(std::int32_t,std::string&);
  bool has_quest_gathering_item_id(std::int32_t,bool&,std::string&)const;
+ // Objective_GatherLoot::InitWithCurrentQty's FindItem query against this
+ // same inventory. Returns the first matching live Item's signed quantity,
+ // or zero when the Character does not currently own that item.
+ bool quest_gathering_item_quantity(std::int32_t,bool& found,std::int32_t&,std::string&)const;
  bool add_quantity_to_item(ItemInstanceV1&,std::int32_t,std::string&);
  // Source AddItemInstance owns input only after delivered storage/merge/delete.
  // Prefix is retained on required effect failure; caller retains unconsumed input.

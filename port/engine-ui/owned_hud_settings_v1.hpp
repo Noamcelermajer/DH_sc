@@ -1,4 +1,5 @@
 #pragma once
+#include "../game-data/savegame_options_v1.hpp"
 #include "game_option_table_v1.hpp"
 #include "hud_startup_callbacks.hpp"
 #include "localization.hpp"
@@ -34,7 +35,7 @@ struct SettingsLoadReceiptV1 {
 // Original private settings owner, not a campaign/character profile save owner.
 // Holds actual GameOption descriptor backing and a private option map. File and
 // language services are borrowed for each synchronous load; no fixture success.
-class OwnedHudSettingsV1 {
+class OwnedHudSettingsV1 : public data::savegame_options_v1::ReadOnlySettings {
  struct Value {std::size_t descriptor{};std::int32_t current{};};
  GameOptionTableV1::Borrow table_;std::map<std::string,Value> options_;
  std::array<std::uint8_t,14> tutorials_{};std::vector<std::uint8_t> file_;
@@ -43,7 +44,9 @@ public:
  explicit OwnedHudSettingsV1(GameOptionTableV1::Borrow);
  OwnedHudSettingsV1(const OwnedHudSettingsV1&)=delete;OwnedHudSettingsV1& operator=(const OwnedHudSettingsV1&)=delete;
  bool load(bool language_only,const SettingsFileServicesV1&,const SettingsLanguageServicesV1&,const SettingsDeviceFactsV1&,SettingsLoadReceiptV1&,std::string&);
- bool has_option(const char*)const;
+ bool has_option(const char*)const noexcept override;
+ data::savegame_options_v1::Status get_option(const char*,std::int32_t*)const noexcept override;
+ data::savegame_options_v1::Status is_option_toggled(const char*,bool*)const noexcept override;
  std::int32_t option(const char*)const; // Source Savegame.getOption miss=-1.
  std::int32_t option_max(const char*)const; // type 2 subtracts one; miss=-1.
  std::int32_t option_string(const char*)const; // value_string + current; miss=-1.
@@ -57,7 +60,7 @@ public:
  const std::vector<std::uint8_t>& file_bytes()const{return file_;}
  bool loaded()const{return loaded_;}bool new_settings()const{return new_settings_;}
  bool orientation()const{return orientation_;}std::int32_t language_hint()const{return language_hint_;}
- std::size_t option_count()const{return options_.size();}
+ std::size_t option_count()const noexcept override{return options_.size();}
 };
 // Persistent existing-wrapper adapter. Application/savegame/sound/result must
 // match the caller's live HudStartupState48 identities. Only real settings

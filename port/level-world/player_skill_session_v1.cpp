@@ -15,6 +15,11 @@ bool span(const void* p,std::size_t n,std::size_t a){auto v=reinterpret_cast<std
 bool overlap(const void* p,std::size_t n,const void* q,std::size_t m){auto a=reinterpret_cast<std::uintptr_t>(p),b=reinterpret_cast<std::uintptr_t>(q);return a<=b?b-a<n:a-b<m;}
 void number(dh2_script_value& v,float n){v={};v.type=DH2_SCRIPT_NUMBER;v.number=n;}
 int discard(void*,const dh2_script_first_return_v1*,char*,std::size_t){return 0;}
+constexpr char combat_identity_transport[] = R"lua(
+function __dh2_player_combat(callback_name, attacker, defender)
+    return _G[callback_name]({_this = attacker}, {_this = defender})
+end
+)lua";
 }
 void VmDeleter::operator()(dh2_script_vm* p)const noexcept{dh2_script_vm_destroy(p);}
 struct Session::Impl {
@@ -24,6 +29,7 @@ struct Session::Impl {
     std::vector<std::unique_ptr<Binding>> bindings;
     std::vector<Resource> resources;
     Statistics stats;std::string path,error;Stage stage=Stage::created;bool busy=false;
+    bool combat_identity_transport_loaded=false;
     Impl(Vm v,Configuration c):vm(std::move(v)),config(std::move(c)),path(config.initial_path){}
     ~Impl(){busy=true;vm.reset();config.providers.lifetime.reset();dh2_script_alias_destroy(aliases);}
     int failure(char* text,std::size_t size,const char* why){
@@ -250,6 +256,48 @@ int Session::call(const char* name,const dh2_script_value* args,std::uint32_t co
 int Session::initialize_vcb(ais_player_init_vcb::Result* out,std::string& error) {
     if(impl_->busy || impl_->stage!=Stage::character_bound || !impl_->output(out,sizeof(*out),alignof(ais_player_init_vcb::Result)) || overlap(out,sizeof(*out),this,sizeof(*this)))return -1;
     Busy busy(impl_->busy);impl_->error.clear();int status=impl_->vcb(out);error=impl_->error;return status;
+}
+int Session::dispatch_combat_result(std::uintptr_t ais,
+    ais_combat_result_dispatch_v1::Callback callback,
+    std::uintptr_t attacker,std::uintptr_t defender,std::string& error) {
+    if(impl_->busy || impl_->stage!=Stage::character_bound || !ais ||
+       ais!=impl_->config.ais->ais || !attacker || !defender || attacker==defender ||
+       (attacker!=impl_->config.character && defender!=impl_->config.character))return -1;
+    Busy busy(impl_->busy);impl_->error.clear();
+    try {
+        const char* requested=callback==ais_combat_result_dispatch_v1::Callback::target_hit?
+            "OnTargetHit":callback==ais_combat_result_dispatch_v1::Callback::target_missed?
+            "OnTargetMissed":nullptr;
+        if(!requested){impl_->error="unsupported Player combat callback";error=impl_->error;return -1;}
+        const char* resolved=dh2_script_alias_resolve(impl_->aliases,requested);
+        if(!resolved){impl_->error="Player combat callback alias is absent";error=impl_->error;return -1;}
+        const std::string captured(resolved);
+        if(!impl_->combat_identity_transport_loaded) {
+            const int loaded=dh2_script_vm_load(impl_->vm.get(),combat_identity_transport,
+                sizeof(combat_identity_transport)-1,"player-neutral-combat-identity-transport");
+            if(loaded){impl_->error=dh2_script_vm_error(impl_->vm.get());
+                if(impl_->error.empty())impl_->error="Player combat identity transport load failed";
+                ++impl_->stats.combat_callback_failures;error=impl_->error;return loaded;}
+            impl_->combat_identity_transport_loaded=true;
+        }
+        dh2_script_value arguments[3]{};
+        arguments[0].type=DH2_SCRIPT_STRING;
+        arguments[0].text=captured.c_str();
+        arguments[0].text_bytes=captured.size();
+        arguments[1].type=DH2_SCRIPT_IDENTITY;arguments[1].identity=attacker;
+        arguments[2].type=DH2_SCRIPT_IDENTITY;arguments[2].identity=defender;
+        ++impl_->stats.combat_callback_calls;
+        const int status=dh2_script_vm_call_discard_source(impl_->vm.get(),
+            "__dh2_player_combat",arguments,3);
+        impl_->error=dh2_script_vm_error(impl_->vm.get());
+        if(status) {
+            ++impl_->stats.combat_callback_failures;
+            if(status==-5&&impl_->error.empty())impl_->error="required Player combat service failure caught by Lua";
+        }
+        error=impl_->error;return status;
+    }catch(...){
+        ++impl_->stats.combat_callback_failures;error="Player combat callback dependency exception";return -1;
+    }
 }
 int Session::call_all(const char* name,const dh2_script_value* args,std::uint32_t count,
                      dh2_script_returns_observer_v1 observer,void* context,std::string& error) {

@@ -228,6 +228,55 @@ AddToVFTable('OnDied', 'NativeNullOnDied')
                 "null source killer must be one Lua nil argument");
         ++cases;
 
+        const std::string combat_callback_script = monster_bytes + R"lua(
+function NativeCombatResult(...)
+    assert(select('#', ...) == 2, 'combat callback must receive attacker and defender')
+    local attacker, defender = ...
+    assert(type(attacker) == 'table' and type(attacker._this) == 'userdata',
+           'attacker must be original Character userdata')
+    assert(type(defender) == 'table' and type(defender._this) == 'userdata',
+           'defender must be original Character userdata')
+    assert(attacker._this ~= defender._this, 'combat identities were aliased')
+    SetTarget(attacker)
+    HeadTo(defender)
+end
+AddToVFTable('OnTargetHit', 'NativeCombatResult')
+AddToVFTable('OnTargetMissed', 'NativeCombatResult')
+)lua";
+        Session combat_callback; Fixture combat_fixture;
+        combat_fixture.session = &combat_callback;
+        combat_fixture.commons = commons;
+        combat_fixture.monster = source(combat_callback_script);
+        require(combat_callback.initialize(commons, source(combat_callback_script),
+                    bind(combat_fixture), error) == Status::complete,
+                "source combat callback fixture failed to initialize");
+        const auto combat_vm = combat_callback.vm_identity();
+        require(combat_callback.source_alias(Event::target_hit) ==
+                    std::string("NativeCombatResult") &&
+                combat_callback.source_alias(Event::target_missed) ==
+                    std::string("NativeCombatResult"),
+                "combat callbacks must resolve through the retained AIS VFTable");
+        require(combat_callback.dispatch_combat_result(Event::target_hit, enemy, other, error) ==
+                    Status::complete && combat_callback.vm_identity() == combat_vm &&
+                combat_fixture.target == enemy && combat_fixture.last_face == other &&
+                combat_fixture.faces == 1 && combat_callback.statistics().completed_callbacks == 1 &&
+                combat_callback.statistics().projected_object_table_arguments == 2,
+                "OnTargetHit must call the existing VM with original attacker/defender order");
+        trace(combat_fixture, {"SetTarget", "HeadTo"});
+        combat_fixture.trace.clear();
+        require(combat_callback.dispatch_combat_result(Event::target_missed, enemy, other, error) ==
+                    Status::complete && combat_callback.vm_identity() == combat_vm &&
+                combat_fixture.last_face == other && combat_fixture.faces == 2 &&
+                combat_callback.statistics().completed_callbacks == 2 &&
+                combat_callback.statistics().projected_object_table_arguments == 4,
+                "OnTargetMissed must dispatch through the same retained VM");
+        trace(combat_fixture, {"SetTarget", "HeadTo"});
+        require(combat_callback.dispatch(Event::target_hit, enemy, error) == Status::invalid_argument &&
+                combat_callback.dispatch_combat_result(Event::target_in_melee_range, enemy, other, error) ==
+                    Status::unsupported_callback,
+                "one-argument or non-combat callback routes must fail closed");
+        ++cases;
+
         Session melee_range; Fixture melee_range_fixture;
         melee_range_fixture.target = enemy;
         initialized(melee_range, melee_range_fixture, commons, monster);
@@ -619,6 +668,7 @@ AddToVFTable('OnInitPost', 'NativePostProof')
                     "\"numeric_result_arity\":true,\"unknown_callbacks_rejected\":true,"
                     "\"same_vm_post_final_callbacks\":true,\"post_discarded_return_updates_final_alias\":true,"
                     "\"death_callback_same_vm\":true,\"death_killer_identity_and_nil\":true,"
+                    "\"combat_callback_two_character_abi\":true,"
                     "\"stop_attack_callbacks\":true,"
                     "\"native_wired\":false,\"mismatches\":0}\n", cases);
         return 0;

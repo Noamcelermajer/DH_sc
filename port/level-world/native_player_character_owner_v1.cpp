@@ -35,11 +35,11 @@ bool NativePlayerCharacterOwnerV1::bind_session(
         error = "Native Character rebind changed an authoritative owner";
         return false;
     }
-    if (!player_character_660_) ooi_intent_412_ = 0;
     if (*player_character_660 && *player_character_660 != id) {
         error = "PlayerInfo Character660 already belongs to another Character";
         return false;
     }
+    if (!player_character_660_) ooi_intent_412_ = 0;
     player_character_660_ = player_character_660;
     save_ = &save;
     properties_ = &properties;

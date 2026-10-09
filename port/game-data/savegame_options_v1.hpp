@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <string>
@@ -9,6 +10,22 @@ namespace dh2::data::savegame_options_v1 {
 struct Definition {std::int32_t toggled_value;std::int32_t type;};
 struct Record {const Definition* definition;std::int32_t value;};
 enum class Status : std::int32_t {complete,invalid_argument,missing_definition,storage_failure};
+
+// Read-only view of the one active Application settings owner. The view is
+// borrowed, queried synchronously, and never copied into the gameplay Owner.
+class ReadOnlySettings {
+public:
+    virtual ~ReadOnlySettings()=default;
+    virtual bool has_option(const char*)const noexcept=0;
+    virtual Status get_option(const char*,std::int32_t*)const noexcept=0;
+    virtual Status is_option_toggled(const char*,bool*)const noexcept=0;
+    virtual std::size_t option_count()const noexcept=0;
+};
+// One Application settings owner is active on the game/UI thread. Binding the
+// same owner is idempotent; another live owner is rejected until it is unbound.
+bool bind_read_only_settings(const ReadOnlySettings*)noexcept;
+bool unbind_read_only_settings(const ReadOnlySettings*)noexcept;
+
 class Owner {
     std::map<std::string,Record,std::less<>> options_;
 public:
@@ -20,7 +37,7 @@ public:
     Status has_option(const char*,bool*)const noexcept;
     Status get_option(const char*,std::int32_t*)const noexcept;
     Status is_option_toggled(const char*,bool*)const noexcept;
-    std::size_t size()const noexcept{return options_.size();}
+    std::size_t size()const noexcept;
 };
 // Application captures its manager pointer before hasOption. Native services
 // borrow this owner beside the existing Application/PlayerSavegame owners.

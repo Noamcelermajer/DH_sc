@@ -177,6 +177,36 @@ int main(int argc,char** argv){try{
     check(!f.session->initialize_vcb(&vcb,error) && (f.ais.flags_b8&0x400) && !(f.ais.flags_b8&1) && vcb.service_calls==3,"Player VCB was replaced by External/global membership");++callbacks;
     Return kill;check(!f.call("OnKill",{},kill) && kill.boolean,"actual alias did not dispatch");++callbacks;
     check(!f.session->call("OnKill",nullptr,0,0,observe_reentry,f.session.get(),error),"source return observer reentry guard failed");++guards;
+    Fixture combat(cache,temp/"combat",cat,"KnightPlayerBase");combat.common();
+    const std::string combat_script=
+        "AddToVFTable('OnTargetHit','fixture_player_hit');"
+        "AddToVFTable('OnTargetMissed','fixture_player_missed');"
+        "function fixture_player_hit(a,d) hit_attacker=a._this; hit_defender=d._this; hit_arg_types=type(a)..':'..type(d) end;"
+        "function fixture_player_missed(a,d) miss_attacker=a._this; miss_defender=d._this; miss_arg_types=type(a)..':'..type(d) end";
+    combat.overlay("fixture/combat",combat_script);check(!combat.load("fixture/combat",loaded),"Player combat source fixture failed");
+    dh2::ais_player_init_vcb::Result combat_vcb{};
+    check(!combat.session->initialize_vcb(&combat_vcb,error) &&
+        (combat.ais.flags_b8&0x800) && (combat.ais.flags_b8&0x1000),"Player hit/missed VCB membership was not retained");
+    const auto combat_vm=combat.session->vm();
+    constexpr std::uintptr_t ENEMY=0x300000007ull;
+    check(!combat.session->dispatch_combat_result(AIS,dh2::ais_combat_result_dispatch_v1::Callback::target_hit,
+        ENEMY,CHAR,error),"Player hit callback dispatch failed");
+    dh2_script_value seen_attacker{},seen_defender{},seen_types{};
+    check(!dh2_script_vm_get_global(combat_vm,"hit_attacker",&seen_attacker) && seen_attacker.type==DH2_SCRIPT_IDENTITY && seen_attacker.identity==ENEMY &&
+        !dh2_script_vm_get_global(combat_vm,"hit_defender",&seen_defender) && seen_defender.type==DH2_SCRIPT_IDENTITY && seen_defender.identity==CHAR &&
+        !dh2_script_vm_get_global(combat_vm,"hit_arg_types",&seen_types) && seen_types.type==DH2_SCRIPT_STRING && std::string(seen_types.text,seen_types.text_bytes)=="table:table",
+        "Player hit callback userdata/order differs");
+    check(!combat.session->dispatch_combat_result(AIS,dh2::ais_combat_result_dispatch_v1::Callback::target_missed,
+        CHAR,ENEMY,error),"Player missed callback dispatch failed");
+    check(!dh2_script_vm_get_global(combat_vm,"miss_attacker",&seen_attacker) && seen_attacker.identity==CHAR &&
+        !dh2_script_vm_get_global(combat_vm,"miss_defender",&seen_defender) && seen_defender.identity==ENEMY &&
+        !dh2_script_vm_get_global(combat_vm,"miss_arg_types",&seen_types) && std::string(seen_types.text,seen_types.text_bytes)=="table:table" &&
+        combat.session->vm()==combat_vm && combat.session->statistics().combat_callback_calls==2,
+        "Player missed callback changed owner, ABI, order, or retained VM");
+    error="sentinel";
+    check(combat.session->dispatch_combat_result(AIS+1,dh2::ais_combat_result_dispatch_v1::Callback::target_hit,ENEMY,CHAR,error)==-1 && error=="sentinel",
+        "Player combat accepted a different AIS owner");
+    ++callbacks;
     s::LoadResult untouched{1,2,3,4},saved=untouched;error="sentinel";
     check(f.session->load_resolved("",&untouched,error)==-1 && !std::memcmp(&untouched,&saved,sizeof(saved)) && error=="sentinel","invalid load changed outputs");++guards;
     check(f.session->load_resolved("fixture/vcb",reinterpret_cast<s::LoadResult*>(&f.ais),error)==-1 && (f.ais.flags_b8&0x400),"load result aliases AIS");++guards;
@@ -227,6 +257,6 @@ int main(int argc,char** argv){try{
     check(!lifecycle.load("fixture/close",loaded) && !retired,"lifetime token retired during active VM");
     lifecycle.session.reset();check(retired,"Session retained provider token after closing VM");++guards;
     check(paths.size()==31,"three-class source file footprint changed");
-    std::cout<<"{\"validation\":\"PASS\",\"class_cases\":"<<class_cases<<",\"registered_class_slots\":24,\"registered_faery_slots\":15,\"unique_skill_files\":29,\"unchanged_script_files\":"<<paths.size()<<",\"guards\":"<<guards<<",\"error_cases\":"<<errors<<",\"callback_cases\":"<<callbacks<<",\"native_wired\":false,\"OnSkillUpdate_complete\":false}\n";
+    std::cout<<"{\"validation\":\"PASS\",\"class_cases\":"<<class_cases<<",\"registered_class_slots\":24,\"registered_faery_slots\":15,\"unique_skill_files\":29,\"unchanged_script_files\":"<<paths.size()<<",\"guards\":"<<guards<<",\"error_cases\":"<<errors<<",\"callback_cases\":"<<callbacks<<",\"player_combat_same_vm\":true,\"player_combat_userdata_order\":true,\"native_wired\":false,\"OnSkillUpdate_complete\":false}\n";
     return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

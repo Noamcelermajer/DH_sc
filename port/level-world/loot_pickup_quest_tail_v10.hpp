@@ -31,8 +31,9 @@ struct LootPickupQuestServicesV10 {
     // Preserve the two literal source arguments in their original order.
     bool (*constant)(void*, const char* group, const char* key,
                      std::int32_t& value, std::string& error){};
-    // Source call is EventManager::RaiseAsync(const IEvent&); the adapter must
-    // preserve/copy the stack event before returning from the async call.
+    // Source call is EventManager::RaiseAsync(const IEvent&), which is a thunk
+    // to synchronous Raise in this ELF (IDA 0x339090 -> 0x338ebc). The same
+    // event may be mutated by receivers before this callback returns.
     bool (*raise_async)(void*, std::uintptr_t event_manager,
                         const LootPickupQuestEventV10& event,
                         std::string& error){};

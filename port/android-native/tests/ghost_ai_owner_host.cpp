@@ -398,7 +398,7 @@ void run_owner_pipeline(const std::string& commons, const std::string& monster) 
     require(zonable != f.trace.end() && target_update != f.trace.end() &&
             master_update != f.trace.end() && zonable < target_update && target_update < master_update,
             "CharAI source dispatcher service order changed");
-    std::printf("{\"ghost_ai_owner_host_cases\":8,\"existing_target_cases\":6,\"pending_vm_shared\":true,\"constructor_before_pending_cases\":3,\"flat_character_owner_cases\":4,\"flat_published_vm_shared\":true,\"manager_cursor_owner_cases\":2,\"manager_cursor_live_links\":true,\"status\":\"PASS\","
+    std::printf("{\"ghost_ai_owner_host_cases\":9,\"existing_target_cases\":6,\"pending_vm_shared\":true,\"constructor_before_pending_cases\":3,\"flat_character_owner_cases\":4,\"flat_published_vm_shared\":true,\"manager_cursor_owner_cases\":2,\"manager_cursor_live_links\":true,\"combat_vm_dispatch\":true,\"status\":\"PASS\","
         "\"frame_status\":%d,\"last_service\":%u,\"candidates\":%u,"
         "\"events\":%u,\"script_callbacks\":%u,\"set_target_calls\":%u,"
         "\"head_to_calls\":%u,\"path_count\":%u,\"target_id\":%llu,"
@@ -408,6 +408,41 @@ void run_owner_pipeline(const std::string& commons, const std::string& monster) 
         result.scan.script_dispatches, result.scan.set_target_calls,
         result.scan.head_to_calls, result.scan.path_requests,
         static_cast<unsigned long long>(result.target_identity), result.ais_update_calls);
+}
+
+void run_combat_result_owner(const std::string& commons, const std::string& monster) {
+    const std::string callbacks = monster + R"lua(
+function NativeCombatResult(...)
+    assert(select('#', ...) == 2, 'combat callback argument count changed')
+    local attacker, defender = ...
+    assert(type(attacker) == 'table' and type(attacker._this) == 'userdata',
+           'combat attacker is not Character userdata')
+    assert(type(defender) == 'table' and type(defender._this) == 'userdata',
+           'combat defender is not Character userdata')
+    assert(attacker._this == GetTarget()._this,
+           'source attacker was not the first callback argument')
+    assert(attacker._this ~= defender._this, 'combat Character identities were aliased')
+end
+AddToVFTable('OnTargetHit', 'NativeCombatResult')
+AddToVFTable('OnTargetMissed', 'NativeCombatResult')
+)lua";
+    OwnerFixture f(0x790000000ull);
+    require(f.bind(commons, callbacks), "combat callback source AIS owner failed to bind");
+    f.target_state.target = f.target_object_id;
+    const auto before = f.owner.script_statistics().completed_callbacks;
+    std::string error;
+    require(f.owner.dispatch_combat_result(monster_external_script::Event::target_hit,
+                f.target_object_id, f.owner_id, error) == dh2::native::ghost_ai::Status::complete && error.empty() &&
+            f.owner.ready() && f.owner.script_statistics().completed_callbacks == before + 1,
+            "OnTargetHit did not execute on the active Monster AIS VM");
+    require(f.owner.dispatch_combat_result(monster_external_script::Event::target_missed,
+                f.target_object_id, f.owner_id, error) == dh2::native::ghost_ai::Status::complete && error.empty() &&
+            f.owner.ready() && f.owner.script_statistics().completed_callbacks == before + 2,
+            "OnTargetMissed did not execute on the same active Monster AIS VM");
+    require(f.owner.dispatch_combat_result(monster_external_script::Event::target_hit,
+                f.target_object_id, f.target_object_id + 0x100, error) == dh2::native::ghost_ai::Status::invalid_argument &&
+            f.owner.script_statistics().completed_callbacks == before + 2,
+            "combat dispatch accepted an AIS owner absent from the source participants");
 }
 
 void run_flat_owner(const std::string& commons, const std::string& monster) {
@@ -610,6 +645,7 @@ int main(int argc, char** argv) {
         run_pending_owner(commons, monster);
         run_existing_targets(commons, monster);
         run_owner_pipeline(commons, monster);
+        run_combat_result_owner(commons, monster);
         return 0;
     } catch (const std::exception& error) {
         std::fprintf(stderr, "%s\n", error.what());

@@ -110,7 +110,8 @@ def main() -> int:
     if run.returncode:
         return run.returncode
     host = json.loads(run.stdout)
-    assert host["ghost_ai_owner_host_cases"] == 8 and host["existing_target_cases"] == 6 and host["mismatches"] == 0, host
+    assert host["ghost_ai_owner_host_cases"] == 9 and host["existing_target_cases"] == 6 and host["mismatches"] == 0, host
+    assert host["combat_vm_dispatch"] is True, host
     assert host["pending_vm_shared"] is True, host
     assert host["constructor_before_pending_cases"] == 3, host
     assert host["manager_cursor_owner_cases"] == 2 and host["manager_cursor_live_links"] is True, host

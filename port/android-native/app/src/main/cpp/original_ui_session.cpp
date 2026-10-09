@@ -30,6 +30,7 @@ extern "C" {
 #include "campaign_profile_files_v1.hpp"
 #include "original_menu_viewport_v1.hpp"
 #include "data.hpp"
+#include "savegame_options_v1.hpp"
 #include "hud_text_format_v1.hpp"
 #include "item_text_varargs_v5.hpp"
 #include "swf_menu_launch_v1.hpp"
@@ -2169,7 +2170,9 @@ struct OriginalUiSession::Impl {
         last_width=last_height=0;loading_bitmap_reported=false;reported_frames={{-1,-1,-1,-1,-1}};
         leases.clear();exports.clear();font_failure.clear();provider_failure.clear();
         menu_sounds.clear();
-        menu_audio.clear();settings.reset();settings_files.reset();language_selection=-1;
+        menu_audio.clear();
+        if(settings)data::savegame_options_v1::unbind_read_only_settings(settings.get());
+        settings.reset();settings_files.reset();language_selection=-1;
         menu_stack.clear();game_menu_stack.clear();
         gameplay_hud_active=true;gameplay_hud_input_reset_pending=false;
         gameplay_character_button=0;gameplay_character_button_pressed=false;
@@ -2183,7 +2186,9 @@ struct OriginalUiSession::Impl {
     }
 };
 OriginalUiSession::OriginalUiSession():impl_(std::make_unique<Impl>()){}
-OriginalUiSession::~OriginalUiSession()=default;
+OriginalUiSession::~OriginalUiSession(){
+    if(impl_&&impl_->settings)data::savegame_options_v1::unbind_read_only_settings(impl_->settings.get());
+}
 void OriginalUiSession::bind_front_runtime(const FrontRuntimeServices& services){impl_->runtime=services;}
 data::ItemTextServicesV5 OriginalUiSession::item_text_services(
     const data::ItemTable& items,const data::CharacterTable& characters) noexcept {
@@ -2607,6 +2612,9 @@ bool OriginalUiSession::attach_player(const std::string& directory,std::string& 
     }
     impl_->hud_style=impl_->settings->option("HUDStyle");
     if(impl_->hud_style<0||impl_->hud_style>3){error="Saved HUDStyle is outside the four authored Android layouts";return false;}
+    if(!data::savegame_options_v1::bind_read_only_settings(impl_->settings.get())){
+        error="Another Application settings owner is still bound to gameplay";return false;
+    }
     impl_->directory=directory;impl_->live_player=true;impl_->selected=true;impl_->report_frame=true;
     impl_->gameplay_hud_bound=false;impl_->gameplay_hud_pointer=-1;
     error.clear();return true;

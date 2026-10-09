@@ -627,6 +627,37 @@ Status ActorSession::search_objects_and_dispatch(character::aggro_search::Target
     return search_and_dispatch_impl(list, nullptr, nullptr, objects, view_radius, cone, result);
 }
 
+Status ActorSession::dispatch_combat_result(monster_external_script::Event event,
+        std::uintptr_t attacker, std::uintptr_t defender, std::string& error) {
+    auto current = impl_;
+    if (!current || !current->active_script() || !current->active_script()->ready()) {
+        error = "active monster AIS VM is not ready";
+        return Status::not_ready;
+    }
+    if (current->busy || current->active_holds) {
+        error = "actor session busy";
+        return Status::busy;
+    }
+    if (!current->live()) {
+        error = "monster AIS owner binding is stale";
+        return Status::stale_binding;
+    }
+    if (!attacker || !defender ||
+        (current->owner != attacker && current->owner != defender)) {
+        error = "combat callback does not include this AIS Character";
+        return Status::invalid_argument;
+    }
+    BusyScope busy(current->busy);
+    const auto status = current->active_script()->dispatch_combat_result(
+        event, attacker, defender, error);
+    if (status == monster_external_script::Status::complete)
+        return current->live() ? Status::complete : Status::stale_binding;
+    if (status == monster_external_script::Status::busy) return Status::busy;
+    if (status == monster_external_script::Status::not_ready) return Status::not_ready;
+    if (status == monster_external_script::Status::invalid_argument) return Status::invalid_argument;
+    return Status::script_failed;
+}
+
 Status ActorSession::search_and_dispatch_impl(character::aggro_search::TargetList* list,
     const character::aggro_search::RoomRegistry* rooms,
     character::aggro_character_list::CharacterList* characters,

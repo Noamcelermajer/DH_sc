@@ -5,6 +5,7 @@
 #include "ais_player_init_vcb.hpp"
 #include "debug_switches_runtime.hpp"
 #include "lua_script_load_once.hpp"
+#include "ais_combat_result_dispatch_v1.hpp"
 #include "../adam-script-runtime/script_runtime.h"
 #include <memory>
 
@@ -49,6 +50,7 @@ struct Statistics {
     std::uint32_t ais_bindings=0,character_function_bindings=0;
     std::uint32_t resolutions=0,load_calls=0,cache_hits=0,declarations=0;
     std::uint32_t init_vcb_calls=0,native_calls=0,required_failures=0;
+    std::uint32_t combat_callback_calls=0,combat_callback_failures=0;
 };
 using LoadResult=lua_script_load_once::Result;
 
@@ -80,6 +82,14 @@ public:
     int call_all(const char*,const dh2_script_value*,std::uint32_t,
                  dh2_script_returns_observer_v1,void*,std::string& error);
     int initialize_vcb(ais_player_init_vcb::Result*,std::string& error);
+    // Source AISDefault::OnCombatResults call through this Session's retained
+    // Player AIS VM. The caller applies the attack first and checks the source
+    // VCB membership bit; this method verifies the AIS and Character owner,
+    // wraps both Character identities as source UserData tables, resolves the
+    // current alias and invokes exactly one callback without replaying damage.
+    int dispatch_combat_result(std::uintptr_t ais,
+        ais_combat_result_dispatch_v1::Callback,
+        std::uintptr_t attacker,std::uintptr_t defender,std::string& error);
     dh2_script_vm* vm()const noexcept;
     std::uintptr_t character_identity()const noexcept;
     std::uintptr_t ais_identity()const noexcept;

@@ -4,6 +4,8 @@
 #include "player_ai_death_v1.hpp"
 #include "player_enemy_kill_credit_v1.hpp"
 #include "player_hud_skill_slot_resolution_v1.hpp"
+#include "../../../../../../port/level-world/character_skill_fsm_callbacks_v1.hpp"
+#include "../../../../../../port/level-world/ais_combat_result_dispatch_v1.hpp"
 #include <memory>
 #include <vector>
 #include <string>
@@ -11,11 +13,13 @@ struct AAssetManager;
 struct dh2_pycst_view;
 namespace dh2::character {class Coordinator;struct Timer32;}
 namespace dh2::character_ai_skill_commands_v1 {struct SkillRow;}
+namespace dh2::character_ai_skill_commands_v1 {struct Result;}
 namespace dh2::character_ai_initialization {struct State;}
 namespace dh2::object_update_culling {struct Object;}
 namespace dh2::data {class PlayerSavegameV1;struct AiProps;}
 namespace dh2::data {class PlayerSaveLoadOwnerV1;}
 namespace dh2::data {class FreshInventoryOwnedV4;}
+namespace dh2::data {class TrophyManagerOwnerV1;}
 namespace dh2::data {struct AiTables;struct AnimationTables;}
 namespace dh2::data::savegame_options_v1 {class Owner;}
 namespace dh2::native::debug_files {class Backend;}
@@ -24,6 +28,25 @@ enum class SkillCallback : std::uint32_t {pre,use,post};
 struct SkillCallbackResult {
     std::uint32_t value=0,call_count=0;
     std::int32_t last_lua_status=0;
+};
+// Dependencies captured from the active native Character/PlayerManager and
+// the single externally owned source TrophyManager. This is a synchronous
+// borrowed view; Runtime never creates a second manager or animation owner.
+struct BeginSkillServices {
+    void* context=nullptr;
+    int (*get_anim_stance)(void*,std::uintptr_t,std::int32_t&,std::string&)=nullptr;
+    int (*is_local_player)(void*,std::uintptr_t,std::uint32_t&,std::string&)=nullptr;
+    data::TrophyManagerOwnerV1* trophy_manager=nullptr;
+};
+// Live producer fields and operation adapter for the CSSkill Focus/Blur
+// callbacks. The callback must implement each reached source operation and
+// return failure when an owner is absent; this is not a default/no-op service.
+// Runtime combines it with its existing Coordinator and skill-machine fields.
+struct SkillStateServices {
+    std::uintptr_t debug_switches_identity=0;
+    std::uint8_t* ooi_intent_412=nullptr;
+    const std::uintptr_t* physical_2dc=nullptr;
+    character_skill_fsm_callbacks_v1::Services callbacks{};
 };
 struct Bindings {
     std::uintptr_t character=0,ai=0;
@@ -137,10 +160,44 @@ public:
     bool resolve_character_skill_row(std::uint32_t skill_index,
         character_ai_skill_commands_v1::SkillRow&,
         std::string& error)const;
+    // Exact AI_EndSkill kernel on the existing Character, CharAI state,
+    // Coordinator and retained SkillTables. The animation owner is borrowed
+    // from the host; StopLoop is required only on the source branch that calls
+    // it. This method does not synthesize animation events or trigger OnSkill.
+    bool end_skill(std::uint32_t skill_index,
+        std::uintptr_t animation_owner_identity, void* animation_context,
+        bool (*stop_loop)(void*, bool, std::string&),
+        character_ai_skill_commands_v1::Result&, std::string& error);
+    // Source-ordered AI_BeginSkill over the same Character, CharAI fields,
+    // Coordinator, SkillTables and prepared Player VM. animation_owner_identity
+    // must be the live Character+0x49c receiver. A missing CSSkill event graph
+    // or TrophyManager fails at its reached source operation; no action caller
+    // should be enabled until both are actually bound.
+    bool begin_skill(std::uint32_t skill_index,
+        std::uintptr_t animation_owner_identity,
+        const BeginSkillServices&,
+        character_ai_skill_commands_v1::Result&, std::string& error);
+    // Bind CSSkill's exact Focus/Blur callbacks to the same persistent
+    // CharStateMachine projection and Coordinator used by Begin/EndSkill.
+    // Call before BeginSkill can issue event C355. Character OOI-intent and
+    // physical fields and every callback operation are explicit borrowed
+    // providers; no fallback owners are manufactured. Unbind after leaving
+    // state 6 and before retiring this Runtime.
+    bool bind_skill_state_callbacks(std::uintptr_t animation_owner_identity,
+        const SkillStateServices&,std::string& error);
+    bool unbind_skill_state_callbacks(std::string& error);
     // CharAI::AI_IsSkillCheck_Usable/Active over that same vector and retained
     // VM. The caller owns source ordering; this does not begin a cast.
     int skill_check(std::uint32_t skill_slot,bool active,std::uint32_t& value,
                     std::string& error);
+    // Dispatch AISDefault's selected combat callback through the exact retained
+    // Player Session VM. Damage has already been applied by the caller.
+    int dispatch_combat_result(std::uintptr_t ais,
+        ais_combat_result_dispatch_v1::Callback,
+        std::uintptr_t attacker,std::uintptr_t defender,std::string& error);
+    // Borrowed source AIS/VCB view for synchronous source-ordered combat
+    // dispatch. The pointer is valid only while this Runtime remains alive.
+    bool combat_owner(std::uintptr_t& ais,const std::uint32_t*& flags)const noexcept;
     // Invoke one original Player skill Lua callback through the same retained
     // VM/prepared instance used by HUD checks. The source caller owns timing:
     // OnPreSkill belongs to AI_BeginSkill's passive-skill branch, OnSkill to

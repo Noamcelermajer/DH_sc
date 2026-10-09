@@ -14,7 +14,16 @@ struct Reader {
 };
 }
 OwnedHudSettingsV1::OwnedHudSettingsV1(GameOptionTableV1::Borrow table):table_(std::move(table)){if(!table_)throw std::invalid_argument("Owned settings need actual GameOption backing");}
-bool OwnedHudSettingsV1::has_option(const char* key)const{return key&&options_.find(key)!=options_.end();}
+bool OwnedHudSettingsV1::has_option(const char* key)const noexcept{return key&&options_.find(key)!=options_.end();}
+data::savegame_options_v1::Status OwnedHudSettingsV1::get_option(const char* key,std::int32_t* out)const noexcept{
+ if(!key||!out)return data::savegame_options_v1::Status::invalid_argument;
+ *out=option(key);return data::savegame_options_v1::Status::complete;
+}
+data::savegame_options_v1::Status OwnedHudSettingsV1::is_option_toggled(const char* key,bool* out)const noexcept{
+ if(!key||!out)return data::savegame_options_v1::Status::invalid_argument;
+ const auto* row=descriptor(key);if(!row){*out=false;return data::savegame_options_v1::Status::complete;}
+ *out=row->type==0&&option(key)==row->maximum;return data::savegame_options_v1::Status::complete;
+}
 std::int32_t OwnedHudSettingsV1::option(const char* key)const{if(!key)return -1;auto i=options_.find(key);return i==options_.end()?-1:i->second.current;}
 std::int32_t OwnedHudSettingsV1::option_max(const char* key)const{
  const auto* row=descriptor(key);if(!row)return -1;

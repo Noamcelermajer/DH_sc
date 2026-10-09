@@ -71,6 +71,10 @@ enum class Event : std::uint32_t {
     // Character event 17 enters AISExternal::OnTargetInMeleeRange; that Lua
     // callback is called with zero arguments.
     target_in_melee_range = 7,
+    // AISDefault::OnCombatResults forwards the original attacker and defender
+    // Character userdata to the cached source callback on this same AIS VM.
+    target_hit = 8,
+    target_missed = 9,
 };
 
 // Logical retained source AIS+0xb4 projection, not an ARM overlay. The current
@@ -177,6 +181,11 @@ public:
     // for a nonnull killer, or nil for null. `enemy` carries that identity for
     // Event::died. Event 2's FSM payload remains a separate later dispatch.
     Status dispatch(Event event, std::uintptr_t enemy, std::string& error);
+    // AISDefault::OnCombatResults passes two Character userdata arguments in
+    // attacker, defender order. This dispatch reuses this session's VM and
+    // alias map; the caller must have checked the active AIS VCB membership.
+    Status dispatch_combat_result(Event event, std::uintptr_t attacker,
+                                  std::uintptr_t defender, std::string& error);
     // Reuse the independent complete20B source CallState wrappers. Each call reads the
     // current pointer once, skips only an actual null projection, otherwise
     // reads its selected name and calls the current source alias with no args.

@@ -1,6 +1,8 @@
 #include "swf_menu_launch_v1.hpp"
 #include "game_option_table_v1.hpp"
+#include "owned_hud_settings_v1.hpp"
 #include "menu_save_slot_projection_v1.hpp"
+#include "../../game-data/savegame_options_v1.hpp"
 #include "swf_frame_connection.hpp"
 #include "../../android-native/app/src/main/cpp/menu_diagnostic_filter.hpp"
 #include "gameswf/gameswf_player.h"
@@ -28,6 +30,7 @@ struct Context {
  static bool integer(void* p,double value,std::int32_t& output,std::string& e){auto& c=*static_cast<Context*>(p);c.trace.push_back("integer");if(c.fail_integer){e="EABI failed";return false;}output=std::int32_t(value);return true;}
  static bool open(void*,const char* uri,bool& found,Raw& bytes,std::uintptr_t& lease,std::string&){bytes.clear();found=true;lease=1;word(bytes,1,2);text(bytes,std::string(uri)=="text/p8_s0"?"TEST_LABEL":"ACT ^d / ^s",2);return true;}
  static bool close(void*,std::uintptr_t,std::string&){return true;}
+ static bool refresh_settings(void*,OwnedHudSettingsV1&,std::int32_t,std::string&){return true;}
  static bool debug(void* p,const char*,std::string&){static_cast<Context*>(p)->trace.push_back("debug");return true;}
  static bool hud(void* p,const HudTextRequestV1& q,HudTextResponseV1& out,std::string& e){auto& c=*static_cast<Context*>(p);c.trace.push_back("text:"+std::to_string(q.operation));if(c.fail_text){e="text provider failed";return false;}
   if(q.operation==hud_text_constant_v1){out.value=std::string(q.key)=="GLOBAL_DECIMAL_SEPERATOR"?0:std::string(q.key)=="GLOBAL_THOUSANDS_SEPERATOR"?1:2;return true;}
@@ -37,6 +40,14 @@ struct Context {
  static bool preview(void* p,std::int32_t slot,bool force,std::string&){static_cast<Context*>(p)->trace.push_back("preview:"+std::to_string(slot)+":"+std::to_string(force));return true;}
  static bool start(void* p,bool numeric,std::int32_t difficulty,std::string& e){auto& c=*static_cast<Context*>(p);c.trace.push_back("start:"+std::to_string(numeric)+":"+std::to_string(difficulty)+":"+std::to_string(c.assigned_slot));if(c.fail_start){e="development continuation rejected";return false;}return true;}
  SwfMenuLaunchServicesV1 services(){return {this,create,assign,integer,preview,start};}
+};
+struct SavedSettingsFixture {
+ Raw bytes;
+ static bool open(void* p,const char* uri,bool& found,Raw& bytes,std::uintptr_t& lease,std::string& error){
+  if(!uri||std::string(uri)!="dh2_settings.savegame"){error="unexpected saved settings URI";return false;}
+  auto& self=*static_cast<SavedSettingsFixture*>(p);found=true;bytes=self.bytes;lease=1;return true;
+ }
+ static bool close(void*,std::uintptr_t,std::string&){return true;}
 };
 struct NameObject:gameswf::as_object {
  Context& context;std::string value;
@@ -116,6 +127,25 @@ int main(int argc,char** argv){try{
  Localization strings;Raw lr,ln,ls;word(lr,9);names(ln,{"ENGLISH","FRENCH","GERMAN","ITALIAN","JAPANESE","KOREAN","SC","SPANISH","SYMBOLS"});names(ls,{"filename","name"});names(ls,{"list"});
  for(unsigned p=0;p<9;++p){word(lr,37);for(unsigned s=0;s<37;++s){text(lr,"p"+std::to_string(p)+"_s"+std::to_string(s));text(lr,s==0?"TEST":"UNUSED");}}
  ck(strings.load({lr.data(),lr.size()},{ln.data(),ln.size()},{ls.data(),ls.size()},error)&&strings.switch_pack(0,false,error),"localization cache setup");LocalizationServices localized{&c,Context::open,Context::close,Context::debug};HudTextServicesV1 hud{&c,Context::hud};
+ // The active gameplay Application view borrows the sole loaded UI settings
+ // owner. The override is a real source-format dh2_settings.savegame record;
+ // table defaults remain sourced from the bundled design cache.
+ auto auto_transmute=std::find(borrow.names().begin(),borrow.names().end(),"AutoTransmute");
+ ck(auto_transmute!=borrow.names().end(),"actual GameOptionTable contains AutoTransmute");
+ const auto auto_index=std::size_t(auto_transmute-borrow.names().begin());const auto& auto_row=borrow.rows()[auto_index];
+ ck(auto_row.default_value==0&&auto_row.maximum==5&&auto_row.minimum==0&&auto_row.step==1&&auto_row.type==2,"exact AutoTransmute source descriptor/default");
+ SavedSettingsFixture settings_file;word(settings_file.bytes,1);text(settings_file.bytes,"AutoTransmute");word(settings_file.bytes,3);settings_file.bytes.insert(settings_file.bytes.end(),14,1);
+ SettingsFileServicesV1 settings_files{&settings_file,SavedSettingsFixture::open,SavedSettingsFixture::close};
+ SettingsLanguageServicesV1 settings_language{&c,Context::refresh_settings,nullptr,&strings};SettingsDeviceFactsV1 settings_device{};
+ OwnedHudSettingsV1 settings(borrow);SettingsLoadReceiptV1 settings_receipt;
+ ck(settings.load(false,settings_files,settings_language,settings_device,settings_receipt,error)&&settings_receipt.found&&settings_receipt.recognized_records==1,"load saved AutoTransmute override through original settings owner");
+ dh2::data::savegame_options_v1::Owner settings_view;dh2::data::savegame_options_v1::Application settings_app{1,&settings_view};
+ ck(settings.option("AutoTransmute")==3&&dh2::data::savegame_options_v1::bind_read_only_settings(&settings),"bind one borrowed settings owner");
+ std::int32_t saved_option=-1;bool toggled=true;
+ ck(dh2::data::savegame_options_v1::get_saved_option(&settings_app,"AutoTransmute",&saved_option)==dh2::data::savegame_options_v1::Status::complete&&saved_option==3,"Application reads loaded saved-option override");
+ ck(dh2::data::savegame_options_v1::is_saved_option_on(&settings_app,"AutoTransmute",&toggled)==dh2::data::savegame_options_v1::Status::complete&&!toggled&&settings_view.size()==16,"numeric AutoTransmute is not a boolean toggle; size follows source owner");
+ ck(settings.set_option("AutoTransmute",2)&&dh2::data::savegame_options_v1::get_saved_option(&settings_app,"AutoTransmute",&saved_option)==dh2::data::savegame_options_v1::Status::complete&&saved_option==2,"borrowed Application view observes live settings updates without copying");
+ ck(dh2::data::savegame_options_v1::unbind_read_only_settings(&settings),"unbind exact settings owner");
  gameswf::gc_ptr<gameswf::as_array> a=new gameswf::as_array(player.get_ptr());a->push(3);a->push("Hero");fn=call(env,result,self,{"TEST_LABEL",gameswf::as_value(a.get_ptr())});c.trace.clear();ck(swf_menu_parsed_string_v1(fn,strings,localized,hud,services,error)&&result.to_tu_string()=="ACT 3 / Hero","real AS array numeric/string composition");
  ck(std::count(c.trace.begin(),c.trace.end(),"integer")==1,"exact numeric conversion count");
  result.set_string("keep");c.fail_text=true;c.trace.clear();ck(!swf_menu_parsed_string_v1(fn,strings,localized,hud,services,error)&&result.to_tu_string()=="keep"&&std::count(c.trace.begin(),c.trace.end(),"integer")==1,"parse failure retains AS result and numeric effects");c.fail_text=false;

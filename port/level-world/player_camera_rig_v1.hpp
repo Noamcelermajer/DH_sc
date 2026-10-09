@@ -2,6 +2,7 @@
 
 #include "../engine-animation/animation.hpp"
 #include "../scene-materials/scene.hpp"
+#include "visual_timeline.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -53,6 +54,24 @@ private:
     Projection projection_{};
     std::size_t root_=0,camera_=0,target_=0,up_vector_=0;
     bool loaded_=false;
+};
+
+// Runtime for CameraLevel's selected CameraTests idle clip. CameraLevel::PlayAnim
+// selects the clip with loop=false and speed=1; the scene timeline supplies
+// elapsed milliseconds, clamps at the authored end, and notifies completion
+// once. The caller advances this from its game-frame delta rather than a
+// wall-clock epoch.
+class Playback {
+public:
+    bool start(const Rig&,std::string& error);
+    bool advance(Rig&,std::uint32_t dt_ms,Pose*,std::string& error);
+    std::int32_t current_time_ms() const noexcept { return timeline_.current_ms; }
+    bool completed() const noexcept { return timeline_.ended!=0; }
+
+private:
+    timeline::State timeline_{};
+    std::uint32_t source_clock_ms_=0;
+    bool started_=false;
 };
 
 } // namespace dh2::player_camera_rig_v1

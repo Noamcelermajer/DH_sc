@@ -218,6 +218,27 @@ monster_external_script::Statistics Owner::script_statistics() const noexcept {
     return script_.script_statistics();
 }
 
+Status Owner::dispatch_combat_result(monster_external_script::Event event,
+        std::uintptr_t attacker, std::uintptr_t defender, std::string& error) {
+    if (!bound_ || !script_.ready()) {
+        error = "active Monster AIS owner is not ready";
+        return Status::script_not_ready;
+    }
+    if (busy_) { error = "Monster AIS owner busy"; return Status::busy; }
+    if (identity_.character != attacker && identity_.character != defender) {
+        error = "combat participants do not include this Monster Character";
+        return Status::invalid_argument;
+    }
+    BusyScope busy(busy_);
+    const auto status = script_.dispatch_combat_result(event, attacker, defender, error);
+    if (status == ghost_ai_session::Status::complete) return Status::complete;
+    if (status == ghost_ai_session::Status::busy) return Status::busy;
+    if (status == ghost_ai_session::Status::invalid_argument) return Status::invalid_argument;
+    if (status == ghost_ai_session::Status::stale_binding) return Status::stale_owner;
+    if (status == ghost_ai_session::Status::not_ready) return Status::script_not_ready;
+    return Status::source_failed;
+}
+
 Status Owner::tick(const FrameInput& input, FrameResult* output) {
     if (!output || busy_ || !bound_) return busy_ ? Status::busy : Status::invalid_argument;
     if (!ready()) return Status::script_not_ready;

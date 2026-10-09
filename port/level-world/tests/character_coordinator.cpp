@@ -5,6 +5,7 @@
 
 #include <cstdio>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 using namespace dh2::character;
@@ -151,6 +152,50 @@ struct SkillFixture {
         return 0;
     }
 };
+
+struct SkillMachineBridgeFixture {
+    Coordinator character{0x300000001ull,1};
+    Facts facts{};
+    std::vector<Frozen::Operation> operations;
+    std::vector<std::uint32_t> callback_events;
+    std::vector<std::int32_t> transition_previous;
+    std::uint8_t ooi_intent=1;
+    std::uintptr_t physical=0x303;
+
+    SkillMachineBridgeFixture(){
+        facts.is_player=1;facts.idle=11;facts.walk=22;facts.run=33;
+        facts.attack_static=44;facts.attack_moving=55;
+        facts.walk_threshold=.45f;facts.run_threshold=.85f;facts.walk_speed=1.3f;
+        CoordinatorBindings bindings{};
+        bindings.context=this;
+        bindings.facts=read_facts;bindings.services={this,state_service};
+        character.bind(bindings);
+    }
+    static Facts read_facts(void* context){
+        return static_cast<SkillMachineBridgeFixture*>(context)->facts;
+    }
+    static void state_service(void* context,State* state,const Request* request){
+        auto& fixture=*static_cast<SkillMachineBridgeFixture*>(context);
+        check(state==&fixture.character.state,"bound skill callback changed Coordinator state owner");
+        if(request->service==raise_event&&request->argument[0]==0x1d)
+            fixture.transition_previous.push_back(request->argument[1]);
+    }
+    static std::int32_t skill_service(void* context,Frozen::State*,
+        const Frozen::Request* request,Frozen::Response* response){
+        auto& fixture=*static_cast<SkillMachineBridgeFixture*>(context);
+        fixture.operations.push_back(request->operation);
+        if(request->operation==Frozen::Operation::string_construct)
+            response->identity=0x304;
+        if(request->operation==Frozen::Operation::raise_event)
+            fixture.callback_events.push_back(request->argument0);
+        if(request->operation==Frozen::Operation::start_timer)
+            check(request->argument0==10&&request->argument1==0&&
+                  request->argument2==0x30,
+                  "CSSkill Blur did not use source timer parameters on the same Coordinator");
+        if(request->operation==Frozen::Operation::is_monster)response->word=0;
+        return 0;
+    }
+};
 }
 
 int main() {
@@ -199,6 +244,59 @@ int main() {
                 machine_owner, 0x100000004ull, 0x100000003ull);
         } catch (const std::invalid_argument&) { rejected = true; }
         check(rejected, "skill machine projection accepted a different Character owner");
+
+        SkillMachineBridgeFixture skill_bridge;
+        dh2::character_ai_skill_machine_projection_v1::Projection bridged_machine(
+            skill_bridge.character,skill_bridge.character.owner(),0x300000002ull);
+        std::string skill_bridge_error;
+        Frozen::Services missing_skill_services{};
+        check(!bridged_machine.bind_skill_state_callbacks(0x300000003ull,
+                  0x300000004ull,&skill_bridge.ooi_intent,&skill_bridge.physical,
+                  missing_skill_services,skill_bridge_error)&&
+              !skill_bridge_error.empty()&&
+              !bridged_machine.skill_state_callbacks_bound(),
+              "CSSkill projection accepted missing operation services");
+        const Frozen::Services skill_callbacks{&skill_bridge,
+                                               SkillMachineBridgeFixture::skill_service};
+        check(bridged_machine.bind_skill_state_callbacks(0x300000003ull,
+                  0x300000004ull,&skill_bridge.ooi_intent,&skill_bridge.physical,
+                  skill_callbacks,skill_bridge_error)&&
+              bridged_machine.skill_state_callbacks_bound(),
+              "CSSkill projection did not bind to the retained machine/Coordinator");
+        check(skill_bridge.character.transition(3)==1,
+              "CSSkill bridge could not enter source Idle");
+        *bridged_machine.machine()->moving_58=1;
+        check(skill_bridge.character.event(0xc355)==1&&
+              skill_bridge.character.state.current==6&&
+              skill_bridge.character.state.flags==0x6341&&
+              skill_bridge.character.state.attack_gate==0x100&&
+              skill_bridge.callback_events==std::vector<std::uint32_t>({0x1e})&&
+              skill_bridge.operations==std::vector<Frozen::Operation>({
+                  Frozen::Operation::debug_load,Frozen::Operation::string_construct,
+                  Frozen::Operation::debug_query,Frozen::Operation::string_destroy,
+                  Frozen::Operation::raise_event,Frozen::Operation::set_animation,
+                  Frozen::Operation::set_speed,Frozen::Operation::cancel_sneaking,
+                  Frozen::Operation::unpin,Frozen::Operation::is_monster}),
+              "C355 did not route CSSkill Focus in source operation order");
+        check(!bridged_machine.unbind_skill_state_callbacks(skill_bridge_error)&&
+              skill_bridge.character.event(0x22)==1&&
+              skill_bridge.character.state.current==3&&
+              skill_bridge.callback_events==std::vector<std::uint32_t>({0x1e,0x1f})&&
+              skill_bridge.operations==std::vector<Frozen::Operation>({
+                  Frozen::Operation::debug_load,Frozen::Operation::string_construct,
+                  Frozen::Operation::debug_query,Frozen::Operation::string_destroy,
+                  Frozen::Operation::raise_event,Frozen::Operation::set_animation,
+                  Frozen::Operation::set_speed,Frozen::Operation::cancel_sneaking,
+                  Frozen::Operation::unpin,Frozen::Operation::is_monster,
+                  Frozen::Operation::debug_load,Frozen::Operation::string_construct,
+                  Frozen::Operation::debug_query,Frozen::Operation::string_destroy,
+                  Frozen::Operation::sync_last_target,Frozen::Operation::stop,
+                  Frozen::Operation::raise_event,Frozen::Operation::start_timer,
+                  Frozen::Operation::is_monster})&&
+              skill_bridge.transition_previous==std::vector<std::int32_t>({-1,3,6})&&
+              bridged_machine.unbind_skill_state_callbacks(skill_bridge_error)&&
+              !bridged_machine.skill_state_callbacks_bound(),
+              "CSSkill Blur, close event, or safe projection detachment order differs");
 
         Fixture movement;
         check(movement.character.transition(3) == 1 &&
@@ -378,6 +476,7 @@ int main() {
                     "\"spawn_timer_and_named_event\":true,"
                     "\"safe_growth\":true,\"exception_borrow_cleanup\":true,"
                     "\"csskill_c355_focus_blur_event_and_transition\":true,"
+                    "\"csskill_machine_projection_bind_and_callback_order\":true,"
                     "\"csskill_projection_lifecycle\":true,"
                     "\"csskill_borrows_coordinator_machine_state\":true}\n");
         return 0;

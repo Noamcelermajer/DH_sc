@@ -167,6 +167,11 @@ public:
         const dh2::character::aggro_character_list::ObjectListMethods* objects,
         float view_radius, float cone, ScanResult* result);
 
+    // Dispatch OnTargetHit/OnTargetMissed through this actor's already-active
+    // AIS VM. The actor Character must be one of the two source combatants.
+    Status dispatch_combat_result(monster_external_script::Event, std::uintptr_t attacker,
+                                  std::uintptr_t defender, std::string& error);
+
 private:
     struct Impl;
     Status search_and_dispatch_impl(dh2::character::aggro_search::TargetList*,

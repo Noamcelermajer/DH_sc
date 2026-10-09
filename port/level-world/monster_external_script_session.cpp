@@ -28,6 +28,8 @@ const char* callback_name(Event event) {
         case Event::update: return "OnUpdate";
         case Event::died: return "OnDied";
         case Event::target_in_melee_range: return "OnTargetInMeleeRange";
+        case Event::target_hit: return "OnTargetHit";
+        case Event::target_missed: return "OnTargetMissed";
     }
     return nullptr;
 }
@@ -50,6 +52,9 @@ end
 function __dh2_monster_external_object(callback_name, identity)
     if identity == nil then return _G[callback_name](nil) end
     return _G[callback_name]({_this = identity})
+end
+function __dh2_monster_external_combat(callback_name, attacker, defender)
+    return _G[callback_name]({_this = attacker}, {_this = defender})
 end
 )lua";
 
@@ -588,6 +593,10 @@ Status Session::dispatch(Event event, std::uintptr_t enemy, std::string& error) 
     if (busy_) { error = "monster session busy"; return Status::busy; }
     const char* requested = callback_name(event);
     if (!requested) { error = "monster callback unsupported"; return Status::unsupported_callback; }
+    if (event == Event::target_hit || event == Event::target_missed) {
+        error = "combat callback requires attacker and defender identities";
+        return Status::invalid_argument;
+    }
     if (event == Event::enemy_spotted && enemy == 0) {
         error = "enemy identity missing";
         return Status::invalid_argument;
@@ -614,6 +623,44 @@ Status Session::dispatch(Event event, std::uintptr_t enemy, std::string& error) 
     } else {
         status = dh2_script_alias_call_discard_source(impl_->vm, impl_->aliases, requested, nullptr, 0);
     }
+    if (status != 0) {
+        ++impl_->failed;
+        impl_->faulted = true;
+        error = dh2_script_vm_error(impl_->vm);
+        return Status::script_error;
+    }
+    ++impl_->completed;
+    error.clear();
+    return Status::complete;
+}
+
+Status Session::dispatch_combat_result(Event event, std::uintptr_t attacker,
+                                       std::uintptr_t defender, std::string& error) {
+    if (busy_) { error = "monster session busy"; return Status::busy; }
+    if (event != Event::target_hit && event != Event::target_missed) {
+        error = "event is not an AIS combat-result callback";
+        return Status::unsupported_callback;
+    }
+    if (!attacker || !defender) {
+        error = "combat attacker and defender identities are required";
+        return Status::invalid_argument;
+    }
+    if (!ready()) { error = "monster session not ready"; return Status::not_ready; }
+    const char* requested = callback_name(event);
+    const char* resolved = dh2_script_alias_resolve(impl_->aliases, requested);
+    if (!resolved) { error = "original combat callback alias is absent"; return Status::unsupported_callback; }
+    BusyScope scope(busy_);
+    dh2_script_value arguments[3]{};
+    arguments[0].type = DH2_SCRIPT_STRING;
+    arguments[0].text = resolved;
+    arguments[0].text_bytes = std::strlen(resolved);
+    arguments[1].type = DH2_SCRIPT_IDENTITY;
+    arguments[1].identity = attacker;
+    arguments[2].type = DH2_SCRIPT_IDENTITY;
+    arguments[2].identity = defender;
+    const int status = dh2_script_vm_call_discard_source(
+        impl_->vm, "__dh2_monster_external_combat", arguments, 3);
+    impl_->object_table_arguments += 2;
     if (status != 0) {
         ++impl_->failed;
         impl_->faulted = true;

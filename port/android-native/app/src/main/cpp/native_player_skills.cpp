@@ -21,6 +21,8 @@
 #include "character_skill_cooldown_services.hpp"
 #include "character_coordinator.hpp"
 #include "character_ai_skill_commands_v1.hpp"
+#include "character_ai_skill_machine_projection_v1.hpp"
+#include "trophy_manager_owner_v1.hpp"
 #include "player_ais_lifecycle_v1.hpp"
 #include "ais_external_init_callbacks.hpp"
 #include "player_ai_timer_events_v1.hpp"
@@ -82,6 +84,8 @@ struct Runtime::Impl {
  std::unique_ptr<dh2::player_ai_death_v1::Runtime> death;
  std::unique_ptr<dh2::character_dead_focus_services_v1::Adapter> focus_services;
  dh2::character::set_target::Services target_services{};
+ std::unique_ptr<dh2::character_ai_skill_machine_projection_v1::Projection> skill_machine;
+ std::uintptr_t skill_animation_owner=0;
  dh2::player_ai_death_v1::Result died_result{};
  dh2::character_skill_cooldown_services::Services cooldown{};
  dh2::player_skill_property_services_v1::Bindings property_services{};
@@ -1144,6 +1148,353 @@ bool Runtime::resolve_character_skill_row(std::uint32_t skill_index,
  }
  return resolve_character_skill_row(skill_index,selector,output,error);
 }
+bool Runtime::end_skill(std::uint32_t skill_index,
+    std::uintptr_t animation_owner_identity,void* animation_context,
+    bool (*stop_loop)(void*,bool,std::string&),
+    character_ai_skill_commands_v1::Result& output,std::string& error){
+ namespace commands=character_ai_skill_commands_v1;
+ auto& s=*impl_;error.clear();
+ if(!animation_owner_identity||!s.skill_machine||
+    animation_owner_identity!=s.skill_animation_owner||
+    !s.initialized||s.update_blocked||!s.preparation||
+    !s.bindings.tables||!s.bindings.source_ai||!s.bindings.coordinator||
+    !s.bindings.coordinator->bound()||
+    s.bindings.coordinator->owner()!=s.bindings.character||
+    s.bindings.source_ai->owner_04!=s.bindings.character||
+    s.bindings.source_ai->active_ais_1c!=s.ais.ais||
+    !s.bindings.source_ai->identity||s.bindings.ai!=s.bindings.source_ai->identity){
+  error="AI_EndSkill requires the initialized same Character, AIS, Coordinator, SkillTables and retained Player VM";
+  return false;
+ }
+ struct Provider {
+  Runtime::Impl* runtime;
+  std::uintptr_t animation_owner;
+  void* animation_context;
+  bool (*stop_loop)(void*,bool,std::string&);
+  std::string error;
+ } provider{&s,animation_owner_identity,animation_context,stop_loop,{}};
+ auto invoke=[](void* raw,commands::State*,const commands::Request* request,
+                commands::Response* response)->std::int32_t {
+  auto& p=*static_cast<Provider*>(raw);auto& owner=*p.runtime;
+  if(!request||!response)return -1;
+  switch(request->operation){
+  case commands::Operation::get_skill_row:{
+   if(request->subject!=owner.bindings.character||!owner.bindings.tables||
+      !owner.bindings.source_ai||owner.bindings.source_ai->owner_04!=request->subject){
+    p.error="AI_EndSkill GetCharSkill crossed the retained Character/SkillTables";return -1;
+   }
+   auto selector=owner.property_view.resolved[28];
+   if(selector<0||std::size_t(selector)>=owner.bindings.tables->skills().skill_lists.size())selector=3;
+   const auto* row=owner.bindings.tables->skill(selector,request->index);
+   if(!row){p.error="AI_EndSkill GetCharSkill index is outside the selected SkillList";return -1;}
+   response->row.identity=reinterpret_cast<std::uintptr_t>(row);
+   response->row.animation_04=&row->anim;
+   response->row.moving_08=&row->anim_is_moving;
+   response->row.type_48=&row->type;
+   if(!response->row.identity){p.error="AI_EndSkill selected SkillTable row has no native identity";return -1;}
+   return 0;
+  }
+  case commands::Operation::stop_skill_loop:
+   if(request->subject!=p.animation_owner||request->related!=owner.bindings.character||
+      request->value!=1||!p.stop_loop){
+    p.error="AI_EndSkill source StopLoop has no matching retained animation owner/provider";return -1;
+   }
+   if(!p.stop_loop(p.animation_context,true,p.error)){
+    if(p.error.empty())p.error="AI_EndSkill animation StopLoop provider failed";
+    return -1;
+   }
+   return 0;
+  default:
+   p.error="AI_EndSkill reached an operation outside its verified source provider set";return -1;
+  }
+ };
+
+ // Reuse the same persistent logical Character/skill-machine projection that
+ // Begin wrote. It borrows the Coordinator's sole state ID and live CharAI
+ // bytes; it owns no FSM, timer, VM, animation or skill row.
+ commands::OwnerSlot owner_slot{s.skill_machine->character()};
+ commands::Fields fields{&s.bindings.source_ai->word_cc,
+                         &s.bindings.source_ai->byte_d0,
+                         &s.bindings.source_ai->byte_d1};
+ commands::State state{};
+ state.ai=s.bindings.ai;state.owner_04=&owner_slot;state.fields=&fields;
+ state.assertion_level=0;
+ const commands::Services services{&provider,invoke};
+ commands::Result result{};
+ const auto status=commands::execute(&state,commands::Command::end,skill_index,
+                                     &services,&result);
+ if(status!=commands::Status::complete){
+  error=provider.error.empty()?"Source CharAI::AI_EndSkill command failed (status "+
+        std::to_string(static_cast<std::int32_t>(status))+")":provider.error;
+  output=result;return false;
+ }
+ output=result;error.clear();return true;
+}
+
+bool Runtime::bind_skill_state_callbacks(
+    std::uintptr_t animation_owner_identity,
+    const SkillStateServices& external,std::string& error){
+ auto& s=*impl_;error.clear();
+ if(!animation_owner_identity||!s.initialized||s.update_blocked||
+    !s.preparation||!s.bindings.tables||!s.bindings.source_ai||
+    !s.bindings.coordinator||!s.bindings.coordinator->bound()||
+    s.bindings.coordinator->owner()!=s.bindings.character||
+    s.bindings.source_ai->owner_04!=s.bindings.character||
+    s.bindings.source_ai->active_ais_1c!=s.ais.ais||
+    !s.bindings.source_ai->identity||s.bindings.ai!=s.bindings.source_ai->identity){
+  error="CSSkill callback binding requires the initialized same Character, AIS, Coordinator, SkillTables and retained Player VM";
+  return false;
+ }
+ if(s.skill_machine&&s.skill_animation_owner!=animation_owner_identity){
+  error="CSSkill callback animation owner differs from the retained Character+0x49c projection";
+  return false;
+ }
+ if(!s.skill_machine){
+  try{
+   s.skill_machine=std::make_unique<dh2::character_ai_skill_machine_projection_v1::Projection>(
+       *s.bindings.coordinator,s.bindings.character,animation_owner_identity);
+   s.skill_animation_owner=animation_owner_identity;
+  }catch(const std::exception& failure){error=failure.what();return false;}
+ }
+ return s.skill_machine->bind_skill_state_callbacks(s.bindings.ai,
+     external.debug_switches_identity,external.ooi_intent_412,
+     external.physical_2dc,external.callbacks,error);
+}
+
+bool Runtime::unbind_skill_state_callbacks(std::string& error){
+ auto& s=*impl_;error.clear();
+ if(!s.skill_machine){error="CSSkill callback binding has no retained skill-machine projection";return false;}
+ return s.skill_machine->unbind_skill_state_callbacks(error);
+}
+
+bool Runtime::begin_skill(std::uint32_t skill_index,
+    std::uintptr_t animation_owner_identity,const BeginSkillServices& external,
+    character_ai_skill_commands_v1::Result& output,std::string& error){
+ namespace commands=character_ai_skill_commands_v1;
+ auto& s=*impl_;error.clear();output={};output.trophy_index=-1;
+ if(!animation_owner_identity||!s.initialized||s.update_blocked||!s.preparation||
+    !s.uses||!s.session||!s.bindings.tables||!s.bindings.source_ai||
+    !s.bindings.coordinator||!s.bindings.coordinator->bound()||
+    s.bindings.coordinator->owner()!=s.bindings.character||
+    s.session->character_identity()!=s.bindings.character||
+    s.bindings.source_ai->owner_04!=s.bindings.character||
+    s.bindings.source_ai->active_ais_1c!=s.ais.ais||
+    !s.bindings.source_ai->identity||s.bindings.ai!=s.bindings.source_ai->identity){
+  error="AI_BeginSkill requires the initialized same Character, AIS, Coordinator, SkillTables and retained Player VM";
+  return false;
+ }
+ if(s.skill_machine&&s.skill_animation_owner!=animation_owner_identity){
+  error="AI_BeginSkill animation owner differs from the retained Character+0x49c projection";
+  return false;
+ }
+ if(!s.skill_machine){
+  try{
+   s.skill_machine=std::make_unique<dh2::character_ai_skill_machine_projection_v1::Projection>(
+       *s.bindings.coordinator,s.bindings.character,animation_owner_identity);
+   s.skill_animation_owner=animation_owner_identity;
+  }catch(const std::exception& failure){error=failure.what();return false;}
+ }
+ try{s.refresh_properties();}
+ catch(const std::exception& failure){error=failure.what();return false;}
+
+ struct Provider{
+  Runtime::Impl* runtime;
+  const BeginSkillServices* external;
+  std::vector<const char*> trophy_names;
+  std::string error;
+ } provider{&s,&external,{},{}};
+ auto invoke=[](void* raw,commands::State* state,const commands::Request* request,
+                commands::Response* response)->std::int32_t{
+  auto& p=*static_cast<Provider*>(raw);auto& owner=*p.runtime;
+  if(!state||!request||!response)return -1;
+  auto& b=owner.bindings;
+  switch(request->operation){
+  case commands::Operation::get_skill_row:{
+   if(request->subject!=b.character||!b.tables||!b.source_ai||
+      b.source_ai->owner_04!=request->subject||
+      b.source_ai->active_ais_1c!=owner.ais.ais){
+    p.error="AI_BeginSkill GetCharSkill crossed the active Character/AIS/SkillTables";return -1;
+   }
+   commands::SkillRow row{};
+   if(!owner.initialized||!b.tables){p.error="AI_BeginSkill selected SkillTables are unavailable";return -1;}
+   auto selector=owner.property_view.resolved[28];
+   if(selector<0||std::size_t(selector)>=b.tables->skills().skill_lists.size())selector=3;
+   const auto* source_row=b.tables->skill(selector,request->index);
+   if(!source_row){p.error="AI_BeginSkill GetCharSkill index is outside the selected SkillList";return -1;}
+   row.identity=reinterpret_cast<std::uintptr_t>(source_row);
+   row.animation_04=&source_row->anim;row.moving_08=&source_row->anim_is_moving;
+   row.type_48=&source_row->type;
+   response->row=row;return 0;
+  }
+  case commands::Operation::check_active:
+  case commands::Operation::check_usable:{
+   const auto* scripts=owner.preparation?&owner.preparation->slots(
+       dh2::character_ai_set_skills_and_spells::List::skill):nullptr;
+   if(!scripts||request->index>=scripts->size()||!(*scripts)[request->index]){
+    p.error="AI_BeginSkill Active/Usable index has no retained Player script";return -1;
+   }
+   const auto expected_subject=request->operation==commands::Operation::check_active?
+       (*scripts)[request->index]:b.ai;
+   if(request->subject!=expected_subject||request->related!=b.character){
+    p.error="AI_BeginSkill Active/Usable query does not name the selected retained Player owner";return -1;
+   }
+   dh2::player_skill_use_session_v1::Result result{};std::string why;
+   const auto check=request->operation==commands::Operation::check_active?
+       dh2::player_skill_use_session_v1::Check::active:
+       dh2::player_skill_use_session_v1::Check::usable;
+   if(owner.uses->check(dh2::player_skill_use_session_v1::List::skill,
+       request->index,check,result,why)){
+    p.error=why.empty()?"AI_BeginSkill retained Player VM query failed":why;return -1;
+   }
+   response->word=result.value;return 0;
+  }
+  case commands::Operation::pre:{
+   const auto* scripts=owner.preparation?&owner.preparation->slots(
+       dh2::character_ai_set_skills_and_spells::List::skill):nullptr;
+   if(!scripts||request->index>=scripts->size()||!(*scripts)[request->index]||
+      request->subject!=(*scripts)[request->index]||request->related!=b.character){
+    p.error="AI_BeginSkill OnPreSkill does not name the selected retained Player script";return -1;
+   }
+   dh2::player_skill_use_session_v1::Result result{};std::string why;
+   if(owner.uses->invoke(dh2::player_skill_use_session_v1::List::skill,
+       request->index,dh2::player_skill_use_session_v1::Callback::pre,result,why)){
+    p.error=why.empty()?"AI_BeginSkill retained Player OnPreSkill failed":why;return -1;
+   }
+   response->word=result.value;return 0;
+  }
+  case commands::Operation::get_constant:{
+   if(request->subject!=b.character||!request->text){p.error="AI_BeginSkill animation constant request is invalid";return -1;}
+   const char* slash=std::strchr(request->text,'/');
+   if(!slash||slash==request->text||!slash[1]){p.error="AI_BeginSkill animation constant path is malformed";return -1;}
+   dh2_pycst_result value{};
+   if(dh2_pycst_get(&owner.animation_constants,request->text,
+       std::uint32_t(slash-request->text),slash+1,
+       std::uint32_t(std::strlen(slash+1)),&value)||!value.found){
+    p.error="Player AnimStancedAnim/SL__LIST_IPHONE constant is unavailable";return -1;
+   }
+   response->word=static_cast<std::uint32_t>(value.value);return 0;
+  }
+  case commands::Operation::get_anim_stance:{
+   if(request->subject!=b.character||!p.external->get_anim_stance){
+    p.error="AI_BeginSkill reached source GetAnimStance without the active Character provider";return -1;
+   }
+   if(p.external->get_anim_stance(p.external->context,request->subject,
+       response->signed_word,p.error)){
+    if(p.error.empty())p.error="AI_BeginSkill GetAnimStance provider failed";return -1;
+   }
+   return 0;
+  }
+  case commands::Operation::raise_state_event:{
+   if(request->subject!=owner.skill_machine->machine()->identity||
+      request->index!=0xc355||request->related!=0){
+    p.error="AI_BeginSkill state event differs from source C355 dispatch";return -1;
+   }
+   if(!b.coordinator||b.coordinator->event(request->index,request->related)!=0){
+    p.error="AI_BeginSkill C355 reached the retained Coordinator without its live CSSkill dispatcher/animation services";return -1;
+   }
+   return 0;
+  }
+  case commands::Operation::set_state:
+   p.error="AI_BeginSkill unexpectedly requested forced state installation";return -1;
+  case commands::Operation::is_player:{
+   if(request->subject!=b.character||!b.is_player){p.error="AI_BeginSkill Player classification provider is unavailable";return -1;}
+   std::uint32_t value=0;
+   if(b.is_player(b.character_queries_context,request->subject,&value,p.error)){
+    if(p.error.empty())p.error="AI_BeginSkill IsPlayer provider failed";return -1;
+   }
+   response->word=value;return 0;
+  }
+  case commands::Operation::property_add_int:{
+   if(request->subject!=b.character||request->index!=216||request->value>INT32_MAX/256u){
+    p.error="AI_BeginSkill Player property AddInt request is invalid";return -1;
+   }
+   if(dh2_property_add(&owner.property_view,216,std::int32_t(request->value*256u))){
+    p.error="AI_BeginSkill live Player property 216 AddInt failed";return -1;
+   }
+   return 0;
+  }
+  case commands::Operation::trophy_manager:{
+   auto* manager=p.external->trophy_manager;
+   if(request->subject!=b.ai||!manager||!manager->initialized()){
+    p.error="AI_BeginSkill captured source TrophyManager singleton is unavailable or uninitialized";return -1;
+   }
+   response->identity=reinterpret_cast<std::uintptr_t>(manager);return 0;
+  }
+  case commands::Operation::property_get_int:{
+   if(request->subject!=b.character||request->index!=216){p.error="AI_BeginSkill property GetInt receiver differs from captured Character";return -1;}
+   std::int32_t fixed=0;
+   if(dh2_property_resolve(&owner.property_view,216,&fixed)){
+    p.error="AI_BeginSkill live Player property 216 GetInt failed";return -1;
+   }
+   response->signed_word=fixed/256;return 0;
+  }
+  case commands::Operation::is_local_player:{
+   if(request->subject!=b.character||!p.external->is_local_player){
+    p.error="AI_BeginSkill reached PlayerManager::IsLocalPlayer without its active service";return -1;
+   }
+   if(p.external->is_local_player(p.external->context,request->subject,
+       response->word,p.error)){
+    if(p.error.empty())p.error="AI_BeginSkill IsLocalPlayer provider failed";return -1;
+   }
+   return 0;
+  }
+  case commands::Operation::trophy_names:{
+   auto* manager=p.external->trophy_manager;
+   if(!manager||request->related!=reinterpret_cast<std::uintptr_t>(manager)){
+    p.error="AI_BeginSkill TrophyTable lookup does not use the captured source manager";return -1;
+   }
+   const auto& names=manager->table_names();p.trophy_names.clear();
+   p.trophy_names.reserve(names.size());
+   for(const auto& name:names)p.trophy_names.push_back(name.c_str());
+   response->trophy_names={p.trophy_names.empty()?nullptr:p.trophy_names.data(),
+       static_cast<std::uint32_t>(p.trophy_names.size())};
+   return 0;
+  }
+  case commands::Operation::unlock_trophy:{
+   auto* manager=p.external->trophy_manager;
+   if(!manager||request->subject!=reinterpret_cast<std::uintptr_t>(manager)||
+      request->signed_value<0||manager->find_id_by_name("epic_withskills")!=request->signed_value){
+    p.error="AI_BeginSkill UnlockTrophy index is not the exact source epic_withskills row";return -1;
+   }
+   const auto status=manager->unlock(request->signed_value);
+   if(status!=dh2::data::TrophyUnlockStatusV1::completed&&
+      status!=dh2::data::TrophyUnlockStatusV1::already_unlocked&&
+      status!=dh2::data::TrophyUnlockStatusV1::already_unlocking){
+    p.error="AI_BeginSkill source TrophyManager::UnlockTrophy failed";return -1;
+   }
+   return 0;
+  }
+  case commands::Operation::stop_skill_loop:
+   p.error="AI_BeginSkill unexpectedly reached AI_EndSkill StopLoop";return -1;
+  case commands::Operation::assertion_log:
+   p.error="AI_BeginSkill reached a source assertion without the native assertion logger";return -1;
+  }
+  p.error="AI_BeginSkill reached an unsupported source provider operation";return -1;
+ };
+
+ const auto& scripts=s.preparation->slots(dh2::character_ai_set_skills_and_spells::List::skill);
+ commands::SkillVector vector{};
+ if(!scripts.empty())vector={scripts.data(),scripts.data()+scripts.size()};
+ commands::OwnerSlot owner_slot{s.skill_machine->character()};
+ commands::Fields fields{&s.bindings.source_ai->word_cc,
+                         &s.bindings.source_ai->byte_d0,
+                         &s.bindings.source_ai->byte_d1};
+ commands::State state{};state.ai=s.bindings.ai;state.owner_04=&owner_slot;
+ state.skill_vector_b4=&vector;state.fields=&fields;state.assertion_level=0;
+ const commands::Services services{&provider,invoke};
+ commands::Result result{};
+ const auto status=commands::execute(&state,commands::Command::begin,skill_index,
+                                     &services,&result);
+ output=result;
+ if(status!=commands::Status::complete){
+  error=provider.error.empty()?"Source CharAI::AI_BeginSkill command failed (status "+
+        std::to_string(static_cast<std::int32_t>(status))+", phase "+
+        std::to_string(static_cast<std::uint32_t>(result.phase))+")":provider.error;
+  return false;
+ }
+ error.clear();return true;
+}
+
 int Runtime::skill_check(std::uint32_t skill_slot,bool active,
                          std::uint32_t& value,std::string& error){
  auto& s=*impl_;error.clear();value=0;
@@ -1163,6 +1514,33 @@ int Runtime::skill_check(std::uint32_t skill_slot,bool active,
      active?Check::active:Check::usable,result,error);
  if(status==0)value=result.value;
  return status;
+}
+bool Runtime::combat_owner(std::uintptr_t& ais,const std::uint32_t*& flags)const noexcept{
+ const auto& s=*impl_;
+ if(!s.initialized||!s.session||!s.bindings.source_ai||
+    !s.ais.ais||s.session->ais_identity()!=s.ais.ais||
+    s.bindings.source_ai->active_ais_1c!=s.ais.ais)return false;
+ ais=s.ais.ais;flags=&s.ais.flags_b8;return true;
+}
+int Runtime::dispatch_combat_result(std::uintptr_t ais,
+    ais_combat_result_dispatch_v1::Callback callback,
+    std::uintptr_t attacker,std::uintptr_t defender,std::string& error){
+ auto& s=*impl_;error.clear();
+ if(!s.initialized||!s.session||!s.bindings.source_ai||
+    !s.bindings.coordinator||!s.bindings.coordinator->bound()||
+    s.bindings.coordinator->owner()!=s.bindings.character||
+    s.session->character_identity()!=s.bindings.character||
+    s.session->ais_identity()!=s.ais.ais||ais!=s.ais.ais||
+    s.bindings.source_ai->owner_04!=s.bindings.character||
+    s.bindings.source_ai->active_ais_1c!=s.ais.ais||
+    (attacker!=s.bindings.character&&defender!=s.bindings.character)){
+  error="Player combat dispatch requires its active retained AIS VM and participating Character";return -1;
+ }
+ const std::uint32_t membership=callback==ais_combat_result_dispatch_v1::Callback::target_hit?0x800u:
+     callback==ais_combat_result_dispatch_v1::Callback::target_missed?0x1000u:0u;
+ if(!membership){error="unsupported Player combat callback";return -1;}
+ if(!(s.ais.flags_b8&membership)){error="requested Player combat callback is absent from the active VCB";return -1;}
+ return s.session->dispatch_combat_result(ais,callback,attacker,defender,error);
 }
 int Runtime::invoke_skill_callback(std::uint32_t skill_slot,
     SkillCallback callback,SkillCallbackResult& result,std::string& error){
