@@ -1,0 +1,27 @@
+{
+  "repository": "https://github.com/morluto/rea",
+  "revision": "80c3d36dfa2597f34fdeb69e0ba75277ee50c85c",
+  "package_version": "6.0.0",
+  "commands": [
+    "npx -y rea-agents@latest doctor --client codex --json",
+    "npx -y rea-agents@latest providers --json"
+  ],
+  "healthy": false,
+  "scope_checks": [
+    {
+      "name": "node",
+      "ok": true,
+      "classification": "healthy",
+      "detail": "24.19.0"
+    },
+    {
+      "name": "registration:codex",
+      "ok": false,
+      "classification": "config_drift",
+      "detail": "<local Codex registration>",
+      "remediation": "Run rea setup to refresh this registration, then restart the client."
+    }
+  ],
+  "native_analysis_performed": false,
+  "reason": "No native engine configured; used preserved ARM assembly with Unicorn for the bounded reconstruction."
+}

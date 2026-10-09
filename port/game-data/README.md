@@ -1,5 +1,10 @@
 # Original character, model and animation tables
 
+The [Character XP award continuation](reference/character-give-xp-v1/NOTES.md)
+adds the recovered `_GiveXP` coordinator, exact modified-XP arithmetic and a
+quest-reward adapter. Original ARM replay passes 5,196 arithmetic and 1,200
+coordinator cases. LevelUp and live ownership remain external boundaries.
+
 This native C++ reader reconstructs the leading CharacterTable section and the complete ModelDict from the supplied game data. It does not run Python or the original ARM32 engine.
 
 The CharacterTable contains 448 named records, each with 224 signed 32-bit fields. Its leading section consumes 401,412 bytes; 196 following subclass bytes remain uninterpreted. The original names and field-schema files also retain later sections. ModelDict contains 116 named model paths. Length-prefixed ASCII strings and counts are bounded, identifiers are unique, and failed reads clear their outputs.
