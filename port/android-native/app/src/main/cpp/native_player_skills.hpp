@@ -108,6 +108,14 @@ public:
     bool hud_info(bool faery,std::uint32_t list_index,bool refresh_usable,
                   std::uint32_t& usable,float& cooldown_fraction,
                   std::string& error);
+    // Borrow the exact nullable skill-script vector already owned by the one
+    // retained Player preparation. The view is valid only until source
+    // UpdateSkills/reload changes it; cast dispatch refreshes it per call.
+    const std::vector<std::uintptr_t>* prepared_skill_scripts()const noexcept;
+    // CharAI::AI_IsSkillCheck_Usable/Active over that same vector and retained
+    // VM. The caller owns source ordering; this does not begin a cast.
+    int skill_check(std::uint32_t skill_slot,bool active,std::uint32_t& value,
+                    std::string& error);
     // Invoke one original Player skill Lua callback through the same retained
     // VM/prepared instance used by HUD checks. The source caller owns timing:
     // OnPreSkill belongs to AI_BeginSkill's passive-skill branch, OnSkill to

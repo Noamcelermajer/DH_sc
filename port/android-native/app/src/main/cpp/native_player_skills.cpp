@@ -1040,6 +1040,31 @@ bool Runtime::hud_info(bool faery,std::uint32_t index,bool refresh_usable,
                        std::string& error){
  return impl_->hud_info(faery,index,refresh_usable,usable,cooldown_fraction,error);
 }
+const std::vector<std::uintptr_t>* Runtime::prepared_skill_scripts()const noexcept{
+ const auto& s=*impl_;
+ if(!s.initialized||s.update_blocked||!s.preparation)return nullptr;
+ return &s.preparation->slots(dh2::character_ai_set_skills_and_spells::List::skill);
+}
+int Runtime::skill_check(std::uint32_t skill_slot,bool active,
+                         std::uint32_t& value,std::string& error){
+ auto& s=*impl_;error.clear();value=0;
+ if(!s.initialized||s.update_blocked||!s.uses||!s.preparation||!s.session||
+    !s.bindings.coordinator||!s.bindings.source_ai||
+    s.bindings.coordinator->owner()!=s.bindings.character||
+    s.session->character_identity()!=s.bindings.character||
+    s.bindings.source_ai->owner_04!=s.bindings.character||
+    s.bindings.source_ai->active_ais_1c!=s.ais.ais){
+  error="Player skill check requires the initialized same Character, AIS, Coordinator and retained VM";
+  return -1;
+ }
+ using List=dh2::player_skill_use_session_v1::List;
+ using Check=dh2::player_skill_use_session_v1::Check;
+ dh2::player_skill_use_session_v1::Result result{};
+ const int status=s.uses->check(List::skill,skill_slot,
+     active?Check::active:Check::usable,result,error);
+ if(status==0)value=result.value;
+ return status;
+}
 int Runtime::invoke_skill_callback(std::uint32_t skill_slot,
     SkillCallback callback,SkillCallbackResult& result,std::string& error){
  auto& s=*impl_;error.clear();

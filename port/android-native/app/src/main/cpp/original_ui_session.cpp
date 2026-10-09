@@ -978,11 +978,12 @@ struct OriginalUiSession::Impl {
             return true;
         }
         if(!std::strcmp(name,"NativeInvDropItem")){
-            // IDA 0x43cfb4: one numeric inventory index, then offline
-            // TransferItemTo(index, temporary, 1, false, false) and
-            // ItemObject::DropInventory. The V4 inventory and its attached
-            // world-drop provider remain the single state owner.
-            if(fn.nargs!=1||!fn.arg(0).is_number())return true;
+            // Authored doDrop ActionCallFunction encodes argc=2; native IDA
+            // 0x43cfb4 reads only arg0 as the inventory index. Match that
+            // behavior by accepting argc >= 1. Offline drop calls
+            // TransferItemTo then ItemObject::DropInventory. V4 remains
+            // the sole state owner.
+            if(fn.nargs<1||!fn.arg(0).is_number())return true;
             std::int32_t item_index=0;
             if(!start_integer(&self,fn.arg(0).to_number(),item_index,error))return false;
             std::uintptr_t identity=0;

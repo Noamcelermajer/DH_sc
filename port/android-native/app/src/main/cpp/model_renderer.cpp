@@ -4987,6 +4987,26 @@ bool ui_player_hud_projection(std::uintptr_t identity,bool refresh_usable,
 }
 namespace {
 void player_authored_event(const dh2::animation::TriggeredEvent& event,int clip){
+ // NativeHUDSkill's source completion callback is CharAI::_OnAnimEvent
+ // -> _SkillEvent -> CharAISkillScript::OnSkill, reached only by the authored
+ // state-6 do_skill marker. Keep it on the existing retained Player VM and
+ // use the index written by AI_BeginSkill; a HUD tap must never call OnSkill.
+ if(prince_state.current==6&&event.name&&std::strcmp(event.name,"do_skill")==0){
+  if(!prince_source_ai||!prince_skills||!prince_skills->initialized())
+   throw std::runtime_error("Authored state-6 do_skill event has no retained Player AIS/skill owner");
+  const auto skill_index=prince_source_ai->state.word_cc;
+  if(skill_index==std::numeric_limits<std::uint32_t>::max())
+   throw std::runtime_error("Authored state-6 do_skill event has no AI_BeginSkill index");
+  dh2::native::player_skills::SkillCallbackResult callback{};
+  std::string callback_error;
+  const int status=prince_skills->invoke_skill_callback(skill_index,
+      dh2::native::player_skills::SkillCallback::use,callback,callback_error);
+  if(status<0)throw std::runtime_error("Source CharAISkillScript::OnSkill failed: "+callback_error);
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+      "Source state-6 do_skill dispatched through retained Player VM | skill row %u | calls %u | Lua status %d | value %u | clip %d",
+      skill_index,callback.call_count,callback.last_lua_status,callback.value,clip);
+  return;
+ }
  const auto& frames=prince_locomotion.scheduler.frames();
  if(frames.empty())return;
  const dh2::data::CombatEventContext context{prince_state.current,int(frames.front().step),int(frames.back().step),0,-1};

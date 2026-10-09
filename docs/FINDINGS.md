@@ -1,5 +1,9 @@
 # Recovery findings and interpretation
 
+## Android 17 follow-up - 2026-10-09
+
+Fixed the inventory Drop adapter guard: SWF `doDrop` invokes `NativeInvDropItem` with `CallFunction` argc=2; IDA Pro and REA's IDA provider both confirm the native reads arg0 as the inventory index, then transfers the item and spawns its world object. The rebuilt APK is installed on the API 37 emulator. The SWF path to the Drop confirmation is statically traced; confirming that the modal dispatches `doDrop` and validating the live drop remain open. No release was created. REA used the IDA provider in headless mode against ELF SHA-256 `36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80`.
+
 ## Current Android checkpoint - 2026-10-08
 
 The [API 37 prerelease](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-ui-inventory-camera-api37-2026-10-08) contains the [APK](https://github.com/Noamcelermajer/DH_sc/releases/download/native-ui-inventory-camera-api37-2026-10-08/Dungeon-Hunter-2-native-ui-inventory-camera-api37-debug.apk), built for ARM64 and x86_64. Local APK: 163,003,027 bytes, SHA-256 `27491448224558E7F405C051008F7C128D9CB9409A3065A3D09F344D70D98BB5`; v2 signature and 16 KiB ZIP alignment verify. This exact build launched on a generic Android 17/API 37 x86_64 emulator with 16 KiB pages, not Fold7: intro, main menu and Single Player submenu rendered. It did not enter gameplay. The build adds a complete 69-key stats adapter, inventory auto-equip/swap callbacks, a native skill-menu guard and a forward camera anchor. These new gameplay paths have not all been verified live; the camera anchor host test passes 26 assertions, while authored camera animation remains incomplete. Full inventory/talent/skill/Fairy interaction, game entry, movement/camera, enemy AI, combat/loot, campaign progression and save restoration remain open.
