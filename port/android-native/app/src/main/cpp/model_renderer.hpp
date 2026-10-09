@@ -40,6 +40,10 @@ std::string load_world(const std::uint8_t*,std::size_t,AAssetManager*,
                        const std::uint8_t* generated_spawnpoints=nullptr,
                        std::size_t generated_spawnpoints_size=0);
 void move_axis(float x,float y);
+// Owning GL thread only. Applies the original ZoomHandler pinch delta to the
+// active CameraLevel owner; returns false when that source camera is inactive.
+bool camera_pinch_zoom(float previous_distance,float current_distance);
+bool camera_touch_pan(std::int32_t delta_x,std::int32_t delta_y);
 // Authored HUD joystick already produces the source-rotated direction and
 // magnitude. It enters the existing Player controller directly, bypassing the
 // Android touch/gamepad deadzone and camera remapping. stop=true schedules the
@@ -112,6 +116,8 @@ bool ui_player_hud_projection(std::uintptr_t,bool refresh_usable,
                               UiPlayerHudProjectionV1&,std::string&);
 bool ui_player_stats(std::uintptr_t,UiPlayerStatsReadV1&,std::string&);
 bool ui_player_assign_stat(std::uintptr_t,std::uint32_t,std::string&);
+bool ui_player_set_current_quest(std::uintptr_t,std::int32_t,std::string&);
+bool ui_player_save_game(std::uintptr_t,std::string&);
 struct UiSkillReadV1 {
  std::int32_t id{-1},level{-1},slot{-1},required_level{-1};
  std::int32_t character_level{},difficulty{},faerie_text_offset{};
@@ -126,9 +132,9 @@ struct UiEquippedItemReadV1 {
  std::int32_t id{-1},index{-1},power_count{};std::string name;
 };
 struct UiItemDetailsReadV1 {
- std::int32_t id{-1},index{-1},value{},buy_value{},sell_value{},transmute_property_raw{};
+ std::int32_t id{-1},index{-1},value{},buy_value{},sell_value{},transmute_property_raw{},transmute_value{1};
  std::string name,stats,requirements,icon;
- bool stackable{},equippable{};std::vector<std::string> power_descriptions;
+ bool stackable{},equippable{},equipped{},equipped_other_hand{};std::vector<std::string> power_descriptions;
 };
 bool ui_player_skill_slots(std::uintptr_t,std::array<std::int32_t,3>&,std::string&);
 bool ui_player_skill_points(std::uintptr_t,std::int32_t&,std::string&);
@@ -142,7 +148,8 @@ bool ui_player_set_active_faery(std::uintptr_t,std::uint32_t,std::string&);
 bool ui_player_faery_unlocked(std::uintptr_t,std::uint32_t,bool&,std::string&);
 bool ui_player_inventory_gold(std::uintptr_t,std::int32_t&,std::string&);
 bool ui_player_inventory_slot(std::uintptr_t,std::int32_t,std::vector<UiInventoryItemReadV1>&,std::string&);
-bool ui_player_inventory_item_details(std::uintptr_t,std::int32_t,UiItemDetailsReadV1&,std::string&);
+bool ui_player_inventory_item_details(std::uintptr_t,std::int32_t,std::uint32_t,
+                                      UiItemDetailsReadV1&,std::string&);
 bool ui_player_transmute_item(std::uintptr_t,std::int32_t,std::uint32_t,std::string&);
 bool ui_player_equipped_item(std::uintptr_t,std::int32_t,UiEquippedItemReadV1&,bool&,std::string&);
 bool ui_player_equip_item(std::uintptr_t,std::int32_t item_index,std::int32_t equipment_slot,std::string&);
@@ -152,6 +159,9 @@ bool ui_player_auto_equip_slot(std::uintptr_t,std::int32_t equipment_slot,std::s
 bool ui_player_swap_equipment(std::uintptr_t,std::string&);
 bool ui_player_weapon_flags(std::uintptr_t,bool&,bool&,std::string&);
 bool ui_player_potions(std::uintptr_t,std::int32_t&,std::int32_t&,std::string&);
+// Source NativeUsePotion -> v2Controller::Cmd_UsePotion -> Character::Ctrl_UsePotion.
+// Uses the active controller flags, one V4 inventory, and the live PropertyState.
+bool ui_player_use_potion(std::uintptr_t,std::string&);
 struct LootStagingResultV1 {std::size_t first_world_item{},item_count{};};
 // Owning GL thread only. Stages powered Loot through the existing Character
 // V4 inventory/RNG and its retained Item presentation owner. This does not

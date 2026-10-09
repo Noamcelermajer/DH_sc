@@ -22,6 +22,10 @@ int main(int argc,char** argv) {
     if(argc!=3){std::fprintf(stderr,"usage: native_level_camera_config_v1_host swamp.mlx crypt.rule.xml\n");return 2;}
     const auto swamp_xml=read(argv[1]),crypt_xml=read(argv[2]);
     dh2::native::level_camera_config_v1::ClipPlanes swamp{},crypt{};
+    if(!near(dh2::native::level_camera_config_v1::kVerticalFovRadians,
+             0.42963001132011414f,1e-8f)){
+        std::fprintf(stderr,"FAIL: Level::_LoadCamera vertical FOV must match CameraBase::SetData\n");return 1;
+    }
     if(!dh2::native::level_camera_config_v1::parse_clip_planes(swamp_xml,&swamp)||
        !near(swamp.near_clip,900.0f)||!near(swamp.far_clip,4200.0f)){
         std::fprintf(stderr,"FAIL: SWAMP LevelConfig clip planes must come from 001_swamp.mlx\n");return 1;

@@ -19,6 +19,10 @@ final class NativeBridge {
     static native String loadModel(byte[] encoded,android.content.res.AssetManager assets);
     static native String loadWorld(byte[] encoded,android.content.res.AssetManager assets);
     static native void moveAxis(float x,float y);
+    /** Routes an independent two-pointer gesture to the active source CameraLevel zoom owner. */
+    static native void cameraPinchZoom(float previousDistance,float currentDistance);
+    /** Routes a single-pointer logical-stage drag to the active source CameraLevel pan offset. */
+    static native void cameraTouchPan(int deltaX,int deltaY);
     static native void focusObject(int index);
     static native String objectState(int index,String state);
     static native String spawnCharacter(String exactName);

@@ -64,6 +64,15 @@ public:
     // Both the facts producer and synchronous state services are required.
     void bind(const CoordinatorBindings& bindings);
     bool bound() const;
+    // CSSkill callback storage is borrowed. These lifecycle methods may be
+    // used after bind() without replacing the Coordinator's State/FSM owner.
+    // Projection binding through this API is single-assignment (the same
+    // pointer is idempotent); unbind requires that exact pointer and is
+    // refused while CSSkill state 6 is live.
+    bool bind_skill_projection(
+        character_skill_state_dispatch_v1::Projection* projection);
+    bool unbind_skill_projection(
+        character_skill_state_dispatch_v1::Projection* projection);
     std::uintptr_t owner() const { return timers_.owner; }
     std::uint32_t event_cause() const { return event_cause_; }
     const TimerStore32& timers() const { return timers_; }

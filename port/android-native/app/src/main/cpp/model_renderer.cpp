@@ -37,8 +37,10 @@
 #include "fresh_inventory_owned_v4.hpp"
 #include "../../../../../game-data/player_add_loot_v1.hpp"
 #include "../../../../../level-world/player_initial_equipment_v1.hpp"
+#include "../../../../../level-world/loot_pickup_quest_tail_v10.hpp"
 #include "character_inventory_selection_v1.hpp"
 #include "player_savegame_v1.hpp"
+#include "quest_current_selection_v1.hpp"
 #include "player_saved_skill_slots_v1.hpp"
 #include "savegame_options_v1.hpp"
 #include "level_tables.hpp"
@@ -67,9 +69,11 @@
 #include "native_character_controller_v1.hpp"
 #include "native_character_stop.hpp"
 #include "native_camera_crypt_frame_v1.hpp"
+#include "../../../../../../port/level-world/camera_level_runtime_v1.hpp"
 #include "player_camera_rig_v1.hpp"
 #include "actor_runtime.hpp"
 #include "actor_blended_playback.hpp"
+#include "../../../../../../port/level-world/player_root_motion_policy_v1.hpp"
 #include "actor_scene_retention_v1.hpp"
 #include "physical_world.hpp"
 #include "character_scene.hpp"
@@ -184,6 +188,18 @@ struct ObjectActor:dh2::objects::Record {
  dh2::data::PropertyState properties;
  dh2::animation::EventCursor event_cursor;unsigned animation_events=0;
  dh2::data::CombatActorState combat_state;int combat_target=-1;bool pending_death=false;
+ // Direct source Monster MoveTo state. Each actor owns its route, route
+ // scratch, PFObject projection and controller; it never borrows Prince or
+ // another actor's navigation storage.
+ dh2::navigation::NavigationObject direct_nav_object{};
+ dh2::navigation::PathObject direct_path{};
+ dh2::navigation::PathController direct_controller{};
+ std::vector<dh2::navigation::PathSegment> direct_route_storage,direct_route_scratch;
+ dh2::character::PathToState40 direct_move_to{};
+ dh2::character::PathToServices16 direct_path_services{};
+ std::uint64_t direct_path_identity=0;
+ std::uint8_t direct_source_moving=0;
+ bool direct_path_ready=false;
  bool loot_dropped=false,loot_retry_pending=false,kill_credit_attempted=false;unsigned loot_retry_delay_frames=0;
  std::uint64_t loot_killer_identity=0;
  std::vector<dh2::data::ItemInstanceV1*> loot_rollback_items;
@@ -357,6 +373,9 @@ struct RuntimeLevelAssets {
  std::int32_t row=-1;std::string name="GOTHICUS_CRYPT_01",level_file="007_crypt_01.rule.xml";
  std::string descriptor="crypt01.dwld",bres="crypt.bdae",spawns="crypt01.spwn",objects="crypt01.dact";
  float camera_near_clip=0.0f,camera_far_clip=0.0f;
+ // Source LevelConfig projection + authored idle rig and bounded per-frame
+ // CameraLevel/CameraTarget follow/zoom composition; animation/input providers
+ // remain separate.
  bool source_player_camera_enabled=false;
  // Application::LoadLevel's chosen local seed is distinct from Random's
  // process-global GSInit state and seeds a fresh RandomGenerator per level.
@@ -977,7 +996,45 @@ struct NativeLootAdapterV1 {
   return {this,forward_metadata,forward_text};
  }
  dh2::data::OwnedInventoryServicesV4 inventory_services() {
-  return {this,invoke_inventory,observe_storage,false};
+  return {this,invoke_inventory,observe_storage,false,after_world_pickup};
+ }
+ static bool pickup_is_player(void*,std::uintptr_t character,bool& result,std::string& error) {
+  if(!prince_combat.inventory){error="Canonical Character inventory unavailable for pickup IsPlayer";return false;}
+  auto* record=native_host.record_for(native_host.host_projection());
+  result=character==prince_combat.inventory->character()&&record&&record->character_660==character;
+  error.clear();return true;
+ }
+ static bool pickup_registered_gathering_id(void*,std::uintptr_t character,
+     std::int32_t item_id,bool& result,std::string& error) {
+  if(!prince_combat.inventory){
+   error="Canonical Character inventory unavailable for GatherLoot list30";return false;
+  }
+  if(character!=prince_combat.inventory->character()){
+   error="GatherLoot list30 query used a different Character inventory owner";return false;
+  }
+  return prince_combat.inventory->has_quest_gathering_item_id(item_id,result,error);
+ }
+ static bool pickup_quest_constant(void*,const char* group,const char* key,
+     std::int32_t& value,std::string& error) {
+  if(!group||!key||std::strcmp(group,"v2QuestObjectiveType")||std::strcmp(key,"GatherLoot")){
+   error="Pickup quest requested a constant outside the recovered GatherLoot key";return false;
+  }
+  dh2_pycst_result result{};
+  if(!actor_quest_constants.view.bytes||dh2_pycst_get(&actor_quest_constants.view,
+       group,std::uint32_t(std::strlen(group)),key,std::uint32_t(std::strlen(key)),&result)||!result.found){
+   error="Actual v2QuestObjectiveType.GatherLoot constant unavailable";return false;
+  }
+  value=result.value;error.clear();return true;
+ }
+ static bool after_world_pickup(void* raw,std::uintptr_t character,std::int32_t item_id,
+     std::string& error) {
+  // ItemInventory+0x30 is queried from this Character's canonical V4 owner.
+  // IDA 0x3ffa68 confirms TransferInventoryTo checks list30 after AddItemInstance.
+  // GSLevel/current-Level and its RaiseAsync owner are still not constructed.
+  const dh2::character::LootPickupQuestServicesV10 services{
+   raw,pickup_is_player,pickup_registered_gathering_id,nullptr,
+   pickup_quest_constant,nullptr};
+  return dh2::character::loot_pickup_quest_tail_v10(character,item_id,services,error);
  }
  static const dh2::data::Item* forward_metadata(void* raw,
      const dh2::data::ItemInstanceV1& item,std::string& error) {
@@ -1149,9 +1206,25 @@ dh2::animation::Player walk_player;dh2::world::Level level;dh2::world::Point act
 bool world_mode=false,walking=false,resume_world=false;float move_x=0,move_y=0,heading=0;
 float authored_hud_direction[3]{};bool authored_hud_command_active=false,authored_hud_stop_pending=false;
 dh2::native::crypt_camera_frame_v1::ForwardAnchorState prince_camera_anchor{};
+dh2::camera_level_runtime_v1::Owner source_camera_level_owner{};
+dh2::camera_level_runtime_v1::ZoomInput source_camera_zoom_input{};
+bool source_camera_level_owner_ready=false;
+std::string source_camera_level_owner_key;
+dh2::camera_level_runtime_v1::Vec3 source_camera_level_root_position{};
+dh2::camera_level_runtime_v1::Vec3 source_camera_level_pan_offset{};
+void reset_source_camera_level_runtime(){
+ source_camera_zoom_input.clear_camera();
+ source_camera_level_owner=dh2::camera_level_runtime_v1::Owner{};
+ source_camera_level_owner_ready=false;
+ source_camera_level_owner_key.clear();
+ source_camera_level_root_position={};
+ source_camera_level_pan_offset={};
+}
 std::unique_ptr<dh2::player_camera_rig_v1::Rig> player_camera_rig;
 AAssetManager* player_camera_asset_manager=nullptr;
 bool player_camera_rig_load_attempted=false;
+std::string player_camera_rig_asset;
+float player_camera_rig_default_target_distance=0.0f;
 std::chrono::steady_clock::time_point player_camera_rig_epoch;
 float player_camera_input_yaw=dh2::native::crypt_camera_frame_v1::kInputYawRadians;
 float player_camera_input_pitch=dh2::native::crypt_camera_frame_v1::input_pitch_radians();
@@ -1160,6 +1233,8 @@ dh2_crypt_spawn_trigger::State crypt_trigger_state{};
 dh2_zone_contact::Vec3 crypt_trigger_position{},crypt_trigger_scale{};
 unsigned crypt_trigger_room=0;
 unsigned movement_steps=0,blocked_steps=0;
+unsigned authored_hud_command_trace_count=0,authored_hud_controller_trace_count=0,
+         authored_hud_actor_trace_count=0;
 unsigned native_heading_updates=0;
 std::chrono::steady_clock::time_point last_frame;
 std::chrono::steady_clock::time_point epoch;
@@ -2521,8 +2596,25 @@ bool initialize_player_equipment_native(AAssetManager* assets,
 std::array<float,3> cross(const std::array<float,3>& a,const std::array<float,3>& b){return {a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]};}
 void normalize(std::array<float,3>& a){float n=std::sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]);for(float& x:a)x/=n;}
 float dot(const std::array<float,3>& a,const std::array<float,3>& b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+void swamp_default_camera_basis(float& camera_yaw,float& camera_pitch){
+  // LevelConfig::InitPost defaults an empty camera_file to CameraTests.bdae;
+  // its PlayerCamera_Default node has this authored eye offset from its target.
+  // Convert the BDAE's renderer-space XYZ into camera()'s orbit convention.
+  if(dh2::native::camera_input_v1::orbit_from_eye_offset(
+       dh2::native::camera_input_v1::kSwampDefaultCameraEyeOffset,
+       &camera_yaw,&camera_pitch))
+    throw std::runtime_error("CameraTests default camera basis rejected");
+}
 Matrix camera(int width,int height){
-  const float aspect=float(width)/height,tan=.41421356f;
+  const float aspect=float(width)/height;
+  float tan=.41421356f;
+  const bool source_swamp_camera=world_mode&&
+      dh2::native::crypt_camera_frame_v1::source_swamp_static_camera_fallback_ready(
+          active_level_assets.name,active_level_assets.level_file,
+          active_level_assets.camera_near_clip>0.0f&&
+          active_level_assets.camera_far_clip>active_level_assets.camera_near_clip);
+  if(source_swamp_camera)
+    tan=std::tan(dh2::native::level_camera_config_v1::kVerticalFovRadians*0.5f);
   std::array<float,3> target{center[0],center[1],center[2]};
   if(world_mode){
     // Level::_LoadCamera targets the local Player; CameraTarget::GetTargetPosition
@@ -2534,12 +2626,27 @@ Matrix camera(int width,int height){
         &prince_camera_anchor,actor_target);
     target={anchor[0],anchor[1],anchor[2]};
   }
-  const float distance=radius*1.15f*std::sqrt(1+1/(tan*tan*std::min(1.f,aspect)*std::min(1.f,aspect)))*zoom;
+  float distance=radius*1.15f*std::sqrt(1+1/(tan*tan*std::min(1.f,aspect)*std::min(1.f,aspect)))*zoom;
+  if(source_swamp_camera){
+    float source_distance=0.0f,source_yaw=0.0f,source_pitch=0.0f;
+    if(dh2::native::camera_input_v1::orbit_from_eye_offset(
+         dh2::native::camera_input_v1::kSwampDefaultCameraEyeOffset,
+         &source_yaw,&source_pitch,&source_distance))
+      throw std::runtime_error("CameraTests default camera distance rejected");
+    (void)source_yaw;(void)source_pitch;
+    // The fallback orbit already uses CameraTests' authored azimuth/elevation.
+    // Preserve its authored eye-target distance instead of the development
+    // scene-radius zoom, which places the camera only about one third as far.
+    distance=source_distance*zoom;
+  }
   std::array<float,3> eye{target[0]+distance*std::cos(yaw)*std::cos(pitch),target[1]+distance*std::sin(yaw)*std::cos(pitch),target[2]+distance*std::sin(pitch)};
   std::array<float,3> f{target[0]-eye[0],target[1]-eye[1],target[2]-eye[2]};normalize(f);
   auto s=cross(f,{0,0,1});normalize(s);auto u=cross(s,f);
   Matrix view{s[0],u[0],-f[0],0,s[1],u[1],-f[1],0,s[2],u[2],-f[2],0,-dot(s,eye),-dot(u,eye),dot(f,eye),1};
-  const float near=world_mode?50.f:std::max(.01f,distance-radius*1.5f),far=world_mode?12000.f:distance+radius*3;
+  const float near=source_swamp_camera?active_level_assets.camera_near_clip:
+      world_mode?50.f:std::max(.01f,distance-radius*1.5f);
+  const float far=source_swamp_camera?active_level_assets.camera_far_clip:
+      world_mode?12000.f:distance+radius*3;
   Matrix projection{1/(tan*aspect),0,0,0,0,1/tan,0,0,0,0,-(far+near)/(far-near),-1,0,0,-2*far*near/(far-near),0};
   const auto result=dh2::scene::multiply(projection,view);
   if(world_mode){
@@ -2567,13 +2674,20 @@ Matrix camera(int width,int height){
   }
   return result;
 }
-bool ensure_player_camera_rig(){
- if(player_camera_rig)return true;
- if(player_camera_rig_load_attempted||!player_camera_asset_manager)return false;
+bool ensure_player_camera_rig(const RuntimeLevelAssets& level){
+ const bool swamp_default=dh2::native::crypt_camera_frame_v1::
+     verified_swamp_default_camera_route(level.name,level.level_file);
+ const std::string camera_path=swamp_default?
+     "data/3d/camera/cameratests.bdae":"data/3d/camera/playercamera.bdae";
+ if(player_camera_rig&&player_camera_rig_asset==camera_path)return true;
+ if(player_camera_rig_load_attempted&&player_camera_rig_asset==camera_path)return false;
+ player_camera_rig.reset();player_camera_rig_asset=camera_path;
+ player_camera_rig_default_target_distance=0.0f;
+ player_camera_rig_load_attempted=false;
+ if(!player_camera_asset_manager)return false;
  player_camera_rig_load_attempted=true;
  try{
-  const auto camera_scene=read(player_camera_asset_manager,
-      "data/3d/camera/playercamera.bdae","actors");
+  const auto camera_scene=read(player_camera_asset_manager,camera_path,"actors");
   const auto idle_animation=read(player_camera_asset_manager,
       "data/3d/camera/animations/common/camera_idle.bdae","actors");
   auto candidate=std::make_unique<dh2::player_camera_rig_v1::Rig>();
@@ -2588,12 +2702,18 @@ bool ensure_player_camera_rig(){
       initial.camera[12]-initial.target[12],
       initial.camera[13]-initial.target[13],
       initial.camera[14]-initial.target[14]};
+  player_camera_rig_default_target_distance=std::hypot(
+      std::hypot(eye_offset[0],eye_offset[1]),eye_offset[2]);
+  if(!std::isfinite(player_camera_rig_default_target_distance)||
+     player_camera_rig_default_target_distance<=0.0f)
+   throw std::runtime_error("Authored camera rig has no finite camera-to-target distance");
   player_camera_input_yaw=std::atan2(eye_offset[1],eye_offset[0]);
   player_camera_input_pitch=std::atan2(eye_offset[2],std::hypot(eye_offset[0],eye_offset[1]));
   player_camera_rig_epoch=std::chrono::steady_clock::now();
   player_camera_rig=std::move(candidate);
   __android_log_print(ANDROID_LOG_INFO,"DH2Native",
-      "Shared authored player camera rig loaded | tracks %u | clip %d..%d | BRES fov/aspect/clips %.4f/%.4f/%.0f..%.0f | runtime FOV from Level::_LoadCamera | eye %.3f %.3f %.3f | target %.3f %.3f %.3f",
+      "Authored gameplay camera rig loaded | level %s | asset %s | tracks %u | clip %d..%d | BRES fov/aspect/clips %.4f/%.4f/%.0f..%.0f | runtime FOV from Level::_LoadCamera | eye %.3f %.3f %.3f | target %.3f %.3f %.3f",
+      level.name.c_str(),camera_path.c_str(),
       player_camera_rig->track_count(),player_camera_rig->animation_start(),
       player_camera_rig->animation_end(),player_camera_rig->projection().source_fov_value,
       player_camera_rig->projection().aspect_ratio,player_camera_rig->projection().near_clip,
@@ -2606,7 +2726,7 @@ bool ensure_player_camera_rig(){
  }
 }
 bool sample_player_camera_rig(dh2::player_camera_rig_v1::Pose& pose){
- if(!ensure_player_camera_rig())return false;
+ if(!ensure_player_camera_rig(active_level_assets))return false;
  const auto start=player_camera_rig->animation_start();
  const auto duration=std::max(1,player_camera_rig->animation_end()-start);
  const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -2614,46 +2734,107 @@ bool sample_player_camera_rig(dh2::player_camera_rig_v1::Pose& pose){
  const auto offset=static_cast<std::int32_t>(elapsed%duration);
  std::string error;
  if(!player_camera_rig->sample(start+offset,&pose,error)){
-  __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Shared authored player camera sample failed: %s",error.c_str());
+  __android_log_print(ANDROID_LOG_ERROR,"DH2Native","Authored gameplay camera sample failed: %s",error.c_str());
   return false;
  }
  return true;
 }
-Matrix source_player_camera(int width,int height){
+Matrix source_player_camera(int width,int height,std::uint32_t dt_ms){
  using namespace dh2::native::crypt_camera_frame_v1;
+ using namespace dh2::camera_level_runtime_v1;
  Frame frame{};
  dh2::player_camera_rig_v1::Pose pose{};
- if(!sample_player_camera_rig(pose))
-  throw std::runtime_error("Shared player camera rig sample unavailable");
- const Vec3 authored_target_offset{pose.target[12],pose.target[13],pose.target[14]};
- const Vec3 authored_eye_offset{pose.camera[12]-pose.target[12],
-                                pose.camera[13]-pose.target[13],
-                                pose.camera[14]-pose.target[14]};
- const Vec3 authored_up{pose.up_vector[12]-pose.camera[12],
-                        pose.up_vector[13]-pose.camera[13],
-                        pose.up_vector[14]-pose.camera[14]};
+ if(!sample_player_camera_rig(pose)){
+  static bool warned=false;
+  if(!warned){
+   __android_log_print(ANDROID_LOG_WARN,"DH2Native",
+      "Authored camera rig sample unavailable; keeping gameplay on the level camera fallback");
+   warned=true;
+  }
+  return camera(width,height);
+ }
+ const dh2::native::crypt_camera_frame_v1::Vec3 authored_target_offset{
+     pose.target[12],pose.target[13],pose.target[14]};
+ const dh2::native::crypt_camera_frame_v1::Vec3 authored_eye_offset{
+     pose.camera[12]-pose.target[12],pose.camera[13]-pose.target[13],
+     pose.camera[14]-pose.target[14]};
+ const dh2::native::crypt_camera_frame_v1::Vec3 authored_up{
+     pose.up_vector[12]-pose.camera[12],pose.up_vector[13]-pose.camera[13],
+     pose.up_vector[14]-pose.camera[14]};
  player_camera_input_yaw=std::atan2(authored_eye_offset[1],authored_eye_offset[0]);
  player_camera_input_pitch=std::atan2(authored_eye_offset[2],
      std::hypot(authored_eye_offset[0],authored_eye_offset[1]));
- const Vec3 actor_target{actor_position[0],actor_position[1],actor_position[2]};
- const Vec3 target=forward_anchor_target(&prince_camera_anchor,actor_target);
+ const auto camera_key=active_level_assets.name+"\n"+active_level_assets.level_file;
+ if(source_camera_level_owner_key!=camera_key){
+  source_camera_zoom_input.clear_camera();
+ source_camera_level_owner=Owner{};source_camera_level_owner_ready=false;
+  source_camera_level_root_position={};source_camera_level_pan_offset={};source_camera_level_owner_key=camera_key;
+ }
+ const dh2::native::crypt_camera_frame_v1::Vec3 actor_target{
+     actor_position[0],actor_position[1],actor_position[2]};
+ const auto actor_anchor=forward_anchor_target(&prince_camera_anchor,actor_target);
+ GameObjectSample target_object{};
+ target_object.identity=reinterpret_cast<std::uintptr_t>(&prince_character);
+ target_object.present=true;
+ target_object.object_position={actor_target[0],actor_target[1],actor_target[2]};
+ target_object.custom_anchor_present=prince_camera_anchor.has_target;
+ target_object.custom_anchor_plus_12={actor_anchor[0],actor_anchor[1],actor_anchor[2]};
+ if(!source_camera_level_owner_ready){
+  if(!source_camera_level_owner.set_target(&target_object,0,nullptr))
+   throw std::runtime_error("Source CameraTarget rejected the live Player owner");
+  if(!std::isfinite(player_camera_rig_default_target_distance)||
+     player_camera_rig_default_target_distance<=0.0f)
+   throw std::runtime_error("Source CameraLevel default target distance is unavailable");
+  source_camera_level_owner.set_default_target_distance(player_camera_rig_default_target_distance);
+  // The authored gameplay UI stage is 480x320. ZoomHandler uses the larger
+  // source viewport count as its inverse sensitivity; gestures are converted
+  // to this same logical stage before reaching this provider.
+  if(!source_camera_zoom_input.set_camera(&source_camera_level_owner,{480,320}))
+   throw std::runtime_error("Source ZoomHandler could not bind the active CameraLevel owner");
+  source_camera_level_root_position={actor_anchor[0],actor_anchor[1],actor_anchor[2]};
+  source_camera_level_owner_ready=true;
+ }
+ FrameInput camera_input{};
+ camera_input.active_camera=true;camera_input.camera_node_present=true;
+ camera_input.target_cam_node_present=true;camera_input.target_game_object_present=true;
+ camera_input.target=target_object;
+ camera_input.dt_ms=static_cast<std::int32_t>(std::min<std::uint32_t>(dt_ms,2000));
+ camera_input.camera_world_position=source_camera_level_root_position;
+ camera_input.animated_target_cam_offset=source_camera_level_pan_offset;
+ // SWAMP DesignSettingsTable row 0 bounds are source-checked: normal zoom
+ // 0..0.35 and alternate/minimap zoom -1.5..0.5.
+ camera_input.normal_design_min_zoom=0.0f;
+ camera_input.normal_design_max_zoom=0.35f;
+ camera_input.alternate_design_min_zoom=-1.5f;
+ camera_input.alternate_design_max_zoom=0.5f;
+ FrameOutput camera_output{};
+ const auto camera_status=source_camera_level_owner.update(camera_input,&camera_output);
+ if(camera_status!=Status::transition_position_written&&
+    camera_status!=Status::follow_position_written)
+  throw std::runtime_error("Source CameraLevel/CameraTarget follow update rejected its live providers");
+ source_camera_level_root_position=camera_output.camera_world_position;
+ const dh2::native::crypt_camera_frame_v1::Vec3 target{
+     camera_output.camera_world_position.x,
+     camera_output.camera_world_position.y,
+     camera_output.camera_world_position.z};
  if(!build_player_frame(target,width,height,&frame,kVerticalFovRadians,
            active_level_assets.camera_near_clip,active_level_assets.camera_far_clip,
-           authored_eye_offset,authored_up,authored_target_offset))
-  throw std::runtime_error("Source player camera frame rejected level projection/viewport/actor");
+           authored_eye_offset,authored_up,authored_target_offset,
+           camera_output.target_cam_local_position.z))
+  throw std::runtime_error("Source gameplay camera frame rejected LevelConfig/viewport/actor");
  std::memcpy(source_camera.matrix.elements,frame.view_projection.data(),sizeof(source_camera.matrix.elements));
  std::memcpy(source_camera.frustum.position,frame.eye.data(),sizeof(source_camera.frustum.position));
  if(dh2::engine_camera::frustum_runtime::set_from(&source_camera.matrix,&source_camera.frustum)!=
     dh2::engine_camera::frustum_runtime::Status::complete)
-  throw std::runtime_error("Verified Crypt source camera frustum rejected live frame");
+  throw std::runtime_error("Source gameplay camera frustum rejected live frame");
  const bool resized=source_camera.width!=width||source_camera.height!=height;
  source_camera.width=width;source_camera.height=height;
  if((source_camera.frames++%128)==0||resized){
   __android_log_print(ANDROID_LOG_INFO,"DH2Native",
-    "Source player camera frame | %s | %dx%d | eye %.4f %.4f %.4f | target %.4f %.4f %.4f | fov %.9g aspect %.9g near %.0f far %.0f | input yaw %.6g pitch %.6g | shared authored rig",
+    "Source gameplay camera frame | %s | %dx%d | eye %.4f %.4f %.4f | target %.4f %.4f %.4f | camera-root %.4f %.4f %.4f | fov %.9g aspect %.9g near %.0f far %.0f | input yaw %.6g pitch %.6g | authored idle rig + CameraTarget follow/damping",
     active_level_assets.name.c_str(),
     width,height,frame.eye[0],frame.eye[1],frame.eye[2],frame.target[0],frame.target[1],frame.target[2],
-    kVerticalFovRadians,frame.aspect,active_level_assets.camera_near_clip,
+    target[0],target[1],target[2],kVerticalFovRadians,frame.aspect,active_level_assets.camera_near_clip,
     active_level_assets.camera_far_clip,frame.input_yaw,frame.input_pitch);
  }
  return frame.view_projection;
@@ -3231,7 +3412,7 @@ if(active_crypt_room_runtime){
 }
 void deactivate(){
  clear_player_equipment_native(true);
- player_camera_rig.reset();player_camera_asset_manager=nullptr;player_camera_rig_load_attempted=false;
+ player_camera_rig.reset();player_camera_asset_manager=nullptr;player_camera_rig_load_attempted=false;player_camera_rig_asset.clear();player_camera_rig_default_target_distance=0.0f;
  source_camera={};
  release_class_previews();menu_background=false;class_scene=false;
  if(active_crypt_room_runtime){
@@ -3270,7 +3451,7 @@ void deactivate(){
  prince_retained_pose.clear();prince_locomotion=dh2::actor::BlendedPlayback{};
  prince_visual={};prince_attack_clips.clear();prince_animation_bank={};scene_clock=0;
  active_native_start_plan.reset();pending_menu_start={};active_level_assets=RuntimeLevelAssets{};
- enabled=false;world_mode=false;resume_world=false;move_x=move_y=0;authored_hud_direction[0]=authored_hud_direction[1]=authored_hud_direction[2]=0;authored_hud_command_active=authored_hud_stop_pending=false;prince_camera_anchor={};
+ enabled=false;world_mode=false;resume_world=false;move_x=move_y=0;authored_hud_direction[0]=authored_hud_direction[1]=authored_hud_direction[2]=0;authored_hud_command_active=authored_hud_stop_pending=false;prince_camera_anchor={};reset_source_camera_level_runtime();
  const auto remaining=std::count_if(retired.begin(),retired.end(),[](const auto& owner){return !owner.expired();});
  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native terminal world discard | Ghost references %zu | remaining %zu | groups %zu | saved actors %zu | catalogue %u",retired.size(),std::size_t(remaining),object_groups.size(),saved_actors.size(),unsigned(bool(actor_skill_catalogue)));
 }
@@ -3470,13 +3651,26 @@ void move_axis(float x,float y){
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Player facing | angle %.9g | native updates %u",heading,native_heading_updates);
   }
 }
+bool camera_pinch_zoom(float previous_distance,float current_distance){
+ if(!world_mode||!active_level_assets.source_player_camera_enabled||
+    !source_camera_level_owner_ready)return false;
+ return source_camera_zoom_input.pinch_zoom(previous_distance,current_distance);
+}
+bool camera_touch_pan(std::int32_t delta_x,std::int32_t delta_y){
+ if(!world_mode||!active_level_assets.source_player_camera_enabled||
+    !source_camera_level_owner_ready)return false;
+ return source_camera_zoom_input.touch_pan(delta_x,delta_y,
+     &source_camera_level_pan_offset,true);
+}
 bool authored_hud_command(const float* direction,bool stop,std::string& error){
  if(stop){authored_hud_command_active=false;authored_hud_stop_pending=true;authored_hud_direction[0]=authored_hud_direction[1]=authored_hud_direction[2]=0;move_x=move_y=0;error.clear();return true;}
  if(!direction||!std::isfinite(direction[0])||!std::isfinite(direction[1])||!std::isfinite(direction[2])){
   error="Authored joystick HeadTowards vector is absent or nonfinite";return false;
  }
  if(!world_mode||!native_actor_ready){error="Authored joystick command requires the active native Player world";return false;}
- std::copy(direction,direction+3,authored_hud_direction);authored_hud_command_active=true;authored_hud_stop_pending=false;error.clear();return true;
+ std::copy(direction,direction+3,authored_hud_direction);authored_hud_command_active=true;authored_hud_stop_pending=false;error.clear();
+ if(authored_hud_command_trace_count<8){++authored_hud_command_trace_count;__android_log_print(ANDROID_LOG_INFO,"DH2Native","Authored joystick HeadTowards accepted | command %u | direction %.6g %.6g %.6g | state %d | flags %x | controller locked %u",authored_hud_command_trace_count,direction[0],direction[1],direction[2],prince_state.current,prince_state.flags,unsigned(prince_state.controller_locked));}
+ return true;
 }
 void focus_object(int index){
   inspected_object=-1;
@@ -3627,7 +3821,132 @@ dh2::data::AiRangeResult actor_player_range(const ObjectActor& actor){
  const auto* npc=dh2::data::ai_props(actor_ai_tables,actor.properties.resolved[1]);const auto* prince=dh2::data::ai_props(actor_ai_tables,prince_combat.properties.resolved[1]);dh2::data::AiRangeResult result{};if(!npc||!prince)return result;
  const dh2::data::AiRangeRequest request{{actor.position[0],actor.position[1],actor.position[2]},{actor_position[0],actor_position[1],actor_position[2]},npc->melee_radius,prince->melee_radius,npc->view_radius};dh2_ai_range(&result,&request);return result;
 }
-void update_enemy(ObjectActor& actor,int table){
+int direct_monster_find_path(void* raw,const dh2::character::PathToRequest32* request,
+                             std::uint32_t* found){
+ if(!raw||!request||!found||!level.native_floor)return 1;
+ auto& actor=*static_cast<ObjectActor*>(raw);
+ if(!actor.direct_path_ready||actor.direct_path_identity!=actor.identity||
+    request->owner!=actor.identity||request->reserved||request->reserved1||
+    request->limit>100000)return 1;
+ actor.direct_path.segments=actor.direct_route_storage.data();
+ actor.direct_path.capacity=std::uint32_t(actor.direct_route_storage.size());
+ dh2::navigation::RouteResult route{};
+ const int status=dh2::floors::find_path(*level.native_floor,actor.direct_path,
+                                          request->target,request->limit,route);
+ if(status)return 1;
+ *found=route.found;
+ actor.direct_move_to.path_nonempty=actor.direct_path.count!=0;
+ std::memcpy(actor.direct_move_to.path_target,request->target,
+             sizeof(actor.direct_move_to.path_target));
+ return 0;
+}
+bool initialize_direct_monster_path(ObjectActor& actor){
+ if(!level.native_floor||!actor.identity||!level.native_floor->sewn)return false;
+ if(actor.direct_path_ready&&actor.direct_path_identity==actor.identity){
+  actor.direct_path.segments=actor.direct_route_storage.data();
+  actor.direct_path.capacity=std::uint32_t(actor.direct_route_storage.size());
+  actor.direct_path_services={&actor,direct_monster_find_path};
+  return true;
+ }
+ const auto capacity=level.native_floor->graph.node_count+1;
+ if(!capacity)return false;
+ actor.direct_route_storage.assign(capacity,{});
+ actor.direct_route_scratch.assign(capacity,{});
+ if(dh2_nav_object_defaults(&actor.direct_nav_object))return false;
+ const dh2::navigation::ObjectInitRequest init{
+  &level.native_floor->collision_world,&actor.direct_nav_object,actor.identity,
+  {actor.position[0],actor.position[1],actor.position[2]},1.f,0,0};
+ if(dh2_nav_init_object(&init))return false;
+ actor.direct_path={};actor.direct_path.segments=actor.direct_route_storage.data();
+ actor.direct_path.capacity=std::uint32_t(actor.direct_route_storage.size());
+ actor.direct_path.route.flags=actor.direct_nav_object.motion.flags;
+ actor.direct_path.route.radius=actor.direct_nav_object.radius;
+ std::copy(actor.position.begin(),actor.position.end(),actor.direct_path.position);
+ std::copy(actor.position.begin(),actor.position.end(),actor.direct_path.target);
+ actor.direct_controller={};
+ std::copy(actor.position.begin(),actor.position.end(),actor.direct_controller.position);
+ std::copy(actor.position.begin(),actor.position.end(),actor.direct_controller.destination);
+ actor.direct_move_to={actor.identity,0,0,30,0,
+  {actor.position[0],actor.position[1],actor.position[2]},0};
+ actor.direct_path_services={&actor,direct_monster_find_path};
+ actor.direct_source_moving=0;actor.direct_path_identity=actor.identity;
+ actor.direct_path_ready=true;
+ return true;
+}
+bool direct_monster_move_to(ObjectActor& actor,const float* target){
+ if(!target||!initialize_direct_monster_path(actor))return false;
+ actor.direct_path.segments=actor.direct_route_storage.data();
+ actor.direct_move_to.path_nonempty=actor.direct_path.count!=0;
+ dh2::character::PathToResult16 result{};
+ if(dh2_character_path_to(&result,&actor.direct_move_to,target,
+                           &actor.direct_path_services)!=0)return false;
+ return result.requested&&result.find_result!=0&&actor.direct_path.count!=0;
+}
+void stop_direct_monster_path(ObjectActor& actor){
+ if(!actor.direct_path_ready)return;
+ actor.direct_path.segments=actor.direct_route_storage.data();
+ actor.direct_path.capacity=std::uint32_t(actor.direct_route_storage.size());
+ if(actor.direct_path.count)dh2_nav_drop_path(&actor.direct_path);
+ actor.direct_move_to.path_nonempty=0;actor.direct_source_moving=0;
+ for(unsigned i=0;i<3;++i){
+  actor.direct_path.position[i]=actor.position[i];
+  actor.direct_path.target[i]=actor.position[i];
+  actor.direct_controller.position[i]=actor.position[i];
+  actor.direct_controller.destination[i]=actor.position[i];
+ }
+ actor.direct_controller.path_requested=0;
+ actor.direct_nav_object.motion.position[0]=actor.position[0];
+ actor.direct_nav_object.motion.position[1]=actor.position[1];
+ actor.direct_nav_object.motion.position[2]=actor.position[2];
+}
+bool advance_direct_monster_path(ObjectActor& actor,unsigned dt_ms){
+ if(!dt_ms||!actor.direct_path_ready||!level.native_floor||!actor.direct_path.count||
+    actor.combat_state.dead||actor.state=="Attack")return false;
+ auto& path=actor.direct_path;path.segments=actor.direct_route_storage.data();
+ path.capacity=std::uint32_t(actor.direct_route_storage.size());
+ std::copy(actor.position.begin(),actor.position.end(),path.position);
+ std::copy(actor.position.begin(),actor.position.end(),actor.direct_controller.position);
+ std::copy(actor.position.begin(),actor.position.end(),actor.direct_nav_object.motion.position);
+ const dh2::navigation::ControllerPolicy policy{1,0,0,0};
+ dh2::navigation::ControllerWorkspace workspace{
+  actor.direct_route_scratch.data(),std::uint32_t(actor.direct_route_scratch.size()),0,
+  nullptr,0,0,nullptr,0,0};
+ const dh2::navigation::ControllerRequest request{
+  &actor.direct_controller,&path,&actor.direct_nav_object,
+  &level.native_floor->collision_world,&level.native_floor->graph,nullptr,&policy,
+  &workspace,actor.identity,&actor.direct_source_moving};
+ dh2::navigation::ControllerResult result{};
+ if(dh2_nav_update_path(&result,&request)!=0)return false;
+ actor.direct_move_to.path_nonempty=path.count!=0;
+ if(!path.count||!result.move.active)return false;
+ const float dx=actor.direct_controller.destination[0]-actor.position[0];
+ const float dy=actor.direct_controller.destination[1]-actor.position[1];
+ const float distance=std::sqrt(dx*dx+dy*dy);
+ if(!(distance>0.001f)||!std::isfinite(distance))return false;
+ // GameObject::GetSpeed returns 4.0 source units per second. World poses in
+ // this renderer are centimeters, hence the bounded 400-unit/s route step.
+ const float step=dh2::actor::base_virtual_speed*100.f*float(dt_ms)*0.001f;
+ const float fraction=std::min(1.f,step/distance);
+ float candidate[3]{actor.position[0]+dx*fraction,
+                    actor.position[1]+dy*fraction,actor.position[2]};
+ const float before_x=actor.direct_controller.destination[0]-actor.position[0];
+ const float before_y=actor.direct_controller.destination[1]-actor.position[1];
+ const float after_x=actor.direct_controller.destination[0]-candidate[0];
+ const float after_y=actor.direct_controller.destination[1]-candidate[1];
+ if(!(after_x*after_x+after_y*after_y<before_x*before_x+before_y*before_y))return false;
+ auto accepted_object=actor.direct_nav_object;
+ dh2::navigation::PositionResult accepted{};
+ if(dh2_nav_validate_position(&accepted,&level.native_floor->collision_world,
+      &accepted_object.motion,candidate,&live_motion_policy)!=0||accepted.kind!=2)return false;
+ actor.direct_nav_object=accepted_object;
+ std::copy(candidate,candidate+3,actor.position.begin());
+ std::copy(candidate,candidate+3,path.position);
+ std::copy(candidate,candidate+3,actor.direct_controller.position);
+ actor.placement[12]=candidate[0];actor.placement[13]=candidate[1];
+ actor.placement[14]=candidate[2];
+ return true;
+}
+void update_enemy(ObjectActor& actor,int table,unsigned dt_ms){
  if(actor.source_room_zone_managed&&!actor.source_updates_enabled)return;
  if(actor.gated_spawn)return; // Full actor-owned AI/FSM integration is pending.
  if(!enemy_ai_enabled||frozen||actor.combat_state.dead)return;
@@ -3645,13 +3964,29 @@ void update_enemy(ObjectActor& actor,int table){
  const dh2::data::AiTargetRequest request{actor.state=="Attack"?5:3,facts,actor.target_alive,actor.target_sight};dh2::data::AiTargetResult result{};
  if(dh2_ai_target_update(&result,&request)){enabled=false;return;}actor.target_alive=result.alive;actor.target_sight=result.sight;
  auto select=[&](const char* name){auto* sequence=dh2::data::animation_state(actor_animation_tables,table,name);std::string error;if(!sequence||!actor.scheduler.start(actor_animation_tables,sequence-actor_animation_tables.sequences.data(),actor_random,error)){enabled=false;__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Enemy controller animation failed");return;}actor.state=name;actor.cursor=0;actor.completions=0;actor.event_cursor={};actor.animation_events=0;};
- if(!result.target_present){actor.combat_target=-1;if(actor.ai_attack){select("Idle");actor.ai_attack=false;}
-  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Enemy target cleared | %s | event %u | Prince dead %u | controller stopped | pursuit backend pending",actor.name.c_str(),result.events[result.event_count-1],prince_combat.life.dead);return;}
- if(result.event_count&&result.events[result.event_count-1]==17&&(actor.state!="Attack"||!actor.scheduler.active())){
-  select("Attack");actor.ai_attack=true;__android_log_print(ANDROID_LOG_INFO,"DH2Native","Enemy melee selected | %s | target Prince | event 17 | distance squared bits %08x | clip %d | native controller adapter",actor.name.c_str(),range.distance_bits,actor.scheduler.clip().anim);
+ if(!result.target_present){actor.combat_target=-1;actor.target_seeking=false;stop_direct_monster_path(actor);if(actor.ai_attack||actor.state=="Walk"){select("Idle");actor.ai_attack=false;}
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Enemy target cleared | %s | event %u | Prince dead %u | actor-owned route stopped",actor.name.c_str(),result.event_count?result.events[result.event_count-1]:0,prince_combat.life.dead);return;}
+ const auto* events=result.events;
+ const auto* event_end=events+std::min<std::uint32_t>(result.event_count,3);
+ const bool target_out_of_range=std::find(events,event_end,14)!=event_end;
+ const bool idle_or_attacking=actor.state=="Idle"||actor.state=="Walk"||actor.state=="Attack";
+ if(target_out_of_range&&actor.target_seeking&&idle_or_attacking){
+  // Source uses GameObject::GetInteractionSpot here. That provider is not
+  // projected yet, so the native Player target position is the explicit fallback.
+  const float target_position[]{actor_position[0],actor_position[1],actor_position[2]};
+  if(!direct_monster_move_to(actor,target_position))
+   __android_log_print(ANDROID_LOG_WARN,"DH2Native","Monster MoveTo path unavailable | %s | event 14 | target %.6g %.6g %.6g",actor.name.c_str(),target_position[0],target_position[1],target_position[2]);
  }
- // Full pursuit, seeking, attack-delay/FSM and already-attacking target
- // switching remain separate reconstruction work.
+ if(result.event_count&&result.events[result.event_count-1]==17&&(actor.state!="Attack"||!actor.scheduler.active())){
+  stop_direct_monster_path(actor);select("Attack");actor.ai_attack=true;__android_log_print(ANDROID_LOG_INFO,"DH2Native","Enemy melee selected | %s | target Prince | event 17 | distance squared bits %08x | clip %d | native controller adapter",actor.name.c_str(),range.distance_bits,actor.scheduler.clip().anim);
+ }
+ if(advance_direct_monster_path(actor,dt_ms)){
+  if(actor.state!="Walk")select("Walk");
+ }else if(actor.state=="Walk"&&actor.direct_path_ready&&!actor.direct_path.count){
+  select("Idle");
+ }
+ // Character body/velocity, animation-driven locomotion, interaction-spot,
+ // obstacle-avoidance and full Character FSM providers remain unsupported.
 }
 void apply_actor_to_player(ObjectActor& attacker,const dh2::data::CombatEventAction& action){
  if(prince_combat.life.dead)return;
@@ -3963,11 +4298,29 @@ bool ui_player_assign_stat(std::uintptr_t identity,std::uint32_t stat,std::strin
 }
 bool ui_player_skill_slots(std::uintptr_t identity,std::array<std::int32_t,3>& slots,std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
- if(identity!=current||!prince_combat.savegame->skills_initialized()){
+ if(identity!=current||!prince_combat.savegame||!prince_combat.savegame->skills_initialized()){
   error="Gameplay skill-slot read requires the active Character's initialized Save";return false;
  }
  for(std::int32_t i=0;i<3;++i)slots[std::size_t(i)]=prince_combat.savegame->skill_in_slot(i);
  error.clear();return true;
+}
+bool ui_player_set_current_quest(std::uintptr_t identity,std::int32_t quest_id,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.savegame||prince_combat.savegame->character()!=identity){
+  error="Current Quest selection requires the active Character's canonical Save";return false;
+ }
+ if(native_host.online){error="Online Quest selection is unavailable in this offline host";return false;}
+ return dh2::data::quest_current_selection_v1::set(*prince_combat.savegame,
+     false,native_save_difficulty,quest_id,error);
+}
+bool ui_player_save_game(std::uintptr_t identity,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.savegame||prince_combat.savegame->character()!=identity||
+    !prince_combat.save_transport||
+    &prince_combat.save_transport->loader().save()!=prince_combat.savegame.get()){
+  error="NativeSaveGame requires the active Character's canonical Save/profile transport";return false;
+ }
+ return prince_combat.save_transport->save_gameplay(error);
 }
 bool ui_player_skill_points(std::uintptr_t identity,std::int32_t& points,std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
@@ -4242,7 +4595,13 @@ bool ui_player_inventory_slot(std::uintptr_t identity,std::int32_t requested,std
  }
  out=std::move(rows);error.clear();return true;
 }
-bool ui_player_inventory_item_details(std::uintptr_t identity,std::int32_t requested,UiItemDetailsReadV1& out,std::string& error){
+namespace {
+std::int32_t menu_transmute_value(std::int32_t item_value,std::int32_t raw_bonus,
+                                  std::uint32_t multiplier_bits);
+}
+bool ui_player_inventory_item_details(std::uintptr_t identity,std::int32_t requested,
+                                      std::uint32_t transmute_multiplier,
+                                      UiItemDetailsReadV1& out,std::string& error){
  std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
  if(identity!=current||!prince_combat.inventory||!prince_combat.item_presentation){
   error="Inventory detail read requires the active V4 inventory and retained ItemPresentation owner";return false;
@@ -4259,11 +4618,20 @@ bool ui_player_inventory_item_details(std::uintptr_t identity,std::int32_t reque
  // percentages are zero and buy/sell values clamp to one.
  value.buy_value=1;value.sell_value=1;
  value.transmute_property_raw=prince_combat.properties.resolved[197];
+ value.transmute_value=menu_transmute_value(instance.value,value.transmute_property_raw,
+                                             transmute_multiplier);
  value.name=instance.name.empty()?definition->name:instance.name;
  value.stats=instance.description;value.requirements=instance.requirements;
  value.icon=definition->icon_name;
  value.stackable=(static_cast<std::uint32_t>(definition->record.words[7])&0xffu)!=0;
  if(!inventory_item_equippable_by_player(definition->record,value.equippable,error))return false;
+ if(!prince_combat.inventory->is_equipped(std::uint32_t(requested),value.equipped,error))return false;
+ const auto set=std::size_t(prince_combat.inventory->current_equipment());
+ const auto& equipment=prince_combat.inventory->equipment();
+ const auto item_slot=definition->record.words[26];
+ const auto paired=item_slot==1?2:item_slot==2?1:item_slot==5?6:item_slot==6?5:-1;
+ if(paired>=0&&set<equipment.size()&&std::size_t(paired)<equipment[set].size())
+  value.equipped_other_hand=equipment[set][std::size_t(paired)]==items[std::size_t(requested)].get();
  if(!instance.powers.empty()){
   const auto* powers=prince_combat.item_presentation->powers(instance);
   if(!powers||powers->size()!=instance.powers.size()){
@@ -4487,6 +4855,64 @@ bool ui_player_potions(std::uintptr_t identity,std::int32_t& count,std::int32_t&
  std::uint32_t shifted=(bits>>8)|((bits&0x80000000u)?0xff000000u:0u);
  std::int32_t signed_capacity=0;std::memcpy(&signed_capacity,&shifted,sizeof(signed_capacity));
  capacity=static_cast<std::int8_t>(static_cast<std::uint8_t>(std::max(0,signed_capacity)));
+ error.clear();return true;
+}
+bool ui_player_use_potion(std::uintptr_t identity,std::string& error){
+ std::uintptr_t current=0;if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!prince_combat.inventory||
+    prince_combat.inventory->character()!=identity||!player_equipment_native||
+    !player_equipment_native->services){
+  error="Potion command requires the active Character, canonical V4 inventory and inventory services";return false;
+ }
+ // NativeUsePotion tests HasPotion before reading either percentage.
+ const auto* initial_potion=prince_combat.inventory->potion();
+ if(!initial_potion||initial_potion->signed_quantity()<=0){error.clear();return true;}
+ // NativeUsePotion calls GetHPPercent/GetMPPercent and dispatches only when
+ // either ratio is below 1.0. These source properties are raw 8.8 values, so
+ // converting both operands to float preserves the original comparison.
+ const auto fixed_float=[](std::int32_t raw){return float(raw)/256.f;};
+ const float hp_percent=fixed_float(prince_combat.properties.resolved[36])/
+                        fixed_float(prince_combat.properties.resolved[38]);
+ const float mp_percent=fixed_float(prince_combat.properties.resolved[41])/
+                        fixed_float(prince_combat.properties.resolved[43]);
+ if(!(hp_percent<1.f||mp_percent<1.f)){error.clear();return true;}
+
+ // v2Controller::Cmd_UsePotion at 0x4056b0: forced bypasses both checks;
+ // otherwise global s_blocked and the per-controller locked byte veto dispatch.
+ if(!prince_controller_forced&&(controller_global_blocked||prince_state.controller_locked)){
+  error.clear();return true;
+ }
+ // Character::Ctrl_UsePotion checks IsDead before HasPotion, then consumes the
+ // exact ItemInventory potion through RemoveOnePotion.
+ if(prince_combat.life.dead){error.clear();return true;}
+ auto* potion=prince_combat.inventory->potion();
+ if(!potion||potion->signed_quantity()<=0){error.clear();return true;}
+ if(!prince_combat.inventory->remove_one_potion(
+       player_equipment_native->live_services,error))return false;
+
+ // The Player branch increments Character property 219 before its optional
+ // TrophyManager search for "use_100_potions". Preserve that counter on this
+ // same owner. The achievement award itself remains an explicit seam because
+ // this runtime has no canonical TrophyManager provider.
+ auto property_view=dh2::data::property_view(actor_property_rules,prince_combat.properties);
+ if(dh2_property_add(&property_view,219,1)){
+  error="Potion consumed but Character property 219 update failed";return false;
+ }
+ if(prince_combat.properties.resolved[219]>99)
+  __android_log_print(ANDROID_LOG_WARN,"DH2Native","Potion achievement seam | source trophy use_100_potions is eligible; no canonical TrophyManager provider is attached");
+
+ // Character::Ctrl_UsePotion calls RegenHP(-1), then RegenMP(-1), after the
+ // removal and Player achievement prefix. The existing vitals kernel owns the
+ // fill-to-maximum arithmetic and mutates this Character's PropertyState.
+ dh2::data::VitalsChange hp_change{},mp_change{};
+ if(dh2_vitals_regen(&property_view,0,-1,&hp_change)){
+  error="Potion consumed and property 219 updated, but source HP regeneration failed";return false;
+ }
+ if(dh2_vitals_regen(&property_view,1,-1,&mp_change)){
+  error="Potion consumed and HP regenerated, but source MP regeneration failed";return false;
+ }
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native","Character::Ctrl_UsePotion source prefix | remaining %d | HP %d -> %d | MP %d -> %d | trophy manager unavailable",
+  prince_combat.inventory->num_potions(),hp_change.before,hp_change.after,mp_change.before,mp_change.after);
  error.clear();return true;
 }
 bool ui_player_hud_projection(std::uintptr_t identity,bool refresh_usable,
@@ -4797,7 +5223,12 @@ int prince_controller_stop_game_object(void*){
  prince_state.heading_active=heading_active;refresh_prince_facts();return 0;
 }
 int prince_controller_raise_character_event(void*,std::uint32_t event){
- if(event==0)return prince_event(0xc351,0)<0?-1:0;
+ if(event==0){
+  const int before=prince_state.current;const std::uint32_t flags_before=prince_state.flags;
+  const int result=prince_event(0xc351,0);
+  if(authored_hud_controller_trace_count<8){++authored_hud_controller_trace_count;__android_log_print(ANDROID_LOG_INFO,"DH2Native","Authored joystick move event | trace %u | source event 0xc351 | result %d | state %d -> %d | flags %x -> %x",authored_hud_controller_trace_count,result,before,prince_state.current,flags_before,prince_state.flags);}
+  return result<0?-1:0;
+ }
  if(event==63){
   const dh2::character::Request enable{dh2::character::enable_collisions,{0,0,0},0,0,0};
   character_service(nullptr,&prince_state,&enable);
@@ -5044,6 +5475,13 @@ void advance_native_actor(unsigned dt_ms){
  // ObjectManager. A contact started below is consumed by the next frame.
  advance_crypt_script(dt_ms);
  request_prince_death();
+ // Character::Move's recovered flags select position-from-visual. Feed that
+ // policy into the existing animation root-delta owner before its scene phase.
+ dh2::actor::player_root_motion_policy_v1::Projection root_motion{};
+ if(dh2::actor::player_root_motion_policy_v1::project(&root_motion,prince_state.flags)!=
+    dh2::actor::player_root_motion_policy_v1::Status::complete)
+  throw std::runtime_error("Player root-motion policy projection failed");
+ prince_locomotion.displacement=root_motion.displacement;
   scene_clock+=float(dt_ms);
   prince_scene_phase=true;
   if(!prince_locomotion.scene_phase(std::uint32_t(scene_clock),prince_attack_clips,prince_visual,current_scene,error))throw std::runtime_error(error);
@@ -5068,23 +5506,29 @@ void advance_native_actor(unsigned dt_ms){
   if(character.update_timers(dt_ms,0)<0||character.update_state(dt_ms)<0)
    throw std::runtime_error("Gated Character timer/state update failed");
  }
+ // Direct serialized Monsters have no SpawnOwner coordinator. Run their
+ // existing target/event adapter and actor-owned MoveTo route once per
+ // gameplay tick, outside the render traversal.
+ for(auto& group:object_groups){
+  if(group.animation_table<0)continue;
+  for(auto& actor:group.instances)if(actor.kind==1)
+   update_enemy(actor,group.animation_table,dt_ms);
+ }
  // Development touch input supplies the original controller facts. State
  // predicates/focus/blur decide eligibility, policy and authored animation.
- // v2GamepadController::Update applies its radial deadzone/response curve and
- // camera-relative angle before Character::Move. Keep this at the same per
- // actor-update point; the adapter reports the conditioned activity state.
+ // The inspection stick follows HUDControls::OnEvent/Update's fixed screen
+ // basis and radial magnitude. Authored HUD commands already supply the
+ // source heading and bypass this conversion.
  float input[3]{move_x,move_y,0};bool input_active=false;
- const bool source_player_camera=world_mode&&
-     active_level_assets.source_player_camera_enabled&&player_camera_rig!=nullptr;
- const float input_yaw=source_player_camera?player_camera_input_yaw:yaw;
- const float input_pitch=source_player_camera?player_camera_input_pitch:pitch;
  const bool authored_stop=authored_hud_stop_pending;authored_hud_stop_pending=false;
  if(authored_stop){input[0]=input[1]=input[2]=0;input_active=false;}
  else if(authored_hud_command_active){
   std::copy(authored_hud_direction,authored_hud_direction+3,input);input_active=true;
- }else if(dh2::native::camera_input_v1::map_touch_ground_input(input,input_yaw,input_pitch,world_mode,&input_active))
-  throw std::runtime_error("Native camera-relative touch input rejected");
+ }else if(dh2::native::camera_input_v1::map_hud_touch_input(input,&input_active))
+  throw std::runtime_error("Native HUD touch input rejected");
  const bool was_heading=prince_state.heading_active!=0;
+ const int state_before_heading=prince_state.current;
+ const std::uint32_t flags_before_heading=prince_state.flags;
  bool using_skill=false,casting=false;
  if(input_active){
   const dh2::character_skill_state_queries::Machine machine{&prince_state.current};
@@ -5112,6 +5556,12 @@ void advance_native_actor(unsigned dt_ms){
   throw std::runtime_error("Character attack heading event failed");
  if(prince_character.update_state(dt_ms)<0)throw std::runtime_error("Character state update failed");
  prince_flags=prince_state.flags;prince_move_type=prince_state.move_type;walking=prince_state.current==4;
+ if(authored_hud_command_active&&authored_hud_actor_trace_count<12)
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Authored joystick controller frame | input %.6g %.6g %.6g | allowed %u | skill %u | casting %u | state %d -> %d | flags %x -> %x | heading %u | gate %.6g %.6g %.6g",
+   input[0],input[1],input[2],unsigned(!prince_state.controller_locked),unsigned(using_skill),unsigned(casting),
+   state_before_heading,prince_state.current,flags_before_heading,prince_state.flags,
+   unsigned(prince_runtime.controller.heading.active),prince_runtime.controller.heading.direction[0],
+   prince_runtime.controller.heading.direction[1],prince_runtime.controller.heading.direction[2]);
  const float global_speed=(prince_state.current==4||prince_state.current==5)?prince_state.cached_speed:1.f;
  const bool moving=prince_state.current==4;
  const auto extra=prince_locomotion.completion.extra_ms;
@@ -5122,11 +5572,20 @@ void advance_native_actor(unsigned dt_ms){
  const dh2::actor::RuntimePolicy policy{{1,0,0,decoded.position_from_physics},1,0,0,0,dh2::actor::base_virtual_speed};
  const dh2::subobjects::Services services{nullptr,actor_virtual_service};
  const dh2::actor::RuntimeRequest request{&prince_runtime,prince_body.body?&prince_body:nullptr,&prince_visual,&current_scene,&level.native_floor->collision_world,&level.native_floor->graph,&live_registry,&live_motion_policy,&live_workspace,nullptr,prince_combat.properties.resolved.data(),&policy,&services,nullptr,prince_character.identity(),prince_flags,dt_ms,prince_character.game_object_moving_storage()};
+ const auto authored_actor_position_before=actor_position;
  dh2::actor::RuntimeResult result{};
  if(dh2::actor::update_actor(result,request,error))throw std::runtime_error(error);
  prince_state.heading_active=prince_runtime.controller.heading.active;
  const float dx=prince_runtime.subobjects.position[0]-actor_position[0],dy=prince_runtime.subobjects.position[1]-actor_position[1];
  if(moving){if(dx*dx+dy*dy>0.000001f)++movement_steps;else ++blocked_steps;++native_heading_updates;}
+ if((authored_hud_command_active||authored_hud_stop_pending||moving)&&authored_hud_actor_trace_count<12){
+  ++authored_hud_actor_trace_count;
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native","Authored joystick actor update | trace %u | input %.6g %.6g %.6g | state %d | flags %x | controller locked %u | before %.6g %.6g %.6g | after %.6g %.6g %.6g | delta %.6g %.6g | result phase %u",
+   authored_hud_actor_trace_count,input[0],input[1],input[2],prince_state.current,prince_state.flags,
+   unsigned(prince_state.controller_locked),authored_actor_position_before[0],authored_actor_position_before[1],
+   authored_actor_position_before[2],prince_runtime.subobjects.position[0],prince_runtime.subobjects.position[1],
+   prince_runtime.subobjects.position[2],dx,dy,unsigned(result.phase));
+ }
  std::copy(prince_runtime.subobjects.position,prince_runtime.subobjects.position+3,actor_position.begin());heading=prince_runtime.subobjects.rotation;
  const dh2::native::crypt_camera_frame_v1::Vec3 source_position{
      actor_position[0],actor_position[1],actor_position[2]};
@@ -5351,22 +5810,24 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     const bool source_clip_planes_loaded=
         load_source_level_camera_clip_planes(assets,level_assets,camera_config_error);
     const bool source_camera_route=dh2::native::crypt_camera_frame_v1::
-        verified_crypt_route(level_assets.name,level_assets.level_file);
+        verified_crypt_route(level_assets.name,level_assets.level_file)||
+        dh2::native::crypt_camera_frame_v1::verified_swamp_default_camera_route(
+            level_assets.name,level_assets.level_file);
     const bool authored_camera_rig_loaded=source_clip_planes_loaded&&source_camera_route&&
-        ensure_player_camera_rig();
+        ensure_player_camera_rig(level_assets);
     level_assets.source_player_camera_enabled=
-        dh2::native::crypt_camera_frame_v1::source_player_camera_route_ready(
+        dh2::native::crypt_camera_frame_v1::source_camera_rig_route_ready(
             level_assets.name,level_assets.level_file,source_clip_planes_loaded,
             authored_camera_rig_loaded);
     if(level_assets.source_player_camera_enabled){
       __android_log_print(ANDROID_LOG_INFO,"DH2Native",
-        "Source player camera LevelConfig | %s / %s | near %.0f far %.0f | shared rig %u",
+        "Source gameplay camera projection + idle rig | %s / %s | near %.0f far %.0f | CameraLevel dynamics pending | source rig %u",
         level_assets.name.c_str(),level_assets.level_file.c_str(),
         level_assets.camera_near_clip,level_assets.camera_far_clip,
         unsigned(level_assets.source_player_camera_enabled));
     }else if(source_clip_planes_loaded){
       __android_log_print(ANDROID_LOG_WARN,"DH2Native",
-        "Source player camera not enabled; route has no verified CameraLevel projection/target | %s / %s | preserving existing camera path",
+        "Source gameplay camera not enabled; route has no verified LevelConfig projection/authored rig | %s / %s | preserving existing camera path",
         level_assets.name.c_str(),level_assets.level_file.c_str());
     }else{
       __android_log_print(ANDROID_LOG_WARN,"DH2Native",
@@ -5616,6 +6077,63 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     const auto animation_data=read(assets,"animations_pyarray.bin","data"),animation_names=read(assets,"animations_pyarraynames.bin","data"),animation_fields=read(assets,"animations_pystructnames.bin","data"),clip_names=read(assets,"animations_dictionary_pyarraynames.bin","data"),clip_values=read(assets,"animations_dictionary_pyarray.bin","data");
     dh2::data::Dictionary clip_table;dh2::data::AnimationTables animation_tables;dh2::data::AnimationRandom animation_random;
     if(!dh2::data::load_dictionary({clip_names.data(),clip_names.size()},{clip_values.data(),clip_values.size()},clip_table,error)||!dh2::data::load_animation_tables({animation_data.data(),animation_data.size()},{animation_names.data(),animation_names.size()},{animation_fields.data(),animation_fields.size()},clip_table,animation_tables,error))throw std::runtime_error(error);
+    if(dh2::native::crypt_camera_frame_v1::verified_swamp_default_camera_route(
+          level_assets.name,level_assets.level_file)){
+     // LevelConfig::DeclareProperties defaults camera_animset to "Default"
+     // (IDA 0x3f4c04); camera_name is the separate PlayerCamera_Default node.
+     // Bind the renderer's already-sampled CameraTests rig to that real table
+     // row, rather than silently assuming a camera_idle file with matching
+     // spelling is the selected source animation.
+     const auto camera_set=std::find(animation_tables.camera_names.begin(),
+         animation_tables.camera_names.end(),"Default");
+     if(camera_set==animation_tables.camera_names.end())
+      throw std::runtime_error("SWAMP source camera animset Default is absent");
+     const auto camera_set_index=static_cast<std::size_t>(
+         camera_set-animation_tables.camera_names.begin());
+     if(camera_set_index!=0||camera_set_index>=animation_tables.cameras.size())
+      throw std::runtime_error("SWAMP source camera animset Default row changed");
+     const auto idle_id=animation_tables.cameras[camera_set_index].idle;
+     if(idle_id<0||static_cast<std::size_t>(idle_id)>=clip_table.values.size())
+      throw std::runtime_error("SWAMP source camera Default idle animation is invalid");
+     std::string idle_path=clip_table.values[static_cast<std::size_t>(idle_id)];
+     std::transform(idle_path.begin(),idle_path.end(),idle_path.begin(),
+         [](unsigned char c){return static_cast<char>(std::tolower(c));});
+      if(idle_path!="data/3d/camera/animations/common/camera_idle.bdae")
+       throw std::runtime_error("SWAMP source camera Default idle animation changed");
+      const bool camera_tests_rig_bound=player_camera_rig&&
+         player_camera_rig_asset=="data/3d/camera/cameratests.bdae"&&
+         player_camera_rig->track_count()>0;
+
+     // DesignSettingsTable's runtime row is 176 bytes (vptr + 43 packed
+     // fields; IDA read 0x4b3cd0). The cache row omits the vptr, so these
+     // packed field indices supply the four exact HandleZoom limits at
+     // CameraLevel::HandleZoom 0x410218.
+     const auto design=read(assets,"design_pyarray.bin","original-cache/data/pydata");
+     const auto read_u32=[](const std::uint8_t* p){return std::uint32_t(p[0])|
+         (std::uint32_t(p[1])<<8)|(std::uint32_t(p[2])<<16)|
+         (std::uint32_t(p[3])<<24);};
+     if(design.size()<4+43*4||read_u32(design.data())!=1)
+      throw std::runtime_error("SWAMP source camera DesignSettings row is unavailable");
+     const auto read_design_float=[&](std::size_t field){
+      float value=0.0f;const auto bits=read_u32(design.data()+4+field*4);
+      std::memcpy(&value,&bits,sizeof(value));return value;
+     };
+     const float mini_map_max=read_design_float(17),mini_map_min=read_design_float(18);
+     const float zoom_max=read_design_float(41),zoom_min=read_design_float(42);
+     if(!std::isfinite(mini_map_min)||!std::isfinite(mini_map_max)||
+        !std::isfinite(zoom_min)||!std::isfinite(zoom_max)||
+        mini_map_min>mini_map_max||zoom_min>zoom_max)
+      throw std::runtime_error("SWAMP source camera DesignSettings zoom bounds are invalid");
+     if(camera_tests_rig_bound){
+      __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+         "SWAMP source camera binding | CameraTests / PlayerCamera_Default | CamAnimSet Default row %zu | idle %d %s | normal zoom %.3f..%.3f | alternate zoom %.3f..%.3f | rig tracks %u | ZoomHandler state remains separate",
+         camera_set_index,idle_id,clip_table.values[static_cast<std::size_t>(idle_id)].c_str(),
+         zoom_min,zoom_max,mini_map_min,mini_map_max,player_camera_rig->track_count());
+     }else{
+      __android_log_print(ANDROID_LOG_WARN,"DH2Native",
+         "SWAMP CameraTests rig asset unavailable; source idle and zoom tables verified; using source-derived fallback camera optics");
+     }
+    }
     __android_log_print(ANDROID_LOG_INFO,"DH2Native","Animation tables ready | sequences %zu | characters %zu | clip paths %zu | bytes %zu",animation_tables.sequences.size(),animation_tables.characters.size(),clip_table.values.size(),animation_tables.data_consumed);
     std::vector<dh2::objects::Record> object_records;
     std::vector<dh2::world::GeneratedCryptActorHandleV1>
@@ -6216,9 +6734,13 @@ std::string load_world(const std::uint8_t* descriptor,std::size_t size,AAssetMan
     }
     level=std::move(candidate);player=std::move(candidate_idle);walk_player=std::move(candidate_walk);current_scene=std::move(rest);
     active_crypt_module_bounds=std::move(candidate_crypt_module_bounds);
-    actor_position=restore?previous:level.spawn;prince_camera_anchor={};
+    actor_position=restore?previous:level.spawn;prince_camera_anchor={};reset_source_camera_level_runtime();
     world_mode=true;resume_world=false;walking=false;move_x=move_y=0;authored_hud_direction[0]=authored_hud_direction[1]=authored_hud_direction[2]=0;authored_hud_command_active=authored_hud_stop_pending=false;heading=restore?previous_heading:source_spawn_heading;movement_steps=blocked_steps=0;
-    radius=350;yaw=-1.57f;pitch=.75f;zoom=1;object_epoch=epoch=last_frame=std::chrono::steady_clock::now();sampled_ms=0;frozen=restore?previous_frozen:false;
+    radius=350;yaw=-1.57f;pitch=.75f;
+    if(level_assets.name=="SWAMP"&&level_assets.level_file=="001_swamp.mlx"&&
+       !level_assets.source_player_camera_enabled)
+      swamp_default_camera_basis(yaw,pitch);
+    zoom=1;object_epoch=epoch=last_frame=std::chrono::steady_clock::now();sampled_ms=0;frozen=restore?previous_frozen:false;
     if(!initialize_player_equipment_native(assets,prince,error))
       throw std::runtime_error("Native player equipment initialization: "+error);
     initialize_native_actor(assets,restore);
@@ -6738,13 +7260,14 @@ bool retire_staged_world_loot_item(std::size_t index,std::string& error) {
 void draw(int width,int height){
   if(!enabled||!program)return;
   float frame_dt=0;
+  unsigned frame_dt_ms=0;
   if(world_mode){const auto now=std::chrono::steady_clock::now();
     const auto now_ms=std::uint32_t(std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count());
     const auto previous_ms=std::uint32_t(std::chrono::duration_cast<std::chrono::milliseconds>(last_frame.time_since_epoch()).count());
     const unsigned dt_ms=now_ms-previous_ms;last_frame=now;
     // The original Application skips updates after a real-time gap >2000ms.
     // Its normal dt is unsigned milliseconds, with one world Step and no cap.
-    if(dt_ms<=2000){if(!native_actor_ready)throw std::runtime_error("Native actor runtime is not initialized");advance_native_actor(dt_ms);frame_dt=float(dt_ms)*.001f;}
+    if(dt_ms<=2000){if(!native_actor_ready)throw std::runtime_error("Native actor runtime is not initialized");advance_native_actor(dt_ms);frame_dt_ms=dt_ms;frame_dt=float(dt_ms)*.001f;}
     const auto& target=inspected_object>=0?world_objects[inspected_object].position:actor_position;
     center[0]=target[0];center[1]=target[1];center[2]=target[2]+90;
   }
@@ -6758,7 +7281,7 @@ void draw(int width,int height){
   if(class_scene&&animation_failed)throw std::runtime_error("Class scene animation sampling failed");
   const auto projection=class_scene?class_camera(width,height):menu_background?menu_camera(width,height):
       world_mode&&active_level_assets.source_player_camera_enabled&&player_camera_rig?
-        source_player_camera(width,height):camera(width,height);glUseProgram(program);
+        source_player_camera(width,height,frame_dt_ms):camera(width,height);glUseProgram(program);
   if(world_mode&&active_crypt_room_runtime&&
      !active_crypt_room_runtime->update_frustum(actor_position))
     throw std::runtime_error("Source RoomZone frustum transition failed");
@@ -6856,7 +7379,6 @@ void draw(int width,int height){
         }
         continue;
       }
-      update_enemy(actor,group.animation_table);
       if(actor.pending_death){
         auto* sequence=dh2::data::animation_state(actor_animation_tables,group.animation_table,"Died");
         if(!sequence||!actor.scheduler.start(actor_animation_tables,sequence-actor_animation_tables.sequences.data(),actor_random,error)){__android_log_print(ANDROID_LOG_ERROR,"DH2Native","Combat death animation failed");enabled=false;return;}

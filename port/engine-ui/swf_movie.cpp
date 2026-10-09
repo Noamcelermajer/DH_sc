@@ -317,9 +317,13 @@ bool SwfMovie::menu_input_behavior(std::uint32_t flags,std::string& e){
  return input->set_flags(flags,e)&&owner->finish(e);
 }
 bool SwfMovie::input_cursor(const SwfCursor16& cursor,std::string& e){
+ return input_cursor(cursor,0,e);
+}
+bool SwfMovie::input_cursor(const SwfCursor16& cursor,std::uint32_t cursor_index,std::string& e){
  auto owner=impl_;auto input=input_;if(!owner||!input){e="Source input owner unavailable";return false;}
  Impl::Scope scope(owner.get());if(!scope.entered){e="SWF core busy";return false;}
- try{return input->cursor(cursor,0,e)&&owner->finish(e);}catch(const std::exception& x){e=x.what();return false;}
+ if(cursor_index>=4){e="Source input cursor index outside 0..3";return false;}
+ try{return input->cursor(cursor,cursor_index,e)&&owner->finish(e);}catch(const std::exception& x){e=x.what();return false;}
 }
 bool SwfMovie::input_advance(std::int32_t ms,std::string& e){
  auto owner=impl_;auto input=input_;if(!owner||!input||ms<0){e="Source input owner/time unavailable";return false;}
@@ -327,11 +331,15 @@ bool SwfMovie::input_advance(std::int32_t ms,std::string& e){
  try{return input->update(ms,false,e)&&owner->finish(e);}catch(const std::exception& x){e=x.what();return false;}
 }
 bool SwfMovie::input_cancel(float x,float y,std::string& e){
+ return input_cancel(x,y,0,e);
+}
+bool SwfMovie::input_cancel(float x,float y,std::uint32_t cursor_index,std::string& e){
  auto owner=impl_;auto input=input_;if(!owner||!input){e="Source input owner unavailable";return false;}
  Impl::Scope scope(owner.get());if(!scope.entered){e="SWF core busy";return false;}
- if(!input->enable(false,0,e))return false;
- const bool cleared=input->cursor({x,y,0.f,0},0,e)&&input->reset_focus(0,e);
- std::string restore;const bool enabled=input->enable(true,0,restore);
+ if(cursor_index>=4){e="Source input cursor index outside 0..3";return false;}
+ if(!input->enable(false,cursor_index,e))return false;
+ const bool cleared=input->cursor({x,y,0.f,0},cursor_index,e)&&input->reset_focus(cursor_index,e);
+ std::string restore;const bool enabled=input->enable(true,cursor_index,restore);
  if(!cleared)return false;if(!enabled){e=restore;return false;}
  return owner->finish(e);
 }

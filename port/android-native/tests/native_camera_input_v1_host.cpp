@@ -55,6 +55,44 @@ int main() {
     check(near(look_at[0],0)&&near(look_at[1],std::cos(pitch))&&near(look_at[2],-std::sin(pitch)),
           "orbit look-at vector differs from center-minus-eye camera direction");
 
+    // LevelConfig::InitPost (IDA 0x3f28ec) selects CameraTests.bdae and
+    // PlayerCamera_Default for levels with an empty camera file/name. Its
+    // PlayerCamera_Default-node has this CameraTests eye offset, distinct
+    // from the separately preserved Crypt-gated playercamera.bdae rig.
+    constexpr const float* swamp_eye_offset =
+        dh2::native::camera_input_v1::kSwampDefaultCameraEyeOffset;
+    float swamp_yaw=0,swamp_pitch=0;
+    float swamp_distance=0;
+    check(dh2::native::camera_input_v1::orbit_from_eye_offset(
+              swamp_eye_offset,&swamp_yaw,&swamp_pitch,&swamp_distance)==0&&
+          near(swamp_yaw,-0.785398163f)&&near(swamp_pitch,0.8981458f),
+          "CameraTests authored eye offset converts to the SWAMP fallback orbit basis");
+    float swamp_look_at[3]{};
+    const float swamp_eye_length=std::sqrt(swamp_eye_offset[0]*swamp_eye_offset[0]+
+        swamp_eye_offset[1]*swamp_eye_offset[1]+swamp_eye_offset[2]*swamp_eye_offset[2]);
+    check(near(swamp_distance,swamp_eye_length),
+          "SWAMP fallback camera preserves the authored CameraTests eye distance");
+    check(dh2::native::camera_input_v1::camera_look_at_from_orbit(
+              swamp_yaw,swamp_pitch,swamp_look_at)==0&&
+          near(swamp_look_at[0],-swamp_eye_offset[0]/swamp_eye_length)&&
+          near(swamp_look_at[1],-swamp_eye_offset[1]/swamp_eye_length)&&
+          near(swamp_look_at[2],-swamp_eye_offset[2]/swamp_eye_length),
+          "SWAMP fallback screen basis uses CameraTests target-minus-eye direction");
+    float swamp_right[3]{swamp_look_at[1],-swamp_look_at[0],0.0f};
+    const float swamp_right_length=std::hypot(swamp_right[0],swamp_right[1]);
+    for(float& component:swamp_right)component/=swamp_right_length;
+    const float swamp_renderer_up[3]{
+        swamp_right[1]*swamp_look_at[2]-swamp_right[2]*swamp_look_at[1],
+        swamp_right[2]*swamp_look_at[0]-swamp_right[0]*swamp_look_at[2],
+        swamp_right[0]*swamp_look_at[1]-swamp_right[1]*swamp_look_at[0]};
+    // BDAE camera quaternion rotates its local upvector node to this authored
+    // world-up direction; the renderer's global-Z basis reproduces it.
+    constexpr float swamp_authored_up[3]{-0.5530796f,0.5530797f,0.6230616f};
+    check(near(swamp_renderer_up[0],swamp_authored_up[0])&&
+          near(swamp_renderer_up[1],swamp_authored_up[1])&&
+          near(swamp_renderer_up[2],swamp_authored_up[2]),
+          "SWAMP renderer screen-up matches the CameraTests authored upvector");
+
     bool active=true;
     float tiny[3]{0.2f,0,0.9f};
     check(dh2::native::camera_input_v1::map_touch_ground_input(tiny,0,0,false,&active)==0&&
@@ -80,9 +118,31 @@ int main() {
           near(camera_relative[1],std::cos(pitch)/3.0f),
           "camera-relative stick mapping uses full pitch-aware look vector after radial curve");
 
-    // The shared playercamera.bdae camera-to-target offset is the live source
-    // camera basis on both supported gameplay routes. CameraBase input uses
-    // target-minus-eye, then unsigned Point3D::angle and rotateXY.
+    // HUDControls::OnEvent maps touchscreen stick angle through its authored
+    // (1,-1) basis; this is independent of the gamepad camera-relative path.
+    float hud_right[3]{1,0,0};
+    check(dh2::native::camera_input_v1::map_hud_touch_input(hud_right,&active)==0&&
+          active&&near(hud_right[0],std::sqrt(0.5f))&&
+          near(hud_right[1],std::sqrt(0.5f))&&near(hud_right[2],0),
+          "touchscreen right maps through the source HUD 45-degree basis");
+    float hud_up[3]{0,1,0};
+    check(dh2::native::camera_input_v1::map_hud_touch_input(hud_up,&active)==0&&
+          active&&near(hud_up[0],-std::sqrt(0.5f))&&
+          near(hud_up[1],std::sqrt(0.5f)),
+          "touchscreen up preserves the source HUD screen-Y sign");
+    float hud_partial[3]{0.1f,0,8};
+    check(dh2::native::camera_input_v1::map_hud_touch_input(hud_partial,&active)==0&&
+          active&&near(hud_partial[0],std::sqrt(0.005f))&&
+          near(hud_partial[1],std::sqrt(0.005f))&&near(hud_partial[2],0),
+          "touchscreen input preserves analog magnitude below the gamepad deadzone");
+    float hud_below_heading_threshold[3]{0.009f,0,0};
+    check(dh2::native::camera_input_v1::map_hud_touch_input(
+              hud_below_heading_threshold,&active)==0&&!active,
+          "touchscreen activity follows the source heading threshold");
+
+    // Crypt remains gated on the separately verified playercamera.bdae route.
+    // CameraBase input uses target-minus-eye, then unsigned Point3D::angle and
+    // rotateXY; this is not the default SWAMP CameraTests.bdae pose above.
     constexpr float rig_eye_offset[3]{1380.0f,-1180.46f,2551.55f};
     const float rig_yaw=std::atan2(rig_eye_offset[1],rig_eye_offset[0]);
     const float rig_pitch=std::atan2(rig_eye_offset[2],

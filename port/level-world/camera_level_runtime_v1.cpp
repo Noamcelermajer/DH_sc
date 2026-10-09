@@ -1,5 +1,6 @@
 #include "camera_level_runtime_v1.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -83,6 +84,79 @@ void Owner::set_zoom_animation_state(bool active,bool preserve_zoom) noexcept {
 }
 void Owner::set_default_target_distance(float distance) noexcept { default_target_distance_=distance; }
 
+bool ZoomInput::set_camera(Owner* owner,ZoomSensitivityCounts counts) noexcept {
+    const auto count=std::max(counts.difficulty_count_12,counts.difficulty_count_16);
+    if(!owner||count<=0)return false;
+    owner_=owner;
+    sensitivity_=1.0f/static_cast<float>(count);
+    mouse_pan_enabled_=false;
+    mouse_pan_active_=false;
+    mouse_start_x_=mouse_start_y_=0;
+    mouse_pan_baseline_={};
+    return std::isfinite(sensitivity_)&&sensitivity_>0.0f;
+}
+
+void ZoomInput::clear_camera() noexcept {
+    owner_=nullptr;sensitivity_=0.0f;mouse_pan_enabled_=false;mouse_pan_active_=false;
+    mouse_start_x_=mouse_start_y_=0;mouse_pan_baseline_={};
+}
+
+bool ZoomInput::mouse_wheel(float delta) noexcept {
+    if(!owner_||!std::isfinite(delta)||!std::isfinite(sensitivity_))return false;
+    const float current=owner_->current_zoom();
+    const float next=current+(sensitivity_*5.0f)*delta;
+    if(!std::isfinite(current)||!std::isfinite(next))return false;
+    owner_->set_zoom(next,owner_->target_zoom());
+    return true;
+}
+
+bool ZoomInput::begin_mouse_pan(std::int32_t x,std::int32_t y,Vec3 camera_offset,
+                                bool menu_camera,bool inside_map_render_zone) noexcept {
+    if(!owner_||!finite(camera_offset))return false;
+    mouse_start_x_=x;mouse_start_y_=y;mouse_pan_baseline_=camera_offset;
+    mouse_pan_active_=mouse_pan_enabled_&&(!menu_camera||inside_map_render_zone);
+    return mouse_pan_active_;
+}
+
+bool ZoomInput::move_mouse_pan(std::int32_t x,std::int32_t y,Vec3* camera_offset) const noexcept {
+    if(!owner_||!camera_offset||!mouse_pan_active_)return false;
+    const float next_x=mouse_pan_baseline_.x+
+        (static_cast<float>(mouse_start_x_)-static_cast<float>(x))*50.0f;
+    const float next_y=mouse_pan_baseline_.y+
+        (static_cast<float>(y)-static_cast<float>(mouse_start_y_))*50.0f;
+    const Vec3 next{next_x,next_y,mouse_pan_baseline_.z};
+    if(!finite(next))return false;
+    *camera_offset=next;
+    return true;
+}
+
+bool ZoomInput::end_mouse_pan() noexcept {
+    if(!owner_)return false;
+    mouse_pan_active_=false;
+    return true;
+}
+
+bool ZoomInput::touch_pan(std::int32_t delta_x,std::int32_t delta_y,Vec3* camera_offset,
+                          bool touch_pan_enabled) const noexcept {
+    if(!owner_||!camera_offset||!touch_pan_enabled||!finite(*camera_offset))return false;
+    const Vec3 next{camera_offset->x-static_cast<float>(delta_x)*50.0f,
+                    camera_offset->y+static_cast<float>(delta_y)*50.0f,
+                    camera_offset->z};
+    if(!finite(next))return false;
+    *camera_offset=next;
+    return true;
+}
+
+bool ZoomInput::pinch_zoom(float previous_distance,float current_distance) noexcept {
+    if(!owner_||!std::isfinite(previous_distance)||!std::isfinite(current_distance)||
+       previous_distance<0.0f||current_distance<0.0f)return false;
+    const float zoom=owner_->current_zoom();
+    const float next=zoom+(current_distance-previous_distance)*sensitivity_;
+    if(!std::isfinite(zoom)||!std::isfinite(next))return false;
+    owner_->set_zoom(next,owner_->target_zoom());
+    return true;
+}
+
 Status Owner::update(const FrameInput& in,FrameOutput* out) noexcept {
     if(!out||in.dt_ms<0||!std::isfinite(in.normal_design_min_zoom)||!std::isfinite(in.normal_design_max_zoom)||
        !std::isfinite(in.alternate_design_min_zoom)||!std::isfinite(in.alternate_design_max_zoom)||
@@ -104,6 +178,7 @@ Status Owner::update(const FrameInput& in,FrameOutput* out) noexcept {
         const auto remaining=static_cast<std::int64_t>(transition_remaining_ms_)-in.dt_ms;
         transition_remaining_ms_=remaining<std::numeric_limits<std::int32_t>::min()
             ?std::numeric_limits<std::int32_t>::min():static_cast<std::int32_t>(remaining);
+        out->target_cam_local_position=target_cam_local_position_;
         if(remaining<=0){out->camera_world_position=anchor;return Status::transition_position_written;}
         const float t=1.0f-static_cast<float>(transition_remaining_ms_)/static_cast<float>(transition_duration_ms_);
         out->camera_world_position=lerp(transition_start_,anchor,t);
@@ -145,7 +220,8 @@ Status Owner::update(const FrameInput& in,FrameOutput* out) noexcept {
         current_zoom_=0.0f;signed_zoom=-0.0f;
     }
     rig={0.0f,0.0f,signed_zoom*default_target_distance_};
-    out->target_cam_local_position=rig;
+    target_cam_local_position_=rig;
+    out->target_cam_local_position=target_cam_local_position_;
     target=add(target,ghost_camera_offset_);
     out->target_before_damping=target;
 

@@ -1,6 +1,7 @@
 #include "fresh_inventory_owned_v4.hpp"
 #include <algorithm>
 #include <cstring>
+#include <limits>
 #include <stdexcept>
 namespace dh2::data {
 namespace {
@@ -13,6 +14,51 @@ bool legacy_fixture_random(void* context,std::int32_t bound,std::uint32_t stream
 FreshInventoryOwnedV4::FreshInventoryOwnedV4(std::uintptr_t id,LootTablesV2::Borrow b,InventoryRandomServiceV4 random,std::int8_t cap,PropertyState& props):tables_(std::move(b)),random_(random),character_(id),properties_(&props),potion_capacity_(cap){if(!id||!tables_)throw std::invalid_argument("Unbound fresh inventory owner");}
 FreshInventoryOwnedV4::FreshInventoryOwnedV4(std::uintptr_t id,LootTablesV2::Borrow b,LootRandom8V2& r,std::int8_t cap,std::shared_ptr<PropertyState> props):tables_(std::move(b)),random_{&r,legacy_fixture_random},character_(id),properties_(props.get()),fixture_properties_(std::move(props)),potion_capacity_(cap){if(!id||!tables_||!properties_)throw std::invalid_argument("Unbound legacy fixture inventory owner");}
 bool FreshInventoryOwnedV4::mutation_allowed(std::string& e)const{if(callback_depth_){e="Unsupported destructive inventory callback reentry";return false;}return true;}
+bool FreshInventoryOwnedV4::register_quest_gathering_item_id(std::int32_t item_id,std::string& e){
+ if(!mutation_allowed(e))return false;
+ if(running_){e="Gathering-ID mutation during active inventory operation is unsupported";return false;}
+ if(item_id<0||std::size_t(item_id)>=tables_.items().rows.size()){
+  e="Quest gathering Item ID is outside the retained ItemTable";return false;
+ }
+ const auto found=std::find_if(quest_gathering_item_ids_.begin(),quest_gathering_item_ids_.end(),
+  [item_id](const QuestGatheringItemIdV4& entry){return entry.item_id==item_id;});
+ if(found!=quest_gathering_item_ids_.end()){
+  if(found->registrations==std::numeric_limits<std::uint8_t>::max()){
+   e="Quest gathering Item ID registration count would overflow its source byte";return false;
+  }
+  ++found->registrations;e.clear();return true;
+ }
+ try{quest_gathering_item_ids_.push_back({item_id,1});}
+ catch(const std::exception&){e="Quest gathering Item ID list allocation failed";return false;}
+ e.clear();return true;
+}
+bool FreshInventoryOwnedV4::unregister_quest_gathering_item_id(std::int32_t item_id,std::string& e){
+ if(!mutation_allowed(e))return false;
+ if(running_){e="Gathering-ID mutation during active inventory operation is unsupported";return false;}
+ if(item_id<0||std::size_t(item_id)>=tables_.items().rows.size()){
+  e="Quest gathering Item ID is outside the retained ItemTable";return false;
+ }
+ const auto found=std::find_if(quest_gathering_item_ids_.begin(),quest_gathering_item_ids_.end(),
+  [item_id](const QuestGatheringItemIdV4& entry){return entry.item_id==item_id;});
+ if(found==quest_gathering_item_ids_.end()||!found->registrations){
+  e="Quest gathering Item ID unregister would underflow its source byte";return false;
+ }
+ if(--found->registrations==0)quest_gathering_item_ids_.erase(found);
+ e.clear();return true;
+}
+bool FreshInventoryOwnedV4::has_quest_gathering_item_id(std::int32_t item_id,bool& registered,std::string& e)const{
+ registered=false;
+ if(item_id<0||std::size_t(item_id)>=tables_.items().rows.size()){
+  e="Quest gathering Item ID is outside the retained ItemTable";return false;
+ }
+ const auto found=std::find_if(quest_gathering_item_ids_.begin(),quest_gathering_item_ids_.end(),
+  [item_id](const QuestGatheringItemIdV4& entry){return entry.item_id==item_id;});
+ if(found!=quest_gathering_item_ids_.end()){
+  if(!found->registrations){e="Quest gathering Item ID has an invalid zero source refcount";return false;}
+  registered=true;
+ }
+ e.clear();return true;
+}
 bool FreshInventoryOwnedV4::invoke_loot_power_bridge(void* context,const LootPowerRequestV7& q,std::int32_t& result,std::string& e){
  auto& bridge=*static_cast<LootPowerBridgeV4*>(context);OwnedInventoryResponseV4 out;
  auto op=static_cast<OwnedInventoryOperationV4>(q.operation);
@@ -152,14 +198,22 @@ bool FreshInventoryOwnedV4::pickup_world_item(std::size_t index,std::int32_t& in
  // equipment slot; slotless items transfer directly, while potions use the
  // separate capacity check above.
  if(info->record.words[26]!=-1){bool full=false;if(!inventory_full(full,s,e))return false;if(full){e="Source ItemObject::Interact leaves a full-inventory drop in the world";return false;}}
- auto* source=world_items_[index]->item.get();ItemInstanceV1* merge_target=nullptr;std::uint16_t merge_quantity=0;
+ auto* source=world_items_[index]->item.get();const auto source_id=source->id;ItemInstanceV1* merge_target=nullptr;std::uint16_t merge_quantity=0;
  if(item_type(*info)!=13&&std::uint8_t(info->record.words[7])){std::uint32_t candidate=0;bool found=false;if(!has_like(source,candidate,found,e))return false;if(found){merge_target=items_[candidate]->item.get();merge_quantity=merge_target->quantity;}}
  const auto old_gold=gold_;auto* old_potion=potion_;bool accepted=false;
  try{accepted=add_item(world_items_[index]->item,false,true,inventory_index,s,e);}
  catch(const std::exception& x){e=x.what();}catch(...){e="World item pickup callback threw";}
  if(!world_items_[index]->item){
   if(!accepted&&inventory_index<0)for(std::size_t i=0;i<items_.size();++i)if(items_[i]&&items_[i]->item.get()==source){inventory_index=std::int32_t(i);break;}
-  world_items_.erase(world_items_.begin()+std::ptrdiff_t(index));if(accepted)e.clear();return accepted;
+  world_items_.erase(world_items_.begin()+std::ptrdiff_t(index));
+  if(!accepted)return false;
+  if(s.after_world_pickup){
+   ++callback_depth_;struct Guard{std::uint32_t& depth;~Guard(){--depth;}}guard{callback_depth_};
+   try{if(!s.after_world_pickup(s.context,character_,source_id,e)){if(e.empty())e="Source ItemObject::Interact quest tail failed after transfer";return false;}}
+   catch(const std::exception& x){e=x.what();return false;}
+   catch(...){e="Source ItemObject::Interact quest tail threw after transfer";return false;}
+  }
+  e.clear();return true;
  }
  // A failed gold notification or stack-retirement callback must not leave a
  // retryable world item after applying its value/quantity to inventory.
@@ -308,6 +362,18 @@ bool FreshInventoryOwnedV4::remove_inventory_item(std::uint32_t index,const Owne
  // delete_instance erase its owning slot.
  if(potion_==instance)potion_=nullptr;
  return delete_instance(instance,s,e,0x3fe558);
+}
+bool FreshInventoryOwnedV4::remove_one_potion(const OwnedInventoryServicesV4& s,std::string& e){
+ if(!mutation_allowed(e))return false;
+ auto* instance=potion_;
+ if(!instance){e.clear();return true;}
+ const auto found=std::find_if(items_.begin(),items_.end(),[&](const auto& slot){return slot&&slot->item.get()==instance;});
+ if(found==items_.end()){e="Source potion alias does not belong to this inventory";return false;}
+ if(instance->signed_quantity()>1)return add_quantity_to_item(*instance,-1,e);
+ // _DelItemInstance clears the potion alias before synchronously destroying
+ // and erasing the exact retained Item. It does not route through Character's
+ // higher-level RemoveItem equipment callbacks.
+ return delete_instance(instance,s,e,0x40e878);
 }
 bool FreshInventoryOwnedV4::set_gold(std::int32_t value,const OwnedInventoryServicesV4& s,std::string& e){if(!mutation_allowed(e))return false;if(value<0){e="Negative SetGold requires original assertion continuation";return false;}gold_=value<=gold_limit_?value:gold_limit_;OwnedInventoryResponseV4 out;if(!deliver(s,OwnedInventoryOperationV4::gold_notifications,0x3fdfd8,nullptr,nullptr,0,0,out,e))return false;e.clear();return true;}
 bool FreshInventoryOwnedV4::add_gold(std::int32_t amount,const OwnedInventoryServicesV4& s,std::string& e){if(!mutation_allowed(e))return false;if(amount<0){auto neg=wrap32(0u-std::uint32_t(amount));if(gold_<neg)amount=wrap32(0u-std::uint32_t(gold_));}if(amount>0){auto room=wrap32(std::uint32_t(gold_limit_)-std::uint32_t(gold_));if(amount>room)amount=room<0?0:room;}return set_gold(wrap32(std::uint32_t(gold_)+std::uint32_t(amount)),s,e);}

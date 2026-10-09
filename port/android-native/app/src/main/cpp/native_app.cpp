@@ -33,6 +33,7 @@ void bind_menu_runtime(){
  services.change_preview_slot=[](void*,std::int32_t slot,bool force,std::string& error){return model_renderer::select_menu_preview_slot(slot,force,error);};
  services.debug_load=[](void*,std::string& error){return model_renderer::menu_debug_load(menu_assets,error);};
  services.debug_query=[](void*,const char* key,std::string& error){return model_renderer::menu_debug_query(menu_assets,key,error);};
+ services.save_game=[](void*,std::uintptr_t character,std::string& error){return model_renderer::ui_player_save_game(character,error);};
  original_ui.bind_front_runtime(services);
  model_renderer::bind_item_text_services(&original_ui,
   [](void* context,const dh2::data::ItemTable& items,const dh2::data::CharacterTable& characters){
@@ -184,6 +185,8 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_loadModel
 extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_orbit(JNIEnv*,jclass,jfloat dx,jfloat dy,jfloat zoom){model_renderer::orbit(dx,dy,zoom);}
 extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_animationTime(JNIEnv*,jclass,jint milliseconds){model_renderer::set_time(milliseconds);}
 extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_moveAxis(JNIEnv*,jclass,jfloat x,jfloat y){model_renderer::move_axis(x,y);}
+extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_cameraPinchZoom(JNIEnv*,jclass,jfloat previous,jfloat current){model_renderer::camera_pinch_zoom(previous,current);}
+extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_cameraTouchPan(JNIEnv*,jclass,jint dx,jint dy){if(original_ui.camera_pan_allowed())model_renderer::camera_touch_pan(dx,dy);}
 extern "C" JNIEXPORT void JNICALL Java_com_example_dh2_NativeBridge_focusObject(JNIEnv*,jclass,jint index){model_renderer::focus_object(index);}
 extern "C" JNIEXPORT jstring JNICALL Java_com_example_dh2_NativeBridge_objectState(JNIEnv* env,jclass,jint index,jstring state){
  if(!state)return env->NewStringUTF("Actor state is absent");

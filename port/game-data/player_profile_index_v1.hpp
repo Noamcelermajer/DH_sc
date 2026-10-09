@@ -45,6 +45,14 @@ public:
     PlayerProfileIndexV1() = default;
     PlayerProfileIndexV1(const PlayerProfileIndexV1&) = delete;
     PlayerProfileIndexV1& operator=(const PlayerProfileIndexV1&) = delete;
+    // Save adapters must verify that the borrowed campaign view belongs to
+    // this exact canonical index before replacing sections in place.
+    bool owns(const Borrow& view) const noexcept {
+        return snapshot_ && snapshot_ == view.snapshot_;
+    }
+    void swap(PlayerProfileIndexV1& other) noexcept {
+        snapshot_.swap(other.snapshot_);
+    }
     bool load(Bytes, std::string&);
     Borrow borrow() const { return Borrow(snapshot_); }
 };

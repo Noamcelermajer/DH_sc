@@ -31,7 +31,7 @@ endif()
 target_compile_features(dh2_level_world PUBLIC cxx_std_17)
 target_sources(dh2_level_world PRIVATE camera_level_runtime_v1.cpp player_camera_rig_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_aggro_character_list.cpp character_aggro_object_manager_list.cpp)
-target_sources(dh2_level_world PRIVATE physical_world.cpp physical_lifecycle.cpp native_body.cpp visual_motion.cpp move_state.cpp decor_body_config.cpp visual_timeline.cpp actor_rotation.cpp actor_runtime.cpp actor_playback.cpp decor_scene.cpp character_scene.cpp)
+target_sources(dh2_level_world PRIVATE physical_world.cpp physical_lifecycle.cpp native_body.cpp visual_motion.cpp move_state.cpp player_root_motion_policy_v1.cpp decor_body_config.cpp visual_timeline.cpp actor_rotation.cpp actor_runtime.cpp actor_playback.cpp decor_scene.cpp character_scene.cpp)
 target_sources(dh2_level_world PRIVATE character_state.cpp animation_blender.cpp)
 target_sources(dh2_level_world PRIVATE character_coordinator.cpp native_player_character_owner_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_factory.cpp)
@@ -165,7 +165,7 @@ target_sources(dh2_level_world PRIVATE character_level_runtime.cpp character_ini
   ../player-info-level/player_offline_registry_v1.cpp
   ../player-info-level/player_manager_friendly_v1.cpp
   ../player-info-level/player_metadata_prepare_v1.cpp
- player_saved_inventory_v1.cpp player_save_inventory_v1.cpp
+ player_saved_inventory_v1.cpp player_save_inventory_v1.cpp player_gear_save_writer_v1.cpp
  character_saved_class_v1.cpp character_gameplay_save_v1.cpp
  character_init_post_player_v1.cpp character_init_final_v1.cpp character_template_random.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_update_all_skills.cpp
@@ -231,6 +231,10 @@ else()
  target_compile_options(character_init_post_player_v1_audit PRIVATE -Wall -Wextra -Werror)
  add_executable(source_random_lifecycle_v1_audit tests/source_random_lifecycle_v1.cpp)
  target_link_libraries(source_random_lifecycle_v1_audit PRIVATE dh2_level_world)
+ add_executable(player_gear_save_writer_v1_audit tests/player_gear_save_writer_v1.cpp)
+ target_link_libraries(player_gear_save_writer_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(player_gear_save_writer_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(player_gear_save_writer_v1_audit PRIVATE -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
  add_executable(player_save_inventory_v1_audit
   tests/player_save_inventory_v1.cpp)
  target_link_libraries(player_save_inventory_v1_audit PRIVATE dh2_level_world)
@@ -323,6 +327,8 @@ else()
  target_link_libraries(character_scene_audit PRIVATE dh2_level_world)
  add_executable(move_state_audit tests/move_state.cpp)
  target_link_libraries(move_state_audit PRIVATE dh2_level_world)
+ add_executable(player_root_motion_policy_v1_audit tests/player_root_motion_policy_v1.cpp)
+ target_link_libraries(player_root_motion_policy_v1_audit PRIVATE dh2_level_world)
  add_executable(decor_body_config_audit tests/decor_body_config.cpp)
  target_link_libraries(decor_body_config_audit PRIVATE dh2_level_world)
  add_executable(visual_timeline_audit tests/visual_timeline.cpp)

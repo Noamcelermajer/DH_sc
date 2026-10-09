@@ -1,14 +1,23 @@
 #include "../app/src/main/cpp/native_player_profile.hpp"
+#include "../app/src/main/cpp/native_quest_owner.hpp"
 #include "character_saved_class_v1.hpp"
 #include "properties.hpp"
 #include "level_tables.hpp"
 #include "world_map_tables.hpp"
+#include "skill_tables.hpp"
+#include "loot_tables_v2.hpp"
+#include "item_power_tables_v5.hpp"
+#include "player_profile_filename_v1.hpp"
 #include <algorithm>
+#include <array>
+#include <cstring>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 
 using namespace dh2::data;
+namespace data=dh2::data;
 namespace profile=dh2::native::player_profile;
 namespace saved_class=dh2::character_saved_class_v1;
 using Raw=std::vector<std::uint8_t>;
@@ -34,6 +43,169 @@ Raw campaign(const std::string& class_name,const Raw& prop,bool include_level=tr
 void write(const std::filesystem::path& path,const Raw& raw){std::ofstream f(path,std::ios::binary|std::ios::trunc);require(bool(f));f.write(reinterpret_cast<const char*>(raw.data()),std::streamsize(raw.size()));require(bool(f));}
 struct Query {unsigned calls=0;std::uintptr_t character;};
 int is_player(void* raw,std::uintptr_t id,std::uint32_t* value,std::string&){auto& q=*static_cast<Query*>(raw);require(id==q.character);++q.calls;*value=1;return 0;}
+struct GameplayPayload {const PlayerSavegameV1* save=nullptr;std::array<char,4> tag{};unsigned calls=0;};
+bool write_gameplay_payload(void* raw,const PlayerSavegameV1& save,Raw& out,std::string& error){
+ auto& provider=*static_cast<GameplayPayload*>(raw);if(provider.save!=&save){error="provider received a different canonical Save";return false;}
+ ++provider.calls;out.assign(provider.tag.begin(),provider.tag.end());error.clear();return true;
+}
+struct GameplayAssemblyTables {
+ SkillTables skills;LevelTables levels;WorldMapTables world_map;
+ LootTablesV2 loot;ItemPowerTablesV5 powers;
+ quest_table_bindings_v1::Owner quest_owner;
+ quest_table_bindings_v1::View quests;
+ dh2::native::quests::Constants constants;
+ std::shared_ptr<Raw> quest_constants;
+};
+bool no_random(void*,std::int32_t bound,std::uint32_t,std::int32_t& value,std::string& error){
+ if(bound<=0){error="positive source random bound required";return false;}value=0;return true;
+}
+bool unused_inventory_effect(void*,FreshInventoryOwnedV4&,
+ const OwnedInventoryRequestV4&,OwnedInventoryResponseV4&,std::string& error){
+ error="unexpected inventory effect during read-only GEAR save";return false;
+}
+void unused_inventory_observer(void*,FreshInventoryOwnedV4&,
+ const OwnedInventoryRequestV4&){}
+void gameplay_assembly_case(const std::filesystem::path& root,
+ const std::filesystem::path& cache,const std::string& class_name,
+ const CharacterTable& characters,const PropertyRules& property_rules){
+ GameplayAssemblyTables tables;std::string error;
+ const auto load_three=[&](const char* prefix,auto& owner,auto load){
+  const auto data=read(cache/(std::string(prefix)+"_pyarray.bin"));
+  const auto names=read(cache/(std::string(prefix)+"_pyarraynames.bin"));
+  const auto schema=read(cache/(std::string(prefix)+"_pystructnames.bin"));
+  require(load(bytes(data),bytes(names),bytes(schema),owner,error));
+ };
+ load_three("skills",tables.skills,load_skill_tables);
+ load_three("levels",tables.levels,load_levels);
+ load_three("worldmap",tables.world_map,load_world_map);
+ load_three("loot_table",tables.loot,[](Bytes a,Bytes b,Bytes c,LootTablesV2& target,std::string& e){return target.load(a,b,c,e);});
+ const auto item_power_dir=cache.parent_path()/"original-cache"/"data"/"pydata";
+ const auto power_records=read(item_power_dir/"item_powers_pyarray.bin");
+ const auto power_names=read(item_power_dir/"item_powers_pyarraynames.bin");
+ const auto power_schema=read(item_power_dir/"item_powers_pystructnames.bin");
+ require(tables.powers.load(bytes(power_records),bytes(power_names),bytes(power_schema),error));
+
+ const auto quest_records=std::make_shared<Raw>(read(cache/"v2quests_pyarray.bin"));
+ const auto quest_names=std::make_shared<Raw>(read(cache/"v2quests_pyarraynames.bin"));
+ quest_table_bindings_v1::Input quest_input;
+ require(!dh2_quests_open(&quest_input.table,quest_records->data(),std::uint32_t(quest_records->size())));
+ quest_input.packed_owner=quest_records;quest_input.names=quest_names->data();
+ quest_input.names_size=quest_names->size();quest_input.names_owner=quest_names;
+ require(tables.quest_owner.load(quest_input,error));tables.quests=tables.quest_owner.borrow();
+ tables.quest_constants=std::make_shared<Raw>(read(cache/"v2quests_pycst.bin"));
+ require(!dh2_pycst_open(&tables.constants.view,tables.quest_constants->data(),
+                         std::uint32_t(tables.quest_constants->size())));
+ tables.constants.owner=tables.quest_constants;
+
+ const auto dir=root/"gameplay-save-assembled";std::filesystem::create_directories(dir);
+ constexpr std::int32_t slot=9;const auto primary=dir/data::player_profile_filename_v1(slot,false,false);
+ const auto original=campaign(class_name,Raw{});write(primary,original);
+ auto save=std::make_shared<PlayerSavegameV1>();save->set_character(UINT64_C(0x77770009));save->set_slot(slot);
+ PlayerSaveProfileV1 profile;std::int32_t difficulty=0;std::uint8_t online=0;
+ PropertyState properties;reset_properties(property_rules,properties);
+ auto inventory=std::make_unique<FreshInventoryOwnedV4>(save->character(),
+   tables.loot.borrow(),InventoryRandomServiceV4{nullptr,no_random},0,properties);
+ auto effect_lease=std::make_shared<std::uint8_t>(0);
+ OwnedInventoryServicesV4 inventory_services{effect_lease.get(),unused_inventory_effect,
+                                               unused_inventory_observer,false};
+ auto quest_owner=std::make_shared<dh2::native::quests::Owner>(save,tables.quests,tables.constants);
+ profile::Transport transport(*save,profile);
+ profile::TransportBindings bindings{dir,&characters,&difficulty,{},false,
+   &tables.levels,&tables.world_map,quest_owner,&online};
+ bindings.skill_tables=&tables.skills;bindings.skill_tree_selector=&properties.resolved[28];
+ bindings.property_rules=&property_rules;bindings.properties=&properties;
+ bindings.inventory=inventory.get();bindings.item_powers=tables.powers.borrow();
+ bindings.inventory_services=inventory_services;bindings.inventory_services_owner=effect_lease;
+ std::unique_ptr<ItemInstanceV1> incoming;bindings.inventory_incoming=&incoming;
+ require(transport.bind(std::move(bindings),error));
+ require(transport.loader().load(1,error));require(transport.loader().load(2,error));
+ require(transport.loader().load(4,error));
+ const auto save_identity=save.get();const auto profile_identity=profile.identity;
+ auto* loader=&transport.loader();const auto old_view=profile.campaign;
+ require(old_view&&old_view.bytes()==original&&quest_owner->owns_save(save.get()));
+ require(transport.save_gameplay(error));
+ const auto committed=read(primary);require(committed!=original&&read(primary.string()+".bak")==original);
+ require(save.get()==save_identity&&&transport.loader()==loader&&profile.identity==profile_identity);
+ require(profile.campaign.bytes()==committed&&transport.loader().profile().campaign.bytes()==committed);
+ constexpr const char* tags[]{"PNAM","PLVL","PCLS","PDFL","LNAM","LEPT","LUSP",
+  "LVLS","SKIL","FAES","CFEE","QEST","PROP","GEAR","FTVL"};
+ for(const auto* tag:tags)require(profile.campaign.section(tag)!=nullptr);
+ require(old_view.bytes()==original&&profile.campaign.bytes()!=old_view.bytes());
+ std::string close_error;require(quest_owner->close(close_error));
+}
+std::vector<profile::GameplaySectionPayloadProviderV1> gameplay_providers(
+ const PlayerSavegameV1& save,std::vector<std::shared_ptr<GameplayPayload>>& owners){
+ constexpr const char* tags[]{"PNAM","PLVL","PCLS","PDFL","LNAM","LEPT","LUSP",
+  "LVLS","SKIL","FAES","CFEE","QEST","PROP","GEAR","FTVL"};
+ std::vector<profile::GameplaySectionPayloadProviderV1> result;result.reserve(15);owners.clear();owners.reserve(15);
+ for(const auto* tag:tags){auto state=std::make_shared<GameplayPayload>();state->save=&save;std::memcpy(state->tag.data(),tag,4);
+  result.push_back({state->tag,state,state.get(),write_gameplay_payload});owners.push_back(std::move(state));}
+ return result;
+}
+void gameplay_save_cases(const std::filesystem::path& root,const CharacterTable& table,
+                         const std::string& class_name){
+ const auto dir=root/"gameplay-save";std::filesystem::create_directories(dir);std::string error;
+ const std::int32_t slot=7;const auto primary=dir/data::player_profile_filename_v1(slot,false,false);
+ const auto original=campaign(class_name,Raw{});write(primary,original);
+ PlayerSavegameV1 save;save.set_character(UINT64_C(0x77770001));save.set_slot(slot);
+ PlayerSaveProfileV1 canonical;std::int32_t difficulty=0;std::uint8_t online=0;
+ profile::Transport transport(save,canonical);
+ require(transport.bind({dir,&table,&difficulty,{},false,nullptr,nullptr,{},&online},error));
+ require(transport.loader().load(1,error));require(transport.loader().load(4,error));
+ constexpr const char* tags[]{"PNAM","PLVL","PCLS","PDFL","LNAM","LEPT","LUSP",
+  "LVLS","SKIL","FAES","CFEE","QEST","PROP","GEAR","FTVL"};
+ std::vector<std::shared_ptr<GameplayPayload>> owners;auto providers=gameplay_providers(save,owners);
+ const auto save_id=reinterpret_cast<std::uintptr_t>(&save),profile_id=canonical.identity;
+ auto* loader=&transport.loader();const auto old_view=canonical.campaign;
+ require(profile_id&&old_view&&old_view.bytes()==original);
+ const auto original_mode=save.source_save_mode();
+ require(!transport.save_gameplay(error)&&read(primary)==original&&
+         save.source_save_mode()==original_mode);
+ require(transport.save_gameplay(providers,error));
+ const auto committed=read(primary);require(read(primary.string()+".bak")==original);
+ require(reinterpret_cast<std::uintptr_t>(&save)==save_id&&&transport.loader()==loader&&canonical.identity==profile_id);
+ require(loader->profile().identity==profile_id&&canonical.campaign.bytes()==committed&&
+         transport.loader().profile().campaign.bytes()==committed);
+ require(canonical.campaign.bytes()!=old_view.bytes()&&old_view.bytes()==original);
+ for(std::size_t i=0;i<15;++i){const auto payload=canonical.campaign.payload(tags[i]);
+  require(payload.size==4&&std::memcmp(payload.data,tags[i],4)==0&&owners[i]->calls==1);}
+
+ const auto backup=read(primary.string()+".bak");
+ const auto indexed=canonical.campaign.bytes();
+ auto missing=providers;missing.erase(missing.begin()+11);
+ require(!transport.save_gameplay(missing,error)&&read(primary)==committed&&read(primary.string()+".bak")==backup);
+ auto extra=providers;profile::GameplaySectionPayloadProviderV1 extra_provider=providers.front();
+ std::memcpy(extra_provider.tag.data(),"EXTR",4);extra.push_back(extra_provider);
+ require(!transport.save_gameplay(extra,error)&&read(primary)==committed);
+ auto duplicate=providers;duplicate.push_back(providers.front());
+ require(!transport.save_gameplay(duplicate,error)&&read(primary)==committed);
+ require(std::all_of(owners.begin(),owners.end(),[](const auto& p){return p->calls==1;}));
+
+ save.set_source_save_blocked(true);
+ require(!transport.save_gameplay(providers,error)&&read(primary)==committed);
+ save.set_source_save_blocked(false);
+ online=1;require(!transport.save_gameplay(providers,error)&&read(primary)==committed);online=0;
+ const auto saved_slot=save.slot();save.set_slot(saved_slot+1);
+ require(!transport.save_gameplay(providers,error)&&read(primary)==committed);save.set_slot(saved_slot);
+
+ // A mask-1-only registration set is incomplete even with all providers.
+ const auto partial_dir=root/"gameplay-save-partial";std::filesystem::create_directories(partial_dir);
+ const auto partial_primary=partial_dir/data::player_profile_filename_v1(8,false,false);
+ write(partial_primary,original);PlayerSavegameV1 partial_save;partial_save.set_character(UINT64_C(0x77770002));partial_save.set_slot(8);
+ PlayerSaveProfileV1 partial_profile;std::uint8_t partial_online=0;profile::Transport partial_transport(partial_save,partial_profile);
+ require(partial_transport.bind({partial_dir,&table,&difficulty,{},false,nullptr,nullptr,{},&partial_online},error));
+ require(partial_transport.loader().load(1,error));std::vector<std::shared_ptr<GameplayPayload>> partial_owners;
+ auto partial_providers=gameplay_providers(partial_save,partial_owners);
+ require(!partial_transport.save_gameplay(partial_providers,error)&&read(partial_primary)==original);
+ require(std::all_of(partial_owners.begin(),partial_owners.end(),[](const auto& p){return p->calls==0;}));
+
+ // Out-of-band primary mutation is rejected without overwriting that file or
+ // replacing the backup/canonical immutable profile snapshot.
+ Raw external;put(external,1);put(external,1);external.insert(external.end(),{'R','A','C','E'});external.push_back(0x99);
+ write(primary,external);const Raw backup_sentinel{0xa1,0xa2};write(primary.string()+".bak",backup_sentinel);
+ require(!transport.save_gameplay(providers,error)&&read(primary)==external&&
+         read(primary.string()+".bak")==backup_sentinel&&canonical.campaign.bytes()==indexed);
+}
 }
 int main(int argc,char** argv){try{
  require(argc==3);const std::filesystem::path cache=argv[1],dir=argv[2];std::filesystem::create_directories(dir);
@@ -42,6 +214,8 @@ int main(int argc,char** argv){try{
  const auto knight=std::find(table.names.begin(),table.names.end(),"KnightPlayerBase");require(knight!=table.names.end());
  const auto id=std::int32_t(knight-table.names.begin());require(id==263);
  PropertyRules rules;require(load_property_rules(table,rules,error));
+ gameplay_save_cases(dir,table,*knight);
+ gameplay_assembly_case(dir,cache,*knight,table,rules);
  Raw prop;put(prop,224);for(unsigned i=0;i<224;++i)put(prop,0x40000000+i);prop.push_back(41);
  const auto primary=dir/"dh2_000.savegame";write(primary,campaign(*knight,prop));
  profile::Metadata preview;std::int32_t difficulty=0;

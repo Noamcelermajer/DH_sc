@@ -40,6 +40,40 @@ inline bool gameplay_menu_named_pop_requested_v1(
     return std::find(stack.begin(), stack.end(), name) != stack.end();
 }
 
+// Character-menu initialization repeats menu_CharacterMenu while adding its
+// initial sheet tabs; only the authored confirmation panel should be revealed
+// by unwinding a covering menu stack.
+inline bool gameplay_menu_reveal_existing_requested_v1(const std::string& name) {
+    return name == "menu_confirm2";
+}
+
+// NativePushState routes CharacterMenu and Ingame through GSFlashMenu only
+// when GSLevel is the current StateMachine state. GSFlashMenu owns the
+// gameplay overlay lifecycle; the active level's retained menu owner renders
+// and advances its authored target.
+inline bool gameplay_native_push_state_is_level_menu_target_v1(const std::string& name) {
+    return name == "menu_CharacterMenu" || name == "menu_Ingame";
+}
+
+inline bool gameplay_native_push_state_routes_to_level_menu_v1(
+    const std::string& name, bool level_state_active) {
+    return level_state_active && gameplay_native_push_state_is_level_menu_target_v1(name);
+}
+
+// A pushed SWF state can request an already-retained confirmation panel after
+// another menu has covered it. Resume that instance by popping the states
+// above it through the normal owner callback; do not silently suppress the
+// authored request and leave the requested panel hidden below the active one.
+template<class Pop>
+bool gameplay_menu_reveal_existing_v1(
+    std::vector<std::string>& stack, const std::string& name, Pop&& pop) {
+    if (!gameplay_menu_named_pop_requested_v1(stack, name)) return false;
+    while (!stack.empty() && stack.back() != name) {
+        if (!pop()) return false;
+    }
+    return !stack.empty();
+}
+
 // Menus are drawn bottom-to-top so transparent child panels compose over the
 // retained character-menu tab strip.
 template<class Draw>

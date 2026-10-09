@@ -47,10 +47,14 @@ inline Status dispatch_head_towards(dh2::navigation::HeadingState* heading,
     *outcome = Outcome::unchanged;
     if (!controller_enabled) return Status::complete;
 
-    // v2GamepadController's calibrated output activity is the route decision.
-    // Do not reuse GameObject::SetHeadingDirection's 1e-4 activation test here:
-    // valid radial outputs just above its 0.25 deadzone can be smaller than it.
-    if (mapped_input_active) {
+    // Character::Ctrl_HeadTowards (0x3adb60) applies this vector threshold
+    // after controller activity has been produced. A calibrated gamepad value
+    // just above its radial deadzone can still enter the source zero-vector
+    // branch; the authored touchscreen can also be held at its center.
+    constexpr float kSourceHeadingLengthSquared = 0.0001f;
+    const bool source_nonzero_head_towards =
+        mapped_input_active && length_squared > kSourceHeadingLengthSquared;
+    if (source_nonzero_head_towards) {
         if (using_skill || casting) {
             *outcome = Outcome::skill_blocked;
             return Status::complete;
@@ -64,9 +68,15 @@ inline Status dispatch_head_towards(dh2::navigation::HeadingState* heading,
         return Status::complete;
     }
 
-    if (!heading->active) return Status::complete;
-    // Character::Ctrl_Stop delegates to GameObject::Stop, which owns clearing
-    // heading after DropPath. Preserve the source's pre-stop fields until then.
+    const bool was_heading_active = heading->active != 0;
+    if (!was_heading_active) return Status::complete;
+    // Ctrl_HeadTowards calls SetHeadingDirection with a zero/tiny vector before
+    // Ctrl_Stop. A separate input release calls Ctrl_Stop directly, so retain
+    // the pre-stop heading only for that direct-stop case.
+    if (mapped_input_active && camera_input_v1::apply_head_towards(
+            heading, movement_heading_angle, mapped_direction))
+        return Status::invalid_argument;
+    // Ctrl_Stop delegates to GameObject::Stop before RaiseEvent(63).
     if (services->stop_game_object(services->context) < 0)
         return Status::service_failed;
     if (services->raise_character_event(services->context, 63) < 0)

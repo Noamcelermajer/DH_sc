@@ -49,7 +49,7 @@ struct FrameInput {
     // Level::Update chooses GameObject +352 in this mode; otherwise it calls
     // CameraTarget::GetTargetPosition -> GameObject::GetCameraAnchorPosition.
     bool use_object_position=false;
-    Vec3 animated_target_cam_offset{};    // CameraLevel +152/+156/+160 sample
+    Vec3 animated_target_cam_offset{};    // CameraLevel +152/+156/+160 ZoomHandler pan state
 
     // Values produced by source providers, kept explicit so this owner does not
     // silently invent projection, multiplayer, asset-timeline or table data.
@@ -99,6 +99,7 @@ public:
     std::uintptr_t target_identity() const noexcept { return target_identity_; }
     Vec3 damping_velocity() const noexcept { return damping_velocity_; }
     float current_zoom() const noexcept { return current_zoom_; }
+    float target_zoom() const noexcept { return target_zoom_; }
     float effective_zoom() const noexcept { return effective_zoom_; }
     std::int32_t transition_remaining_ms() const noexcept { return transition_remaining_ms_; }
 
@@ -107,6 +108,8 @@ private:
     Vec3 transition_start_{};
     std::int32_t transition_duration_ms_=0;
     std::int32_t transition_remaining_ms_=0;
+    // CameraLevel leaves the target-camera node untouched on transition frames.
+    Vec3 target_cam_local_position_{};
     bool center_offset_enabled_=false;
     bool damping_enabled_=true;
     float damping_ratio_=0.7f;
@@ -115,9 +118,58 @@ private:
     bool zoom_animation_active_=false;
     bool preserve_zoom_=false;
     float current_zoom_=0.0f;
-    float target_zoom_=0.0f;
+    // ZoomHandler's constructor initializes current to 0 and target to 1
+    // (IDA source finding). Keep this distinct from effective_zoom_, which
+    // CameraLevel derives during its first non-transition update.
+    float target_zoom_=1.0f;
     float effective_zoom_=0.0f;
     float default_target_distance_=0.0f;
+};
+
+// Source-derived ZoomHandler input math (ZoomHandler::setCamera 0x381fb0,
+// onEvent 0x382040, and touch onEvent 0x382bdc). Event decoding, menu hit
+// testing, and native pointer tracking remain caller-owned providers.
+struct ZoomSensitivityCounts {
+    std::int32_t difficulty_count_12=0;
+    std::int32_t difficulty_count_16=0;
+};
+
+class ZoomInput {
+public:
+    // setCamera computes 1 / max(table +12, table +16). Rebinding resets the
+    // mouse drag gesture just as ZoomHandler::setCamera clears its state.
+    bool set_camera(Owner* owner, ZoomSensitivityCounts counts) noexcept;
+    void clear_camera() noexcept;
+    void set_mouse_pan_enabled(bool enabled) noexcept { mouse_pan_enabled_=enabled; }
+
+    // SEvent type 1 / code 7: current zoom += delta * 5 * inverse max count.
+    bool mouse_wheel(float delta) noexcept;
+    // SEvent type 1 / code 0,6,3. `inside_map_render_zone` is supplied by the
+    // original MenuCharMenu_Map hit-test; ordinary cameras do not use it.
+    bool begin_mouse_pan(std::int32_t x, std::int32_t y, Vec3 camera_offset,
+                         bool menu_camera, bool inside_map_render_zone) noexcept;
+    bool move_mouse_pan(std::int32_t x, std::int32_t y, Vec3* camera_offset) const noexcept;
+    bool end_mouse_pan() noexcept;
+
+    // IEvent touch path: single-pointer deltas pan CameraLevel +152/+156 by
+    // 50 world units per screen pixel; multi-pointer distance delta changes
+    // current zoom by inverse max difficulty count.
+    bool touch_pan(std::int32_t delta_x, std::int32_t delta_y,
+                   Vec3* camera_offset, bool touch_pan_enabled) const noexcept;
+    bool pinch_zoom(float previous_distance, float current_distance) noexcept;
+
+    bool mouse_pan_active() const noexcept { return mouse_pan_active_; }
+    float sensitivity() const noexcept { return sensitivity_; }
+    Vec3 mouse_pan_baseline() const noexcept { return mouse_pan_baseline_; }
+
+private:
+    Owner* owner_=nullptr;
+    float sensitivity_=0.0f;
+    bool mouse_pan_enabled_=false;
+    bool mouse_pan_active_=false;
+    std::int32_t mouse_start_x_=0;
+    std::int32_t mouse_start_y_=0;
+    Vec3 mouse_pan_baseline_{};
 };
 
 } // namespace dh2::camera_level_runtime_v1

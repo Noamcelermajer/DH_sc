@@ -64,8 +64,9 @@ int main() {
           outcome == Outcome::skill_blocked && capture.calls.empty(),
           "casting gate must block nonzero heading and RaiseEvent");
 
-    // Mapper activity, not SetHeadingDirection's 1e-4 activation threshold,
-    // decides whether this is HeadTowards or Stop.
+    // Character::Ctrl_HeadTowards applies its 1e-4 squared-length threshold
+    // after the gamepad radial mapper, so near-edge mapper activity alone is
+    // not enough to accept a heading command.
     float small_mapped_input[3]{0.255f, 0.0f, 0.0f};
     bool mapped_input_active = false;
     check(dh2::native::camera_input_v1::map_touch_ground_input(
@@ -74,11 +75,12 @@ int main() {
           small_mapped_input[0] * small_mapped_input[0] <= 0.0001f,
           "radial deadzone maps valid near-edge movement below SetHeadingDirection activation epsilon");
     capture.calls.clear();
+    capture.stop_saw_active = true;
     check(dispatch_head_towards(&heading, &angle, small_mapped_input, mapped_input_active, true,
-                                false, false, &services, &outcome) == Status::complete &&
-          outcome == Outcome::heading && capture.calls == std::vector<unsigned>{0} &&
-          !heading.active,
-          "active mapped input below heading activation epsilon must not route to Stop");
+                                true, true, &services, &outcome) == Status::complete &&
+          outcome == Outcome::stopped && capture.calls == std::vector<unsigned>{1000, 63} &&
+          !capture.stop_saw_active && !heading.active,
+          "tiny HeadTowards updates direction then stops without skill/casting gates");
 
     const float start_heading[3]{0, 1, 0};
     check(dh2::native::camera_input_v1::apply_head_towards(
@@ -90,19 +92,30 @@ int main() {
     // invokes Ctrl_Stop while heading is still active; GameObject::Stop clears
     // it after DropPath and RaiseEvent(63) follows Stop.
     capture.stop_saw_active = false;
-    check(dispatch_head_towards(&heading, &angle, zero, false, true, true, true,
+    check(dispatch_head_towards(&heading, &angle, zero, true, true, true, true,
                                 &services, &outcome) == Status::complete &&
           outcome == Outcome::stopped && !heading.active &&
           heading.direction[0] == 0 && heading.direction[1] == 0 &&
-          capture.stop_saw_active &&
+          !capture.stop_saw_active &&
           capture.calls == std::vector<unsigned>{1000, 63},
-          "release must preserve pre-stop heading through GameObject::Stop, then raise event 63");
+          "centered active joystick zero-vector branch sets heading then raises stop event 63");
 
     capture.calls.clear();
-    check(dispatch_head_towards(&heading, &angle, zero, false, true, false, false,
+    check(dispatch_head_towards(&heading, &angle, zero, true, true, false, false,
                                 &services, &outcome) == Status::complete &&
           outcome == Outcome::unchanged && capture.calls.empty(),
-          "zero input without active heading must not stop or raise an event");
+          "zero vector while already stopped must not stop or raise an event");
+    check(dh2::native::camera_input_v1::apply_head_towards(
+              &heading, &angle, start_heading) == 0 && heading.active,
+          "restore active heading for direct release stop ordering");
+    capture.calls.clear();
+    capture.stop_saw_active = false;
+    check(dispatch_head_towards(&heading, &angle, zero, false, true, false, false,
+                                &services, &outcome) == Status::complete &&
+          outcome == Outcome::stopped && capture.stop_saw_active &&
+          capture.calls == std::vector<unsigned>{1000, 63},
+          "direct release stops GameObject before clearing prior heading and raises event 63");
+    capture.calls.clear();
     check(dispatch_head_towards(&heading, &angle, forward, true, false, false, false,
                                 &services, &outcome) == Status::complete &&
           outcome == Outcome::unchanged && !heading.active && capture.calls.empty(),

@@ -1,6 +1,12 @@
 #include "native_player_profile.hpp"
 #include "player_profile_filename_v1.hpp"
 #include "player_profile_create_v1.hpp"
+#include "player_profile_atomic_replace_v1.hpp"
+#include "player_level_states_save_writer_v1.hpp"
+#include "player_skill_save_writer_v1.hpp"
+#include "player_save_section_writers_v1.hpp"
+#include "player_property_save_writer_v1.hpp"
+#include "player_gear_save_writer_v1.hpp"
 #include "data.hpp"
 #include "level_tables.hpp"
 #include "world_map_tables.hpp"
@@ -15,6 +21,7 @@
 #include <fstream>
 #include <map>
 #include <cstdio>
+#include <limits>
 #ifdef _WIN32
 #include <io.h>
 #ifndef WIN32_LEAN_AND_MEAN
@@ -35,6 +42,33 @@ bool metadata_tag(const char* tag){
  for(const char* name:{"PNAM","PLVL","PCLS","PDFL","LNAM","LEPT","LUSP"})
   if(!std::strcmp(tag,name))return true;
  return false;
+}
+constexpr std::array<const char*,15> kMask1And4WriterTags{{
+ "PNAM","PLVL","PCLS","PDFL","LNAM","LEPT","LUSP",
+ "LVLS","SKIL","FAES","CFEE","QEST","PROP","GEAR","FTVL"}};
+struct GameplayPayloadSink {std::vector<std::uint8_t>* bytes=nullptr;};
+bool append_gameplay_payload(void* raw,data::Bytes bytes,std::string& error){
+ auto* sink=static_cast<GameplayPayloadSink*>(raw);
+ if(!sink||!sink->bytes||(!bytes.data&&bytes.size)||
+    sink->bytes->size()>UINT32_MAX||
+    bytes.size>std::size_t(UINT32_MAX)-sink->bytes->size()){
+  error="gameplay section output exceeds source 32-bit span";return false;
+ }
+ if(bytes.size)sink->bytes->insert(sink->bytes->end(),bytes.data,bytes.data+bytes.size);
+ return true;
+}
+template<class QuestOwner>
+auto save_quest_payload(QuestOwner& owner,
+ const data::player_save_section_writers_v1::WriteServicesV1& stream,
+ std::string& error,int)
+ ->decltype(owner.save_quests(stream,error),bool()){
+ return owner.save_quests(stream,error);
+}
+template<class QuestOwner>
+bool save_quest_payload(QuestOwner&,
+ const data::player_save_section_writers_v1::WriteServicesV1&,
+ std::string& error,long){
+ error="same-Save Native Quest save provider is not available";return false;
 }
 bool read_profile_file(const std::filesystem::path& path,
                        std::vector<std::uint8_t>& bytes,std::string& error){
@@ -75,6 +109,9 @@ bool replace_file(const std::filesystem::path& from,
 struct Transport::Impl {
  struct Profile {
   data::PlayerProfileIndexV1 index;
+  std::filesystem::path directory;
+  std::string filename;
+  std::int32_t slot=-1;
   struct Callback {data::PlayerSavegameV1* save=nullptr;bool reader=false,writer=false;};
   std::map<std::string,Callback> callbacks;
  };
@@ -84,6 +121,12 @@ struct Transport::Impl {
  Receipt receipt;
  std::shared_ptr<Profile> input;
  bool active=false;
+ struct GameplayProviderLease {
+  std::shared_ptr<Impl> transport;
+  std::array<char,4> tag{};
+ };
+ static bool write_gameplay_payload(void*,const data::PlayerSavegameV1&,
+   std::vector<std::uint8_t>&,std::string&);
  Impl(data::PlayerSavegameV1& saved,data::PlayerSaveProfileV1& canonical):save(saved),profile(canonical){}
  void refresh(){
   receipt.slot=save.slot();receipt.character_class=save.class_id();receipt.level=save.level();
@@ -230,6 +273,7 @@ struct Transport::Impl {
    }
    auto next=std::make_shared<Profile>();
    if(!next->index.load({bytes.data(),bytes.size()},error))return false;
+   next->directory=bindings.directory;next->filename=q.filename;next->slot=save.slot();
    input=std::move(next);response.profile={reinterpret_cast<std::uintptr_t>(input.get()),input,input->index.borrow()};
    return true;
   }
@@ -247,9 +291,119 @@ struct Transport::Impl {
    if(consumed)++receipt.field_reads;
    return true;
   }
-  return continue_load(q,response,error);
+ return continue_load(q,response,error);
  }
 };
+bool Transport::Impl::write_gameplay_payload(void* raw,
+ const data::PlayerSavegameV1& save,std::vector<std::uint8_t>& output,
+ std::string& error){
+ auto* lease=static_cast<GameplayProviderLease*>(raw);
+ if(!lease||!lease->transport||&lease->transport->save!=&save){
+  error="gameplay writer lease does not belong to the canonical Save";return false;
+ }
+ auto& state=*lease->transport;const auto& bindings=state.bindings;
+ const std::string tag(lease->tag.data(),lease->tag.size());
+ output.clear();GameplayPayloadSink sink{&output};
+ const data::PlayerMetadataWriteServicesV1 metadata_stream{&sink,append_gameplay_payload};
+ const data::player_save_section_writers_v1::WriteServicesV1 section_stream{&sink,append_gameplay_payload};
+ if(metadata_tag(tag.c_str())){
+  if(!bindings.characters||!bindings.current_difficulty){error="metadata writer owner unavailable";return false;}
+  return data::write_player_metadata_section_v1(tag.c_str(),save,
+    *bindings.characters,bindings.current_difficulty,metadata_stream,error);
+ }
+ if(tag=="LVLS"){
+  if(!bindings.levels||!bindings.world_map){error="LVLS table owners unavailable";return false;}
+  const data::player_level_states_save_writer_v1::WriteServicesV1 stream{
+    &sink,append_gameplay_payload};
+  const auto status=data::player_level_states_save_writer_v1::write_lvls_v1(
+    *bindings.levels,*bindings.world_map,save,stream,error);
+  if(status==data::player_level_states_save_writer_v1::Status::complete)return true;
+  if(error.empty())error="LVLS source writer did not complete";
+  return false;
+ }
+ if(tag=="SKIL"){
+  if(!bindings.skill_tables||!save.skills_initialized()){
+   error="same-Save initialized Skill list and retained SkillTables required";return false;
+  }
+  const auto status=data::player_skill_save_writer_v1::write_section_v1(
+    save,*bindings.skill_tables,
+    {section_stream.context,section_stream.write},error);
+  if(status==data::player_skill_save_writer_v1::Status::complete)return true;
+  if(error.empty())error="SKIL source writer did not complete";
+  return false;
+ }
+ if(tag=="FAES"||tag=="CFEE"||tag=="FTVL"){
+  const auto status=data::player_save_section_writers_v1::write_section_v1(
+    tag.c_str(),save,section_stream,error);
+  if(status==data::player_save_section_writers_v1::Status::complete)return true;
+  if(error.empty())error=tag+" source writer did not complete";
+  return false;
+ }
+ if(tag=="QEST"){
+  if(!bindings.quests||!bindings.quests->owns_save(&save)){
+   error="same-Save Native Quest serializer owner unavailable";return false;
+  }
+  return save_quest_payload(*bindings.quests,section_stream,error,0);
+ }
+ if(tag=="PROP"){
+  if(!bindings.property_rules||!bindings.properties||!save.character()){
+   error="same-Character live property sheets and rules required for PROP";return false;
+  }
+  auto view=data::property_view(*bindings.property_rules,*bindings.properties);
+  const auto status=data::player_property_save_writer_v1::write_properties_v1(
+    save,view,section_stream,error);
+  if(status==data::player_save_section_writers_v1::Status::complete)return true;
+  if(error.empty())error="PROP source writer did not complete";
+  return false;
+ }
+ if(tag=="GEAR"){
+  if(!bindings.inventory||!bindings.item_powers||
+     !bindings.inventory_services_owner||!bindings.inventory_services.context||
+     !bindings.inventory_services.invoke||!bindings.inventory_services.observe_storage||
+     !bindings.inventory_incoming||bindings.inventory->character()!=save.character()){
+   error="same-Character V4 Inventory, ItemPower and callback leases required for GEAR";return false;
+  }
+  const auto& slots=bindings.inventory->items();
+  const auto& names=bindings.inventory->table().identifiers;
+  const auto& powers=bindings.item_powers.names();
+  std::uint64_t required=12;
+  const auto add_size=[&](std::uint64_t value){
+   if(value>UINT32_MAX-required)return false;
+   required+=value;return true;
+  };
+  for(const auto& slot:slots){
+   if(!slot||!slot->item){error="GEAR reached an unavailable same-Character Item slot";return false;}
+   const auto& item=*slot->item;
+   if(item.id<0||std::size_t(item.id)>=names.size()){
+    error="GEAR Item ID has no retained source identifier row";return false;
+   }
+   if(!add_size(21)||!add_size(std::uint64_t(names[std::size_t(item.id)].size())+5)){
+    error="GEAR output exceeds source section span";return false;
+   }
+   for(const auto id:item.powers){
+    if(id<0||std::size_t(id)>=powers.size()){
+     error="GEAR ItemPower ID has no retained source identifier row";return false;
+    }
+    if(!add_size(std::uint64_t(powers[std::size_t(id)].size())+5)){
+     error="GEAR output exceeds source section span";return false;
+    }
+   }
+  }
+  output.resize(static_cast<std::size_t>(required));
+  player_gear_save_writer_v1::Result result{};
+  const player_gear_save_writer_v1::Bindings input{
+    &save,bindings.inventory,bindings.item_powers};
+  const auto status=player_gear_save_writer_v1::save(input,
+    {output.data(),output.size()},&result,error);
+  if(status!=player_gear_save_writer_v1::Status::complete){
+   if(error.empty())error="GEAR source writer did not complete";
+   return false;
+  }
+  if(result.written!=required){error="GEAR source writer length differs from its bounded output";return false;}
+  error.clear();return true;
+ }
+ error="no concrete provider for registered gameplay tag: "+tag;return false;
+}
 Transport::Transport(data::PlayerSavegameV1& save,data::PlayerSaveProfileV1& profile):impl_(std::make_shared<Impl>(save,profile)){
  const auto state=impl_;
  loader_=std::make_unique<data::PlayerSaveLoadOwnerV1>(save,profile,data::PlayerSaveLoadServicesV1{state,[state](const auto& q,auto& response,auto& error){return state->invoke(q,response,error);}});
@@ -357,6 +511,127 @@ bool Transport::save_existing_metadata(std::string& error){
   }
   error.clear();return true;
  }catch(...){if(error.empty())error="existing campaign save adapter threw";return false;}
+}
+bool Transport::save_gameplay(
+ const std::vector<GameplaySectionPayloadProviderV1>& providers,
+ std::string& error){
+ auto& s=*impl_;
+ using namespace data::player_profile_atomic_replace_v1;
+ if(s.active||s.bindings.create_new||s.bindings.directory.empty()||
+    !s.bindings.characters||!s.bindings.current_difficulty||
+    !s.bindings.online||*s.bindings.online!=0||s.save.source_save_blocked()||
+    s.save.slot()<0||!s.save.character()||!s.input||!s.profile.identity||
+    s.profile.identity!=reinterpret_cast<std::uintptr_t>(s.input.get())||
+    s.profile.owner.get()!=s.input.get()||!s.profile.campaign||
+    s.input->slot!=s.save.slot()||s.input->directory!=s.bindings.directory||
+    s.input->filename!=data::player_profile_filename_v1(
+       std::uint32_t(s.save.slot()),false,false)||
+    s.input->callbacks.size()!=kMask1And4WriterTags.size()){
+  error="offline gameplay Save, unblocked same-slot profile/index and all mask-1/mask-4 registrations required";return false;
+ }
+ // Require the exact source registration set, all enabled for writes and all
+ // attached to this one Save. No absent/extra callback can be silently skipped.
+ for(const auto* tag:kMask1And4WriterTags){
+  const auto found=s.input->callbacks.find(tag);
+  if(found==s.input->callbacks.end()||found->second.save!=&s.save||
+     !found->second.writer){
+   error=std::string("registered source writer missing or belongs to another Save: ")+tag;return false;
+  }
+ }
+ std::map<std::string,const GameplaySectionPayloadProviderV1*,std::less<>> by_tag;
+ for(const auto& provider:providers){
+  if(std::memchr(provider.tag.data(),0,provider.tag.size())||!provider.owner||
+     !provider.write){error="gameplay section provider has an invalid tag, lease or writer";return false;}
+  const std::string tag(provider.tag.data(),provider.tag.size());
+  if(!by_tag.emplace(tag,&provider).second){error="duplicate gameplay section payload provider: "+tag;return false;}
+ }
+ if(by_tag.size()!=kMask1And4WriterTags.size()){
+  error="gameplay payload providers must exactly cover registered mask-1 and mask-4 writers";return false;
+ }
+ for(const auto* tag:kMask1And4WriterTags)if(by_tag.find(tag)==by_tag.end()){
+  error=std::string("gameplay payload provider missing registered writer: ")+tag;return false;
+ }
+ for(const auto& row:by_tag){
+  bool registered=false;for(const auto* tag:kMask1And4WriterTags)
+   if(row.first==tag){registered=true;break;}
+  if(!registered){error="extra gameplay payload provider is not registered: "+row.first;return false;}
+ }
+
+ s.active=true;
+ struct Guard{Impl& state;~Guard(){state.refresh();state.active=false;}}guard{s};
+ try{
+  // PlayerSavegame::SG_Save stores its offline source mode before invoking
+  // registered callbacks; a later provider failure retains this reached field.
+  s.save.set_source_save_mode(1);
+  struct Payload {std::array<char,4> tag{};std::vector<std::uint8_t> bytes;};
+  std::vector<Payload> payloads;payloads.reserve(kMask1And4WriterTags.size());
+  for(const auto* tag:kMask1And4WriterTags){
+   const auto* provider=by_tag.at(tag);Payload payload;
+   std::memcpy(payload.tag.data(),tag,payload.tag.size());
+   if(!provider->write(provider->context,s.save,payload.bytes,error)){
+    if(error.empty())error=std::string("registered gameplay section writer failed: ")+tag;
+    return false;
+   }
+   if(payload.bytes.size()>UINT32_MAX){error=std::string("gameplay section exceeds source span: ")+tag;return false;}
+   payloads.push_back(std::move(payload));
+  }
+  if(s.save.source_save_blocked()||!s.bindings.online||*s.bindings.online!=0||
+     s.save.slot()!=s.input->slot||!s.profile.campaign||
+     s.profile.identity!=reinterpret_cast<std::uintptr_t>(s.input.get())||
+     s.profile.owner.get()!=s.input.get()){
+   error="gameplay Save/profile/offline identity changed during section serialization";return false;
+  }
+  std::vector<data::PlayerProfileRawSectionV1> replacements;
+  replacements.reserve(payloads.size());
+  for(const auto& payload:payloads)
+   replacements.push_back({payload.tag,{payload.bytes.data(),payload.bytes.size()}});
+  Result receipt{};
+  const auto primary=s.input->directory/s.input->filename;
+  if(!replace_existing_profile_sections_v1(primary,s.input->index,
+       s.profile.campaign,replacements,&receipt,error))return false;
+  if(!s.input->index.owns(s.profile.campaign)||
+     s.profile.campaign.bytes().empty()){
+   error="gameplay profile index publication did not retain the canonical Save view";return false;
+  }
+  error.clear();return true;
+ }catch(...){if(error.empty())error="offline gameplay profile save provider threw";return false;}
+}
+bool Transport::save_gameplay(std::string& error){
+ auto& state=*impl_;const auto& bindings=state.bindings;
+ if(state.active||!bindings.characters||!bindings.current_difficulty||
+    !bindings.levels||!bindings.world_map||!bindings.skill_tables||
+    !state.save.skills_initialized()||!bindings.quests||
+    !bindings.quests->owns_save(&state.save)||
+    !bindings.property_rules||!bindings.properties||
+    !bindings.inventory||!bindings.item_powers||
+    !bindings.inventory_services_owner||!bindings.inventory_services.context||
+    !bindings.inventory_services.invoke||!bindings.inventory_services.observe_storage||
+    !bindings.inventory_incoming||!state.save.character()||
+    bindings.inventory->character()!=state.save.character()||
+    bindings.inventory->properties()!=bindings.properties||
+    !bindings.online||*bindings.online!=0||state.save.source_save_blocked()){
+  error="offline gameplay persistence requires every same-Save metadata, level, skill, quest, property and inventory writer owner";return false;
+ }
+ for(const auto initialized:state.save.faeries_initialized())if(!initialized){
+  error="offline gameplay persistence requires all same-Save faery lists initialized";return false;
+ }
+ for(std::uint32_t difficulty=0;difficulty<3;++difficulty){
+  const auto* levels=state.save.source_level_states(difficulty);
+  const auto* world=state.save.source_world_map_states(difficulty);
+  if(!levels||!world||!levels->words||!world->words||
+     levels->count!=bindings.levels->levels.size()||
+     world->count!=bindings.world_map->locations.size()){
+   error="offline gameplay persistence requires all same-Save LVLS arrays";return false;
+  }
+ }
+ std::vector<GameplaySectionPayloadProviderV1> providers;
+ providers.reserve(kMask1And4WriterTags.size());
+ for(const auto* tag:kMask1And4WriterTags){
+  auto lease=std::make_shared<Impl::GameplayProviderLease>();lease->transport=impl_;
+  std::memcpy(lease->tag.data(),tag,lease->tag.size());
+  providers.push_back({lease->tag,lease,lease.get(),Impl::write_gameplay_payload});
+ }
+ return save_gameplay(providers,error);
 }
 data::PlayerSaveLoadOwnerV1& Transport::loader()noexcept{return *loader_;}
 const Receipt& Transport::receipt()const noexcept{impl_->refresh();return impl_->receipt;}

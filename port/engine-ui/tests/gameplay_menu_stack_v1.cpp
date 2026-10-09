@@ -43,6 +43,36 @@ int main() {
                 "named NativePopMenu must also accept the current menu name");
         require(!gameplay_menu_named_pop_requested_v1(stack, "menu_Inventory"),
                 "named NativePopMenu must leave the stack untouched for an absent name");
+        require(!gameplay_menu_reveal_existing_requested_v1("menu_CharacterMenu"),
+                "repeated character-menu initialization must preserve its active sheet stack");
+        require(gameplay_menu_reveal_existing_requested_v1("menu_confirm2"),
+                "only the retained confirmation panel should unwind covering menus");
+        require(gameplay_native_push_state_routes_to_level_menu_v1("menu_CharacterMenu", true),
+                "NativePushState must route CharacterMenu through GSFlashMenu over GSLevel");
+        require(gameplay_native_push_state_routes_to_level_menu_v1("menu_Ingame", true),
+                "NativePushState must route Ingame through GSFlashMenu over GSLevel");
+        require(gameplay_native_push_state_is_level_menu_target_v1("menu_CharacterMenu") &&
+                    gameplay_native_push_state_is_level_menu_target_v1("menu_Ingame") &&
+                    !gameplay_native_push_state_is_level_menu_target_v1("menu_Options"),
+                "only CharacterMenu and Ingame are special NativePushState level targets");
+        require(!gameplay_native_push_state_routes_to_level_menu_v1("menu_CharacterMenu", false) &&
+                    !gameplay_native_push_state_routes_to_level_menu_v1("menu_Options", true),
+                "the GSLevel menu route is limited to CharacterMenu and Ingame with GSLevel active");
+
+        auto confirmation_stack = std::vector<std::string>{
+            "menu_CharacterMenu", "menu_InventorySheetMain", "menu_confirm2",
+            "menu_InventorySheetDetails"};
+        unsigned resumed_pops = 0;
+        require(gameplay_menu_reveal_existing_v1(
+                    confirmation_stack, "menu_confirm2", [&] {
+                        ++resumed_pops;
+                        confirmation_stack.pop_back();
+                        return true;
+                    }),
+                "an authored request for a covered confirmation should resume the retained state");
+        require(resumed_pops == 1 && confirmation_stack.size() == 3 &&
+                    confirmation_stack.back() == "menu_confirm2",
+                "resuming a confirmation must pop covered states through the owner and make it active");
 
         const auto pop = gameplay_menu_transition_plan_v1(
             "menu_CharacterSheetStats", "menu_CharacterSheetNew", false);

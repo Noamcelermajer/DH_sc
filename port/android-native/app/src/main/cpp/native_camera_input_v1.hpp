@@ -6,6 +6,26 @@
 
 namespace dh2::native::camera_input_v1 {
 
+inline constexpr float kSwampDefaultCameraEyeOffset[3]{1380.0f,-1380.0f,2450.0f};
+
+// Convert an authored camera-to-target offset (renderer world axes) to the
+// orbit angles used by the native renderer. This is a coordinate conversion;
+// source joystick conditioning and rotation remain in the functions below.
+inline int orbit_from_eye_offset(const float* eye_offset,
+                                 float* camera_yaw, float* camera_pitch,
+                                 float* camera_distance = nullptr) {
+    if (!eye_offset || !camera_yaw || !camera_pitch ||
+        !std::isfinite(eye_offset[0]) || !std::isfinite(eye_offset[1]) ||
+        !std::isfinite(eye_offset[2])) return 1;
+    const float horizontal = std::hypot(eye_offset[0], eye_offset[1]);
+    const float length = std::hypot(horizontal, eye_offset[2]);
+    if (!std::isfinite(length) || length <= 0.0f) return 1;
+    *camera_yaw = std::atan2(eye_offset[1], eye_offset[0]);
+    *camera_pitch = std::atan2(eye_offset[2], horizontal);
+    if (camera_distance) *camera_distance = length;
+    return 0;
+}
+
 // Reconstruct the camera-relative part of v2GamepadController::Update
 // (0x406c2c). CameraBase::GetCameraLookAtVec (0x40e8a8) supplies a full 3D
 // direction. The orbit adapter below derives center-eye from the renderer's
@@ -82,6 +102,31 @@ inline int map_touch_ground_input(float* direction, float camera_yaw, float came
     direction[1] = mapped[1];
     direction[2] = 0.0f;
     *active = next_active;
+    return 0;
+}
+
+// Match HUDControls::OnEvent (IDA 0x4197f4-0x419970) for the Android
+// virtual stick. The source rotates its normalized (1,-1) basis by
+// 90deg-atan2(screen_dy,screen_dx); native move_axis supplies screen-up as
+// positive Y, so screen_dy=-direction[1]. This simplifies to a fixed +45deg
+// basis transform. HUDControls preserves radial magnitude and the downstream
+// SetHeadingDirection considers XY active only above squared length 1e-4.
+// Inputs are the normalized/clamped axes already produced by MainActivity.
+inline int map_hud_touch_input(float* direction, bool* active) {
+    if (!direction || !active || !std::isfinite(direction[0]) ||
+        !std::isfinite(direction[1]) || !std::isfinite(direction[2])) return 1;
+    constexpr float kInvSqrtTwo = 0.7071067811865475244f;
+    const float x = direction[0];
+    const float y = direction[1];
+    const float mapped_x = (x - y) * kInvSqrtTwo;
+    const float mapped_y = (x + y) * kInvSqrtTwo;
+    const float magnitude_squared = x * x + y * y;
+    if (!std::isfinite(mapped_x) || !std::isfinite(mapped_y) ||
+        !std::isfinite(magnitude_squared)) return 1;
+    direction[0] = mapped_x;
+    direction[1] = mapped_y;
+    direction[2] = 0.0f;
+    *active = magnitude_squared > 0.0001f;
     return 0;
 }
 

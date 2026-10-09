@@ -13,7 +13,7 @@ struct Fixture {
     std::vector<int> calls;
     bool player{true};
     bool registered{true};
-    std::uintptr_t game_state{789};
+    std::uintptr_t event_manager{789};
     int fail_at{};
     LootPickupQuestEventV10 copied{};
 
@@ -43,7 +43,7 @@ struct Fixture {
 
     static bool current(void* raw, std::uintptr_t& out, std::string& error) {
         auto& self = *static_cast<Fixture*>(raw);
-        out = self.game_state;
+        out = self.event_manager;
         return self.step(3, error);
     }
 
@@ -57,11 +57,11 @@ struct Fixture {
         return self.step(4, error);
     }
 
-    static bool async(void* raw, std::uintptr_t game_state,
+    static bool async(void* raw, std::uintptr_t event_manager,
                       const LootPickupQuestEventV10& event,
                       std::string& error) {
         auto& self = *static_cast<Fixture*>(raw);
-        if (game_state != 789) throw std::runtime_error("GameState identity");
+        if (event_manager != 789) throw std::runtime_error("EventManager identity");
         self.copied = event;
         return self.step(5, error);
     }
@@ -102,10 +102,10 @@ int main() {
         ++checks;
 
         fixture = {};
-        fixture.game_state = 0;
+        fixture.event_manager = 0;
         services = services_for(fixture);
-        check(loot_pickup_quest_tail_v10(123, 456, services, error), "missing GameState no-op");
-        check(fixture.calls == std::vector<int>({1, 2, 3}), "GameState gate order");
+        check(loot_pickup_quest_tail_v10(123, 456, services, error), "missing current-level no-op");
+        check(fixture.calls == std::vector<int>({1, 2, 3}), "current-level gate order");
         ++checks;
 
         fixture = {};

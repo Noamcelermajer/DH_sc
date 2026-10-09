@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <limits>
 
 using namespace dh2::camera_level_runtime_v1;
 
@@ -20,6 +21,9 @@ FrameInput frame(const GameObjectSample& target){
 
 int main(){
     GameObjectSample a{1,true,{2,3,4},true,{10,20,30},false},b{2,true,{50,60,70},false,{},false};
+    Owner initialized_owner;
+    check(near(initialized_owner.current_zoom(),0.0f)&&near(initialized_owner.target_zoom(),1.0f),
+          "ZoomHandler constructor preserves exact current=0 and target=1 initialization");
     Vec3 resolved{};
     check(resolve_camera_anchor(a,&resolved)&&near(resolved,{10,20,30}),"custom +736 anchor resolves to pointer +12");
     a.custom_anchor_present=false;
@@ -31,6 +35,8 @@ int main(){
     auto in=frame(a);in.dt_ms=16;FrameOutput out{};
     check(owner.update(in,&out)==Status::transition_position_written&&near(out.camera_world_position,{2,3,4}),
           "zero-duration SetTarget still consumes the source transition snap frame");
+    check(near(out.target_cam_local_position,{}),
+          "initial transition retains the target-camera node's startup zero zoom");
     in.dt_ms=16;
     check(owner.update(in,&out)==Status::follow_position_written,"expired transition returns to normal follow update");
 
@@ -80,6 +86,29 @@ int main(){
     check(owner.update(in,&out)==Status::follow_position_written&&near(owner.current_zoom(),0.8f)&&
           near(owner.effective_zoom(),0.6f)&&near(out.target_cam_local_position,{0,0,-6}),
           "design zoom provider clamps current/target then uses their minimum times loaded camera distance");
+    const Vec3 prior_target_cam_position=out.target_cam_local_position;
+    const GameObjectSample previous_target=b;
+    check(owner.set_target(&a,100,&previous_target),"positive retarget starts source camera transition");
+    in=frame(a);in.dt_ms=25;
+    check(owner.update(in,&out)==Status::transition_position_written&&
+          near(out.target_cam_local_position,prior_target_cam_position),
+          "transition frame preserves previously written target-camera zoom");
+    in.dt_ms=75;
+    check(owner.update(in,&out)==Status::transition_position_written&&
+          near(out.target_cam_local_position,prior_target_cam_position),
+          "transition endpoint preserves target-camera zoom until follow writes it again");
+    in=frame(a);in.dt_ms=16;
+    check(owner.update(in,&out)==Status::follow_position_written&&
+          near(out.target_cam_local_position,prior_target_cam_position),
+          "first post-transition follow resumes the same source zoom");
+    check(owner.set_target(&b,0,nullptr),"zero-duration retarget restores the original actor");
+    in=frame(b);in.dt_ms=16;
+    check(owner.update(in,&out)==Status::transition_position_written&&
+          near(out.target_cam_local_position,prior_target_cam_position),
+          "immediate retarget also retains the last target-camera local position");
+    in=frame(b);in.dt_ms=16;
+    check(owner.update(in,&out)==Status::follow_position_written,
+          "follow resumes after zoom-retaining immediate transition");
     in.infinite_zoom=true;
     check(owner.update(in,&out)==Status::follow_position_written&&near(owner.effective_zoom(),0.8f)&&
           near(out.target_cam_local_position,{0,0,-8}),"InfiniteZoom selects unclamped current zoom");
@@ -112,5 +141,38 @@ int main(){
           "GameObject +129 retires target after completing follow update");
     in.target.identity=999;
     check(owner.update(in,&out)==Status::no_camera_update,"missing canonical target owner cannot update camera");
+
+    Owner input_owner;input_owner.set_zoom(0.25f,0.8f);
+    ZoomInput input;
+    check(input.set_camera(&input_owner,{4,8})&&near(input.sensitivity(),0.125f),
+          "ZoomHandler setCamera uses reciprocal of larger difficulty count");
+    check(input.mouse_wheel(2.0f)&&near(input_owner.current_zoom(),1.5f)&&
+          near(input_owner.target_zoom(),0.8f),
+          "mouse wheel changes current zoom by delta times five and sensitivity only");
+    check(!input.begin_mouse_pan(10,20,{100,200,300},false,false),
+          "mouse drag remains disabled until the source enable flag is provided");
+    input.set_mouse_pan_enabled(true);
+    check(!input.begin_mouse_pan(10,20,{100,200,300},true,false)&&
+          !input.mouse_pan_active(),"menu camera rejects drag start outside map render zone");
+    check(input.begin_mouse_pan(10,20,{100,200,300},true,true),
+          "menu camera accepts drag start inside map render zone");
+    Vec3 mouse_offset{};
+    check(input.move_mouse_pan(12,17,&mouse_offset)&&near(mouse_offset,{0,50,300}),
+          "mouse drag uses captured start offset and source 50-units-per-pixel signs");
+    check(input.end_mouse_pan()&&!input.mouse_pan_active(),"mouse-up clears pan gesture state");
+    Vec3 touch_offset{100,200,300};
+    check(input.touch_pan(2,-3,&touch_offset,true)&&near(touch_offset,{0,50,300}),
+          "single-touch pan applies source incremental x/y signs at 50 units per pixel");
+    check(!input.touch_pan(1,1,&touch_offset,false),
+          "single-touch pan requires the source camera touch-pan flag");
+    check(input.pinch_zoom(100.0f,116.0f)&&near(input_owner.current_zoom(),3.5f)&&
+          near(input_owner.target_zoom(),0.8f),
+          "two-pointer pinch applies distance delta times sensitivity to current zoom");
+    const float input_zoom=input_owner.current_zoom();
+    check(!input.pinch_zoom(std::numeric_limits<float>::quiet_NaN(),120.0f)&&
+          near(input_owner.current_zoom(),input_zoom),
+          "invalid pinch distances leave camera zoom unchanged");
+    check(!input.set_camera(&input_owner,{0,0})&&input_owner.current_zoom()==input_zoom,
+          "invalid difficulty counts are rejected without mutating zoom");
     std::printf("PASS: CameraLevel source-backed host checks (%d assertions)\n",assertions);
 }

@@ -112,7 +112,7 @@ struct SkillFixture {
     Frozen::Services callback_services{};
     Dispatch::Projection projection{};
 
-    SkillFixture(){
+    explicit SkillFixture(bool bind_projection_during_coordinator_bind=true){
         facts.is_player=1;facts.idle=11;facts.walk=22;facts.run=33;
         facts.attack_static=44;facts.attack_moving=55;
         facts.walk_threshold=.45f;facts.run_threshold=.85f;facts.walk_speed=1.3f;
@@ -124,7 +124,9 @@ struct SkillFixture {
         projection={&character.state,&callback_state,&globals,&callback_services};
         CoordinatorBindings bindings{};
         bindings.context=this;bindings.facts=read_facts;
-        bindings.services={this,state_service};bindings.skill_projection=&projection;
+        bindings.services={this,state_service};
+        if(bind_projection_during_coordinator_bind)
+            bindings.skill_projection=&projection;
         character.bind(bindings);
     }
     static Facts read_facts(void* context){return static_cast<SkillFixture*>(context)->facts;}
@@ -281,6 +283,39 @@ int main() {
               skills.character.state.current_animation==22&&
               skills.previous_states==std::vector<std::int32_t>({-1,3,6}),
               "CSSkill blur/registered exit did not transition through Coordinator");
+
+        SkillFixture projection_lifecycle(false);
+        State foreign_machine{};
+        auto wrong_machine_projection=projection_lifecycle.projection;
+        wrong_machine_projection.machine=&foreign_machine;
+        check(projection_lifecycle.character.bound()&&
+              !projection_lifecycle.character.bind_skill_projection(
+                  &wrong_machine_projection),
+              "CSSkill projection for another FSM was accepted");
+        auto replacement_projection=projection_lifecycle.projection;
+        check(projection_lifecycle.character.bind_skill_projection(
+                  &projection_lifecycle.projection)&&
+              projection_lifecycle.character.bind_skill_projection(
+                  &projection_lifecycle.projection)&&
+              !projection_lifecycle.character.bind_skill_projection(
+                  &replacement_projection)&&
+              !projection_lifecycle.character.unbind_skill_projection(
+                  &replacement_projection),
+              "CSSkill projection binding replaced or mismatched its borrowed owner");
+        check(projection_lifecycle.character.transition(3)==1&&
+              projection_lifecycle.character.event(0xc355)==1&&
+              projection_lifecycle.character.state.current==6&&
+              !projection_lifecycle.character.unbind_skill_projection(
+                  &projection_lifecycle.projection),
+              "CSSkill projection detached while state 6 was active");
+        check(projection_lifecycle.character.event(0xc351)==1&&
+              projection_lifecycle.character.state.current==4&&
+              projection_lifecycle.character.unbind_skill_projection(
+                  &projection_lifecycle.projection)&&
+              projection_lifecycle.character.event(0xc355)==-1&&
+              projection_lifecycle.character.state.current==4,
+              "CSSkill projection could not be unbound after leaving state 6");
+
         skills.character.state.elapsed_ms=71;
         const auto reenter_skill=skills.character.event(0xc355);
         const auto close_skill=skills.character.event(0x22);
@@ -302,7 +337,8 @@ int main() {
                     "\"expiry_hook_before_state\":true,\"script_blocking_and_pause\":true,"
                     "\"spawn_timer_and_named_event\":true,"
                     "\"safe_growth\":true,\"exception_borrow_cleanup\":true,"
-                    "\"csskill_c355_focus_blur_event_and_transition\":true}\n");
+                    "\"csskill_c355_focus_blur_event_and_transition\":true,"
+                    "\"csskill_projection_lifecycle\":true}\n");
         return 0;
     } catch (const std::exception& error) {
         std::fprintf(stderr, "character coordinator: %s\n", error.what());

@@ -118,7 +118,9 @@ class SwfMovie {
                     std::uint32_t& selection,const SwfViewportDriver&,const SwfInputCoreServices&,std::string&);
  bool input_rectangle(const std::int32_t xywh[4],std::string&);
  bool input_cursor(const SwfCursor16&,std::string&);
+ bool input_cursor(const SwfCursor16&,std::uint32_t cursor_index,std::string&);
  bool input_cancel(float x,float y,std::string&);
+ bool input_cancel(float x,float y,std::uint32_t cursor_index,std::string&);
  bool input_advance(std::int32_t milliseconds,std::string&);
  bool input_raw_position(int& x,int& y,std::string&);
  gameswf::font* borrowed_font(std::int32_t resource_id) const; // invalidated by destruction/reload

@@ -33,6 +33,20 @@ int main() {
                 "verified Crypt route enables the authored player camera only when both providers are ready")) return 48;
     if (!expect(!source_player_camera_route_ready("SWAMP", "001_swamp.mlx", true, true),
                 "clip-plane availability alone does not enable unverified SWAMP camera/FOV/target data")) return 49;
+    if (!expect(verified_swamp_default_camera_route("SWAMP", "001_swamp.mlx") &&
+                !verified_swamp_default_camera_route("SWAMP", "001_swamp_backup.mlx"),
+                "SWAMP CameraTests rig is selected only for the exact source LevelConfig")) return 51;
+    if (!expect(source_camera_rig_route_ready("SWAMP", "001_swamp.mlx", true, true) &&
+                !source_camera_rig_route_ready("SWAMP", "001_swamp.mlx", false, true) &&
+                !source_camera_rig_route_ready("SWAMP", "001_swamp.mlx", true, false),
+                "SWAMP authored static rig requires both source LevelConfig and BDAE providers")) return 52;
+    if (!expect(source_swamp_static_camera_fallback_ready("SWAMP", "001_swamp.mlx", true) &&
+                !source_swamp_static_camera_fallback_ready("SWAMP", "001_swamp.mlx", false) &&
+                !source_swamp_static_camera_fallback_ready("GOTHICUS_CRYPT_01", "007_crypt_01.rule.xml", true),
+                "missing optional SWAMP CameraTests rig uses only its verified static camera fallback")) return 54;
+    if (!expect(source_camera_rig_route_ready("GOTHICUS_CRYPT_01", "007_crypt_01.rule.xml", true, true) &&
+                !source_camera_rig_route_ready("GOTHICUS_CRYPT_01", "other.rule.xml", true, true),
+                "generic authored-rig route preserves Crypt and exact-level gating")) return 53;
     if (!expect(!source_player_camera_route_ready("GOTHICUS_CRYPT_01", "007_crypt_01.rule.xml", false, true) &&
                 !source_player_camera_route_ready("GOTHICUS_CRYPT_01", "007_crypt_01.rule.xml", true, false),
                 "Crypt route remains disabled when either camera provider is unavailable")) return 50;
@@ -71,6 +85,27 @@ int main() {
                 near(authored_frame.input_pitch,std::atan2(authored_eye_offset[2],
                     std::hypot(authored_eye_offset[0],authored_eye_offset[1]))),
                 "movement basis follows authored rig eye offset")) return 43;
+    Vec3 composed_eye_offset{};
+    if (!expect(apply_target_camera_local_z({3.0f,4.0f,0.0f},-1.0f,&composed_eye_offset) &&
+                near(composed_eye_offset[0],2.4f) && near(composed_eye_offset[1],3.2f) &&
+                near(std::hypot(composed_eye_offset[0],composed_eye_offset[1]),4.0f),
+                "negative CameraLevel local-Z zoom moves the eye toward the unchanged target")) return 54;
+    Frame zoomed_frame{};
+    if (!expect(build_player_frame(receipt_target,2400,1080,&zoomed_frame,
+                    kVerticalFovRadians,kNearPlane,kFarPlane,authored_eye_offset,
+                    authored_up,authored_target_offset,-100.0f),
+                "build Crypt frame with the CameraLevel local-Z offset")) return 55;
+    const float authored_distance=std::hypot(std::hypot(authored_eye_offset[0],
+        authored_eye_offset[1]),authored_eye_offset[2]);
+    const float zoomed_distance=std::hypot(std::hypot(
+        zoomed_frame.eye[0]-zoomed_frame.target[0],
+        zoomed_frame.eye[1]-zoomed_frame.target[1]),
+        zoomed_frame.eye[2]-zoomed_frame.target[2]);
+    if (!expect(near(zoomed_frame.target[0],authored_frame.target[0]) &&
+                near(zoomed_frame.target[1],authored_frame.target[1]) &&
+                near(zoomed_frame.target[2],authored_frame.target[2]) &&
+                near(zoomed_distance,authored_distance-100.0f),
+                "rendered camera consumes CameraLevel zoom while preserving authored target")) return 56;
     float clip[4]{};
     const Vec3 authored_up_point{authored_frame.target[0]+authored_up[0],
                                  authored_frame.target[1]+authored_up[1],

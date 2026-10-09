@@ -25,6 +25,9 @@ struct FrontRuntimeServices {
     bool (*debug_load)(void*,std::string&){};
     bool (*debug_query)(void*,const char* key,std::string&){};
     bool (*change_preview_slot)(void*,std::int32_t slot,bool force,std::string&){};
+    // Source NativeSaveGame resolves this local Character and calls its same
+    // PlayerSavegame::SG_Save owner synchronously on the GL/UI thread.
+    bool (*save_game)(void*,std::uintptr_t character,std::string&){};
 };
 // Retained authored HUD owner. Movie/font/texture CPU state survives GL
 // recreation; the connected status view borrows actual world properties.
@@ -53,6 +56,11 @@ public:
     data::ItemTextServicesV5 item_text_services(const data::ItemTable&,
                                                const data::CharacterTable&) noexcept;
     bool touch(float x,float y,int action,std::string&);
+    bool touch(float x,float y,int action,std::uint32_t cursor_index,std::string&);
+    bool camera_pan_allowed() const noexcept;
+    // Android system Back uses the same live gameplay menu owner as the
+    // authored NativeBackToHud callback; it never reloads the selected level.
+    bool back_to_hud(std::string&);
     bool active() const;
     bool overlays_player() const;
     void deactivate();

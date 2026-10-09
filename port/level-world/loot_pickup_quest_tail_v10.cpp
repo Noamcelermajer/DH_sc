@@ -31,12 +31,12 @@ bool loot_pickup_quest_tail_v10(std::uintptr_t character, std::int32_t item,
         return missing_service(error, "Required SAME inventory gathering-ID list30");
     if (!registered) return true;
 
-    std::uintptr_t game_state{};
-    if (!services.current_game_state)
-        return missing_service(error, "Required actual Application current GS for pickup quest");
-    if (!services.current_game_state(services.context, game_state, error))
-        return missing_service(error, "Required actual Application current GS for pickup quest");
-    if (!game_state) return true;
+    std::uintptr_t event_manager{};
+    if (!services.current_level_event_manager)
+        return missing_service(error, "Required actual Application current Level EventManager for pickup quest");
+    if (!services.current_level_event_manager(services.context, event_manager, error))
+        return missing_service(error, "Required actual Application current Level EventManager for pickup quest");
+    if (!event_manager) return true;
 
     LootPickupQuestEventV10 event{};
     event.character = character;
@@ -48,9 +48,9 @@ bool loot_pickup_quest_tail_v10(std::uintptr_t character, std::int32_t item,
         return missing_service(error, "Required actual GatherLoot quest constant");
 
     if (!services.raise_async)
-        return missing_service(error, "Required actual GS pickup quest AsyncCall");
-    if (!services.raise_async(services.context, game_state, event, error))
-        return missing_service(error, "Required actual GS pickup quest AsyncCall");
+        return missing_service(error, "Required current Level EventManager RaiseAsync for pickup quest");
+    if (!services.raise_async(services.context, event_manager, event, error))
+        return missing_service(error, "Required current Level EventManager RaiseAsync for pickup quest");
     return true;
 }
 

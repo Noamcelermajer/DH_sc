@@ -2,6 +2,7 @@
 #include "player_save_load_owner_v1.hpp"
 #include "fresh_inventory_owned_v4.hpp"
 #include "item_power_tables_v5.hpp"
+#include <array>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -17,6 +18,16 @@ struct Receipt {
  std::int32_t slot=-1,character_class=-1,level=0,difficulty=0;
  std::uint32_t source_level_id=0,sections=0,field_reads=0,file_opens=0;
  bool loaded=false;
+};
+// A synchronous provider for one registered campaign section writer. The
+// caller retains `owner` for the duration of save_gameplay; the provider must
+// serialize from the supplied canonical Save into caller-owned payload bytes.
+struct GameplaySectionPayloadProviderV1 {
+ std::array<char,4> tag{};
+ std::shared_ptr<void> owner;
+ void* context=nullptr;
+ bool (*write)(void*,const data::PlayerSavegameV1&,
+               std::vector<std::uint8_t>&,std::string&){};
 };
 struct TransportBindings {
  TransportBindings()=default;
@@ -92,6 +103,16 @@ public:
  // primary as .bak before replacing it. Source Savegame's async job queue is
  // not modeled by this adapter.
  bool save_existing_metadata(std::string&);
+ // Offline existing-profile save across the complete registered mask-1 +
+ // mask-4 writer set. Every callback must belong to this exact Save, and the
+ // provider vector must cover those tags exactly. Online synchronization,
+ // checkpoint removal and volatile quest saving are explicitly unsupported;
+ // this is not enabled until the caller supplies all actual section writers.
+ bool save_gameplay(const std::vector<GameplaySectionPayloadProviderV1>&,
+                    std::string&);
+ // Production assembly from this transport's retained same-Save bindings.
+ // Missing writer owners fail before profile publication.
+ bool save_gameplay(std::string&);
  data::PlayerSaveLoadOwnerV1& loader() noexcept;
  const Receipt& receipt()const noexcept;
 };

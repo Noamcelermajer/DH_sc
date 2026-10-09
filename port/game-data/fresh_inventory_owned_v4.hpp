@@ -7,6 +7,7 @@
 #include <cstddef>
 namespace dh2::data {
 struct OwnedItemSlotV4 {std::unique_ptr<ItemInstanceV1> item;std::array<std::int8_t,2> slots{{-1,-1}};};
+struct QuestGatheringItemIdV4 {std::int32_t item_id{};std::uint8_t registrations{};};
 enum class OwnedInventoryOperationV4:std::uint32_t {
  debug_load=0x337888,debug_query=0x337a88,current_player=0x31f594,player_count=0x4043a8,
  update_name=0x3fb754,update_stats=0x3fb290,update_requirements=0x3facdc,add_power=0x3fbc60,
@@ -29,6 +30,10 @@ struct OwnedInventoryServicesV4 {
  // Explicit legacy temporary contract: callbacks retain no Item pointers and
  // create no external per-Item state. Absence of retirement is not proof.
  bool stateless_temporaries=false;
+ // ItemObject::Interact's post-transfer quest tail. Runs only after the world
+ // Item has left this owner and AddItemInstance accepted the transfer. A
+ // failure preserves that source prefix; callers must not retry the pickup.
+ bool (*after_world_pickup)(void*,std::uintptr_t character,std::int32_t item_id,std::string& error){};
 };
 // NativeInvDropItem needs a real online-state query and the complete original
 // offline ItemObject::DropInventory continuation. The latter must calculate
@@ -57,7 +62,10 @@ struct OwnedLootEffectsV7 {
 class FreshInventoryOwnedV4 {
  LootTablesV2::Borrow tables_;InventoryRandomServiceV4 random_;std::uintptr_t character_;
  PropertyState* properties_{};std::shared_ptr<PropertyState> fixture_properties_;
- std::vector<std::unique_ptr<OwnedItemSlotV4>> items_,world_items_;ItemInstanceV1* potion_{};
+ std::vector<std::unique_ptr<OwnedItemSlotV4>> items_,world_items_;
+ // Source ItemInventory+0x30 / Character+940 unique IDs and byte refcounts.
+ std::vector<QuestGatheringItemIdV4> quest_gathering_item_ids_;
+ ItemInstanceV1* potion_{};
  std::array<std::array<OwnedItemSlotV4*,9>,2> equipment_{};std::uint8_t selected_{};
  std::int8_t potion_capacity_;std::int32_t gold_{},gold_limit_{INT32_MAX};bool unlimited_{},running_{};std::uint32_t callback_depth_{};
  bool mutation_allowed(std::string&)const;
@@ -122,6 +130,14 @@ public:
  // UnEquipSlot and therefore cannot merge a stack) before synchronously
  // retiring presentation attached to the actual Item and erasing its slot.
  bool remove_inventory_item(std::uint32_t,const OwnedInventoryServicesV4&,std::string&);
+ // ItemInventory::RemoveOnePotion (0x40e878): decrement the canonical
+ // potion Item through AddQty(-1), or retire that exact Item at quantity <= 1.
+ bool remove_one_potion(const OwnedInventoryServicesV4&,std::string&);
+ // Objective_GatherLoot's list-30 registration state, owned by this exact
+ // Character inventory. It is not an EventManager or quest dispatcher.
+ bool register_quest_gathering_item_id(std::int32_t,std::string&);
+ bool unregister_quest_gathering_item_id(std::int32_t,std::string&);
+ bool has_quest_gathering_item_id(std::int32_t,bool&,std::string&)const;
  bool add_quantity_to_item(ItemInstanceV1&,std::int32_t,std::string&);
  // Source AddItemInstance owns input only after delivered storage/merge/delete.
  // Prefix is retained on required effect failure; caller retains unconsumed input.

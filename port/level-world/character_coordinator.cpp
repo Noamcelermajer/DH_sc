@@ -41,6 +41,26 @@ bool Coordinator::bound() const {
     return bindings_.facts && bindings_.services.invoke;
 }
 
+bool Coordinator::bind_skill_projection(
+    character_skill_state_dispatch_v1::Projection* projection) {
+    if (!bound() || active_facts_ || timers_.update_depth || !projection ||
+        projection->machine != &state)
+        return false;
+    if (bindings_.skill_projection)
+        return bindings_.skill_projection == projection;
+    bindings_.skill_projection = projection;
+    return true;
+}
+
+bool Coordinator::unbind_skill_projection(
+    character_skill_state_dispatch_v1::Projection* projection) {
+    if (!bound() || active_facts_ || timers_.update_depth || !projection ||
+        bindings_.skill_projection != projection || state.current == 6)
+        return false;
+    bindings_.skill_projection = nullptr;
+    return true;
+}
+
 Services Coordinator::state_services() { return {this, invoke_service}; }
 TimerServices32 Coordinator::timer_services() {
     return {this, timer_expired, grow_timers, 0};

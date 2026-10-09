@@ -109,6 +109,43 @@ public final class MainActivity extends Activity {
         surface.setEGLConfigChooser(8,8,8,8,16,0);
         surface.setOnTouchListener(new View.OnTouchListener(){
             float x,y;
+            int pinchPointerA=-1,pinchPointerB=-1;
+            int panPointer=-1;
+            boolean swfPointerActive,gestureCancelled;
+            float previousPinchDistance;
+            float panLastX,panLastY,panRemainderX,panRemainderY;
+            private int pointerIndex(MotionEvent event,int pointerId){
+                for(int i=0;i<event.getPointerCount();i++)if(event.getPointerId(i)==pointerId)return i;
+                return -1;
+            }
+            private float fitScale(){
+                return Math.min(Math.max(1,surface.getWidth())/480f,
+                        Math.max(1,surface.getHeight())/320f);
+            }
+            private float pinchDistance(MotionEvent event,int first,int second){
+                int a=pointerIndex(event,first),b=pointerIndex(event,second);
+                if(a<0||b<0)return -1;
+                float fit=fitScale();
+                float dx=(event.getX(a)-event.getX(b))/fit;
+                float dy=(event.getY(a)-event.getY(b))/fit;
+                return (float)Math.hypot(dx,dy);
+            }
+            private void endPinch(){pinchPointerA=pinchPointerB=-1;previousPinchDistance=0;}
+            private void beginPan(MotionEvent event,int index){
+                panPointer=event.getPointerId(index);panLastX=event.getX(index);panLastY=event.getY(index);
+                panRemainderX=panRemainderY=0;
+            }
+            private void updatePan(MotionEvent event){
+                int index=pointerIndex(event,panPointer);if(index<0)return;
+                float fit=fitScale();
+                panRemainderX+=(event.getX(index)-panLastX)/fit;
+                panRemainderY+=(event.getY(index)-panLastY)/fit;
+                panLastX=event.getX(index);panLastY=event.getY(index);
+                int dx=Math.round(panRemainderX),dy=Math.round(panRemainderY);
+                panRemainderX-=dx;panRemainderY-=dy;
+                if(dx!=0||dy!=0)surface.queueEvent(()->NativeBridge.cameraTouchPan(dx,dy));
+            }
+            private void endPan(){panPointer=-1;panRemainderX=panRemainderY=0;}
             @Override public boolean onTouch(View view,MotionEvent event){
                 if("ui/original-main-menu".equals(loadedAsset)){
                     final float px=event.getX(),py=event.getY();final int action=event.getActionMasked();
@@ -117,8 +154,56 @@ public final class MainActivity extends Activity {
                 }
                 if(!inspectionMode&&loadedAsset!=null&&loadedAsset.startsWith("worlds/")){
                     final int action=event.getActionMasked();
-                    if(action==MotionEvent.ACTION_DOWN||action==MotionEvent.ACTION_UP||action==MotionEvent.ACTION_MOVE||action==MotionEvent.ACTION_CANCEL)
+                    if(action==MotionEvent.ACTION_DOWN){
+                        gestureCancelled=false;swfPointerActive=true;beginPan(event,0);
+                    }
+                    if(action==MotionEvent.ACTION_POINTER_DOWN){
+                        if(event.getPointerCount()==2&&pinchPointerA<0){
+                            int added=event.getActionIndex();
+                            pinchPointerA=event.getPointerId(added==0?1:0);
+                            pinchPointerB=event.getPointerId(added);
+                            previousPinchDistance=pinchDistance(event,pinchPointerA,pinchPointerB);
+                            // A pinch takes ownership from the original SWF pointer.
+                            // Cancel it once and suppress this whole gesture until a fresh DOWN.
+                            if(swfPointerActive){
+                                int active=pointerIndex(event,panPointer);
+                                if(active<0)active=added==0?1:0;
+                                forwardUiTouch(view,event.getX(active),event.getY(active),MotionEvent.ACTION_CANCEL,false);
+                                swfPointerActive=false;
+                            }
+                            gestureCancelled=true;endPan();
+                        }else if(pinchPointerA<0){
+                            if(swfPointerActive){
+                                int active=pointerIndex(event,panPointer);
+                                if(active<0)active=0;
+                                forwardUiTouch(view,event.getX(active),event.getY(active),MotionEvent.ACTION_CANCEL,false);
+                                swfPointerActive=false;
+                            }
+                            gestureCancelled=true;endPan();
+                        }
+                    }else if(action==MotionEvent.ACTION_MOVE&&pinchPointerA>=0){
+                        float distance=pinchDistance(event,pinchPointerA,pinchPointerB);
+                        if(distance>=0&&previousPinchDistance>0){
+                            final float before=previousPinchDistance,after=distance;
+                            surface.queueEvent(()->NativeBridge.cameraPinchZoom(before,after));
+                            previousPinchDistance=distance;
+                        }
+                    }else if(action==MotionEvent.ACTION_MOVE&&!gestureCancelled&&pinchPointerA<0&&event.getPointerCount()==1&&panPointer>=0){
+                        updatePan(event);
+                    }else if(action==MotionEvent.ACTION_POINTER_UP){
+                        int lifted=event.getPointerId(event.getActionIndex());
+                        if(pinchPointerA>=0&&(lifted==pinchPointerA||lifted==pinchPointerB))endPinch();
+                        int remaining=event.getPointerCount()-1;
+                        // Do not reclassify the remaining pinch finger as a fresh pan/SWF touch.
+                        if(gestureCancelled||remaining!=1)endPan();
+                    }else if(action==MotionEvent.ACTION_UP||action==MotionEvent.ACTION_CANCEL){
+                        endPinch();endPan();gestureCancelled=false;
+                    }
+                    if(swfPointerActive&&(action==MotionEvent.ACTION_DOWN||action==MotionEvent.ACTION_UP||action==MotionEvent.ACTION_MOVE||action==MotionEvent.ACTION_CANCEL)){
+                        if(action==MotionEvent.ACTION_UP||action==MotionEvent.ACTION_CANCEL)swfPointerActive=false;
                         return forwardUiTouch(view,event.getX(),event.getY(),action,false);
+                    }
+                    if(action==MotionEvent.ACTION_UP||action==MotionEvent.ACTION_CANCEL)gestureCancelled=false;
                     return true;
                 }
                 if(event.getActionMasked()==MotionEvent.ACTION_DOWN){x=event.getX();y=event.getY();return true;}

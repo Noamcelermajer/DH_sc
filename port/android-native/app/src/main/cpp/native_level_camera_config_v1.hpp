@@ -7,6 +7,10 @@
 
 namespace dh2::native::level_camera_config_v1 {
 
+// Level::_LoadCamera passes this CameraBase::SetData FOV on both SWAMP and
+// Crypt routes (IDA: 0x3f1008 -> 0x40e9a8; ARM immediate 0x3edbf877).
+inline constexpr float kVerticalFovRadians=0.42963001132011414f;
+
 struct ClipPlanes {
     float near_clip=0.0f;
     float far_clip=0.0f;

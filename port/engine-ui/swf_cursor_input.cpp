@@ -74,14 +74,16 @@ void cursor(Run&r,const SwfCursor16&next,std::uint32_t i){auto&slot=r.s.slots[i]
  float mouse[6]{static_cast<float>(trunc32(point[0])),static_cast<float>(trunc32(point[1]))};r.call(SwfInputOperation::notify_mouse_state,r.s.root,nullptr,nullptr,mouse,0,i);
  const bool down=next.buttons!=0;const bool down_edge=down&&old.buttons==0,up_edge=!down&&old.buttons!=0,moved=down&&!(next.x==old.x&&next.y==old.y);
  auto hit_root=(r.s.flags&4)?r.call(SwfInputOperation::root_movie,r.s.root).identity:r.s.context;
- // RenderFX normally hit-tests the retained movie root (0x04). The native
- // gameplay HUD is a separate authored input context within that movie; its
- // controls must be resolved inside menu_HUD_0 so unrelated root-level modal
- // blockers cannot mask HUDelements buttons. Other menu renderers retain the
- // source 0x84 root-hit behavior.
  const auto& context_view=r.s.context?r.view(r.s.context):SwfInputCharacter32{};
  const bool gameplay_hud=context_view.name&&!std::strcmp(context_view.name,"menu_HUD_0");
- if(gameplay_hud)hit_root=r.s.context;
+ const bool gameplay_pause=context_view.name&&!std::strcmp(context_view.name,"menu_Ingame");
+ // RenderFX hits the retained movie root. CharacterMenu, InventorySheet and
+ // FaerySheet are sibling clips there; the source depth order selects the
+ // active screen's actual child button while preserving CharacterMenu tabs.
+ // The gameplay HUD and pause modal use their local clips. In particular,
+ // menu_Ingame's Continue button is covered in the retained root hit list by
+ // the unrelated menu_hud_confirm.btnBlocker sibling.
+ if(gameplay_hud||gameplay_pause)hit_root=r.s.context;
  Strong root(r,hit_root);float hit_point[6]{mul(point[0],20.f),mul(point[1],20.f)};
  Strong hit(r,hit_root?r.call(SwfInputOperation::topmost,hit_root,nullptr,nullptr,hit_point).identity:0);
  Strong old_focus(r,slot.focus);
