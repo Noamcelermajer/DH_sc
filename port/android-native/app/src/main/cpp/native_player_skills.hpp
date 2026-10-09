@@ -18,6 +18,11 @@ namespace dh2::data {struct AiTables;struct AnimationTables;}
 namespace dh2::data::savegame_options_v1 {class Owner;}
 namespace dh2::native::debug_files {class Backend;}
 namespace dh2::native::player_skills {
+enum class SkillCallback : std::uint32_t {pre,use,post};
+struct SkillCallbackResult {
+    std::uint32_t value=0,call_count=0;
+    std::int32_t last_lua_status=0;
+};
 struct Bindings {
     std::uintptr_t character=0,ai=0;
     std::shared_ptr<void> ai_lifetime;
@@ -103,6 +108,14 @@ public:
     bool hud_info(bool faery,std::uint32_t list_index,bool refresh_usable,
                   std::uint32_t& usable,float& cooldown_fraction,
                   std::string& error);
+    // Invoke one original Player skill Lua callback through the same retained
+    // VM/prepared instance used by HUD checks. The source caller owns timing:
+    // OnPreSkill belongs to AI_BeginSkill's passive-skill branch, OnSkill to
+    // the selected skill animation event, and OnPostSkill to its source tail.
+    // This method does not begin/end a cast, change the FSM, or synthesize an
+    // animation event; do not call SkillCallback::use directly from a HUD tap.
+    int invoke_skill_callback(std::uint32_t skill_slot,
+        SkillCallback callback,SkillCallbackResult& result,std::string& error);
     // Source CharAI::OnDied only. Character::Kill/rewards/event2 caller is a
     // separate integration boundary; this retains the same AIS and VM.
     void died(std::uintptr_t killer);

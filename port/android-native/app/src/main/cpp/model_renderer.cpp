@@ -1298,6 +1298,7 @@ struct NativeWorldItem {
  std::array<float,3> position{};
  dh2::physical::NativeBody body{};
  BodyOwner body_owner;
+ std::uint32_t player_pickup_lock_ms=0;
  bool pending_interact=false;
  explicit NativeWorldItem(dh2::data::ItemInstanceV1* value):item(value){body_owner.native=&body;body_owner.world_item=this;}
 };
@@ -1311,7 +1312,7 @@ void destroy_native_world_item_bodies();
 void clear_native_world_item_resources();
 bool drop_actor_loot(ObjectActor&,std::uint64_t killer_identity,std::string&);
 bool ensure_native_world_items(std::string&);
-void update_native_world_items_after_step();
+void update_native_world_items_after_step(std::uint32_t);
 void BodyOwner::collision(void* raw,dh2::physical::ContactEvent event,void* other,
                           const float*,unsigned) {
  auto& owner=*static_cast<BodyOwner*>(raw);
@@ -1320,7 +1321,8 @@ void BodyOwner::collision(void* raw,dh2::physical::ContactEvent event,void* othe
  if((event!=dh2::physical::ContactEvent::add&&
      event!=dh2::physical::ContactEvent::persist)||!owner.world_item||!other)return;
  const auto& peer=*static_cast<BodyOwner*>(other);
- if(peer.is_player&&!prince_combat.life.dead&&
+ if(peer.is_player&&!owner.world_item->player_pickup_lock_ms&&
+    !prince_combat.life.dead&&
     (prince_state.current==4||prince_state.current==19))
   owner.world_item->pending_interact=true;
 }
@@ -5487,7 +5489,7 @@ void advance_native_actor(unsigned dt_ms){
   if(!prince_locomotion.scene_phase(std::uint32_t(scene_clock),prince_attack_clips,prince_visual,current_scene,error))throw std::runtime_error(error);
   prince_scene_phase=false;
  actor_world.update(dt_ms);++native_physics_steps;
- update_native_world_items_after_step();
+ update_native_world_items_after_step(dt_ms);
  // This renderer advances the authored timer and FSM subset after the world
  // step. The CharAI frame belongs between these calls; native Ghost AI is not
  // wired yet, so do not report this interim sequence as a complete update.
@@ -7203,7 +7205,7 @@ bool drop_actor_loot(ObjectActor& victim,std::uint64_t killer_identity,std::stri
   unsigned(selection.infinite_loot_drops));
  victim.loot_dropped=true;error.clear();return true;
 }
-void update_native_world_items_after_step() {
+void update_native_world_items_after_step(std::uint32_t dt_ms) {
  for(auto& group:object_groups)for(auto& actor:group.instances)if(actor.loot_retry_pending){
   if(actor.loot_retry_delay_frames){--actor.loot_retry_delay_frames;continue;}
   std::string error;
@@ -7211,6 +7213,10 @@ void update_native_world_items_after_step() {
   else actor.loot_retry_delay_frames=30;
  }
  if(!prince_combat.inventory)return;
+ for(auto& item:native_world_items){
+  if(item->player_pickup_lock_ms<=dt_ms)item->player_pickup_lock_ms=0;
+  else item->player_pickup_lock_ms-=dt_ms;
+ }
  for(auto& item:native_world_items)if(item->body.body){
   const auto point=item->body.body->GetPosition();
   item->position[0]=point.x*100.f;item->position[1]=point.y*100.f;
@@ -7249,6 +7255,73 @@ void update_native_world_items_after_step() {
  }
 }
 } // namespace
+
+bool ui_player_drop_inventory_item(std::uintptr_t identity,std::int32_t item_index,
+                                   std::string& error) {
+ // NativeInvDropItem (IDA 0x43cfb4) transfers one Item then reaches
+ // DropInventory (0x3ec974); its player-scatter and five-second lock are
+ // supplied below through the existing world projection and inventory RNG.
+ std::uintptr_t current=0;
+ if(!ui_player_identity(current,error))return false;
+ if(identity!=current||!world_mode||!native_actor_ready||!prince_combat.inventory){
+  error="Inventory drop requires the active offline Player and canonical V4 inventory";
+  return false;
+ }
+ if(item_index<0){error="Inventory drop index is negative";return false;}
+ if(!ensure_native_world_items(error))return false;
+
+ struct DropContext { std::uintptr_t character; } context{identity};
+ const auto is_online=[](void*,bool& online,std::string& message){
+  online=native_host.online!=0;message.clear();return true;
+ };
+ const auto spawn_and_lock=[](void* raw,dh2::data::FreshInventoryOwnedV4& owner,
+       std::size_t world_index,dh2::data::ItemInstanceV1* item,
+       std::string& message){
+  if(!raw){message="Inventory drop has no retained Player context";return false;}
+  auto& drop=*static_cast<DropContext*>(raw);
+  if(drop.character!=prince_character.identity()||
+     !prince_combat.inventory||&owner!=prince_combat.inventory.get()||
+     world_index>=owner.world_items().size()||!item||
+     !owner.world_items()[world_index]||owner.world_items()[world_index]->item.get()!=item){
+   message="Inventory drop crossed the active Character, V4 owner or transferred Item";
+   return false;
+  }
+  auto random=dh2::random_lifecycle::inventory_random_service();
+  std::int32_t x=0,y=0;
+  if(!random.next||!random.next(random.context,500,0,x,message)||
+     !random.next(random.context,500,0,y,message)){
+   if(message.empty())message="Source process RNG unavailable for player Item drop";
+   return false;
+  }
+  const std::array<float,3> position{
+      actor_position[0]+float(x-250),actor_position[1]+float(y-250),actor_position[2]};
+  if(!project_world_item(item,position,message))return false;
+  const auto projected=std::find_if(native_world_items.begin(),native_world_items.end(),
+      [item](const auto& value){return value&&value->item==item;});
+  if(projected==native_world_items.end()){
+   message="Source ItemManager spawn has no matching native world projection";return false;
+  }
+  // ItemObject::DropInventory writes the source 5000 ms lock and local player
+  // ID to the spawned Item. The current runtime is a single-player host, so
+  // this local owner timer represents that exact player-scoped lock.
+  (*projected)->player_pickup_lock_ms=5000;
+  message.clear();return true;
+ };
+ NativeLootAdapterV1 adapter{prince_combat.item_text,
+                             prince_combat.item_presentation.get()};
+ const dh2::data::OfflineWorldItemDropServicesV4 drop_services{
+     &context,is_online,spawn_and_lock};
+ std::int32_t world_index=-1;
+ const bool dropped=prince_combat.inventory->drop_inventory_item_offline(
+     static_cast<std::uint32_t>(item_index),adapter.inventory_services(),
+     drop_services,world_index,error);
+ if(dropped){
+  __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+      "Source NativeInvDropItem completed | inventory index %d | world item %d | player pickup lock 5000 ms",
+      item_index,world_index);
+ }
+ return dropped;
+}
 
 bool retire_staged_world_loot_item(std::size_t index,std::string& error) {
  if(!world_mode||!prince_combat.inventory||!prince_combat.item_presentation){

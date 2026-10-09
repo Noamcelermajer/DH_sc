@@ -1040,6 +1040,48 @@ bool Runtime::hud_info(bool faery,std::uint32_t index,bool refresh_usable,
                        std::string& error){
  return impl_->hud_info(faery,index,refresh_usable,usable,cooldown_fraction,error);
 }
+int Runtime::invoke_skill_callback(std::uint32_t skill_slot,
+    SkillCallback callback,SkillCallbackResult& result,std::string& error){
+ auto& s=*impl_;error.clear();
+ player_skill_use_session_v1::Callback source_callback{};
+ switch(callback){
+ case SkillCallback::pre:source_callback=player_skill_use_session_v1::Callback::pre;break;
+ case SkillCallback::use:source_callback=player_skill_use_session_v1::Callback::use;break;
+ case SkillCallback::post:source_callback=player_skill_use_session_v1::Callback::post;break;
+ default:error="Player skill callback phase is invalid";return -1;
+ }
+ if(!s.initialized||s.update_blocked||!s.uses||!s.preparation||!s.session||
+    !s.bindings.coordinator||!s.bindings.source_ai||
+    s.bindings.coordinator->owner()!=s.bindings.character||
+    s.session->character_identity()!=s.bindings.character||
+    s.bindings.source_ai->owner_04!=s.bindings.character||
+    s.bindings.source_ai->active_ais_1c!=s.ais.ais){
+  error="Player skill callback requires the initialized same Character, AIS, Coordinator and retained VM";
+  return -1;
+ }
+ const auto& slots=s.preparation->slots(dh2::character_ai_set_skills_and_spells::List::skill);
+ if(skill_slot>=slots.size()){
+  error="Player skill callback slot is outside the retained prepared skill vector";
+  return -1;
+ }
+ if(!slots[skill_slot]){
+  error="Player skill callback slot has no retained source script instance";
+  return -1;
+ }
+ const auto* instance=s.preparation->instance(slots[skill_slot]);
+ if(!instance||instance->character!=s.bindings.character||instance->identity!=slots[skill_slot]){
+  error="Player skill callback instance no longer belongs to the active Character";
+  return -1;
+ }
+ player_skill_use_session_v1::Result source_result{};
+ const auto status=s.uses->invoke(player_skill_use_session_v1::List::skill,
+                                  skill_slot,source_callback,source_result,error);
+ if(status==0){
+  result.value=source_result.value;result.call_count=source_result.call_count;
+  result.last_lua_status=source_result.last_lua_status;
+ }
+ return status;
+}
 void Runtime::state_service(std::uint32_t service){
  auto& s=*impl_;if(!s.focus_services)throw std::runtime_error("Native Character cleanup owner unavailable");
  s.refresh_properties();dh2::character_dead_focus_services_v1::Result result{};

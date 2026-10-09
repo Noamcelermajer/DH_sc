@@ -147,6 +147,7 @@ bool ui_player_active_faery(std::uintptr_t,std::int32_t&,std::int32_t&,std::stri
 bool ui_player_set_active_faery(std::uintptr_t,std::uint32_t,std::string&);
 bool ui_player_faery_unlocked(std::uintptr_t,std::uint32_t,bool&,std::string&);
 bool ui_player_inventory_gold(std::uintptr_t,std::int32_t&,std::string&);
+bool ui_player_drop_inventory_item(std::uintptr_t,std::int32_t,std::string&);
 bool ui_player_inventory_slot(std::uintptr_t,std::int32_t,std::vector<UiInventoryItemReadV1>&,std::string&);
 bool ui_player_inventory_item_details(std::uintptr_t,std::int32_t,std::uint32_t,
                                       UiItemDetailsReadV1&,std::string&);

@@ -977,6 +977,19 @@ struct OriginalUiSession::Impl {
             if(fn.result)fn.result->set_as_object(array);
             return true;
         }
+        if(!std::strcmp(name,"NativeInvDropItem")){
+            // IDA 0x43cfb4: one numeric inventory index, then offline
+            // TransferItemTo(index, temporary, 1, false, false) and
+            // ItemObject::DropInventory. The V4 inventory and its attached
+            // world-drop provider remain the single state owner.
+            if(fn.nargs!=1||!fn.arg(0).is_number())return true;
+            std::int32_t item_index=0;
+            if(!start_integer(&self,fn.arg(0).to_number(),item_index,error))return false;
+            std::uintptr_t identity=0;
+            if(!local_character(0,false,identity))return false;
+            if(!identity)return true;
+            return model_renderer::ui_player_drop_inventory_item(identity,item_index,error);
+        }
         if(!std::strcmp(name,"NativeInvGetEquipedItem")){
             // 0x43d790 writes ItemName, ItemIndex and ItemColor(power count)
             // into arg 1 and returns whether the requested slot is occupied.
@@ -1938,7 +1951,10 @@ struct OriginalUiSession::Impl {
         services.native_actions={"NativePlaySoundFX","NativePushMenu","NativePushState","NativePopMenu","NativePopAllAbove","NativePopAllMenus","NativeGetCreditMovement","NativeBackToHud","NativeAwayFromHud","NativeIsMultiplayerEnabled"};services.native_action=native_action;
         if(front_screen=="main")for(const auto* action:{"NativeGetSaveSlotDetails","NativeCreateSaveSlot","NativeAssignSaveSlotToPlayer","NativeSetSaveSlotIDToMainMenu","NativeStartGame","NativeHasPushNotification","NativeStartFromGCInvite"})services.native_actions.emplace_back(action);
         if(front_screen=="main"||live_player)services.native_actions.emplace_back("NativeGetParsedString");
-        // Keep these source actions unregistered until their canonical projection/owner paths are selected: quest journal, item drop, and HUD skill cast.
+        // Keep HUD skill use unregistered until NativeHUDSkill can follow the
+        // source Cmd_BeginSkill/Cmd_EndSkill and state-6 do_skill event path.
+        // OnSkill belongs to that animation event, never directly to onRelease.
+        // Quest journal still lacks its source level/event owner.
         if(live_player)for(const auto* action:{"NativeGetOptionParameters","NativeUseIpodPlayer","NativeUpdateOrientation","NativePauseAllSounds","NatvieResumeAllSounds","NativePauseMusic","NativeScreenIsBlack","NativeGetPossibleClassSpec","NativeTouchToMove","NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
             "NativeSkillsGetSkillPointsLeft","NativeSkillsTrainSkill","NativeEquipSkill","NativeGetPlayerStats","NativeStatsAssignPoint","NativeSaveGame","NativeSetCurrentQuest","NativeIsMultiplayerGame",
             "NativeShowStatusBar",
@@ -1947,7 +1963,7 @@ struct OriginalUiSession::Impl {
             "NativeGetCharMenuTutorialMessage","NativeSkipCharMenuTutorialMessage","NativeHUDGetActiveFaery","NativeHUDGetIsFaeryUnlocked",
             "NativeHUDSetActiveFaery",
 
-            "NativeInvEquipItem","NativeInvUnequipItem","NativeInvAutoEquipSlot","NativeSwapEquipment","NativeInvGetItemsListForSlot","NativeInvGetItemDetails","NativeInvGetEquipedItem",
+            "NativeInvDropItem","NativeInvEquipItem","NativeInvUnequipItem","NativeInvAutoEquipSlot","NativeSwapEquipment","NativeInvGetItemsListForSlot","NativeInvGetItemDetails","NativeInvGetEquipedItem",
             "NativeInvTransmuteItem","NativeInvGetHasOffHandWeapon","NativeInvGetHasTwoHandedWeapon","NativeInvGetPlayerGold",
             "NativeGetNumPotions","NativeGetStringNumPotions","NativeUsePotion","NativeChangeRolloverInputBehavior"})services.native_actions.emplace_back(action);
         if(front_screen=="main")for(const auto* action:{"NativeGetOptionParameters","NativeSetOptions","NativeLoadSettings","NativeSaveSettings","NativeEnterOptionMenu","NativeRefreshHudManager","NativeChangeRolloverInputBehavior","NativeIsJapaneseVersion","NativeIsKorean","NativeDoWeHaveInternet"})services.native_actions.emplace_back(action);
