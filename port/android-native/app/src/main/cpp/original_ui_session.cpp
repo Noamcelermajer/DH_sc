@@ -1726,6 +1726,23 @@ struct OriginalUiSession::Impl {
         }
         if(change.pushed&&!graph.invoke(menu,menu,"onPush",{},result,callable,error))return false;
         if(!graph.invoke(menu,menu,"onShow",{},result,callable,error))return false;
+        if(change.name=="menu_MapSheet"){
+            // Source MenuCharMenu_Map::Show calls ShowLevelName after opening.
+            // That reads the active LevelList row's +0x24 string ID, resolves
+            // it through StringManager, and writes the MapName text field.
+            const auto string_id=model_renderer::ui_current_level_name_id();
+            if(string_id>=0){
+                std::string text;ui::SwfAsValue field;
+                if(!change.self->localization.string_id(static_cast<std::uint32_t>(string_id),
+                        change.self->text_services(),text,error))return false;
+                if(!graph.find_target(root,"menu_MapSheet.MapName",field,error)||!field.identity()){
+                    error="Required authored map title field absent";return false;
+                }
+                if(!graph.set_member(field,"htmlText",ui::SwfAsValue::text(text.c_str()),accepted,error))return false;
+                __android_log_print(ANDROID_LOG_INFO,tag,
+                    "Original map level title updated | row string id %d | text %s",string_id,text.c_str());
+            }
+        }
         return true;
     }
     bool transition_menu(const std::string& previous,const std::string& next,bool pushed,std::string& error){

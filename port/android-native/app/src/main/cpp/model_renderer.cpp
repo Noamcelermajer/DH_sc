@@ -3375,6 +3375,16 @@ std::string start_menu_game(std::int32_t slot,AAssetManager* assets,std::int32_t
  }catch(const std::exception& e){pending_menu_start={};return std::string("Start Game failed: ")+e.what();}
 }
 std::vector<std::uint8_t> read_asset(AAssetManager* assets,const std::string& name){return read(assets,name,"");}
+std::int32_t ui_current_level_name_id() noexcept {
+ if(!world_mode)return -1;
+ // IDA MenuCharMenu_Map::ShowLevelName (0x45335c) uses current Level+0x3c
+ // as a LevelList index and reads row+0x24. The decoded row exposes that
+ // source field as level_name_id.
+ std::int32_t row=active_level_assets.row;
+ if(row==-1)row=0;
+ if(row<0||std::size_t(row)>=actor_level_tables.levels.size())return -1;
+ return actor_level_tables.levels[std::size_t(row)].level_name_id;
+}
 void reset_context(){
  // EGL has already replaced the context. Forget its old GPU names before a
  // fallible CPU snapshot; deleting those names here could affect the new context.
