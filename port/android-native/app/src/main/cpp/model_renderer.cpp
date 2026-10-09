@@ -35,6 +35,8 @@
 #include "item_power_tables_v5.hpp"
 #include "loot_power_resources_v7.hpp"
 #include "fresh_inventory_owned_v4.hpp"
+#include "../../../../../game-data/player_add_loot_v1.hpp"
+#include "../../../../../level-world/player_initial_equipment_v1.hpp"
 #include "character_inventory_selection_v1.hpp"
 #include "player_savegame_v1.hpp"
 #include "player_saved_skill_slots_v1.hpp"
@@ -2208,6 +2210,7 @@ struct PlayerEquipmentNativeV1 {
  NativeLootAdapterV1 inventory_adapter{};
  dh2::data::EquipmentLiveHooksV1 hooks{};
  std::unique_ptr<dh2::data::PlayerEquipmentLiveServicesV1> services;
+ dh2::data::OwnedInventoryServicesV4 live_services{};
  std::vector<PartIdentity> parts;
  std::vector<std::size_t> draw_part;
 
@@ -2296,6 +2299,80 @@ struct PlayerEquipmentNativeV1 {
                                              native_request,response,error))return false;
   result=response.value;error.clear();return true;
  }
+ static int initial_equipment_backend(void* raw,
+     const dh2::player_initial_equipment_v1::Request* request,
+     dh2::player_initial_equipment_v1::Reply* reply,std::string& error){
+  auto& self=*static_cast<PlayerEquipmentNativeV1*>(raw);
+  using Operation=dh2::player_initial_equipment_v1::Operation;
+  if(!request||!reply||!prince_combat.inventory||
+     request->character!=prince_combat.inventory->character()||
+     request->inventory!=prince_combat.inventory.get()||
+     request->equipment_services!=&self.live_services){
+   error="Initial equipment request is detached from the live Character/V4/equipment owners";return 1;
+  }
+  *reply={};
+  if(request->operation==Operation::online){reply->word=native_host.online?1u:0u;error.clear();return 0;}
+  if(request->operation==Operation::online_player_record){
+   error="Online InitEquipment requires the unavailable live PlayerInfo record provider";return 1;
+  }
+  if(request->operation!=Operation::add_loot){error="Unknown source InitEquipment operation";return 1;}
+  if(!prince_combat.loot_power_creation||!prince_combat.item_power_tables||
+     !prince_combat.item_presentation||!prince_combat.inventory_loot_tables){
+   error="Initial equipment requires retained source loot, item power, presentation, and inventory owners";return 1;
+  }
+  if(request->arguments[1]!=0||request->arguments[2]!=0||
+     request->arguments[3]!=-1||request->arguments[4]!=0){
+   error="Initial equipment AddLoot arguments differ from Character::_InitEquipment";return 1;
+  }
+  auto inventory_services=self.inventory_adapter.inventory_services();
+  dh2::data::OwnedInventoryResponseV4 response{};
+  const dh2::data::OwnedInventoryRequestV4 count_request{
+   dh2::data::OwnedInventoryOperationV4::player_count,0x4043a8,nullptr,nullptr,0,0};
+  if(!NativeLootAdapterV1::invoke_inventory(&self.inventory_adapter,
+      *prince_combat.inventory,count_request,response,error))return 1;
+  if(response.value!=1){error="Initial equipment requires the recovered single-player class-count projection";return 1;}
+  dh2::data::LootEntrySelectionContextV1 selection{};
+  if(!prince_combat.profile_characters||prince_combat.character_class<0||
+     std::size_t(prince_combat.character_class)>=prince_combat.profile_characters->names.size()){
+   error="Initial equipment has no retained Character row for class-count selection";return 1;
+  }
+  const auto& source_class_name=prince_combat.profile_characters->names[std::size_t(prince_combat.character_class)];
+  if(source_class_name=="KnightPlayerBase")selection.player_counts.warrior=1;
+  else if(source_class_name=="RoguePlayerBase")selection.player_counts.rogue=1;
+  else if(source_class_name=="MagePlayerBase")selection.player_counts.mage=1;
+  else{error="Initial equipment has no source class-count mapping for "+source_class_name;return 1;}
+  const dh2::data::OwnedInventoryRequestV4 debug_load{
+   dh2::data::OwnedInventoryOperationV4::debug_load,0x337888,nullptr,nullptr,0,0};
+  if(!NativeLootAdapterV1::invoke_inventory(&self.inventory_adapter,
+      *prince_combat.inventory,debug_load,response,error))return 1;
+  const dh2::data::OwnedInventoryRequestV4 infinite_loot{
+   dh2::data::OwnedInventoryOperationV4::debug_query,0x337a88,nullptr,"InfiniteLootDrops",0,0};
+  if(!NativeLootAdapterV1::invoke_inventory(&self.inventory_adapter,
+      *prince_combat.inventory,infinite_loot,response,error))return 1;
+  selection.infinite_loot_drops=response.value!=0;
+  std::unique_ptr<dh2::data::ItemInstanceV1> pending;
+  const dh2::data::ItemTextServicesV5 text=self.inventory_adapter.text_services();
+  const dh2::data::player_add_loot_v1::Bindings add_bindings{
+   request->character,prince_combat.inventory.get(),
+   prince_combat.properties.resolved.data()+9,&selection,native_save_difficulty,
+   {&pending},&inventory_services,prince_combat.loot_power_creation.get(),
+   prince_combat.item_power_tables->borrow(),text};
+  const dh2::data::player_add_loot_v1::Request add_request{
+   request->character,{request->arguments[0],request->arguments[1],
+    request->arguments[2],request->arguments[3],request->arguments[4]}};
+  dh2::data::player_add_loot_v1::Result add_result{};
+  const auto status=dh2::data::player_add_loot_v1::invoke(
+      add_bindings,add_request,&add_result,error);
+  if(status!=dh2::data::player_add_loot_v1::Status::complete||pending){
+   if(pending){std::string retirement_error;
+    if(!prince_combat.inventory->retire_item({&pending},inventory_services,retirement_error))
+     error+=(error.empty()?"":"; ")+std::string("pending initial Item retirement failed: ")+retirement_error;
+   }
+   if(error.empty())error="Source ItemInventory::AddLoot did not complete";
+   return 1;
+  }
+  error.clear();return 0;
+ }
  bool initialize(AAssetManager* manager,const std::vector<std::uint8_t>& bres,
                  std::string& error){
   assets=manager;
@@ -2317,6 +2394,25 @@ struct PlayerEquipmentNativeV1 {
   services=std::make_unique<dh2::data::PlayerEquipmentLiveServicesV1>(
       *prince_combat.inventory,properties,actor_class_rows.data(),
       std::uint32_t(actor_class_rows.size()),prince_combat.item_power_tables->borrow(),hooks);
+  live_services=services->services();
+  error.clear();return true;
+ }
+ bool initialize_source_initial_equipment(std::string& error){
+  if(!services||!prince_combat.inventory){error="Initial equipment requires the live equipment/V4 owners";return false;}
+  const dh2::player_initial_equipment_v1::Bindings bindings{
+   prince_combat.inventory->character(),prince_combat.inventory.get(),&properties,
+   &live_services,{this,initial_equipment_backend}};
+  try{
+   dh2::player_initial_equipment_v1::Runtime runtime(bindings);
+   dh2::player_initial_equipment_v1::Result result{};
+   if(runtime.initialize(&result,error)!=dh2::player_initial_equipment_v1::Status::complete){
+    if(error.empty())error="Character::_InitEquipment continuation failed";return false;
+   }
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+    "Source Character::_InitEquipment | decision %u | loot %d | added %zu | auto-equip calls %u | canonical V4 inventory | native InitPost continuation",
+    unsigned(result.decision),result.loot,
+    prince_combat.inventory->items().size(),result.auto_equip_calls);
+  }catch(const std::exception& exception){error=exception.what();return false;}
   if(!services->refresh(false,error))return false;
   error.clear();return true;
  }
@@ -2414,6 +2510,7 @@ bool initialize_player_equipment_native(AAssetManager* assets,
     const std::vector<std::uint8_t>& prince,std::string& error){
  clear_player_equipment_native(true);auto owner=std::make_unique<PlayerEquipmentNativeV1>();
  if(!owner->initialize(assets,prince,error)){owner->services.reset();owner->visual.reset();return false;}
+ if(!owner->initialize_source_initial_equipment(error)){owner->services.reset();owner->visual.reset();return false;}
  player_equipment_native=std::move(owner);
  __android_log_print(ANDROID_LOG_INFO,"DH2Native",
     "Native player equipment connected | visual %016llx | canonical V4 %016llx | views %zu",

@@ -1440,7 +1440,19 @@ struct OriginalUiSession::Impl {
         for(std::size_t id=0;id<std::size(original_sounds);++id){
             const auto& record=original_sounds[id];
             if(requested!=record.name)continue;
-            if(!record.menu_backend){error=std::string("Required sound backend unavailable: ")+requested;return false;}
+            if(!record.menu_backend){
+                // The authored gameplay movie invokes NativePlaySoundFX while
+                // opening item-detail pages (for example PickupWeapon). The
+                // Android build currently has only the five menu-effect
+                // assets/player; treating an unavailable optional effect as
+                // a failed SWF event aborts the whole page transition. Keep
+                // source navigation and state updates intact until a gameplay
+                // SoundFX owner is connected.
+                __android_log_print(ANDROID_LOG_INFO,tag,
+                    "Original SoundFX skipped | name %s | file %s | gameplay audio owner unavailable",
+                    record.name,record.file);
+                return true;
+            }
             self.menu_sounds.emplace_back(record.file);
             __android_log_print(ANDROID_LOG_INFO,tag,"Original menu sound requested | name %s | id %zu | file %s",requested.c_str(),id,record.file);
             return true;
