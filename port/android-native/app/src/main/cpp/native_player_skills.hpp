@@ -116,14 +116,13 @@ public:
     const std::vector<std::uintptr_t>* prepared_skill_scripts()const noexcept;
     // Resolve NativeHUDSkill's HUD slot through the canonical Save map to its
     // selected SkillList/Save row and same-index retained Player script. The
-    // SkillList selector is explicit so this does not infer a Character field.
+    // SkillList selector is explicit for callers that have a source value.
     bool resolve_hud_skill_slot(std::int32_t hud_slot,
         std::int32_t skill_list_selector,
         player_hud_skill_slot_resolution_v1::Result&,
         std::string& error)const;
-    // Production selector path: use the active resolved Character SkillTree
-    // property and the source Character fallback row 3 when that value is
-    // outside the decoded SkillList table.
+    // Character+0x1068 is CharProperties.resolved[28]. Both convenience
+    // resolvers use that proven selector and fallback SkillList 3.
     bool resolve_hud_skill_slot(std::int32_t hud_slot,
         player_hud_skill_slot_resolution_v1::Result&,
         std::string& error)const;
@@ -133,6 +132,9 @@ public:
     // no Skill, VM, Save row, or state-machine owner.
     bool resolve_character_skill_row(std::uint32_t skill_index,
         std::int32_t skill_list_selector,
+        character_ai_skill_commands_v1::SkillRow&,
+        std::string& error)const;
+    bool resolve_character_skill_row(std::uint32_t skill_index,
         character_ai_skill_commands_v1::SkillRow&,
         std::string& error)const;
     // CharAI::AI_IsSkillCheck_Usable/Active over that same vector and retained

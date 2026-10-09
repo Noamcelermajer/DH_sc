@@ -1127,6 +1127,23 @@ bool Runtime::resolve_character_skill_row(std::uint32_t skill_index,
  }
  output=value;error.clear();return true;
 }
+bool Runtime::resolve_character_skill_row(std::uint32_t skill_index,
+    character_ai_skill_commands_v1::SkillRow& output,
+    std::string& error)const{
+ auto& s=*impl_;error.clear();
+ if(!s.bindings.tables){
+  error="Character::GetCharSkill requires the active retained SkillTables";
+  return false;
+ }
+ auto selector=s.property_view.resolved[28];
+ if(selector<0||std::size_t(selector)>=s.bindings.tables->skills().skill_lists.size())
+  selector=3;
+ if(std::size_t(selector)>=s.bindings.tables->skills().skill_lists.size()){
+  error="Character::GetCharSkill source fallback SkillList 3 is unavailable";
+  return false;
+ }
+ return resolve_character_skill_row(skill_index,selector,output,error);
+}
 int Runtime::skill_check(std::uint32_t skill_slot,bool active,
                          std::uint32_t& value,std::string& error){
  auto& s=*impl_;error.clear();value=0;
