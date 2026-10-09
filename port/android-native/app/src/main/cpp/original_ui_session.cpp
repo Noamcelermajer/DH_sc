@@ -1010,15 +1010,18 @@ struct OriginalUiSession::Impl {
             return true;
         }
         if(!std::strcmp(name,"NativeInvEquipItem")){
-            // 0x44e600: [itemIndex, equipmentSlot, playerIndex].
+            // IDA 0x43e600 calls NativeGetPlayerChar(arg2), then
+            // Character::EquipItemToSlot(arg0, arg1). The Character method
+            // forwards (slot, itemIndex) to ItemInventory: [slot, item, player].
             if(fn.nargs!=3||!fn.arg(0).is_number()||!fn.arg(1).is_number()||!fn.arg(2).is_number())return true;
             std::uintptr_t identity=0;
             if(!local_character(fn.arg(2).to_int(),false,identity))return false;
             if(!identity)return true;
-            return model_renderer::ui_player_equip_item(identity,fn.arg(0).to_int(),fn.arg(1).to_int(),error);
+            return model_renderer::ui_player_equip_item(identity,fn.arg(1).to_int(),fn.arg(0).to_int(),error);
         }
         if(!std::strcmp(name,"NativeInvUnequipItem")){
-            // 0x44ef64: [equipmentSlot, playerIndex].
+            // IDA 0x43ef64 calls NativeGetPlayerChar(arg1), then
+            // Character::UnequipItemFromSlot(arg0): [equipmentSlot, player].
             if(fn.nargs!=2||!fn.arg(0).is_number()||!fn.arg(1).is_number())return true;
             std::uintptr_t identity=0;
             if(!local_character(fn.arg(1).to_int(),false,identity))return false;
@@ -1026,7 +1029,8 @@ struct OriginalUiSession::Impl {
             return model_renderer::ui_player_unequip_item(identity,fn.arg(0).to_int(),error);
         }
         if(!std::strcmp(name,"NativeInvAutoEquipSlot")){
-            // 0x44da2c: [equipmentSlot, playerIndex]; -1 requests a full set.
+            // IDA 0x43da2c calls NativeGetPlayerChar(arg1), then uses arg0
+            // as equipmentSlot; -1 requests a full set: [slot, player].
             if(fn.nargs!=2||!fn.arg(0).is_number()||!fn.arg(1).is_number())return true;
             std::uintptr_t identity=0;
             if(!local_character(fn.arg(1).to_int(),false,identity))return false;
