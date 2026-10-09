@@ -33,7 +33,8 @@ target_sources(dh2_level_world PRIVATE camera_level_runtime_v1.cpp player_camera
 target_sources(dh2_level_world PRIVATE character_aggro_character_list.cpp character_aggro_object_manager_list.cpp)
 target_sources(dh2_level_world PRIVATE physical_world.cpp physical_lifecycle.cpp native_body.cpp visual_motion.cpp move_state.cpp player_root_motion_policy_v1.cpp decor_body_config.cpp visual_timeline.cpp actor_rotation.cpp actor_runtime.cpp actor_playback.cpp decor_scene.cpp character_scene.cpp)
 target_sources(dh2_level_world PRIVATE character_state.cpp animation_blender.cpp)
-target_sources(dh2_level_world PRIVATE character_coordinator.cpp native_player_character_owner_v1.cpp)
+target_sources(dh2_level_world PRIVATE character_coordinator.cpp native_player_character_owner_v1.cpp
+ character_ai_skill_machine_projection_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_factory.cpp)
 target_sources(dh2_level_world PRIVATE crypt_spawn_script_session.cpp crypt_spawn_trigger.cpp
  ../script-runtime/script_runtime.cpp ../pydata-scripts/native/pydata_scripts.cpp

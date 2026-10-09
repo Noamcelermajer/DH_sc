@@ -267,6 +267,9 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Select bounded CharAI Begin/End/Use skill-command kernel in
   `dh2_level_world`: 16 ARM comparisons, 13 source cases, four failure prefixes,
   two guards and shared-Player-VM passive checks pass. Player activation remains open.
+- [x] Add the borrowed CharStateMachine fields needed by that kernel to the
+  Android-selected build; IDA/REA field mapping and ARM64/x86_64 compilation pass.
+  Host regression is authored but not run; production binding and HUD activation remain open.
 - [x] Run bounded authored Ghost `LoadNInitScriptProcess(true)` through HP/MP,
   SetSkillsAndSpells, UpdateAllSkills, Post and Final in source order: 0 ordinary
   skill entries and 5 null-script faeries on the same retained VM.

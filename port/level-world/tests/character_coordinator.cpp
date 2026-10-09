@@ -1,5 +1,7 @@
 #include "character_coordinator.hpp"
+#include "character_ai_skill_machine_projection_v1.hpp"
 #include "character_skill_state_dispatch_v1.hpp"
+#include "character_skill_state_queries.hpp"
 
 #include <cstdio>
 #include <stdexcept>
@@ -159,6 +161,44 @@ int main() {
         bool rejected = false;
         try { unbound.bind({}); } catch (const std::invalid_argument&) { rejected = true; }
         check(rejected, "missing source services accepted");
+
+        Coordinator machine_owner(0x100000002ull, 1);
+        dh2::character_ai_skill_machine_projection_v1::Projection skill_machine(
+            machine_owner, machine_owner.owner(), 0x100000003ull);
+        auto* command_character = skill_machine.character();
+        auto* command_machine = skill_machine.machine();
+        check(command_character->identity == machine_owner.owner() &&
+              command_character->skill_machine_4fc == command_machine &&
+              command_machine->owner_04 == machine_owner.owner() &&
+              command_machine->identity != 0 &&
+              command_machine->state_query->current_state_id ==
+                  &machine_owner.state.current &&
+              skill_machine.state_query() == command_machine->state_query &&
+              *command_machine->animation_28 == -1 &&
+              *command_machine->skill_index_54 == 0 &&
+              *command_machine->moving_58 == 0,
+              "skill machine did not borrow Coordinator state with source constructor fields");
+        dh2::character_skill_state_queries::Result skill_state{};
+        machine_owner.state.current = 6;
+        check(dh2::character_skill_state_queries::is_using_skill(
+                  command_machine->state_query, &skill_state) ==
+                  dh2::character_skill_state_queries::Status::complete &&
+              skill_state.value == 1,
+              "skill machine query did not read the Coordinator's live state ID");
+        *command_machine->animation_28 = 0x1234;
+        *command_machine->skill_index_54 = 7;
+        *command_machine->moving_58 = 1;
+        check(*command_machine->animation_28 == 0x1234 &&
+              *command_machine->skill_index_54 == 7 &&
+              *command_machine->moving_58 == 1 &&
+              machine_owner.state.current == 6,
+              "skill machine fields were not retained separately from the sole FSM state");
+        rejected = false;
+        try {
+            dh2::character_ai_skill_machine_projection_v1::Projection wrong_owner(
+                machine_owner, 0x100000004ull, 0x100000003ull);
+        } catch (const std::invalid_argument&) { rejected = true; }
+        check(rejected, "skill machine projection accepted a different Character owner");
 
         Fixture movement;
         check(movement.character.transition(3) == 1 &&
@@ -338,7 +378,8 @@ int main() {
                     "\"spawn_timer_and_named_event\":true,"
                     "\"safe_growth\":true,\"exception_borrow_cleanup\":true,"
                     "\"csskill_c355_focus_blur_event_and_transition\":true,"
-                    "\"csskill_projection_lifecycle\":true}\n");
+                    "\"csskill_projection_lifecycle\":true,"
+                    "\"csskill_borrows_coordinator_machine_state\":true}\n");
         return 0;
     } catch (const std::exception& error) {
         std::fprintf(stderr, "character coordinator: %s\n", error.what());
