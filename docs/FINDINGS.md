@@ -2,7 +2,7 @@
 
 ## Android 17 follow-up - 2026-10-09
 
-Fixed the inventory Drop adapter guard: SWF `doDrop` invokes `NativeInvDropItem` with `CallFunction` argc=2; IDA Pro and REA's IDA provider both confirm the native reads arg0 as the inventory index, then transfers the item and spawns its world object. The rebuilt APK is installed on the API 37 emulator. The SWF path to the Drop confirmation is statically traced; confirming that the modal dispatches `doDrop` and validating the live drop remain open. No release was created. REA used the IDA provider in headless mode against ELF SHA-256 `36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80`.
+Fixed the inventory Drop adapter guard: SWF `doDrop` invokes `NativeInvDropItem` with `CallFunction` argc=2; IDA Pro and REA's IDA provider both confirm the native reads arg0 as the inventory index, then transfers the item and spawns its world object. The SWF `btn_yes` callback is also confirmed to call the parent `doDrop` closure after checking `WarningType == "Drop"` (offsets `0x3463b–0x34666`). The rebuilt APK is installed on the API 37 emulator; live Drop remains untested. No release was created. REA used the IDA provider in headless mode against ELF SHA-256 `36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80`.
 
 ## Current Android checkpoint - 2026-10-08
 
