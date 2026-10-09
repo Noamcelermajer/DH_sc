@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "original_ranges": [
+    {
+      "address": "0x3bf498",
+      "size": 912,
+      "sha256": "cb823415c40c3d8e1e28c8e99d2b4eb89b2f0c1c4bf9d1f7963b67d8a15bec30",
+      "assembly": "Character-1405a63e8a78-001.asm"
+    },
+    {
+      "address": "0x3de7ec",
+      "size": 40,
+      "sha256": "685e7ae7901fe323ceb2b169becde5f87aa561873f7b738207d1662feb373af3",
+      "assembly": "CharProperties-bd859354c915-001.asm"
+    }
+  ],
+  "arithmetic_cases": 5196,
+  "coordinator_cases": 1200,
+  "compared_service_calls": 13776,
+  "granted_cases": 473,
+  "quest_reward_adapter_cases": 1200,
+  "level_up_handoffs": 257,
+  "failure_prefix_cases": 13776,
+  "seed": 20261009,
+  "source_sha256": {
+    "character_give_xp_v1.cpp": "7ea314cac1ae04058b5974a384171599615bb41fb6520761b615913dbc50cde1",
+    "character_give_xp_v1.hpp": "5109b36a6a72b37f5fe085742a5c78e90935f3a05d47996711ee28f0cc256c8f"
+  },
+  "limitations": [
+    "ARM bytes reconstructed from archived assembly, not freshly extracted ELF.",
+    "External property mutation, LevelUp, constants, player lookup and statistics use controlled boundary fixtures.",
+    "No Android or live gameplay validation.",
+    "Original assertion level 2 crash not executed."
+  ],
+  "sanitizer": "UBSan; no recovery",
+  "compiler_command": [
+    "c++",
+    "-std=c++17",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-fsanitize=undefined",
+    "-fno-sanitize-recover=all",
+    "-fPIC",
+    "-shared",
+    "port/game-data/character_give_xp_v1.cpp",
+    "port/game-data/tests/character_give_xp_v1_fixture.cpp",
+    "-o",
+    "<temporary-library>"
+  ]
+}

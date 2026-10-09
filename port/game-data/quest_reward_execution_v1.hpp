@@ -1,6 +1,7 @@
 #pragma once
 #include "quest_reward_factory_v1.hpp"
 #include "fresh_inventory_owned_v4.hpp"
+#include "character_give_xp_v1.hpp"
 namespace dh2::data::quest_reward_execution_v1 {
 using Record=quest_reward_factory_v1::Record;
 using Status=quest_reward_factory_v1::Status;
@@ -19,6 +20,18 @@ struct Services {
  std::int32_t (*give_xp)(void*,Record&,CharacterRef&,std::int32_t fixed_point,std::uint8_t source_flag,bool*)=nullptr;
 };
 struct InventoryEffects {const OwnedInventoryServicesV4* services=nullptr;};
+struct XpEffects {
+ void* context=nullptr;
+ // Resolve services borrowing this exact Character's canonical fields/owners.
+ character_give_xp_v1::Services (*services_for)(void*,CharacterRef&)=nullptr;
+};
+inline std::int32_t character_xp(void* raw,Record&,CharacterRef& character,std::int32_t amount,std::uint8_t source_flag,bool* granted){
+ const auto* binding=static_cast<const XpEffects*>(raw);
+ if(!binding||!binding->services_for||!granted||!character.identity)return 1;
+ const auto result=character_give_xp_v1::give_xp(binding->services_for(binding->context,character),amount,source_flag!=0);
+ if(result.status!=character_give_xp_v1::Status::complete)return 1;
+ *granted=result.granted;return 0;
+}
 inline std::int32_t inventory_add_gold(void* raw,Record&,CharacterRef& character,std::int32_t amount){
  const auto* binding=static_cast<const InventoryEffects*>(raw);
  if(!binding||!binding->services||!character.inventory||character.inventory->character()!=character.identity)return 1;
@@ -36,7 +49,8 @@ public:
 // All five Compile leaves plus complete Gold/XP Give callers. Definition reads
 // borrow the immutable table generation retained in the actual Record. Gold
 // composes the already ported inventory AddGold body and its mandatory effects;
-// Character::_GiveXP remains an explicit reached dependency. No experience,
+// character_xp composes the recovered Character::_GiveXP coordinator; its
+// LevelUp/property/statistics services still require canonical game owners. No experience,
 // timer, property, reward receipt or inventory mirror is created. Fresh reads
 // after callbacks preserve source reentry/partial failure stores. Actual native
 // pointer projection checks are guards, not original ARM success behavior.
