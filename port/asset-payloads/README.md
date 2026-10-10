@@ -9,10 +9,10 @@ It adds **18 complete animation accessor bodies and 8 complete typed search bodi
 | Check | Result | Evidence |
 | --- | --- | --- |
 | Original ARM32 versus compiled ARM64 animation access/search | 271,970 comparisons, zero mismatches; all 456 instruction addresses in the 26 complete ranges executed | [ARM report](../../reports/asset-payloads-arm-validation.json) |
-| Full recovered BRES cache | 2,901 files; 10,924 meshes; 1,641,664 vertices; 3,265,266 indices / 1,088,422 triangles | [Cache report](../../reports/asset-payloads-cache-validation.json) |
-| Nine type-1 geometry records | Each has a checked embedded mesh after a 20-byte opaque prefix; 542 embedded vertices and 600 triangles total; 4 malformed cases rejected | [Type-1 report](type1-validation.json) |
-| Type-1 revision ARM64 cross-build | NDK r29 produced a 31,560-byte shared library; both `PT_LOAD` segments have 16 KiB alignment. Runtime execution of this new revision on ARM64 is untested | [Type-1 build report](type1-arm64-build-validation.json) |
-| Animation payloads | 49,060 animation records, 3,732 segments, 82,880 sampler/segment vector pairs and 890,301 time keys decoded and checked | Same cache report |
+| Complete recovered BRES cache | 2,904 files; 10,924 type-0 meshes plus nine bounded type-1 alias views; 1,641,664 type-0 vertices; 3,265,266 indices / 1,088,422 triangles; zero unsupported geometry rows | [Cache report](../../reports/asset-payloads-complete-cache-validation.json) |
+| Nine type-1 geometry records | Each exact spline-named record has a checked 20-byte opaque prefix followed by the adjacent type-0 geometry's payload; 542 vertices and 600 triangles total; 8 malformed or out-of-contract cases rejected | [Type-1 report](type1-validation.json) |
+| Type-1 revision ARM64 cross-build/execution | NDK r29 produced a 31,936-byte shared library with two 16 KiB-aligned `PT_LOAD` segments; all nine bounded views match the host reader under executed ARM64 instructions. No physical ARM64 device run | [Type-1 build report](type1-arm64-build-validation.json) |
+| Animation payloads | 49,060 animation records, 3,735 segments, 82,880 sampler/segment vector pairs and 890,301 time keys decoded and checked | Same cache report |
 | Host / Android ARM64 compilation | Both pass with strict floating-point evaluation and 16 KiB target load alignment | [Build report](../../reports/asset-payloads-build.json) |
 | Corrupted / truncated BRES inputs | 5,000 host ASan/UBSan probes pass; leak detection disabled because of the execution environment | Same build report |
 | Host versus executed ARM64 mesh decoder | Real mesh metadata, pointers, vertex samples and index samples agree, including the Prince deferred buffers | [ARM64 mesh report](../../reports/asset-payloads-arm64-mesh-validation.json) |
@@ -30,7 +30,8 @@ The original-instruction animation test samples the first/middle/last animation 
 - Frame selection and fraction arithmetic retain 32-bit signed wrap where the assembly performs integer subtraction. Invalid indices and unrepresentable float-to-int conversions are rejected safely.
 - Animation entry pointers are relative to their **pointer word**, not to the BRES base. The decoder resolves them without modifying or widening the input.
 - `prince_modular.bdae` alone uses deferred mesh buffers in this corpus. Its 173 meshes reference 16-byte on-demand records rather than immediate vertex/index bytes. Complete-file offsets are resolved without recreating allocator or GPU ownership.
-- The nine type-1 records have separate `dh2_type1_geometry_open` views. Their five prefix words remain opaque; the embedded mesh uses the checked type-0 mesh readers. The original `constructGeometry` rejects type 1, so `dh2_mesh_open` still does too.
+- The nine type-1 records have bounded `dh2_type1_geometry_open` views. All are geometry zero, use one of the two observed spline IDs, have the exact five-word prefix `[0, 15, 3, 0, 0]`, and alias geometry one's ordinary type-0 payload at prefix+20. The returned `source_mesh_geometry` identifies that adjacent row. Inputs outside this observed contract are rejected.
+- The original `constructGeometry` dispatcher admits only type 0, so `dh2_mesh_open` still rejects the type-1 row. The bounded view does not invent runtime spline behavior; it exposes bytes already accepted through the adjacent source mesh. See [the evidence boundary](TYPE1-GEOMETRY.md).
 
 ## Build and reproduce
 
@@ -61,6 +62,6 @@ ASAN_OPTIONS=detect_leaks=0 python build.py --ndk /path/to/android-ndk-r29 \
 
 ## Remaining engine work
 
-The type-1 embedded bytes are now inspectable, but the five prefix words and any spline semantics remain unresolved. The original runtime mesh constructor returns null for type 1; the normal mesh and OBJ paths continue to skip it. All decoded meshes use interleaved streams; separate-stream meshes and already-relocated/runtime-mutated images are unsupported. OBJ currently requires triangle lists. Other primitive map values are retained as engine enums, not mistaken for GL enums.
+The nine type-1 records and their adjacent type-0 aliases are now inspectable under the exact observed corpus contract, but the five prefix words and any spline semantics remain unresolved. The original runtime mesh constructor returns null for type 1; the normal mesh and OBJ paths continue to skip it. All decoded meshes use interleaved streams; separate-stream meshes and already-relocated/runtime-mutated images are unsupported. OBJ currently requires triangle lists. Other primitive map values are retained as engine enums, not mistaken for GL enums.
 
 Default/scale getters expose checked borrowed addresses; their variant payloads are not interpreted. Scene hierarchy, controllers, skin weights, skeletons, track-specific value interpolation/application, cached generic search dispatch, clips, material/image decoding, GPU buffers and rendering still need reconstruction. Deferred bytes are supported only when contained in the complete image; external/split-file loading and the original string/shared ownership ABI remain unfinished. No Android device execution or integrated game build was performed for this module. It is a usable asset and animation foundation, not a complete engine or playable rebuilt APK.

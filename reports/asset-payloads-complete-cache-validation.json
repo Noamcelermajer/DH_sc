@@ -21,6 +21,7 @@
     "animation_time_keys": 890301,
     "finite_animation_components": 3244961,
     "animation_scalar_reader_checks": 140511,
+    "bounded_type1_geometry": 9,
     "files_with_deferred_mesh_buffers": 1
   },
   "types": {
@@ -41,54 +42,82 @@
     "1": 1457,
     "0": 2278
   },
-  "unsupported_geometry": [
+  "bounded_type1_geometry": [
     {
       "file": "data/3d/characters/dragon/dragon.bdae",
       "geometry": 0,
-      "type": 1
+      "type": 1,
+      "source_mesh_geometry": 1,
+      "vertices": 24,
+      "primitives": 1
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_attack_02.bdae",
       "geometry": 0,
-      "type": 1
+      "type": 1,
+      "source_mesh_geometry": 1,
+      "vertices": 52,
+      "primitives": 1
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_attack_03.bdae",
       "geometry": 0,
-      "type": 1
+      "type": 1,
+      "source_mesh_geometry": 1,
+      "vertices": 52,
+      "primitives": 1
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate.bdae",
       "geometry": 0,
-      "type": 1
+      "type": 1,
+      "source_mesh_geometry": 1,
+      "vertices": 78,
+      "primitives": 1
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate_01.bdae",
       "geometry": 0,
-      "type": 1
+      "type": 1,
+      "source_mesh_geometry": 1,
+      "vertices": 78,
+      "primitives": 1
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate_01b.bdae",
       "geometry": 0,
-      "type": 1
+      "type": 1,
+      "source_mesh_geometry": 1,
+      "vertices": 78,
+      "primitives": 1
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate_02.bdae",
       "geometry": 0,
-      "type": 1
+      "type": 1,
+      "source_mesh_geometry": 1,
+      "vertices": 78,
+      "primitives": 1
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate_03.bdae",
       "geometry": 0,
-      "type": 1
+      "type": 1,
+      "source_mesh_geometry": 1,
+      "vertices": 78,
+      "primitives": 1
     },
     {
       "file": "data/3d/interface/spell_dh2_splined_projectile.bdae",
       "geometry": 0,
-      "type": 1
+      "type": 1,
+      "source_mesh_geometry": 1,
+      "vertices": 24,
+      "primitives": 1
     }
   ],
+  "unsupported_geometry": [],
   "cache_manifest_sha256": "6a8849f308f09b48ae3b1f95b103fd22eb4808750538ca998227a2716678bb26",
-  "library_sha256": "3ddd651980f37ddfffafdc3c185e5591e28f42d5378961c5431a2cfb027bd45f",
-  "elapsed_seconds": 24.9
+  "library_sha256": "a48676050a69ee822e9e9cf858746c49c85d44e8b499fa89c6211af1ef307644",
+  "elapsed_seconds": 13.36
 }

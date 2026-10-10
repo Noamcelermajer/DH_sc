@@ -261,6 +261,7 @@ def main():
     provenance = json.loads((ROOT/'original-functions.json').read_text())
     verify_original(a.original,provenance)
     dependency_lib = ROOT/'build/libpayload_dependencies.so'
+    dependency_lib.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(['cc','-shared','-fPIC','-O2','-fno-fast-math','-ffp-contract=off',str(ROOT/'tests/dependencies.c'),'-o',str(dependency_lib)],check=True)
     dependencies = Dependencies(dependency_lib)
     old,new = Cpu(a.original,False,provenance,dependencies),Cpu(a.ported,True,provenance,dependencies)

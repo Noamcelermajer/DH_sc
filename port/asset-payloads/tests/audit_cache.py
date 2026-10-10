@@ -13,7 +13,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'tools'))
-from api import Attribute, Input, Mesh, Primitive, Vector, bind
+from api import Attribute, Input, Mesh, Primitive, Type1Geometry, Vector, bind
 
 def main():
     p = argparse.ArgumentParser()
@@ -23,7 +23,7 @@ def main():
     a = p.parse_args()
     dll = bind(a.library)
     totals, types, states = Counter(), Counter(), Counter()
-    skipped, hashes = [], []
+    bounded_type1, skipped, hashes = [], [], []
     start = time.monotonic()
     for file in sorted(a.cache.rglob('*.bdae')):
         raw = file.read_bytes(); data = Input(dll, raw)
@@ -36,7 +36,21 @@ def main():
         for i in range(dll.dh2_bres_library_count(c.byref(data.view), 7)):
             mesh = Mesh(); error = dll.dh2_mesh_open(c.byref(mesh), c.byref(data.view), i)
             if error == 3:
-                skipped.append({'file': str(file.relative_to(a.cache)), 'geometry': i, 'type': u(u(root+108)+16*i+8)})
+                geometry_type = u(u(root+108)+16*i+8)
+                if geometry_type == 1:
+                    observed = Type1Geometry()
+                    assert dll.dh2_type1_geometry_open(c.byref(observed), c.byref(data.view), i) == 0
+                    bounded_type1.append({
+                        'file': str(file.relative_to(a.cache)), 'geometry': i,
+                        'type': geometry_type,
+                        'source_mesh_geometry': observed.source_mesh_geometry,
+                        'vertices': observed.embedded_mesh.vertices,
+                        'primitives': observed.embedded_mesh.primitives,
+                    })
+                    totals['bounded_type1_geometry'] += 1
+                    continue
+                skipped.append({'file': str(file.relative_to(a.cache)), 'geometry': i,
+                                'type': geometry_type})
                 continue
             assert error == 0, (file, i, error)
             totals['decoded_meshes'] += 1; totals['vertices'] += mesh.vertices
@@ -114,7 +128,7 @@ def main():
             print(json.dumps({'files_checked': totals['files'], 'seconds': round(time.monotonic()-start, 2)}), flush=True)
     report = {'all_checks_passed': True, 'scope': 'full recovered BRES cache; immutable payload decoding and data integrity',
               'complete_engine': False, 'totals': dict(totals), 'types': dict(types), 'segment_states': dict(states),
-              'unsupported_geometry': skipped,
+              'bounded_type1_geometry': bounded_type1, 'unsupported_geometry': skipped,
               'cache_manifest_sha256': hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest(),
               'library_sha256': hashlib.sha256(a.library.read_bytes()).hexdigest(),
               'elapsed_seconds': round(time.monotonic()-start, 2)}
