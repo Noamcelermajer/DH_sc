@@ -1,0 +1,46 @@
+{
+  "schema": "dh2-vox-n-ima-adpcm-provenance-v1",
+  "original_elf_sha256": "36498eb8180ffb74759e6305e9596db999f18583d460f3b8534abcb6022f5e80",
+  "original_code_evidence": [
+    {
+      "symbol": "vox::VoxNativeSubDecoderIMAADPCM::DecodeBlock(void*, vox::SegmentState*)",
+      "elf_va": "0x00887068",
+      "range_size": 1020,
+      "sha256": "35db31f76e36891a2d3e3055848f65ce83e0d8d40948410798b096cd5ebdaebe",
+      "recovered_assembly": "recovered/native/assembly/libDungeonHunter2.so/vox_VoxNativeSubDecoderIMAADPCM-4f783647ca7a-001.asm",
+      "recovered_assembly_sha256": "af628283a026d4431ff960169f67d8559995621b84ed5567f70f2450711ce8fc"
+    },
+    {
+      "symbol": "vox::VoxNativeSubDecoderIMAADPCM::VoxNativeSubDecoderIMAADPCM(...) [C1]",
+      "elf_va": "0x00886bfc",
+      "range_size": 448,
+      "sha256": "81c7255013e9645e4da1eaf793a78ddf3834b3c251cfa2eb4a7b7031f2e75121",
+      "recovered_assembly": "recovered/native/assembly/libDungeonHunter2.so/vox_VoxNativeSubDecoderIMAADPCM-4f783647ca7a-001.asm",
+      "recovered_assembly_sha256": "af628283a026d4431ff960169f67d8559995621b84ed5567f70f2450711ce8fc"
+    },
+    {
+      "symbol": "vox::VoxMSWavSubDecoderIMAADPCM::DecodeBlock(void*)",
+      "elf_va": "0x008758d8",
+      "range_size": 860,
+      "sha256": "81a2c965bda8ca625dbd7cdaa676a9482f54b6e5f2ad54328a6d3ea326773b9f",
+      "recovered_assembly": "recovered/native/assembly/libDungeonHunter2.so/vox_VoxMSWavSubDecoderIMAADPCM-e5f4552dc727-001.asm",
+      "recovered_assembly_sha256": "da99e53e04ab71975711b092c37f30fde7b66ad4a51bb03846bf15478b260f8a"
+    }
+  ],
+  "original_table_evidence": [
+    {
+      "name": "IMA ADPCM signed index delta table",
+      "elf_va": "0x00911a14",
+      "range_size": 16,
+      "sha256": "54eeb55fd7262bd30a093d8219411929ddd8367f2e447f4e882f4276d6fa11ff"
+    },
+    {
+      "name": "IMA ADPCM signed 16-bit step table",
+      "elf_va": "0x00911a24",
+      "range_size": 178,
+      "sha256": "98d29d10eef87b44f37e4e6a0410e9f3db98eaf56579d1189c7e3317e63bc3f3"
+    }
+  ],
+  "original_execution": false,
+  "port_scope": "bounded Microsoft IMA ADPCM block decoding for the recorded VoxN format; no transition engine, seeking state, mixer, playback, or original ABI"
+}
