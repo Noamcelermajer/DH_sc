@@ -1,11 +1,11 @@
 # Dungeon Hunter 2 — project completion checklist
 
-Updated: 2026-10-09. Branch: `reconstruction/item-world-runtime-2026-10-07`.
+Updated: 2026-10-10. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest local debug APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (161,006,636 bytes; SHA-256 `08E796D6F8B9F3467FA55CC582368B16CAE35DFFE80124F4E5E5FC19BD4D1055`). API 37/target 37, ARM64 + x86_64; build, APK signature and 16 KiB ZIP alignment verified. On the Android 17/API 37 x86_64 16 KiB emulator, Start Game → Single Player loaded SWAMP and a joystick drag moved the player; no crash observed. This bounded smoke did not verify combat damage or quest progress.
+**Latest APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (169,449,187 bytes; SHA-256 `1549f83a9ca4681b2b5eb88df07e72a287d2bf3acd20c473853f7a3d2b31dbc1`). V2 signature and 16 KiB ZIP alignment verify; ARM64 + x86_64 Gradle build passes. API 37 / 16 KiB single-Knight smoke passes menu → Crypt → Back → process restart → occupied-slot reopen → Home/resume with same Character/Quest/Save → terminal Back. Original device saves/checksums were restored. [Report and captures](../.checks/api37-16k-projection-rebind-20261010.json). Debug APK; no new release.
 
 **Latest published APK:** [Native UI, camera and movement — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-ui-movement-api37-2026-10-08) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-ui-movement-api37-2026-10-08/Dungeon-Hunter-2-native-ui-movement-api37-debug.apk)). This debug checkpoint is still an unfinished reconstruction. New-save inventory starts empty; skill-save and skill-confirmation Back callbacks remain incomplete. Live item drop is not connected.
 
@@ -34,24 +34,32 @@ still require live gameplay integration. All final completion gates remain open.
 | Inputs, Adam's work and research | 12 | 3 |
 | Native Android build and setup | 8 | 4 |
 | Rendering, resources and animation | 13 | 6 |
-| World, physics, navigation and factories | 32 | 9 |
+| World, physics, navigation and factories | 37 | 9 |
 | Character properties, equipment and state | 36 | 8 |
-| Lua, skills and enemy AI | 53 | 15 |
-| Combat, death, loot and progression | 24 | 12 |
-| Quests, campaign, UI, audio and saves | 46 | 11 |
+| Lua, skills and enemy AI | 54 | 15 |
+| Combat, death, loot and progression | 25 | 12 |
+| Quests, campaign, UI, audio and saves | 47 | 11 |
 | Fan modding and source delivery | 3 | 6 |
 | Final completion gates | 0 | 9 |
-| **Total scoped tasks** | **227** | **83** |
+| **Total scoped tasks** | **235** | **83** |
 
 Prior verified source gate: [Loot composition and world-pickup host report](../reports/reconstruction-2026-10-07/loot-world-gold-host.json): 173,967 selected-library checks pass across presentation, V7 loot, fixed/random/nested AddLoot and Type 13 `Gold_01`. Row 124 matches source item/value/RNG; gold pickup credits V4 wallet gold and retires the same staged item. Debug, text and `AddPower` callbacks are controlled fixtures; full `AddLoot` and Android gameplay are not claimed. Its `:app:assembleDebug` succeeded for ARM64/x86_64; the APK contains both native libraries and `crypt01.spwn`.
 
 Current branch projects the supported Player melee kill edge through dead/HP-zero and active-Player-killer guards into V4 DropLoot staging → original ItemAudioVisual/BDAE draw + Box2D sensor → deferred MoveOn pickup. It does not yet run complete Character::Kill. IDA confirms AudioVisualID is ItemRecord word 21 (`ItemObject::InitAgain` reads `ItemInstance::GetItem()+84`); the earlier word-24 lookup was a blocker and is corrected. Failed one-shot loot continuations retain the killer identity across world-update retries; partial V4 suffix items are removed by item identity before another roll. ARM64/x86_64 Android build and package checks pass. Live loot/pickup remains unverified.
 
-2026-10-09 IDA-backed continuation: Monster target-out-of-range event 14 now creates per-actor `PathTo` state and advances outside drawing; GatherLoot pickup checks the same canonical V4 inventory’s registration list. Level `GSLevel`/`EventManager` delivery and objective registration remain unconnected. The source menu smoke reaches Single Player and SWAMP. IDA/REA proved `NativeHUDSkill`'s Save-slot lookup and that Character+0x1068 aliases the post-recalc SkillTree `resolved[28]` cell; HUD casting remains disabled until production Begin/End and Focus/Blur providers are wired. The authored CameraTests rig is loaded and selected in source; host tests pass, but live SWAMP camera routing and zoom/movement interaction remain unverified.
+2026-10-09 IDA-backed continuation: Monster target-out-of-range event 14 now creates per-actor `PathTo` state and advances outside drawing; GatherLoot pickup checks the same canonical V4 inventory’s registration list. Level `GSLevel`/`EventManager` delivery and objective registration remain unconnected. Skill and spell HUD actions now route through the retained runtime and source controller gate; nonempty live use remains unverified. IDA confirms animation-selection event `0x26` is not the frame-step callback; the separate callback runs after a validated step is stored. The authored CameraTests rig is loaded and selected in source; live SWAMP camera routing and zoom/movement interaction remain unverified.
 
-Latest native loop work: original 69-row TrophyTable and saved AutoTransmute settings now bind to the shared runtime. AutoTransmute transfers through canonical V4 (including stack merges) without firing the normal GatherLoot tail; normal pickup now applies property 223 and local pickup/full-inventory trophy checks. API 37 APK builds for ARM64/x86_64 and launches; item pickup, transmute, skill casting, and complete quest progression are not yet live-verified.
+Player menu teardown now follows IDA's `GoToMainMenu -> RemoveAllPlayers -> Character::~Character` boundary: retire borrowed skill/cast projections without Blur, release timer storage, and clear the reusable Character state. Source-only change; no new build or runtime validation.
+
+Movement/camera reconciliation: IDA confirms the fixed 45° transform matches the authored HUD joystick; the camera-relative gamepad path is separate. Source `Level::_LoadCamera` aspect is 1.6678, while the 20:9 emulator projection adapts to 2.222; compare in gameplay before changing camera policy. Main remaining UI gate is the selected-class/profile to canonical Character and source `LevelList` launch path; current start remains a development handoff.
+
+Latest native loop work: original 69-row TrophyTable and saved AutoTransmute settings now bind to the shared runtime. AutoTransmute transfers through canonical V4 (including stack merges) without firing the normal GatherLoot tail; normal pickup now applies property 223 and local pickup/full-inventory trophy checks. API 37 APK builds for ARM64/x86_64 and launches; item pickup, transmute, nonempty skill casting, faerie casting, and complete quest progression are not yet live-verified.
 
 Historical [quest compilation and payload gate](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,659 host checks with nonempty SKIL, FAES, QEST and typed PROP on one Save/PropertyState; a FAES count mismatch still reaches QEST. FAES passes 74 original-ARM differential cases. In the current smoke, mask 1 attaches a metadata-only profile before `SG_Load(4)` dispatches its eight section requests and registers callbacks; all eight mask-4 payloads are absent. Full InitPost, existing-profile payload restoration (including GEAR), and quest-world callbacks remain open.
+
+2026-10-10 continuation: IDA confirms `Character::SG_Load` forwards mask 4 and `_Load` skips eight section callbacks when Save is null; focused host checks pass. The shared CharAI queue, SpawnGroupManager/`InitSpawned(Char)` and paired ObjectManager-map/CharacterList registration kernels also pass focused host checks. API37 menu → Crypt → occupied-slot reload → Home/resume → terminal Back now passes with retained CharAI/CSSkill owners cleaned up. Crypt still lacks live SpawnSpot records and has only a zero-quantity TEST spawn group. The roster bridge remains disconnected from Player creation; full equipment/loot/skill gameplay and progression remain incomplete.
+
+2026-10-10: fixed retained CSSkill projection rebinding after Coordinator service replacement; focused host audit passes. One-class API37/16KiB smoke now passes terminal Back after Home/resume with CharAI cleanup complete and no deferred teardown. Full campaign, inventory payload restoration, combat and progression remain open.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -116,7 +124,10 @@ Historical reports retain their original APK identities and test scopes.
 - [x] Implement bounded source material/technique/blend/depth mappings and record remaining gaps.
 - [x] Close the full frustum graph: 80 intersection/77 composition ARM cases; nine actual Android snapshots match. Original camera transform/scene producers remain open.
 - [x] Correct VoxN framing/tag parsing; verify 17 audio files. Decoding/playback remain open.
-- [x] Reuse Adam's GFNT/viewport code; 8,532/5,200 fixture comparisons pass with sanitizers. Native UI binding remains open.
+- [x] Wire 18 source-catalogued Player PCM WAV cues through the shared Android effect owner; build/runtime verification pending. VoxN music remains unsupported.
+- [x] Reuse Adam's GFNT/viewport code; 8,532/5,200 fixture comparisons pass with sanitizers. Native gameplay UI binding remains open.
+- [x] Match MenuFlash2DCamera's full-surface bounds for front UI and backdrop; 20:9 input mapping fixture passes on Android 17.
+- [ ] Package and verify the intro crop and gameplay overlay anchors in the full 20:9 APK.
 - [ ] Complete the original custom Irrlicht/`glitch::` rendering behavior and ownership.
 - [ ] Complete all material techniques, lighting, effects, transparency and shader-state selection.
 - [ ] Complete all animation states, mixing/layers/transitions/events and visual-state synchronization.
@@ -135,7 +146,7 @@ Historical reports retain their original APK identities and test scopes.
 - [x] Parse all 21 Crypt MGX definitions, retain 35 source-float exits/cells and derive 160 directed candidates; host fixture passes 395 checks. MGX-only placement passes 22 checks; MGP/MVP do not determine the footprint.
 - [x] Audit 22 active Crypt rule entries: 21 exact triples resolve to listed MGX plus referenced MGP/MVP/MVX; MGX links and MVX geometry roots parse and agree.
 - [x] Verify the selected-library DACT/world actor regression resolves the five source-authored SWAMP Monsters and model dictionary entries.
-- [ ] Verify actor animation, AI and combat in gameplay. The live generated Crypt route loaded 18 direct Monsters and confirmed player movement; animation, AI and combat remain unverified.
+- [ ] Verify actor animation, AI and combat in gameplay. The generated Crypt loads 18 direct Monsters and confirms player movement; ambush Monsters remain gated. Completed Died animations now run retained AIS OnEndOfAnim then same-Coordinator event 0x22; timer event 0x2e enters the bounded CSDespawn state 2. Live lethal gameplay remains unverified.
 - [x] Parse source `floortypes` with IDA-confirmed duplicate/key/quote behavior, apply native type masks, and make default floor snapping skip void/wall in source order; unknown tags such as `sand` add no mask.
 - [x] Resolve 97 of its 166 object records: 84 scenery objects and 13 monsters.
 - [x] Reconstruct bounded navigation graph/search/path/smoothing/avoidance and floor producers.
@@ -152,6 +163,9 @@ Historical reports retain their original APK identities and test scopes.
   cases, virtual physics-policy selection and ordered partial effects. Native
   native frame invocation remains open.
 - [ ] Finish the full ObjectManager factory, exact-name map, group membership and teardown.
+- [x] Add a tested rollback-safe registration transaction across the existing
+  ObjectManager map and CharacterList projections. It accepts borrowed canonical
+  actors only; live factory/menu integration remains open.
 - [x] Reconstruct ObjectManager's per-object dispatch slice: 30 ARM cases/101 guards. Full traversal, deletion and providers remain open.
 - [ ] Resolve Crypt's remaining 69 conditional/script/template/factory records.
 - [x] Compose source Stop with real Box2D; 14 cases include callback reentry and retained partial effects. Native frame binding remains open.
@@ -167,6 +181,8 @@ Historical reports retain their original APK identities and test scopes.
 - [x] Compile generated Crypt SpawnPoints from source-ordered module MGPs to SPWN v1; fixture IDs 0 and 2 preserve module/order/transforms. Conditions, scripts and duplicate IDs fail closed.
 - [x] Check custom BRES renderer roots for Crypt: 20/21 source MVX roots exist; missing `entrance_s` is unreachable from the current RootRule. A generated one-module `cemetery_entrance` DWLD loads and yields 73 floor triangles with authored spawn.
 - [x] Connect row-23 Crypt rules/catalogue and resolved seed to Android generation; pass generated DWLD/SPWN and supported direct-Monster DACT records into `load_world`. API 37/target 37 APK builds for ARM64/x86_64; signature/alignment pass. Live API 37 run loaded 7 rooms and 18 Monsters, then accepted player movement.
+- [x] Preserve the authored Crypt `templateName=Faery` Character descriptor and bundle the five DefaultFairy fallback models, four AnimTable 23 clips and six referenced textures from the pinned cache. ObjectManager/Character/AI activation and final placement remain open.
+- [x] Port `Level::PlaceFaeryAndFollowers` as a source-ordered kernel over borrowed Character/Player services. Android providers, an instantiated Faery, and live selection/placement remain open.
 - [ ] Rebuild the original camera producer and static module visibility; add remaining factories/conditions/scripts and complete the object update lifecycle. Port-side RoomZone frustum transitions already gate direct Crypt Characters.
 - [ ] Connect authored and generated levels to the actual level stack and loading lifecycle.
 - [ ] Complete exits, level transitions, hubs, fast travel and return-to-level behavior.
@@ -233,6 +249,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Connect bounded normal managed metadata to registered menu players: 245 ARM comparisons, 46 composition checks and three live class flows. Class/level/name use the same Record and Save680.
 - [x] Select bounded Character::InitPost caller block through `0x3b51bc`: 4 original ARM cases/37 calls match host order, callsites, owners and arguments; failure-prefix, reentry and Android ARM64/x86_64 builds pass. Providers remain unbound.
 - [x] Select Character save/InitAll wrappers: 46 ARM comparisons and 115 selected-host checks; exact embedded Quest owner fields/order and same-Save LoadOwner are enforced. Android now calls mask 2 then mask 4 once on the same retained Character/Save/loader. API 37 smoke verifies identity, eight mask-4 requests after profile attachment and no replay on Home/resume; the generated profile has no mask-4 payloads. Full InitPost and existing-profile section restoration remain open.
+- [x] Guard mask-4 save dispatch against the source null-Save path: profile load requests exactly eight sections; an absent profile is accepted only for slot -1, requests none and makes one offline status call. Focused host checks pass; durable save payloads remain open.
 - [x] Select Character::InitFinal: 260 ARM comparisons and 803 host checks; real lighting/AI/skills/save providers remain required.
 
 ## 6. Lua, skills and enemy AI — current implementation focus
@@ -272,6 +289,8 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Add the borrowed CharStateMachine fields needed by that kernel to the
   Android-selected build; IDA/REA field mapping and ARM64/x86_64 compilation pass.
   Host regression is authored but not run; production binding and HUD activation remain open.
+- [x] Add retained-VM `List::faery` OnPreSkill/OnSkill/OnPostSkill callback access and route the state-7 `do_spell` marker by the saved faery slot; both Android ABIs compile and API37 install/launch pass. Casting itself is not verified.
+- [x] Wire Android state-7 entry/exit, CSCast Focus/Blur and NativeHUDSpell through the retained Coordinator, animation and Player VM owners. Latest source-only correction makes SM_SetCastState read only CharAnimTable.Spells[faeryId], as IDA does. Current source has not been rebuilt; nonempty live casting remains unverified.
 - [x] Run bounded authored Ghost `LoadNInitScriptProcess(true)` through HP/MP,
   SetSkillsAndSpells, UpdateAllSkills, Post and Final in source order: 0 ordinary
   skill entries and 5 null-script faeries on the same retained VM.
@@ -293,9 +312,13 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Reconstruct the bounded Character::Update lazy-script/concurrent-AI map
   slice; verify 18 ARM cases, all 127 reached instructions, 15 guards and
   partial effects. Preserve full-width AIS identity. Native shared-map binding remains open.
+- [x] Retain one shared CharAI turn queue across actor registration, apply the
+  source Monster turn gate and advance its 180 ms timer once after Character
+  updates. Focused host audit and Android ABI compilation pass; full
+  Character::Update gates and Ghost frame ownership remain open.
 - [ ] Complete `Character::Update` scheduler/eligibility gates, the shared
-  180 ms `CharAI::IncUpdateQueue`/`Application::GetDt` owner and frame ownership;
-  native world setup currently invokes only the bounded Ghost lifecycle. See
+  `CharAI::IncUpdateQueue`/`Application::GetDt` eligibility gates and frame
+  ownership; native world setup still lacks the complete Character/Ghost frame. See
   the [checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
 - [x] Trace original Ghost pursuit in IDA: Level/Character frame order,
   unchanged `monster` callbacks, PathTo/FindPath, the `+0x1450` home point,
@@ -342,12 +365,13 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Connect source equipped-faery ID/level wrappers to that same save/VM: 49 host checks, 130 ARM comparisons and complete native faery updates; no invented unlock/grant.
 - [x] Adapt one source buff owner to current properties/Coordinator and run actual Celest resistance live across reload/rotation. 40 whole-state ARM and 40 same-VM host updates pass; FX and live timed expiry remain open.
 - [x] Select CSSkill Focus/Blur and state6 event projection over borrowed Coordinator fields; 214 new ARM comparisons, 60 host cases and both Android ABIs pass. Native activation remains open.
-- [x] Compose CSSkill state 6 into the same Character Coordinator: C355 entry, event28, source Focus/Blur ordering, elapsed reset, and close event22. Focused `character_coordinator_audit` builds/runs in the target checkout. Android does not bind the optional projection or issue skill commands yet.
-- [x] Resolve `NativeHUDSkill` through the Save HUD-slot map, selected SkillList/Save row, and same-index retained Player script; expose borrowed decoded SkillTable `anim`/`anim_is_moving`/`type` using the proven Character+0x1068 == `resolved[28]` selector. HUD action remains disabled until source Begin/End and Focus/Blur owners are composed.
-- [x] Map CSSkill fields: Character+0x554 is embedded CharStateMachine+0x58 `moving`; Character+0x412 is separate OOI interaction intent. Add OOI storage to the canonical Character owner with fresh-session/retirement clearing. Production callback services and live cast remain open.
+- [x] Compose CSSkill state 6 into the same Character Coordinator: C355 entry, event28, source Focus/Blur ordering, elapsed reset, and close event22. Android binds this projection and HUD command path to the retained Character; live nonempty activation remains open.
+- [x] Resolve `NativeHUDSkill` through the Save HUD-slot map, selected SkillList/Save row, and same-index retained Player script; route Begin/End through the same runtime and controller gate. A validated playback frame-step hook now handles deferred EndSkill loop stopping.
+- [x] Map CSSkill fields: Character+0x554 is embedded CharStateMachine+0x58 `moving`; Character+0x412 is separate OOI interaction intent. Add OOI storage to the canonical Character owner with fresh-session/retirement clearing. State-6 callbacks are bound to the existing Coordinator; live nonempty casting remains open.
 - [ ] Complete nonempty skills for all classes through full Player AIS construction,
   saved skill levels, `LuaManager::AddFile` and lifecycle ownership.
-- [ ] Bind profile/equipment skill slots before preparation, then Android Begin/End input and CharAI skill-machine fields to `_InitSkillsSlots` and the existing `AI_BeginSkill`/`AI_UseSkill` kernels, using the same Coordinator state 6 and sole VM. Route authored animation event 42 to `OnSkill`; playback already forwards close event `0x22`. Then bind source target search/LookAt/ClearTarget and exact `SkillCombatRoll` Arguments. Mana/cooldown owners already exist; no starter grant or damaging cast is wired.
+- [ ] Verify nonempty HUD skills through state 6, authored `do_skill` event 40, EndSkill loop stop and Blur; finish target search/LookAt/ClearTarget and exact `SkillCombatRoll` arguments. No starter grant or damaging cast is verified.
+- [x] Register `NativeHUDSpell` on the separate current-faerie cast path through state 7, CSCast Focus/Blur and retained faerie callbacks. Live casting with a selected faery remains open; do not route this action through the skill-slot API.
 - [ ] Complete all 265 original Character bindings and every actually used game/engine service.
 - [ ] Connect native Ghost acquisition and pursuit through real frame/path/body services.
 - [ ] Bind positive Player DoT attack/application and Ghost AI/DoT providers; Ghost timers remain paused.
@@ -358,7 +382,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Remove invented per-frame UpdateAllSkills replay; original initialization/progression callers own this update. Live InitProcess/reload receipts retain exactly one call.
 - [ ] Bind genuine linked-aggro/group/OnAggro producers and reached inventory-stance/nonnull-FX services for death; finish outer Character Kill/event2 routing.
 - [x] Retain Player CPU playback and actual scene pose through development reload and Activity recreation without event replay: seven host boundaries, 402 exact continuation frames and nine guards pass. The API37/16KiB frozen dead-pose fixture retains exact playback/pose hashes and event count.
-- [ ] Complete enemy movement, attacks, skill decisions, combat state changes and target cleanup.
+- [ ] Complete remaining Monster Dead lifecycle: model CSDespawn state exits plus safe object/script cleanup after Despawn_Delay; finish nonnull FX-manager services before enabling ambush targeting and testing death/loot/credit.
 - [ ] Complete other AIS factories, enemy types, bosses and player AI/input behavior.
 - [ ] Playtest all enemy/skill combinations and preserve original decisions and timing.
 
@@ -382,11 +406,18 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Feed player melee and actor stance/ranged facts from the canonical V4 inventory. IDA `F_MeleeAttack` confirms slots 1/2 and item word 37; `HasRangedWeapon` uses word 22 types 4/5. API37 ARM64/x86_64 build/package passes. Inventory UI/equip mutations and gameplay remain open.
 - [ ] Live-test the guarded kill → BDAE model/sensor → deferred MoveOn pickup path. The build is available; gameplay and pickup are not verified.
 - [x] Align the three current direct melee directions with positive-amount `AI_AddAggro` before `HitFor` through the existing reciprocal aggro tables; `combat_application_order_audit` passes nonlethal, lethal, no-hit and rejected cases.
+- [x] Share per-Character outgoing/incoming aggro storage between combat and retained CharAI; relation-owner and seven-case cleanup host checks pass. Nonempty peer callbacks/lifetime remain gated.
+- [x] Route generated Crypt `SpawnCharacter` through the exact registered ObjectManager Character and source FSM transition; three manager-backed host cases pass. Missing-actor creation and deferred scripted MGP activation remain open.
+- [x] Select `Character::InitSpawned` at `0x3b379c` as a source-ordered activation kernel; focused host checks pass. Runtime SpawnGroupManager/SpawnSpot creation and hookup remain open.
+- [x] Add a tested SpawnGroupManager policy kernel for timer/weighted selection,
+  spot gating and the `Create Character -> InitSpawned(Char) -> PlaceObject`
+  sequence. Crypt hookup remains blocked by absent SpawnSpot rows and a zero-quantity TEST group.
 - [x] Carry active Player killer identity through loot retries and require the source dead/HP-zero Kill prefix before V4 DropLootTable staging; the Android API 37 ARM64/x86_64 build passes. The event4 Android bridge is built; live behavior remains unverified. XP, quests and outer event2 remain open.
 - [x] Select the Player event4/credit kernel over the existing dispatcher and PropertyView: focused host audit passes callback→target clear→properties 23/24 order, FSM fallback, single-Player scope and retry suppression.
 - [x] Bind the kernel to the supported Android Player melee death edge exactly once after the initial DropLoot attempt, including deferred/failed loot staging; reuse the retained CharAI/AIS/VM and canonical target/property owners. Focused host audit and API37 ARM64/x86_64 APK build pass; live gameplay remains unverified.
 - [x] Add same-VM `Event::died` → `OnDied(killer)` forwarding: nonnull killer is userdata table, null killer is Lua nil. Focused session test passes 39 cases; Android providers and event-2 routing remain open. `Stop()` and explicit `Attack(target)` adapters are optional; no-argument `Attack()` fails closed because its hidden `ReturnValues+0x408` target is not projected.
 - [x] Select the `_GiveXP` callee kernel over the canonical Save/PropertyView: focused audit verifies source XP arithmetic/gates, normal-constant lookup order and missing-key zero, fresh difficulty/Level reads, conditional `a3` lookup, and post-LevelUp XP/MaxXP reread/clamp.
+- [x] Select the post-loot `Character::Kill` quest-event tail at `0x3a5b18`; host checks pass 12 cases for source order, gates, mutable payloads and failure prefixes. Live Level/EventManager dispatch remains open.
 - [x] Select host `Character::DistributeXP`: focused audit covers two roster passes, level scaling, kill-centered radius/self bypass, cooperative share and fixed-point grants. Android binding remains open.
 - [ ] Connect `DistributeXP` and `_GiveXP` to the same live Player registry, PropertyView and Save; the current Android roster has one Player. Do not enable threshold-crossing awards until LevelUp/SG_Save is complete.
 - [ ] Implement the LevelUp transaction and normal offline `SG_Save`: class/property recalc, HP/MP, existing-profile `saveAll` writers and durable persistence, HUD/scripts/VFX/trophies and overage XP. `_SaveVolatileQuestsLog` is online-only; current Android saving only writes explicitly created profiles.
@@ -420,13 +451,15 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Render live Player equipment through Adam's V6 visual owner over the existing V4 inventory; connect equip/unequip SWF callbacks through the source equipment service. Host gate: 7,383 checks; API 37 emulator confirmed a live Unequip → Equip cycle.
 - [x] Fix `NativeInvDropItem` arity handling: the SWF encodes `CallFunction` argc=2, while IDA and REA confirm the native reads arg0 as the inventory index. The Android 17 APK rebuilt and installed; live drop confirmation remains open.
 - [x] Load and select SWAMP’s authored CameraTests idle rig, with the source-derived camera as fallback if rig binding fails. Camera math/input gates pass 46/28 assertions. Latest API 37 SWAMP joystick drag moved the Player ~18.8 world units and release stopped; a live camera-route and zoom check remains open.
-- [x] Resolve the IDA `NativeStartGame` plan against the 51-row table and carry Android menu requests through it: 27 host assertions pass; row 41 selects static SWAMP and row 23 selects source-generated Crypt. The API 37 live row-23 run uses a debug-only transient override; campaign save remains unchanged.
+- [x] Preserve authored `NativeStartGame` arguments with the assigned `PlayerInfo` slot across deferred SWF delivery, then resolve through the existing metadata `Save` and 51-row `LevelList` plan. Offline selection matches IDA; numeric and LUSP `SG_Save` effects use the same temporary Save/index. Loaders cover generated Crypt and static SWAMP; row 23 still uses a debug-only override.
+- [x] Map NativeStartGame's current-Level state-38 early return to the retained active-world owner before argument conversion; normal menu starts and EGL restoration remain allowed.
+- [ ] Finish `Application`/`GSLevel` startup. Online host/client remains deferred. IDA shows `useSpawnPoint` is stored on `Level` but no reader was found; keep it separate from entrypoint-based placement until its consumer is identified.
 - [x] Apply NativeStartGame numeric and selected-LUSP `SG_Save` effects to the same metadata Save/index; host audit passes 773 checks, API 37 ARM64/x86_64 build and 16 KiB menu/start/movement/reopen smoke pass. No reachable enemy in this smoke; combat remains unverified.
 - [x] Add the bounded GEAR payload writer to the selected `dh2_level_world` library; source field order/encodings and 95-byte fixture pass 293 host checks, including all 95 output truncation prefixes. The original ARM writer is mapped; this test does not execute it.
 - [x] Select raw profile-section assembly over the existing index: host audit verifies lexical tag order, last-duplicate retention, GEAR replacement/round-trip, transactional failure, and the metadata serializer’s seven-tag guard. This utility does not dispatch `Savegame::saveAll` callbacks.
 - [ ] Replace the direct renderer-loader shortcut with `Application::LoadLevel`/`GSLevel`/`Level`, source parser/factory owners, and their remaining providers.
 - [ ] Complete original NativeStartGame/Application.LoadLevel, difficulty/location/quest handoff and full gameplay startup.
-- [ ] Finish original `MenuManager`/`HUDControls` and in-game UI callback paths. Character Stats, Inventory, Skills and Faeries screens open by touch. Fresh-save inventory is empty; skill Save/confirmation-Back, class-spec selection, live item drop, merchant, potion and combat-skill callbacks remain open.
+- [ ] Finish original `MenuManager`/`HUDControls` and in-game UI callback paths. Current source routes inventory actions through the shared V4/V6 owners and talent training/equip through the retained Player skill owner; Faery selection saves and refreshes skills but cannot yet place/rebind an in-world companion because the generated Crypt has no canonical Faery/Follower actor factory. Fresh-save item population, skill Save/confirmation-Back, class-spec selection, live item-drop confirmation, merchant and combat-skill callbacks remain open. Potion read/use routes through the existing Player/V4 owner but is not rebuilt or gameplay-verified with current edits.
 - [ ] Complete `MenuManager`/`HUDControls` input ownership, pinch zoom, orientation/window and lifecycle behavior. `NativeTouchToMove` is an exact source no-op.
 - [ ] Connect music, sound, voice, visual effects and their original timing/lifetimes.
 - [ ] Complete campaign/profile save serialization, load ownership and version handling. Selected host-tested writers cover CFEE/FAES/FTVL, SKIL, PROP and LVLS; QEST, mask-4 GEAR registration and existing-profile Transport/saveAll persistence remain open.
@@ -490,11 +523,11 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 ## Immediate work order
 
-1. Extend the existing six-plane `RoomZone::Update` adapter from materialized direct Characters to remaining factories, conditions and dynamic spawns. Replace the development orbit-camera plane producer with the game camera after its source path is reconstructed.
-2. Connect the shared 180 ms CharAI queue and one `ghost_ai_owner` frame to the existing VM/path owner; then bind Stop/Attack and named hit events. Android still has no live Ghost frame or lethal hit → loot → event 2 path.
-3. Build the generator from the 21 MGX definitions, exact exit graph, `gDistributions`, occupancy/backtracking and source-compatible MLX serialization.
-4. Import remaining object factories/conditions, connect generated/authored levels to the actual loading lifecycle, then finish campaign/save/skills/UI and modding systems.
-5. Validate sustained gameplay on current Android and physical ARM64, then publish reproducible source and release checkpoints.
+1. Capture and fix the first failure after API37 menu `NativeStartGame` row 23/catalogue setup and before the game-start/HUD receipt; preserve the now-working profile/slot route and add the new registration bridge only at the proven Character creation point.
+2. Connect valid Crypt SpawnSpot/SpawnGroup data to the tested spawn policy, then extend `RoomZone::Update` through remaining factories and conditions. The current cache has no Crypt SpawnSpots and only a zero-quantity TEST group.
+3. Finish `Character::Update` gates and Ghost frame ownership on the shared VM/path owner; then connect source-backed movement, combat death, loot and event 2.
+4. Build the generator from the 21 MGX definitions, exit graph, `gDistributions`, occupancy/backtracking and source-compatible MLX serialization; connect authored/generated levels to the real loading lifecycle.
+5. Complete campaign, durable saves, equipment/skills/UI and fan-modding; validate sustained gameplay on current Android and physical ARM64 before publishing major checkpoints.
 
 Update the relevant checkboxes only after their stated verification passes. Keep
 the detailed artifact-specific proof in checkpoint documents and reports.

@@ -263,6 +263,20 @@ int main() {
                   skill_callbacks,skill_bridge_error)&&
               bridged_machine.skill_state_callbacks_bound(),
               "CSSkill projection did not bind to the retained machine/Coordinator");
+        // Rebinding the base Coordinator services replaces CoordinatorBindings
+        // and can clear the optional borrowed CSSkill projection. Repeating the
+        // same graph bind must restore that link, rather than treating the
+        // Projection object's local fsm_bound_ bit as proof it is still attached.
+        CoordinatorBindings skill_bridge_base{};
+        skill_bridge_base.context=&skill_bridge;
+        skill_bridge_base.facts=SkillMachineBridgeFixture::read_facts;
+        skill_bridge_base.services={&skill_bridge,
+                                    SkillMachineBridgeFixture::state_service};
+        skill_bridge.character.bind(skill_bridge_base);
+        check(bridged_machine.bind_skill_state_callbacks(0x300000003ull,
+                  0x300000004ull,&skill_bridge.ooi_intent,&skill_bridge.physical,
+                  skill_callbacks,skill_bridge_error),
+              "same-graph CSSkill bind did not restore Coordinator projection after base rebind");
         check(skill_bridge.character.transition(3)==1,
               "CSSkill bridge could not enter source Idle");
         *bridged_machine.machine()->moving_58=1;
@@ -278,10 +292,12 @@ int main() {
                   Frozen::Operation::set_speed,Frozen::Operation::cancel_sneaking,
                   Frozen::Operation::unpin,Frozen::Operation::is_monster}),
               "C355 did not route CSSkill Focus in source operation order");
-        check(!bridged_machine.unbind_skill_state_callbacks(skill_bridge_error)&&
-              skill_bridge.character.event(0x22)==1&&
-              skill_bridge.character.state.current==3&&
-              skill_bridge.callback_events==std::vector<std::uint32_t>({0x1e,0x1f})&&
+        check(!bridged_machine.unbind_skill_state_callbacks(skill_bridge_error),
+              "CSSkill projection detached while state 6 was still active");
+        check(skill_bridge.character.event(0x22)==1&&
+              skill_bridge.character.state.current==3,
+              "CSSkill close event did not return to Idle");
+        check(skill_bridge.callback_events==std::vector<std::uint32_t>({0x1e,0x1f})&&
               skill_bridge.operations==std::vector<Frozen::Operation>({
                   Frozen::Operation::debug_load,Frozen::Operation::string_construct,
                   Frozen::Operation::debug_query,Frozen::Operation::string_destroy,
@@ -292,11 +308,13 @@ int main() {
                   Frozen::Operation::debug_query,Frozen::Operation::string_destroy,
                   Frozen::Operation::sync_last_target,Frozen::Operation::stop,
                   Frozen::Operation::raise_event,Frozen::Operation::start_timer,
-                  Frozen::Operation::is_monster})&&
-              skill_bridge.transition_previous==std::vector<std::int32_t>({-1,3,6})&&
-              bridged_machine.unbind_skill_state_callbacks(skill_bridge_error)&&
+                  Frozen::Operation::is_monster}),
+              "CSSkill Blur callback events or operations differ");
+        check(skill_bridge.transition_previous==std::vector<std::int32_t>({-1,3,6}),
+              "CSSkill Focus/Blur transition previous-state sequence differs");
+        check(bridged_machine.unbind_skill_state_callbacks(skill_bridge_error)&&
               !bridged_machine.skill_state_callbacks_bound(),
-              "CSSkill Blur, close event, or safe projection detachment order differs");
+              "CSSkill projection could not be unbound after leaving state 6");
 
         Fixture movement;
         check(movement.character.transition(3) == 1 &&
@@ -446,13 +464,19 @@ int main() {
               !projection_lifecycle.character.unbind_skill_projection(
                   &projection_lifecycle.projection),
               "CSSkill projection detached while state 6 was active");
+        check(projection_lifecycle.character.event(0x28,
+                  reinterpret_cast<std::uintptr_t>("is_stoppable"))==0&&
+              (projection_lifecycle.character.state.flags&0x8000u),
+              "CSSkill projection fixture did not enable the source stoppable gate");
         check(projection_lifecycle.character.event(0xc351)==1&&
-              projection_lifecycle.character.state.current==4&&
-              projection_lifecycle.character.unbind_skill_projection(
-                  &projection_lifecycle.projection)&&
-              projection_lifecycle.character.event(0xc355)==-1&&
               projection_lifecycle.character.state.current==4,
+              "CSSkill source Move event did not leave state 6");
+        check(projection_lifecycle.character.unbind_skill_projection(
+                  &projection_lifecycle.projection),
               "CSSkill projection could not be unbound after leaving state 6");
+        check(projection_lifecycle.character.event(0xc355)==-1&&
+              projection_lifecycle.character.state.current==4,
+              "unbound CSSkill event reached the former borrowed projection");
 
         skills.character.state.elapsed_ms=71;
         const auto reenter_skill=skills.character.event(0xc355);

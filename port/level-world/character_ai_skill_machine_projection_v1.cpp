@@ -72,7 +72,17 @@ bool Projection::bind_skill_state_callbacks(std::uintptr_t ai_identity,
             fsm_globals_.debug_switches == debug_switches_identity &&
             fsm_services_.context == services.context &&
             fsm_services_.invoke == services.invoke;
-        if (same) return true;
+        if (same) {
+            // Coordinator::bind replaces its base service bundle and may
+            // clear optional projections while retaining this callback graph.
+            // Reattach our borrowed projection instead of reporting a stale
+            // successful bind after Home/resume or another base rebind.
+            if (!coordinator_->bind_skill_projection(&fsm_projection_)) {
+                error = "CSSkill callback projection no longer belongs to the active Coordinator";
+                return false;
+            }
+            return true;
+        }
         error = "CSSkill callback graph is already bound to different borrowed owners";
         return false;
     }
@@ -108,6 +118,33 @@ bool Projection::unbind_skill_state_callbacks(std::string& error) {
     }
     if (!coordinator_->unbind_skill_projection(&fsm_projection_)) {
         error = "CSSkill callback projection cannot detach while dispatch is active or state 6 is live";
+        return false;
+    }
+    fsm_bound_ = false;
+    fsm_projection_ = {};
+    fsm_services_ = {};
+    fsm_globals_ = {};
+    fsm_state_ = {};
+    fsm_character_ = {};
+    return true;
+}
+
+bool Projection::retire_skill_state_callbacks(std::string& error) {
+    error.clear();
+    if (!fsm_bound_ || !coordinator_) {
+        error = "CSSkill callback projection is not bound";
+        return false;
+    }
+    if (!coordinator_->retire_skill_projection(&fsm_projection_)) {
+        const auto status=coordinator_->skill_projection_retirement_status(&fsm_projection_);
+        error = "CSSkill callback projection retirement blocked: coordinator_bound="+
+            std::to_string(status.coordinator_bound)+
+            " active_facts="+std::to_string(status.dispatch_active)+
+            " timer_update_depth="+std::to_string(status.timer_update_depth)+
+            " projection_matches="+std::to_string(status.projection_matches)+
+            " expected_projection="+std::to_string(status.expected_projection)+
+            " bound_projection="+std::to_string(status.bound_projection)+
+            " state="+std::to_string(status.current_state);
         return false;
     }
     fsm_bound_ = false;
