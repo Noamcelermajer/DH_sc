@@ -1,10 +1,14 @@
 {
   "all_checks_passed": true,
-  "scope": "nine cache type-1 records; checked embedded mesh bytes only; no original runtime construction",
+  "scope": "nine cache type-1 records; exact observed prefix/ID/index and adjacent type-0 payload alias; original runtime type-1 rejection preserved",
   "files": [
     {
       "file": "data/3d/characters/dragon/dragon.bdae",
       "sha256": "97e980e2b5516fcff63f713427a729c736d9d955a25309cd5b56bfb78cf55fce",
+      "type1_id": "Circle01-spline",
+      "source_mesh_geometry": 1,
+      "source_mesh_id": "_colbox_dragon-mesh",
+      "source_mesh_name": "_colbox_dragon",
       "opaque_header": [
         0,
         15,
@@ -12,12 +16,21 @@
         0,
         0
       ],
+      "payload_offset": 25212,
+      "source_payload_offset": 25232,
+      "material": "ColorMaterial",
       "vertices": 24,
-      "triangles": 12
+      "triangles": 12,
+      "vertex_sha256": "4c64ff9e47f401baac29f87d9bce679a2ccad2c8b470bd68e3b9558a549e669d",
+      "index_sha256": "1103d407310c34042b6a050c281e16e3e46b2345f3cfca5a2540273a83109e6a"
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_attack_02.bdae",
       "sha256": "7b721e0454499b23c08c851942c3ce4f57fc6ccd8c4503a84fe65566ce43c7fa",
+      "type1_id": "Circle01-spline",
+      "source_mesh_geometry": 1,
+      "source_mesh_id": "_mesh_cone2_nobatch01-mesh",
+      "source_mesh_name": "_mesh_cone2_nobatch01",
       "opaque_header": [
         0,
         15,
@@ -25,12 +38,21 @@
         0,
         0
       ],
+      "payload_offset": 42028,
+      "source_payload_offset": 42048,
+      "material": "fx_magic_lenz_flares_bwa",
       "vertices": 52,
-      "triangles": 48
+      "triangles": 48,
+      "vertex_sha256": "ec4fc919d4c971435dcf43d38f976184af7f2ccdac2088092c18b174b2b32505",
+      "index_sha256": "6bd2d3e182d79c13f5a324029e9e2d04ad7397c2ad4e66299bb68172af0ce3d4"
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_attack_03.bdae",
       "sha256": "1a74b8cd645b5a62df0d0d849952f722b47b53f7ea97abb567d0249beb779d90",
+      "type1_id": "Circle01-spline",
+      "source_mesh_geometry": 1,
+      "source_mesh_id": "_mesh_cone2_nobatch01-mesh",
+      "source_mesh_name": "_mesh_cone2_nobatch01",
       "opaque_header": [
         0,
         15,
@@ -38,12 +60,21 @@
         0,
         0
       ],
+      "payload_offset": 37968,
+      "source_payload_offset": 37988,
+      "material": "fx_magic_lenz_flares_bwa",
       "vertices": 52,
-      "triangles": 48
+      "triangles": 48,
+      "vertex_sha256": "ec4fc919d4c971435dcf43d38f976184af7f2ccdac2088092c18b174b2b32505",
+      "index_sha256": "6bd2d3e182d79c13f5a324029e9e2d04ad7397c2ad4e66299bb68172af0ce3d4"
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate.bdae",
       "sha256": "bbf1daae7bebb4fe55c52de8b0234265f349164dbba021ac0e5aa8196d2f6381",
+      "type1_id": "Circle01-spline",
+      "source_mesh_geometry": 1,
+      "source_mesh_id": "_mesh_tornado_b_nobatch02-mesh",
+      "source_mesh_name": "_mesh_tornado_b_nobatch02",
       "opaque_header": [
         0,
         15,
@@ -51,12 +82,21 @@
         0,
         0
       ],
+      "payload_offset": 24820,
+      "source_payload_offset": 24840,
+      "material": "Standard_7",
       "vertices": 78,
-      "triangles": 96
+      "triangles": 96,
+      "vertex_sha256": "ca2fc4f46984135eb03fbbc51a39c96c192960347b4feacc3a234dda30562643",
+      "index_sha256": "de18df6ee14e0763e7f6ddf944941f428e339821bb9499553745c37b4794b644"
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate_01.bdae",
       "sha256": "f12fd64bd4da6507c1b210532e796e3894e905b87d4b6d573d04c399227fff26",
+      "type1_id": "Circle01-spline",
+      "source_mesh_geometry": 1,
+      "source_mesh_id": "_mesh_tornado_b_nobatch02-mesh",
+      "source_mesh_name": "_mesh_tornado_b_nobatch02",
       "opaque_header": [
         0,
         15,
@@ -64,12 +104,21 @@
         0,
         0
       ],
+      "payload_offset": 25184,
+      "source_payload_offset": 25204,
+      "material": "Standard_7",
       "vertices": 78,
-      "triangles": 96
+      "triangles": 96,
+      "vertex_sha256": "ca2fc4f46984135eb03fbbc51a39c96c192960347b4feacc3a234dda30562643",
+      "index_sha256": "de18df6ee14e0763e7f6ddf944941f428e339821bb9499553745c37b4794b644"
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate_01b.bdae",
       "sha256": "bdcee26bc73850a0fa938a2d11b5570df20dc010f3cb96430a1584d808b69348",
+      "type1_id": "Circle01-spline",
+      "source_mesh_geometry": 1,
+      "source_mesh_id": "_mesh_tornado_b_nobatch02-mesh",
+      "source_mesh_name": "_mesh_tornado_b_nobatch02",
       "opaque_header": [
         0,
         15,
@@ -77,12 +126,21 @@
         0,
         0
       ],
+      "payload_offset": 26140,
+      "source_payload_offset": 26160,
+      "material": "Standard_7",
       "vertices": 78,
-      "triangles": 96
+      "triangles": 96,
+      "vertex_sha256": "ca2fc4f46984135eb03fbbc51a39c96c192960347b4feacc3a234dda30562643",
+      "index_sha256": "de18df6ee14e0763e7f6ddf944941f428e339821bb9499553745c37b4794b644"
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate_02.bdae",
       "sha256": "f6f4879cbd4064eca6cecabb072635e6eb381b1e99e8d046d7edb1684ff34f12",
+      "type1_id": "Circle01-spline",
+      "source_mesh_geometry": 1,
+      "source_mesh_id": "_mesh_tornado_b_nobatch02-mesh",
+      "source_mesh_name": "_mesh_tornado_b_nobatch02",
       "opaque_header": [
         0,
         15,
@@ -90,12 +148,21 @@
         0,
         0
       ],
+      "payload_offset": 26012,
+      "source_payload_offset": 26032,
+      "material": "Standard_7",
       "vertices": 78,
-      "triangles": 96
+      "triangles": 96,
+      "vertex_sha256": "ca2fc4f46984135eb03fbbc51a39c96c192960347b4feacc3a234dda30562643",
+      "index_sha256": "de18df6ee14e0763e7f6ddf944941f428e339821bb9499553745c37b4794b644"
     },
     {
       "file": "data/3d/interface/skill_dh2_monster_dragon_intimidate_03.bdae",
       "sha256": "9b1ab2eab19ec3dd0f534a7a7b61df1de4b96e802c8375c885eb078aa261c15e",
+      "type1_id": "Circle01-spline",
+      "source_mesh_geometry": 1,
+      "source_mesh_id": "_mesh_tornado_b_nobatch02-mesh",
+      "source_mesh_name": "_mesh_tornado_b_nobatch02",
       "opaque_header": [
         0,
         15,
@@ -103,12 +170,21 @@
         0,
         0
       ],
+      "payload_offset": 26544,
+      "source_payload_offset": 26564,
+      "material": "Standard_7",
       "vertices": 78,
-      "triangles": 96
+      "triangles": 96,
+      "vertex_sha256": "ca2fc4f46984135eb03fbbc51a39c96c192960347b4feacc3a234dda30562643",
+      "index_sha256": "de18df6ee14e0763e7f6ddf944941f428e339821bb9499553745c37b4794b644"
     },
     {
       "file": "data/3d/interface/spell_dh2_splined_projectile.bdae",
       "sha256": "a66c76d81c4df6b17211e72318585ef4d12f24483a1f7a4a31a3dcbcaff07670",
+      "type1_id": "Line01-spline",
+      "source_mesh_geometry": 1,
+      "source_mesh_id": "_mesh_projectile-mesh",
+      "source_mesh_name": "_mesh_projectile",
       "opaque_header": [
         0,
         15,
@@ -116,17 +192,23 @@
         0,
         0
       ],
+      "payload_offset": 7852,
+      "source_payload_offset": 7872,
+      "material": "_7_-_Default",
       "vertices": 24,
-      "triangles": 12
+      "triangles": 12,
+      "vertex_sha256": "15658bfab24dceec4de43eb657971df1c909f207bfd08c9ecf8cceb2e74b5824",
+      "index_sha256": "1103d407310c34042b6a050c281e16e3e46b2345f3cfca5a2540273a83109e6a"
     }
   ],
   "totals": {
     "type1_records": 9,
+    "source_mesh_aliases": 9,
     "embedded_vertices": 542,
     "embedded_triangles": 600,
     "scalar_checks": 4336,
     "index_checks": 1800,
-    "malformed_cases": 4
+    "malformed_cases": 8
   },
-  "host_library_sha256": "8a196fbb0d8f412b6f0c2d04ef67df3c45524f47871423add7f15bfbd5f4c6c8"
+  "host_library_sha256": "a48676050a69ee822e9e9cf858746c49c85d44e8b499fa89c6211af1ef307644"
 }

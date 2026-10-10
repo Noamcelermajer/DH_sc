@@ -16,7 +16,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'tools'))
 sys.path.insert(0, str(ROOT/'../engine-resources/tests'))
-from api import Attribute, Input, Mesh, Primitive, bind
+from api import Attribute, Input, Mesh, Primitive, Type1Geometry, bind
 from cpu import Cpu
 
 def main():
@@ -31,6 +31,18 @@ def main():
     files = {a.cache/'data/3d/menu/main_menu_charactere_swamp.bdae',
              a.cache/'data/3d/characters/prince/prince_modular.bdae',
              a.cache/'data/3d/animateddecors/candle_flame.bdae'}
+    type1_files = {a.cache/path for path in (
+        'data/3d/characters/dragon/dragon.bdae',
+        'data/3d/interface/skill_dh2_monster_dragon_attack_02.bdae',
+        'data/3d/interface/skill_dh2_monster_dragon_attack_03.bdae',
+        'data/3d/interface/skill_dh2_monster_dragon_intimidate.bdae',
+        'data/3d/interface/skill_dh2_monster_dragon_intimidate_01.bdae',
+        'data/3d/interface/skill_dh2_monster_dragon_intimidate_01b.bdae',
+        'data/3d/interface/skill_dh2_monster_dragon_intimidate_02.bdae',
+        'data/3d/interface/skill_dh2_monster_dragon_intimidate_03.bdae',
+        'data/3d/interface/spell_dh2_splined_projectile.bdae',
+    )}
+    files.update(type1_files)
     # Include the largest geometry-bearing BRES file, chosen from the corpus.
     candidates = []
     for f in a.cache.rglob('*.bdae'):
@@ -39,7 +51,7 @@ def main():
             candidates.append((len(raw), f))
     if candidates:
         files.add(max(candidates)[1])
-    checks = meshes = vertices = indices = 0
+    checks = meshes = vertices = indices = type1_views = 0
     def same(old, new, context):
         nonlocal checks
         assert old == new, (context,old,new)
@@ -47,7 +59,8 @@ def main():
     provenance = []
     for f in sorted(files):
         raw = f.read_bytes(); host = Input(dll,raw)
-        image,view,mesh,attr,primitive,result = [cpu.data+x for x in [0x10000,0x1000,0x2000,0x3000,0x4000,0x5000]]
+        image,view,mesh,attr,primitive,result,type1 = [
+            cpu.data+x for x in [0x10000,0x1000,0x2000,0x3000,0x4000,0x5000,0x6000]]
         cpu.uc.mem_write(image,raw)
         assert cpu.invoke('dh2_bres_open',[view,image,len(raw)],budget=10000000) == 0
         host_base = c.addressof(host.bytes)
@@ -89,9 +102,36 @@ def main():
                     out = c.c_uint32(); assert dll.dh2_index_read(c.byref(h),k,c.byref(out))
                     assert cpu.invoke('dh2_index_read',[primitive,k,result]) == 1
                     same(out.value,struct.unpack('<I',cpu.uc.mem_read(result,4))[0],(f.name,i,j,k,'index'))
+        if f in type1_files:
+            h = Type1Geometry()
+            error = dll.dh2_type1_geometry_open(c.byref(h), c.byref(host.view), 0)
+            native_error = cpu.invoke('dh2_type1_geometry_open', [type1, view, 0], budget=10000000)
+            same(error, native_error, (f.name, 'type1 open'))
+            assert error == 0
+            n = Type1Geometry.from_buffer_copy(
+                bytes(cpu.uc.mem_read(type1, c.sizeof(Type1Geometry))))
+            same((offset(h.embedded_mesh.id, host_base),
+                  offset(h.embedded_mesh.name, host_base)),
+                 (offset(n.embedded_mesh.id, image),
+                  offset(n.embedded_mesh.name, image)), (f.name, 'type1 names'))
+            same((h.embedded_mesh.vertices, h.embedded_mesh.stride,
+                  h.embedded_mesh.attributes, h.embedded_mesh.primitives,
+                  h.embedded_mesh.stream, h.embedded_mesh.buffers),
+                 (n.embedded_mesh.vertices, n.embedded_mesh.stride,
+                  n.embedded_mesh.attributes, n.embedded_mesh.primitives,
+                  n.embedded_mesh.stream, n.embedded_mesh.buffers),
+                 (f.name, 'type1 mesh'))
+            same(bytes(h.embedded_mesh.minimum) + bytes(h.embedded_mesh.maximum),
+                 bytes(n.embedded_mesh.minimum) + bytes(n.embedded_mesh.maximum),
+                 (f.name, 'type1 bounds'))
+            same((list(h.opaque_header), h.source_mesh_geometry),
+                 (list(n.opaque_header), n.source_mesh_geometry),
+                 (f.name, 'type1 alias'))
+            type1_views += 1
         provenance.append({'file': str(f.relative_to(a.cache)), 'sha256': hashlib.sha256(raw).hexdigest(), 'decoded_meshes': decoded})
-    report = {'scope': 'host versus executed compiled ARM64 mesh decoder; original constructor is not executed',
+    report = {'scope': 'host versus executed compiled ARM64 mesh and bounded type-1 alias decoders; original constructor is not executed',
               'complete_engine': False, 'comparisons': checks, 'mismatches': 0, 'meshes': meshes, 'vertices': vertices, 'indices': indices,
+              'bounded_type1_views': type1_views,
               'arm64_pointers_above_4gib': True, 'files': provenance,
               'ported_sha256': hashlib.sha256(a.ported.read_bytes()).hexdigest(), 'host_sha256': hashlib.sha256(a.host.read_bytes()).hexdigest(),
               'elapsed_seconds': round(time.monotonic()-start,2)}

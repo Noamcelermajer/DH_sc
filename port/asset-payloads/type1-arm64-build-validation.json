@@ -1,20 +1,31 @@
 {
-  "scope": "Cross-build of the type-1 embedded-mesh reader after commit d037b99; structural ELF check only",
-  "android_ndk": "r29 (29.0.14206865), Windows x86_64 host",
+  "scope": "NDK r29 cross-build plus host-versus-executed-ARM64 mesh and bounded type-1 alias checks",
+  "android_ndk": "r29 (29.0.14206865), Linux x86_64 host",
   "target": "aarch64-linux-android26",
   "compiler_flags": "-std=c++17 -O2 -fPIC -fno-exceptions -fno-rtti -fno-fast-math -ffp-contract=off -Wall -Wextra -Werror -shared -nostdlib++ -Wl,-Bsymbolic -Wl,-z,max-page-size=16384 -Wl,--no-undefined",
   "sources": {
-    "payloads.cpp_sha256": "f921d16550af1133a8c7fb264c0132381ff7f3643c56fbdc3a13512ff478742b",
-    "payloads.hpp_sha256": "fdceff59143442d61cec4a587bfc4dd13318a2592fac19d3bf0e15902680fa09",
-    "resources.cpp_sha256": "5908520d2a2bdd318669c30e0a6863c023b05327366cc0c1cad782700c945b25",
-    "resources.hpp_sha256": "e8d08f735c4c5ee30baebb2d3afca0d91b805b9e3cdfc50152011dbf70ceb230"
+    "payloads.cpp_sha256": "6ca88c09bc8f5a9eff119389e25bbbf04ccc575e68c1af19dd216e4615bdad0c",
+    "payloads.hpp_sha256": "dc03301e644242d6fd13529738b52e8f78fb190aa9d3fc8317b04966255450f3",
+    "resources.cpp_sha256": "9b93e43036f62094fd9d2fa68514f6e0035fbd3ff3aacc6acfaf9a605f476083",
+    "resources.hpp_sha256": "2cf4a179e8d8bbe1caa62c5c543ee540cc41b45fd0f7da605dea6f8173f54d61"
   },
   "artifact": {
     "name": "libdh2_asset_payloads_arm64.so",
-    "bytes": 31560,
-    "sha256": "c2de89716dc90da91fb547e197783cb2cc951ca734e2d62086ba5771999c4751",
+    "bytes": 31936,
+    "sha256": "a429146f93b6e3319916c2b2c006034dd60f9f9804900fa7f64102b28d8a82b7",
     "pt_load_alignments": [16384, 16384]
   },
+  "execution": {
+    "harness": "Unicorn 2.1.4",
+    "comparisons": 26290,
+    "mismatches": 0,
+    "bounded_type1_views": 9,
+    "sampled_type0_meshes": 1181,
+    "sampled_vertices": 101244,
+    "sampled_indices": 223824,
+    "arm64_pointers_above_4gib": true
+  },
   "cross_build_passed": true,
-  "runtime_tested_on_arm64": false
+  "compiled_arm64_execution_passed": true,
+  "physical_arm64_device_tested": false
 }
