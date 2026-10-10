@@ -57,6 +57,10 @@ struct Globals {
 };
 struct Result {
     const FaeryRow* row;
+    // Preserve the authored Character property for callers that need the
+    // serialized/source value. selected_list_id is the effective table row
+    // returned by GetCharFaeryListId (row 0 for negative or out-of-range IDs).
+    std::int32_t authored_list_id;
     std::uint32_t selected_list_id;
     std::uint32_t constant_queries;
     std::uint32_t assertions;

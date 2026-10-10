@@ -79,6 +79,7 @@ Status select(Character* character, std::int32_t faery_id, const Globals* global
     // Exact GetCharFaeryListId leaf: read the authored ID, use fallback row 0
     // for either negative IDs or IDs at/above the current table count.
     const std::int32_t authored_list_id = character->faery_list_id_106c;
+    result->authored_list_id = authored_list_id;
     if (!tables->list_rows || tables->list_count == 0 ||
         tables->list_count > 1'000'000u)
         return Status::invalid_source_fact;

@@ -84,6 +84,7 @@ int main(int argc, char** argv) {
         const auto row_index = f.result.row ?
             static_cast<std::int32_t>(f.result.row - f.faeries.data()) : -1;
         std::cout << "{\"status\":" << static_cast<std::int32_t>(status)
+                  << ",\"authored_list_id\":" << f.result.authored_list_id
                   << ",\"list_id\":" << f.result.selected_list_id
                   << ",\"row_index\":" << row_index
                   << ",\"queries\":" << f.result.constant_queries
@@ -95,7 +96,8 @@ int main(int argc, char** argv) {
         Fixture f;
         f.character.faery_list_id_106c = 1;
         assert(f.run(2) == k::Status::complete);
-        assert(f.result.selected_list_id == 1 && f.result.row == &f.faeries[5]);
+        assert(f.result.authored_list_id == 1 && f.result.selected_list_id == 1 &&
+               f.result.row == &f.faeries[5]);
         assert(f.result.constant_queries == 2 && f.result.type_matches == 1);
         ++cases;
     }
@@ -103,14 +105,16 @@ int main(int argc, char** argv) {
         Fixture f;
         f.character.faery_list_id_106c = -1;
         assert(f.run(4) == k::Status::complete);
-        assert(f.result.selected_list_id == 0 && f.result.row == &f.faeries[3]);
+        assert(f.result.authored_list_id == -1 && f.result.selected_list_id == 0 &&
+               f.result.row == &f.faeries[3]);
         ++cases;
     }
     {
         Fixture f;
         f.character.faery_list_id_106c = 99;
         assert(f.run(0) == k::Status::complete);
-        assert(f.result.selected_list_id == 0 && f.result.row == &f.faeries[2]);
+        assert(f.result.authored_list_id == 99 && f.result.selected_list_id == 0 &&
+               f.result.row == &f.faeries[2]);
         ++cases;
     }
     {
