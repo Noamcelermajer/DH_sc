@@ -5,7 +5,7 @@ Updated: 2026-10-10. Branch: `reconstruction/item-world-runtime-2026-10-07`.
 **Goal:** a complete, source-built native Android game, preserving original
 gameplay/content and providing documented fan modding. **The game is unfinished.**
 
-**Latest APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (169,449,187 bytes; SHA-256 `1549f83a9ca4681b2b5eb88df07e72a287d2bf3acd20c473853f7a3d2b31dbc1`). V2 signature and 16 KiB ZIP alignment verify; ARM64 + x86_64 Gradle build passes. API 37 / 16 KiB single-Knight smoke passes menu → Crypt → Back → process restart → occupied-slot reopen → Home/resume with same Character/Quest/Save → terminal Back. Original device saves/checksums were restored. [Report and captures](../.checks/api37-16k-projection-rebind-20261010.json). Debug APK; no new release.
+**Latest APK:** `port/android-native/app/build/outputs/apk/debug/app-debug.apk` (169,449,281 bytes; SHA-256 `0e325613c99870423cc6ee41999aa7179890a00ba56a1073230b5ef220622114`). V2 signature and 16 KiB ZIP alignment verify; ARM64 + x86_64 Gradle build passes. API 37 / 16 KiB one-Knight smoke passes menu → Crypt row 23/HUD → Back → restart/reopen → Home/resume; saves/checksums restored. Debug APK; no new release.
 
 **Latest published APK:** [Native UI, camera and movement — Android API 37](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-ui-movement-api37-2026-10-08) ([direct APK download](https://github.com/Noamcelermajer/DH_sc/releases/download/native-ui-movement-api37-2026-10-08/Dungeon-Hunter-2-native-ui-movement-api37-debug.apk)). This debug checkpoint is still an unfinished reconstruction. New-save inventory starts empty; skill-save and skill-confirmation Back callbacks remain incomplete. Live item drop is not connected.
 
@@ -57,9 +57,9 @@ Latest native loop work: original 69-row TrophyTable and saved AutoTransmute set
 
 Historical [quest compilation and payload gate](../reports/reconstruction-2026-10-06/quest-payload/validation.json): selected SaveLoad masks 2/4 pass 9,659 host checks with nonempty SKIL, FAES, QEST and typed PROP on one Save/PropertyState; a FAES count mismatch still reaches QEST. FAES passes 74 original-ARM differential cases. In the current smoke, mask 1 attaches a metadata-only profile before `SG_Load(4)` dispatches its eight section requests and registers callbacks; all eight mask-4 payloads are absent. Full InitPost, existing-profile payload restoration (including GEAR), and quest-world callbacks remain open.
 
-2026-10-10 continuation: IDA confirms `Character::SG_Load` forwards mask 4 and `_Load` skips eight section callbacks when Save is null; focused host checks pass. The shared CharAI queue, SpawnGroupManager/`InitSpawned(Char)` and paired ObjectManager-map/CharacterList registration kernels also pass focused host checks. API37 menu → Crypt → occupied-slot reload → Home/resume → terminal Back now passes with retained CharAI/CSSkill owners cleaned up. Crypt still lacks live SpawnSpot records and has only a zero-quantity TEST spawn group. The roster bridge remains disconnected from Player creation; full equipment/loot/skill gameplay and progression remain incomplete.
+2026-10-10 continuation: IDA confirms `Character::SG_Load` forwards mask 4 and `_Load` skips eight section callbacks when Save is null; focused host checks pass. The shared CharAI queue, SpawnGroupManager/`InitSpawned(Char)` and paired ObjectManager-map/CharacterList registration kernels also pass focused host checks. API37 menu → Crypt → occupied-slot reload → Home/resume → terminal Back now passes with retained CharAI/CSSkill owners cleaned up. Crypt still lacks live SpawnSpot records and has only a zero-quantity TEST spawn group; equipment/loot/skill gameplay and progression remain incomplete.
 
-2026-10-10: fixed retained CSSkill projection rebinding after Coordinator service replacement; focused host audit passes. One-class API37/16KiB smoke now passes terminal Back after Home/resume with CharAI cleanup complete and no deferred teardown. Full campaign, inventory payload restoration, combat and progression remain open.
+2026-10-10: fixed CSSkill projection rebind; connected Crypt Player map/list registration; corrected inventory quantities; routed original automatic-pickup semantics through V4; preserved authored FaeryList ID separately from fallback (12 host cases, 5 original ARM comparisons). Current API37/16KiB Crypt row 23/HUD/reopen/resume smoke and both-ABI build pass. Live loot pickup, Faery Character creation/placement and full progression remain open.
 
 Evidence and Adam comparison: [combined status](COMBINED-RECONSTRUCTION-STATUS.md).
 Earlier frame foundation scope: [source frame ownership checkpoint](SOURCE-FRAME-OWNERSHIP-CHECKPOINT-2026-10-05.md).
@@ -271,6 +271,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
   276 original ARM comparisons, 269 host cases and 42 real Lua cases pass.
   Native full-return skill calls now pass; complete Value lifecycle remains open.
 - [x] Decode all 183 original Skill/Faery list/row records; compare with original ARM readers.
+- [x] Preserve authored `FaeryList` separately from its source fallback row; 12 host cases and five original ARM comparisons pass with zero mismatches. The selector is not yet wired to a live generated Faery Character.
 - [x] Adapt Adam's player skill ownership to our source callers: each class has 16 skill/5 faery slots and 13 instances; 29 script names overall. Host/ARM gates pass; full Player AIS/FSM lifecycle remains open.
 - [x] Select saved skill-slot access on the actual current save, preserving source map0/skill-set0 semantics; selected initial-grant regressions and Android builds pass.
 - [x] Select original skill progression/slot initialization callers; prerequisite 777 ARM predicate cases and selected initial-grant 150 ARM comparisons pass. No invented free skill grants.
@@ -401,6 +402,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [x] Reconstruct loot-entry percentage classification, class-weighted probability and weighted selection; 320 original ARM32 vs Android ARM64 comparisons, 204 raw-entry checks and exact RNG states pass ([differential](../reports/reconstruction-2026-10-06/loot-entry-selection-v1-arm32-arm64.json), [host](../reports/reconstruction-2026-10-06/loot-entry-selection-v1-host.json)). Recursive AddLootItems and live drops remain open.
 - [x] Add V4-owned world-drop staging outside player inventory and pickup handoff. Original LootTable row 124 (`Gold_01`, Type 13) matches the selected host item/value/RNG; pickup credits its value to wallet gold and retires the staged item ([receipt](../reports/reconstruction-2026-10-07/loot-world-gold-host.json)). Ordinary item pickup preserves ItemInstance identity.
 - [x] Retain V5/V7 loot-power and presentation owners in Android PlayerCombat, borrow the existing process RNG/V4 inventory, and retain each actor's raw `Loot` ID.
+- [x] Verify generated Crypt row 23, connected HUD, occupied-slot reopen and Home/resume on API 37 / 16 KiB (one Knight case; APK SHA-256 `0e325613…`; device saves restored). Live enemy drop/pickup, mask-4 payload restore and full source `Character::InitPost` remain open.
 - [x] Compile the new Android death-to-item path for ARM64 and x86_64, including original assets and ItemRecord word-21 visual lookup. `:app:assembleDebug`, APK signature and 16 KiB ZIP alignment pass; APK is attached to the [item-world release](https://github.com/Noamcelermajer/DH_sc/releases/tag/native-item-world-2026-10-07).
 - [x] Retry failed one-shot death-loot continuations from the world update; retire partial V4 staging by retained item identity before rerolling. Compile both Android ABIs; no live loot claim.
 - [x] Feed player melee and actor stance/ranged facts from the canonical V4 inventory. IDA `F_MeleeAttack` confirms slots 1/2 and item word 37; `HasRangedWeapon` uses word 22 types 4/5. API37 ARM64/x86_64 build/package passes. Inventory UI/equip mutations and gameplay remain open.
@@ -426,7 +428,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 - [ ] Complete all CalculateResult/ApplyResult dependencies, effects, notifications and actor ownership.
 - [ ] Connect melee/ranged/spell combat, skills, criticals, resistances and status effects in the final runtime.
 - [ ] Complete player damage/death, attacker/killer credit, resurrection and respawn.
-- [ ] Complete source loot coverage: currently gated to one active Warrior/Rogue/Mage on Normal with level+336 zero and `InfiniteLootDrops`; add `DBG_DropAllLoots`, all class/multiplayer counts and difficulty variants, then AutoTransmute/full-inventory UI and rewards/progression.
+- [ ] Complete source loot coverage: currently gated to one active Warrior/Rogue/Mage on Normal with level+336 zero and `InfiniteLootDrops`; automatic-pickup routing now uses the original constant and shared V4 interaction but still needs a live kill/drop test. Add `DBG_DropAllLoots`, all class/multiplayer counts and difficulty variants, then AutoTransmute/full-inventory UI and rewards/progression.
 - [ ] Complete XP, leveling, rewards, gold and difficulty scaling through actual game owners.
 - [ ] Validate boss encounters and any original cooperative/network behavior retained by the project.
 - [ ] Complete a real original level through its exit using the integrated combat loop.
@@ -523,7 +525,7 @@ the [branch-audit reconciliation](BRANCH-AUDIT-2026-10-05.md#adam-reconciliation
 
 ## Immediate work order
 
-1. Capture and fix the first failure after API37 menu `NativeStartGame` row 23/catalogue setup and before the game-start/HUD receipt; preserve the now-working profile/slot route and add the new registration bridge only at the proven Character creation point.
+1. Finish live Player/Character initialization through the menu launch, then exercise a real enemy kill, automatic pickup and inventory/save transfer using the shared V4 owner.
 2. Connect valid Crypt SpawnSpot/SpawnGroup data to the tested spawn policy, then extend `RoomZone::Update` through remaining factories and conditions. The current cache has no Crypt SpawnSpots and only a zero-quantity TEST group.
 3. Finish `Character::Update` gates and Ghost frame ownership on the shared VM/path owner; then connect source-backed movement, combat death, loot and event 2.
 4. Build the generator from the 21 MGX definitions, exit graph, `gDistributions`, occupancy/backtracking and source-compatible MLX serialization; connect authored/generated levels to the real loading lifecycle.
