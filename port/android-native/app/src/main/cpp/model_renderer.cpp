@@ -2356,6 +2356,9 @@ struct PlayerEquipmentNativeV1 {
  dh2::data::EquipmentLiveHooksV1 hooks{};
  std::unique_ptr<dh2::data::PlayerEquipmentLiveServicesV1> services;
  dh2::data::OwnedInventoryServicesV4 live_services{};
+ // Stable pre-transfer split ownership shared by direct, automatic, and
+ // Character::_InitEquipment equip callers. It is empty after force-AddItem.
+ std::unique_ptr<dh2::data::ItemInstanceV1> pending_equipment_split;
  std::vector<PartIdentity> parts;
  std::vector<std::size_t> draw_part;
 
@@ -2546,7 +2549,7 @@ struct PlayerEquipmentNativeV1 {
   if(!services||!prince_combat.inventory){error="Initial equipment requires the live equipment/V4 owners";return false;}
   const dh2::player_initial_equipment_v1::Bindings bindings{
    prince_combat.inventory->character(),prince_combat.inventory.get(),&properties,
-   &live_services,{this,initial_equipment_backend}};
+   &live_services,&pending_equipment_split,{this,initial_equipment_backend}};
   try{
    dh2::player_initial_equipment_v1::Runtime runtime(bindings);
    dh2::player_initial_equipment_v1::Result result{};
@@ -4895,7 +4898,7 @@ bool ui_player_equip_item(std::uintptr_t identity,std::int32_t item_index,
   error="Inventory equip index or EquipmentSlots value is outside the source domain";return false;
  }
  if(!player_equipment_native->services->equip(std::uint32_t(equipment_slot),
-       std::uint32_t(item_index),error))return false;
+       std::uint32_t(item_index),{&player_equipment_native->pending_equipment_split},error))return false;
  error.clear();return true;
 }
 bool ui_player_auto_equip(std::uintptr_t identity,std::int32_t item_index,
@@ -4910,7 +4913,8 @@ bool ui_player_auto_equip(std::uintptr_t identity,std::int32_t item_index,
  if(item_index<0||std::size_t(item_index)>=prince_combat.inventory->items().size()){
   error="Inventory auto-equip index is outside the source Item vector";return false;
  }
- if(!player_equipment_native->services->auto_equip(std::uint32_t(item_index),result,error))return false;
+ if(!player_equipment_native->services->auto_equip(std::uint32_t(item_index),result,
+       {&player_equipment_native->pending_equipment_split},error))return false;
  error.clear();return true;
 }
 bool ui_player_auto_equip_slot(std::uintptr_t identity,std::int32_t equipment_slot,
@@ -4949,7 +4953,8 @@ bool ui_player_auto_equip_slot(std::uintptr_t identity,std::int32_t equipment_sl
    bool already_equipped=false;
    if(!inventory.is_equipped(candidate.index,already_equipped,error))return false;
    if(already_equipped)continue;
-   return equipment.equip(slot,candidate.index,error);
+   return equipment.equip(slot,candidate.index,
+       {&player_equipment_native->pending_equipment_split},error);
   }
   const auto set=slot==1||slot==2?inventory.current_equipment():0;
   if(inventory.equipment()[std::size_t(set)][slot]){

@@ -3,7 +3,8 @@ struct LifetimeCase {std::array<std::uint32_t,8> input;bool failed;std::vector<s
 struct LifetimeWorld:World {
  std::unique_ptr<data::ItemInstanceV1> pending;data::ItemTextServicesV5 actual_text{};
  unsigned failure=0,power_calls=0,published_callbacks=0,retired=0,reentry_checks=0;
- bool active=false,retirement_reject=false,retirement_probe=false,constructor_throw=false;
+ bool active=false,retirement_reject=false,retirement_probe=false,constructor_throw=false,track_clone_identity=false;
+ data::ItemInstanceV1* clone_identity=nullptr;bool presentation_forgotten_before_destroy=false;
  std::vector<std::array<std::uint32_t,4>> effects_seen;
  LifetimeWorld(Tables& t,const std::filesystem::path& cache,const char* name):World(t,cache,name){runtime.reset();real_text=true;effects.stateless_temporaries=false;hooks.required.invoke=required_lifetime;hooks.required.observe_storage=observe_lifetime;actual_text=item_text->services();}
  ~LifetimeWorld(){if(pending){std::string e;ck(presentation->forget(*pending,e),e);pending.reset();}}
@@ -11,24 +12,32 @@ struct LifetimeWorld:World {
  static bool power_text(void* p,data::ItemInstanceV1& i,const data::ItemTextRequestV5& q,data::ItemTextResponseV5& r,std::string& text,std::string& e){auto& s=*static_cast<LifetimeWorld*>(p);if(s.active&&((s.failure==5&&s.power_calls==1)||(s.failure==6&&s.power_calls==2))){e="explicit actual Power localization failure after append";return false;}return s.actual_text.invoke(s.actual_text.context,i,q,r,text,e);}
  static bool required_lifetime(void* p,data::FreshInventoryOwnedV4& i,const data::OwnedInventoryRequestV4& q,data::OwnedInventoryResponseV4& r,std::string& e){auto& s=*static_cast<LifetimeWorld*>(p);using O=data::OwnedInventoryOperationV4;
   if(s.active&&(q.operation==O::update_name||q.operation==O::update_stats||q.operation==O::update_requirements)){
+   if(s.track_clone_identity){if(!s.clone_identity)s.clone_identity=q.item;ck(s.clone_identity==q.item,"equipment path changed split clone identity");}
    ck(q.item&&s.pending.get()==q.item,"constructor callback precedes stable Item publication");++s.published_callbacks;s.effects_seen.push_back({std::uint32_t(q.operation),q.source_caller,std::uint32_t(q.item->value),q.item->identified});
    std::string denied;const auto before=q.item;ck(!i.retire_item({&s.pending},s.effects,denied)&&s.pending.get()==before,"constructor callback retirement reentry destroyed stable Item");++s.reentry_checks;
    if(s.constructor_throw)throw std::runtime_error("explicit constructor throw after stable Item publication");
    if((s.failure==1&&q.source_caller==0x3fc36c)||(s.failure==2&&q.source_caller==0x3fc374)||(s.failure==3&&q.source_caller==0x3fc37c)||(s.failure==4&&q.source_caller==0x3fc44c)||(s.failure==8&&q.source_caller==0x402128)){e="explicit actual clone text failure";return false;}
   }
-  if(q.operation==O::add_power){++s.power_calls;if(s.active){ck(s.pending.get()==q.item,"split Power lost retained clone identity");s.effects_seen.push_back({std::uint32_t(q.operation),q.source_caller,std::uint32_t(q.argument),s.power_calls});}return s.presentation->add_power(*q.item,q.argument,-1,{&s,metadata_text,power_text},e);}
+  if(q.operation==O::add_power){++s.power_calls;if(s.active){if(s.track_clone_identity){if(!s.clone_identity)s.clone_identity=q.item;ck(s.clone_identity==q.item,"split Power changed clone identity");}ck(s.pending.get()==q.item,"split Power lost retained clone identity");s.effects_seen.push_back({std::uint32_t(q.operation),q.source_caller,std::uint32_t(q.argument),s.power_calls});}return s.presentation->add_power(*q.item,q.argument,-1,{&s,metadata_text,power_text},e);}
   if(s.active&&s.failure==7&&q.operation==O::debug_load&&q.source_caller==0x3fe364){e="explicit fullness failure after clone transfer";return false;}
   return World::required(&s,i,q,r,e);
  }
  static void observe_lifetime(void* p,data::FreshInventoryOwnedV4& i,const data::OwnedInventoryRequestV4& q){auto& s=*static_cast<LifetimeWorld*>(p);if(q.operation==data::OwnedInventoryOperationV4::destroy_item){
    ck(q.item&&s.pending.get()==q.item,"retirement no longer sees the live caller-owned Item");if(s.retirement_reject)throw std::runtime_error("explicit required retirement failure");
    if(s.retirement_probe){s.retirement_probe=false;std::string e;ck(!i.retire_item({&s.pending},s.effects,e)&&s.pending.get()==q.item,"retirement observer destructive reentry succeeded");++s.reentry_checks;}
-   const auto count=q.item->powers.size();const auto id=q.item->id;std::string e;ck(s.presentation->forget(*q.item,e)&&!s.presentation->powers(*q.item)&&q.item->powers.size()==count&&q.item->id==id,"Presentation retirement did not precede actual Item destruction");++s.retired;
+   const auto count=q.item->powers.size();const auto id=q.item->id;std::string e;ck((!s.track_clone_identity||s.clone_identity==q.item)&&s.presentation->forget(*q.item,e)&&!s.presentation->powers(*q.item)&&q.item->powers.size()==count&&q.item->id==id,"Presentation retirement did not precede actual Item destruction");s.presentation_forgotten_before_destroy=true;++s.retired;
   }
  }
  void setup(const LifetimeCase& c){std::string e;const auto& in=c.input;ck(inventory->create_item(664,in[1],data::RetainedItemSlotV4{&pending},effects,e),e);pending->value=137;ck(inventory->saved_item_effect(data::OwnedInventoryOperationV4::update_name,0,pending.get(),0,0,effects,e),e);pending->identified=in[4];
   for(unsigned j=0;j<2;++j)ck(inventory->saved_item_effect(data::OwnedInventoryOperationV4::add_power,0,pending.get(),in[6],UINT32_MAX,effects,e),e);
   std::int32_t index;ck(inventory->add_item(pending,true,false,index,effects,e)&&!pending&&index==0,e);inventory->project_current_equipment(in[2]);failure=in[5];power_calls=0;active=true;
+ }
+ void seed_initial_stack(){std::string e;ck(!active&&!pending,"initial stack seed requires an empty lifetime slot");ck(inventory->create_item(664,4,{&pending},effects,e),e);pending->value=137;pending->identified=true;for(unsigned j=0;j<2;++j)ck(inventory->saved_item_effect(data::OwnedInventoryOperationV4::add_power,0,pending.get(),1,UINT32_MAX,effects,e),e);std::int32_t index=-1;ck(inventory->add_item(pending,true,false,index,effects,e)&&!pending&&index==0,e);power_calls=0;active=true;
+ }
+ static int initial_backend(void* raw,const initial::Request* q,initial::Reply* r,std::string& e){auto& s=*static_cast<LifetimeWorld*>(raw);ck(q&&r&&q->inventory==s.inventory.get()&&q->properties==&s.view&&q->equipment_services==&s.effects,"retained initial equipment authority differs");*r={};
+  if(q->operation==initial::Operation::online)return 0;
+  if(q->operation==initial::Operation::add_loot){s.seed_initial_stack();return 0;}
+  e="unexpected retained initial equipment backend operation";return 1;
  }
  void item_words(std::vector<std::uint32_t>& out,const data::ItemInstanceV1& item){out.insert(out.end(),{std::uint32_t(item.id),item.quantity,std::uint32_t(item.value),item.identified,std::uint32_t(item.powers.size())});for(auto id:item.powers)out.push_back(std::uint32_t(id));if(!item.powers.empty()){const auto* full=presentation->powers(item);ck(full&&full->size()==item.powers.size(),"retained full Power owner diverged");for(unsigned j=0;j<full->size();++j)ck((*full)[j].id==item.powers[j],"retained Power IDs diverged");}}
  std::vector<std::uint32_t> snapshot(){std::vector<std::uint32_t> out{std::uint32_t(inventory->current_equipment()),std::uint32_t(inventory->items().size())};for(const auto& slot:inventory->items()){item_words(out,*slot->item);out.push_back(std::uint8_t(slot->slots[0]));out.push_back(std::uint8_t(slot->slots[1]));}out.push_back(bool(pending));if(pending)item_words(out,*pending);
@@ -37,10 +46,16 @@ struct LifetimeWorld:World {
  }
 };
 static void overlay_stackable(Tables& tables,const std::filesystem::path& cache){auto records=file(cache/"loot_table_pyarray.bin"),names=file(cache/"loot_table_pyarraynames.bin"),schema=file(cache/"loot_table_pystructnames.bin");auto borrow=tables.loot.borrow();Reader r{records};r.at=borrow.items().data_begin+4;for(unsigned j=0;j<=664;++j){auto n=r.word();r.at+=n+16;ck(r.at<records.size());if(j==664){records[r.at]=1;break;}r.at+=1+44;n=r.word();r.at+=n+80;}borrow={};std::string e;ck(tables.loot.load(span(records),span(names),span(schema),e),e);}
+enum class EquipmentPath {direct,automatic,initial};
+static bool equipment_path(LifetimeWorld& world,EquipmentPath path,std::string& error){std::int32_t result=-1;
+ if(path==EquipmentPath::direct)return world.equipment->equip(1,0,{&world.pending},error);
+ if(path==EquipmentPath::automatic)return world.equipment->auto_equip(0,result,{&world.pending},error);
+ world.runtime=std::make_unique<initial::Runtime>(initial::Bindings{CHARACTER,world.inventory.get(),&world.view,&world.effects,&world.pending,{&world,LifetimeWorld::initial_backend}});initial::Result out{};return world.runtime->initialize(&out,error)==initial::Status::complete;
+}
 int main(int argc,char** argv){try{
  ck(argc==3);std::filesystem::path cache=argv[1];Tables tables(cache);overlay_stackable(tables,cache);std::ifstream f(argv[2],std::ios::binary);ck(read_gold<unsigned>(f)==0x314c5249);auto n=read_gold<unsigned>(f);std::vector<LifetimeCase> cases;
  while(n--){LifetimeCase c;c.input=read_gold<decltype(c.input)>(f);c.failed=read_gold<unsigned>(f);auto words=read_gold<unsigned>(f);while(words--)c.snapshot.push_back(read_gold<unsigned>(f));auto effects=read_gold<unsigned>(f);while(effects--)c.effects.push_back(read_gold<std::array<std::uint32_t,4>>(f));cases.push_back(std::move(c));}
- unsigned comparisons=0,prefixes=0,retirements=0,guards=0,legacy=0,bulk=0,retained_bulk=0,constructor_prefixes=0;
+ unsigned comparisons=0,prefixes=0,retirements=0,guards=0,legacy=0,bulk=0,retained_bulk=0,constructor_prefixes=0,equipment_path_cases=0,pretransfer_retirements=0,transferred_failures=0,retirement_failures=0;
  for(const char* name:{"KnightPlayerBase","MagePlayerBase","RoguePlayerBase"})for(const auto& c:cases){LifetimeWorld world(tables,cache,name);world.setup(c);auto props=world.properties;auto random=world.random;std::string e;const auto& in=c.input;
   const bool ok=in[0]?world.inventory->split_item(*world.inventory->items()[0]->item,std::int32_t(in[7]),data::RetainedItemSlotV4{&world.pending},world.effects,e):world.inventory->equip_to_slot(1,0,in[3],data::RetainedItemSlotV4{&world.pending},world.effects,e);
   ck(ok!=c.failed,"original retained lifetime status differs: "+e);ck(world.snapshot()==c.snapshot,"original Constructor/Split/Equip scalar/equipment/power prefix differs");ck(world.effects_seen==c.effects,"original source text/power call order differs");ck(!std::memcmp(&props,&world.properties,sizeof props)&&!std::memcmp(&random,&world.random,sizeof random)&&!world.updates&&!world.skin_calls&&!world.vitals,"split added property/Skin/vitals/RNG work");
@@ -72,6 +87,22 @@ int main(int argc,char** argv){try{
  {LifetimeWorld world(tables,cache,"KnightPlayerBase");world.setup(cases.front());world.active=false;std::string e;ck(world.inventory->create_item(664,3,data::RetainedItemSlotV4{&world.pending},world.effects,e),e);for(unsigned j=0;j<2;++j)ck(world.inventory->saved_item_effect(data::OwnedInventoryOperationV4::add_power,0,world.pending.get(),cases.front().input[6],UINT32_MAX,world.effects,e),e);auto* identity=world.pending.get();auto missing=world.effects;missing.observe_storage=nullptr;std::int32_t index=-1;
   ck(!world.inventory->add_item(world.pending,false,false,index,missing,e)&&world.pending.get()==identity&&world.inventory->items()[0]->item->quantity==7&&world.presentation->powers(*identity),"stateful missing merge retirement lost quantity/ownership/Presentation prefix");ck(world.inventory->retire_item({&world.pending},world.effects,e),e);++prefixes;++guards;
  }
+ // One powered stack traverses each production caller. Constructor and Power
+ // failures retain the exact clone until explicit V4 retirement; force-AddItem
+ // failure has already moved that clone into canonical inventory and therefore
+ // must neither retry nor retire it. Retirement rejection preserves both owner
+ // pointer and Presentation prefix for a later explicit attempt.
+ for(const auto path:{EquipmentPath::direct,EquipmentPath::automatic,EquipmentPath::initial})for(unsigned mode:{0u,1u,5u,7u,9u}){
+  LifetimeWorld world(tables,cache,"KnightPlayerBase");world.effects.stateless_temporaries=false;world.failure=mode==9?5:mode;world.retirement_reject=mode==9;std::string e;
+  if(path==EquipmentPath::initial)world.active=false;else{auto c=cases.front();c.input[5]=0;world.setup(c);world.failure=mode==9?5:mode;}world.track_clone_identity=true;
+  const bool completed=equipment_path(world,path,e);++equipment_path_cases;
+  ck(completed==(mode==0),"retained equipment caller status differs");ck(world.clone_identity,"retained equipment caller never published split identity");
+  auto* original=world.inventory->items()[0]->item.get();ck(original&&original->signed_quantity()==1,"equipment caller lost split quantity prefix");
+  if(mode==0){ck(!world.pending&&world.inventory->items().size()==2&&world.inventory->items()[1]->item.get()==world.clone_identity&&world.retired==0,"successful force-add did not clear pending ownership into canonical inventory");}
+  else if(mode==7){ck(!world.pending&&world.inventory->items().size()==2&&world.inventory->items()[1]->item.get()==world.clone_identity&&world.retired==0,"failed post-transfer force-add retried or destroyed canonical clone");++transferred_failures;}
+  else if(mode==9){ck(world.pending.get()==world.clone_identity&&world.inventory->items().size()==1&&world.presentation->powers(*world.pending)&&world.pending->powers.size()==1&&!world.presentation_forgotten_before_destroy,"failed retirement lost clone or Presentation prefix");world.active=false;world.retirement_reject=false;ck(world.inventory->retire_item({&world.pending},world.effects,e)&&!world.pending&&world.presentation_forgotten_before_destroy,e);++retirement_failures;}
+  else{ck(!world.pending&&world.inventory->items().size()==1&&world.retired==1&&world.presentation_forgotten_before_destroy,"pre-transfer failure did not retire Presentation before Item destruction");if(mode==5)ck(world.power_calls==1,"Power-localization failure lost append prefix");++pretransfer_retirements;}
+ }
  {World world(tables,cache,"KnightPlayerBase");world.runtime.reset();world.real_text=true;std::string e;std::unique_ptr<data::ItemInstanceV1> actual;ck(world.effects.stateless_temporaries&&world.inventory->create_item(664,4,actual,world.effects,e),e);std::int32_t index;ck(world.inventory->add_item(actual,true,false,index,world.effects,e),e);ck(world.inventory->equip_to_slot(1,index,true,world.effects,e)&&world.inventory->items().size()==2&&world.inventory->items()[0]->item->quantity==1&&world.inventory->items()[1]->item->quantity==3,"explicit stateless legacy split changed supported behavior");++legacy;}
- std::cout<<"{\"validation\":\"PASS\",\"original_cases\":"<<cases.size()<<",\"actual_classes\":3,\"class_caller_comparisons\":"<<comparisons<<",\"failure_prefix_cases\":"<<prefixes<<",\"retired_live_items\":"<<retirements<<",\"guard_cases\":"<<guards<<",\"supported_legacy_cases\":"<<legacy<<",\"stateless_actual_starter_classes\":"<<bulk<<",\"retained_bulk_cases\":"<<retained_bulk<<",\"constructor_failure_prefix_cases\":"<<constructor_prefixes<<",\"checks\":"<<checks<<",\"synthetic_equippable_stackable_row\":664,\"native_SG4_InitPost\":false,\"text_files\":[";bool comma=false;for(const auto& name:text_files){if(comma)std::cout<<',';comma=true;std::cout<<'\"'<<name<<'\"';}std::cout<<"]}\n";return 0;
+ std::cout<<"{\"validation\":\"PASS\",\"original_cases\":"<<cases.size()<<",\"actual_classes\":3,\"class_caller_comparisons\":"<<comparisons<<",\"failure_prefix_cases\":"<<prefixes<<",\"retired_live_items\":"<<retirements<<",\"guard_cases\":"<<guards<<",\"supported_legacy_cases\":"<<legacy<<",\"stateless_actual_starter_classes\":"<<bulk<<",\"retained_bulk_cases\":"<<retained_bulk<<",\"constructor_failure_prefix_cases\":"<<constructor_prefixes<<",\"equipment_path_cases\":"<<equipment_path_cases<<",\"pretransfer_retirements\":"<<pretransfer_retirements<<",\"post_transfer_failures\":"<<transferred_failures<<",\"preserved_retirement_failures\":"<<retirement_failures<<",\"checks\":"<<checks<<",\"synthetic_equippable_stackable_row\":664,\"native_SG4_InitPost\":false,\"text_files\":[";bool comma=false;for(const auto& name:text_files){if(comma)std::cout<<',';comma=true;std::cout<<'\"'<<name<<'\"';}std::cout<<"]}\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

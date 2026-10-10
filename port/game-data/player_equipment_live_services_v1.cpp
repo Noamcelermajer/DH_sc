@@ -93,11 +93,29 @@ bool PlayerEquipmentLiveServicesV1::prune(std::string& e,unsigned depth){
  return true;
 }
 bool PlayerEquipmentLiveServicesV1::refresh_impl(bool requirements,std::string& e){return gear_.update_properties(e)&&(!requirements||prune(e))&&skin(e)&&gear_.validate_hp_mp(e);}
+bool PlayerEquipmentLiveServicesV1::retire_failed_split(bool completed,RetainedItemSlotV4 pending,std::string& e){
+ if(completed||!pending.value||!*pending.value)return completed;
+ const auto prefix=e;std::string retirement;
+ if(inventory_->retire_item(pending,services(),retirement)){e=prefix;return false;}
+ e=prefix;if(!e.empty())e+="; ";e+="pending equipment split retirement failed";
+ if(!retirement.empty())e+=": "+retirement;
+ return false;
+}
 bool PlayerEquipmentLiveServicesV1::refresh(bool requirements,std::string& e){if(!begin(e))return false;Running guard{running_};return deliver([&]{return refresh_impl(requirements,e);},e);}
 bool PlayerEquipmentLiveServicesV1::check_item_requirements(std::string& e){if(!begin(e))return false;Running guard{running_};return deliver([&]{return prune(e);},e);}
 bool PlayerEquipmentLiveServicesV1::skin_only(std::string& e){if(!begin(e))return false;Running guard{running_};return deliver([&]{return skin(e);},e);}
 bool PlayerEquipmentLiveServicesV1::equip(std::uint32_t slot,std::uint32_t index,std::string& e){if(!begin(e))return false;Running guard{running_};return deliver([&]{return inventory_->equip_to_slot(slot,index,false,services(),e)&&refresh_impl(true,e);},e);}
+bool PlayerEquipmentLiveServicesV1::equip(std::uint32_t slot,std::uint32_t index,RetainedItemSlotV4 pending,std::string& e){
+ if(!pending.value||*pending.value){e="Live equipment split slot is unavailable or occupied";return false;}
+ if(!begin(e))return false;
+ Running guard{running_};const auto completed=deliver([&]{return inventory_->equip_to_slot(slot,index,false,pending,services(),e)&&refresh_impl(true,e);},e);return retire_failed_split(completed,pending,e);
+}
 bool PlayerEquipmentLiveServicesV1::unequip(std::uint32_t slot,std::string& e){if(!begin(e))return false;Running guard{running_};return deliver([&]{return inventory_->unequip_from_slot(slot,-1,services(),e)&&refresh_impl(true,e);},e);}
 bool PlayerEquipmentLiveServicesV1::swap(std::string& e){if(!begin(e))return false;Running guard{running_};inventory_->swap_equipment();return deliver([&]{return refresh_impl(true,e);},e);}
 bool PlayerEquipmentLiveServicesV1::auto_equip(std::uint32_t index,std::int32_t& result,std::string& e){if(!begin(e))return false;Running guard{running_};return deliver([&]{return inventory_->character_auto_equip(index,result,services(),e);},e);}
+bool PlayerEquipmentLiveServicesV1::auto_equip(std::uint32_t index,std::int32_t& result,RetainedItemSlotV4 pending,std::string& e){
+ if(!pending.value||*pending.value){e="Live automatic-equipment split slot is unavailable or occupied";return false;}
+ if(!begin(e))return false;
+ Running guard{running_};const auto completed=deliver([&]{return inventory_->character_auto_equip(index,result,pending,services(),e);},e);return retire_failed_split(completed,pending,e);
+}
 }

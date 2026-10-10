@@ -87,6 +87,7 @@ class FreshInventoryOwnedV4 {
  bool lifetime_slot(RetainedItemSlotV4,const ItemInstanceV1*,std::string&)const;
  bool add_fixed_loot_impl(std::int32_t,std::unique_ptr<ItemInstanceV1>&,bool,const OwnedInventoryServicesV4&,const OwnedLootEffectsV7*,const LootEntrySelectionContextV1*,std::vector<std::unique_ptr<OwnedItemSlotV4>>*,std::string&);
  bool equip_to_slot_impl(std::uint32_t,std::uint32_t,bool,std::unique_ptr<ItemInstanceV1>&,bool,const OwnedInventoryServicesV4&,std::string&);
+ bool auto_equip_impl(std::uint32_t,std::int32_t&,RetainedItemSlotV4,bool,const OwnedInventoryServicesV4&,std::string&);
 public:
  // Live mode borrows the Character's one authoritative PropertyState and RNG.
  // Both remain caller-owned and must outlive this inventory.
@@ -158,8 +159,13 @@ public:
  // Prefix is retained on required effect failure; caller retains unconsumed input.
  bool add_item(std::unique_ptr<ItemInstanceV1>&,bool force,bool convert_gold,std::int32_t& index,const OwnedInventoryServicesV4&,std::string&);
  bool inventory_full(bool&,const OwnedInventoryServicesV4&,std::string&);
+ // Stateful callers provide their existing lifetime slot so a split clone is
+ // never a callee-local temporary while constructor/Power callbacks run.
+ // The legacy overloads remain for explicit stateless fixture services.
  bool auto_equip(std::uint32_t,std::int32_t& result,const OwnedInventoryServicesV4&,std::string&);
+ bool auto_equip(std::uint32_t,std::int32_t& result,RetainedItemSlotV4,const OwnedInventoryServicesV4&,std::string&);
  bool character_auto_equip(std::uint32_t,std::int32_t& result,const OwnedInventoryServicesV4&,std::string&);
+ bool character_auto_equip(std::uint32_t,std::int32_t& result,RetainedItemSlotV4,const OwnedInventoryServicesV4&,std::string&);
  bool equip_to_slot(std::uint32_t,std::uint32_t,bool,const OwnedInventoryServicesV4&,std::string&);
  bool equip_to_slot(std::uint32_t,std::uint32_t,bool,RetainedItemSlotV4,const OwnedInventoryServicesV4&,std::string&);
  bool unequip_from_slot(std::uint32_t,std::int32_t,const OwnedInventoryServicesV4&,std::string&);

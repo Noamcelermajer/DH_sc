@@ -34,6 +34,10 @@ struct Bindings {
  // Borrow the stable descriptor returned by the existing equipment facade.
  // Its context retains real text/Skin/world/item retirement providers.
  const data::OwnedInventoryServicesV4* equipment_services=nullptr;
+ // Stable storage in the caller's existing native equipment lifetime owner.
+ // A split clone remains here until force-AddItem transfers it or explicit
+ // V4 retirement has forgotten Presentation and destroyed the Item.
+ std::unique_ptr<data::ItemInstanceV1>* pending_split=nullptr;
  Backend backend{};
 };
 enum class Decision : std::uint32_t {not_started,online_record_skipped,

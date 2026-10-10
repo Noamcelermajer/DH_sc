@@ -63,6 +63,7 @@ class PlayerEquipmentLiveServicesV1 {
  bool skin(std::string&);
  bool prune(std::string&,unsigned=0);
  bool refresh_impl(bool,std::string&);
+ bool retire_failed_split(bool,RetainedItemSlotV4,std::string&);
  static bool effect(void*,FreshInventoryOwnedV4&,const OwnedInventoryRequestV4&,
                     OwnedInventoryResponseV4&,std::string&);
  static void observe(void*,FreshInventoryOwnedV4&,const OwnedInventoryRequestV4&);
@@ -89,10 +90,17 @@ public:
  // Character::Skin after a menu transmute. Runs the same bound V5 visual
  // provider and source Item identities without refreshing gear/vitals again.
  bool skin_only(std::string&);
+ // Live callers must use the retained overloads with a stable slot owned by
+ // their existing native equipment lifetime. On pre-transfer failure the
+ // exact clone is retired through V4; a rejected retirement leaves it in the
+ // slot with its Presentation prefix. Legacy overloads remain for fixtures
+ // whose services explicitly declare stateless temporaries.
  bool equip(std::uint32_t slot,std::uint32_t index,std::string&);
+ bool equip(std::uint32_t slot,std::uint32_t index,RetainedItemSlotV4,std::string&);
  bool unequip(std::uint32_t slot,std::string&);
  bool swap(std::string&);
  bool auto_equip(std::uint32_t index,std::int32_t& result,std::string&);
+ bool auto_equip(std::uint32_t index,std::int32_t& result,RetainedItemSlotV4,std::string&);
  // DisplayRightHud/FillActionIcon, actual draw/resource lifecycle and native
  // inventory serialization/binding remain mandatory caller integrations.
  FreshInventoryOwnedV4& inventory()const noexcept{return *inventory_;}
