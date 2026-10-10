@@ -79,6 +79,9 @@ include("{(ROOT/'port/engine-ui/inventory_text_v1.cmake').as_posix()}")
  assert sum(p.name=='libdh2_script_runtime.dll' for p in dlls)==1
  host=execute();assert all(r['validation']=='PASS' for r in host.values())
  assert host['retained_lifetime_audit']['class_caller_comparisons']==45 and host['saved_inventory_audit']['original_caller_cases']==19
+ retained=host['retained_lifetime_audit']
+ assert retained['equipment_path_cases']==15 and retained['pretransfer_retirements']==6
+ assert retained['post_transfer_failures']==3 and retained['preserved_retirement_failures']==3
  after_commands=run([ninja,'-C',build,'-t','commands',*targets]);after=hashes(actual_dependencies(build,ninja,selected_entries(build,after_commands))|evidence)
  changes={name:{'before':before.get(name),'after':after.get(name)} for name in before.keys()|after.keys() if before.get(name)!=after.get(name)}
  cache_changes=[name for name,value in inputs.items() if sha(cache.parent/name)!=value]

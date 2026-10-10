@@ -33,7 +33,7 @@ struct World {
  std::unique_ptr<ui::ItemTextOwnerV5> item_text;
  std::unique_ptr<data::ItemPresentationOwnerV5> presentation;
  data::EquipmentLiveHooksV1 hooks{};std::unique_ptr<data::PlayerEquipmentLiveServicesV1> equipment;
- data::OwnedInventoryServicesV4 delegate{},effects{};std::unique_ptr<initial::Runtime> runtime;
+ data::OwnedInventoryServicesV4 delegate{},effects{};std::unique_ptr<data::ItemInstanceV1> initial_pending;std::unique_ptr<initial::Runtime> runtime;
  Gold gold{};std::vector<Trace> trace;std::vector<unsigned> order;
  std::uintptr_t visual=0;std::uint32_t online=0;std::uint8_t record_byte=1;
  bool real_loot=false,real_text=false,attached=true,empty_record=false,throw_failure=false,reenter=false;
@@ -52,7 +52,7 @@ struct World {
   hooks={this,binding,{this,world_query},&visual,{this,skin},{this,required,observe}};
   equipment=std::make_unique<data::PlayerEquipmentLiveServicesV1>(*inventory,view,t.rows.data(),t.rows.size(),t.powers.borrow(),hooks);
   delegate=equipment->services();effects={this,effect,observed,true};
-  runtime=std::make_unique<initial::Runtime>(initial::Bindings{CHARACTER,inventory.get(),&view,&effects,{this,backend}});
+  runtime=std::make_unique<initial::Runtime>(initial::Bindings{CHARACTER,inventory.get(),&view,&effects,&initial_pending,{this,backend}});
   for(unsigned id=0;id<inventory->table().rows.size();++id){const auto& row=inventory->table().rows[id];if(yes_item<0&&row.record.words[26]==1&&!std::uint8_t(row.record.words[7]))yes_item=id;
    if(no_item<0&&row.record.words[26]==-1&&data::item_type(row)!=13&&!std::uint8_t(row.record.words[7]))no_item=id;}
   ck(yes_item>=0&&no_item>=0,"real oracle metadata missing");

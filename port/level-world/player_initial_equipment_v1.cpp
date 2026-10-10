@@ -5,15 +5,16 @@ namespace dh2::player_initial_equipment_v1 {namespace {
 struct Range{std::uintptr_t b,e;};
 template<class T>bool range(const T* p,Range& r){const auto a=reinterpret_cast<std::uintptr_t>(p);if(!p||a%alignof(T)||a>UINTPTR_MAX-sizeof(T))return false;r={a,a+sizeof(T)};return true;}
 bool overlap(Range a,Range b){return a.b<b.e&&b.b<a.e;}
-bool valid(const Bindings& b){Range i,p,s;
- if(!b.character||!range(b.inventory,i)||!range(b.properties,p)||!range(b.equipment_services,s)||overlap(i,p)||overlap(i,s)||overlap(p,s))return false;
+bool valid(const Bindings& b){Range i,p,s,r;
+ if(!b.character||!range(b.inventory,i)||!range(b.properties,p)||!range(b.equipment_services,s)||!range(b.pending_split,r))return false;
+ const Range controls[]{i,p,s,r};for(unsigned j=0;j<4;++j)for(unsigned k=j+1;k<4;++k)if(overlap(controls[j],controls[k]))return false;
  const auto* state=b.inventory->properties();Range v;if(!range(state,v))return false;
  return b.inventory->character()==b.character&&b.properties->base==state->base.data()&&b.properties->saved==state->saved.data()&&
   b.properties->gear==state->gear.data()&&b.properties->resolved==state->resolved.data()&&!dh2_property_validate(b.properties);
 }
 bool separate(const Bindings& b,Range r){
  const auto clear=[&](const auto* p){Range c;return range(p,c)&&!overlap(r,c);};
- if(!clear(b.inventory)||!clear(b.inventory->properties())||!clear(b.properties)||!clear(b.equipment_services))return false;
+ if(!clear(b.inventory)||!clear(b.inventory->properties())||!clear(b.properties)||!clear(b.equipment_services)||!clear(b.pending_split))return false;
  const auto& view=*b.properties;
  const std::int32_t* sheets[]{view.defaults,view.types,view.base,view.saved,view.gear,view.resolved};
  for(const auto* p:sheets){const auto at=reinterpret_cast<std::uintptr_t>(p);if(!p||at>UINTPTR_MAX-224*4||overlap(r,{at,at+224*4}))return false;}
@@ -55,10 +56,16 @@ struct Call {
    const auto index=std::uint32_t(a);if(a<0||index>=b.inventory->items().size()||!b.inventory->items()[index]||!b.inventory->items()[index]->item)return fail("Initial equipment source Item unavailable");
    const auto* row=data::item(b.inventory->table(),b.inventory->items()[index]->item->id);if(!row)return fail("Initial equipment source Item metadata unavailable");value=row->record.words[26]!=-1;return 0;
   }
-  case auto_equip:++out.auto_equip_calls;
-   try{if(!b.inventory->character_auto_equip(std::uint32_t(a),value,*b.equipment_services,error))return fail("Initial equipment CharacterAutoEquip failed");}
-   catch(...){return fail("Initial equipment CharacterAutoEquip exception");}
+  case auto_equip:{++out.auto_equip_calls;bool completed=false;
+   try{completed=b.inventory->character_auto_equip(std::uint32_t(a),value,data::RetainedItemSlotV4{b.pending_split},*b.equipment_services,error);}
+   catch(const std::exception& x){if(error.empty())error=x.what();}
+   catch(...){if(error.empty())error="Initial equipment CharacterAutoEquip exception";}
+   if(!completed){if(*b.pending_split){const auto prefix=error;std::string retirement;
+     if(!b.inventory->retire_item({b.pending_split},*b.equipment_services,retirement)){error=prefix;if(!error.empty())error+="; ";error+="pending initial equipment split retirement failed";if(!retirement.empty())error+=": "+retirement;}
+     else error=prefix;
+    }return fail("Initial equipment CharacterAutoEquip failed");}
    out.last_auto_equip=value;return valid(b)?0:fail("Initial equipment borrowed owners changed");
+  }
   case skin:{++out.skin_calls;
    if(!b.equipment_services->invoke)return fail("Initial equipment source Skin provider unavailable");
    const data::OwnedInventoryRequestV4 q{data::OwnedInventoryOperationV4::skin,0x3b3a3c,nullptr,nullptr,0,0};data::OwnedInventoryResponseV4 r{};
@@ -94,7 +101,7 @@ struct Call {
 Runtime::Runtime(Bindings b):bindings_(b){if(!valid(b))throw std::invalid_argument("Invalid borrowed initial equipment owners");}
 Status Runtime::initialize(Result* out,std::string& error){
  if(busy_)return Status::busy;
- Range r,e,t;if(!valid(bindings_)||!range(out,r)||!range(&error,e)||!range(this,t)||overlap(r,e)||overlap(r,t)||overlap(e,t)||!separate(bindings_,r)||!separate(bindings_,e))return Status::invalid_argument;
+ Range r,e,t;if(!valid(bindings_)||*bindings_.pending_split||!range(out,r)||!range(&error,e)||!range(this,t)||overlap(r,e)||overlap(r,t)||overlap(e,t)||!separate(bindings_,r)||!separate(bindings_,e))return Status::invalid_argument;
  *out={};error.clear();busy_=true;struct Scope{bool& busy;~Scope(){busy=false;}}scope{busy_};Call call{bindings_,*out,error};
  try{return call.execute()?Status::failed:Status::complete;}catch(...){if(error.empty())error="Initial equipment provider exception";return Status::failed;}
 }
