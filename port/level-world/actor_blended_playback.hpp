@@ -13,6 +13,7 @@ struct BlendedPlaybackEvent {
 struct BlendedEventObserver {
  void* context=nullptr;
  void(*invoke)(void*,BlendedPlayback&,const BlendedPlaybackEvent&)=nullptr;
+ bool(*frame_step)(void*,BlendedPlayback&,std::uint32_t,std::uint32_t,std::uint32_t)=nullptr;
 };
 enum BlendedEventPhase : std::uint32_t {animator_event=4,selection_event=5};
 struct PlaybackSlot {

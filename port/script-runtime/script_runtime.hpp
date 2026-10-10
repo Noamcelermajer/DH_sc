@@ -27,7 +27,9 @@ enum Error {
     ERROR_TIME_OVERFLOW,
     ERROR_TASK_TICKET_OVERFLOW,
     ERROR_EVENT_CAPACITY,
-    ERROR_CHARACTER_SERVICE
+    ERROR_CHARACTER_SERVICE,
+    ERROR_CAMERA_SERVICE,
+    ERROR_UNSUPPORTED_ONLINE
 };
 
 enum EventType {
@@ -94,6 +96,10 @@ struct SpawnServices {
     // Runs synchronously at the original SpawnCharacter command boundary.
     // >0 accepted, 0 source lookup miss, <0 bound Character service failure.
     int (*request)(void*, const Event&);
+    // Executes the source PlayCamera command at its scheduler boundary.
+    // use_crit selects the selected CamAnimSet Crit; otherwise clip_id is
+    // resolved as an AnimDict ID in that same selected set.
+    int (*play_camera)(void*, uint8_t use_crit, int32_t clip_id);
 };
 
 struct Task {
@@ -104,9 +110,14 @@ struct Task {
     uint32_t wait_duration_ms;
     uint32_t wait_elapsed_ms;
     int32_t parent_script_id;
+    // ScriptManager::StartScript(id, arg, check) arguments are retained on
+    // the same task record. The selected interpreter subset may reject the
+    // script before activation when its commands lack providers.
+    int32_t start_argument;
     uint8_t depth;
     uint8_t active;
     uint8_t waiting;
+    uint8_t start_check_running;
 };
 
 struct Runtime {
@@ -151,6 +162,20 @@ Error init(Runtime *runtime,
  * TriggerZone increments its activation count even when SafeStart finds the
  * script already running; the configured count still gates later activations. */
 bool enter_trigger(Runtime *runtime);
+/* Starts a source-named TriggerZone script in the same level ScriptManager.
+ * Per-trigger activation counters live with the TriggerZone GameObject while
+ * tasks, tables, and time remain shared by the single Runtime owner. */
+bool enter_trigger_for(Runtime *runtime, int32_t script_id,
+                       const char *trigger_name, int32_t trigger_count,
+                       uint32_t *trigger_activations,
+                       uint8_t *trigger_fired);
+/* ScriptManager adapters over this Runtime's single task table. Negative IDs
+ * represent source GetIDFromName misses: running=false and start is a
+ * successful no-op. StartScript's check-running guard is online-only; this
+ * offline runtime rejects online dispatch because network routing is absent. */
+bool is_script_running(const Runtime *runtime, int32_t script_id);
+Error start_script(Runtime *runtime, int32_t script_id, int32_t argument,
+                   uint8_t check_running, uint8_t online);
 
 /* Advances game time once and executes only tasks present at update start.
  * A blocking Wait checks prior elapsed, receives this delta, and returns

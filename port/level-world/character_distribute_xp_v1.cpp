@@ -102,6 +102,22 @@ std::int32_t cast_int(float value, bool& valid) {
 
 } // namespace
 
+std::int32_t current_level_difficulty_from_owner(
+    void* context,std::int32_t* difficulty,std::string& error) {
+    if(!context||!difficulty) {
+        error="Current-Level difficulty owner binding is incomplete";
+        return 1;
+    }
+    const auto& owner=*static_cast<const CurrentLevelDifficultyOwner*>(context);
+    if(!owner.fields||!owner.ready||!*owner.ready) {
+        error="Application current-Level owner is not ready";
+        return 1;
+    }
+    *difficulty=owner.fields->difficulty_118;
+    error.clear();
+    return 0;
+}
+
 Status distribute(State* state, const Services* services, Result* output,
                   std::string& error) {
     if (!state || !services || !output || !state->killed ||

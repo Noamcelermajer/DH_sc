@@ -62,6 +62,46 @@ void ordered_map_and_stable_identity() {
     assert(owner.add_object(23, object(high_identity), &negative) == Status::duplicate_identity);
 }
 
+void named_handle_create_miss_counter_and_collision() {
+    Owner owner;
+    assert(owner.next_source_handle() == 1);
+    SourceHandle handle = 99;
+    bool created = true;
+    assert(owner.get_or_reserve_named_handle("Potion", false, &handle, &created) ==
+           Status::not_found);
+    assert(handle == 0 && !created && owner.next_source_handle() == 1);
+
+    assert(owner.get_or_reserve_named_handle("Potion", true, &handle, &created) ==
+           Status::ok);
+    assert(handle == 1 && created && owner.next_source_handle() == 2);
+    auto* reservation = owner.find_by_name("Potion");
+    assert(reservation && reservation->source_handle == 1 &&
+           reservation->identity == 0 && reservation->name == "Potion");
+    assert(owner.find_by_name("potion") == nullptr);
+    assert(owner.get_or_reserve_named_handle("Potion", true, &handle, &created) ==
+           Status::ok);
+    assert(handle == 1 && !created && owner.next_source_handle() == 2);
+
+    GameObject* stored = nullptr;
+    assert(owner.add_named_object(1, "Potion", object(0x991), &stored) == Status::ok);
+    assert(stored == reservation && stored->identity == 0x991 &&
+           owner.find_by_name("Potion") == stored);
+    bool removed = false;
+    assert(owner.remove_object(1, &removed) == Status::ok && removed &&
+           owner.find_by_name("Potion") == nullptr);
+
+    Owner collision;
+    assert(collision.add_object(1, object(0x992), &stored) == Status::ok);
+    assert(collision.get_or_reserve_named_handle("NewName", true, &handle,
+                                                  &created) ==
+           Status::source_handle_collision);
+    assert(handle == 1 && !created && collision.next_source_handle() == 2 &&
+           collision.find_by_source_handle(1)->identity == 0x992 &&
+           collision.find_by_name("NewName") == nullptr);
+    collision.reset_after_native_flush();
+    assert(collision.next_source_handle() == 1 && collision.empty());
+}
+
 void canonical_views() {
     Owner owner;
     GameObject* value = nullptr;
@@ -233,6 +273,7 @@ void native_flush_reset_retires_only_the_manager_projection() {
 
 int main() {
     ordered_map_and_stable_identity();
+    named_handle_create_miss_counter_and_collision();
     canonical_views();
     borrowed_actor_fields_remain_canonical();
     no_room_list_and_player_path();

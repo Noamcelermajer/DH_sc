@@ -25,6 +25,9 @@ def main():
                         help="canonical cache/files/data/pydata directory")
     parser.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE,
                         help="original powered AddLoot fixture")
+    parser.add_argument("--character-data", type=Path,
+                        default=ROOT / "port/android-native/app/src/main/assets/data",
+                        help="canonical Character and class cache directory")
     parser.add_argument("--build", type=Path,
                         default=MODULE / "build/player-add-loot-v1-host")
     parser.add_argument("--compiler", default=shutil.which("g++") or "g++",
@@ -34,6 +37,7 @@ def main():
     args = parser.parse_args()
 
     cache = args.cache.resolve()
+    character_data = args.character_data.resolve()
     fixture = args.fixture.resolve()
     build = args.build.resolve()
     compiler = Path(shutil.which(args.compiler) or args.compiler).resolve()
@@ -42,6 +46,8 @@ def main():
         raise NotADirectoryError(cache)
     if not fixture.is_file():
         raise FileNotFoundError(fixture)
+    if not character_data.is_dir():
+        raise NotADirectoryError(character_data)
     if not c_compiler.is_file():
         raise FileNotFoundError(f"matching C compiler not found: {c_compiler}")
     cache_names = (
@@ -119,14 +125,22 @@ def main():
     run(compile_command)
 
     env["PATH"] = str(lib_dir) + os.pathsep + env.get("PATH", "")
-    result = run([executable, fixture, cache])
+    result = run([executable, fixture, cache, character_data])
     host = json.loads(result.stdout)
     if host.get("validation") != "PASS":
         raise AssertionError("player AddLoot host test did not pass")
 
+    character_files = [character_data / name for name in (
+        "character_properties_pyarray.bin", "character_properties_pyarraynames.bin",
+        "character_properties_pystructnames.bin", "character_classes_pyarray.bin",
+        "character_classes_pyarraynames.bin", "character_classes_pystructnames.bin")]
+    missing_character = [path for path in character_files if not path.is_file()]
+    if missing_character:
+        raise FileNotFoundError(missing_character[0])
     inputs = [TESTS / "player_add_loot_v1_host.cpp",
               MODULE / "player_add_loot_v1.cpp",
-              MODULE / "player_add_loot_v1.hpp", fixture, *cache_files]
+              MODULE / "player_add_loot_v1.hpp", fixture, *cache_files,
+              *character_files]
     report_path = (args.report.resolve() if args.report else
                    build / "player_add_loot_v1_host.json")
     report_path.parent.mkdir(parents=True, exist_ok=True)

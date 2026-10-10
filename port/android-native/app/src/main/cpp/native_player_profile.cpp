@@ -1,4 +1,5 @@
 #include "native_player_profile.hpp"
+#include "native_exclusive_publish_v1.hpp"
 #include "player_profile_filename_v1.hpp"
 #include "player_profile_create_v1.hpp"
 #include "player_profile_atomic_replace_v1.hpp"
@@ -32,6 +33,7 @@
 #endif
 #include <windows.h>
 #else
+#include <fcntl.h>
 #include <unistd.h>
 #endif
 
@@ -80,6 +82,56 @@ bool read_profile_file(const std::filesystem::path& path,
  if(!file.read(reinterpret_cast<char*>(bytes.data()),std::streamsize(bytes.size()))){error="existing campaign read failed";return false;}
  return true;
 }
+enum class CampaignReadV1 { loaded, missing, failed };
+CampaignReadV1 read_campaign_candidate_v1(const std::filesystem::path& path,
+ std::vector<std::uint8_t>& bytes,std::string& error){
+ std::error_code status_error;
+ const auto status=std::filesystem::status(path,status_error);
+ if(status_error==std::errc::no_such_file_or_directory)return CampaignReadV1::missing;
+ if(status_error){error="campaign file inspection failed: "+path.string();return CampaignReadV1::failed;}
+ if(!std::filesystem::exists(status))return CampaignReadV1::missing;
+ if(!std::filesystem::is_regular_file(status)){
+  error="campaign path is not a regular file: "+path.string();return CampaignReadV1::failed;
+ }
+ std::error_code size_error;const auto size=std::filesystem::file_size(path,size_error);
+ if(size_error||size>32u*1024u*1024u){
+  error="campaign file size outside native span: "+path.string();return CampaignReadV1::failed;
+ }
+ std::ifstream file(path,std::ios::binary);
+ if(!file){error="campaign file open failed: "+path.string();return CampaignReadV1::failed;}
+ bytes.resize(static_cast<std::size_t>(size));
+ if(!bytes.empty()&&!file.read(reinterpret_cast<char*>(bytes.data()),
+                                static_cast<std::streamsize>(bytes.size()))){
+  error="campaign file read failed: "+path.string();return CampaignReadV1::failed;
+ }
+ if(file.peek()!=std::char_traits<char>::eof()){
+  error="campaign changed during read: "+path.string();return CampaignReadV1::failed;
+ }
+ return CampaignReadV1::loaded;
+}
+bool usable_campaign_header_v1(const std::vector<std::uint8_t>& bytes){
+ return bytes.size()>3&&!(bytes[0]==0xff&&bytes[1]==0xff&&
+                          bytes[2]==0xff&&bytes[3]==0xff);
+}
+bool read_existing_campaign_v1(const std::filesystem::path& primary,
+ std::vector<std::uint8_t>& bytes,std::uint32_t& opens,std::string& error){
+ bytes.clear();
+ auto result=read_campaign_candidate_v1(primary,bytes,error);
+ if(result==CampaignReadV1::failed)return false;
+ if(result==CampaignReadV1::loaded)++opens;
+ // Original cache recovery is limited to a missing primary, a header shorter
+ // than one word, or its FFFFFFFF corruption marker. A malformed section
+ // index after a usable header is not a reason to retry an arbitrary backup.
+ if(result==CampaignReadV1::loaded&&usable_campaign_header_v1(bytes))return true;
+ bytes.clear();
+ result=read_campaign_candidate_v1(std::filesystem::path(primary.string()+".bak"),bytes,error);
+ if(result==CampaignReadV1::failed)return false;
+ if(result==CampaignReadV1::loaded)++opens;
+ if(result!=CampaignReadV1::loaded||!usable_campaign_header_v1(bytes)){
+  error="no usable campaign primary/backup header: "+primary.string();return false;
+ }
+ error.clear();return true;
+}
 bool write_synced_file(const std::filesystem::path& path,
                        const std::vector<std::uint8_t>& bytes,std::string& error){
  auto* file=std::fopen(path.string().c_str(),"wb");
@@ -103,6 +155,20 @@ bool replace_file(const std::filesystem::path& from,
  std::error_code ec;std::filesystem::rename(from,to,ec);
  if(!ec)return true;
  error="campaign output replace failed: "+ec.message();return false;
+#endif
+}
+bool sync_campaign_directory(const std::filesystem::path& target,
+                             std::string& error){
+#ifdef _WIN32
+ (void)target;(void)error;
+ return true; // MOVEFILE_WRITE_THROUGH is the Windows rename durability boundary.
+#else
+ auto parent=target.parent_path();if(parent.empty())parent=".";
+ const int fd=::open(parent.c_str(),O_RDONLY);
+ if(fd<0){error="campaign directory open for sync failed";return false;}
+ const bool okay=::fsync(fd)==0;const int close_result=::close(fd);
+ if(!okay||close_result!=0){error="campaign directory sync failed";return false;}
+ return true;
 #endif
 }
 }
@@ -265,11 +331,8 @@ struct Transport::Impl {
     if(file||std::filesystem::exists(bindings.directory/q.filename)||std::filesystem::exists((bindings.directory/q.filename).string()+".bak")){error="new campaign slot is already occupied";return false;}
     bytes.assign(4,0);
    }else{
-    if(!file){error="campaign primary unavailable; backup/new-character providers required";return false;}
-    ++receipt.file_opens;const auto size=file.tellg();
-    if(size<4||size>32*1024*1024){error="campaign size outside native span";return false;}
-    bytes.resize(static_cast<std::size_t>(size));file.seekg(0);
-    if(!file.read(reinterpret_cast<char*>(bytes.data()),std::streamsize(bytes.size()))){error="campaign read failed";return false;}
+    if(!read_existing_campaign_v1(bindings.directory/q.filename,bytes,
+                                  receipt.file_opens,error))return false;
    }
    auto next=std::make_shared<Profile>();
    if(!next->index.load({bytes.data(),bytes.size()},error))return false;
@@ -455,7 +518,11 @@ bool Transport::save_all(std::string& error){
   if(std::fclose(file))okay=false;
   if(!okay){std::filesystem::remove(temporary);error="new campaign durable write failed";return false;}
   if(std::filesystem::exists(target)){std::filesystem::remove(temporary);error="new campaign destination became occupied";return false;}
-  std::filesystem::rename(temporary,target);error.clear();return true;
+  if(!publish_new_campaign_file(temporary,target,error)){
+   std::filesystem::remove(temporary);return false;
+  }
+  if(!sync_campaign_directory(target,error))return false;
+  error.clear();return true;
  }catch(...){if(error.empty())error="new campaign persistence adapter threw";return false;}
 }
 bool Transport::save_existing_metadata(std::string& error){
@@ -503,12 +570,14 @@ bool Transport::save_existing_metadata(std::string& error){
   if(!replace_file(backup_temp,backup,error)){
    std::error_code ignored;std::filesystem::remove(backup_temp,ignored);return false;
   }
+  if(!sync_campaign_directory(target,error))return false;
   if(!write_synced_file(primary_temp,next,error)){
    std::error_code ignored;std::filesystem::remove(primary_temp,ignored);return false;
   }
   if(!replace_file(primary_temp,target,error)){
    std::error_code ignored;std::filesystem::remove(primary_temp,ignored);return false;
   }
+  if(!sync_campaign_directory(target,error))return false;
   error.clear();return true;
  }catch(...){if(error.empty())error="existing campaign save adapter threw";return false;}
 }
@@ -637,9 +706,9 @@ data::PlayerSaveLoadOwnerV1& Transport::loader()noexcept{return *loader_;}
 const Receipt& Transport::receipt()const noexcept{impl_->refresh();return impl_->receipt;}
 
 struct Metadata::Impl {
- data::PlayerSavegameV1 metadata;
- data::PlayerSaveProfileV1 profile;
- Transport transport{metadata,profile};
+ std::shared_ptr<data::PlayerSavegameV1> metadata=std::make_shared<data::PlayerSavegameV1>();
+ std::shared_ptr<data::PlayerSaveProfileV1> profile=std::make_shared<data::PlayerSaveProfileV1>();
+ std::shared_ptr<Transport> transport=std::make_shared<Transport>(*metadata,*profile);
  Receipt receipt;
  std::filesystem::path directory;
  bool active=false;
@@ -649,45 +718,67 @@ Metadata::~Metadata()=default;
 bool Metadata::load(std::int32_t slot,const std::filesystem::path& directory,const data::CharacterTable& characters,std::int32_t& current_difficulty,std::string& error){
  auto& s=*impl_;
  if(s.active||slot<0||directory.empty()){error="invalid/reentrant metadata input";return false;}
- if(s.metadata.slot()!=-1&&(s.metadata.slot()!=slot||s.directory!=directory)){error="metadata owner belongs to another selected slot/directory";return false;}
+ if(s.metadata->slot()!=-1&&(s.metadata->slot()!=slot||s.directory!=directory)){error="metadata owner belongs to another selected slot/directory";return false;}
  // Manage creates +680 through the indexed C1(slot,1,false), whose level
  // default is 1. A blank Save followed by SetSlot would incorrectly retain
  // level0 when a valid profile has no PLVL section. Repeat reads reuse C1.
- if(s.metadata.slot()==-1&&!s.metadata.initialize_new_profile_metadata(slot,error))return false;
+ if(s.metadata->slot()==-1&&!s.metadata->initialize_new_profile_metadata(slot,error))return false;
  s.directory=directory;s.active=true;s.receipt.loaded=false;
- struct Guard{Impl& state;~Guard(){std::string unused;state.transport.bind({},unused);state.active=false;}}guard{s};
- if(!s.transport.bind({directory,&characters,&current_difficulty,{}},error))return false;
- if(!s.transport.loader().load(1,error)){s.receipt=s.transport.receipt();return false;}
- s.receipt=s.transport.receipt();
- if(!s.metadata.level_name_loaded()||!s.metadata.use_spawn_points_loaded()){error="campaign metadata omitted required initialized fields";return false;}
+ struct Guard{Impl& state;~Guard(){std::string unused;state.transport->bind({},unused);state.active=false;}}guard{s};
+ if(!s.transport->bind({directory,&characters,&current_difficulty,{}},error))return false;
+ if(!s.transport->loader().load(1,error)){s.receipt=s.transport->receipt();return false;}
+ s.receipt=s.transport->receipt();
+ if(!s.metadata->level_name_loaded()||!s.metadata->use_spawn_points_loaded()){error="campaign metadata omitted required initialized fields";return false;}
  s.receipt.loaded=true;
  return true;
 }
 bool Metadata::save_numeric_request(const data::CharacterTable& characters,
  std::int32_t& current_difficulty,std::string& error){
  auto& s=*impl_;
- if(s.active||!s.receipt.loaded||s.metadata.slot()<0||s.directory.empty()){
+ if(s.active||!s.receipt.loaded||s.metadata->slot()<0||s.directory.empty()){
   error="loaded NativeStartGame temporary Save required";return false;
  }
  s.active=true;
- struct Guard{Impl& state;~Guard(){std::string ignored;state.transport.bind({},ignored);state.active=false;}}guard{s};
- if(!s.transport.bind({s.directory,&characters,&current_difficulty,{},false},error))return false;
- return s.transport.save_existing_metadata(error);
+ struct Guard{Impl& state;~Guard(){std::string ignored;state.transport->bind({},ignored);state.active=false;}}guard{s};
+ if(!s.transport->bind({s.directory,&characters,&current_difficulty,{},false},error))return false;
+ return s.transport->save_existing_metadata(error);
 }
 bool Metadata::clear_spawn_point_and_save(std::size_t difficulty,
  const data::CharacterTable& characters,std::int32_t& current_difficulty,std::string& error){
  auto& s=*impl_;
- if(s.active||!s.receipt.loaded||s.metadata.slot()<0||s.directory.empty()){
+ if(s.active||!s.receipt.loaded||s.metadata->slot()<0||s.directory.empty()){
   error="loaded NativeStartGame temporary Save required";return false;
  }
  s.active=true;
- struct Guard{Impl& state;~Guard(){std::string ignored;state.transport.bind({},ignored);state.active=false;}}guard{s};
- if(!s.transport.bind({s.directory,&characters,&current_difficulty,{},false},error))return false;
- if(!s.metadata.clear_use_spawn_point(difficulty,error))return false;
- return s.transport.save_existing_metadata(error);
+ struct Guard{Impl& state;~Guard(){std::string ignored;state.transport->bind({},ignored);state.active=false;}}guard{s};
+ if(!s.transport->bind({s.directory,&characters,&current_difficulty,{},false},error))return false;
+ if(!s.metadata->clear_use_spawn_point(difficulty,error))return false;
+ return s.transport->save_existing_metadata(error);
 }
 const Receipt& Metadata::receipt()const noexcept{return impl_->receipt;}
-const data::PlayerSavegameV1& Metadata::save()const noexcept{return impl_->metadata;}
-std::uintptr_t Metadata::profile_identity()const noexcept{return impl_->profile.identity;}
-std::uintptr_t Metadata::save_identity()const noexcept{return reinterpret_cast<std::uintptr_t>(&impl_->metadata);}
+const data::PlayerSavegameV1& Metadata::save()const noexcept{return *impl_->metadata;}
+Metadata::SharedSession Metadata::share_session()const noexcept{
+ return {impl_->metadata,impl_->profile,impl_->transport};
+}
+bool Metadata::create_character_session(std::uintptr_t character,
+ CharacterSession& out,std::string& error)const{
+ const auto& s=*impl_;
+ if(!s.receipt.loaded||s.metadata->slot()<0||!character){
+  error="loaded selected metadata and actual Character identity required";return false;
+ }
+ if(out.save||out.profile||out.transport){
+  error="Character session output must be empty";return false;
+ }
+ // Application::LoadLevel receives the slot, not the temporary NativeStartGame
+ // Save pointer. Character::InitializePlayerSavegame then allocates its own
+ // Save and its matching profile/LoadOwner before InitPost calls SG_Load(4).
+ auto save=std::make_shared<data::PlayerSavegameV1>();
+ save->set_character(character);save->set_slot(s.metadata->slot());
+ auto profile=std::make_shared<data::PlayerSaveProfileV1>();
+ auto transport=std::make_shared<Transport>(*save,*profile);
+ out=CharacterSession(std::move(save),std::move(profile),std::move(transport));
+ error.clear();return true;
+}
+std::uintptr_t Metadata::profile_identity()const noexcept{return impl_->profile->identity;}
+std::uintptr_t Metadata::save_identity()const noexcept{return reinterpret_cast<std::uintptr_t>(impl_->metadata.get());}
 }

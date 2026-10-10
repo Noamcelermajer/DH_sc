@@ -44,7 +44,7 @@ void callback(void* context,State* state,const Request* request){
  }
  fixture.calls.push_back(*request);
  if(request->service==stop){state->heading_active=0;if(fixture.mode==4)for(float& heading:fixture.facts->heading)heading=0;}
- if(request->service==set_animation){state->current_animation=request->argument[0];if(fixture.mode==2)state->body_present=0;}
+ if(request->service==set_animation&&request->argument[0]>=0){state->current_animation=request->argument[0];if(fixture.mode==2)state->body_present=0;}
  if(request->service==swap_animation&&fixture.mode==1)state->heading_active=0;
  if(request->service==remove_body)state->body_present=0;
  if(request->service==raise_event&&request->argument[0]==0x1d&&fixture.complete_on_notification){
@@ -95,11 +95,37 @@ int main(int argc,char** argv){
   require(fixture.calls.size()==11,"reentry service count");for(unsigned n=0;n<11;++n)require(fixture.calls[n].service==order[n],"reentry service order");
   require(fixture.calls[2].argument[0]==253,"AttackMoving source Attack+stance selection");
   require(fixture.calls[7].argument[0]==400&&fixture.calls[7].argument[2]==0x2a,"attack blur delay event");
+  State despawn;despawn.current=12;despawn.flags=0x40;despawn.current_animation=214;
+  Facts monster_facts;monster_facts.is_player=0;monster_facts.despawn_delay=300;
+  fixture.calls.clear();fixture.facts=&monster_facts;
+  require(dh2_character_state_event(&despawn,&monster_facts,0x2e,0,&services)==1,
+          "Dead despawn-timer transition");
+  require(despawn.current==2&&despawn.flags==512&&despawn.current_animation==214&&
+          despawn.controller_locked==0,"CSDespawn entry state");
+  require(fixture.calls.size()==4&&fixture.calls[0].service==store_previous_flags&&
+          fixture.calls[0].argument[0]==0x40&&fixture.calls[1].service==set_animation&&
+          fixture.calls[1].argument[0]==-1&&fixture.calls[2].service==cancel_sneaking&&
+          fixture.calls[3].service==raise_event&&fixture.calls[3].argument[0]==0x1d&&
+          fixture.calls[3].argument[1]==12,"CSDespawn source entry order");
+  // IDA: CharAI::RaiseAIEvent(event2) calls CharAI::OnDied/AI_SetDead before
+  // forwarding to the machine. The owner is already Dead(12); CSDead has no
+  // event2 registration or OnEvent2 action, so this is an exact no-op.
+  State dead_event2;dead_event2.current=12;dead_event2.flags=0x241;
+  dead_event2.body_present=1;dead_event2.current_animation=0x1234;
+  fixture.calls.clear();fixture.facts=&monster_facts;
+  require(dh2_character_state_event(&dead_event2,&monster_facts,2,
+      0x123456789abcdef0ull,&services)==0,"Monster dead event2 must remain unregistered");
+  require(dead_event2.current==12&&dead_event2.flags==0x241&&
+      dead_event2.body_present==1&&dead_event2.current_animation==0x1234&&
+      fixture.calls.empty(),"Monster dead event2 unexpectedly changed FSM state");
+  State illegal;illegal.current=12;before=illegal;
+  require(dh2_character_state_transition(&illegal,&monster_facts,2,0,0,&services)==-1&&
+          state_equal(illegal,before),"CSDespawn cannot be entered outside event 46");
   State dead;dead.current=3;dead.flags=0x2380;dead.elapsed_ms=41;
   fixture.original_flags=dead.flags;fixture.fail_debug_prelude=true;fixture.calls.clear();
   bool threw=false;try{dh2_character_state_transition(&dead,&facts,12,0xc358,0,&services);}catch(const std::runtime_error&){threw=true;}
   require(threw&&dead.current==12&&dead.elapsed_ms==0&&dead.flags==0x2380&&!dead.controller_locked&&fixture.calls.empty(),"Debug failure preserves reached transition prefix");
-  std::printf("{\"original_reference_cases\":%u,\"ordered_service_requests\":%llu,\"mandatory_dead_debug_preludes\":%u,\"debug_failure_prefix_passed\":true,\"malformed_no_mutation_cases\":%u,\"synchronous_reentry_passed\":true,\"mismatches\":0}\n",count,static_cast<unsigned long long>(request_count),fixture.debug_preludes,malformed);
+  std::printf("{\"original_reference_cases\":%u,\"ordered_service_requests\":%llu,\"mandatory_dead_debug_preludes\":%u,\"debug_failure_prefix_passed\":true,\"despawn_entry_passed\":true,\"malformed_no_mutation_cases\":%u,\"synchronous_reentry_passed\":true,\"mismatches\":0}\n",count,static_cast<unsigned long long>(request_count),fixture.debug_preludes,malformed);
   return 0;
  }catch(const std::exception& failure){std::fprintf(stderr,"character_state audit: %s\n",failure.what());return 1;}
 }

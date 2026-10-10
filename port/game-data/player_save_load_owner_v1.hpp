@@ -57,7 +57,7 @@ class PlayerSaveLoadOwnerV1 {
     PlayerSavegameV1& save_;
     PlayerSaveProfileV1& profile_;
     PlayerSaveLoadServicesV1 services_;
-    std::uint32_t phase_{}, calls_{};
+    std::uint32_t phase_{}, calls_{}, section_calls_{};
     bool active_{};
     bool send(PlayerSaveLoadRequestV1, PlayerSaveLoadResponseV1&, std::string&);
     bool section(const char*, const PlayerSaveProfileV1&, bool, std::string&);
@@ -75,6 +75,7 @@ public:
     bool load(std::int32_t source_mask, std::string&);
     std::uint32_t reached_phase() const noexcept { return phase_; }
     std::uint32_t delivered_calls() const noexcept { return calls_; }
+    std::uint32_t delivered_section_calls() const noexcept { return section_calls_; }
 };
 
 struct PlayerMetadataServicesV1 {

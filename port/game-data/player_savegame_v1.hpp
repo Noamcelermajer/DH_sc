@@ -103,6 +103,13 @@ public:
     bool initialize_new_profile_metadata(std::int32_t slot, std::string&);
     void set_player_level(std::int32_t value) noexcept { level_ = value; }
     void set_player_name(const std::string& value) { name_ = value; }
+    // Character::SG_SetLevelEntryPointEii: difficulty -1 resolves to the
+    // source process difficulty before this same Save's LEPT word is written.
+    bool set_level_entry_point(std::uint32_t difficulty, std::int32_t value) noexcept {
+        if (difficulty >= level_entry_points_.size()) return false;
+        level_entry_points_[difficulty] = value;
+        return true;
+    }
     void set_unlocked_difficulty(std::int32_t value) noexcept { unlocked_difficulty_ = value; }
     void set_save_date(std::uint32_t value) noexcept { level_name_fields_.level_id = value; }
     std::uint32_t save_date() const noexcept { return level_name_fields_.level_id; }

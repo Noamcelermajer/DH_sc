@@ -8,10 +8,14 @@
 #include "data.hpp"
 #include "item_presentation_v5.hpp"
 #include "loot_entry_selection_v1.hpp"
+namespace dh2::native::quests { struct QuestTextServicesV1; }
 namespace model_renderer {
 using ItemTextServicesFactoryV5 = dh2::data::ItemTextServicesV5 (*)(
  void*,const dh2::data::ItemTable&,const dh2::data::CharacterTable&);
 void bind_item_text_services(void*,ItemTextServicesFactoryV5);
+// Borrows the retained OriginalUiSession DesignSettingsTable bytes for
+// source DistributeXP scaling; caller keeps that table owner alive.
+void bind_xp_design_settings(const std::uint8_t*,std::size_t);
 void mod_directory(std::string);
 void runtime_directory(std::string);
 std::string profile_slot(int);
@@ -22,15 +26,21 @@ bool assign_menu_save_slot(std::int32_t slot,std::int32_t ordinal,std::string&);
 bool selected_menu_save_slot(std::int32_t&,std::string&);
 bool select_menu_preview_slot(std::int32_t,bool,std::string&);
 bool request_menu_start(bool,std::int32_t,std::int32_t&,std::string&);
-std::string start_menu_game(std::int32_t,AAssetManager*,std::int32_t debug_level_row=-1);
+std::string start_menu_game(std::int32_t,AAssetManager*,std::int32_t debug_level_row=-1,
+                            bool has_numeric_difficulty=false,std::int32_t requested_difficulty=0);
 // Source MenuCharMenu_Map::ShowLevelName reads the active LevelList row's
 // localized name ID. Returns -1 when no current world/row is attached.
 std::int32_t ui_current_level_name_id() noexcept;
 std::vector<std::uint8_t> read_asset(AAssetManager*,const std::string&);
 void reset_context();
 void deactivate();
-void unload_game_to_menu();
+// Returns false while retaining the gameplay owner if terminal retirement is
+// blocked by an active source dispatch or borrowed timer/state storage.
+bool unload_game_to_menu(std::string& error);
 bool active();
+// Source NativeStartGame returns before inspecting its arguments while the
+// retained gameplay Level is active (source state 38).
+bool source_start_game_blocked_by_current_world() noexcept;
 std::string load(const std::uint8_t*,std::size_t,AAssetManager*);
 std::string load_menu_background(AAssetManager*);
 void draw_menu_background(int width,int height);
@@ -69,8 +79,18 @@ std::array<int,7> player_vitals();
 // associated Save name. Requires the attached world; creates no profile owner.
 bool ui_player_identity(std::uintptr_t&,std::string&);
 bool ui_player_name(std::uintptr_t,std::string&,std::string&);
+struct UiFastTravelReadV1 {
+ std::string level_name;std::int32_t description_id{},importance{},entry_point_id{},string_id{};bool visible{};
+};
+// Read-only projection of the selected difficulty's canonical Save unlock
+// bits and the source FastTravelList. No parallel travel or unlock owner.
+bool ui_player_fast_travel_rows(std::uintptr_t,std::vector<UiFastTravelReadV1>&,std::string&);
 bool ui_player_class_specialization_text_ids(std::uintptr_t,
  std::array<std::int32_t,4>&,std::string&);
+// Apply the authored NativeSelectClassSpec selector through the active
+// Character properties, Save, Player skill runtime and profile transport.
+bool ui_player_select_class_specialization(std::uintptr_t,std::int32_t,
+                                           std::string&);
 struct UiPlayerReloadResultV1 {std::uint32_t phase{},calls{},specialization{};};
 // The current retained character-menu movie supplies the two final AS menu
 // operations; all earlier phases run through the same live Player owners.
@@ -120,7 +140,23 @@ bool ui_player_hud_projection(std::uintptr_t,bool refresh_usable,
 bool ui_player_stats(std::uintptr_t,UiPlayerStatsReadV1&,std::string&);
 bool ui_player_assign_stat(std::uintptr_t,std::uint32_t,std::string&);
 bool ui_player_set_current_quest(std::uintptr_t,std::int32_t,std::string&);
+struct UiQuestReadV1 {
+ std::int32_t id{-1},state{-1},priority{-1};
+ std::array<std::int32_t,4> text_ids{{-1,-1,-1,-1}};
+ bool current{};
+ std::string objective_description;
+};
+// Rows remain in SG_GetQuestByID order. The authored SWF provider applies
+// predicate filtering and localized title sorting before writing its array.
+// Optional text services borrow the active SWF localization owner when the
+// dynamic objective description field is requested.
+bool ui_player_quest_rows(std::uintptr_t,std::vector<UiQuestReadV1>&,std::string&,
+                          const dh2::native::quests::QuestTextServicesV1* =nullptr);
 bool ui_player_save_game(std::uintptr_t,std::string&);
+// Reached only after the original _GiveXP max-level gate. Advances the same
+// Character/Save through LevelUp property reset, base-class recalc, RegenHP,
+// RegenMP, SG_SetPlayerLevel, then the canonical SG_Save transport.
+bool ui_player_apply_level_up_state(std::uintptr_t,std::string&);
 struct UiSkillReadV1 {
  std::int32_t id{-1},level{-1},slot{-1},required_level{-1};
  std::int32_t character_level{},difficulty{},faerie_text_offset{};
@@ -128,7 +164,7 @@ struct UiSkillReadV1 {
  bool assignable{},faerie_dependent_text{},can_increment{};std::string icon;
 };
 struct UiInventoryItemReadV1 {
- std::int32_t id{-1},index{-1},quantity{},slot{-1};std::string name;
+ std::int32_t id{-1},index{-1},quantity{},slot{-1},power_count{};std::string name;
  bool equippable{},equipped{},equipped_other_hand{};
 };
 struct UiEquippedItemReadV1 {
@@ -140,6 +176,8 @@ struct UiItemDetailsReadV1 {
  bool stackable{},equippable{},equipped{},equipped_other_hand{};std::vector<std::string> power_descriptions;
 };
 bool ui_player_skill_slots(std::uintptr_t,std::array<std::int32_t,3>&,std::string&);
+bool ui_player_use_skill_slot(std::uintptr_t identity,std::int32_t hud_slot,std::string& error);
+bool ui_player_use_spell(std::uintptr_t identity,std::string& error);
 bool ui_player_skill_points(std::uintptr_t,std::int32_t&,std::string&);
 bool ui_player_skill(std::uintptr_t,std::uint32_t,UiSkillReadV1&,std::string&);
 bool ui_player_skill_display_properties(std::uintptr_t,std::uint32_t,std::int32_t,
@@ -176,6 +214,9 @@ bool stage_world_loot_table(std::int32_t,const dh2::data::LootEntrySelectionCont
  LootStagingResultV1&,std::string& error);
 bool retire_staged_world_loot_item(std::size_t,std::string& error);
 void orbit(float dx,float dy,float zoom);
+// Owning GL thread only. Refreshes the active ZoomHandler equivalent from
+// the current drawable target dimensions; logical SWF stage stays separate.
+void drawable_target_changed(int width,int height);
 void set_time(int milliseconds);
 void set_enemy_ai(bool);
 void draw(int width,int height);

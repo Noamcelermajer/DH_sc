@@ -50,7 +50,7 @@ def main() -> None:
     cpp_sources = [RUNTIME / "script_function_alias.cpp"] + [
         MODULE / (name + ".cpp") for name in (
             "ais_native_bindings", "ais_external_init_callbacks", "ais_state_callbacks",
-            "lua_script_load_once", "monster_external_script_session")
+            "lua_script_load_once", "character_oid_cache_v1", "monster_external_script_session")
     ] + [MODULE / "tests/monster_created_service_install.cpp"]
     commands, objects, warnings = [], [], []
     for path in c_sources + cpp_sources:
@@ -84,6 +84,7 @@ def main() -> None:
         MODULE / "monster_external_script_session.hpp", MODULE / "tests/monster_external_script_session.cpp",
         MODULE / "ais_native_bindings.hpp", MODULE / "ais_external_init_callbacks.hpp",
         MODULE / "ais_state_callbacks.hpp", MODULE / "lua_script_load_once.hpp",
+        MODULE / "character_oid_cache_v1.hpp",
         RUNTIME / "script_runtime.h", RUNTIME / "script_function_alias.h",
         ROOT / "port/lua-numeric/numeric.h", Path(__file__).resolve(),
         *sorted((RUNTIME / "lua").glob("*.h")), common, monster]

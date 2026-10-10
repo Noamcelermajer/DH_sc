@@ -32,6 +32,10 @@ struct Pose {
     std::array<float,16> camera{};
     std::array<float,16> target{};
     std::array<float,16> up_vector{};
+    // CameraLevel::Update writes a local position to the target node. A local
+    // translation is transformed by the node's parent, not its own rotation.
+    // Keep that parent-space Z basis explicit for the native zoom projection.
+    std::array<float,3> target_parent_z_axis{0.0f,0.0f,1.0f};
 };
 
 // Loads a camera-only visual graph plus its authored idle animation. Sampling
@@ -39,28 +43,30 @@ struct Pose {
 class Rig {
 public:
     bool load(const Assets&,std::string& error);
+    // Replace the active source clip on the already-loaded Camera scene graph.
+    // The one Playback owner must be restarted after a successful replacement.
+    bool load_animation(const std::uint8_t*,std::size_t,std::string& error);
     bool sample(std::int32_t milliseconds,Pose*,std::string& error);
 
     const Projection& projection() const noexcept { return projection_; }
-    std::int32_t animation_start() const noexcept { return idle_.start; }
-    std::int32_t animation_end() const noexcept { return idle_.end; }
-    unsigned track_count() const noexcept { return idle_.track_count(); }
-    unsigned skipped_tracks() const noexcept { return idle_.skipped; }
-    unsigned unbound_tracks() const noexcept { return idle_.unbound; }
+    std::int32_t animation_start() const noexcept { return animation_.start; }
+    std::int32_t animation_end() const noexcept { return animation_.end; }
+    unsigned track_count() const noexcept { return animation_.track_count(); }
+    unsigned skipped_tracks() const noexcept { return animation_.skipped; }
+    unsigned unbound_tracks() const noexcept { return animation_.unbound; }
 
 private:
     scene::Scene scene_;
-    animation::Player idle_;
+    animation::Player animation_;
     Projection projection_{};
     std::size_t root_=0,camera_=0,target_=0,up_vector_=0;
     bool loaded_=false;
 };
 
-// Runtime for CameraLevel's selected CameraTests idle clip. CameraLevel::PlayAnim
-// selects the clip with loop=false and speed=1; the scene timeline supplies
-// elapsed milliseconds, clamps at the authored end, and notifies completion
-// once. The caller advances this from its game-frame delta rather than a
-// wall-clock epoch.
+// Runtime for CameraLevel's currently selected clip. CameraLevel::PlayAnim
+// selects each clip with loop=false and speed=1; start() restarts this single
+// timeline at the active clip's authored range. The caller advances it from
+// game-frame deltas rather than a wall-clock epoch.
 class Playback {
 public:
     bool start(const Rig&,std::string& error);

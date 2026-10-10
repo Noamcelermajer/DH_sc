@@ -44,6 +44,7 @@ def main():
         "faeries_pyarray.bin", "faeries_pyarraynames.bin", "faeries_pystructnames.bin",
         "character_properties_pyarray.bin", "character_properties_pyarraynames.bin",
         "character_properties_pystructnames.bin", "faeries_pycst.bin",
+        "animations_pycst.bin",
     )
     cache_paths = [pydata / name for name in table_names]
     debug_seed = args.debug_seed.resolve()
@@ -54,13 +55,18 @@ def main():
 
     sources = [
         CPP / "native_ghost_skills.cpp",
+        CPP / "native_ghost_death_v1.cpp",
         CPP / "native_debug_files.cpp",
         CPP / "tests/native_ghost_skills_host.cpp",
         LEVEL / "character_ai_set_skills_and_spells.cpp",
+        LEVEL / "character_ai_set_target.cpp",
         LEVEL / "character_faery_selection.cpp",
         LEVEL / "character_ai_skill_script_constructor.cpp",
         LEVEL / "debug_switches_runtime.cpp",
         LEVEL / "debug_switches_persistence.cpp",
+        LEVEL / "character_ai_classification.cpp",
+        LEVEL / "character_animation_ai.cpp",
+        LEVEL / "character_stance.cpp",
         GAME_DATA / "skill_tables.cpp",
         GAME_DATA / "data.cpp",
         GAME_DATA / "properties.cpp",
@@ -116,21 +122,27 @@ def main():
 
     inputs = sources + [Path(__file__).resolve(), source_runner,
                         CPP / "native_ghost_skills.hpp",
+                        CPP / "native_ghost_death_v1.hpp",
                         CPP / "native_debug_files.hpp",
+                        LEVEL / "character_ai_classification.hpp",
+                        LEVEL / "character_stance.hpp",
                         LEVEL / "character_ai_set_skills_and_spells.hpp",
+                        LEVEL / "character_ai_set_target.hpp",
                         LEVEL / "character_faery_selection.hpp",
+                        GAME_DATA / "animation_tables.hpp",
                         GAME_DATA / "skill_tables.hpp",
                         GAME_DATA / "properties.hpp",
                         ROOT / "port/pydata-constants/constants.c"]
     report = {
         "validation": "PASS",
         "host_runtime_cases": 4,
+        "death_provider_operations_per_actor": 6,
         "actors": ["Crypt_Ghost", "Crypt_Ghost_RE"],
         "source_kernel_host_cases": source_report.get("host_report", {}).get("host_cases"),
         "source_kernel_original_arm_cases": source_arm.get("cases"),
         "source_kernel_arm_gate": str(source_report_path.relative_to(ROOT)),
         "source_kernel_arm_mismatches": source_arm.get("mismatches"),
-        "scope": "Real-cache host adapter checks plus source-kernel host/ARM gates; Android renderer build/device checks are outside this runner.",
+        "scope": "Real-cache Ghost adapter and player_ai_death backend-operation checks plus source-kernel host/ARM gates; full death orchestration and Android renderer/device checks remain outside this runner.",
         "cache_inputs": {path.name: sha(path) for path in paths},
         "source_hashes": {str(path.relative_to(ROOT)): sha(path) for path in inputs},
         "host_stdout": lines,

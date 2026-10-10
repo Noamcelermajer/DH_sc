@@ -92,9 +92,10 @@ static bool task_is_running(const Runtime *runtime, int32_t script_id) {
     return false;
 }
 
-static Error start_script(Runtime *runtime, int32_t script_id,
-                          int32_t parent_script_id, uint8_t parent_depth,
-                          const Task *caller, uint32_t command_id) {
+static Error start_task(Runtime *runtime, int32_t script_id,
+                        int32_t parent_script_id, uint8_t parent_depth,
+                        const Task *caller, uint32_t command_id,
+                        int32_t argument, uint8_t check_running) {
     const dh2_script *script = get_script(runtime, script_id);
     if (script == NULL) {
         if (!emit(runtime, EVENT_UNRESOLVED_SCRIPT, caller, command_id,
@@ -110,7 +111,7 @@ static Error start_script(Runtime *runtime, int32_t script_id,
         }
         return ERROR_DEPTH_LIMIT;
     }
-    if (task_is_running(runtime, script_id)) {
+    if (check_running && task_is_running(runtime, script_id)) {
         if (!emit(runtime, EVENT_EXEC_DUPLICATE_SUPPRESSED, caller,
                   command_id, script_id, script_name(runtime, script_id))) {
             return runtime->error;
@@ -147,6 +148,8 @@ static Error start_script(Runtime *runtime, int32_t script_id,
     task->ticket = ++runtime->next_task_ticket;
     task->script_id = script_id;
     task->parent_script_id = parent_script_id;
+    task->start_argument = argument;
+    task->start_check_running = check_running != 0;
     task->depth = (uint8_t)(parent_depth + 1u);
     task->active = 1;
     return emit(runtime, EVENT_SCRIPT_STARTED, task, command_id,
@@ -232,8 +235,8 @@ static Error execute_tutorial(Runtime *runtime, Task *task,
         return emit(runtime, EVENT_UNRESOLVED_SCRIPT, task, command->command_id,
                     flag, script_name_buffer) ? ERROR_OK : runtime->error;
     }
-    Error result = start_script(runtime, target_id, task->script_id,
-                                task->depth, task, command->command_id);
+    Error result = start_task(runtime, target_id, task->script_id,
+                              task->depth, task, command->command_id, -1, 1);
     return result;
 }
 
@@ -264,8 +267,8 @@ static Error execute_command(Runtime *runtime, Task *task,
                 }
                 target_id += (int32_t)runtime->common_table->script_count;
             }
-            return start_script(runtime, target_id, task->script_id,
-                                task->depth, task, command->command_id);
+            return start_task(runtime, target_id, task->script_id,
+                              task->depth, task, command->command_id, -1, 1);
         }
         case 1:  // EnterCutSceneMode
             runtime->cutscene_mode = 1;
@@ -277,6 +280,24 @@ static Error execute_command(Runtime *runtime, Task *task,
             return emit(runtime, EVENT_CUTSCENE_MODE_CHANGED, task,
                         command->command_id, 0, "exit")
                 ? ERROR_OK : runtime->error;
+        case 5: {  // Script_PlayCamera::Execute(bool, int)
+            if (command->field_count != 2 ||
+                command->fields[0].kind != DH2_SCRIPT_VALUE_I32 ||
+                command->fields[1].kind != DH2_SCRIPT_VALUE_BOOL) {
+                return ERROR_INVALID_ARGUMENT;
+            }
+            if (runtime->spawn_services.play_camera == NULL) {
+                return unsupported(runtime, task, command,
+                                   "source CameraLevel PlayAnim owner is unbound")
+                    ? ERROR_OK : runtime->error;
+            }
+            const int accepted = runtime->spawn_services.play_camera(
+                runtime->spawn_services.context,
+                command->fields[1].value.boolean,
+                command->fields[0].value.i32);
+            if (accepted < 0) return ERROR_CAMERA_SERVICE;
+            return ERROR_OK;
+        }
         case 8: {  // SetCameraTarget resolves the named object; native ignores fields 0 and 2.
             if (command->field_count != 3 ||
                 command->fields[1].kind != DH2_SCRIPT_VALUE_STRING) {
@@ -493,31 +514,65 @@ Error init(Runtime *runtime,
 }
 
 bool enter_trigger(Runtime *runtime) {
-    if (runtime == NULL || runtime->error != ERROR_OK) return false;
-    if (runtime->trigger_count >= 0 &&
-        runtime->trigger_activations >= (uint32_t)runtime->trigger_count) {
+    if (runtime == NULL) return false;
+    return enter_trigger_for(runtime, runtime->trigger_script_id,
+        runtime->trigger_name, runtime->trigger_count,
+        &runtime->trigger_activations, &runtime->trigger_fired);
+}
+
+bool enter_trigger_for(Runtime *runtime, int32_t script_id,
+                       const char *trigger_name, int32_t trigger_count,
+                       uint32_t *trigger_activations,
+                       uint8_t *trigger_fired) {
+    if (runtime == NULL || runtime->error != ERROR_OK || script_id < 0 ||
+        !trigger_name || !trigger_activations || !trigger_fired) return false;
+    if (trigger_count >= 0 &&
+        *trigger_activations >= (uint32_t)trigger_count) {
         if (!emit(runtime, EVENT_TRIGGER_REJECTED, NULL, 0,
-                  (int32_t)runtime->trigger_activations,
-                  runtime->trigger_name)) return false;
+                  (int32_t)*trigger_activations, trigger_name)) return false;
         return false;
     }
-    if (task_is_running(runtime, runtime->trigger_script_id)) {
+    if (task_is_running(runtime, script_id)) {
         if (!emit(runtime, EVENT_TRIGGER_SCRIPT_ALREADY_RUNNING, NULL, 0,
-                  runtime->trigger_script_id, "script is already running")) return false;
-        ++runtime->trigger_activations;
-        runtime->trigger_fired = 1;
+                  script_id, "script is already running")) return false;
+        ++*trigger_activations;
+        *trigger_fired = 1;
         return true;
     }
-    const Error result = start_script(runtime, runtime->trigger_script_id,
-                                      -1, 0, NULL, 0);
+    const Error result = start_task(runtime, script_id, -1, 0, NULL, 0,
+                                    -1, 1);
     if (result != ERROR_OK) {
         runtime->error = result;
         return false;
     }
-    ++runtime->trigger_activations;
-    runtime->trigger_fired = 1;
+    ++*trigger_activations;
+    *trigger_fired = 1;
     return emit(runtime, EVENT_TRIGGER_STARTED, NULL, 0,
-                runtime->trigger_script_id, runtime->trigger_name);
+                script_id, trigger_name);
+}
+
+bool is_script_running(const Runtime *runtime, int32_t script_id) {
+    return runtime != NULL && script_id >= 0 &&
+        task_is_running(runtime, script_id);
+}
+
+Error start_script(Runtime *runtime, int32_t script_id, int32_t argument,
+                   uint8_t check_running, uint8_t online) {
+    if (runtime == NULL || runtime->error != ERROR_OK || check_running > 1 ||
+        online > 1)
+        return ERROR_INVALID_ARGUMENT;
+    // Source callers may pass GetIDFromName's -1 result straight through;
+    // ScriptManager treats that as a no-op rather than a fatal VM error.
+    if (script_id < 0) return ERROR_OK;
+    // IDA: ScriptManager::StartScript checks its bool only in the online
+    // branch. Offline starts always create the task, even if an identical
+    // script is already active. Online message routing is not implemented by
+    // this offline runtime, so callers must not pretend that mode is covered.
+    if (online) return ERROR_UNSUPPORTED_ONLINE;
+    const Error result = start_task(runtime, script_id, -1, 0, NULL, 0,
+                                    argument, 0);
+    if (result != ERROR_OK) runtime->error = result;
+    return result;
 }
 
 Error advance(Runtime *runtime, uint32_t delta_ms) {
@@ -568,6 +623,8 @@ const char *error_name(Error error) {
         case ERROR_TASK_TICKET_OVERFLOW: return "script task ticket overflow";
         case ERROR_EVENT_CAPACITY: return "event capacity reached";
         case ERROR_CHARACTER_SERVICE: return "bound Character spawn service failed";
+        case ERROR_CAMERA_SERVICE: return "bound CameraLevel playback service failed";
+        case ERROR_UNSUPPORTED_ONLINE: return "online ScriptManager routing is not implemented";
         default: return "unknown scheduler error";
     }
 }

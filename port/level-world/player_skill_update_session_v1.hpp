@@ -1,13 +1,21 @@
 #pragma once
 #include "player_skill_session_v1.hpp"
 #include "character_ai_update_all_skills.hpp"
+#include "character_ai_update_skills.hpp"
 #include "character_ai_skill_script_update.hpp"
+#include "../game-data/player_savegame_v1.hpp"
 #include <memory>
 
 namespace dh2::player_skill_update_session_v1 {
 struct Result {
     character_ai_update_all_skills::Status status{};
     character_ai_update_all_skills::Result source{};
+    std::uint32_t callbacks=0,lua_errors=0;
+    int last_lua_status=0;
+};
+struct SelectedFaeryResult {
+    character_ai_update_skills::Status status{};
+    character_ai_update_skills::Result source{};
     std::uint32_t callbacks=0,lua_errors=0;
     int last_lua_status=0;
 };
@@ -24,6 +32,11 @@ public:
     ~Runtime();
     Runtime(const Runtime&)=delete;Runtime& operator=(const Runtime&)=delete;
     int update(Result&,std::string& error);
+    // Exact CharAI::UpdateSkills path. Uses the same borrowed Character,
+    // prepared CharAI scripts, Save and VM as update(); it updates only saved
+    // skill slots plus the one Faery selected for difficulty. No VM is made.
+    int update_current_faery(const data::PlayerSavegameV1&,
+        const std::int32_t& difficulty,SelectedFaeryResult&,std::string& error);
     std::size_t retained_failed_returns()const noexcept;
 private:
     struct Impl;

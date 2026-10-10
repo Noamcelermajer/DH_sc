@@ -1,4 +1,5 @@
 #include "character_factory.hpp"
+#include "object_manager_runtime_owner_v1.hpp"
 
 #include <cstring>
 
@@ -38,6 +39,24 @@ SpawnResult request_spawn_character(ActorRef* actors,std::uint32_t actor_count,
  return result==1?SpawnResult::requested:SpawnResult::source_state_rejected;
 }
 
+SpawnResult request_registered_spawn_character(
+ dh2::object_manager_runtime_owner_v1::Owner& object_manager,
+ ActorRef* actors,std::uint32_t actor_count,const char* exact_name,
+ const Services* services){
+ if(actor_count&&!actors)return SpawnResult::invalid_request;
+ // Validate the entire borrowed candidate list before the exact-name lookup
+ // can issue state services. The map remains the sole source registration;
+ // ActorRef is only a temporary view over those same live Character owners.
+ for(std::uint32_t i=0;i<actor_count;++i){
+  if(actors[i].source_handle<0||!actors[i].object_identity)
+   return SpawnResult::object_not_registered;
+  const auto* registered=object_manager.find_by_source_handle(actors[i].source_handle);
+  if(!registered||registered->identity!=actors[i].object_identity)
+   return SpawnResult::object_not_registered;
+ }
+ return request_spawn_character(actors,actor_count,exact_name,services);
+}
+
 const char* spawn_result_name(SpawnResult result){
  switch(result){
  case SpawnResult::requested:return "requested";
@@ -46,6 +65,7 @@ const char* spawn_result_name(SpawnResult result){
  case SpawnResult::ambiguous_name:return "ambiguous_name";
  case SpawnResult::spawn_state_unregistered:return "spawn_state_unregistered";
  case SpawnResult::source_state_rejected:return "source_state_rejected";
+ case SpawnResult::object_not_registered:return "object_not_registered";
  }
  return "unknown";
 }

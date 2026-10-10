@@ -1,5 +1,6 @@
 #include "../monster_external_script_session.hpp"
 #include "../ais_external_init_callbacks.hpp"
+#include "../../android-native/app/src/main/cpp/player_gameplay_audio.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -43,6 +44,11 @@ struct Fixture {
     std::uintptr_t last_face = 0, last_move = 0;
     std::uintptr_t last_attack = 0;
     unsigned property_reads = 0, faces = 0, moves = 0, stops = 0, attacks = 0;
+    unsigned play_sound_calls = 0, stop_sound_calls = 0;
+    std::string sound_label, stopped_sound_label;
+    std::size_t sound_label_bytes = 0, stopped_sound_label_bytes = 0;
+    bool sound_looping = false, sound_stop_music = false;
+    float sound_fade_ms = 0, stopped_sound_fade_ms = 0;
 };
 
 Fixture& actor(void* raw, std::uintptr_t identity) {
@@ -142,11 +148,39 @@ std::int32_t actor_attack(void* raw, std::uintptr_t identity, std::uintptr_t tar
     ++fixture.attacks;
     return 0;
 }
+std::int32_t play_sound(void* raw, const char* label, std::size_t label_bytes,
+                        bool looping, float fade_ms, bool stop_music) {
+    auto& fixture = *static_cast<Fixture*>(raw);
+    fixture.trace.emplace_back("PlaySound");
+    require(label && label_bytes == std::string("sfx_skill_mage_thunder_braid_add_2").size() &&
+                std::string(label, label_bytes) == "sfx_skill_mage_thunder_braid_add_2",
+            "source PlaySound label or byte length changed");
+    fixture.sound_label.assign(label, label_bytes);
+    fixture.sound_label_bytes = label_bytes;
+    fixture.sound_looping = looping;
+    fixture.sound_fade_ms = fade_ms;
+    fixture.sound_stop_music = stop_music;
+    ++fixture.play_sound_calls;
+    return dh2::player_gameplay_audio::play_source_sound(raw,label,label_bytes,looping,fade_ms,stop_music);
+}
+std::int32_t stop_sound(void* raw, const char* label, std::size_t label_bytes, float fade_ms) {
+    auto& fixture = *static_cast<Fixture*>(raw);
+    fixture.trace.emplace_back("StopSound");
+    require(label && std::string(label, label_bytes) == "sfx_skill_mage_thunder_braid_add_2",
+            "source StopSound label changed");
+    fixture.stopped_sound_label.assign(label, label_bytes);
+    fixture.stopped_sound_label_bytes = label_bytes;
+    fixture.stopped_sound_fade_ms = fade_ms;
+    ++fixture.stop_sound_calls;
+    return dh2::player_gameplay_audio::stop_source_sound(raw,label,label_bytes,fade_ms);
+}
 Services bind(Fixture& fixture) {
     Services services{&fixture, owner, structure, property, constant, has_target, get_target,
                       get_state, has_path, set_target, head_to, move_to};
     services.stop = actor_stop;
     services.attack = actor_attack;
+    services.play_sound = play_sound;
+    services.stop_sound = stop_sound;
     return services;
 }
 void initialized(Session& session, Fixture& fixture, Source commons, Source monster) {
@@ -167,10 +201,83 @@ void trace(const Fixture& fixture, std::initializer_list<const char*> expected) 
     std::vector<std::string> values(expected.begin(), expected.end());
     require(fixture.trace == values, "original Lua callback service order changed");
 }
+void audio_bridge_case(Source commons, Source monster) {
+    const std::string extension=std::string(static_cast<const char*>(monster.bytes),monster.size)+R"lua(
+function NativeAudioBridge()
+    PlaySound('sfx_skill_mage_thunder_braid_add_2', false, 0, false)
+    StopSound('sfx_skill_mage_thunder_braid_add_2', 0)
+    StopSound('sfx_skill_mage_thunder_braid_add_2', 125.9)
+end
+AddToVFTable('OnTargetInMeleeRange', 'NativeAudioBridge')
+)lua";
+    Session audio_session;Fixture audio_fixture;
+    std::string error;
+    initialized(audio_session,audio_fixture,commons,source(extension));
+    require(audio_session.dispatch(Event::target_in_melee_range,owner,error)==Status::complete &&
+            audio_fixture.play_sound_calls==1 && audio_fixture.stop_sound_calls==2 &&
+            audio_fixture.sound_label=="sfx_skill_mage_thunder_braid_add_2" &&
+            audio_fixture.sound_label_bytes==audio_fixture.sound_label.size() &&
+            !audio_fixture.sound_looping && audio_fixture.sound_fade_ms==0.0f &&
+            !audio_fixture.sound_stop_music &&
+            audio_fixture.stopped_sound_label==audio_fixture.sound_label &&
+            audio_fixture.stopped_sound_label_bytes==audio_fixture.sound_label_bytes &&
+            audio_fixture.stopped_sound_fade_ms==125.9f,
+            "AIS PlaySound/StopSound source argument order or values changed");
+    std::string queued_audio;
+    require(dh2::player_gameplay_audio::consume(queued_audio) &&
+            queued_audio=="dh2fx,play,"+std::to_string(reinterpret_cast<std::uintptr_t>(&audio_fixture))+
+                ",118,0,0,sfx_skill_mage_thunder_braid_add_2.wav" &&
+            dh2::player_gameplay_audio::consume(queued_audio) &&
+            queued_audio=="dh2fx,stop,"+std::to_string(reinterpret_cast<std::uintptr_t>(&audio_fixture))+",118,0" &&
+            dh2::player_gameplay_audio::consume(queued_audio) &&
+            queued_audio=="dh2fx,stop,"+std::to_string(reinterpret_cast<std::uintptr_t>(&audio_fixture))+",118,125" &&
+            !dh2::player_gameplay_audio::consume(queued_audio),
+            "monster PlaySound/StopSound must enqueue UID-scoped commands to the shared audio queue");
+    trace(audio_fixture,{"PlaySound","StopSound","StopSound"});
+
+    Session unsupported_stop;Fixture unsupported_fixture;
+    auto unsupported_services=bind(unsupported_fixture);
+    unsupported_services.stop_sound=nullptr;
+    unsupported_fixture.session=&unsupported_stop;
+    unsupported_fixture.commons=commons;
+    const auto unsupported_extension=std::string(static_cast<const char*>(monster.bytes),monster.size)+R"lua(
+function NativeUnsupportedStop()
+    PlaySound('sfx_skill_mage_thunder_braid_add_2', false, 0, false)
+    StopSound('sfx_skill_mage_thunder_braid_add_2', 0)
+    StopSound('sfx_skill_mage_thunder_braid_add_2')
+end
+AddToVFTable('OnTargetInMeleeRange', 'NativeUnsupportedStop')
+)lua";
+    require(unsupported_stop.initialize(commons,source(unsupported_extension),unsupported_services,error)==Status::complete,
+            "unsupported StopSound fixture must initialize before callback");
+    const auto unsupported_status=unsupported_stop.dispatch(Event::target_in_melee_range,owner,error);
+    require(unsupported_status==Status::script_error && unsupported_fixture.play_sound_calls==1 &&
+            unsupported_fixture.stop_sound_calls==0 && error.find("monster StopSound failed or unsupported")!=std::string::npos,
+            "missing StopSound provider must fail after the source PlaySound side effect");
+
+    Session missing_fade;Fixture missing_fade_fixture;
+    const auto missing_fade_extension=std::string(static_cast<const char*>(monster.bytes),monster.size)+R"lua(
+function NativeMissingStopFade()
+    StopSound('sfx_skill_mage_thunder_braid_add_2')
+end
+AddToVFTable('OnTargetInMeleeRange', 'NativeMissingStopFade')
+)lua";
+    initialized(missing_fade,missing_fade_fixture,commons,source(missing_fade_extension));
+    const auto missing_fade_status=missing_fade.dispatch(Event::target_in_melee_range,owner,error);
+    require(missing_fade_status==Status::script_error && missing_fade_fixture.stop_sound_calls==0 &&
+            error.find("unsupported monster StopSound arguments")!=std::string::npos,
+            "source StopSound requires its numeric fade argument");
+}
 }  // namespace
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 4 && std::string(argv[1]) == "--audio-only") {
+            const auto commons_bytes=read(argv[2]),monster_bytes=read(argv[3]);
+            audio_bridge_case(source(commons_bytes),source(monster_bytes));
+            std::puts("PASS: monster AIS PlaySound/StopSound source forwarding");
+            return 0;
+        }
         require(argc == 3, "pass unchanged original commons and monster paths");
         const auto commons_bytes = read(argv[1]), monster_bytes = read(argv[2]);
         const auto commons = source(commons_bytes), monster = source(monster_bytes);
@@ -250,6 +357,9 @@ AddToVFTable('OnTargetMissed', 'NativeCombatResult')
         require(combat_callback.initialize(commons, source(combat_callback_script),
                     bind(combat_fixture), error) == Status::complete,
                 "source combat callback fixture failed to initialize");
+        // Initialization itself performs the source Struct/Prop queries.
+        // Clear those before asserting the runtime combat callback order.
+        combat_fixture.trace.clear();
         const auto combat_vm = combat_callback.vm_identity();
         require(combat_callback.source_alias(Event::target_hit) ==
                     std::string("NativeCombatResult") &&
@@ -260,7 +370,7 @@ AddToVFTable('OnTargetMissed', 'NativeCombatResult')
                     Status::complete && combat_callback.vm_identity() == combat_vm &&
                 combat_fixture.target == enemy && combat_fixture.last_face == other &&
                 combat_fixture.faces == 1 && combat_callback.statistics().completed_callbacks == 1 &&
-                combat_callback.statistics().projected_object_table_arguments == 2,
+                combat_callback.statistics().projected_object_table_arguments == 4,
                 "OnTargetHit must call the existing VM with original attacker/defender order");
         trace(combat_fixture, {"SetTarget", "HeadTo"});
         combat_fixture.trace.clear();
@@ -268,7 +378,7 @@ AddToVFTable('OnTargetMissed', 'NativeCombatResult')
                     Status::complete && combat_callback.vm_identity() == combat_vm &&
                 combat_fixture.last_face == other && combat_fixture.faces == 2 &&
                 combat_callback.statistics().completed_callbacks == 2 &&
-                combat_callback.statistics().projected_object_table_arguments == 4,
+                combat_callback.statistics().projected_object_table_arguments == 8,
                 "OnTargetMissed must dispatch through the same retained VM");
         trace(combat_fixture, {"SetTarget", "HeadTo"});
         require(combat_callback.dispatch(Event::target_hit, enemy, error) == Status::invalid_argument &&
@@ -658,6 +768,7 @@ AddToVFTable('OnInitPost', 'NativePostProof')
                     "post discarded returns and fresh final alias resolution lost");
             trace(live,{"HasTarget","HasTarget"});++cases;
         }
+        {audio_bridge_case(commons,monster);++cases;}
 
         std::printf("{\"monster_external_session_cases\":%u,\"unchanged_original_scripts_executed\":true,"
                     "\"spotted_callback_order\":true,\"idle_path_short_circuit\":true,"

@@ -101,10 +101,13 @@ Status Runtime::save_data(const Record& q,
  else {
   bool saved_quantity=false;
   switch(q.dispatch_0){
-   case Dispatch::kill_enemies:case Dispatch::talk_to_npc:
-   case Dispatch::open_game_object:case Dispatch::kill_enemy_template:
+   case Dispatch::kill_enemies:case Dispatch::clear_enemies:
+   case Dispatch::trigger_plate:case Dispatch::destroy_game_object:
+   case Dispatch::talk_to_npc:case Dispatch::open_game_object:
+   case Dispatch::trigger_on:case Dispatch::picked_up_liftable:
+   case Dispatch::kill_enemy_template:case Dispatch::clear_enemy_template:
     saved_quantity=true;break;
-   case Dispatch::move_in_zone:case Dispatch::automatic:
+   case Dispatch::move_in_zone:case Dispatch::automatic:case Dispatch::gather_loot:
     saved_quantity=false;break;
    default:result.status=Status::source_fault;break;
   }

@@ -7,6 +7,9 @@
 #include <cstdint>
 #include <list>
 #include <map>
+#include <set>
+#include <string>
+#include <string_view>
 
 namespace dh2::object_manager_runtime_owner_v1 {
 
@@ -21,6 +24,9 @@ static_assert(sizeof(SourceHandle) == 4, "source ObjectHandle key is ARM32 int")
 struct GameObject {
     Address identity{};
     SourceHandle source_handle{};
+    // Exact ObjectManager key/name retained with the same source-handle row.
+    // Empty means the caller has not yet supplied a source name.
+    std::string name{};
     Address is_zonable_target_c4{};
     Address set_updating_target_3c{};
     Address room_zone_2f4{};
@@ -65,6 +71,8 @@ enum class Status : std::uint8_t {
     invalid_argument,
     duplicate_source_handle,
     duplicate_identity,
+    source_handle_collision,
+    source_handle_exhausted,
     not_found,
     allocation_failed
 };
@@ -87,12 +95,26 @@ public:
 
     Status add_object(SourceHandle source_handle, const GameObject& object,
                       GameObject** stored) noexcept;
+    // ObjectManager::GetObjectByName uses exact strcmp for ordinary names.
+    // Keep this index inside the same keyed owner; it is not a second registry.
+    Status add_named_object(SourceHandle source_handle, std::string_view name,
+                            const GameObject& object,
+                            GameObject** stored) noexcept;
+    // Mirrors GetObjectByName's exact-name fast path and create-on-miss
+    // counter pre-increment. A created row is a name-only ObjectListItem
+    // reservation until Add fills that same source key.
+    Status get_or_reserve_named_handle(std::string_view name,
+                                       bool create_if_missing,
+                                       SourceHandle* source_handle,
+                                       bool* created) noexcept;
     Status remove_object(SourceHandle source_handle, bool* removed) noexcept;
 
     GameObject* find_by_source_handle(SourceHandle source_handle) noexcept;
     const GameObject* find_by_source_handle(SourceHandle source_handle) const noexcept;
     GameObject* find_by_identity(Address identity) noexcept;
     const GameObject* find_by_identity(Address identity) const noexcept;
+    GameObject* find_by_name(std::string_view name) noexcept;
+    const GameObject* find_by_name(std::string_view name) const noexcept;
 
     // Each call returns the next live entry in the exact signed-key order used
     // by ObjectManager::InitPost/RoomZone::InitObjectList and GetObjectsByType.
@@ -137,12 +159,20 @@ public:
     }
 
     std::size_t object_count() const noexcept { return objects_.size(); }
+    SourceHandle next_source_handle() const noexcept { return next_source_handle_; }
+    bool empty() const noexcept {
+        return objects_.empty() && no_room_objects_.empty() && room_objects_.empty();
+    }
     std::size_t no_room_count() const noexcept { return no_room_objects_.size(); }
     bool no_room_at(std::size_t index, Address* identity) const noexcept;
 
 private:
     using ObjectMap = std::map<SourceHandle, GameObject, std::less<SourceHandle>>;
     ObjectMap objects_;
+    std::map<std::string, std::set<SourceHandle>, std::less<>> names_;
+    // ObjectManager +0x4c: starts/resets to 1 and advances only on a
+    // create-on-name-miss, before the keyed map slot is acquired.
+    SourceHandle next_source_handle_{1};
     // Source AddNoRoomObject tail-inserts a GameObject*; RemoveNoRoomObject
     // removes the first equal pointer. Keep that list order independently.
     std::list<Address> no_room_objects_;

@@ -20,7 +20,13 @@ The original ELF SHA256 is `36498eb8180ffb74759e6305e9596db999f18583d460f3b8534a
 | CharAI::_SpellCleanUp | 0x3d8a98 | 72 | Source spell vector iteration |
 | AISDefault::OnDied | 0x3dbe90 | 4 | Actual inherited empty Player/PlayerIPhone virtual leaf |
 
+`Character::RaiseEvent(2,killer)` is a separate route: it forwards through `CharAI::RaiseAIEvent`, invokes the active AIS virtual `+0x24` with the killer, then raises FSM event 2. Keep that distinct from the `CharAI::OnDied -> AI_SetDead` composition above; wiring event 2 alone does not perform its target, timer, aggro, or skill/spell cleanup.
+
+Monster lethal-hit route confirmed in the same ARMv7 IDB: `HitFor` `0x3a8bc4` reaches `v2Controller::Cmd_Kill` `0x40570c`; `Character::Ctrl_Kill` `0x3ad528` does fresh `IsDead`, `Character::Kill` `0x3a5b18`, then `RaiseEvent(2,killer)`. `Kill` owns the non-player loot gate and reward/aggro work; `DropLoot` `0x3a5ae4` reaches `ItemObject::DropLootTable` `0x3ecba0`. Event 2 reaches `CharAI::RaiseAIEvent` `0x3cbb34`, then Monster `AISExternal::OnDied` `0x3dd440`, then `AI_SetDead`. Current `model_renderer.cpp` lethal damage instead queues `pending_death` and starts `Died` in the frame loop; it skips this route. Spawned Monsters therefore remain gated until their retained Character/AIS, timer, aggro and cleanup owners are wired through this order.
+
 Both Player vtables resolve virtual+0x24 to the real four-byte `bx lr` leaf. This does not invent a Lua OnDied or call OnTerminate. The nonempty virtual+0x3c OnDeAggro is a distinct dependency; linked providers must deliver it with the correct receiver.
+
+IDA resolves the Ghost/AISExternal virtual+0x3c slot to inherited `AISDefault::OnDeAggro`, a four-byte empty leaf. Do not invent a Lua `OnDeAggro` callback for Ghosts.
 
 GetCharAnimTableId's invalid branch at 0x3a3254/58 returns17. SM_SetDeadState independently checks that returned value against the fresh row count. An invalid row returns normally before changing the state, while the AI_SetDead timer/aggro/cleanup tail continues.
 
@@ -49,3 +55,5 @@ Group, Debug/string, constant/stance, `_SetState`, STL allocation/storage, OnDeA
 The selected host gate rebuilds the actual centrally selected world and sole script-runtime DSOs from recorded compiler dependencies. The host compares all eighteen ARM traces and outputs, injects reached target/animation/aggro/cleanup/state failures, rejects same-runtime reentry and output/error owner aliases, and checks only the two canonical AI timers stop. Real Knight/Mage/Rogue rows use the actual AnimationTables, animation constants, Debug/files and unchanged prepared Session for thirteen cleanup callbacks across twenty-one source vector slots. State external scene/controller/FX/prelude bodies remain declared callee fixtures in this gate; the separate focus adapter and root native gates prove their narrower closures.
 
 Remaining reached dependencies include nonnull GroupInfo, unknown AIS callbacks, genuine stance inventory when enabled, linked OnDeAggro and source prior-state OnBlur branches beyond those supported by the selected state kernel. The module fails at those existing boundaries instead of treating them as success. Character::Kill rewards/trophy/online/campaign continuation and recovery are outside this adapter. Host source proof does not itself claim Android deployment or live gameplay.
+
+IDA `AISPlayer::OnDeAggro` `0x3dde48` also updates Player aggro/music counters and may call `VoxSoundManager::SetMusicState`/`PlayMusic`; Android currently has title/menu audio only. Keep linked Monster cleanup closed until gameplay Vox routing is owned.

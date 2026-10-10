@@ -26,7 +26,7 @@ target_compile_options(player_equipment_audit PRIVATE -Wall -Wextra -Werror -fno
 target_link_libraries(player_equipment_audit PRIVATE dh2_level_world dh2_inventory_text_v1)
 '''
  (wrapper/'CMakeLists.txt').write_text(body)
- logs=[run([cmake,'-S',wrapper,'-B',build,'-G','Ninja',f'-DCMAKE_MAKE_PROGRAM={ninja}',f'-DCMAKE_CXX_COMPILER={compiler}',f'-DCMAKE_C_COMPILER={cc}','-DCMAKE_BUILD_TYPE=Release','-DCMAKE_CXX_FLAGS_RELEASE=-O1','-DCMAKE_C_FLAGS_RELEASE=-O1'])]
+ logs=[run([cmake,'-S',wrapper,'-B',build,'-G','Ninja',f'-DCMAKE_MAKE_PROGRAM={Path(ninja).as_posix()}',f'-DCMAKE_CXX_COMPILER={compiler.as_posix()}',f'-DCMAKE_C_COMPILER={cc.as_posix()}','-DCMAKE_BUILD_TYPE=Release','-DCMAKE_CXX_FLAGS_RELEASE=-O1','-DCMAKE_C_FLAGS_RELEASE=-O1'])]
  print('Discovering actual selected compiler and reached cache inputs',flush=True)
  logs.append(run([cmake,'--build',build,'--target','player_equipment_audit','--parallel','2']))
  commands=run([ninja,'-C',build,'-t','commands','player_equipment_audit']);entries=selected_entries(build,commands);sources=[Path(r['file']).resolve() for r in entries]

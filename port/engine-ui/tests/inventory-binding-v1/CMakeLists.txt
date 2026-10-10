@@ -21,3 +21,6 @@ add_executable(inventory_binding_format_gold_v1 ../hud_text_format_v1.cpp)
 target_link_libraries(inventory_binding_format_gold_v1 PRIVATE dh2_inventory_text_v1)
 add_executable(inventory_binding_varargs_gold_v1 ../item_text_varargs_v5.cpp ../item_text_varargs_v5_fixture.cpp)
 target_link_libraries(inventory_binding_varargs_gold_v1 PRIVATE dh2_inventory_text_v1)
+add_executable(localization_level_up_title_v1 ../localization_level_up_title_v1.cpp
+ "${DH2_BINDING_ROOT}/port/pydata-constants/constants.c")
+target_link_libraries(localization_level_up_title_v1 PRIVATE dh2_inventory_text_v1)

@@ -21,6 +21,25 @@ bool same_view(const data::PropertyView& a,const data::PropertyView& b){
 }
 }
 
+PlayerByCharacterStatus player_by_character_internal_id(
+    const PlayerByCharacterBinding* binding,std::uintptr_t character,
+    PlayerByCharacterResult* output){
+    if(!binding||!binding->registry||!binding->player_services||!character||!output)
+        return PlayerByCharacterStatus::invalid_argument;
+    player_locality_v1::Result selected{};
+    const auto status=player_locality_v1::get_player_by_character(
+        binding->registry,binding->player_services,character,0,&selected);
+    if(status!=player_locality_v1::Status::complete)
+        return PlayerByCharacterStatus::lookup_failed;
+    if(!selected.player)return PlayerByCharacterStatus::missing_player;
+    PlayerByCharacterResult result{};
+    result.route=selected.route;
+    result.player=selected.player;
+    result.internal_id=selected.player->internal_id;
+    *output=result;
+    return PlayerByCharacterStatus::complete;
+}
+
 Runtime::Runtime(Bindings bindings,Backend backend):bindings_(bindings),backend_(backend){
     if(bindings_.properties)captured_properties_=*bindings_.properties;
     if(bindings_.save)captured_save_character_=bindings_.save->character();
@@ -35,6 +54,16 @@ Status Runtime::invoke(Operation operation,const char* name,std::int32_t argumen
     result.last_operation=operation;reply={};++result.calls;
     const Request request{operation,bindings_.character,bindings_.properties,bindings_.save,argument,name};
     try{
+        if(operation==Operation::player_by_character&&backend_.player_lookup){
+            PlayerByCharacterResult selected{};
+            const auto selected_status=player_by_character_internal_id(
+                backend_.player_lookup,bindings_.character,&selected);
+            if(selected_status!=PlayerByCharacterStatus::complete){
+                error="Source PlayerManager::GetPlayerByCharacter tail lookup failed";
+                return Status::service_failed;
+            }
+            reply.value=selected.internal_id;
+        }else{
         const auto provider=operation==Operation::level_up?backend_.level_up:backend_.invoke;
         if(!provider){
             if(operation==Operation::level_up){
@@ -49,6 +78,7 @@ Status Runtime::invoke(Operation operation,const char* name,std::int32_t argumen
                 "Character::LevelUp provider failed after the XP property prefix":
                 "Character::_GiveXP service failed";
             return Status::service_failed;
+        }
         }
     }catch(const std::exception& e){error=e.what();return Status::service_failed;}
     catch(...){error="Character::_GiveXP service threw";return Status::service_failed;}
@@ -142,7 +172,12 @@ Status Runtime::give_xp(Result* out,std::string& error){
     if(status!=Status::complete){out->status=status;return status;}
     auto raw_amount=bindings_.amount_fixed;
     if(reply.word)raw_amount=wrap_sub(properties.resolved[34],properties.resolved[33]);
-    const auto difficulty=bindings_.save->unlocked_difficulty();
+    // `_GiveXP` calls Character::SG_GetGameDifficultyUnlocked again here,
+    // after OneKillLevelUp, rather than reusing the Save snapshot read for the
+    // max-level branch. This is an observable source reread and can differ if
+    // the debug callback changed the active Save/profile projection.
+    std::int32_t difficulty=0;
+    if(!read_unlocked_difficulty(difficulty))return out->status;
     status=invoke(Operation::current_level_difficulty,nullptr,0,reply,*out,error);
     if(status!=Status::complete){out->status=status;return status;}
     const auto current_level_difficulty=reply.value;

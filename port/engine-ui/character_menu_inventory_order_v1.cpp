@@ -11,6 +11,7 @@ bool character_menu_slot_candidate_v1(const data::ItemInstanceV1& instance,const
  return target==-4&&slot==1;
 }
 bool character_menu_item_name_less_v1(const data::ItemInstanceV1& a,const data::ItemInstanceV1& b)noexcept{if(a.powers.size()!=b.powers.size())return a.powers.size()>b.powers.size();return std::strcmp(a.name.c_str(),b.name.c_str())<0;}
+bool character_menu_item_equipped_in_requested_slot_v1(bool equipped,bool equipped_other_hand)noexcept{return equipped&&!equipped_other_hand;}
 namespace {
 std::int32_t score(const data::ItemInstanceV1& item,const data::ItemRecord164& row,std::int32_t actor)noexcept{
  unsigned word=0;switch(actor){case 263:word=8;break;case 264:word=12;break;case 265:word=11;break;case 290:word=9;break;case 291:word=16;break;case 292:word=15;break;case 325:word=10;break;case 326:word=14;break;case 327:word=13;break;default:return item.value;}

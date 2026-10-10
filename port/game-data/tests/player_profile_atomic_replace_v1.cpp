@@ -148,6 +148,52 @@ int main() {
                   replacements, &result, error),
               "foreign profile borrow rejected even when content matches");
 
+        // A recovered Save may write only when the backup bytes are exactly
+        // the canonical indexed profile. Missing, short, and marker primaries
+        // all retain that old backup while atomically publishing the update.
+        const std::vector<std::pair<std::string, std::vector<std::uint8_t>>> bad_bases{
+            {"missing", {}}, {"short", {1, 2, 3}},
+            {"marker", {0xff, 0xff, 0xff, 0xff}},
+        };
+        for (const auto& state : bad_bases) {
+            const auto recovered_primary = directory / (state.first + ".savegame");
+            const auto recovered_backup = std::filesystem::path(
+                recovered_primary.string() + ".bak");
+            write_file(recovered_backup, published);
+            if (!state.second.empty()) write_file(recovered_primary, state.second);
+            PlayerProfileIndexV1 recovered_index;
+            check(recovered_index.load({published.data(), published.size()}, error),
+                  "load recovered canonical backup");
+            auto recovered_view = recovered_index.borrow();
+            Result recovered_result{};
+            check(replace_existing_profile_sections_v1(recovered_primary,
+                      recovered_index, recovered_view, replacements,
+                      &recovered_result, error),
+                  "save through source-valid backup recovery");
+            check(read_file(recovered_backup) == published &&
+                      read_file(recovered_primary) == recovered_view.bytes() &&
+                      recovered_index.owns(recovered_view) &&
+                      recovered_result.index_published,
+                  "recovered save keeps the old backup and publishes same index");
+        }
+        const auto malformed_primary = directory / "malformed.savegame";
+        const auto malformed_backup = std::filesystem::path(
+            malformed_primary.string() + ".bak");
+        std::vector<std::uint8_t> malformed;
+        word(malformed, 1); word(malformed, 100);
+        malformed.insert(malformed.end(), {'P', 'N', 'A', 'M'});
+        write_file(malformed_primary, malformed); write_file(malformed_backup, published);
+        PlayerProfileIndexV1 malformed_index;
+        check(malformed_index.load({published.data(), published.size()}, error),
+              "load unrelated valid fallback snapshot");
+        auto malformed_view = malformed_index.borrow();
+        check(!replace_existing_profile_sections_v1(malformed_primary,
+                  malformed_index, malformed_view, replacements, &result, error) &&
+                  read_file(malformed_primary) == malformed &&
+                  read_file(malformed_backup) == published &&
+                  malformed_view.bytes() == published,
+              "usable but malformed primary never falls back to backup");
+
         fs::remove_all(directory);
         std::cout << "player_profile_atomic_replace_v1: PASS\n";
         return 0;

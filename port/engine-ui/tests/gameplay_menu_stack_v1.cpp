@@ -43,12 +43,29 @@ int main() {
                 "named NativePopMenu must also accept the current menu name");
         require(!gameplay_menu_named_pop_requested_v1(stack, "menu_Inventory"),
                 "named NativePopMenu must leave the stack untouched for an absent name");
+        const std::vector<std::string> skill_confirmation{
+            "menu_CharacterMenu", "menu_SkillTreeSheetNew", "menu_confirm2"};
+        require(gameplay_menu_back_dismisses_overlay_v1(skill_confirmation),
+                "NativeBackToHud from a skill confirmation must dismiss only the overlay");
+        require(!gameplay_menu_back_dismisses_overlay_v1(
+                    std::vector<std::string>{"menu_CharacterMenu"}),
+                "NativeBackToHud from the root character menu must return to the HUD");
+        require(!gameplay_menu_back_dismisses_overlay_v1({}),
+                "empty gameplay menu stack must not be treated as a nested overlay");
         require(!gameplay_menu_reveal_existing_requested_v1("menu_CharacterMenu"),
                 "repeated character-menu initialization must preserve its active sheet stack");
         require(gameplay_menu_reveal_existing_requested_v1("menu_confirm2"),
                 "only the retained confirmation panel should unwind covering menus");
         require(gameplay_native_push_state_routes_to_level_menu_v1("menu_CharacterMenu", true),
                 "NativePushState must route CharacterMenu through GSFlashMenu over GSLevel");
+        require(gameplay_menu_state_v1("menu_CharacterMenu") &&
+                    gameplay_menu_state_v1("menu_InventorySheetMain") &&
+                    gameplay_menu_state_v1("menu_SkillTreeSheetNew") &&
+                    gameplay_menu_state_v1("menu_FaerySheet"),
+                "portrait, Inventory, Talents and Faery authored screens must remain reachable");
+        require(!gameplay_menu_state_v1("menu_Inventory") &&
+                    !gameplay_menu_state_v1("menu_Talents"),
+                "native renderer must accept the original authored state names, not guessed aliases");
         require(gameplay_native_push_state_routes_to_level_menu_v1("menu_Ingame", true),
                 "NativePushState must route Ingame through GSFlashMenu over GSLevel");
         require(gameplay_native_push_state_is_level_menu_target_v1("menu_CharacterMenu") &&

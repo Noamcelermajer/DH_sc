@@ -21,7 +21,10 @@ struct MenuProfileMetadataServicesV1 {
     // Required when QEST exists. The canonical owner must initialize/load its
     // actual quests with the source regular/rewound-volatile dispatch; both
     // act arrays arrive with LNAM values and must reflect reached QEST stores.
-    bool (*load_quest_acts)(void*,Bytes,std::array<std::int32_t,3>& regular,
+    // The Save and profile index are the exact owners used by this metadata
+    // read; providers must not parse the payload into another Save/cursor.
+    bool (*load_quest_acts)(void*,const std::shared_ptr<PlayerSavegameV1>&,
+        const PlayerProfileIndexV1::Borrow&,std::array<std::int32_t,3>& regular,
         std::array<std::int32_t,3>& volatile_acts,std::string&){};
 };
 // Actual metadata-reader order PNAM,PLVL,PCLS,PDFL,LNAM,LEPT,LUSP,QEST.

@@ -9,6 +9,22 @@ namespace dh2::ui {
 
 enum class GameplayMenuTransitionActionV1 { cover, hide, show };
 
+// Authored dqcharmenu states constructed by MenuManager::Init. Keep this as
+// the same allowlist used by the retained native renderer so UI navigation
+// tests can catch a dropped Inventory, Skills or Faery screen.
+inline bool gameplay_menu_state_v1(const std::string& name) {
+    return name == "menu_Ingame" || name == "menu_CharacterMenu" ||
+        name == "menu_CharacterSheetNew" || name == "menu_CharacterSheetRecovery" ||
+        name == "menu_CharacterSheetMagic" || name == "menu_CharacterSheetDefense" ||
+        name == "menu_CharacterSheetOffense" || name == "menu_CharacterSheetStats" ||
+        name == "menu_InventorySheetMain" || name == "menu_InventorySheetDetails" ||
+        name == "menu_SkillTreeSheetNew" || name == "menu_FaerySheet" ||
+        name == "menu_QuestLogSheetNEW" || name == "menu_MapSheet" ||
+        name == "menu_Specialisation" || name == "menu_Merchant" ||
+        name == "menu_MultiplayerLobbyMulti" || name == "menu_FriendInvitationMulti" ||
+        name == "menu_confirm2";
+}
+
 struct GameplayMenuTransitionEventV1 {
     GameplayMenuTransitionActionV1 action{};
     std::string menu;
@@ -38,6 +54,14 @@ inline std::vector<GameplayMenuTransitionEventV1> gameplay_menu_transition_plan_
 inline bool gameplay_menu_named_pop_requested_v1(
     const std::vector<std::string>& stack, const std::string& name) {
     return std::find(stack.begin(), stack.end(), name) != stack.end();
+}
+
+// NativeBackToHud shares Android Back's stack policy while a gameplay menu is
+// active: an overlay (including menu_confirm2) returns to its authored caller;
+// only the root CharacterMenu returns control to the HUD.
+inline bool gameplay_menu_back_dismisses_overlay_v1(
+    const std::vector<std::string>& stack) {
+    return stack.size() > 1;
 }
 
 // Character-menu initialization repeats menu_CharacterMenu while adding its

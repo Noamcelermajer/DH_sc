@@ -49,7 +49,14 @@ bool AnimationScheduler::activate_with_services(const AnimationTables& table,std
  if(step.redir==1)return enter_with_services(table,step.anim,stack.size(),random,enabled,services);
  if(step.redir!=0||step.anim<0)throw std::runtime_error("Animation scheduler has no clip");
  current=step;playing=true;
- return !services.prepare||services.prepare(services.context,*this);
+ if(services.prepare&&!services.prepare(services.context,*this))return false;
+ // The selected frame index is already stored, and prepare has now installed
+ // its active playback slot. This callback is separate from the preceding
+ // selection event 0x26 and from Character::RaiseEvent(38).
+ if(services.frame_step&&
+    !services.frame_step(services.context,*this,index,static_cast<std::uint32_t>(sequence.steps.size())))
+  throw std::runtime_error("Animation frame-step observer rejected the selected source step");
+ return true;
 }
 bool AnimationScheduler::start_with_services(const AnimationTables& table,std::int32_t id,AnimationRandom& random,
                                             std::string& error,const AnimationSelectionServices& services,bool enabled){

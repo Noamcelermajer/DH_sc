@@ -164,7 +164,7 @@ Relevant recovered native routines are in
 - `functions-006.pseudo.c`, ELF `0x004707f4`,
   `Script_ExecScript::Execute`; an absolute-script flag prevents adding the
   level-script base to the ID.
-- `functions-005.pseudo.c`, ELF `0x004522b8`, `NativeGoToZone`.
+- `functions-005.pseudo.c`, ELF `0x004422b8`, `NativeGoToZone`.
 
 What this host evidence does **not** activate or establish:
 

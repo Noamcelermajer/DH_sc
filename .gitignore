@@ -82,3 +82,5 @@ private-documents/
 hs_err_pid*.log
 port/engine-camera/build/
 port/engine-ui/build/
+
+tools/rea-local/

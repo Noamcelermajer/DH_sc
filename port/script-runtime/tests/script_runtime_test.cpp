@@ -8,11 +8,51 @@ using namespace dh2_script_runtime;
 
 static int failures = 0;
 
+struct CameraCall { uint32_t calls; uint8_t use_crit; int32_t clip_id; int result; };
+static int camera_dispatch(void *context,uint8_t use_crit,int32_t clip_id) {
+    CameraCall *call=(CameraCall *)context;
+    if(call==NULL)return -1;
+    ++call->calls;call->use_crit=use_crit;call->clip_id=clip_id;
+    return call->result;
+}
+
 static void check(bool condition, const char *label) {
     if (!condition) {
         fprintf(stderr, "FAIL: %s\n", label);
         ++failures;
     }
+}
+
+static void test_play_camera_command() {
+    const uint8_t script_name_bytes[]={'C','a','m'};
+    dh2_script_command command={};
+    command.command_id=5;command.field_count=2;
+    command.fields[0].kind=DH2_SCRIPT_VALUE_I32;
+    command.fields[0].value.i32=44;
+    command.fields[1].kind=DH2_SCRIPT_VALUE_BOOL;
+    command.fields[1].value.boolean=1;
+    dh2_script script={};
+    script.command_count=1;script.name={script_name_bytes,3};script.commands=&command;
+    dh2_script_table common={};common.script_count=1;common.scripts=&script;
+    dh2_script_table level={};
+    CameraCall call={0,0,0,0};
+    Runtime runtime={};runtime.common_table=&common;runtime.level_table=&level;
+    runtime.spawn_services={&call,NULL,camera_dispatch};
+    runtime.tasks[0].script=&script;runtime.tasks[0].ticket=1;
+    runtime.tasks[0].script_id=0;runtime.tasks[0].active=1;
+    runtime.task_slots_used=1;runtime.next_task_ticket=1;
+    check(advance(&runtime,16)==ERROR_OK,"PlayCamera callback completes in the shared scheduler");
+    check(call.calls==1&&call.use_crit==1&&call.clip_id==44,
+          "PlayCamera preserves its typed Crit flag and external AnimDict ID");
+
+    CameraCall rejected={0,0,0,-1};
+    Runtime failed={};failed.common_table=&common;failed.level_table=&level;
+    failed.spawn_services={&rejected,NULL,camera_dispatch};
+    failed.tasks[0].script=&script;failed.tasks[0].ticket=1;
+    failed.tasks[0].script_id=0;failed.tasks[0].active=1;
+    failed.task_slots_used=1;failed.next_task_ticket=1;
+    check(advance(&failed,16)==ERROR_CAMERA_SERVICE&&rejected.calls==1,
+          "PlayCamera provider failure stops the same scheduler at its command boundary");
 }
 
 static uint8_t *read_file(const char *path, uint32_t *out_size) {
@@ -460,6 +500,12 @@ static void run_flow(const dh2_script_table &common,
 }
 
 int main(int argc, char **argv) {
+    if(argc==2&&strcmp(argv[1],"--play-camera-only")==0){
+        test_play_camera_command();
+        if(failures!=0)return 1;
+        printf("typed PlayCamera scheduler checks passed\n");
+        return 0;
+    }
     if (argc != 6) {
         fprintf(stderr, "usage: %s COMMON_NAMES COMMON_PROGRAMS SWAMP_NAMES "
                 "SWAMP_PROGRAMS SOURCE_SEED_TSV\n", argv[0]);
@@ -470,6 +516,7 @@ int main(int argc, char **argv) {
     const bool common_ok = load_table(argv[1], argv[2], &common, "common");
     const bool swamp_ok = load_table(argv[3], argv[4], &swamp, "SWAMP");
     check(common_ok && swamp_ok, "decode original common and SWAMP tables");
+    test_play_camera_command();
     if (common_ok && swamp_ok) {
         check(common.name_count == 15 && swamp.name_count == 55,
               "native tables expose all common and SWAMP names");

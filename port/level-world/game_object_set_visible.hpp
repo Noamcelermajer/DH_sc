@@ -9,6 +9,12 @@ struct SceneNode {
     Address identity;
     Address set_visible_target_48;
     std::uint32_t flags_11c;
+    // GameObject::SetVisualObject writes its owner into the root node at
+    // VisualObject+8+0x204 after publishing the VisualObject at GameObject+0x2d8.
+    Address owner_game_object_204{};
+    // Optional borrowed backing field for a live renderer-owned scene node.
+    // The host projection remains the fallback when no live owner is bound.
+    Address* owner_game_object_204_live{};
 };
 struct VisualObject { Address identity; SceneNode* root_8; };
 struct GameObject {

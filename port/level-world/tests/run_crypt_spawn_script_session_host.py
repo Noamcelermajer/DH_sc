@@ -41,6 +41,10 @@ def main():
     executable = report.parent / "crypt-spawn-script-session-host.exe"
     sources = [HERE / "crypt_spawn_script_session.cpp", MODULE / "crypt_spawn_script_session.cpp",
                MODULE / "character_factory.cpp", MODULE / "character_state.cpp",
+               MODULE / "object_manager_runtime_owner_v1.cpp",
+               MODULE / "character_skill_fsm_callbacks_v1.cpp",
+               MODULE / "character_skill_state_dispatch_v1.cpp",
+               MODULE / "character_cast_lifecycle_v1.cpp",
                MODULE / "crypt_spawn_trigger.cpp",
                REPO / "port/trigger-contact/trigger_contact.cpp",
                REPO / "port/zone-contact-runtime/zone_geometry.cpp",

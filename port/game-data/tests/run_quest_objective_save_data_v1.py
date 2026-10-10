@@ -15,7 +15,7 @@ PIN=MODULE/'reference/quest-objective-save-data-v1/original-functions.json'
 Q=0x10001000; STREAM=0x10002000; VTABLE=0x10003000
 STOP=0x30000000; WRITE=STOP+0x100
 BASE=0x47ab74; SAVED_QTY=0x47ab84
-BASE_DISPATCH={7,9}; QTY_DISPATCH={3,8,10,13}
+BASE_DISPATCH={7,9,15}; QTY_DISPATCH={3,4,5,6,8,10,11,12,13,14}
 
 def cases():
     rows=[]

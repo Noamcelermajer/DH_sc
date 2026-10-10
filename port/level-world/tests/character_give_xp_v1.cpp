@@ -1,4 +1,5 @@
 #include "../character_give_xp_v1.hpp"
+#include "../character_distribute_give_xp_dispatch_v1.hpp"
 
 #include <array>
 #include <cstdio>
@@ -18,6 +19,37 @@ void check(bool value, const char* message) {
         std::exit(1);
     }
 }
+
+struct PlayerLookupFixture {
+    dh2::character_level_member::IntMember levels[2]{};
+    dh2::player_manager_host_level::PlayerInfoProjection host{};
+    dh2::player_manager_host_level::PlayerInfoProjection selected{};
+    dh2::player_manager_host_level::PlayerInfoProjection* entries[1]{};
+    dh2::player_manager_host_level::PlayerRegistry registry{};
+    std::uintptr_t selected_character=0xabc001;
+    std::uint32_t character_reads=0;
+    dh2::player_locality_v1::Services services{};
+
+    PlayerLookupFixture() {
+        host={0x10001008,-1,&levels[0]};
+        selected={0x10002008,77,&levels[1]};
+        entries[0]=&selected;
+        registry={0x10001000,entries,1,&host};
+        services.context=this;
+        services.online=[](void*,std::uint8_t* online)->std::int32_t {
+            *online=0;
+            return 0;
+        };
+        services.character_660=[](void* raw,
+            dh2::player_locality_v1::PlayerInfo* player,
+            std::uintptr_t* character)->std::int32_t {
+            auto& self=*static_cast<PlayerLookupFixture*>(raw);
+            ++self.character_reads;
+            *character=player==&self.selected?self.selected_character:0;
+            return 0;
+        };
+    }
+};
 
 void word(std::vector<unsigned char>& bytes, std::uint32_t value) {
     for (unsigned i = 0; i < 4; ++i) bytes.push_back(static_cast<unsigned char>(value >> (i * 8)));
@@ -196,11 +228,13 @@ struct Fixture {
     }
 
     xp::Runtime runtime(std::int32_t amount_fixed, bool install_level_up = false,
-                        bool update_player_stat = true) {
+                        bool update_player_stat = true,
+                        const xp::PlayerByCharacterBinding* player_lookup = nullptr) {
         const xp::Bindings bindings{CHARACTER, amount_fixed, &view, &save,
                                     &constants, update_player_stat};
         const xp::Backend backend{this, generic, install_level_up ? full_level_up : nullptr,
-                                  audit_constant, audit_unlocked_difficulty};
+                                  audit_constant, audit_unlocked_difficulty,
+                                  player_lookup};
         return xp::Runtime(bindings, backend);
     }
 };
@@ -246,14 +280,18 @@ void requeries_level_and_unlocked_difficulty_after_one_kill_switch() {
     Fixture f;
     f.level_difficulty = 2;
     f.level_difficulty_after_debug = 1;
-    f.save_difficulty_after_debug = 1;
+    f.save_difficulty_after_debug = 0;
+    // First read selects Normal max level, second read is the source's fresh
+    // VeryHard override query, and the post-OneKillLevelUp Character method
+    // must perform a third fresh read that disagrees with the mutated Save.
+    f.max_level_difficulty_script = {0, 2, 2};
     f.one_kill = false;
     auto runtime = f.runtime(5 * 256);
     xp::Result result{};
     std::string error;
     check(runtime.give_xp(&result, error) == xp::Status::complete &&
           result.raw_amount_fixed == 5 * 256 && result.xp_after == 105 * 256,
-          "difficulty source reads were reused across the OneKillLevelUp debug query");
+          "post-OneKillLevelUp SG difficulty reread reused a stale Save difficulty");
     const std::vector<xp::Operation> expected{
         xp::Operation::character_virtual_40, xp::Operation::character_virtual_84,
         xp::Operation::current_level_suppression, xp::Operation::one_kill_level_up,
@@ -261,6 +299,12 @@ void requeries_level_and_unlocked_difficulty_after_one_kill_switch() {
         xp::Operation::player_by_character};
     check(f.trace == expected,
           "CurrentLevel difficulty was not freshly queried after OneKillLevelUp");
+    check(f.max_level_difficulty_reads == 3 &&
+          f.max_level_trace == std::vector<std::string>{
+              "CharacterDesign/MaxLevelBNormal", "SG_GetGameDifficultyUnlocked",
+              "SG_GetGameDifficultyUnlocked", "CharacterDesign/MaxLevelDVeryHard",
+              "SG_GetGameDifficultyUnlocked"},
+          "source Character::SG_GetGameDifficultyUnlocked call order changed");
 }
 
 void preserves_prefix_and_requires_real_level_up_owner() {
@@ -419,6 +463,74 @@ void absent_max_level_constant_is_the_source_zero_value() {
     check(f.max_level_trace == expected,
           "missing max-level constants bypassed the source override lookup order");
 }
+
+void resolves_the_exact_player_manager_xp_tail() {
+    PlayerLookupFixture fixture;
+    xp::PlayerByCharacterBinding binding{&fixture.registry,&fixture.services};
+    xp::PlayerByCharacterResult result{};
+    check(xp::player_by_character_internal_id(&binding,
+              fixture.selected_character,&result)==
+              xp::PlayerByCharacterStatus::complete &&
+          result.route==dh2::player_locality_v1::Route::registered_player &&
+          result.player==&fixture.selected && result.internal_id==77,
+          "_GiveXP tail did not use the source GetPlayerByCharacter selection and +0x670 identity");
+
+    check(xp::player_by_character_internal_id(&binding,0xabc002,&result)==
+              xp::PlayerByCharacterStatus::complete &&
+          result.route==dh2::player_locality_v1::Route::manager_plus_8 &&
+          result.player==&fixture.host && result.internal_id==-1,
+          "GetPlayerByCharacter miss did not preserve the source manager+8 fallback");
+
+    const auto fallback=result;
+    binding.player_services=nullptr;
+    check(xp::player_by_character_internal_id(&binding,fixture.selected_character,
+              &result)==xp::PlayerByCharacterStatus::invalid_argument &&
+          result.player==fallback.player && result.internal_id==fallback.internal_id,
+          "invalid XP-tail binding replaced the last committed PlayerInfo projection");
+}
+
+void give_xp_can_use_the_canonical_player_manager_tail() {
+    Fixture f;
+    f.state.saved[33]=9000*256;
+    f.state.base[34]=10000*256;
+    f.state.base[200]=10*256;
+    f.recalc();
+    f.one_kill=true;
+
+    PlayerLookupFixture players;
+    players.selected_character=CHARACTER;
+    xp::PlayerByCharacterBinding lookup{&players.registry,&players.services};
+    auto runtime=f.runtime(256,true,true,&lookup);
+    xp::Result result{};
+    std::string error;
+    check(runtime.give_xp(&result,error)==xp::Status::complete &&
+          result.level_up_called==1 && result.stat_player_lookups==1 &&
+          result.player_internal_id==77 && players.character_reads==1,
+          "_GiveXP did not run LevelUp then the canonical GetPlayerByCharacter tail");
+    check(f.trace.back()==xp::Operation::level_up,
+          "generic fallback stole the PlayerManager-owned _GiveXP tail");
+}
+
+void distribute_dispatch_reuses_the_live_give_xp_runtime() {
+    Fixture f;
+    PlayerLookupFixture players;
+    players.selected_character=CHARACTER;
+    xp::PlayerByCharacterBinding lookup{&players.registry,&players.services};
+    const xp::Backend backend{&f,Fixture::generic,nullptr,Fixture::audit_constant,
+                              Fixture::audit_unlocked_difficulty,&lookup};
+    dh2::character_distribute_give_xp_dispatch_v1::Owner owner{
+        &f.constants,backend};
+    dh2::character_distribute_xp_v1::CharacterView character{
+        CHARACTER,&f.view,&f.save,0,0};
+    std::uint32_t source_return=99;
+    std::string error;
+    check(dh2::character_distribute_give_xp_dispatch_v1::give_xp(
+              &owner,&character,256,1,&source_return,error)==0 &&
+          source_return==1 &&
+          f.state.saved[33]==100*256+256 && players.character_reads==1 &&
+          f.trace.back()==xp::Operation::trace_character_stats && error.empty(),
+          "DistributeXP did not dispatch through the same canonical _GiveXP runtime and PlayerManager tail");
+}
 }
 
 int main() {
@@ -432,5 +544,8 @@ int main() {
     reads_normal_constant_before_fresh_difficulty_and_override();
     hard_override_uses_only_the_first_difficulty_read();
     absent_max_level_constant_is_the_source_zero_value();
-    std::puts("PASS: eligible single-player _GiveXP through canonical PropertyView/Save; XP modifier, source gates, explicit LevelUp dependency, prefix retention, and PlayerManager tail");
+    resolves_the_exact_player_manager_xp_tail();
+    give_xp_can_use_the_canonical_player_manager_tail();
+    distribute_dispatch_reuses_the_live_give_xp_runtime();
+    std::puts("PASS: eligible single-player _GiveXP through canonical PropertyView/Save; XP modifier, source gates, explicit LevelUp dependency, prefix retention, and canonical PlayerManager tail");
 }

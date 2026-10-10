@@ -207,6 +207,7 @@ CryptGeneratedDactStatusV1 crypt_compile_generated_dact_v1(
 
   try {
     std::vector<ProjectedActor> actors;
+    std::vector<CryptGeneratedFaeryV1> faery_descriptors;
     std::vector<CryptGeneratedDactSkippedV1> skipped;
     std::vector<std::uint32_t> next_source_record(source.module_count, 0);
     std::uint32_t last_module = 0;
@@ -265,6 +266,77 @@ CryptGeneratedDactStatusV1 crypt_compile_generated_dact_v1(
                         "Character template is outside the reviewed DACT subset",
                         module_index, object.source_record);
         }
+        if (std::strcmp(template_name, "Faery") == 0) {
+          const auto* character = dh2_world_field(&object, "charpropsname");
+          if (!object.name || !*object.name || !character || !*character) {
+            return reject(diagnostic, Status::character_data,
+                          "Faery Character lacks source identity or CharacterTable link",
+                          module_index, object.source_record);
+          }
+          const auto* ai_id = data::property(characters, character, "AI");
+          const auto* animation_id =
+              data::property(characters, character, "AnimTable");
+          const auto* model_id =
+              data::property(characters, character, "ModelFile");
+          const auto* faery_list_id =
+              data::property(characters, character, "FaeryList");
+          const auto* scale_x = data::property(characters, character, "Scale_X");
+          const auto* scale_y = data::property(characters, character, "Scale_Y");
+          const auto* scale_z = data::property(characters, character, "Scale_Z");
+          if (!ai_id || *ai_id < 0 || !animation_id || *animation_id < 0 ||
+              !model_id || *model_id < 0 ||
+              static_cast<std::size_t>(*model_id) >= models.values.size() ||
+              !faery_list_id ||
+              !scale_x || !scale_y || !scale_z) {
+            return reject(diagnostic, Status::character_data,
+                          "Faery CharacterTable AI, animation, model, FaeryList, or scale reference is unresolved",
+                          module_index, object.source_record);
+          }
+          if (models.values[static_cast<std::size_t>(*model_id)].empty()) {
+            return reject(diagnostic, Status::character_data,
+                          "Faery CharacterTable model dictionary reference is empty",
+                          module_index, object.source_record);
+          }
+
+          CryptGeneratedFaeryV1 faery;
+          faery.module_index = module_index;
+          faery.source_record = object.source_record;
+          faery.name = object.name;
+          faery.object_type = object.gametype;
+          faery.template_name = template_name;
+          faery.character = character;
+          faery.ai_table_id = *ai_id;
+          faery.animation_table_id = *animation_id;
+          faery.character_model_dictionary_index = *model_id;
+          faery.character_model_path = models.values[static_cast<std::size_t>(*model_id)];
+          faery.faery_list_table_id = *faery_list_id;
+          const std::int32_t authored_scale[3] = {
+              *scale_x, *scale_y, *scale_z};
+          float position[3] = {};
+          float rotation[3] = {};
+          float scale[3] = {};
+          for (unsigned axis = 0; axis < 3; ++axis) {
+            position[axis] = object.world_position[axis];
+            rotation[axis] = object.local.rotation_degrees[axis] +
+                source.modules[module_index].record.local.rotation_degrees[axis];
+            scale[axis] = static_cast<float>(
+                static_cast<double>(object.local.scale[axis]) *
+                authored_scale[axis] / 100.0);
+            faery.authored_world_transform[axis] = position[axis];
+            faery.authored_world_transform[3 + axis] = rotation[axis];
+            faery.authored_world_transform[6 + axis] = scale[axis];
+          }
+          if (!finite_transform(position, 10000000.0f) ||
+              !finite_transform(rotation, 3600.0f) ||
+              !finite_transform(scale, 100.0f, true)) {
+            return reject(diagnostic, Status::unsupported_transform,
+                          "Faery Character transform is outside runtime limits",
+                          module_index, object.source_record);
+          }
+          // Kept outside DACT actor enumeration; the upper layer adds the
+          // source ObjectManager handle without creating an enemy instance.
+          faery_descriptors.push_back(std::move(faery));
+        }
         skipped.push_back({module_index, object.source_record,
                            CryptGeneratedDactSkipReasonV1::known_factory_template,
                            object.name ? object.name : ""});
@@ -288,6 +360,17 @@ CryptGeneratedDactStatusV1 crypt_compile_generated_dact_v1(
                            CryptGeneratedDactSkipReasonV1::scripted_object,
                            object.name});
         continue;
+      }
+
+      // Character::SafeGetCharPropsId prefers the runtime char_template row
+      // over charpropsname. DACT v1 stores only the direct CharacterTable
+      // link, so accepting this source route would silently lose the template
+      // selection and its caller-owned RNG draw.
+      const auto* character_template = dh2_world_field(&object, "char_template");
+      if (character_template && *character_template) {
+        return reject(diagnostic, Status::unsupported_type,
+                      "Direct Monster char_template route requires source selection",
+                      module_index, object.source_record);
       }
 
       bool gated = false;
@@ -391,6 +474,7 @@ CryptGeneratedDactStatusV1 crypt_compile_generated_dact_v1(
       if (dact_version == 2) write_u32(record + 236, actor.gated ? 1U : 0U);
       candidate.source_order.push_back(actor.source);
     }
+    candidate.faeries = std::move(faery_descriptors);
     candidate.skipped = std::move(skipped);
     output = std::move(candidate);
     return Status::ok;

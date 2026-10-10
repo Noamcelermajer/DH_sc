@@ -5,6 +5,7 @@
 #include "player_enemy_kill_credit_v1.hpp"
 #include "player_hud_skill_slot_resolution_v1.hpp"
 #include "../../../../../../port/level-world/character_skill_fsm_callbacks_v1.hpp"
+#include "../../../../../../port/level-world/character_cast_lifecycle_v1.hpp"
 #include "../../../../../../port/level-world/ais_combat_result_dispatch_v1.hpp"
 #include <memory>
 #include <vector>
@@ -29,6 +30,12 @@ struct SkillCallbackResult {
     std::uint32_t value=0,call_count=0;
     std::int32_t last_lua_status=0;
 };
+struct SpellOperationResult {
+    std::int32_t saved_faery_slot=-1;
+    std::int32_t spell_type=0;
+    std::uint32_t usable=0;
+    std::uint32_t is_casting=0;
+};
 // Dependencies captured from the active native Character/PlayerManager and
 // the single externally owned source TrophyManager. This is a synchronous
 // borrowed view; Runtime never creates a second manager or animation owner.
@@ -47,6 +54,14 @@ struct SkillStateServices {
     std::uint8_t* ooi_intent_412=nullptr;
     const std::uintptr_t* physical_2dc=nullptr;
     character_skill_fsm_callbacks_v1::Services callbacks{};
+};
+// Live producer fields and real operation adapter for CSCast state7 Focus/Blur.
+// Runtime binds these to the already-retained Coordinator and skill-machine;
+// it does not construct another Character, FSM, Player VM, or animation owner.
+struct CastStateServices {
+    std::uintptr_t debug_switches_identity=0;
+    std::uint8_t* ooi_intent_412=nullptr;
+    character_cast_lifecycle_v1::Services callbacks{};
 };
 struct Bindings {
     std::uintptr_t character=0,ai=0;
@@ -85,6 +100,13 @@ struct Bindings {
     const dh2_pycst_view* design=nullptr;
     const dh2_pycst_view* ai_constants=nullptr;
     const dh2_pycst_view* faery_constants=nullptr;
+    // Skill-only Character/GameObject APIs backed by the current gameplay
+    // owners. This forwards unsupported native calls to the existing world,
+    // target list and combat owners; it does not install another VM or list.
+    void* skill_gameplay_context=nullptr;
+    int (*skill_gameplay_native)(void*,std::uint32_t,
+        const void*,std::uint32_t,void*,
+        std::uint32_t,std::uint32_t*,char*,std::size_t,const char*)=nullptr;
     character::Coordinator* coordinator=nullptr;
     debug_files::Backend* debug=nullptr;
     AAssetManager* assets=nullptr;
@@ -114,6 +136,17 @@ public:
     bool reload_skill_instances(data::PlayerSaveLoadOwnerV1&,std::string& error);
     // NativeReloadSkills providers over the existing BuffOwner/property graph.
     bool remove_all_buffs(std::string& error);
+    // CharAI::OnTerminate / AI_ScriptCleanUp terminal prefix. Runs the
+    // existing skill then faery cleanup loops while the Character timers,
+    // CharAI, and retained Player VM are still alive; it does not dispatch
+    // CSSkill/CSCast state Blur callbacks.
+    bool cleanup_ai_scripts(std::string& error);
+    // Character::CancelSneaking over this Character's existing BuffOwner,
+    // computed properties, selected SkillList and retained Player VM. The
+    // caller supplies the actual projected Character+0x415 byte; this method
+    // does not create a second buff, property, script or skill-vector owner.
+    bool cancel_sneaking(std::uint8_t* character_byte_415,
+                         std::string& error);
     bool recalculate_properties(bool source_argument,std::string& error);
     // Source Character::IncSkill over the same retained Save, skill VM,
     // property/buff view and caller-supplied canonical V4 inventory.
@@ -137,6 +170,7 @@ public:
     // retained Player preparation. The view is valid only until source
     // UpdateSkills/reload changes it; cast dispatch refreshes it per call.
     const std::vector<std::uintptr_t>* prepared_skill_scripts()const noexcept;
+    std::uintptr_t character_identity()const noexcept;
     // Resolve NativeHUDSkill's HUD slot through the canonical Save map to its
     // selected SkillList/Save row and same-index retained Player script. The
     // SkillList selector is explicit for callers that have a source value.
@@ -177,15 +211,53 @@ public:
         std::uintptr_t animation_owner_identity,
         const BeginSkillServices&,
         character_ai_skill_commands_v1::Result&, std::string& error);
+    // Source SM_SetAnim toggle over the retained CharStateMachine projection.
+    // Mutates only its animation_28 field and returns the animation ID that
+    // CharAnimator::ANIM_Set receives; the host still owns playback.
+    bool select_skill_animation(std::uintptr_t animation_owner_identity,
+        std::int32_t requested_animation,std::int32_t& selected_animation,
+        std::string& error);
+    // Source SM_SetCastState animation selection. Uses the active Character's
+    // CharAnimTable `Spells[saved_faery_slot]` sequence and writes the same
+    // retained machine animation_28 field used by skill state selection.
+    // This does not raise C356 or install state 7; the caller owns that event.
+    bool select_cast_animation(std::int32_t animation_table_id,
+        std::int32_t saved_faery_slot,
+        std::uintptr_t animation_owner_identity,
+        std::int32_t& selected_animation,std::string& error);
+    // Source-ordered offline AI_BeginSpell/AI_EndSpell over the same Save,
+    // prepared faery vector/VM, CharAI bytes, Coordinator and retained
+    // Character animation owner used by CSCast. Online controller messaging
+    // is not part of this projection. EndSpell requires the real animator
+    // StopLoop provider only on the source SpellType==2/byte_d0 branch.
+    bool begin_spell(std::uintptr_t animation_owner_identity,
+        SpellOperationResult&,std::string& error);
+    bool end_spell(std::uintptr_t animation_owner_identity,void* animation_context,
+        bool (*stop_loop)(void*,bool,std::string&),
+        SpellOperationResult&,std::string& error);
     // Bind CSSkill's exact Focus/Blur callbacks to the same persistent
     // CharStateMachine projection and Coordinator used by Begin/EndSkill.
     // Call before BeginSkill can issue event C355. Character OOI-intent and
     // physical fields and every callback operation are explicit borrowed
-    // providers; no fallback owners are manufactured. Unbind after leaving
-    // state 6 and before retiring this Runtime.
+    // providers; no fallback owners are manufactured. Normally unbind after
+    // leaving state 6; terminal Character destruction uses retire_* instead.
     bool bind_skill_state_callbacks(std::uintptr_t animation_owner_identity,
         const SkillStateServices&,std::string& error);
     bool unbind_skill_state_callbacks(std::string& error);
+    bool retire_skill_state_callbacks(std::string& error);
+    bool skill_state_callbacks_bound()const noexcept;
+    // Bind CSCast state7 Focus/Blur to the same Character/Coordinator and
+    // retained machine/animator used by skill and cast-animation selection.
+    // Requires that existing skill_machine; does not allocate a second one.
+    // Normally unbind after leaving state7; terminal Character destruction
+    // uses retire_* instead.
+    bool bind_cast_state_callbacks(std::uintptr_t animation_owner_identity,
+        const CastStateServices&,std::string& error);
+    bool unbind_cast_state_callbacks(std::string& error);
+    bool retire_cast_state_callbacks(std::string& error);
+    bool cast_state_callbacks_bound()const noexcept;
+    // Exact token in cast lifecycle Request.subject for set_animation.
+    bool cast_state_machine_identity(std::uintptr_t& identity)const noexcept;
     // CharAI::AI_IsSkillCheck_Usable/Active over that same vector and retained
     // VM. The caller owns source ordering; this does not begin a cast.
     int skill_check(std::uint32_t skill_slot,bool active,std::uint32_t& value,
@@ -205,6 +277,15 @@ public:
     // This method does not begin/end a cast, change the FSM, or synthesize an
     // animation event; do not call SkillCallback::use directly from a HUD tap.
     int invoke_skill_callback(std::uint32_t skill_slot,
+        SkillCallback callback,SkillCallbackResult& result,std::string& error);
+    // Source CSCast callbacks use the faery-script vector, not the skill
+    // vector: Character events 32/33 dispatch OnPreSkill/OnPostSkill, and the
+    // authored do_spell marker dispatches OnSkill (IDA CharAI::RaiseAIEvent /
+    // _SpellFocus, _SpellBlur, _SpellEvent). Invokes through the same retained
+    // Player VM and preparation owner; caller retains source timing. Like the
+    // source helpers, an out-of-vector or null script slot completes as a
+    // no-op; stale ownership for a nonnull instance is an error.
+    int invoke_faery_callback(std::uint32_t faery_slot,
         SkillCallback callback,SkillCallbackResult& result,std::string& error);
     // Source CharAI::OnDied only. Character::Kill/rewards/event2 caller is a
     // separate integration boundary; this retains the same AIS and VM.

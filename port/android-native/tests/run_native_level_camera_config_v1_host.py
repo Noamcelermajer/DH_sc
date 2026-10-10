@@ -1,4 +1,4 @@
-"""Test source LevelConfig camera clip planes against the original cache."""
+"""Test source LevelConfig camera projection and resource selection."""
 from __future__ import annotations
 
 import shutil
@@ -18,4 +18,5 @@ with tempfile.TemporaryDirectory(prefix="dh2-level-camera-config-") as temp:
     crypt = ROOT / "port/android-native/app/src/main/assets/worlds/007_crypt_01.rule.xml"
     subprocess.run([COMPILER, "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror",
                     str(source), "-o", str(exe)], check=True)
-    subprocess.run([str(exe), str(swamp), str(crypt)], check=True)
+    crypt_mlx = ROOT / "port/android-native/app/src/main/assets/worlds/x07_crypt_backup.mlx"
+    subprocess.run([str(exe), str(swamp), str(crypt), str(crypt_mlx)], check=True)

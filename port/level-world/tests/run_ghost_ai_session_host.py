@@ -58,6 +58,7 @@ def main() -> int:
         MODULE / "character_path_commands.cpp",
         MODULE / "character_script_lifecycle.cpp",
         MODULE / "navigation_heading.cpp",
+        MODULE / "character_oid_cache_v1.cpp",
         MODULE / "monster_external_script_session.cpp",
         MODULE / "lua_script_load_once.cpp",
         MODULE / "ais_state_callbacks.cpp",

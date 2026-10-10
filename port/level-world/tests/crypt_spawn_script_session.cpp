@@ -99,12 +99,141 @@ struct Fixture {
         require(session.advance(dt, error), error.c_str());
     }
 };
+
+void test_shared_crypt_trigger_owner(char** paths) {
+    Fixture fixture(paths);
+    std::string error;
+    require(fixture.load(error), error.c_str());
+    const auto* shared_runtime = fixture.session.runtime();
+    const char* trigger_names[] = {
+        "_prim_TriggerZone_GhostAmbush01",
+        "_prim_TriggerZone_GhostAmbush03",
+        "_prim_TriggerZone_GhostAmbush04",
+        "_prim_TriggerZone_hallambush"};
+    const char* script_names[] = {
+        "GhostAmbush01", "GhostAmbush03", "GhostAmbush04",
+        "GhostAmbushHallway"};
+    const float positions[][3] = {
+        {-1405.23f, 19500.262f, 608.062f},
+        {1385.11f, 495.688f, 573.477f},
+        {-1392.52f, 495.688f, 573.477f},
+        {-3.28113f, -693.084f, 0.0f}};
+    const dh2_crypt_spawn_trigger::PlayerAabb player{{-100000.0f, -100000.0f, -100000.0f,
+        100000.0f, 100000.0f, 100000.0f}, 1};
+    dh2_crypt_spawn_trigger::Frame frame{};
+    frame.players = &player;
+    frame.player_count = 1;
+    frame.enabled = 1;
+    std::array<dh2_crypt_spawn_trigger::State, 4> states{};
+    for (std::size_t i = 0; i < states.size(); ++i) {
+        std::int32_t id = -1;
+        require(fixture.session.supports_script(script_names[i], &id, error),
+            error.c_str());
+        dh2_crypt_spawn_trigger::SourceFacts source{};
+        source.trigger_name = trigger_names[i];
+        source.script_name = script_names[i];
+        source.module_gameplay_file = "generated-crypt.mgp";
+        source.authored_local_position = {positions[i][0], positions[i][1],
+            positions[i][2]};
+        source.authored_object_scale = {1.0f, 1.0f, 1.0f};
+        source.inherited_zone_dimensions = {200.0f, 200.0f, 200.0f};
+        source.activation_limit = 1;
+        frame.owner_world_position = source.authored_local_position;
+        frame.owner_scale = source.authored_object_scale;
+        dh2_crypt_spawn_trigger::init_state(&states[i]);
+        const auto event_begin = shared_runtime->event_count;
+        require(fixture.session.contact(states[i], source, frame) ==
+                dh2_trigger_contact::STATUS_ACTIVATED &&
+                states[i].trigger_activations == 1 && states[i].trigger_fired,
+            "all supported Crypt spawn scripts activate through one shared session");
+        const Event* started = nullptr;
+        for (std::uint32_t event = event_begin;
+             event < shared_runtime->event_count; ++event) {
+            const auto& candidate = shared_runtime->events[event];
+            if (candidate.type == EVENT_TRIGGER_STARTED) started = &candidate;
+        }
+        require(started && std::strcmp(started->detail, trigger_names[i]) == 0 &&
+                started->value == id,
+            "shared Crypt session must start supported scripts in MGP source order");
+        require(fixture.session.runtime() == shared_runtime &&
+                fixture.session.contact(states[i], source, frame) ==
+                    dh2_trigger_contact::STATUS_BLOCKED_ACTIVATION_COUNT,
+            "source one-shot gates are independent while the scheduler remains shared");
+    }
+}
+
+void test_empty_and_unsupported_trigger_scripts(char** paths) {
+    Fixture fixture(paths);
+    std::string error;
+    require(fixture.load(error), error.c_str());
+    std::int32_t id = 1234;
+    require(fixture.session.classify_trigger_script("", &id, error) ==
+                TriggerScriptKind::no_script && id == -1 && error.empty(),
+            "empty authored trigger script is a valid no-op");
+    id = -1;
+    require(fixture.session.classify_trigger_script("Gate1Open", &id, error) ==
+                TriggerScriptKind::unsupported && id == -1 &&
+                error == "Crypt script requires an unbound command service",
+            "nonempty OpenDoor script remains fail-closed");
+    id = -1;
+    require(fixture.session.classify_trigger_script("GhostAmbush01", &id, error) ==
+                TriggerScriptKind::supported && id >= 15 && error.empty(),
+            "selected Wait/Spawn script remains supported");
+}
+
+void test_same_script_manager_start_and_query(char** paths) {
+    Fixture fixture(paths);
+    std::string error;
+    require(fixture.load(error), error.c_str());
+    std::int32_t script_id = -1;
+    require(fixture.session.supports_script("GhostAmbush03", &script_id, error),
+            error.c_str());
+    bool running = true;
+    require(fixture.session.script_is_running(script_id, running, error) &&
+            !running && error.empty(), "current manager reports loaded script idle");
+    require(fixture.session.start_script(script_id, 37, false, false, error), error.c_str());
+    require(fixture.session.runtime()->tasks[0].active &&
+            fixture.session.runtime()->tasks[0].script_id == script_id &&
+            fixture.session.runtime()->tasks[0].start_argument == 37 &&
+            fixture.session.runtime()->tasks[0].start_check_running == 0,
+            "source StartScript args are retained in the one shared task owner");
+    require(fixture.session.script_is_running(script_id, running, error) && running,
+            "current manager query observes the task it just started");
+    require(fixture.session.script_is_running("GhostAmbush03", running, error) &&
+            running, "Quest name query resolves through the same current tables");
+    const auto task_limit = fixture.session.runtime()->next_task_ticket;
+    const auto event_limit = fixture.session.runtime()->event_count;
+    require(fixture.session.start_script(script_id, 99, true, false, error), error.c_str());
+    require(fixture.session.runtime()->next_task_ticket == task_limit + 1 &&
+            fixture.session.runtime()->event_count == event_limit + 1,
+            "offline source StartScript ignores check-running and creates a duplicate task");
+    require(fixture.session.start_script(script_id, 55, false, false, error), error.c_str());
+    require(fixture.session.runtime()->next_task_ticket == task_limit + 2 &&
+            fixture.session.runtime()->tasks[2].start_argument == 55 &&
+            fixture.session.runtime()->tasks[2].start_check_running == 0,
+            "unchecked StartScript preserves source duplicate-task behavior");
+    require(fixture.session.start_script(-1, -1, true, false, error) && error.empty() &&
+            fixture.session.runtime()->next_task_ticket == task_limit + 2,
+            "missing source script ID remains a successful no-op");
+    require(fixture.session.script_is_running("Kill_Hellhole", running, error) &&
+            !running && error.empty() &&
+            fixture.session.start_script("Kill_Hellhole", -1, true, false, error) &&
+            error.empty() && fixture.session.runtime()->next_task_ticket == task_limit + 2,
+            "unloaded Quest script name mirrors GetIDFromName miss and no-op");
+    require(!fixture.session.start_script(999, -1, true, false, error) && !error.empty(),
+            "out-of-range positive ScriptManager ID fails closed");
+    require(!fixture.session.start_script(script_id, 1, true, true, error) && !error.empty(),
+            "online ScriptManager dispatch fails closed without source network routing");
+}
 }
 
 int main(int argc, char** argv) {
     try {
         require(argc == 5, "expected four original script-table paths");
         std::string error;
+        test_shared_crypt_trigger_owner(argv + 1);
+        test_empty_and_unsupported_trigger_scripts(argv + 1);
+        test_same_script_manager_start_and_query(argv + 1);
         Fixture normal(argv + 1);
         normal.start();
         normal.tick(249);
@@ -185,7 +314,7 @@ int main(int argc, char** argv) {
         require(fixed_tick.calls.size() == 2 && fixed_tick.calls[0].time_ms == 275 &&
                 fixed_tick.calls[1].time_ms == 350, "original pre-update blocking check and current-tick Wait update");
 
-        std::puts("Crypt Spawn script session checks passed: original15+25 tables; GhostAmbush01 Wait250/75; synchronous Character factory; exact misses; failures; reentry; owned lifetime");
+        std::puts("Crypt Spawn session passes: original15+25 tables; four ordered source triggers on one scheduler; Wait250/75; synchronous Character factory; failures and lifetime");
         return 0;
     } catch (const std::exception& error) {
         std::fprintf(stderr, "Crypt script session: %s\n", error.what());

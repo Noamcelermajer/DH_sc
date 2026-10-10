@@ -73,6 +73,13 @@ bool AuthoredGameplayHudV1::refresh_skills(std::string& error){
  // stale first-three rows and grows beyond the authored three button owners.
  return invoke(menu_,"onPush",{},error);
 }
+bool AuthoredGameplayHudV1::notify_status_message(std::string& error){
+ if(style_<0){error="Authored HUD is not bound";return false;}
+ // StatusMsg::s_StartFuncName is onStatusMessage; its one source as_value is
+ // numeric zero. The SWF itself calls NativeGetNextStatusMessage to consume
+ // the canonical MenuMessageManager queue head.
+ return invoke("_root","onStatusMessage",{SwfAsValue::number(0)},error);
+}
 std::int32_t AuthoredGameplayHudV1::action_icon(std::int8_t type) noexcept{
  // Original unsigned CMP rejects negative signed bytes too; table 8c9f28.
  static constexpr std::int32_t icons[]{0,1,2,3,5,5,6,7,5,5,4};
@@ -104,7 +111,13 @@ bool AuthoredGameplayHudV1::update(const std::array<std::int32_t,17>& infos,std:
   if(style_>1){ // Fixed/grid skill buttons carry SlotId; rolling rows use their ordinal.
    struct Slot{const std::string* path;unsigned* slot;};Slot q{&controls_[4+n],&slot};
    if(!movie_.action_script(&q,[](void* p,SwfAsGraph& g,std::string& e){auto& q=*static_cast<Slot*>(p);SwfAsValue root,v,id;bool found{};double number{};
-    if(!g.root_value(root,e)||!g.find_target(root,q.path->c_str(),v,e)||!g.get_member(v,"SlotId",id,found,e)||!found||!g.to_number(id,number,e)){if(e.empty())e="Required fixed-layout HUD SlotId";return false;}
+    if(!g.root_value(root,e)||!g.find_target(root,q.path->c_str(),v,e)||!g.get_member(v,"SlotId",id,found,e))return false;
+    // Empty source slots are returned as -1 by NativeSkillGetEquipedSkillsIDs
+    // and the authored SWF does not create SlotId on those blank buttons. The
+    // three fixed clips still correspond to Save slot order, so use their
+    // ordinal only when that optional member is absent.
+    if(!found)return true;
+    if(!g.to_number(id,number,e)){if(e.empty())e="Fixed-layout HUD SlotId is not numeric";return false;}
     *q.slot=number>=0&&number<=2?static_cast<unsigned>(number):0;return true;},error))return false;
   }
   if(!frame(controls_[4+n]+".CoolDown",std::max(infos[8+slot*2]-1,0),error)||!movie_.set_visible((controls_[4+n]+".Grey").c_str(),!infos[9+slot*2],error))return false;

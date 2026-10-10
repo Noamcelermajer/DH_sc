@@ -1,0 +1,120 @@
+#include "../app/src/main/cpp/player_gameplay_audio.hpp"
+
+#include <array>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+
+namespace {
+void check(bool actual, bool expected, const char* message) {
+    if (actual != expected) {
+        std::cerr << "FAIL: " << message << '\n';
+        std::exit(1);
+    }
+}
+}
+
+int main() {
+    using namespace dh2::player_gameplay_audio;
+    std::string cue;
+    constexpr char chain_lightning_cue[] = "sfx_skill_mage_thunder_braid_add_2";
+
+    check(enqueue(chain_lightning_cue, sizeof(chain_lightning_cue) - 1, false), true,
+          "retained chain-lightning victim cue is accepted");
+    check(consume(cue), true, "queued gameplay cue reaches the Android poll bridge");
+    check(cue == "dh2fx,play,0,118,0,0,sfx_skill_mage_thunder_braid_add_2.wav", true,
+          "play command carries original Sounds UID and normalized PCM filename");
+    check(consume(cue), false, "cue is delivered once");
+
+    check(enqueue_play(chain_lightning_cue,sizeof(chain_lightning_cue)-1,0x11,true,80),true,
+          "catalogued looping/fade-in gameplay sound is accepted");
+    check(consume(cue),true,"looping sound reaches playback");
+    check(cue=="dh2fx,play,17,118,80,1,sfx_skill_mage_thunder_braid_add_2.wav",true,
+          "source loop and millisecond fade are preserved");
+    check(enqueue("sfx_unmapped_enemy_grunt", 22, false), false,
+          "unmapped source labels remain fail-closed");
+    check(consume(cue), false, "rejected cues never enter the playback queue");
+
+    check(enqueue_play(chain_lightning_cue,sizeof(chain_lightning_cue)-1,0x11,true,0),true,
+          "first owner starts its sound");
+    check(enqueue_play(chain_lightning_cue,sizeof(chain_lightning_cue)-1,0x22,true,0),true,
+          "second owner can play the same sound ID");
+    check(enqueue_stop(chain_lightning_cue,sizeof(chain_lightning_cue)-1,0x11,200.75f),true,
+          "first owner can stop its sound with a fade");
+    check(consume(cue)&&cue=="dh2fx,play,17,118,0,1,sfx_skill_mage_thunder_braid_add_2.wav",true,
+          "first owner's start is delivered");
+    check(consume(cue)&&cue=="dh2fx,play,34,118,0,1,sfx_skill_mage_thunder_braid_add_2.wav",true,
+          "second owner's start is delivered independently");
+    check(consume(cue)&&cue=="dh2fx,stop,17,118,200",true,
+          "stop retains only its owner's ID and truncated source fade milliseconds");
+    check(consume(cue),false,"stop command is delivered once");
+
+    using namespace dh2::engine_audio::spatial_playback_contract_v1;
+    check(listener_profile(0)->anchor==3&&listener_profile(0)->max_distance==2500&&
+          listener_profile(0)->orientation==0&&listener_profile(0)->reference_distance==3150&&
+          listener_profile(0)->rolloff_factor==1.0f&&listener_profile(0)->up_vector==0&&
+          listener_profile(1)->anchor==2&&listener_profile(1)->max_distance==1800&&
+          listener_profile(1)->orientation==2&&listener_profile(1)->reference_distance==1000&&
+          listener_profile(2)->anchor==2&&listener_profile(3)->anchor==1&&
+          listener_profile(4)->anchor==0&&listener_profile(-1)==nullptr&&
+          listener_profile(5)==nullptr,
+          true,"five decoded Listener records preserve selectors and distance parameters");
+    Request spatial{};
+    spatial.sound_id=118;spatial.has_sound_id=true;
+    spatial.emitter_position={3.0f,4.0f,0.0f};spatial.has_emitter_position=true;
+    spatial.listener={{0.0f,0.0f,0.0f},{0.0f,0.0f,1.0f},{0.0f,1.0f,0.0f}};
+    spatial.has_listener=true;
+    spatial.emitter_parameters.by_source_id={50.0f,1.0f,1.0f};
+    spatial.has_emitter_parameters=true;
+    spatial.has_distance_model=true;
+    spatial.raw_parameter_0=1;
+    check(enqueue_spatial_play(chain_lightning_cue,sizeof(chain_lightning_cue)-1,
+          0x33,false,10,spatial),true,
+          "complete source ID0/1/2/3 and listener request reaches the shared audio queue");
+    check(consume(cue),true,"typed spatial request reaches the existing JNI poll queue");
+    check(cue=="dh2fx,play,51,118,10,0,sfx_skill_mage_thunder_braid_add_2.wav,1,1465,2930",true,
+          "transport combines source model-2 distance gain with the exact Q14 pan outputs");
+
+    spatial.distance_model_id=3;
+    check(enqueue_spatial_play(chain_lightning_cue,sizeof(chain_lightning_cue)-1,
+          0x33,false,0,spatial),false,
+          "unsupported distance models fail closed before queueing");
+    check(consume(cue),false,"unsupported distance models create no audio command");
+
+    const auto* armored=character_sound_row(1);
+    check(armored!=nullptr,true,"source CharSounds row resolves by Character sound-table ID");
+    check(std::string(armored->name)=="ArmoredHuman"&&armored->die.count==1&&
+          armored->die.ids[0]==28&&armored->hurt.ids==std::array<std::uint16_t,3>{29,30,31}&&
+          armored->impact_vs_flesh.ids==std::array<std::uint16_t,3>{120,121,122}&&
+          armored->impact_vs_metal.ids==std::array<std::uint16_t,3>{117,118,119}&&
+          !armored->is_flesh&&armored->is_metallic,
+          true,"CharSounds table preserves original lists and flags");
+    check(character_sound_row(0)->die.count==0&&character_sound_row(2)->hurt.count==0&&
+          character_sound_row(-1)==nullptr&&character_sound_row(3)==nullptr,
+          true,"empty and out-of-range CharSounds rows stay bounded");
+    check(character_sound_id_or_default(-1)==2&&character_sound_id_or_default(3)==2&&
+          character_sound_id_or_default(1)==1&&
+          character_sound_row_for_character(-1)==character_sound_row(2),
+          true,"Character+0x1018 uses source default-row fallback for invalid IDs");
+    constexpr std::array<std::array<std::uint16_t,2>,10> source_map{{
+        {{28,50}},{{29,38}},{{30,39}},{{31,40}},{{117,41}},
+        {{118,42}},{{119,43}},{{120,44}},{{121,45}},{{122,46}},
+    }};
+    for(const auto& mapping:source_map){
+        const auto* entry=find_source_sound_id(mapping[0]);
+        check(entry&&entry->uid==mapping[1],true,
+              "every CharSounds ID resolves to its original sound-pack UID");
+    }
+
+    spatial.sound_id=28;
+    spatial.distance_model_id=observed_default_distance_model_id;
+    check(enqueue_spatial_source_sound(28,0x44,false,0,spatial),true,
+          "CharSounds source ID routes into the existing positional queue");
+    check(consume(cue)&&cue=="dh2fx,play,68,50,0,0,sfx_character_death.wav,1,1465,2930",true,
+          "spatial bridge sends resolved sound-pack UID and packaged PCM file");
+    check(enqueue_spatial_source_sound(27,0x44,false,0,spatial),false,
+          "unmapped CharSounds IDs fail closed");
+    check(consume(cue),false,"unknown source IDs never reach playback");
+
+    std::cout << "PASS: native gameplay cue and CharSounds UID routing\n";
+}

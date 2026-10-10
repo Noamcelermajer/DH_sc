@@ -78,6 +78,7 @@ int main(int argc, char** argv) {
             "fresh session did not clear OOI intent or resolve the sole live owners");
     require(owner.matches_session(&character_660, save, properties, nullptr),
             "initial session binding did not validate");
+    *ooi_intent = 1;
     require(owner.bind_session(&character_660, save, properties, nullptr, error),
             "same live session was not idempotent");
     require(owner.ooi_intent()==1 && owner.ooi_intent_storage()==ooi_intent,
@@ -94,6 +95,16 @@ int main(int argc, char** argv) {
             "late inventory attachment replaced a canonical owner");
     require(owner.bind_inventory(inventory, error),
             "same canonical inventory attachment was not idempotent");
+
+    data::ItemPowerTablesV5 presentation_tables;
+    data::ItemPresentationOwnerV5 presentation(presentation_tables.borrow());
+    data::ItemTextServicesV5 text{};
+    require(!owner.update_inventory_localization(identity + 8, presentation,
+                                                  text, error),
+            "SetLanguage refresh accepted a different Character identity");
+    require(owner.update_inventory_localization(identity, presentation, text,
+                                                 error),
+            error.c_str());
 
     data::PropertyState foreign_properties;
     data::FreshInventoryOwnedV4 mismatched_properties(identity, loot_tables.borrow(),
@@ -149,9 +160,10 @@ int main(int argc, char** argv) {
     require(owner.unbind_session(error) && !owner.ooi_intent(),
             "rebound session retirement retained OOI intent");
 
-    std::cout << "{\"validation\":\"PASS\",\"checks\":28,"
+    std::cout << "{\"validation\":\"PASS\",\"checks\":30,"
                  "\"identity_is_native_object_address\":true,"
                  "\"coordinator_save_properties_inventory_single_owner\":true,"
+                 "\"language_refresh_requires_same_player_and_v4\":true,"
                  "\"inventory_attached_after_character_publish\":true,"
                  "\"source_add_character_parity\":false}\n";
     return 0;

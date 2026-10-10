@@ -66,6 +66,10 @@ void init_state(State *state);
 Status update(dh2_script_runtime::Runtime *runtime,
               State *state,
               const Frame *frame);
+Status update(dh2_script_runtime::Runtime *runtime,
+              State *state,
+              const SourceFacts *source,
+              const Frame *frame);
 
 }  // namespace dh2_crypt_spawn_trigger
 

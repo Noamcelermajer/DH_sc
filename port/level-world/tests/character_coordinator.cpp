@@ -2,6 +2,10 @@
 #include "character_ai_skill_machine_projection_v1.hpp"
 #include "character_skill_state_dispatch_v1.hpp"
 #include "character_skill_state_queries.hpp"
+#include "player_char_ai_target_prefix_v1.hpp"
+#include "../player_character_zonability_v1.hpp"
+#include "../world_object_character_identity_v1.hpp"
+#include "../character_physical_collision_gate_v1.hpp"
 
 #include <cstdio>
 #include <stdexcept>
@@ -15,6 +19,75 @@ void check(bool value, const char* message) {
 }
 namespace Frozen=dh2::character_skill_fsm_callbacks_v1;
 namespace Dispatch=dh2::character_skill_state_dispatch_v1;
+namespace TargetUpdate=dh2::character_ai_update_target;
+namespace PlayerTarget=dh2::player_char_ai_target_prefix_v1;
+namespace PlayerZonability=dh2::player_character_zonability_v1;
+namespace BodyIdentity=dh2::world_object_character_identity_v1;
+struct AIFrameFixture {
+    Coordinator character{0x410000001ull,1};
+    AIFrameOwner48 owner{};
+    AIFrameState32 frame{};
+    std::vector<std::uint32_t> calls;
+    AIFrameFixture() {
+        character.state.flags=0x100;
+        owner={character.owner(),0x411,character.state.flags,0,0,0,0,0,0,0};
+        CoordinatorBindings bindings{};
+        bindings.context=this;bindings.facts=read_facts;
+        bindings.services={this,state_service};bindings.ai_identity=0x412;
+        bindings.ai_owner_projection=&owner;bindings.controller_identity=owner.controller;
+        character.bind(bindings);
+        frame={bindings.ai_identity,&owner,0,0,0,0};
+    }
+    static Facts read_facts(void*) { return {}; }
+    static void state_service(void*,State*,const Request*) {}
+    static int service(void* context,AIFrameState32*,
+                       const AIFrameRequest16* request,std::uint32_t* value) {
+        auto& self=*static_cast<AIFrameFixture*>(context);
+        self.calls.push_back(request->service);
+        *value=0; // Source Character::IsZonable result for this fixture.
+        return 0;
+    }
+};
+struct LogicFrameFixture {
+    Coordinator character{0x420000001ull,1};
+    AIFrameOwner48 owner{};
+    AIFrameState32 frame{};
+    std::vector<std::uint32_t> order;
+    LogicFrameFixture() {
+        character.state.current=3;
+        character.state.flags=0x100;
+        owner={character.owner(),0x421,character.state.flags,0,0,0,0,0,0,0};
+        CoordinatorBindings bindings{};
+        bindings.context=this;bindings.facts=read_facts;
+        bindings.services={this,state_service};
+        bindings.before_timer_event=before_timer;
+        bindings.route_timer_event=route_timer;
+        bindings.ai_identity=0x422;bindings.ai_owner_projection=&owner;
+        bindings.controller_identity=owner.controller;
+        character.bind(bindings);
+        frame={bindings.ai_identity,&owner,0,0,0,0};
+    }
+    static Facts read_facts(void*) { return {}; }
+    static void state_service(void* context,State*,const Request* request) {
+        auto& self=*static_cast<LogicFrameFixture*>(context);
+        if(request->service==idle_common_update)self.order.push_back(6);
+    }
+    static void before_timer(void* context,Coordinator&,std::int32_t,
+                            Timer32&,std::uint32_t) {
+        static_cast<LogicFrameFixture*>(context)->order.push_back(1);
+    }
+    static TimerRouting route_timer(void*,Coordinator&,std::int32_t,
+                                    Timer32&,std::uint32_t) {
+        return TimerRouting::delivered;
+    }
+    static int ai_service(void* context,AIFrameState32*,
+                          const AIFrameRequest16* request,std::uint32_t* value) {
+        auto& self=*static_cast<LogicFrameFixture*>(context);
+        self.order.push_back(request->service+2);
+        *value=0; // IsZonable=false; all other service results are ignored.
+        return 0;
+    }
+};
 struct Fixture {
     Coordinator character{0x100000001ull, 1};
     Facts facts{};
@@ -200,6 +273,209 @@ struct SkillMachineBridgeFixture {
 
 int main() {
     try {
+        {
+            BodyIdentity::Projection projection{};
+            int first_body=0,second_body=0;
+            std::uintptr_t identity=0xdead;
+            check(BodyIdentity::resolve(&projection,&first_body,&identity)==
+                      BodyIdentity::Status::unbound&&identity==0xdead,
+                  "Unbound physical Character identity resolved");
+            check(BodyIdentity::bind(&projection,&first_body,0x440)==
+                      BodyIdentity::Status::complete&&
+                  BodyIdentity::bind(&projection,&first_body,0x441)==
+                      BodyIdentity::Status::already_bound,
+                  "Body identity projection replaced its live owner");
+            check(BodyIdentity::resolve(&projection,&second_body,&identity)==
+                      BodyIdentity::Status::body_mismatch&&identity==0xdead&&
+                  BodyIdentity::retire(&projection,&second_body)==
+                      BodyIdentity::Status::body_mismatch&&
+                  projection.game_object_identity==0x440,
+                  "Stale body resolved or retired another body's identity");
+            check(BodyIdentity::resolve(&projection,&first_body,&identity)==
+                      BodyIdentity::Status::complete&&identity==0x440&&
+                  BodyIdentity::retire(&projection,&first_body)==
+                      BodyIdentity::Status::complete&&
+                  BodyIdentity::resolve(&projection,&first_body,&identity)==
+                      BodyIdentity::Status::unbound&&identity==0x440,
+                  "Body identity did not retire with its physical owner");
+            check(BodyIdentity::bind(&projection,&second_body,0x441)==
+                      BodyIdentity::Status::complete&&
+                  BodyIdentity::resolve(&projection,&second_body,&identity)==
+                      BodyIdentity::Status::complete&&identity==0x441,
+                  "Replacement physical body did not acquire its own identity");
+        }
+        {
+            int player_body=0,peer_body=0,unbound_body=0;
+            BodyIdentity::Projection player{},peer{},unbound{};
+            BodyIdentity::PersistEvent event{0xdead,0xbeef};
+            check(BodyIdentity::bind(&player,&player_body,0x440)==
+                      BodyIdentity::Status::complete&&
+                  BodyIdentity::bind(&peer,&peer_body,0x441)==
+                      BodyIdentity::Status::complete&&
+                  BodyIdentity::project_player_persist(&player,&player_body,0x440,
+                      &peer,&peer_body,true,&event)==BodyIdentity::Status::complete&&
+                  event.character_event==0x39&&event.peer_game_object_identity==0x441,
+                  "Player persist did not preserve source instigator event and peer identity");
+            check(BodyIdentity::project_player_persist(&player,&player_body,0x440,
+                      &peer,&peer_body,false,&event)==BodyIdentity::Status::complete&&
+                  event.character_event==0x3a&&event.peer_game_object_identity==0x441,
+                  "Non-instigator persist did not map to source event 0x3a");
+            const auto unchanged=event;
+            check(BodyIdentity::project_player_persist(&player,&player_body,0x442,
+                      &peer,&peer_body,true,&event)==
+                      BodyIdentity::Status::owner_identity_mismatch&&
+                  event.character_event==unchanged.character_event&&
+                  event.peer_game_object_identity==unchanged.peer_game_object_identity&&
+                  BodyIdentity::project_player_persist(&player,&player_body,0x440,
+                      &unbound,&unbound_body,true,&event)==
+                      BodyIdentity::Status::non_character_peer&&
+                  event.character_event==unchanged.character_event&&
+                  event.peer_game_object_identity==unchanged.peer_game_object_identity,
+                  "Persist projection accepted a foreign Player or non-Character peer");
+        }
+        {
+            namespace Gate=dh2::character_physical_collision_gate_v1;
+            check(Gate::evaluate(0,0)==Gate::Decision::reject_limbus&&
+                  Gate::evaluate(0,3)==Gate::Decision::reject_limbus,
+                  "POCharacter Limbus gate did not reject every category");
+            check(Gate::evaluate(10,0)==Gate::Decision::reject_knockback_category&&
+                  Gate::evaluate(10,1)==Gate::Decision::delegate_generic&&
+                  Gate::evaluate(10,2)==Gate::Decision::delegate_generic&&
+                  Gate::evaluate(10,3)==Gate::Decision::delegate_generic,
+                  "POCharacter KnockedBack gate did not test other category low bits");
+            check(Gate::evaluate(-1,0)==Gate::Decision::delegate_generic&&
+                  Gate::evaluate(3,0)==Gate::Decision::delegate_generic,
+                  "POCharacter custom gate altered non-Limbus/non-KnockedBack states");
+        }
+        {
+            Fixture player;
+            const PlayerZonability::Owner owner{player.character.owner()};
+            PlayerZonability::Result result{};
+            check(PlayerZonability::evaluate(&owner,&result)==
+                      PlayerZonability::Status::complete&&
+                  result.decision==dh2::character_zonability::Decision::player&&
+                  result.service_calls==1&&result.is_player_word==1&&
+                  result.is_faerie_word==0&&result.zonable==0&&
+                  result.captured_character==player.character.owner(),
+                  "Player zonability did not take the source IsPlayer early return");
+        }
+        {
+            Fixture player;
+            player.character.state.current=3;
+            dh2::character_ai_initialization::State ai{};
+            ai.identity=0x430;ai.owner_04=player.character.owner();
+            ai.byte_54=1;ai.byte_55=1;
+            set_target::OwnerFacts target_owner{
+                player.character.owner(),8,0,0};
+            const PlayerTarget::Bindings bindings{
+                &player.character,&ai,&target_owner};
+            PlayerTarget::Result result{};
+            PlayerTarget::MasterResult master_result{};
+            check(PlayerTarget::update_master_null(&bindings,&master_result)==
+                      PlayerTarget::Status::complete&&master_result.calls==0&&
+                  master_result.events==0&&ai.byte_54==1&&ai.byte_55==1,
+                  "Player null-master update did not follow the source early return");
+            ai.master_50=0x432;
+            check(PlayerTarget::update_master_null(&bindings,&master_result)==
+                      PlayerTarget::Status::source_failed&&master_result.calls==1&&
+                  ai.byte_54==1&&ai.byte_55==1,
+                  "Player master adapter fabricated an unavailable nonnull-master query");
+            ai.master_50=0;
+            check(PlayerTarget::update(&bindings,&result)==
+                      PlayerTarget::Status::complete&&
+                  result.decision==TargetUpdate::Decision::no_target&&
+                  result.service_calls==2&&ai.target_40==0&&ai.last_target_44==0,
+                  "Player CharAI target prefix did not reuse FSM state for its null-target path");
+            player.character.state.current=17;
+            check(PlayerTarget::update(&bindings,&result)==
+                      PlayerTarget::Status::complete&&
+                  result.decision==TargetUpdate::Decision::awaiting_spawn&&
+                  result.service_calls==1,
+                  "Player CharAI target prefix did not stop at source awaiting-spawn gate");
+            player.character.state.current=0;
+            check(PlayerTarget::update(&bindings,&result)==
+                      PlayerTarget::Status::complete&&
+                  result.decision==TargetUpdate::Decision::in_limbus&&
+                  result.service_calls==2,
+                  "Player CharAI target prefix did not stop at source limbus gate");
+            player.character.state.current=3;ai.target_40=0x431;
+            check(PlayerTarget::update(&bindings,&result)==
+                      PlayerTarget::Status::source_failed&&
+                  result.decision==TargetUpdate::Decision::incomplete&&
+                  result.service_calls==3&&ai.target_40==0x431,
+                  "Player CharAI target prefix fabricated a nonnull interaction result");
+        }
+        {
+            LogicFrameFixture logic;
+            check(logic.character.start_timer(1,0,0x2a,0)==0,
+                  "logic-frame timer setup failed");
+            AIFrameServices24 all_services{&logic,LogicFrameFixture::ai_service,31,0};
+            LogicFrameResult result{};
+            check(logic.character.update_logic_frame(1,0,&logic.frame,
+                      &all_services,&result)==0&&
+                  result.phase==LogicFramePhase::complete&&
+                  result.timer_status==1&&result.ai_status==0&&
+                  result.ai.service_calls==5&&result.state_status==1&&
+                  logic.order==std::vector<std::uint32_t>({
+                      1,2,3,4,5,6,6}),
+                  "Character logic frame did not run timers, CharAI, then state through one owner");
+
+            logic.order.clear();
+            check(logic.character.start_timer(1,0,0x2a,0)==0,
+                  "logic-frame failure timer setup failed");
+            AIFrameServices24 target_missing{&logic,LogicFrameFixture::ai_service,1,0};
+            check(logic.character.update_logic_frame(1,0,&logic.frame,
+                      &target_missing,&result)==-3&&
+                  result.phase==LogicFramePhase::char_ai&&
+                  result.ai_status==2&&result.ai.last_service==ai_frame_update_target&&
+                  logic.order==std::vector<std::uint32_t>({1,2}),
+                  "logic-frame failure did not preserve completed prefixes and stop before Character state");
+
+            logic.order.clear();logic.frame.paused=1;
+            check(logic.character.update_logic_frame(1,0,&logic.frame,
+                      &all_services,&result)==0&&
+                  result.phase==LogicFramePhase::complete&&
+                  result.ai.skip==ai_frame_paused&&result.ai.service_calls==0&&
+                  result.state_status==1&&logic.order==std::vector<std::uint32_t>({6}),
+                  "CharAI pause gate incorrectly skipped the following Character state phase");
+        }
+        {
+            AIFrameFixture frame;
+            AIFrameServices24 missing_target{&frame,AIFrameFixture::service,1,0};
+            AIFrameResult16 result{};
+            frame.frame.paused=1;
+            check(frame.character.update_ai_frame(&frame.frame,&missing_target,&result)==0&&
+                  result.skip==ai_frame_paused&&result.service_calls==0&&frame.calls.empty(),
+                  "Coordinator AI frame did not apply the source pause gate first");
+            frame.frame.paused=0;
+            check(frame.character.update_ai_frame(&frame.frame,&missing_target,&result)==2&&
+                  result.last_service==ai_frame_update_target&&result.service_calls==1&&
+                  frame.calls==std::vector<std::uint32_t>({ai_frame_is_zonable})&&
+                  frame.owner.updated88==1,
+                  "Unavailable target owner did not stop the frame before AIS virtual dispatch");
+            auto substituted_owner=frame.owner;
+            substituted_owner.forced=1; // Must not forge CharAI's controller bypass.
+            frame.frame.owner=&substituted_owner;
+            const auto calls=frame.calls.size();
+            check(frame.character.update_ai_frame(&frame.frame,&missing_target,&result)==-1&&
+                  frame.calls.size()==calls,
+                  "AI frame accepted a copied owner with a forged forced bit");
+            frame.frame.owner=&frame.owner;
+            frame.owner.controller^=1;
+            check(frame.character.update_ai_frame(&frame.frame,&missing_target,&result)==-1&&
+                  frame.calls.size()==calls,
+                  "AI frame accepted the wrong canonical controller identity");
+            frame.owner.controller^=1;
+            frame.frame.ai^=1;
+            check(frame.character.update_ai_frame(&frame.frame,&missing_target,&result)==-1&&
+                  frame.calls.size()==calls,
+                  "AI frame accepted a CharAI not associated with this Character");
+            frame.frame.ai^=1;
+            frame.owner.flags520^=1;
+            check(frame.character.update_ai_frame(&frame.frame,&missing_target,&result)==-1&&
+                  frame.calls.size()==calls,
+                  "AI frame accepted a projection from another Character state");
+        }
         Coordinator unbound(1);
         check(unbound.event(0xc351) == -1 && unbound.state.current == -1,
               "unbound event mutated state");
@@ -502,7 +778,15 @@ int main() {
                     "\"csskill_c355_focus_blur_event_and_transition\":true,"
                     "\"csskill_machine_projection_bind_and_callback_order\":true,"
                     "\"csskill_projection_lifecycle\":true,"
-                    "\"csskill_borrows_coordinator_machine_state\":true}\n");
+                    "\"csskill_borrows_coordinator_machine_state\":true,"
+                    "\"char_ai_frame_uses_same_coordinator_and_fails_closed\":true,"
+                    "\"character_logic_frame_orders_timer_ai_state\":true,"
+                    "\"player_char_ai_target_prefix_fails_closed\":true,"
+                    "\"player_char_ai_master_null_branch\":true,"
+                    "\"player_is_zonable_source_false\":true,"
+                    "\"world_object_character_identity_lifecycle\":true,"
+                    "\"player_persist_identity_event_projection\":true,"
+                    "\"character_physical_collision_state_gate\":true}\n");
         return 0;
     } catch (const std::exception& error) {
         std::fprintf(stderr, "character coordinator: %s\n", error.what());

@@ -23,7 +23,7 @@ namespace d=dh2::data;
 using Tables=dh2::player_skill_tables_adapter::Tables;
 constexpr std::uintptr_t CHAR=0x100000001ull,AIS=0x200000001ull;
 void check(bool value,const char* why){if(!value)throw std::runtime_error(why);}
-std::vector<std::uint8_t> read(const std::filesystem::path& path){std::ifstream f(path,std::ios::binary);check(bool(f),"missing cache resource");return {std::istreambuf_iterator<char>(f),{}};}
+std::vector<std::uint8_t> read(const std::filesystem::path& path){std::ifstream f(path,std::ios::binary);if(!f)throw std::runtime_error("missing cache resource: "+path.string());return {std::istreambuf_iterator<char>(f),{}};}
 d::Bytes bytes(const std::vector<std::uint8_t>& b){return {b.data(),b.size()};}
 std::uint32_t word(const std::vector<std::uint8_t>& b,std::size_t at){check(at<=b.size() && b.size()-at>=4,"truncated names");std::uint32_t w;std::memcpy(&w,b.data()+at,4);return w;}
 std::vector<std::uint8_t> first_names(const std::vector<std::uint8_t>& b){std::size_t at=4;auto n=word(b,0);while(n--){auto size=word(b,at);at+=4;check(size<=b.size()-at,"name overflow");at+=size;}return {b.begin(),b.begin()+at};}

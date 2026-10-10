@@ -1,4 +1,5 @@
 #include "../player_camera_rig_v1.hpp"
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <fstream>
@@ -23,13 +24,15 @@ bool same_pose(const dh2::player_camera_rig_v1::Pose& a,
     for(unsigned i=0;i<16;++i)
         if(!close(a.camera[i],b.camera[i])||!close(a.target[i],b.target[i])||
            !close(a.up_vector[i],b.up_vector[i]))return false;
+    for(unsigned i=0;i<3;++i)
+        if(!close(a.target_parent_z_axis[i],b.target_parent_z_axis[i]))return false;
     return true;
 }
 }
 
 int main(int argc,char** argv) {
     try {
-        if(argc!=3){std::cerr<<"usage: player_camera_rig_v1_audit playercamera.bdae camera_idle.bdae\n";return 2;}
+        if(argc!=3&&argc!=5){std::cerr<<"usage: player_camera_rig_v1_audit camera_scene.bdae camera_idle.bdae [camera_shake.bdae camera_crit.bdae]\n";return 2;}
         const auto camera=read(argv[1]),idle=read(argv[2]);
         dh2::player_camera_rig_v1::Rig rig;std::string error;
         require(rig.load({camera.data(),camera.size(),idle.data(),idle.size()},error),error.c_str());
@@ -47,6 +50,24 @@ int main(int argc,char** argv) {
         for(float value:first.camera)require(std::isfinite(value),"Nonfinite camera matrix");
         for(float value:first.target)require(std::isfinite(value),"Nonfinite target matrix");
         for(float value:first.up_vector)require(std::isfinite(value),"Nonfinite up-vector matrix");
+        float parent_axis_length=0.0f,parent_vs_node_axis_delta=0.0f;
+        for(unsigned i=0;i<3;++i){
+            require(std::isfinite(first.target_parent_z_axis[i]),"Nonfinite target-parent Z axis");
+            parent_axis_length+=first.target_parent_z_axis[i]*first.target_parent_z_axis[i];
+            parent_vs_node_axis_delta+=std::abs(first.target_parent_z_axis[i]-first.target[8+i]);
+        }
+        require(parent_axis_length>0.0f,"Target parent basis did not expose local-Z direction");
+        float maximum_parent_vs_node_axis_delta=parent_vs_node_axis_delta;
+        for(const auto sample_time:{rig.animation_start(),
+                                    rig.animation_start()+(rig.animation_end()-rig.animation_start())/2,
+                                    rig.animation_end()}){
+            dh2::player_camera_rig_v1::Pose sampled{};
+            require(rig.sample(sample_time,&sampled,error),error.c_str());
+            float delta=0.0f;
+            for(unsigned i=0;i<3;++i)delta+=std::abs(
+                sampled.target_parent_z_axis[i]-sampled.target[8+i]);
+            maximum_parent_vs_node_axis_delta=std::max(maximum_parent_vs_node_axis_delta,delta);
+        }
         require(std::abs(first.camera[12])+std::abs(first.camera[13])+std::abs(first.camera[14])>1.0f,
                 "Camera pose did not expose the authored camera transform");
         float forward[3]{first.target[12]-first.camera[12],
@@ -88,10 +109,53 @@ int main(int argc,char** argv) {
         require(playback.current_time_ms()==rig.animation_end()&&playback.completed()&&
                 same_pose(terminal_pose,expected_terminal),
                 "Completed non-looping camera idle wrapped back to the beginning");
+        if(argc==5){
+            const std::vector<std::uint8_t> invalid_clip(8,0);
+            require(!rig.load_animation(invalid_clip.data(),invalid_clip.size(),error)&&
+                        rig.animation_start()==0&&rig.animation_end()==33&&
+                        rig.track_count()==6,
+                    "Rejected clip damaged the active camera animation");
+            for(int i=3;i<5;++i){
+                const auto clip=read(argv[i]);
+                if(!rig.load_animation(clip.data(),clip.size(),error))
+                    throw std::runtime_error(std::string(argv[i])+": "+error);
+                require(rig.track_count()>0&&!rig.unbound_tracks()&&
+                            rig.animation_end()>rig.animation_start(),
+                        "Selected camera effect did not bind as a complete camera clip");
+                dh2::player_camera_rig_v1::Pose effect_start{},effect_middle{};
+                require(rig.sample(rig.animation_start(),&effect_start,error),error.c_str());
+                require(rig.sample(rig.animation_start()+
+                            (rig.animation_end()-rig.animation_start())/2,&effect_middle,error),error.c_str());
+                for(const auto* sampled:{&effect_start,&effect_middle}){
+                    float delta=0.0f;
+                    for(unsigned element=0;element<3;++element)delta+=std::abs(
+                        sampled->target_parent_z_axis[element]-sampled->target[8+element]);
+                    maximum_parent_vs_node_axis_delta=std::max(maximum_parent_vs_node_axis_delta,delta);
+                }
+                float effect_delta=0.0f;
+                for(unsigned element=0;element<16;++element)
+                    effect_delta+=std::abs(effect_start.camera[element]-effect_middle.camera[element])+
+                                  std::abs(effect_start.target[element]-effect_middle.target[element])+
+                                  std::abs(effect_start.up_vector[element]-effect_middle.up_vector[element]);
+                require(effect_delta>1e-4f,
+                        "Selected camera effect does not change the authored camera pose");
+                require(playback.start(rig,error),error.c_str());
+                require(playback.advance(rig,0,&playback_pose,error),error.c_str());
+                require(playback.current_time_ms()==rig.animation_start()&&!playback.completed(),
+                        "One camera timeline did not restart at the selected effect clip start");
+                require(playback.advance(rig,static_cast<std::uint32_t>(
+                            rig.animation_end()-rig.animation_start()+1),&playback_pose,error),error.c_str());
+                require(playback.current_time_ms()==rig.animation_end()&&playback.completed(),
+                        "Selected camera effect did not complete at its source terminal time");
+            }
+        }
         std::cout<<"camera rig loaded; tracks="<<rig.track_count()<<" range="
                  <<rig.animation_start()<<".."<<rig.animation_end()<<"; eye0="
                  <<first.camera[12]<<","<<first.camera[13]<<","<<first.camera[14]
                  <<" target0="<<first.target[12]<<","<<first.target[13]<<","<<first.target[14]
+                 <<" targetParentZ0="<<first.target_parent_z_axis[0]<<","<<first.target_parent_z_axis[1]
+                 <<","<<first.target_parent_z_axis[2]<<" targetOwnZDelta="<<parent_vs_node_axis_delta
+                 <<" maxParentVsNodeAxisDelta="<<maximum_parent_vs_node_axis_delta
                  <<" up0="<<first.up_vector[12]<<","<<first.up_vector[13]<<","<<first.up_vector[14]
                  <<"; eyeMid="<<middle.camera[12]<<","<<middle.camera[13]<<","<<middle.camera[14]
                  <<" poseDelta="<<pose_delta<<"; timeline=game-delta,once,terminal="

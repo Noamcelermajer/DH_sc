@@ -1,11 +1,12 @@
 #include "character_state.hpp"
 #include "character_skill_state_dispatch_v1.hpp"
+#include "character_cast_lifecycle_v1.hpp"
 #include <cmath>
 #include <cstring>
 namespace {
 using namespace dh2::character;
 std::int32_t signed_bits(std::uint32_t value){std::int32_t result;std::memcpy(&result,&value,sizeof result);return result;}
-bool id(int value){return value==-1||value==3||value==4||value==5||value==12;}
+bool id(int value){return value==-1||value==2||value==3||value==4||value==5||value==12;}
 bool valid_base(const State* s,const Facts* f,const Services* c){
  return s&&f&&c&&c->invoke&&f->is_player<=1&&!f->reserved&&
  f->is_at_destination<=1&&f->following_path<=1&&f->has_ranged_weapon<=1&&
@@ -66,6 +67,12 @@ void focus(State& s,const Facts& f,int prior,std::uint64_t payload,const Service
   if(s.body_present)call(s,c,set_death_filter,0,0x51c,3);
   call(s,c,cancel_sneaking);call(s,c,disable_state_fx);call(s,c,disable_self_fx);call(s,c,remove_buffs);
   call(s,c,raise_event,0x2a);call(s,c,raise_event,0x2c);call(s,c,raise_event,0x2b);break;
+ case 2:{
+  // CSDespawn::OnFocus saves prior flags, disables animation, then cancels sneaking.
+  const auto previous=s.flags;s.flags=512;
+  call(s,c,store_previous_flags,std::int32_t(previous));
+  call(s,c,set_animation,-1);call(s,c,cancel_sneaking);break;
+ }
  }
 }
 int transition(State& s,const Facts& f,int next,int event,std::uint64_t payload,const Services& c){
@@ -73,7 +80,7 @@ int transition(State& s,const Facts& f,int next,int event,std::uint64_t payload,
  focus(s,f,prior,payload,c);call(s,c,raise_event,0x1d,prior,0,0,std::uint64_t(std::int64_t(prior)));
  (void)event;return 1;
 }
-bool skill_id(int value){return id(value)||value==6;}
+bool skill_id(int value){return (id(value)&&value!=2)||value==6;}
 int skill_transition(State& s,const Facts& f,
  dh2::character_skill_state_dispatch_v1::Projection& projection,
  int next,int event,std::uint64_t payload,const Services& c){
@@ -89,6 +96,23 @@ int skill_transition(State& s,const Facts& f,
   skill::Result callback{};
   if(skill::callback(&projection,dh2::character_skill_fsm_callbacks_v1::Callback::focus,
                      &callback)!=skill::Status::complete)return -1;
+ }else focus(s,f,prior,payload,c);
+ call(s,c,raise_event,0x1d,prior,0,0,std::uint64_t(std::int64_t(prior)));
+ (void)event;return 1;
+}
+int cast_transition(State& s,const Facts& f,
+ dh2::character_cast_lifecycle_v1::Projection& projection,
+ int next,int event,std::uint64_t payload,const Services& c){
+ namespace cast=dh2::character_cast_lifecycle_v1;
+ const int prior=s.current;
+ if(prior==7){
+  cast::Result callback{};
+  if(cast::execute(&projection,cast::Callback::blur,&callback)!=cast::Status::complete)return -1;
+ }else blur(s,f,c);
+ s.current=next;if(prior!=next)s.elapsed_ms=0;
+ if(next==7){
+  cast::Result callback{};
+  if(cast::execute(&projection,cast::Callback::focus,&callback)!=cast::Status::complete)return -1;
  }else focus(s,f,prior,payload,c);
  call(s,c,raise_event,0x1d,prior,0,0,std::uint64_t(std::int64_t(prior)));
  (void)event;return 1;
@@ -171,7 +195,8 @@ int spawn_transition(State& s,const Facts& f,const SpawnFacts& sf,int next,
 }
 extern "C" int dh2_character_state_transition(dh2::character::State* s,const dh2::character::Facts* f,
  std::int32_t next,std::int32_t event,std::uint64_t payload,const dh2::character::Services* c){
- if(!valid(s,f,c)||next==-1||!id(next))return -1;
+ if(!valid(s,f,c)||next==-1||!id(next)||
+    (next==2&&(s->current!=12||event!=0x2e)))return -1;
  return transition(*s,*f,next,event,payload,*c);
 }
 extern "C" int dh2_character_state_event(dh2::character::State* s,const dh2::character::Facts* f,
@@ -197,8 +222,13 @@ extern "C" int dh2_character_state_event(dh2::character::State* s,const dh2::cha
   call(*s,*c,remove_body);s->body_present=0;
   if(!f->is_player){call(*s,*c,start_timer,std::int32_t(f->despawn_delay),0,0x2e);s->flags=0x40;}
  }
+ // Monster Character::RaiseEvent(2,killer) reaches the FSM only after
+ // CharAI::OnDied has called AI_SetDead and entered state12. CSDead::OnInit
+ // registers 46 and 50009, while CSDead::OnEvent handles only 34; event2 is
+ // therefore the source no-op here, not another transition to Dead.
  int next=-1;
  if(event==0xc358&&(s->current==3||s->current==4||s->current==5))next=12;
+ else if(event==0x2e&&s->current==12)next=2;
  else if(event==0xc354&&(s->current==3||s->current==4)&&!(s->attack_gate&1))next=5;
  else if(event==0xc351&&(s->current==3||(s->current==5&&s->stop_attack_allowed)))next=4;
  else if((event==0x22&&s->current==5)||(event==0x3f&&s->current==4)||
@@ -230,6 +260,18 @@ extern "C" int dh2_character_skill_state_transition(dh2::character::State* s,
  if((next==6&&s->current!=3&&s->current!=4&&s->current!=5&&s->current!=6)||
     (s->current==6&&next!=3&&next!=4&&next!=5&&next!=6&&next!=12))return -1;
  return skill_transition(*s,*f,*projection,next,event,payload,*c);
+}
+extern "C" int dh2_character_cast_state_transition(dh2::character::State* s,
+ const dh2::character::Facts* f,
+ dh2::character_cast_lifecycle_v1::Projection* projection,
+ std::int32_t next,std::int32_t event,std::uint64_t payload,
+ const dh2::character::Services* c){
+ using namespace dh2::character;
+ if(!valid_base(s,f,c)||!projection||next==2||(next!=7&&!id(next))||
+    (s->current!=3&&s->current!=4&&s->current!=5&&s->current!=7))return -1;
+ if((next==7&&(s->current!=3&&s->current!=4&&s->current!=5))||
+    (s->current==7&&next!=3&&next!=12))return -1;
+ return cast_transition(*s,*f,*projection,next,event,payload,*c);
 }
 extern "C" int dh2_character_attack_speed(float* out,const std::int32_t* properties){
  if(!out||!properties)return -1;

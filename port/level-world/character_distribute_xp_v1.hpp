@@ -2,6 +2,7 @@
 
 #include "../game-data/player_savegame_v1.hpp"
 #include "../game-data/properties.hpp"
+#include "level_construction_fields.hpp"
 
 #include <cstdint>
 #include <string>
@@ -86,6 +87,16 @@ struct Services {
                                       std::int32_t displayed_xp,
                                       std::string& error){};
 };
+
+// Adapter over the active native Application::GetCurrentLevel projection.
+// `fields` is the same Level+0x118 owner used by level callbacks; readiness
+// is borrowed from its lifecycle owner so teardown/candidate levels fail closed.
+struct CurrentLevelDifficultyOwner {
+    const level_construction_fields::State* fields{};
+    const bool* ready{};
+};
+std::int32_t current_level_difficulty_from_owner(
+    void*,std::int32_t* difficulty,std::string& error);
 
 enum class Status : std::uint32_t {
     complete,

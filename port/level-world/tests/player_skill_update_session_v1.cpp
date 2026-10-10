@@ -216,6 +216,43 @@ void run() {
           runtime.retained_failed_returns() == 1 && f.native_names.size() == failed_calls,
           "failed ReturnValues/callback was replayed through the FSM skip");
 
+    // CharAI::UpdateSkills uses this same prepared character/VM and updates
+    // only the Save-selected faery. A foreign Save must fail before Lua.
+    dh2::data::PlayerSavegameV1 save;
+    save.set_character(CHAR);
+    save.initialize_faeries();
+    dh2::player_skill_update_session_v1::SelectedFaeryResult selected{};
+    const auto before_foreign_save = f.native_names.size();
+    dh2::data::PlayerSavegameV1 foreign_save;
+    foreign_save.set_character(CHAR + 1);
+    foreign_save.initialize_faeries();
+    check(runtime.update_current_faery(foreign_save, 0, selected, error) < 0 &&
+          f.native_names.size() == before_foreign_save,
+          "selected-faery update accepted a foreign Save identity");
+
+    machine = 0;
+    set_mode(f, 0);
+    const auto before_selected = counter(f);
+    const auto selected_status = runtime.update_current_faery(save, 0, selected, error);
+    check(selected_status == 0 &&
+          selected.status == dh2::character_ai_update_skills::Status::complete &&
+          selected.source.decision == dh2::character_ai_update_skills::Decision::updated &&
+          selected.source.faery_index == 0 && selected.source.faery_updated == 1 &&
+          selected.source.script_updates == 1 && selected.callbacks == 1 &&
+          counter(f) == before_selected + 1,
+          "selected faery did not use its exact prepared script and VM");
+
+    // A required native failure through the selected path retains its exact
+    // ReturnValues owner and stops without retrying or inventing cleanup.
+    set_mode(f, 3);
+    const auto selected_failure_calls = f.native_names.size();
+    check(runtime.update_current_faery(save, 0, selected, error) < 0 &&
+          selected.status == dh2::character_ai_update_skills::Status::service_failed &&
+          selected.callbacks == 0 && runtime.retained_failed_returns() == 2 &&
+          f.native_names.size() == selected_failure_calls + 1 &&
+          f.native_names.back() == "GetCurrentSkillInfo__",
+          "selected-faery required provider failure was not retained at source boundary");
+
     std::cout << "{\"validation\":\"PASS\",\"source_slots\":21,"
                  "\"cross_character_guard\":true,"
                  "\"fsm_skips\":2,\"zero_return_updates\":13,"
@@ -223,6 +260,7 @@ void run() {
                  "\"multi_return_updates\":13,\"multi_return_set_skill_updates\":13,"
                  "\"ordinary_set_skill_errors\":13,"
                  "\"ordinary_update_errors\":13,\"required_failures\":1,"
+                 "\"selected_faery_updates\":1,\"selected_required_failures\":1,"
                  "\"retained_failed_resources\":" << runtime.retained_failed_returns()
               << ",\"real_cache_preparation\":true,\"native_player_wiring\":false}\n";
 }

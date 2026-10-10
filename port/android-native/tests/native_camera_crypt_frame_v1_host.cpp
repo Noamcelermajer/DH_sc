@@ -31,8 +31,12 @@ int main() {
     if (!expect(!verified_crypt_route("GOTHICUS_CRYPT_01", "x07_crypt_backup.mlx"), "wrong route file excluded")) return 3;
     if (!expect(source_player_camera_route_ready("GOTHICUS_CRYPT_01", "007_crypt_01.rule.xml", true, true),
                 "verified Crypt route enables the authored player camera only when both providers are ready")) return 48;
-    if (!expect(!source_player_camera_route_ready("SWAMP", "001_swamp.mlx", true, true),
-                "clip-plane availability alone does not enable unverified SWAMP camera/FOV/target data")) return 49;
+    if (!expect(source_player_camera_route_ready("SWAMP", "001_swamp.mlx", true, true),
+                "verified SWAMP LevelConfig, CameraTests rig and selected CamAnimSet enable the shared source camera owner")) return 49;
+    if (!expect(!source_player_camera_route_ready("SWAMP", "001_swamp.mlx", false, true) &&
+                !source_player_camera_route_ready("SWAMP", "001_swamp.mlx", true, false) &&
+                !source_player_camera_route_ready("SWAMP", "001_swamp_backup.mlx", true, true),
+                "SWAMP source camera still requires both providers and the exact level route")) return 55;
     if (!expect(verified_swamp_default_camera_route("SWAMP", "001_swamp.mlx") &&
                 !verified_swamp_default_camera_route("SWAMP", "001_swamp_backup.mlx"),
                 "SWAMP CameraTests rig is selected only for the exact source LevelConfig")) return 51;
@@ -52,7 +56,7 @@ int main() {
                 "Crypt route remains disabled when either camera provider is unavailable")) return 50;
     if (!expect(near(kVerticalFovRadians, 0.42963001132011414f, 1e-8f) &&
                 kNearPlane == 900.0f && kFarPlane == 5000.0f,
-                "Crypt CameraBase::SetData projection override matches Level::_LoadCamera and rule XML")) return 45;
+                "Crypt clip planes and shared Crypt/SWAMP CameraBase::SetData FOV match source")) return 45;
 
     const Vec3 receipt_target{-2227.77f, 1220.93f, 842.364f};
     Frame frame{};
@@ -85,27 +89,24 @@ int main() {
                 near(authored_frame.input_pitch,std::atan2(authored_eye_offset[2],
                     std::hypot(authored_eye_offset[0],authored_eye_offset[1]))),
                 "movement basis follows authored rig eye offset")) return 43;
-    Vec3 composed_eye_offset{};
-    if (!expect(apply_target_camera_local_z({3.0f,4.0f,0.0f},-1.0f,&composed_eye_offset) &&
-                near(composed_eye_offset[0],2.4f) && near(composed_eye_offset[1],3.2f) &&
-                near(std::hypot(composed_eye_offset[0],composed_eye_offset[1]),4.0f),
-                "negative CameraLevel local-Z zoom moves the eye toward the unchanged target")) return 54;
+    Vec3 composed_target{};
+    if (!expect(apply_target_camera_local_z({3.0f,4.0f,0.0f},{0.0f,0.0f,1.0f},-1.0f,
+                                             &composed_target) &&
+                near(composed_target[0],3.0f) && near(composed_target[1],4.0f) &&
+                near(composed_target[2],-1.0f),
+                "negative CameraLevel local-Z zoom moves the target through its authored node basis")) return 54;
     Frame zoomed_frame{};
     if (!expect(build_player_frame(receipt_target,2400,1080,&zoomed_frame,
                     kVerticalFovRadians,kNearPlane,kFarPlane,authored_eye_offset,
-                    authored_up,authored_target_offset,-100.0f),
+                    authored_up,authored_target_offset,-100.0f,{0.0f,0.0f,1.0f}),
                 "build Crypt frame with the CameraLevel local-Z offset")) return 55;
-    const float authored_distance=std::hypot(std::hypot(authored_eye_offset[0],
-        authored_eye_offset[1]),authored_eye_offset[2]);
-    const float zoomed_distance=std::hypot(std::hypot(
-        zoomed_frame.eye[0]-zoomed_frame.target[0],
-        zoomed_frame.eye[1]-zoomed_frame.target[1]),
-        zoomed_frame.eye[2]-zoomed_frame.target[2]);
     if (!expect(near(zoomed_frame.target[0],authored_frame.target[0]) &&
                 near(zoomed_frame.target[1],authored_frame.target[1]) &&
-                near(zoomed_frame.target[2],authored_frame.target[2]) &&
-                near(zoomed_distance,authored_distance-100.0f),
-                "rendered camera consumes CameraLevel zoom while preserving authored target")) return 56;
+                near(zoomed_frame.target[2],authored_frame.target[2]-100.0f) &&
+                near(zoomed_frame.eye[0],authored_frame.eye[0]) &&
+                near(zoomed_frame.eye[1],authored_frame.eye[1]) &&
+                near(zoomed_frame.eye[2],authored_frame.eye[2]),
+                "rendered camera applies CameraLevel local-Z to the target node while preserving the authored eye")) return 56;
     float clip[4]{};
     const Vec3 authored_up_point{authored_frame.target[0]+authored_up[0],
                                  authored_frame.target[1]+authored_up[1],
@@ -148,6 +149,25 @@ int main() {
                                      true,true,false) && near(look_at_gate.distance,337.0f) &&
                 near(look_at_gate.target[0],10.0f) && near(look_at_gate.target[1],358.0f),
                 "turn gate uses prior actor look-at and advances the active camera target")) return 35;
+    ForwardAnchorState slow_walk{};
+    if (!expect(update_forward_anchor(&slow_walk,{0.0f,0.0f,0.0f},
+                                     {0.0f,1.0f,0.0f},{0.0f,1.0f,0.0f},
+                                     false,false,false),
+                "idle AnchorForward captures the source displacement baseline")) return 41;
+    if (!expect(update_forward_anchor(&slow_walk,{0.005f,0.0f,0.0f},
+                                     {0.0f,1.0f,0.0f},{0.0f,1.0f,0.0f},
+                                     true,true,false) && near(slow_walk.distance,320.0f),
+                "slow movement begins inside the camera expansion threshold")) return 42;
+    bool slow_walk_ok = true;
+    for (unsigned step = 2; step <= 50; ++step) {
+        const float x = static_cast<float>(step) * 0.005f;
+        slow_walk_ok = slow_walk_ok && update_forward_anchor(
+            &slow_walk,{x,0.0f,0.0f},{0.0f,1.0f,0.0f},{0.0f,1.0f,0.0f},
+            true,true,false);
+    }
+    if (!expect(slow_walk_ok && near(slow_walk.distance,422.0f) &&
+                near(slow_walk.target[1],422.0f),
+                "many individually sub-threshold movement frames expand from the retained idle baseline")) return 43;
     ForwardAnchorState look_at_turn{};
     look_at_turn.distance=320.0f;look_at_turn.previous_actor_look_at={1.0f,0.0f,0.0f};
     look_at_turn.previous_actor_position={0.0f,0.0f,0.0f};

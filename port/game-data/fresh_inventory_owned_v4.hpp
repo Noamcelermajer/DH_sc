@@ -167,6 +167,9 @@ public:
  bool has_two_hander(bool,bool&,std::string&)const;
  bool set_gold(std::int32_t,const OwnedInventoryServicesV4&,std::string&);
  bool add_gold(std::int32_t,const OwnedInventoryServicesV4&,std::string&);
+ // ItemInventory::UpdateLocalizationForItems walks its current dense Item
+ // vector in order. Text/power presentation is rebuilt on each same Item.
+ bool update_localization(ItemPresentationOwnerV5&,const ItemTextServicesV5&,std::string&);
  static bool equal(const ItemInstanceV1&,const ItemInstanceV1&)noexcept;
  const auto& items()const noexcept{return items_;}const auto& equipment()const noexcept{return equipment_;}
  const auto& world_items()const noexcept{return world_items_;}

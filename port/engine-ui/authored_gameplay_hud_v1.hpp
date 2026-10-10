@@ -20,6 +20,10 @@ public:
  bool bind(std::int32_t actual_saved_style,std::string&);
  bool activate(std::string&); // whole root DisplayRightHud selects CurrentHud
  bool refresh_skills(std::string&); // actual setSkillsButtons native queries
+ // MenuMessageManager<StatusMsg,4> dispatch: _root.onStatusMessage(0).
+ // The SWF pulls the already queued localized text through its existing
+ // NativeGetNextStatusMessage callback; this does not own or synthesize a queue.
+ bool notify_status_message(std::string&);
  // MenuManager.Update: signed Character+14a8 raw OOI type, NOT AI target.
  bool update_action_icon(std::int8_t actual_object_of_interest_type,std::string&);
  bool refresh_action_icon(std::string&); // source menu-return/equipment refresh

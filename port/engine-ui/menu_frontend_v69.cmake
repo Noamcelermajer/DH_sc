@@ -53,10 +53,14 @@ set(DH2_MENU_UI_SOURCES gfnt.cpp swf_movie.cpp freetype_font.cpp
  hud_manager.cpp hud_manager_core.cpp text_layout_v1.cpp swf_text_layout_connection.cpp
  character_menu_stats_owner_v1.cpp
  character_menu_inventory_order_v1.cpp
- character_menu_reload_v1.cpp
+ character_menu_reload_v1.cpp scrolling_combat_text_owner_v1.cpp
+ scrolling_combat_text_projection_v1.cpp scrolling_combat_text_bridge_v1.cpp
+ scrolling_combat_text_position_v1.cpp
  swf_input_history.cpp swf_frame_schedule.cpp swf_frame_connection.cpp
  swf_drag_values.cpp swf_cursor_input.cpp swf_input_geometry.cpp swf_input_policy.cpp
  swf_input_connection.cpp swf_event_dispatch.cpp swf_event_core.cpp)
+list(APPEND DH2_MENU_UI_SOURCES world_map_list_v1.cpp level_transition_v1.cpp
+ application_level_load_handoff_v1.cpp gslevel_queued_state_handoff_v1.cpp)
 list(TRANSFORM DH2_MENU_UI_SOURCES PREPEND "${DH2_MENU_UI_DIR}/")
 add_library(dh2_engine_ui SHARED ${DH2_MENU_UI_SOURCES})
 target_sources(dh2_engine_ui PRIVATE

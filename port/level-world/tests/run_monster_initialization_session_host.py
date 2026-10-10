@@ -22,7 +22,7 @@ def main():
     c_sources=[RUNTIME/'lua'/(n+'.c') for n in CORE]+[
         RUNTIME/'script_runtime.c',ROOT/'port/lua-numeric/numeric.c',ROOT/'port/pydata-constants/constants.c']
     cpp_sources=[RUNTIME/'script_function_alias.cpp',MODULE/'ais_native_bindings.cpp',
-        MODULE/'monster_external_script_session.cpp',MODULE/'lua_script_level_queries.cpp',
+        MODULE/'character_oid_cache_v1.cpp',MODULE/'monster_external_script_session.cpp',MODULE/'lua_script_level_queries.cpp',
         MODULE/'lua_script_load_once.cpp',
         MODULE/'ais_state_callbacks.cpp',
         MODULE/'character_script_set_level.cpp',MODULE/'character_regeneration.cpp',

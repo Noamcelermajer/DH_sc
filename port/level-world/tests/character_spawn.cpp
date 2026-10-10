@@ -1,4 +1,5 @@
 #include "character_factory.hpp"
+#include "../object_manager_runtime_owner_v1.hpp"
 
 #include <array>
 #include <cmath>
@@ -186,6 +187,37 @@ int main(){
           SpawnResult::source_state_rejected&&state_equal(actor,snapshot)&&fixture.calls.empty(),
           "reserved Spawn fact is rejected atomically");
 
+  // Generated Crypt uses the canonical source ObjectManager key map as the
+  // authority for dynamic script spawn. The same Character state owner is
+  // reached only when handle and identity still name that registered object.
+  dh2::object_manager_runtime_owner_v1::Owner object_manager;
+  dh2::object_manager_runtime_owner_v1::GameObject projection{};
+  projection.identity=0x100000081ull;
+  dh2::object_manager_runtime_owner_v1::GameObject* stored=nullptr;
+  require(object_manager.add_object(17,projection,&stored)==
+          dh2::object_manager_runtime_owner_v1::Status::ok&&stored,
+          "canonical ObjectManager Character registration");
+  ActorRef registered{"_prim_Monster_SURPRISE_01",&actor,&facts,&spawn,
+      source_character_registered_states,projection.identity,17};
+  actor.current=0;fixture.calls.clear();
+  require(request_registered_spawn_character(object_manager,&registered,1,
+          "_prim_Monster_SURPRISE_01",&services)==SpawnResult::requested&&
+          actor.current==1&&!fixture.calls.empty(),
+          "registered dynamic SpawnCharacter reaches the existing state owner");
+  fixture.calls.clear();
+  ActorRef wrong_identity=registered;wrong_identity.object_identity++;
+  actor.current=0;const auto registered_snapshot=actor;
+  require(request_registered_spawn_character(object_manager,&wrong_identity,1,
+          "_prim_Monster_SURPRISE_01",&services)==SpawnResult::object_not_registered&&
+          state_equal(actor,registered_snapshot)&&fixture.calls.empty(),
+          "stale ObjectManager identity cannot spawn or mutate Character");
+  fixture.calls.clear();
+  ActorRef missing_handle=registered;missing_handle.source_handle=18;
+  require(request_registered_spawn_character(object_manager,&missing_handle,1,
+          "_prim_Monster_SURPRISE_01",&services)==SpawnResult::object_not_registered&&
+          state_equal(actor,registered_snapshot)&&fixture.calls.empty(),
+          "missing ObjectManager key cannot spawn or mutate Character");
+
   // Same-state _SetState requests still blur/focus and emit event 0x1d.
   actor.current=1;actor.flags=0x241;fixture.calls.clear();
   require(request_spawn_character(&one,1,"_prim_Monster_SURPRISE_01",&services)==
@@ -200,8 +232,8 @@ int main(){
   require(dh2_character_spawn_transition(&reentrant,&facts,&spawn,1,&services)==1&&
           reentrant.current==3,"source state notification synchronous completion");
 
-  std::printf("{\"spawn_transition_cases\":%u,\"factory_atomicity_cases\":%u,\"ordered_service_requests\":%zu,\"limbus_spawn_idle_path\":true,\"interactive_event_body\":true,\"fade_boundary_is_stub\":true,\"on_update_invents_no_transition\":true,\"mismatches\":0}\n",
-              10u,5u,fixture.calls.size());
+  std::printf("{\"spawn_transition_cases\":%u,\"factory_atomicity_cases\":%u,\"registered_manager_spawn_cases\":%u,\"ordered_service_requests\":%zu,\"limbus_spawn_idle_path\":true,\"interactive_event_body\":true,\"object_manager_backed_spawn_verified\":true,\"fade_boundary_is_stub\":true,\"on_update_invents_no_transition\":true,\"mismatches\":0}\n",
+              10u,5u,3u,fixture.calls.size());
   return 0;
  }catch(const std::exception& failure){
   std::fprintf(stderr,"character spawn audit: %s\n",failure.what());return 1;

@@ -41,20 +41,24 @@ def main():
  profile_source=ROOT/'port/android-native/app/src/main/cpp/native_player_profile.cpp'
  profile_header=profile_source.with_suffix('.hpp')
  gameplay_header=ROOT/'port/level-world/character_gameplay_save_v1.hpp'
- evidence={source,source.with_suffix('.hpp'),cursor,cursor.with_suffix('.hpp'),profile_source,profile_header,gameplay_header,test,Path(__file__).resolve()}
+ kill_kernel=ROOT/'port/quest-kill/quest.c'
+ evidence={source,source.with_suffix('.hpp'),source.with_name('native_current_level_character_population_v1.hpp'),cursor,cursor.with_suffix('.hpp'),profile_source,profile_header,gameplay_header,kill_kernel,test,Path(__file__).resolve()}
  inputs=actual_dependencies(build,ninja,entries)|evidence
  before={path.relative_to(ROOT).as_posix():sha(path) for path in sorted(inputs)}
  dsos=sorted(library.parent.parent.rglob('*.dll'));binary_before={str(path):sha(path) for path in [library,world,*dsos]}
- cache=args.cache.resolve();files=[cache/name for name in ['v2quests_pyarray.bin','v2quests_pyarraynames.bin','v2quests_pycst.bin']];cache_before={path.name:sha(path) for path in files}
+ cache=args.cache.resolve();files=[cache/name for name in ['v2quests_pyarray.bin','v2quests_pyarraynames.bin','v2quests_pycst.bin']]
+ condition_cache=cache.parent/'original-cache'/'data'/'pydata'
+ files += [condition_cache/name for name in ['v2conditions_pyarray.bin','v2conditions_pyarraynames.bin','v2conditions_pystructnames.bin','v2conditions_pycst.bin']]
+ cache_before={str(path.relative_to(cache.parent)):sha(path) for path in files}
  exe=out/'host.exe'
- command=[args.compiler,'-std=c++17','-Wall','-Wextra','-Werror','-O2','-I'+str(ROOT/'port/game-data'),'-I'+str(ROOT/'port/pydata-constants'),test,source,cursor,profile_source,library,world,'-o',exe]
+ command=[args.compiler,'-std=c++17','-Wall','-Wextra','-Werror','-O2','-I'+str(ROOT/'port/game-data'),'-I'+str(ROOT/'port/pydata-constants'),'-I'+str(ROOT/'port/level-world'),test,source,cursor,profile_source,kill_kernel,library,world,'-o',exe]
  run(command)
  live=env.copy();live['PATH']=os.pathsep.join([*(str(path.parent) for path in dsos),env['PATH']]);host=json.loads(run([exe,cache],live));assert host['validation']=='PASS'
  assert before=={path.relative_to(ROOT).as_posix():sha(path) for path in sorted(inputs)}
  assert commands==run([ninja,'-C',build,'-t','commands','dh2_level_world'])
  assert inputs==actual_dependencies(build,ninja,entries)|evidence
  assert binary_before=={str(path):sha(path) for path in [library,world,*dsos]}
- assert cache_before=={path.name:sha(path) for path in files}
+ assert cache_before=={str(path.relative_to(cache.parent)):sha(path) for path in files}
  imports=re.findall(r'DLL Name: (\S+)',run([args.compiler.with_name('objdump.exe'),'-p',exe]))
  assert 'libdh2_game_data.dll' in imports and 'libdh2_level_world.dll' in imports
  report=dict(validation='PASS',host=host,scope=__doc__,source_before_after_equal=True,commands_before_after_equal=True,

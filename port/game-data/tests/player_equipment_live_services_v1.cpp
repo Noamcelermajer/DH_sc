@@ -1,4 +1,6 @@
 #include "../player_equipment_live_services_v1.hpp"
+#include "../player_equipment_queries_live_v1.hpp"
+#include "../combat.hpp"
 #include "../item_presentation_v5.hpp"
 extern "C" {
 #include "../../random/random.h"
@@ -38,6 +40,15 @@ static bool skin(void* p,FreshInventoryOwnedV4& inventory,const GearSkinRequestV
  if(c.fail_skin){e="Explicit Skin fixture rejection";return false;}result=0;return true;
 }
 static bool random_next(void* p,std::int32_t bound,std::uint32_t stream,std::int32_t& value,std::string&){value=dh2_random_next(static_cast<dh2_random_state*>(p),std::uint32_t(bound),stream);return true;}
+static Damage attack_damage(const std::int32_t* properties,const std::int32_t* defender_properties,
+                            std::int32_t main_category=-1){
+ CombatantView attacker{properties,main_category,-1,0,0,0,0,0};
+ CombatantView defender{defender_properties,-1,-1,0,0,0,0,0};
+ CombatRandom random{0x12345,0};Damage damage{};
+ DamageRequest request{&attacker,&defender,&random,0,0,0,0};
+ if(dh2_combat_damage(&damage,&request))throw std::runtime_error("Live equipped-stat combat query rejected");
+ return damage;
+}
 static EquipmentLiveHooksV1 hooks(Context& c){return {&c,binding,{&c,world},&c.visual,{&c,skin},{&c,required,observe}};}
 
 int main(int argc,char** argv){try{
@@ -49,12 +60,22 @@ int main(int argc,char** argv){try{
  auto gold=file(argv[1]);Reader q{gold};ck(q.u()==0x31515245);auto requirement_cases=q.u();ck(q.u()==0);
  for(unsigned j=0;j<requirement_cases;++j){EquipmentRequirements32V1 facts;ItemRecord164 row;std::int32_t expected,actual;q.copy(&facts,sizeof facts);q.copy(&row,sizeof row);q.copy(&expected,4);ck(equipment_requirements_v1(&actual,&facts,facts.present?&row:nullptr)==0&&actual==expected);}ck(q.at==gold.size());
  std::int32_t out=123;EquipmentRequirements32V1 invalid{};invalid.present=2;ck(equipment_requirements_v1(&out,&invalid,nullptr)==-1&&out==123);invalid.present=0;ck(equipment_requirements_v1(nullptr,&invalid,nullptr)==-1);ck(equipment_requirements_v1(reinterpret_cast<std::int32_t*>(&invalid),&invalid,nullptr)==-1);invalid.present=1;ck(equipment_requirements_v1(&out,&invalid,reinterpret_cast<const ItemRecord164*>(UINTPTR_MAX-3))==-1&&out==123);
- auto starter=file(argv[2]);Reader r{starter};ck(r.u()==0x35564547);auto owner_cases=r.u();unsigned steps=0,pruned=0,live_buffs=0,vitals=0,prefixes=0,guards=4,skin_calls=0,reentries=0,direct_lifetime_rejections=0,direct_detached_rejections=0;
- for(unsigned k=0;k<owner_cases;++k){auto baseid=r.u(),selected=r.u(),count=r.u();PropertyState state;reset_properties(rules,state,&chars.rows.at(baseid));auto view=property_view(rules,state);ck(!dh2_class_recalc_base(rows.data(),rows.size(),state.base.data(),&view));PropertyState initial;r.copy(&initial,sizeof initial);ck(!std::memcmp(&state,&initial,sizeof state));
+ auto starter=file(argv[2]);Reader r{starter};ck(r.u()==0x35564547);auto owner_cases=r.u();unsigned steps=0,pruned=0,live_buffs=0,vitals=0,prefixes=0,guards=4,skin_calls=0,reentries=0,direct_lifetime_rejections=0,direct_detached_rejections=0,gear_combat=0,armor_combat=0;
+ for(unsigned k=0;k<owner_cases;++k){auto baseid=r.u(),selected=r.u(),count=r.u();PropertyState state;reset_properties(rules,state,&chars.rows.at(baseid));auto view=property_view(rules,state);ck(!dh2_class_recalc_base(rows.data(),rows.size(),state.base.data(),&view));PropertyState initial;r.copy(&initial,sizeof initial);ck(!std::memcmp(&state,&initial,sizeof state));const PropertyState unequipped=state;
   dh2_random_state random{{1,991},{0,17}};FreshInventoryOwnedV4 inventory(0x100000001ULL,table.borrow(),{&random,random_next},12,state);if(selected)inventory.swap_equipment();Context c;c.inventory=&inventory;c.view=&view;auto h=hooks(c);PlayerEquipmentLiveServicesV1 adapter(inventory,view,rows.data(),rows.size(),powers.borrow(),h);c.adapter=&adapter;auto services=adapter.services();std::unique_ptr<ItemInstanceV1> bulk_incoming;
   for(unsigned j=0;j<count;++j){auto op=r.u(),a=r.u(),b=r.u();r.u();auto expected=r.u();std::int32_t result=0;
    if(op==0)ck(inventory.add_fixed_loot(std::int32_t(a),RetainedItemSlotV4{&bulk_incoming},services,error));else if(op==2)ck(adapter.auto_equip(a,result,error));else if(op==5)inventory.swap_equipment();else if(op==4)ck(inventory.unequip_from_slot(a,std::int32_t(b),services,error));else if(op==15)ck(adapter.refresh(false,error));else ck(false);
-   ck(std::uint32_t(result)==expected);PropertyState after;r.copy(&after,sizeof after);ck(!std::memcmp(&state,&after,sizeof state));++steps;
+   ck(std::uint32_t(result)==expected);PropertyState after;r.copy(&after,sizeof after);ck(!std::memcmp(&state,&after,sizeof state));
+   // Exercise the actual live V1 equipment service's refresh path, then feed
+   // its same Character PropertyView into combat. The source ELF receipt is
+   // GEV5; its step 4 Warrior starter equip changes props79/80.
+   if(baseid==263&&selected==0&&j==4){PlayerEquipmentQueriesLiveV1 queries(inventory,view);EquipmentWeaponFacts12V1 facts{};ck(queries.facts(facts,error)&&(facts.flags&weapon_main));CombatantView active{};ck(queries.combat_view(active,error));ck(active.properties==state.resolved.data()&&inventory.properties()==&state);PropertySheet defender=rules.defaults;auto bare=attack_damage(unequipped.resolved.data(),defender.data());auto equipped=attack_damage(active.properties,defender.data(),active.main_damage_class);ck(state.gear[79]!=rules.defaults[79]&&state.gear[80]!=rules.defaults[80]&&state.resolved[79]==after.resolved[79]&&state.resolved[80]==after.resolved[80]);ck(equipped.amount>bare.amount);++gear_combat;
+    // The same original starter trace has equipped torso/armor before step 4.
+    // Verify its live defense property is consumed as the combat defender stat,
+    // with the same equipped attacker and same canonical Character view.
+    ck(state.gear[71]>unequipped.gear[71]&&active.properties[71]==state.resolved[71]);auto unarmored_hit=attack_damage(active.properties,unequipped.resolved.data(),active.main_damage_class);auto armored_hit=attack_damage(active.properties,active.properties,active.main_damage_class);ck(armored_hit.amount<unarmored_hit.amount);++armor_combat;
+   }
+   ++steps;
   }
   ck(&adapter.inventory()==&inventory&&&adapter.property_view()==&view&&inventory.properties()==&state&&random.seeds[1]==991&&random.counters[1]==17);
   // Live buffs remain on the caller view; mutate the existing sheet in place.
@@ -103,5 +124,5 @@ int main(int argc,char** argv){try{
   // its eventual destruction; it is never an invented adapter cleanup.
   ck(local_presentation.forget(*incoming,error)&&!local_presentation.powers(*incoming));incoming.reset();
  }
- std::cout<<"{\"validation\":\"PASS\",\"original_requirement_cases\":"<<requirement_cases<<",\"original_owner_cases\":"<<owner_cases<<",\"original_owner_steps\":"<<steps<<",\"same_view_live_buff_cases\":"<<live_buffs<<",\"requirement_pruning_cases\":"<<pruned<<",\"skin_before_vitals_cases\":"<<vitals<<",\"retained_failure_prefix_cases\":"<<prefixes<<",\"lifetime_destroy_cases\":"<<c.destroyed<<",\"direct_lifetime_rejections\":"<<direct_lifetime_rejections<<",\"direct_detached_create_rejections\":"<<direct_detached_rejections<<",\"fixture_skin_deliveries\":"<<skin_calls<<",\"reentry_rejections\":"<<reentries<<",\"failure_guards\":"<<guards<<",\"checks\":"<<checks<<",\"mismatches\":0}\n";return 0;
+ ck(gear_combat==1&&armor_combat==1);std::cout<<"{\"validation\":\"PASS\",\"original_requirement_cases\":"<<requirement_cases<<",\"original_owner_cases\":"<<owner_cases<<",\"original_owner_steps\":"<<steps<<",\"live_equipped_property_to_combat_checks\":"<<gear_combat<<",\"live_armor_property_to_combat_checks\":"<<armor_combat<<",\"same_view_live_buff_cases\":"<<live_buffs<<",\"requirement_pruning_cases\":"<<pruned<<",\"skin_before_vitals_cases\":"<<vitals<<",\"retained_failure_prefix_cases\":"<<prefixes<<",\"lifetime_destroy_cases\":"<<c.destroyed<<",\"direct_lifetime_rejections\":"<<direct_lifetime_rejections<<",\"direct_detached_create_rejections\":"<<direct_detached_rejections<<",\"fixture_skin_deliveries\":"<<skin_calls<<",\"reentry_rejections\":"<<reentries<<",\"failure_guards\":"<<guards<<",\"checks\":"<<checks<<",\"mismatches\":0}\n";return 0;
  }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

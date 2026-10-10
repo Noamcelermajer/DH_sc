@@ -44,6 +44,13 @@ struct Result {
     std::uint32_t init_vcb_calls;
 };
 
+struct DeathCleanupResult {
+    character_ai_set_skills_and_spells::List list{};
+    std::uint32_t slots_examined = 0;
+    std::uint32_t null_slots = 0;
+    std::uint32_t completed = 0;
+};
+
 enum class Status : std::int32_t {
     complete = 0,
     invalid_argument = 1,
@@ -71,6 +78,11 @@ public:
     Status prepare(const Bindings&, Result&);
     const std::vector<std::uintptr_t>& skill_scripts() const { return skill_scripts_; }
     const std::vector<std::uintptr_t>& faery_scripts() const { return faery_scripts_; }
+    // Source _SkillCleanUp/_SpellCleanUp list prefix over these exact owned
+    // vectors. Null entries are skipped as the source does. Non-null entries
+    // require the actual CharAISkillScript cleanup owner and fail closed here.
+    Status cleanup_death_list(character_ai_set_skills_and_spells::List,
+                              DeathCleanupResult&) const noexcept;
 
 private:
     struct ScratchArguments;
@@ -103,6 +115,7 @@ private:
     bool path_snapshot_live_ = false;
     std::vector<ScratchArguments*> arguments_;
     Status operation_failure_ = Status::service_failed;
+    bool prepared_ = false;
 };
 
 } // namespace dh2::native::ghost_skills

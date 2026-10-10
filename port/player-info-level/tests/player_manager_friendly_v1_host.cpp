@@ -26,6 +26,11 @@ struct FriendlyFixture:Fixture {
 };
 Row friendly_base(unsigned mode=0) {auto row=base(mode);row[20]=3;return row;}
 void friendly_failures(unsigned& failed,unsigned& guards) {
+    {friendly::SinglePlayerClassCounts counts{9,9,9};require(friendly::project_single_player_class_counts(263,&counts)==friendly::Status::complete&&counts.warrior==1&&counts.rogue==0&&counts.mage==0,"Warrior source row projects one offline class count");++guards;}
+    {friendly::SinglePlayerClassCounts counts{9,9,9};require(friendly::project_single_player_class_counts(325,&counts)==friendly::Status::complete&&counts.warrior==0&&counts.rogue==1&&counts.mage==0,"Rogue source row projects one offline class count");++guards;}
+    {friendly::SinglePlayerClassCounts counts{9,9,9};require(friendly::project_single_player_class_counts(290,&counts)==friendly::Status::complete&&counts.warrior==0&&counts.rogue==0&&counts.mage==1,"Mage source row projects one offline class count");++guards;}
+    {friendly::SinglePlayerClassCounts counts{9,9,9};require(friendly::project_single_player_class_counts(77,&counts)==friendly::Status::missing_projection&&counts.warrior==9&&counts.rogue==9&&counts.mage==9,"ClassID property is not a CharacterTable row");++guards;}
+    {require(friendly::project_single_player_class_counts(263,nullptr)==friendly::Status::invalid_argument,"class-count output is required");++guards;}
     for(unsigned scenario=0;scenario<8;++scenario) {
         auto row=friendly_base(scenario%3);row[1]=scenario==7?-1:1;
         if(scenario>=3)row[3]=1;

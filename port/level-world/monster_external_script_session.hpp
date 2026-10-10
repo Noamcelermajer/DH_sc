@@ -6,6 +6,7 @@
 #include <string>
 #include "lua_script_load_once.hpp"
 #include "ais_state_callbacks.hpp"
+#include "character_oid_cache_v1.hpp"
 
 namespace dh2::monster_external_script {
 
@@ -58,6 +59,17 @@ struct Services {
     // fails closed until that provider is modeled.
     std::int32_t (*stop)(void*, std::uintptr_t owner) = nullptr;
     std::int32_t (*attack)(void*, std::uintptr_t owner, std::uintptr_t target) = nullptr;
+    // Borrowed owner for the actual current Level's source CharacterTable-ID
+    // cache. The Level integration must bind/clear its real identity/generation;
+    // VM sessions never create or infer a Level/cache owner themselves.
+    character_oid_cache_v1::Owner* current_level_oid_cache = nullptr;
+    // The global AIS PlaySound/StopSound functions are forwarded with their
+    // source argument order intact. The app-side provider owns catalog lookup
+    // and audio delivery; absent providers remain explicit callback failures.
+    std::int32_t (*play_sound)(void*, const char* label, std::size_t label_bytes,
+                               bool looping, float fade_ms, bool stop_music) = nullptr;
+    std::int32_t (*stop_sound)(void*, const char* label, std::size_t label_bytes,
+                               float fade_ms) = nullptr;
 };
 
 enum class Event : std::uint32_t {
@@ -75,6 +87,8 @@ enum class Event : std::uint32_t {
     // Character userdata to the cached source callback on this same AIS VM.
     target_hit = 8,
     target_missed = 9,
+    // AISExternal::OnEndOfAnim invokes the named Lua callback without args.
+    animation_end = 10,
 };
 
 // Logical retained source AIS+0xb4 projection, not an ARM overlay. The current

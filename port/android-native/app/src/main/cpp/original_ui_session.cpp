@@ -1,4 +1,6 @@
 #include "original_ui_session.hpp"
+#include "../../../../../engine-ui/inventory_click_binding_v1.hpp"
+#include "menu_class_selection_v1.hpp"
 #include "original_ui_assets.hpp"
 #include "swf_gpu.hpp"
 #include "swf_hud_freetype_provider.hpp"
@@ -12,6 +14,8 @@ extern "C" {
 #include "swf_frame_connection.hpp"
 #include "player_status_hud.hpp"
 #include "authored_gameplay_hud_v1.hpp"
+#include "gameplay_hud_usable_refresh_v1.hpp"
+#include "deferred_hud_refresh_v1.hpp"
 #include "gameplay_menu_stack_v1.hpp"
 #include "authored_joystick_v1.hpp"
 #include "authored_hud_edge_layout_v6.hpp"
@@ -34,8 +38,14 @@ extern "C" {
 #include "hud_text_format_v1.hpp"
 #include "item_text_varargs_v5.hpp"
 #include "swf_menu_launch_v1.hpp"
+#include "merchant_item_details_gate_v1.hpp"
+#include "../../../../../engine-ui/faery_selection_transaction_v1.hpp"
+#include "font_palette_projection_v1.hpp"
+#include "skill_train_callback_v1.hpp"
 #include "character_menu_reload_v1.hpp"
 #include "model_renderer.hpp"
+#include "native_quest_owner.hpp"
+#include "native_quest_cursor.hpp"
 #include "gameswf/gameswf_as_classes/as_array.h"
 #include "gameswf/gameswf_function.h"
 #include "gameswf/gameswf_character.h"
@@ -52,6 +62,7 @@ extern "C" {
 #include <utility>
 #include <chrono>
 #include <algorithm>
+#include <atomic>
 #include <deque>
 #include <cmath>
 #include <vector>
@@ -66,13 +77,14 @@ struct AssetClose {void operator()(AAsset* value)const{if(value)AAsset_close(val
 struct OriginalUiSession::Impl {
     AAssetManager* manager{};
     FrontRuntimeServices runtime;
-    std::deque<std::int32_t> launch_requests;
+    std::deque<NativeStartGameIntentV1> launch_requests;
     bool launch_delivered=false;
     OriginalUiAssets assets;
     SwfGpu gpu;
     std::string directory,font_failure,provider_failure;
-    std::array<std::vector<std::uint8_t>,3> constant_bytes;
-    std::array<dh2_pycst_view,3> constants{};
+    std::array<std::vector<std::uint8_t>,4> constant_bytes;
+    std::array<dh2_pycst_view,4> constants{};
+    std::vector<std::uint8_t> font_palette_bytes;
     ui::Localization localization;
     const dh2::data::ItemTable* item_text_items{};
     const dh2::data::CharacterTable* item_text_characters{};
@@ -82,6 +94,10 @@ struct OriginalUiSession::Impl {
     std::int32_t language_selection=-1;
     dh2::data::CharacterTable menu_characters;
     dh2::data::LevelTables menu_levels;
+    dh2::data::quest_table_bindings_v1::Owner menu_quest_tables;
+    std::shared_ptr<const std::vector<std::uint8_t>> menu_quest_records,menu_quest_names,
+        menu_quest_constants_bytes;
+    dh2::native::quests::Constants menu_quest_constants;
     // Front-only selected difficulty; gameplay ownership is a separate handoff.
     std::int32_t menu_selected_difficulty=0;
     // The production front owner loads a static menu scene, never gameplay
@@ -96,6 +112,7 @@ struct OriginalUiSession::Impl {
     std::map<std::string,ui::SwfTexture> exports;
     bool selected=false,loaded=false,live_player=false,menu_string_flag=false,report_frame=true;
     std::string front_screen;
+    std::atomic_bool front_name_input_active{false};
     // Initial owned navigation slice. Other registered native menu types,
     // shared-renderer settings and transition animations remain pending.
     std::vector<std::string> menu_stack;
@@ -108,11 +125,17 @@ struct OriginalUiSession::Impl {
     // event has unwound, so the HUD input graph is never re-entered recursively.
     bool gameplay_hud_active=true;
     bool gameplay_hud_input_reset_pending=false;
+    // NativeBackToHud is a synchronous SWF callback in the original game, but
+    // its DisplayRightHud action re-enters the shared GameSWF core. Queue the
+    // owner transition until the current input dispatch has fully unwound.
+    bool gameplay_back_to_hud_pending=false;
+    ui::DeferredHudRefreshV1 gameplay_hud_refresh;
     bool gameplay_multitouch_enabled=false;
     std::int32_t hud_style=-1;
     model_renderer::UiPlayerHudProjectionV1 gameplay_hud_state{};
-    std::chrono::steady_clock::time_point gameplay_hud_usable_refresh{};
+    ui::GameplayHudUsableRefreshV1 gameplay_hud_usable_refresh;
     bool gameplay_hud_projection_warned=false;
+    bool inventory_callback_probe_logged=false;
     std::uintptr_t gameplay_character_button{};
     bool gameplay_character_button_pressed=false;
     std::string active_menu_path()const{return "_root."+(menu_stack.empty()?std::string("menu_MainMenu"):menu_stack.back());}
@@ -131,7 +154,7 @@ struct OriginalUiSession::Impl {
     static bool gameplay_menu_state(const std::string& name){
         // This state is authored in dqhud_droid.swf (SpriteID 429); it is the
         // pause panel itself, not a dqcharmenu screen.
-        return name=="menu_Ingame"||character_menu_state(name);
+        return ui::gameplay_menu_state_v1(name);
     }
     ui::SwfMovie* menu_movie(const std::string& name)const{
         if(live_player&&character_menu_state(name))return character_menu_movie.get();
@@ -146,6 +169,7 @@ struct OriginalUiSession::Impl {
     std::chrono::steady_clock::time_point frame_time{};
     std::chrono::steady_clock::time_point game_menu_frame_time{};
     bool confirmation_state_probed=false;
+    bool talent_detail_callback_logged=false;
     MenuFrameClock menu_clock;
     MenuFrameClock game_menu_clock;
     int driver_width=480,driver_height=320;
@@ -207,14 +231,7 @@ struct OriginalUiSession::Impl {
         return model_renderer::ui_player_controller_allowed(identity,allowed,error);
     }
     static bool authored_joystick_rotate(void*,const float base[3],float degrees,float out[3],std::string& error){
-        if(!base||!out||!std::isfinite(degrees)){error="Malformed authored joystick direction";return false;}
-        const float length=std::sqrt(base[0]*base[0]+base[1]*base[1]+base[2]*base[2]);
-        if(!std::isfinite(length)||length<=0.f){error="Authored joystick direction has zero length";return false;}
-        constexpr float radians_per_degree=0.01745329251994329577f;
-        const float angle=degrees*radians_per_degree,c=std::cos(angle),s=std::sin(angle);
-        const float x=base[0]/length,y=base[1]/length;
-        out[0]=x*c-y*s;out[1]=x*s+y*c;out[2]=base[2]/length;
-        return true;
+        return ui::authored_joystick_rotate_direction_v1(base,degrees,out,error);
     }
     static bool authored_joystick_head_towards(void*,const float direction[3],std::string& error){
         if(!direction||!std::isfinite(direction[0])||!std::isfinite(direction[1])||!std::isfinite(direction[2])){
@@ -230,7 +247,10 @@ struct OriginalUiSession::Impl {
             authored_joystick_rotate,authored_joystick_head_towards,authored_joystick_stop};
     }
     std::array<std::int32_t,4> front_rectangle()const{
-        return ui::original_menu_viewport_v1::fit(driver_width,driver_height);
+        const auto& state=!front_screen.empty()?front_screen:
+            !game_menu_stack.empty()?game_menu_stack.back():front_screen;
+        return ui::original_menu_viewport_v1::viewport_for_screen_state_v1(
+            state,driver_width,driver_height);
     }
     std::array<std::int32_t,4> viewport_rectangle()const{
         return {0,0,driver_width,driver_height};
@@ -256,16 +276,16 @@ struct OriginalUiSession::Impl {
         auto& self=*static_cast<Impl*>(context);
         ui::MenuNativeEventServicesV1 services;services.context=context;services.raw_position=raw_event_position;
         if(!self.menu_stack.empty()&&self.menu_stack.back()=="menu_SelectClass"&&event.kind==2){
-            const int before=self.class_index;
             // MenuCharacterSelect::OnEvent 0x4282c8..0x42839c: compare
             // actual cached characters, clamp the native index to 0..2.
             // Source OnEvent gates selector actions with field fc; Update clears
             // it during a camera transition and restores it after IsAnimOver.
-            if(model_renderer::class_scene_input_enabled()){
-                if(event.character==self.class_right&&self.class_index<2)++self.class_index;
-                else if(event.character==self.class_left&&self.class_index>0)--self.class_index;
-            }
-            if(before!=self.class_index){
+            int selected=self.class_index;
+            const bool changed=ui::menu_class_selection_click_v1(event.kind,event.character,
+                self.class_left,self.class_right,model_renderer::class_scene_input_enabled(),
+                self.class_index,selected);
+            if(changed){
+                self.class_index=selected;
                 // Start immediately in this input batch, so a second queued tap
                 // cannot skip from class 0 to 2 before the next frame update.
                 if(!model_renderer::select_class_scene(self.class_index,0,error)||
@@ -396,6 +416,24 @@ struct OriginalUiSession::Impl {
         }
         error=std::string("Required UI constant missing: ")+group+"."+key;return false;
     }
+    static bool item_name_with_palette(Impl& self,const std::string& name,
+                                       std::int32_t power_count,std::string& output,
+                                       std::string& error) {
+        if(power_count<0){error="Inventory item has a negative power count";return false;}
+        static constexpr const char* power_keys[]={"zero","one","two","three","four"};
+        std::uint32_t palette_index=2; // Original GetFontDef fallback for >=5 powers.
+        if(power_count<5){
+            std::uint32_t index_bits=0;
+            if(!constant(&self,"ItemPowerColor",power_keys[power_count],index_bits,error))return false;
+            std::int32_t signed_index=0;std::memcpy(&signed_index,&index_bits,sizeof(signed_index));
+            if(signed_index<0){error="ItemPowerColor resolved to a negative FontPalette index";return false;}
+            palette_index=static_cast<std::uint32_t>(signed_index);
+        }
+        std::uint32_t text_color=0;
+        return ui::font_palette_text_color_at_index_v1(self.font_palette_bytes.data(),
+                self.font_palette_bytes.size(),palette_index,text_color,error)&&
+            ui::format_item_name_v1(name,text_color,output);
+    }
     static bool player_character(void* context,std::uintptr_t& out,std::string& error) {
         auto& self=*static_cast<Impl*>(context);
         if(!self.live_player){
@@ -481,7 +519,22 @@ struct OriginalUiSession::Impl {
     }
     static bool enter_options(void* context,std::string&){static_cast<Impl*>(context)->menu_audio.emplace_back("resume");return true;}
     static bool refresh_front_hud(void* context,std::string& error){
-        auto& self=*static_cast<Impl*>(context);if(self.live_player){error="Settings HUD refresh requires attached player owner";return false;}return true;
+        auto& self=*static_cast<Impl*>(context);
+        if(!self.live_player)return true;
+        if(!self.gameplay_hud||!self.gameplay_hud_bound||!self.authored_joystick_ready){
+            error="NativeRefreshHudManager requires the attached authored HUD and joystick owners";
+            return false;
+        }
+        // IDA: NativeRefreshHudManager clears InfoHUDManager's active-touch
+        // byte, then HUDControls::Touch clears its held-control state and
+        // calls the current Player controller's Cmd_Stop. Reuse the attached
+        // HUD/joystick and Player controller; do not construct another HUD.
+        self.gameplay_hud_input_reset_pending=true;
+        self.gameplay_hud_pointer=-1;
+        std::uintptr_t identity=0;
+        if(!model_renderer::ui_player_identity(identity,error))return false;
+        return ui::authored_joystick_release_v1(self.authored_joystick,identity!=0,
+                                                self.authored_joystick_services(),error);
     }
     static bool input_behavior(void* context,std::int32_t slot,bool rollover,std::string& error){
         auto& self=*static_cast<Impl*>(context);
@@ -641,6 +694,49 @@ struct OriginalUiSession::Impl {
         std::uint32_t raw{};if(!constant(context,group,key,raw,error))return false;
         std::memcpy(&value,&raw,sizeof(value));return true;
     }
+    bool ensure_menu_quest_resources(std::string& error){
+        if(menu_quest_tables.borrow()&&menu_quest_constants.view.bytes){error.clear();return true;}
+        auto records=std::make_shared<std::vector<std::uint8_t>>();
+        auto names=std::make_shared<std::vector<std::uint8_t>>();
+        auto constants_bytes=std::make_shared<std::vector<std::uint8_t>>();
+        if(!raw_asset("data/v2quests_pyarray.bin",*records,error)||
+           !raw_asset("data/v2quests_pyarraynames.bin",*names,error)||
+           !raw_asset("data/v2quests_pycst.bin",*constants_bytes,error))return false;
+        dh2::data::quest_table_bindings_v1::Input input;
+        if(dh2_quests_open(&input.table,records->data(),std::uint32_t(records->size()))){
+            error="Occupied-slot quest catalogue decode failed";return false;
+        }
+        input.packed_owner=records;input.names=names->data();input.names_size=names->size();input.names_owner=names;
+        if(!menu_quest_tables.load(input,error))return false;
+        dh2::native::quests::Constants constants;
+        if(dh2_pycst_open(&constants.view,constants_bytes->data(),
+                          std::uint32_t(constants_bytes->size()))){
+            error="Occupied-slot quest constants decode failed";return false;
+        }
+        constants.owner=constants_bytes;
+        menu_quest_records=std::move(records);menu_quest_names=std::move(names);
+        menu_quest_constants_bytes=std::move(constants_bytes);menu_quest_constants=std::move(constants);
+        error.clear();return true;
+    }
+    static bool menu_load_quest_acts(void* context,
+        const std::shared_ptr<dh2::data::PlayerSavegameV1>& save,
+        const dh2::data::PlayerProfileIndexV1::Borrow& profile,
+        std::array<std::int32_t,3>& regular,std::array<std::int32_t,3>& volatile_acts,
+        std::string& error){
+        auto& self=*static_cast<Impl*>(context);
+        if(!save||!profile||!profile.section("QEST")){
+            error="Occupied-slot QEST provider requires the exact indexed metadata Save";return false;
+        }
+        if(!self.ensure_menu_quest_resources(error))return false;
+        dh2::native::quests::Owner owner(save,self.menu_quest_tables.borrow(),
+                                        self.menu_quest_constants);
+        if(!owner.initialize(0,error)||!owner.initialize(1,error))return false;
+        dh2::native::quests::Cursor cursor(profile,"QEST");
+        if(!owner.load_quests(cursor,error))return false;
+        const auto& fields=save->level_name_fields();
+        regular=fields.quest_wordfc;volatile_acts=fields.quest_word15c;
+        error.clear();return true;
+    }
     static bool menu_slot_details(void* context,std::uint32_t slot,bool occupied,std::int32_t difficulty,
         ui::SwfFrontSaveSlotDetailsV1& details,std::string& error){
         auto& self=*static_cast<Impl*>(context);
@@ -648,9 +744,10 @@ struct OriginalUiSession::Impl {
         dh2::data::CampaignProfileFileV1 file;
         if(!dh2::data::read_campaign_profile_v1(self.directory,slot,file,error))return false;
         dh2::data::MenuProfileMetadataV1 metadata;
-        // Canonical QEST provider is pending in the gameplay owner. A present
-        // QEST fails explicitly; fresh source profiles contain seven sections.
-        dh2::data::MenuProfileMetadataServicesV1 load_services{&self,menu_store_difficulty,nullptr};
+        // The canonical short-lived Quest owner reads QEST through this
+        // metadata transaction's same Save and whole-profile cursor.
+        dh2::data::MenuProfileMetadataServicesV1 load_services{
+            &self,menu_store_difficulty,menu_load_quest_acts};
         if(!dh2::data::load_menu_profile_metadata_v1({file.bytes.data(),file.bytes.size()},self.menu_characters,
             static_cast<std::int32_t>(slot),self.menu_selected_difficulty,load_services,metadata,error))return false;
         ui::MenuSaveSlotPresentationServicesV1 display_services{&self,menu_slot_constant,menu_slot_string,menu_slot_date};
@@ -772,11 +869,14 @@ struct OriginalUiSession::Impl {
     }
     static bool start_request(void* context,bool numeric,std::int32_t difficulty,std::string& error){
         auto& self=*static_cast<Impl*>(context);
-        if(!self.runtime.request_start_game){error="Development Crypt startup continuation unavailable";return false;}
+        if(!self.runtime.request_start_game){error="NativeStartGame continuation unavailable";return false;}
         std::int32_t slot=-1;
         if(!self.runtime.request_start_game(self.runtime.context,numeric,difficulty,slot,error))return false;
-        self.launch_requests.push_back(slot);
-        __android_log_print(ANDROID_LOG_INFO,tag,"Authored NativeStartGame request queued | selected slot %d | numeric difficulty %d | requested difficulty %d | development handoff | delivery unwinds before world load",slot,numeric,difficulty);
+        // NativeStartGame has a source state-38 early return. The renderer
+        // reports it as a successful no-op with no assigned launch slot.
+        if(slot<0)return true;
+        self.launch_requests.push_back({slot,numeric,difficulty});
+        __android_log_print(ANDROID_LOG_INFO,tag,"Authored NativeStartGame continuation queued | assigned PlayerInfo slot %d | numeric difficulty %d | requested difficulty %d | deferred until SWF dispatch unwinds",slot,numeric,difficulty);
         return true;
     }
     struct CharacterReloadMenuLookup {Impl* self;std::uintptr_t identity{};};
@@ -885,9 +985,14 @@ struct OriginalUiSession::Impl {
             return ui::swf_front_save_slot_details(fn,slots,error);
         }
         if(!std::strcmp(name,"NativeStartGame")){
+            // IDA NativeStartGame checks current Level state 38 before reading
+            // argc or converting the optional difficulty. The retained native
+            // world is the port's single current-Level owner; a front-menu
+            // launch has already retired it.
+            if(model_renderer::source_start_game_blocked_by_current_world())return true;
             ui::SwfMenuLaunchServicesV1 start;
             start.context=&self;start.eabi_integer=start_integer;start.request_start_game=start_request;
-            return ui::swf_menu_start_game_development_v1(fn,start,error);
+            return ui::swf_menu_start_game_continuation_v1(fn,start,error);
         }
         if(!std::strcmp(name,"NativeGetPossibleClassSpec")){
             if(fn.nargs!=1||!fn.arg(0).is_object())return true;
@@ -910,9 +1015,50 @@ struct OriginalUiSession::Impl {
             if(fn.result)fn.result->set_as_object(object);
             return true;
         }
+        if(!std::strcmp(name,"NativeSelectClassSpec")){
+            // The authored specialization screen supplies the selected local
+            // branch as one numeric selector. Apply it through the current
+            // Player/Save/skill owners; never construct a parallel profile.
+            if(fn.nargs!=1||!fn.arg(0).is_number())return true;
+            std::int32_t selector=0;
+            if(!start_integer(&self,fn.arg(0).to_number(),selector,error))return false;
+            if(selector<0||selector>1)return true;
+            std::uintptr_t identity=0;
+            if(!local_character(0,false,identity))return false;
+            if(!identity)return true;
+            return model_renderer::ui_player_select_class_specialization(
+                identity,selector,error);
+        }
         if(!std::strcmp(name,"NativeTouchToMove")){
             // The original callback is an exact empty function (IDA: bx lr).
             return true;
+        }
+        if(!std::strcmp(name,"NativeHUDSkill")){
+            // NativeHUDSkill is called by the authored HUD on release with
+            // its three-slot index. Resolve and execute on the same retained
+            // Character/AI/VM/playback owners; the renderer preserves the
+            // source BeginSkill -> EndSkill order and authored do_skill event.
+            if(fn.nargs!=1||!fn.arg(0).is_number())return true;
+            std::int32_t slot=0;
+            if(!start_integer(&self,fn.arg(0).to_number(),slot,error))return false;
+            std::uintptr_t identity=0;
+            if(!local_character(0,false,identity))return false;
+            if(!identity)return true;
+            if(!model_renderer::ui_player_use_skill_slot(identity,slot,error))return false;
+            // The source skill callback can start its cooldown before the
+            // next render. Recheck usability on that next authored HUD update
+            // instead of waiting for the ordinary 500 ms polling interval.
+            self.gameplay_hud_usable_refresh.invalidate();
+            return true;
+        }
+        if(!std::strcmp(name,"NativeHUDSpell")){
+            // NativeHUDSpell has no SWF arguments. Keep source CTRLIsAllowed
+            // and controller-command gates in the retained Player runtime.
+            if(fn.nargs!=0)return true;
+            std::uintptr_t identity=0;
+            if(!local_character(0,false,identity))return false;
+            if(!identity)return true;
+            return model_renderer::ui_player_use_spell(identity,error);
         }
         if(!std::strcmp(name,"NativeGetParsedString")){
             ParseContext parse{self,{}};const ui::HudTextServicesV1 services{&parse,parsed_text};
@@ -936,6 +1082,164 @@ struct OriginalUiSession::Impl {
             }
             return true;
         }
+        if(!std::strcmp(name,"NativeGetQuestCount")){
+            // IDA 0x4401d4: [playerIndex, predicateName], with the active
+            // source difficulty selected by Character::SG_GetNumQuests.
+            if(fn.nargs!=2||!fn.arg(0).is_number())return true;
+            std::int32_t player=0;
+            if(!start_integer(&self,fn.arg(0).to_number(),player,error))return false;
+            std::uintptr_t identity=0;if(!local_character(player,false,identity))return false;
+            if(!identity)return true;
+            std::vector<model_renderer::UiQuestReadV1> rows;
+            if(!model_renderer::ui_player_quest_rows(identity,rows,error))return false;
+            std::uint32_t debug_priority=0;
+            if(!constant(&self,"v2QuestPriority","Debug",debug_priority,error))return false;
+            const std::string filter=fn.arg(1).to_xstring();
+            const bool closed=filter=="Closed";
+            const auto count=std::count_if(rows.begin(),rows.end(),[&](const auto& row){
+                return row.priority!=std::int32_t(debug_priority)&&
+                    (closed?row.state>12:(row.state>=6&&row.state<=12));
+            });
+            if(fn.result)fn.result->set_double(double(count));
+            error.clear();return true;
+        }
+        if(!std::strcmp(name,"NativeGetQuestIDsInRange")){
+            // IDA 0x443b18: [playerIndex, predicateName, start, count,
+            // outputArray]. The source clips in vector order then sorts the
+            // selected prefix by localized Quest title before appending rows.
+            if(fn.nargs!=5||!fn.arg(0).is_number()||!fn.arg(2).is_number()||
+               !fn.arg(3).is_number()||!fn.arg(4).is_object())return true;
+            auto* array=gameswf::cast_to<gameswf::as_array>(fn.arg(4).to_object());
+            if(!array)return true;
+            std::int32_t player=0,start=0,limit=0;
+            if(!start_integer(&self,fn.arg(0).to_number(),player,error)||
+               !start_integer(&self,fn.arg(2).to_number(),start,error)||
+               !start_integer(&self,fn.arg(3).to_number(),limit,error))return false;
+            std::uintptr_t identity=0;if(!local_character(player,false,identity))return false;
+            if(!identity)return true;
+            std::vector<model_renderer::UiQuestReadV1> rows;
+            if(!model_renderer::ui_player_quest_rows(identity,rows,error))return false;
+            std::uint32_t debug_priority=0;
+            if(!constant(&self,"v2QuestPriority","Debug",debug_priority,error))return false;
+            const std::string filter=fn.arg(1).to_xstring();
+            const bool closed=filter=="Closed";
+            rows.erase(std::remove_if(rows.begin(),rows.end(),[&](const auto& row){
+                return row.priority==std::int32_t(debug_priority)||
+                    (closed?row.state<=12:(row.state<6||row.state>12));
+            }),rows.end());
+            const auto begin=std::size_t(std::max(0,start));
+            const auto end=std::min(rows.size(),begin+std::size_t(std::max(0,limit)));
+            if(begin<rows.size())rows=std::vector<model_renderer::UiQuestReadV1>(
+                rows.begin()+std::ptrdiff_t(begin),rows.begin()+std::ptrdiff_t(end));
+            else rows.clear();
+            struct LocalizedQuest {model_renderer::UiQuestReadV1 row;std::string title;};
+            std::vector<LocalizedQuest> localized;localized.reserve(rows.size());
+            for(const auto& row:rows){
+                std::string title;
+                const auto id=row.text_ids[0];
+                if(id>=0&&id!=1835016){
+                    if(!self.localization.string_id(std::uint32_t(id),self.text_services(),title,error))return false;
+                }else title="not specified";
+                localized.push_back({row,std::move(title)});
+            }
+            std::stable_sort(localized.begin(),localized.end(),[](const auto& a,const auto& b){
+                return std::strcmp(a.title.c_str(),b.title.c_str())<0;
+            });
+            for(const auto& item:localized){
+                auto* object=new gameswf::as_object(fn.get_player());
+                if(!object->set_member("QuestTitle",gameswf::as_value(item.title.c_str()))||
+                   !object->set_member("QuestID",gameswf::as_value(item.row.id))||
+                   !object->set_member("IsCurrent",gameswf::as_value(item.row.current))){
+                    error="NativeGetQuestIDsInRange output rejected a source field";return false;
+                }
+                array->push(gameswf::as_value(object));
+            }
+            if(fn.result)fn.result->set_double(double(localized.size()));
+            error.clear();return true;
+        }
+        if(!std::strcmp(name,"NativeGetQuestDetails")){
+            // IDA 0x44c444: [playerIndex, questVectorOrdinal, outputObject].
+            if(fn.nargs!=3||!fn.arg(0).is_number()||!fn.arg(1).is_number()||
+               !fn.arg(2).is_object())return true;
+            auto* object=fn.arg(2).to_object();if(!object)return true;
+            std::int32_t player=0,ordinal=0;
+            if(!start_integer(&self,fn.arg(0).to_number(),player,error)||
+               !start_integer(&self,fn.arg(1).to_number(),ordinal,error))return false;
+            if(ordinal<0)return true;
+            std::uintptr_t identity=0;if(!local_character(player,false,identity))return false;
+            if(!identity)return true;
+            std::vector<model_renderer::UiQuestReadV1> rows;
+            const dh2::native::quests::QuestTextServicesV1 objective_text{
+                &self,Impl::option_string};
+            if(!model_renderer::ui_player_quest_rows(identity,rows,error,&objective_text))return false;
+            if(std::size_t(ordinal)>=rows.size())return true;
+            const auto& row=rows[std::size_t(ordinal)];
+            const auto text=[&](std::int32_t id,std::string& value){
+                // Quest::GetObjectiveDescription delegates this sentinel to
+                // ObjectiveList::GetDesc, composed by the canonical Quest
+                // owner through this borrowed StringManager service.
+                if(id==1835016){value=row.objective_description;return true;}
+                if(id<0){value="not specified";return true;}
+                return self.localization.string_id(std::uint32_t(id),self.text_services(),value,error);
+            };
+            std::array<std::string,4> values;
+            for(std::size_t i=0;i<values.size();++i)if(!text(row.text_ids[i],values[i]))return false;
+            std::uint32_t primary=0;
+            if(!constant(&self,"v2QuestPriority","Primary",primary,error))return false;
+            if(!object->set_member("Title",gameswf::as_value(values[0].c_str()))||
+               !object->set_member("PreDescription",gameswf::as_value(values[1].c_str()))||
+               !object->set_member("ObjectiveDescription",gameswf::as_value(values[2].c_str()))||
+               !object->set_member("PostDescription",gameswf::as_value(values[3].c_str()))||
+               !object->set_member("IsPrimary",gameswf::as_value(row.priority==std::int32_t(primary)))){
+                error="NativeGetQuestDetails output rejected a source field";return false;
+            }
+            error.clear();return true;
+        }
+        if(!std::strcmp(name,"NativeGetWorldMapLocations")){
+            // IDA 0x4535e4: [outputArray, playerIndex]. Preserve FastTravelList
+            // order and source keys; visibility comes from this difficulty's
+            // unlock words in the active Character's canonical Save.
+            if(fn.nargs!=2||!fn.arg(0).is_object()||!fn.arg(1).is_number())return true;
+            auto* array=gameswf::cast_to<gameswf::as_array>(fn.arg(0).to_object());
+            if(!array)return true;
+            std::int32_t player=0;
+            if(!start_integer(&self,fn.arg(1).to_number(),player,error))return false;
+            std::uintptr_t identity=0;
+            if(!local_character(player,false,identity))return false;
+            if(identity){
+                std::vector<model_renderer::UiFastTravelReadV1> rows;
+                if(!model_renderer::ui_player_fast_travel_rows(identity,rows,error))return false;
+                for(const auto& row:rows){
+                    std::string name,description;
+                    if(!self.localization.string_id(std::uint32_t(row.string_id),
+                            self.text_services(),name,error)||
+                       !self.localization.string_id(std::uint32_t(row.description_id),
+                            self.text_services(),description,error))return false;
+                    auto* object=new gameswf::as_object(fn.get_player());
+                    if(!object->set_member("StrIDShift",gameswf::as_value(name.c_str()))||
+                       !object->set_member("Importance",gameswf::as_value(row.importance))||
+                       !object->set_member("LevelName",gameswf::as_value(row.level_name.c_str()))||
+                       !object->set_member("EntryPointId",gameswf::as_value(row.entry_point_id))||
+                       !object->set_member("Description",gameswf::as_value(description.c_str()))||
+                       !object->set_member("Visible",gameswf::as_value(row.visible))){
+                        error="NativeGetWorldMapLocations output rejected a source field";return false;
+                    }
+                    array->push(gameswf::as_value(object));
+                }
+            }
+            if(fn.result)fn.result->set_as_object(array);
+            error.clear();return true;
+        }
+        if(!std::strcmp(name,"NativeGoToZone")){
+            // IDA 0x4422b8 saves/quicksaves the live Level and Players, resolves
+            // a LevelList row, calls DisplayFastTravel, then enters
+            // Application::LoadLevel with the selected entry point, Save slot,
+            // and difficulty. This runtime has no complete live-Level
+            // teardown/load transaction; never mutate Save or fake arrival.
+            if(fn.nargs!=2||!fn.arg(0).is_string()||!fn.arg(1).is_number())return true;
+            error="NativeGoToZone is gated: source Level save/teardown and Application::LoadLevel destination transaction are not connected";
+            return false;
+        }
         if(!std::strcmp(name,"NativeSetMultitouch")){
             // NativeSetMultitouch writes MenuManager+0x110. The native event
             // path accepts four source cursor indices while this flag is set.
@@ -947,6 +1251,13 @@ struct OriginalUiSession::Impl {
             // IDA/Ghidra source ABI at 0x44bb94: [equipmentSlot, outputArray,
             // playerIndex]. The original appends Item objects to the supplied
             // array and returns that same array; V4 remains the sole inventory.
+            if(!self.inventory_callback_probe_logged){
+                self.inventory_callback_probe_logged=true;
+                __android_log_print(ANDROID_LOG_INFO,tag,
+                    "Inventory callback probe | argc %d | arg0 number %d | arg1 object %d | arg2 number %d",
+                    fn.nargs,fn.nargs>0&&fn.arg(0).is_number(),
+                    fn.nargs>1&&fn.arg(1).is_object(),fn.nargs>2&&fn.arg(2).is_number());
+            }
             if(fn.nargs!=3||!fn.arg(0).is_number()||!fn.arg(1).is_object()||
                !fn.arg(2).is_number())return true;
             auto* array=gameswf::cast_to<gameswf::as_array>(fn.arg(1).to_object());
@@ -956,28 +1267,33 @@ struct OriginalUiSession::Impl {
             if(!identity)return true;
             std::vector<model_renderer::UiInventoryItemReadV1> items;
             if(!model_renderer::ui_player_inventory_slot(identity,fn.arg(0).to_int(),items,error))return false;
-            std::stable_sort(items.begin(),items.end(),[](const auto& a,const auto& b){
-                return a.equippable&&!b.equippable;
-            });
+            const bool valuable_list=fn.arg(0).to_int()==9; // EquipmentSlots::Count
             for(const auto& item:items){
                 auto* row=new gameswf::as_object(fn.get_player());
-                const auto quantity=std::to_string(item.quantity);
-                // These names are consumed directly by dqcharmenu_droid.swf.
-                // The source HTML rarity color is intentionally left to a
-                // later FontPalette adapter; the item text and actions work.
-                if(!row->set_member("ItemName",gameswf::as_value(item.name.c_str()))||
+                // NativeInvGetItemsListForSlot only fills a numeric quantity
+                // for the Count/valuable-items list. Equipment-slot rows get
+                // a single blank, and Count rows are never marked equipped.
+                const std::string quantity=valuable_list?std::to_string(item.quantity):" ";
+                // The original callback formats each name with ItemInstance::GetColor
+                // before the authored inventory row consumes it.
+                std::string formatted_name;
+                if(!item_name_with_palette(self,item.name,item.power_count,formatted_name,error))return false;
+                if(!row->set_member("ItemName",gameswf::as_value(formatted_name.c_str()))||
                    !row->set_member("ItemIndex",gameswf::as_value(item.index))||
-                   !row->set_member("ItemEquippable",gameswf::as_value(item.equippable||fn.arg(0).to_int()==9))||
-                   !row->set_member("ItemEquipped",gameswf::as_value(item.equipped))||
+                   !row->set_member("ItemEquippable",gameswf::as_value(item.equippable))||
+                   !row->set_member("ItemEquipped",gameswf::as_value(!valuable_list&&item.equipped))||
                    !row->set_member("ItemEquippedOtherHand",gameswf::as_value(item.equipped_other_hand))||
                    !row->set_member("ItemQuantity",gameswf::as_value(quantity.c_str()))){
                     error="NativeInvGetItemsListForSlot item object rejected a source field";return false;
-                }
-                array->push(gameswf::as_value(row));
             }
-            if(fn.result)fn.result->set_as_object(array);
-            return true;
+            array->push(gameswf::as_value(row));
         }
+        if(fn.result)fn.result->set_as_object(array);
+        __android_log_print(ANDROID_LOG_INFO,tag,
+            "Inventory list callback complete | slot %d | rows %zu | player %d",
+            fn.arg(0).to_int(),items.size(),fn.arg(2).to_int());
+        return true;
+    }
         if(!std::strcmp(name,"NativeInvDropItem")){
             // Authored doDrop ActionCallFunction encodes argc=2; native IDA
             // 0x43cfb4 reads only arg0 as the inventory index. Match that
@@ -990,7 +1306,11 @@ struct OriginalUiSession::Impl {
             std::uintptr_t identity=0;
             if(!local_character(0,false,identity))return false;
             if(!identity)return true;
-            return model_renderer::ui_player_drop_inventory_item(identity,item_index,error);
+            if(!model_renderer::ui_player_drop_inventory_item(identity,item_index,error))return false;
+            __android_log_print(ANDROID_LOG_INFO,tag,
+                "Native inventory click callback | action Drop | item %d | player 0 | Character %zx | canonical V4/world result 1",
+                item_index,identity);
+            return true;
         }
         if(!std::strcmp(name,"NativeInvGetEquipedItem")){
             // 0x43d790 writes ItemName, ItemIndex and ItemColor(power count)
@@ -1003,7 +1323,9 @@ struct OriginalUiSession::Impl {
             if(!identity)return true;
             model_renderer::UiEquippedItemReadV1 item;bool present=false;
             if(!model_renderer::ui_player_equipped_item(identity,fn.arg(0).to_int(),item,present,error))return false;
-            if(present&&(!object->set_member("ItemName",gameswf::as_value(item.name.c_str()))||
+            std::string formatted_name;
+            if(present&&!item_name_with_palette(self,item.name,item.power_count,formatted_name,error))return false;
+            if(present&&(!object->set_member("ItemName",gameswf::as_value(formatted_name.c_str()))||
                          !object->set_member("ItemIndex",gameswf::as_value(item.index))||
                          !object->set_member("ItemColor",gameswf::as_value(item.power_count)))){
                 error="NativeInvGetEquipedItem object rejected a source field";return false;
@@ -1013,13 +1335,26 @@ struct OriginalUiSession::Impl {
         }
         if(!std::strcmp(name,"NativeInvEquipItem")){
             // IDA 0x43e600 calls NativeGetPlayerChar(arg2), then
-            // Character::EquipItemToSlot(arg0, arg1). The Character method
-            // forwards (slot, itemIndex) to ItemInventory: [slot, item, player].
+            // Character::EquipItemToSlot(arg0, arg1). The SWF pushes
+            // [playerIndex, ItemIndex, equipmentSlot], while gameswf::fn_call
+            // exposes [equipmentSlot, ItemIndex, playerIndex]. The one
+            // canonical Player/V4 equipment owner runs source slot replacement,
+            // property refresh, requirement pruning, skin refresh and HP/MP
+            // validation synchronously before this release callback returns.
             if(fn.nargs!=3||!fn.arg(0).is_number()||!fn.arg(1).is_number()||!fn.arg(2).is_number())return true;
+            const auto call=dh2::ui::inventory_click_equip_call_v1(
+                fn.arg(0).to_int(),fn.arg(1).to_int(),fn.arg(2).to_int());
             std::uintptr_t identity=0;
-            if(!local_character(fn.arg(2).to_int(),false,identity))return false;
+            if(!local_character(call.player_index,false,identity))return false;
             if(!identity)return true;
-            return model_renderer::ui_player_equip_item(identity,fn.arg(1).to_int(),fn.arg(0).to_int(),error);
+            if(!model_renderer::ui_player_equip_item(identity,call.item_index,call.equipment_slot,error))return false;
+            __android_log_print(ANDROID_LOG_INFO,tag,
+                "Native inventory click callback | action Equip | slot %d | item %d | player %d | Character %zx | canonical V4 result 1",
+                call.equipment_slot,call.item_index,call.player_index,identity);
+            // NativeInvEquipItem drops its result value and writes the source
+            // undefined tag after Character::EquipItemToSlot succeeds.
+            if(fn.result)fn.result->set_undefined();
+            return true;
         }
         if(!std::strcmp(name,"NativeInvUnequipItem")){
             // IDA 0x43ef64 calls NativeGetPlayerChar(arg1), then
@@ -1028,7 +1363,11 @@ struct OriginalUiSession::Impl {
             std::uintptr_t identity=0;
             if(!local_character(fn.arg(1).to_int(),false,identity))return false;
             if(!identity)return true;
-            return model_renderer::ui_player_unequip_item(identity,fn.arg(0).to_int(),error);
+            if(!model_renderer::ui_player_unequip_item(identity,fn.arg(0).to_int(),error))return false;
+            __android_log_print(ANDROID_LOG_INFO,tag,
+                "Native inventory click callback | action Unequip | slot %d | item -1 | player %d | Character %zx | canonical V4 result 1",
+                fn.arg(0).to_int(),fn.arg(1).to_int(),identity);
+            return true;
         }
         if(!std::strcmp(name,"NativeInvAutoEquipSlot")){
             // IDA 0x43da2c calls NativeGetPlayerChar(arg1), then uses arg0
@@ -1040,7 +1379,7 @@ struct OriginalUiSession::Impl {
             return model_renderer::ui_player_auto_equip_slot(identity,fn.arg(0).to_int(),error);
         }
         if(!std::strcmp(name,"NativeInvTransmuteItem")){
-            // 0x44f23c: [itemIndex, playerIndex], then INV_TransmuteItem and
+            // 0x43f23c: [itemIndex, playerIndex], then INV_TransmuteItem and
             // INV_UpdateSkin. The canonical V4 inventory owns the mutation.
             if(fn.nargs!=2||!fn.arg(0).is_number()||!fn.arg(1).is_number())return true;
             std::uintptr_t identity=0;
@@ -1054,12 +1393,18 @@ struct OriginalUiSession::Impl {
             return true;
         }
         if(!std::strcmp(name,"NativeSwapEquipment")){
-            // 0x452198 takes the PlayerInfo index and refreshes the same gear owner.
+            // 0x442198 swaps the canonical equipment, refreshes gear/Skin/
+            // vitals, then calls DisplayRightHud and FillActionIcon. Defer the
+            // two authored SWF calls until this native event has unwound.
             if(fn.nargs!=1||!fn.arg(0).is_number())return true;
             std::uintptr_t identity=0;
             if(!local_character(fn.arg(0).to_int(),false,identity))return false;
             if(!identity)return true;
-            return model_renderer::ui_player_swap_equipment(identity,error);
+            return ui::swap_equipment_and_defer_hud_refresh_v1(
+                self.gameplay_hud_refresh,self.gameplay_hud&&self.gameplay_hud_bound,
+                [&](std::string& swap_error){
+                    return model_renderer::ui_player_swap_equipment(identity,swap_error);
+                },error);
         }
         if(!std::strcmp(name,"NativeInvGetHasOffHandWeapon")||
            !std::strcmp(name,"NativeInvGetHasTwoHandedWeapon")){
@@ -1073,7 +1418,7 @@ struct OriginalUiSession::Impl {
             return true;
         }
         if(!std::strcmp(name,"NativeHUDGetActiveFaery")){
-            // 0x45a820 returns the ID directly or fills the optional SWF
+            // 0x44a820 returns the ID directly or fills the optional SWF
             // record with Id and Upgraded.
             if((fn.nargs!=1&&fn.nargs!=2)||!fn.arg(0).is_number()||
                (fn.nargs==2&&!fn.arg(1).is_object()))return true;
@@ -1092,12 +1437,14 @@ struct OriginalUiSession::Impl {
             return true;
         }
         if(!std::strcmp(name,"NativeHUDGetIsFaeryUnlocked")){
-            // 0x44ed58: [faeryId, playerIndex] -> bool.
+            // IDA NativeHUDGetIsFaeryUnlocked (0x43ed58) reads player index
+            // from arg0 and faery ID from arg1 before calling
+            // Character::SG_IsFaerieUnlocked(player, faeryId, -1).
             if(fn.nargs!=2||!fn.arg(0).is_number()||!fn.arg(1).is_number())return true;
-            const auto raw_id=fn.arg(0).to_int();
+            const auto raw_id=fn.arg(1).to_int();
             if(raw_id<0)return true;
             std::uintptr_t identity=0;
-            if(!faery_character(fn.arg(1).to_int(),identity))return false;
+            if(!faery_character(fn.arg(0).to_int(),identity))return false;
             if(!identity)return true;
             bool unlocked=false;
             if(!model_renderer::ui_player_faery_unlocked(identity,std::uint32_t(raw_id),unlocked,error))return false;
@@ -1105,21 +1452,38 @@ struct OriginalUiSession::Impl {
             return true;
         }
         if(!std::strcmp(name,"NativeHUDSetActiveFaery")){
-            // 0x44ee40: [faeryId, playerIndex], then Character::ChangeFaery.
+            // IDA NativeHUDSetActiveFaery (0x43ee40) reads [playerIndex,
+            // faeryId] and calls Character::ChangeFaery. The native wrapper
+            // also calls Level::PlaceFaeryAndFollowers. Require a combined
+            // prepare/commit owner so a missing Level provider cannot leave
+            // Save/skills changed while the visible Faery stays in place.
             if(fn.nargs!=2||!fn.arg(0).is_number()||!fn.arg(1).is_number())return true;
-            const auto raw_id=fn.arg(0).to_int();
+            const auto raw_id=fn.arg(1).to_int();
             if(raw_id<0)return true;
             std::uintptr_t identity=0;
-            if(!faery_character(fn.arg(1).to_int(),identity))return false;
+            if(!faery_character(fn.arg(0).to_int(),identity))return false;
             if(!identity)return true;
-            return model_renderer::ui_player_set_active_faery(identity,std::uint32_t(raw_id),error);
+            // No production transaction is currently bound: the physical
+            // Faery component is not yet the source Character/Level owner.
+            // Keep the UI click explicitly gated and leave canonical state
+            // untouched until that complete owner can be supplied.
+            const dh2::ui::FaerySelectionTransactionServicesV1 transaction{};
+            if(!dh2::ui::transact_faery_selection_v1(identity,
+                    std::uint32_t(raw_id),transaction,error))return false;
+            // The source callback discards ChangeFaery/placement results and
+            // explicitly writes undefined after completing the transaction.
+            if(fn.result)fn.result->set_undefined();
+            return true;
         }
         if(!std::strcmp(name,"NativeGetCharMenuTutorialMessage")){
             // 0x44c7a0 yields the native empty sentinel (id -1 and empty
             // strings) when the char-menu tutorial queue is empty. This port
             // has no tutorial-message queue owner, so leave the SWF's supplied
-            // output object at that empty/default state and keep the menu live.
+            // output object at that empty/default state and return the source
+            // queue-empty result. The object is written only when a message
+            // exists; do not invent or duplicate the process-wide queue.
             if(fn.nargs!=1||!fn.arg(0).is_object())return true;
+            if(fn.result)fn.result->set_bool(false);
             error.clear();return true;
         }
         if(!std::strcmp(name,"NativeSkipCharMenuTutorialMessage")){
@@ -1127,12 +1491,47 @@ struct OriginalUiSession::Impl {
             // The queue is not attached to this reconstruction's menu owner.
             error.clear();return true;
         }
+        if(!std::strcmp(name,"NativeGetNextStatusMessage")){
+            // The authored HUD calls this as (0, false) from onStatusMessage.
+            // The native StatusMsg singleton queue is not attached yet, so
+            // preserve its empty-queue result instead of leaving a registered
+            // SWF native action unresolved. Do not borrow combat-text state.
+            if(fn.nargs!=2||!fn.arg(0).is_number()||!fn.arg(1).is_bool())return true;
+            if(fn.result)fn.result->set_bool(false);
+            error.clear();return true;
+        }
         if(!std::strcmp(name,"NativeInvGetItemDetails")){
-            // 0x44ca5c normal call: [itemIndex, outputObject, playerIndex].
-            // The six-argument merchant path needs an ObjectManager merchant
-            // inventory owner, which this offline port does not attach.
-            if(fn.nargs!=3||!fn.arg(0).is_number()||!fn.arg(1).is_object()||
-               !fn.arg(2).is_number())return true;
+            // 0x44ca5c player call: [itemIndex, outputObject, playerIndex].
+            // The merchant SWF's five-argument equipped-item comparison adds
+            // [merchantName, merchantObjectId] but the native only selects its
+            // merchant path for exactly six args, so it still reads the first
+            // three values from the player's canonical V4 inventory. The
+            // six-argument ABI inserts [remoteFlag] before that identity tail
+            // and reads that Character's canonical V4
+            // inventory when ObjectManager name resolution succeeds. The
+            // current projection has no name lookup or merchant inventory,
+            // so fail closed before reading any Player item.
+            const auto kind=[](const gameswf::as_value& value){
+                using Kind=dh2::ui::MerchantDetailsValueKindV1;
+                if(value.is_number())return Kind::number;
+                if(value.is_object())return Kind::object;
+                if(value.is_bool())return Kind::boolean;
+                if(value.is_string())return Kind::string;
+                return Kind::other;
+            };
+            dh2::ui::MerchantDetailsCallShapeV1 shape;
+            shape.count=fn.nargs;
+            for(std::size_t i=0;i<shape.arguments.size()&&i<std::size_t(fn.nargs);++i)
+                shape.arguments[i]=kind(fn.arg(int(i)));
+            const auto form=dh2::ui::merchant_details_call_form_v1(shape);
+            if(form==dh2::ui::MerchantDetailsCallFormV1::merchant_inventory){
+                constexpr dh2::ui::MerchantDetailsOwnerBindingsV1 bindings{};
+                if(!dh2::ui::merchant_details_owner_ready_v1(bindings)){
+                    error="NativeInvGetItemDetails merchant form requires ObjectManager name lookup, a live merchant Character, and its canonical V4 inventory";
+                    return false;
+                }
+            }
+            if(form!=dh2::ui::MerchantDetailsCallFormV1::player_inventory)return true;
             auto* object=fn.arg(1).to_object();if(!object)return true;
             std::uintptr_t identity=0;
             if(!local_character(fn.arg(2).to_int(),false,identity))return false;
@@ -1178,6 +1577,54 @@ struct OriginalUiSession::Impl {
                !assign("ItemTransmuteValue",gameswf::as_value(item.transmute_value)))return false;
             if(fn.result)fn.result->set_as_object(object);
             error.clear();return true;
+        }
+        if(!std::strcmp(name,"NativeMerchantGetItemsListForSlot")){
+            // IDA 0x444168 ABI: [slot, merchantObjectId, merchantName,
+            // playerInfoIndex, outputArray]. Source resolves the Player first,
+            // then GetObjectByName(name,id), verifies Character::IsMerchant,
+            // reads that Character's ItemInventory, selects GetItemListForSlot
+            // or (EquipmentSlots::Count) GetValuableItems, sorts by
+            // II_Item_sortbybuyback, and appends ItemName/ItemIndex/
+            // ItemEquippable/ItemEquipped/ItemBuyback/ItemQuantity records.
+            // The active Crypt ObjectManager projection has no name lookup,
+            // materialized merchant Character, MerchantTable loot row, or
+            // merchant ItemInventory. Match the source's missing-player / null
+            // merchant result: return the caller's array unchanged; never
+            // synthesize stock or a second inventory.
+            if(fn.nargs!=5||!fn.arg(0).is_number()||!fn.arg(1).is_number()||
+               !fn.arg(2).is_string()||!fn.arg(3).is_number()||!fn.arg(4).is_object())return true;
+            auto* array=gameswf::cast_to<gameswf::as_array>(fn.arg(4).to_object());
+            if(!array)return true;
+            if(fn.result)fn.result->set_as_object(array);
+            return true;
+        }
+        if(!std::strcmp(name,"NativeMerchantBuyItem")){
+            // IDA 0x4408d4 ABI: [merchantItemIndex, merchantObjectId,
+            // merchantName, playerInfoIndex]. Source resolves Player then the
+            // ObjectManager Character, validates IsMerchant and the merchant
+            // inventory slot, then returns a price quote from MerchantTable
+            // and the ItemBuyback flag. The recovered function has no inventory
+            // or gold mutation calls; it is not the purchase transaction owner.
+            // The live Crypt projection lacks the merchant lookup/inventory,
+            // so preserve the missing-object zero result without altering V4.
+            if(fn.nargs!=4||!fn.arg(0).is_number()||!fn.arg(1).is_number()||
+               !fn.arg(2).is_string()||!fn.arg(3).is_number())return true;
+            if(fn.result)fn.result->set_double(0);
+            return true;
+        }
+        if(!std::strcmp(name,"NativeMerchantSellItem")){
+            // IDA 0x44058c ABI uses the same four-argument layout. The source
+            // additionally requires a live menu_Merchant instance with its
+            // one-shot +0xc4 gate, resolves Player and merchant Character,
+            // validates the player item index and reads the merchant price.
+            // The recovered body ends by returning false and shows no gold,
+            // buyback-flag, or inventory mutation. Sale completion is not
+            // established by this callback. The live projection has neither
+            // the menu gate nor the merchant Character/inventory; fail closed.
+            if(fn.nargs!=4||!fn.arg(0).is_number()||!fn.arg(1).is_number()||
+               !fn.arg(2).is_string()||!fn.arg(3).is_number())return true;
+            if(fn.result)fn.result->set_bool(false);
+            return true;
         }
         if(!std::strcmp(name,"NativeInvGetPlayerGold")){
             // 0x44a5c4 and the inventory SWF agree on these call forms:
@@ -1274,8 +1721,7 @@ struct OriginalUiSession::Impl {
             // optionalRemotePlayer]. Keep the native Save rank and equipped
             // slot distinct from the skill's level/cap predicates.
             if((fn.nargs!=3&&fn.nargs!=4)||!fn.arg(0).is_number()||
-               !fn.arg(1).is_object()||!fn.arg(2).is_number()||
-               (fn.nargs==4&&!fn.arg(3).is_bool()))return true;
+               !fn.arg(1).is_object()||!fn.arg(2).is_number())return true;
             auto* object=fn.arg(1).to_object();
             if(!object)return true;
             const auto raw_index=fn.arg(0).to_int();
@@ -1293,6 +1739,18 @@ struct OriginalUiSession::Impl {
                     self.text_services(),description_text,error))return false;
             const bool skill_level_available=skill.level>=0&&
                 skill.character_level>=skill.required_level;
+            // NativeGetSkillDetails offsets the rank StringIDs by
+            // FaeryTable+8 for FairieDependantText (ELF 0x44615c/0x446244).
+            // ui_player_skill resolves that word from the active Save's
+            // selected Faery; use this session's existing Localization owner.
+            const auto skill_rank_text_id=[&](std::int32_t id,std::uint32_t& result){
+                if(skill.faerie_dependent_text&&id==-1)return false;
+                auto value=std::uint32_t(id);
+                if(skill.faerie_dependent_text)
+                    value+=std::uint32_t(skill.faerie_text_offset);
+                if(value&0x80000000u)return false;
+                result=value;return true;
+            };
             std::vector<std::int32_t> current_properties,next_properties;
             if(skill_level_available){
                 if(!model_renderer::ui_player_skill_display_properties(identity,
@@ -1303,10 +1761,12 @@ struct OriginalUiSession::Impl {
                 if(!model_renderer::ui_player_skill_display_properties(identity,
                        std::uint32_t(raw_index),skill.level+1,next_properties,error))return false;
                 if(skill.level>0){
-                    if(!self.localization.string_id(std::uint32_t(skill.current_text),
-                           self.text_services(),current_text,error)||
-                       !format_skill_level_text(self,current_text,current_properties,
-                           current_text,error))return false;
+                    std::uint32_t current_text_id=0;
+                    if(skill_rank_text_id(skill.current_text,current_text_id)&&
+                       (!self.localization.string_id(current_text_id,
+                            self.text_services(),current_text,error)||
+                        !format_skill_level_text(self,current_text,current_properties,
+                            current_text,error)))return false;
                 }
                 static constexpr const char* skill_cap_keys[]={
                     "MaxSkillLevelBNormal","MaxSkillLevelCHard","MaxSkillLevelDVeryHard"};
@@ -1318,10 +1778,12 @@ struct OriginalUiSession::Impl {
                              cap_bits,error))return false;
                 std::int32_t skill_cap=0;std::memcpy(&skill_cap,&cap_bits,sizeof(skill_cap));
                 if(skill.level<skill_cap&&skill.can_increment){
-                    if(!self.localization.string_id(std::uint32_t(skill.next_text),
-                           self.text_services(),next_text,error)||
-                       !format_skill_level_text(self,next_text,next_properties,
-                           next_text,error))return false;
+                    std::uint32_t next_text_id=0;
+                    if(skill_rank_text_id(skill.next_text,next_text_id)&&
+                       (!self.localization.string_id(next_text_id,
+                            self.text_services(),next_text,error)||
+                        !format_skill_level_text(self,next_text,next_properties,
+                            next_text,error)))return false;
                 }
             }
             const auto assign=[&](const char* key,const gameswf::as_value& value){
@@ -1341,6 +1803,13 @@ struct OriginalUiSession::Impl {
             // character-level gate. Keep it separate from CanIncrementSkill.
             if(!assign("SkillUnlocked",gameswf::as_value(skill_level_available)))return false;
             if(fn.result)fn.result->set_as_object(object);
+            if(!self.talent_detail_callback_logged){
+                self.talent_detail_callback_logged=true;
+                __android_log_print(ANDROID_LOG_INFO,tag,
+                    "Talent details callback | Character %p | list index %d | skill id %d | level %d | slot %d | source Save and Player skill owner",
+                    reinterpret_cast<void*>(identity),raw_index,
+                    skill.id,skill.level,skill.slot);
+            }
             error.clear();return true;
         }
         if(!std::strcmp(name,"NativeSkillsGetSkillPointsLeft")){
@@ -1352,15 +1821,27 @@ struct OriginalUiSession::Impl {
             return true;
         }
         if(!std::strcmp(name,"NativeSkillsTrainSkill")){
-            if((fn.nargs!=2&&fn.nargs!=3)||!fn.arg(0).is_number()||!fn.arg(1).is_number()||
-               (fn.nargs==3&&!fn.arg(2).is_undefined()&&!fn.arg(2).is_bool())){
-                error="NativeSkillsTrainSkill requires [skillIndex, playerIndex, optionalTestOnly]";return false;
-            }
-            const auto raw_index=fn.arg(0).to_int();
-            if(raw_index<0){error="NativeSkillsTrainSkill skill index is outside the source UI domain";return false;}
-            const bool test_only=fn.nargs==3&&fn.arg(2).is_bool()&&fn.arg(2).to_bool();
-            std::uintptr_t identity=0;if(!local_character(fn.arg(1).to_int(),false,identity))return false;
+            dh2::ui::SkillTrainCallbackArgsV1 call;
+            const auto to_integer=[&](std::size_t index,std::int32_t& value,std::string& failure){
+                return start_integer(&self,fn.arg(static_cast<int>(index)).to_number(),value,failure);
+            };
+            const auto to_boolean=[&](std::size_t index){
+                return fn.arg(static_cast<int>(index)).to_bool();
+            };
+            if(!dh2::ui::decode_skill_train_callback_v1(
+                   std::size_t(fn.nargs),to_integer,to_boolean,call,error))return false;
+            const auto raw_index=call.skill_index;
+            const bool test_only=call.test_only;
+            std::uintptr_t identity=0;if(!local_character(call.player_index,false,identity))return false;
             if(!identity){error="NativeSkillsTrainSkill requires the attached local Player Character";return false;}
+            // Source IncSkill rejects an invalid negative index without
+            // mutating Save, then the callback still returns current points.
+            if(raw_index<0){
+                std::int32_t points=0;
+                if(!model_renderer::ui_player_skill_points(identity,points,error))return false;
+                if(fn.result){if(test_only)fn.result->set_bool(false);else fn.result->set_double(points);}
+                return true;
+            }
             std::uint32_t source_return=0;std::int32_t points=0;
             if(!model_renderer::ui_player_train_skill(identity,std::uint32_t(raw_index),test_only,
                                                        source_return,points,error))return false;
@@ -1385,6 +1866,10 @@ struct OriginalUiSession::Impl {
                 error="NativeEquipSkill requires [slotIndex, skillIndex, playerIndex]";return false;
             }
             const auto slot=fn.arg(0).to_int(),skill=fn.arg(1).to_int();
+            // Character::IsSkillEquippable(-1) is false in the original
+            // callback, so the SWF request is a no-op before SG_SetSkillInSlot.
+            // Keep the lower-level Save sentinel available to its own callers.
+            if(skill<0)return true;
             std::uintptr_t identity=0;if(!local_character(fn.arg(2).to_int(),false,identity))return false;
             if(!identity){error="NativeEquipSkill requires the attached local Player Character";return false;}
             // Source returns undefined. The canonical Save setter preserves
@@ -1545,7 +2030,12 @@ struct OriginalUiSession::Impl {
             return ui::swf_menu_credit_movement(fn,std::uint32_t(self.last_menu_dt),false,error);
         }
         if(!std::strcmp(name,"NativeBackToHud")){
-            return back_to_hud(context,error);
+            // Calling DisplayRightHud here re-enters ActionScript while the
+            // current GameSWF event still owns its core lock (SWF core busy).
+            // Preserve callback success and apply the HUD owner transition at
+            // the first post-input-dispatch safe point in OriginalUiSession::touch.
+            self.gameplay_back_to_hud_pending=true;
+            error.clear();return true;
         }
         if(!std::strcmp(name,"NativeAwayFromHud")){
             // IDA 0x43ab98: when a live Level exists, clear its HUD-active
@@ -1680,13 +2170,12 @@ struct OriginalUiSession::Impl {
     }
     static bool update_class(void* context,ui::SwfAsGraph& graph,std::string& error){
         auto& self=*static_cast<Impl*>(context);
-        static constexpr const char* titles[]={"MENU_CLASS_00","MENU_CLASS_01","MENU_CLASS_02"};
-        static constexpr const char* descriptions[]={"MENU_KNIGHT_DESC","MENU_ROGUE_DESC","MENU_MAGE_DESC"};
-        static constexpr const char* classes[]={"KnightPlayerBase","RoguePlayerBase","MagePlayerBase"};
+        const auto* choice=ui::menu_class_choice_v1(self.class_index);
+        if(!choice){error="Original class selection index outside its three source classes";return false;}
         ui::SwfAsValue root,menu,result;bool callable=false,accepted=false;
         if(!graph.root_value(root,error)||!graph.find_target(root,"menu_SelectClass",menu,error))return false;
         const char* paths[]={"menu_SelectClass.class_title.text","menu_SelectClass.class_description.text"};
-        const char* symbols[]={titles[self.class_index],descriptions[self.class_index]};
+        const char* symbols[]={choice->title_symbol,choice->description_symbol};
         for(unsigned i=0;i<2;++i){
             ui::SwfAsValue field;std::uint32_t id=0;std::string text;
             if(!graph.find_target(root,paths[i],field,error)||!field.identity()){error="Required original class text field absent";return false;}
@@ -1702,9 +2191,9 @@ struct OriginalUiSession::Impl {
             (i?self.class_right:self.class_left)=button.identity();
             if(!graph.set_member(button,"_visible",ui::SwfAsValue::boolean(i?self.class_index<2:self.class_index>0),accepted,error))return false;
         }
-        if(!graph.invoke(menu,menu,"CurrentClass",{ui::SwfAsValue::text(classes[self.class_index])},result,callable,error))return false;
+        if(!graph.invoke(menu,menu,"CurrentClass",{ui::SwfAsValue::text(choice->profile_character)},result,callable,error))return false;
         if(!callable){error="Required original CurrentClass callback absent";return false;}
-        __android_log_print(ANDROID_LOG_INFO,tag,"Original class selection updated | index %d | class %s | preview actors pending",self.class_index,classes[self.class_index]);
+        __android_log_print(ANDROID_LOG_INFO,tag,"Original class selection updated | index %d | class %s | preview actors pending",self.class_index,choice->profile_character);
         return true;
     }
     static bool change_menu(void* context,ui::SwfAsGraph& graph,std::string& error){
@@ -1777,6 +2266,12 @@ struct OriginalUiSession::Impl {
         if(next.empty()&&live_player&&movie&&gameplay_hud){
             const auto hud_path=gameplay_hud->menu_path();
             if(!movie->menu_input_context(hud_path.c_str(),error))return false;
+            // The authored Character/Skills Back action can empty the menu
+            // stack through generic PopAllMenus without dispatching the
+            // NativeBackToHud callback. The source callback's remaining work
+            // is DisplayRightHud plus input reset; defer that same existing
+            // owner transition until the current SWF dispatch has unwound.
+            gameplay_back_to_hud_pending=true;
         }
         __android_log_print(ANDROID_LOG_INFO,tag,"Original gameplay menu selected | previous %s | current %s | depth %zu",
             previous.empty()?"<hud>":previous.c_str(),next.empty()?"<hud>":next.c_str(),game_menu_stack.size());
@@ -1827,6 +2322,8 @@ struct OriginalUiSession::Impl {
         const auto previous=self.menu_stack.back();
         self.menu_stack.emplace_back(name);
         if(!self.transition_menu(previous,name,true,error)){self.menu_stack.pop_back();return false;}
+        self.front_name_input_active.store(std::strcmp(name,"menu_EnterName")==0,
+                                           std::memory_order_release);
         __android_log_print(ANDROID_LOG_INFO,tag,"Owned menu navigation | push %s | depth %zu",name,self.menu_stack.size());
         return true;
     }
@@ -1842,6 +2339,7 @@ struct OriginalUiSession::Impl {
         if(self.menu_stack.size()<2)return true;
         const auto previous=self.menu_stack.back();self.menu_stack.pop_back();
         if(!self.transition_menu(previous,self.menu_stack.back(),false,error)){self.menu_stack.push_back(previous);return false;}
+        self.front_name_input_active.store(self.menu_stack.back()=="menu_EnterName",std::memory_order_release);
         __android_log_print(ANDROID_LOG_INFO,tag,"Owned menu navigation | pop %s | current %s | depth %zu",previous.c_str(),self.menu_stack.back().c_str(),self.menu_stack.size());
         return true;
     }
@@ -1861,9 +2359,30 @@ struct OriginalUiSession::Impl {
         // Android system Back shares this same live level/menu-stack owner.
         if(self.front_screen=="main"&&!self.live_player)return true;
         if(self.front_screen.empty()&&self.live_player){
+            // Android Back dismisses the top authored overlay first. In
+            // particular, menu_confirm2 must return to the Inventory/Talent
+            // caller instead of abandoning the whole gameplay menu stack.
+            // The root CharacterMenu still follows the source BackToHud path.
+            if(ui::gameplay_menu_back_dismisses_overlay_v1(self.game_menu_stack)){
+                const auto dismissed=self.game_menu_stack.back();
+                if(!pop_top_menu(context,error))return false;
+                __android_log_print(ANDROID_LOG_INFO,tag,
+                    "Gameplay menu Back | dismissed %s | current %s | depth %zu | HUD remains inactive",
+                    dismissed.c_str(),self.game_menu_stack.back().c_str(),self.game_menu_stack.size());
+                return true;
+            }
             const auto prior_depth=self.game_menu_stack.size();
             while(!self.game_menu_stack.empty())if(!pop_top_menu(context,error))return false;
             self.gameplay_hud_active=true;
+            // NativeBackToHud calls the authored root DisplayRightHud before
+            // resetting input. That callback runs the selected HUD's onPush/
+            // onShow path (including NativeReloadSkills); reuse the already
+            // bound movie and attached Player rather than only exposing a
+            // stale HUD projection after leaving the Character/Skills menu.
+            if(!self.gameplay_hud||!self.gameplay_hud_bound){
+                error="NativeBackToHud requires the bound authored gameplay HUD";return false;
+            }
+            if(!self.gameplay_hud->activate(error))return false;
             self.gameplay_hud_input_reset_pending=true;
             __android_log_print(ANDROID_LOG_INFO,tag,
                 "Gameplay HUD transition | BackToHud | active 1 | prior menu depth %zu | reset pending 1",
@@ -1871,6 +2390,28 @@ struct OriginalUiSession::Impl {
             return true;
         }
         error="BackToHud requires the attached gameplay level owner";return false;
+    }
+    static bool flush_deferred_back_to_hud(Impl& self,std::string& error){
+        if(self.gameplay_back_to_hud_pending){
+            self.gameplay_back_to_hud_pending=false;
+            if(!back_to_hud(&self,error)){
+                // Keep a transient SWF-core contention queued for the next safe
+                // renderer boundary; permanent owner errors still fail the caller.
+                if(error=="SWF core busy"){
+                    self.gameplay_back_to_hud_pending=true;error.clear();return true;
+                }
+                return false;
+            }
+        }
+        if(!self.gameplay_hud_refresh.display_right_hud_pending&&
+           !self.gameplay_hud_refresh.fill_action_icon_pending){error.clear();return true;}
+        if(!self.gameplay_hud||!self.gameplay_hud_bound){
+            error="Deferred equipment HUD refresh requires the bound authored gameplay HUD";return false;
+        }
+        return ui::flush_deferred_hud_refresh_v1(self.gameplay_hud_refresh,
+            [&](std::string& nested){return self.gameplay_hud->activate(nested);},
+            [&](std::string& nested){return self.gameplay_hud->refresh_action_icon(nested);},
+            error);
     }
     static bool pop_above_menu(void* context,const char* name,std::string& error){
         auto& self=*static_cast<Impl*>(context);
@@ -1956,7 +2497,8 @@ struct OriginalUiSession::Impl {
     }
     bool load(std::string& error) {
         unsigned constant_index=0;
-        for(const auto* uri:{"data/pydata/common_text_pycst.bin","data/fonts_pycst.bin","data/design_pycst.bin"}) {
+        for(const auto* uri:{"data/pydata/common_text_pycst.bin","data/fonts_pycst.bin","data/design_pycst.bin",
+                             "source-data/font-palette/loot_audiovisual_pycst.bin"}) {
             std::vector<std::uint8_t> bytes;
             if(std::strcmp(uri,"data/pydata/common_text_pycst.bin")!=0){if(!raw_asset(uri,bytes,error))return false;}
             else if(!assets.read(uri,bytes,error))return false;
@@ -1965,6 +2507,10 @@ struct OriginalUiSession::Impl {
             constant_bytes[constant_index]=std::move(bytes);
             constants[constant_index]=view;++constant_index;
         }
+        if(!raw_asset("source-data/font-palette/fonts_pyarray.bin",font_palette_bytes,error))return false;
+        std::uint32_t font_probe=0;
+        if(!ui::font_palette_text_color_at_index_v1(font_palette_bytes.data(),font_palette_bytes.size(),
+                                                     0,font_probe,error))return false;
         std::array<std::vector<std::uint8_t>,3> metadata;
         const char* uris[]={"data/pydata/common_text_pyarray.bin","data/pydata/common_text_pyarraynames.bin","data/pydata/common_text_pystructnames.bin"};
         for(unsigned i=0;i<3;++i)if(!assets.read(uris[i],metadata[i],error))return false;
@@ -1989,22 +2535,26 @@ struct OriginalUiSession::Impl {
         services.native_actions={"NativePlaySoundFX","NativePushMenu","NativePushState","NativePopMenu","NativePopAllAbove","NativePopAllMenus","NativeGetCreditMovement","NativeBackToHud","NativeAwayFromHud","NativeIsMultiplayerEnabled"};services.native_action=native_action;
         if(front_screen=="main")for(const auto* action:{"NativeGetSaveSlotDetails","NativeCreateSaveSlot","NativeAssignSaveSlotToPlayer","NativeSetSaveSlotIDToMainMenu","NativeStartGame","NativeHasPushNotification","NativeStartFromGCInvite"})services.native_actions.emplace_back(action);
         if(front_screen=="main"||live_player)services.native_actions.emplace_back("NativeGetParsedString");
-        // Keep HUD skill use unregistered until NativeHUDSkill can follow the
-        // source Cmd_BeginSkill/Cmd_EndSkill and state-6 do_skill event path.
-        // OnSkill belongs to that animation event, never directly to onRelease.
+        // Event 38 now reaches the retained Player AI from the authored
+        // animation-step producer. Keep HUD use gated until the complete
+        // Begin/End -> close -> CSSkill Blur path passes live gameplay.
+        // OnSkill remains dispatched only by the authored do_skill marker.
         // Quest journal still lacks its source level/event owner.
-        if(live_player)for(const auto* action:{"NativeGetOptionParameters","NativeUseIpodPlayer","NativeUpdateOrientation","NativePauseAllSounds","NatvieResumeAllSounds","NativePauseMusic","NativeScreenIsBlack","NativeGetPossibleClassSpec","NativeTouchToMove","NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
+        if(live_player)for(const auto* action:{"NativeUseIpodPlayer","NativeUpdateOrientation","NativePauseAllSounds","NatvieResumeAllSounds","NativePauseMusic","NativeScreenIsBlack","NativeGetPossibleClassSpec","NativeSelectClassSpec","NativeTouchToMove","NativeSkillGetEquipedSkillsIDs","NativeGetSkillDetails",
             "NativeSkillsGetSkillPointsLeft","NativeSkillsTrainSkill","NativeEquipSkill","NativeGetPlayerStats","NativeStatsAssignPoint","NativeSaveGame","NativeSetCurrentQuest","NativeIsMultiplayerGame",
             "NativeShowStatusBar",
             "NativeShowMinimapLegend",
             "NativeReloadSkills",
             "NativeSetMultitouch",
-            "NativeGetCharMenuTutorialMessage","NativeSkipCharMenuTutorialMessage","NativeHUDGetActiveFaery","NativeHUDGetIsFaeryUnlocked",
-            "NativeHUDSetActiveFaery",
+            "NativeGetCharMenuTutorialMessage","NativeSkipCharMenuTutorialMessage","NativeGetQuestCount","NativeGetQuestIDsInRange","NativeGetQuestDetails","NativeGetWorldMapLocations","NativeGoToZone","NativeHUDSkill","NativeHUDSpell","NativeHUDGetActiveFaery","NativeHUDGetIsFaeryUnlocked",
+            "NativeGetNextStatusMessage",
+            "NativeHUDSetActiveFaery","NativeMerchantGetItemsListForSlot","NativeMerchantBuyItem","NativeMerchantSellItem",
 
             "NativeInvDropItem","NativeInvEquipItem","NativeInvUnequipItem","NativeInvAutoEquipSlot","NativeSwapEquipment","NativeInvGetItemsListForSlot","NativeInvGetItemDetails","NativeInvGetEquipedItem",
             "NativeInvTransmuteItem","NativeInvGetHasOffHandWeapon","NativeInvGetHasTwoHandedWeapon","NativeInvGetPlayerGold",
             "NativeGetNumPotions","NativeGetStringNumPotions","NativeUsePotion","NativeChangeRolloverInputBehavior"})services.native_actions.emplace_back(action);
+        if(live_player)for(const auto action:ui::gameplay_settings_actions_v1)
+            services.native_actions.emplace_back(action.data());
         if(front_screen=="main")for(const auto* action:{"NativeGetOptionParameters","NativeSetOptions","NativeLoadSettings","NativeSaveSettings","NativeEnterOptionMenu","NativeRefreshHudManager","NativeChangeRolloverInputBehavior","NativeIsJapaneseVersion","NativeIsKorean","NativeDoWeHaveInternet"})services.native_actions.emplace_back(action);
         services.context=this;services.read=movie_read;services.texture=texture;services.image=image;
         services.draw=draw;services.stencil=stencil;services.native_call=native;services.diagnostic=diagnostic;
@@ -2164,6 +2714,7 @@ struct OriginalUiSession::Impl {
         loaded=true;return true;
     }
     bool reset_failed(std::string& error) {
+        front_name_input_active.store(false,std::memory_order_release);
         gpu.abort();gameplay_hud.reset();gameplay_hud_bound=false;gameplay_hud_pointer=-1;authored_joystick={};authored_joystick_ready=false;
         status.reset();character_menu_movie.reset();shared_menu_movie.reset();movie.reset();
         character_frame_owner.reset();shared_frame_owner.reset();frame_owner.reset();fonts.reset();loaded=false;selected=false;
@@ -2175,6 +2726,8 @@ struct OriginalUiSession::Impl {
         settings.reset();settings_files.reset();language_selection=-1;
         menu_stack.clear();game_menu_stack.clear();
         gameplay_hud_active=true;gameplay_hud_input_reset_pending=false;
+        gameplay_back_to_hud_pending=false;
+        gameplay_hud_refresh={};
         gameplay_character_button=0;gameplay_character_button_pressed=false;
         launch_requests.clear();
         launch_delivered=false;
@@ -2196,19 +2749,38 @@ data::ItemTextServicesV5 OriginalUiSession::item_text_services(
     impl_->item_text_characters=&characters;
     return {impl_.get(),Impl::item_text_metadata,Impl::item_text_invoke};
 }
-bool OriginalUiSession::consume_launch_request(std::int32_t& slot){
+bool OriginalUiSession::consume_launch_request(NativeStartGameIntentV1& request){
     if(impl_->launch_requests.empty())return false;
-    slot=impl_->launch_requests.front();impl_->launch_requests.pop_front();impl_->launch_delivered=true;return true;
+    request=impl_->launch_requests.front();impl_->launch_requests.pop_front();impl_->launch_delivered=true;return true;
 }
 bool OriginalUiSession::game_difficulty_count(std::uint32_t& count,std::string& error){
     const auto table=impl_->option_table.borrow();
     if(!table){error="Actual frontend design table unavailable";return false;}
     count=table.difficulty_count();error.clear();return true;
 }
+dh2::ui::GameOptionBytesV1 OriginalUiSession::design_settings_table()const noexcept{
+    if(!impl_||!impl_->settings)return {};
+    return impl_->option_table.borrow().design_settings_table();
+}
+std::int32_t OriginalUiSession::language()const noexcept{
+    return impl_&&impl_->settings?impl_->settings->language():-1;
+}
 bool OriginalUiSession::touch(float x,float y,int action,std::string& error){
     return touch(x,y,action,0,error);
 }
+bool OriginalUiSession::menu_text_input_active()const noexcept{
+    return impl_&&impl_->front_name_input_active.load(std::memory_order_acquire);
+}
+bool OriginalUiSession::menu_key_event(std::uint32_t key_code,bool down,std::string& error){
+    if(!menu_text_input_active()){error.clear();return true;}
+    if(!impl_->selected||impl_->front_screen!="main"||!impl_->movie){
+        error="Authored name-entry keyboard has no active front movie";return false;
+    }
+    return impl_->movie->input_key_event(key_code,down,error);
+}
 bool OriginalUiSession::touch(float x,float y,int action,std::uint32_t cursor_index,std::string& error){
+    error.clear();
+    const bool succeeded=[&]{
     const bool front=impl_->front_screen=="main";
     const bool gameplay=impl_->front_screen.empty()&&impl_->live_player;
     if(!impl_->selected||!impl_->loaded||(!front&&!gameplay)){error.clear();return true;}
@@ -2278,8 +2850,11 @@ bool OriginalUiSession::touch(float x,float y,int action,std::uint32_t cursor_in
                             return impl_->gameplay_hud->joystick_receiver_geometry(x,y,receiver,nested)&&
                                 ui::authored_joystick_press_v1(impl_->authored_joystick,
                                     receiver.local[0],receiver.local[1],nested);
-                        },error);
+                    },error);
                     if(!pressed){impl_->gameplay_hud_pointer=-1;return false;}
+                }else{
+                    const auto response=model_renderer::player_attack(-1);
+                    __android_log_print(ANDROID_LOG_INFO,tag,"Authored HUD attack press | %s",response.c_str());
                 }
                 __android_log_print(ANDROID_LOG_INFO,tag,"Authored HUD pointer captured | control %d | style %d | source shape %d | %.1f %.1f",
                     impl_->gameplay_hud_pointer,impl_->hud_style,geometry.character_id,x,y);
@@ -2317,16 +2892,12 @@ bool OriginalUiSession::touch(float x,float y,int action,std::uint32_t cursor_in
                     impl_->authored_joystick_services(),error);
                 return released;
             }
-            ui::AuthoredHudGeometryV1 geometry;
-            if(!impl_->gameplay_hud->geometry(Control::attack,x,y,geometry,error))return false;
-            if(geometry.hit){
-                const auto report=model_renderer::player_attack(-1);
-                __android_log_print(ANDROID_LOG_INFO,tag,"Authored HUD attack release | %s",report.c_str());
-            }
+            // HUDControls::Update polls the held attack state; releasing its
+            // pointer only clears capture and must not trigger a new attack.
             error.clear();return true;
         }
-        // Continue a held attack as a press without sending it through the
-        // SWF cursor; the source attack operation is release-only.
+        // Keep the held attack out of the SWF cursor. Its source operation is
+        // polled from render_player at the HUDControls::Update cadence.
         if(impl_->gameplay_hud_pointer==attack&&action==2)return true;
     }
     if(gameplay&&!gameplay_menu&&impl_->gameplay_character_button){
@@ -2357,9 +2928,20 @@ bool OriginalUiSession::touch(float x,float y,int action,std::uint32_t cursor_in
         }
         return true;
     };
-    if(gameplay&&!gameplay_menu&&impl_->gameplay_hud&&impl_->gameplay_hud_bound)
-        return ui::with_authored_hud_edge_layout_v6(*impl_->movie,*impl_->gameplay_hud,dispatch_cursor,error);
-    return dispatch_cursor(error);
+    const bool dispatched=gameplay&&!gameplay_menu&&impl_->gameplay_hud&&impl_->gameplay_hud_bound
+        ?ui::with_authored_hud_edge_layout_v6(*impl_->movie,*impl_->gameplay_hud,dispatch_cursor,error)
+        :dispatch_cursor(error);
+    return dispatched;
+    }();
+    // Flush only after the touch-dispatch lambda returns: its Dispatch RAII
+    // guard must restore input_dispatch_movie/frames before DisplayRightHud
+    // re-enters the authored SWF.
+    if(succeeded&&(impl_->gameplay_back_to_hud_pending||
+       impl_->gameplay_hud_refresh.display_right_hud_pending||
+       impl_->gameplay_hud_refresh.fill_action_icon_pending)&&
+       !Impl::flush_deferred_back_to_hud(*impl_,error))return false;
+    if(!succeeded&&error.empty())error="Native UI touch dispatch failed";
+    return succeeded;
 }
 bool OriginalUiSession::camera_pan_allowed()const noexcept{
     return impl_&&impl_->front_screen.empty()&&impl_->live_player&&impl_->gameplay_hud_active&&
@@ -2461,6 +3043,8 @@ bool OriginalUiSession::load_front_screen(const std::string& directory,const std
         if(!impl_->reset_failed(error))return false;
     }
     impl_->front_screen=screen;impl_->directory=directory;impl_->live_player=false;
+    impl_->front_name_input_active.store(screen=="main"&&!impl_->menu_stack.empty()&&
+        impl_->menu_stack.back()=="menu_EnterName",std::memory_order_release);
     impl_->selected=true;impl_->report_frame=true;impl_->frame_time=std::chrono::steady_clock::now();error.clear();return true;
 }
 bool OriginalUiSession::load_health_panel(const std::string& directory,std::string& error) {
@@ -2590,9 +3174,100 @@ bool OriginalUiSession::render(int width,int height,std::string& error) {
 }
 bool OriginalUiSession::active() const{return impl_->selected&&(impl_->loaded||!impl_->front_screen.empty());}
 bool OriginalUiSession::overlays_player() const{return impl_->selected&&impl_->live_player;}
-void OriginalUiSession::deactivate(){impl_->selected=false;}
+bool OriginalUiSession::play_authored_animation_text(const char* style,std::uint32_t slot,
+    float x_twips,float y_twips,const char* text,std::uint8_t r,std::uint8_t g,
+    std::uint8_t b,std::uint8_t a,std::string& error){
+    auto& self=*impl_;
+    if(!self.selected||!self.live_player||!self.loaded||!self.movie){
+        error="Authored combat text requires the retained live gameplay HUD movie";return false;
+    }
+    return self.movie->play_authored_animation_text(style,slot,x_twips,y_twips,
+                                                     text,r,g,b,a,error);
+}
+bool OriginalUiSession::authored_animation_style_id(const char* style,std::int32_t& id,
+                                                     std::string& error){
+    auto& self=*impl_;
+    if(!self.selected||!self.live_player||!self.loaded||!self.movie){
+        error="Authored animation style lookup requires the retained live gameplay HUD movie";return false;
+    }
+    return self.movie->authored_animation_style_id(style,id,error);
+}
+bool OriginalUiSession::play_authored_animation_screen(const char* style,std::uint32_t slot,
+    float screen_x_px,float screen_y_px,const char* text,std::uint8_t r,std::uint8_t g,
+    std::uint8_t b,std::uint8_t a,std::string& error){
+    auto& self=*impl_;
+    if(!self.selected||!self.live_player||!self.loaded||!self.movie){
+        error="Screen-space animation requires the retained live gameplay HUD movie";return false;
+    }
+    float logical[2]={screen_x_px,screen_y_px};
+    if(!self.movie->screen_to_logical(logical,error))return false;
+    const float x_twips=logical[0]*20.f,y_twips=logical[1]*20.f;
+    if(!std::isfinite(x_twips)||!std::isfinite(y_twips)){
+        error="Screen-space animation conversion exceeded the source SWF coordinate domain";return false;
+    }
+    return self.movie->play_authored_animation_text(style,slot,x_twips,y_twips,
+                                                     text,r,g,b,a,error);
+}
+bool OriginalUiSession::source_combat_text_constant(const char* group,const char* name,
+    std::int32_t& value,std::string& error){
+    auto& self=*impl_;std::uint32_t raw{};
+    if(!self.selected||!self.live_player||!self.loaded||!group||!name){
+        error="Combat-text constants require the loaded live gameplay source owner";return false;
+    }
+    if(!Impl::constant(&self,group,name,raw,error))return false;
+    std::memcpy(&value,&raw,sizeof(value));return true;
+}
+bool OriginalUiSession::source_combat_text_string(std::int32_t string_id,
+    std::string& value,std::string& error){
+    auto& self=*impl_;
+    if(!self.selected||!self.live_player||!self.loaded||string_id<0){
+        error="Combat-text StringManager ID is invalid or gameplay is unloaded";return false;
+    }
+    return self.localization.string_id(static_cast<std::uint32_t>(string_id),
+                                       self.text_services(),value,error);
+}
+bool OriginalUiSession::source_combat_text_format_int(std::int32_t string_id,
+    std::int32_t argument,std::string& value,std::string& error){
+    auto& self=*impl_;std::string pattern;
+    if(!source_combat_text_string(string_id,pattern,error))return false;
+    Impl::ParseContext parse{self,{}};
+    const ui::HudTextServicesV1 services{&parse,Impl::parsed_text};
+    const dh2::data::ItemTextArgumentV5 value_argument{
+        static_cast<float>(argument),argument,nullptr};
+    bool changed=false;
+    return ui::item_text_varargs_v5(pattern.c_str(),&value_argument,1,services,
+                                    value,changed,error);
+}
+void OriginalUiSession::deactivate(){impl_->front_name_input_active.store(false,std::memory_order_release);impl_->selected=false;}
+bool OriginalUiSession::resume_front_after_start_failure(std::string& error){
+    if(impl_->front_screen!="main"||!impl_->loaded){
+        error="Failed NativeStartGame has no retained authored front-menu owner";return false;
+    }
+    impl_->selected=true;impl_->report_frame=true;
+    impl_->frame_time=std::chrono::steady_clock::now();error.clear();
+    __android_log_print(ANDROID_LOG_INFO,tag,
+        "Authored menu resumed after failed NativeStartGame | current %s | slot assignment and source menu stack retained",
+        impl_->active_menu_path().c_str());
+    return true;
+}
 
 bool OriginalUiSession::attach_player(const std::string& directory,std::string& error){
+    error.clear();
+    if(directory.empty()||directory.front()!='/'){error="Required private HUD directory unavailable";return false;}
+    if(!impl_->settings||!impl_->settings->has_option("HUDStyle")){
+        error="Gameplay HUD requires the retained Application settings owner and HUDStyle";return false;
+    }
+    const auto hud_style=impl_->settings->option("HUDStyle");
+    if(hud_style<0||hud_style>3){error="Saved HUDStyle is outside the four authored Android layouts";return false;}
+    const bool retain_loaded_gameplay_ui=impl_->loaded&&impl_->front_screen.empty()&&impl_->live_player;
+    if(retain_loaded_gameplay_ui&&(!impl_->gameplay_hud||!impl_->gameplay_hud_bound||!impl_->status)){
+        error="Retained gameplay HUD movie has incomplete renderer bindings";return false;
+    }
+    // Bind before retiring the front movie so this ownership conflict cannot
+    // turn a recoverable launch failure into a destroyed menu.
+    if(!data::savegame_options_v1::bind_read_only_settings(impl_->settings.get())){
+        error="Another Application settings owner is still bound to gameplay";return false;
+    }
     if(!impl_->front_screen.empty()){
         // Application settings survive the menu→level renderer handoff in
         // source. Keep the existing owners while retiring the menu SWF; the
@@ -2606,17 +3281,15 @@ bool OriginalUiSession::attach_player(const std::string& directory,std::string& 
         if(!reset)return false;
         impl_->front_screen.clear();
     }
-    if(directory.empty()||directory.front()!='/'){error="Required private HUD directory unavailable";return false;}
-    if(!impl_->settings||!impl_->settings->has_option("HUDStyle")){
-        error="Gameplay HUD requires the retained Application settings owner and HUDStyle";return false;
-    }
-    impl_->hud_style=impl_->settings->option("HUDStyle");
-    if(impl_->hud_style<0||impl_->hud_style>3){error="Saved HUDStyle is outside the four authored Android layouts";return false;}
-    if(!data::savegame_options_v1::bind_read_only_settings(impl_->settings.get())){
-        error="Another Application settings owner is still bound to gameplay";return false;
-    }
+    impl_->hud_style=hud_style;
     impl_->directory=directory;impl_->live_player=true;impl_->selected=true;impl_->report_frame=true;
-    impl_->gameplay_hud_bound=false;impl_->gameplay_hud_pointer=-1;
+    if(!retain_loaded_gameplay_ui){
+        impl_->gameplay_hud_bound=false;impl_->gameplay_hud_pointer=-1;
+    }else{
+        __android_log_print(ANDROID_LOG_INFO,tag,
+            "Gameplay HUD binding retained across surface recreation | style %d | movie %p | status %p",
+            impl_->hud_style,static_cast<void*>(impl_->gameplay_hud.get()),static_cast<void*>(impl_->status.get()));
+    }
     error.clear();return true;
 }
 bool OriginalUiSession::render_player(int width,int height,const std::int32_t* sheet,std::size_t count,
@@ -2624,8 +3297,11 @@ bool OriginalUiSession::render_player(int width,int height,const std::int32_t* s
     if(!overlays_player()){error="Connected player HUD inactive";return false;}
     auto& self=*impl_;
     try{
-        if(!self.loaded){self.driver_width=width;self.driver_height=height;if(!self.load(error))throw std::runtime_error(error);}
-        if(!self.viewport(width,height,error))throw std::runtime_error(error);
+        const auto require=[&](bool ok,const char* operation){
+            if(!ok)throw std::runtime_error(error.empty()?operation:error);
+        };
+        if(!self.loaded){self.driver_width=width;self.driver_height=height;require(self.load(error),"Gameplay UI load failed without a diagnostic");}
+        require(self.viewport(width,height,error),"Gameplay UI viewport update failed without a diagnostic");
         if(self.character_menu_movie){
             const auto now=std::chrono::steady_clock::now();
             const auto elapsed=now-self.game_menu_frame_time;self.game_menu_frame_time=now;
@@ -2636,18 +3312,40 @@ bool OriginalUiSession::render_player(int width,int height,const std::int32_t* s
             auto* inactive=active==self.character_menu_movie.get()?self.movie.get():self.character_menu_movie.get();
             auto& active_owner=active==self.character_menu_movie.get()?self.character_frame_owner:self.frame_owner;
             auto& inactive_owner=inactive==self.character_menu_movie.get()?self.character_frame_owner:self.frame_owner;
-            if(!inactive->advance_frames(milliseconds,inactive_owner->frames,error))throw std::runtime_error(error);
+            require(inactive->advance_frames(milliseconds,inactive_owner->frames,error),"Inactive menu timeline update failed without a diagnostic");
             struct Dispatch {Impl& self;ui::SwfMovie* previous_movie;ui::SwfFrameConnection* previous_frames;
                 ~Dispatch(){self.input_dispatch_movie=previous_movie;self.input_dispatch_frames=previous_frames;}}
                 dispatch{self,self.input_dispatch_movie,self.input_dispatch_frames};
             self.input_dispatch_movie=active;self.input_dispatch_frames=&active_owner->frames;
-            if(!active->input_advance(milliseconds,error))throw std::runtime_error(error);
+            require(active->input_advance(milliseconds,error),"Active menu timeline update failed without a diagnostic");
             const auto hud_rectangle=self.viewport_rectangle();
             const auto menu_rectangle=self.front_rectangle();
-            if(!self.movie->input_rectangle(hud_rectangle.data(),error)||
-               !self.character_menu_movie->input_rectangle(menu_rectangle.data(),error))throw std::runtime_error(error);
+            require(self.movie->input_rectangle(hud_rectangle.data(),error),"HUD hit rectangle update failed without a diagnostic");
+            require(self.character_menu_movie->input_rectangle(menu_rectangle.data(),error),"Gameplay menu hit rectangle update failed without a diagnostic");
+        }else{
+            // The retained gameplay HUD still owns its SWF clock when the
+            // optional character-menu movie is unavailable. Advance it once
+            // through its canonical frame owner so authored combat-text clones
+            // animate and retire; the menu-present branch above already does
+            // this as active or inactive and must not be advanced twice.
+            const auto now=std::chrono::steady_clock::now();
+            if(self.game_menu_frame_time.time_since_epoch().count()==0){
+                self.game_menu_clock.reset();self.game_menu_frame_time=now;
+            }
+            const auto elapsed=now-self.game_menu_frame_time;self.game_menu_frame_time=now;
+            const auto milliseconds=self.game_menu_clock.advance(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed));
+            if(!self.movie||!self.frame_owner)
+                throw std::runtime_error("Gameplay SWF frame owner is unavailable");
+            struct Dispatch {Impl& self;ui::SwfMovie* previous_movie;ui::SwfFrameConnection* previous_frames;
+                ~Dispatch(){self.input_dispatch_movie=previous_movie;self.input_dispatch_frames=previous_frames;}}
+                dispatch{self,self.input_dispatch_movie,self.input_dispatch_frames};
+            self.input_dispatch_movie=self.movie.get();
+            self.input_dispatch_frames=&self.frame_owner->frames;
+            require(self.movie->input_advance(milliseconds,error),
+                    "Gameplay SWF timeline update failed without a diagnostic");
         }
-        if(!self.status->update(sheet,count,character,error))throw std::runtime_error(error);
+        require(self.status->update(sheet,count,character,error),"Status panel update failed without a diagnostic");
         if(self.gameplay_hud_active&&self.gameplay_hud_bound&&self.authored_joystick_ready){
             // render_player is called only for the attached local player in
             // the active level. Keep joystick Update on the source HUDControls
@@ -2658,8 +3356,15 @@ bool OriginalUiSession::render_player(int width,int height,const std::int32_t* s
                 std::ostringstream out;out<<"Authored HUD player identity changed | status "<<character<<" | movement "<<identity;
                 throw std::runtime_error(out.str());
             }
-            if(!ui::authored_joystick_update_v1(self.authored_joystick,self.authored_joystick_services(),error))
-                throw std::runtime_error(error);
+            require(ui::authored_joystick_update_v1(self.authored_joystick,self.authored_joystick_services(),error),
+                    "Authored joystick update failed without a diagnostic");
+        }
+        if(self.gameplay_hud_active&&self.gameplay_hud_bound&&self.gameplay_hud&&
+           self.gameplay_hud_pointer==static_cast<int>(ui::AuthoredHudControlV1::attack)){
+            // Source HUDControls::Update polls the pressed attack flag every
+            // player frame. Keep using the shared model_renderer combat owner;
+            // its return text is intentionally not logged at frame cadence.
+            (void)model_renderer::player_attack(-1);
         }
         if(self.gameplay_hud_active&&self.gameplay_hud_bound&&self.gameplay_hud){
             std::uintptr_t identity=0;
@@ -2669,8 +3374,7 @@ bool OriginalUiSession::render_player(int width,int height,const std::int32_t* s
                 throw std::runtime_error(out.str());
             }
             const auto now=std::chrono::steady_clock::now();
-            const bool refresh_usable=self.gameplay_hud_usable_refresh.time_since_epoch().count()==0||
-                now-self.gameplay_hud_usable_refresh>=std::chrono::milliseconds(500);
+            const bool refresh_usable=self.gameplay_hud_usable_refresh.due(now);
             auto projection=self.gameplay_hud_state;
             std::string projection_error;
             if(!model_renderer::ui_player_hud_projection(identity,refresh_usable,projection,projection_error)){
@@ -2682,19 +3386,25 @@ bool OriginalUiSession::render_player(int width,int height,const std::int32_t* s
                 }
             }else{
                 const bool dpad=self.settings&&self.settings->saved_option("DPad")!=0;
-                if(!self.gameplay_hud->update(projection.infos,projection.class_id,dpad,error))
-                    throw std::runtime_error(error);
+                require(self.gameplay_hud->update(projection.infos,projection.class_id,dpad,error),
+                        "Gameplay HUD state update failed without a diagnostic");
                 self.gameplay_hud_state=projection;
-                if(refresh_usable)self.gameplay_hud_usable_refresh=now;
+                if(refresh_usable)self.gameplay_hud_usable_refresh.refreshed(now);
                 self.gameplay_hud_projection_warned=false;
             }
         }
-        if(self.gameplay_hud_active&&
-           (!self.gameplay_hud||!self.gameplay_hud_bound||!self.gameplay_hud->display(error)||
-            !self.movie->display_source_clip("_root.HurtCorners",error)))throw std::runtime_error(error);
+        if(self.gameplay_hud_active){
+            if(!self.gameplay_hud||!self.gameplay_hud_bound)
+                throw std::runtime_error("Gameplay HUD renderer owner is not bound");
+            require(self.gameplay_hud->display(error),"Gameplay HUD clip display failed without a diagnostic");
+            require(self.movie->display_source_clip("_root.HurtCorners",error),
+                    "HUD hurt-corner clip display failed without a diagnostic");
+            require(self.movie->display_authored_animations(error),
+                    "Authored gameplay animations failed to display without a diagnostic");
+        }
         if(!self.game_menu_stack.empty()){
             const auto rectangle=self.front_rectangle();
-            if(!ui::gameplay_menu_draw_stack_v1(self.game_menu_stack,[&](const std::string& name){
+            require(ui::gameplay_menu_draw_stack_v1(self.game_menu_stack,[&](const std::string& name){
                 auto* renderer=self.menu_movie(name);
                 if(!renderer){error="Gameplay menu renderer unavailable for draw";return false;}
                 if(!renderer->display_clip(("_root."+name).c_str(),
@@ -2711,8 +3421,7 @@ bool OriginalUiSession::render_player(int width,int height,const std::int32_t* s
                     }
                 }
                 return true;
-            }))
-                throw std::runtime_error(error);
+            }),"Gameplay menu stack draw failed without a diagnostic");
         }
         const auto frames=self.status->frames();
         if(self.report_frame||frames!=self.reported_frames){
@@ -2723,6 +3432,7 @@ bool OriginalUiSession::render_player(int width,int height,const std::int32_t* s
                 frames[0],frames[1],frames[2],frames[3],frames[4],self.status->dirty_nodes(),static_cast<void*>(self.movie.get()));
             self.reported_frames=frames;self.report_frame=false;
         }
+        if(!Impl::flush_deferred_back_to_hud(self,error))return false;
         return true;
     }catch(const std::exception& ex){
         const std::string failure=ex.what();std::string cleanup;self.reset_failed(cleanup);

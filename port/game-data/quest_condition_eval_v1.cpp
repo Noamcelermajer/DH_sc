@@ -71,7 +71,7 @@ struct Call {
         const auto comparator=record.comparator_8,state=*quest->state_0;
         if(comparator<0||comparator>2)return true;
         std::int32_t required=0;if(!word(definition,2,required,Operation::definition_state))return false;
-        result.value=comparator==0?state==required:comparator==1?state<required:state>required;return true;
+        result.value=compare_quest_state(comparator,state,required);return true;
     }
     bool level(){
         const Definition definition=record.fields.py_data_4;

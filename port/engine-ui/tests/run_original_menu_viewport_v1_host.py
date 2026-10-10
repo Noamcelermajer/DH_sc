@@ -1,4 +1,4 @@
-"""Build and run the source-stage aspect-fit and hit-rectangle audit."""
+"""Build and run the source-backed full-driver front-menu viewport audit."""
 from __future__ import annotations
 
 import argparse
@@ -34,7 +34,7 @@ def main() -> int:
     ran = subprocess.run([str(output)], cwd=ROOT, capture_output=True, text=True)
     if ran.returncode:
         raise RuntimeError(ran.stdout + ran.stderr)
-    print("PASS: fitted 3:2 menu UI/backdrop, camera aspect, and side-gutter hit mapping (14 assertions)")
+    print("PASS: full-driver front/menu bounds and hit mapping across four aspect ratios (24 assertions)")
     return 0
 
 

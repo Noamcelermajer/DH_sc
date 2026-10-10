@@ -124,4 +124,20 @@ data::FreshInventoryOwnedV4* NativePlayerCharacterOwnerV1::inventory_for(
     return character == identity() ? inventory_ : nullptr;
 }
 
+bool NativePlayerCharacterOwnerV1::update_inventory_localization(
+        std::uintptr_t character,
+        data::ItemPresentationOwnerV5& presentation,
+        const data::ItemTextServicesV5& text,
+        std::string& error) const {
+    const auto id = identity();
+    if (character != id || Coordinator::owner() != id || !player_character_660_ ||
+        *player_character_660_ != id || !save_ || save_->character() != id ||
+        !properties_ || !inventory_ || inventory_->character() != id ||
+        inventory_->properties() != properties_) {
+        error = "SetLanguage player refresh requires the published Character and its canonical V4 inventory";
+        return false;
+    }
+    return inventory_->update_localization(presentation, text, error);
+}
+
 } // namespace dh2::character

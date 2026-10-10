@@ -56,7 +56,7 @@ mismatches. The original ELF SHA-256 is
 The Level constructor’s `+0x3c` row is selected from the incoming level file
 path, not from the LevelList name string. The source chain is:
 
-1. `NativeGoToZone` (`0x4522b8`) resolves the selected LevelName through
+1. `NativeGoToZone` (`0x4422b8`) resolves the selected LevelName through
    `Arrays::LevelList::m_memberNames`, then passes the selected record's
    `+0x20` `LevelFile` to `Application::LoadLevel` (`0x32bdc8`).
 2. `Application::LoadLevel` passes that filename to the static

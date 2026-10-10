@@ -6,6 +6,21 @@
 
 namespace dh2::native::character_list {
 namespace source = character::aggro::object_manager_list;
+namespace runtime_factory = dh2::character_runtime_factory_v1;
+
+namespace {
+int factory_enroll(void* context, Owner::Character* character,
+                   bool duplicate_resolved, bool* appended) {
+    return static_cast<int>(static_cast<Owner*>(context)->enroll_after_add(
+        character, duplicate_resolved, appended));
+}
+
+int factory_remove(void* context, Owner::Character* character,
+                   std::size_t* removed) {
+    return static_cast<int>(static_cast<Owner*>(context)->remove_after_remove(
+        character, removed));
+}
+} // namespace
 
 Owner::Owner() {
     source::initialize(&source_);
@@ -39,10 +54,29 @@ Owner::Status Owner::remove_after_remove(Character* character, std::size_t* remo
     return source::remove_after_remove(&source_, character, release, this, removed);
 }
 
+bool Owner::contains_identity(std::uintptr_t identity,
+                              std::size_t* occurrences) const noexcept {
+    if (occurrences) *occurrences = 0;
+    if (identity == 0) return false;
+    std::size_t count = 0;
+    for (const auto& node : nodes_) {
+        if (node && node->character) {
+            const auto* character = static_cast<const Character*>(node->character);
+            if (character->identity == identity) ++count;
+        }
+    }
+    if (occurrences) *occurrences = count;
+    return count != 0;
+}
+
 void Owner::clear() noexcept {
     nodes_.clear();
     source::initialize(&source_);
     cursor_ = {&source_};
+}
+
+runtime_factory::RosterServices factory_services(Owner& owner) noexcept {
+    return {&owner, &factory_enroll, &factory_remove};
 }
 
 } // namespace dh2::native::character_list

@@ -36,7 +36,11 @@ def main() -> int:
     sources = [
         LEVEL_WORLD / "tests" / "character_spawn.cpp",
         LEVEL_WORLD / "character_state.cpp",
+        LEVEL_WORLD / "character_skill_state_dispatch_v1.cpp",
+        LEVEL_WORLD / "character_skill_fsm_callbacks_v1.cpp",
+        LEVEL_WORLD / "character_cast_lifecycle_v1.cpp",
         LEVEL_WORLD / "character_factory.cpp",
+        LEVEL_WORLD / "object_manager_runtime_owner_v1.cpp",
     ]
     command = [
         compiler,
@@ -72,6 +76,7 @@ def main() -> int:
     expected = {
         "limbus_spawn_idle_path": True,
         "interactive_event_body": True,
+        "object_manager_backed_spawn_verified": True,
         "fade_boundary_is_stub": True,
         "on_update_invents_no_transition": True,
         "mismatches": 0,

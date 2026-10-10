@@ -4,6 +4,11 @@
 
 namespace dh2::data::quest_condition_eval_v1 {
 using Record=quest_condition_factory_v1::Record;
+constexpr bool compare_quest_state(std::int32_t operation,std::int32_t current,
+                                   std::int32_t required)noexcept{
+    return operation==0?current==required:operation==1?current<required:
+           operation==2?current>required:false;
+}
 // Borrow actual canonical fields; none of these controls owns/copies player,
 // quest or Level state. Providers keep controls/backing alive through delivery.
 struct PlayerRef {std::uintptr_t identity=0;std::uintptr_t* character_660=nullptr;};

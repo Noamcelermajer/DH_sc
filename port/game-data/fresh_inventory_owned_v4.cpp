@@ -108,12 +108,18 @@ bool FreshInventoryOwnedV4::add_fixed_loot_impl(std::int32_t id,std::unique_ptr<
    // The selection routine consumes a contiguous LootEntry array. For a
    // pooled recursive table, materialize only these small source records.
    if(!loot_entries_choose_weighted_v1(contiguous.data(),std::uint32_t(contiguous.size()),selection->player_counts,selection->infinite_loot_drops,random_,index,e))return false;
-   const auto& entry=*pool[index];bool accepted=true;
-   // The original DoPctRolls pass leaves weighted entries alone and gates
-   // only percent-classified rows.
-   if(!selection->infinite_loot_drops&&loot_entry_uses_percent_v1(entry,false)&&
-      !loot_entry_do_percent_roll_v1(entry,false,random_,accepted,e))return false;
-   if(accepted&&!append_entry(destination,entry,"Selected random LootEntry ItemList requires unrecovered Debug continuation"))return false;
+   const auto& entry=*pool[index];
+   // Native _GetRandomLootEntry contributes its selected row unconditionally.
+   // The following _DoPctRolls pass independently checks every candidate row,
+   // including percentage rows that were excluded from weighted selection.
+   if(!append_entry(destination,entry,"Selected random LootEntry ItemList requires unrecovered Debug continuation"))return false;
+  }
+  for(const auto* candidate:pool){
+   bool accepted=false;
+   if(!loot_entry_do_percent_roll_v1(*candidate,selection->infinite_loot_drops,
+                                     random_,accepted,e))return false;
+   if(accepted&&!append_entry(destination,*candidate,
+                              "Percent LootEntry ItemList requires unrecovered Debug continuation"))return false;
   }
   return true;
  };
@@ -420,6 +426,13 @@ bool FreshInventoryOwnedV4::remove_one_potion(const OwnedInventoryServicesV4& s,
  return delete_instance(instance,s,e,0x40e878);
 }
 bool FreshInventoryOwnedV4::set_gold(std::int32_t value,const OwnedInventoryServicesV4& s,std::string& e){if(!mutation_allowed(e))return false;if(value<0){e="Negative SetGold requires original assertion continuation";return false;}gold_=value<=gold_limit_?value:gold_limit_;OwnedInventoryResponseV4 out;if(!deliver(s,OwnedInventoryOperationV4::gold_notifications,0x3fdfd8,nullptr,nullptr,0,0,out,e))return false;e.clear();return true;}
+bool FreshInventoryOwnedV4::update_localization(ItemPresentationOwnerV5& presentation,const ItemTextServicesV5& text,std::string& e){
+ e.clear();if(callback_depth_||running_){e="Inventory localization refresh during active mutation unsupported";return false;}
+ if(items_.size()>65536){e="Source inventory localization iteration exceeds owned budget";return false;}
+ ++callback_depth_;struct Guard{std::uint32_t& n;~Guard(){--n;}}guard{callback_depth_};
+ for(const auto& slot:items_){if(!slot||!slot->item){e="Source ItemInventory localization encountered an invalid dense slot";return false;}if(!presentation.update_localization(*slot->item,text,e))return false;}
+ return true;
+}
 bool FreshInventoryOwnedV4::add_gold(std::int32_t amount,const OwnedInventoryServicesV4& s,std::string& e){if(!mutation_allowed(e))return false;if(amount<0){auto neg=wrap32(0u-std::uint32_t(amount));if(gold_<neg)amount=wrap32(0u-std::uint32_t(gold_));}if(amount>0){auto room=wrap32(std::uint32_t(gold_limit_)-std::uint32_t(gold_));if(amount>room)amount=room<0?0:room;}return set_gold(wrap32(std::uint32_t(gold_)+std::uint32_t(amount)),s,e);}
 bool FreshInventoryOwnedV4::add_item(std::unique_ptr<ItemInstanceV1>& incoming,bool force,bool convert_gold,std::int32_t& index,const OwnedInventoryServicesV4& s,std::string& e){if(!mutation_allowed(e))return false;auto* info=metadata(incoming.get(),e);if(!info)return false;auto* p=incoming.get();index=-1;if(potion_capacity_==0&&item_type(*info)==14)return destroy(incoming,s,0x3ff70c,e);if(!potion_&&item_type(*info)==14)potion_=p;if(convert_gold&&item_type(*info)==13){if(!add_gold(p->value,s,e))return false;return destroy(incoming,s,0x3ff744,e);}if(std::uint8_t(info->record.words[7])&&!force){for(std::size_t i=0;i<items_.size();++i){auto* candidate=items_[i]->item.get();if(!candidate)continue;bool equipped;if(!is_equipped(std::uint32_t(i),equipped,e))return false;if(equipped||!equal(*candidate,*p))continue;auto qty=p->signed_quantity();info=metadata(p,e);if(!info)return false;if(item_type(*info)==14){auto room=wrap32(std::uint32_t(std::int32_t(potion_capacity_))-std::uint32_t(candidate->signed_quantity()));if(room<qty)qty=room<0?0:room;}if(!add_quantity(*candidate,qty,e))return false;index=std::int32_t(i);return destroy(incoming,s,0x3ff794,e);}}auto slot=std::make_unique<OwnedItemSlotV4>();slot->item=std::move(incoming);items_.push_back(std::move(slot));auto i=std::uint32_t(items_.size()-1);bool full;observe(s,OwnedInventoryOperationV4::inventory_full,0x3ff6c4,p,0,i);if(!is_full(full,s,e))return false;if(full){OwnedInventoryResponseV4 r;if(!deliver(s,OwnedInventoryOperationV4::full_notifications,0x3ff7a8,p,nullptr,0,i,r,e))return false;}index=std::int32_t(items_.size()-1);e.clear();return true;}
 bool FreshInventoryOwnedV4::has_two_hander(bool ignore,bool& out,std::string& e)const{out=false;auto* slot=equipment_[set_for_slot(1)][1];if(!slot){e.clear();return true;}auto* p=metadata(slot->item.get(),e);if(!p)return false;auto type=item_type(*p);auto slotting=p->record.words[26];out=(std::uint32_t(type)-4<=1||ignore)?slotting==-4:slotting==-4&&properties_->resolved[203]==0;e.clear();return true;}

@@ -130,6 +130,18 @@ int main() {
           active&&near(hud_up[0],-std::sqrt(0.5f))&&
           near(hud_up[1],std::sqrt(0.5f)),
           "touchscreen up preserves the source HUD screen-Y sign");
+    float movement_control_up[3]{0,1,0};
+    check(dh2::native::camera_input_v1::map_movement_control_input(
+              movement_control_up,&active)==0&&active&&
+          near(movement_control_up[0],-std::sqrt(0.5f))&&
+          near(movement_control_up[1],std::sqrt(0.5f))&&movement_control_up[2]==0,
+          "Android MovementControl follows HUDControls direct HeadTowards vector");
+    float gamepad_up[3]{0,1,0};
+    check(dh2::native::camera_input_v1::map_touch_ground_input(
+              gamepad_up,0.31f,0.89f,true,&active)==0&&active&&
+          (!near(gamepad_up[0],movement_control_up[0])||
+           !near(gamepad_up[1],movement_control_up[1])),
+          "HUD MovementControl avoids the separate gamepad camera-relative remap");
     float hud_partial[3]{0.1f,0,8};
     check(dh2::native::camera_input_v1::map_hud_touch_input(hud_partial,&active)==0&&
           active&&near(hud_partial[0],std::sqrt(0.005f))&&

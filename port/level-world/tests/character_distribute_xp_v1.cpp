@@ -218,11 +218,34 @@ void rejects_roster_overrun_before_indexing_the_original_four_slot_array() {
               xp::Status::invalid_source_fact && result.player_slots == 0,
           "source four-entry stack bound was not guarded");
 }
+
+void reads_the_active_level_difficulty_from_its_existing_owner() {
+    dh2::level_construction_fields::State fields{-1,-1,0,{0,0,0},2};
+    bool ready=true;
+    xp::CurrentLevelDifficultyOwner owner{&fields,&ready};
+    std::int32_t difficulty=-99;
+    std::string error;
+    check(xp::current_level_difficulty_from_owner(&owner,&difficulty,error)==0 &&
+          difficulty==2 && error.empty(),
+          "XP text difficulty did not read current Level+0x118");
+
+    fields.difficulty_118=-1;
+    check(xp::current_level_difficulty_from_owner(&owner,&difficulty,error)==0 &&
+          difficulty==-1,
+          "current-Level difficulty was cached or normalized instead of freshly read");
+
+    ready=false;
+    difficulty=777;
+    check(xp::current_level_difficulty_from_owner(&owner,&difficulty,error)!=0 &&
+          difficulty==777 && !error.empty(),
+          "retired/current-level-not-ready read changed output instead of failing closed");
+}
 }
 
 int main() {
     matches_source_scaling_range_coop_share_and_text_tail();
     keeps_missing_xp_owner_explicit_and_preserves_reached_prefix();
     rejects_roster_overrun_before_indexing_the_original_four_slot_array();
-    std::puts("PASS: Character::DistributeXP recipient order, scaling/range/co-op share, canonical XP callbacks, and explicit live-provider gaps");
+    reads_the_active_level_difficulty_from_its_existing_owner();
+    std::puts("PASS: Character::DistributeXP recipient order, scaling/range/co-op share, canonical XP callbacks, and current-Level difficulty owner");
 }

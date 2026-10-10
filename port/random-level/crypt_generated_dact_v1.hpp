@@ -47,6 +47,33 @@ struct CryptGeneratedDactSourceV1 {
   std::string model;
 };
 
+// Source-faithful metadata for an authored Character with templateName Faery. This is
+// deliberately separate from DACT records: it is not a Monster/enemy actor
+// and does not imply that its source factory or AI has been activated.
+struct CryptGeneratedFaeryV1 {
+  std::uint32_t module_index = 0;
+  std::uint32_t source_record = 0;
+  std::string name;
+  // MGP `gametype` selects ObjectManager::objectCreationMap; distinct from
+  // `template_name` (`_templateName=Faery`).
+  std::string object_type;
+  std::string template_name;
+  std::string character;
+  // CharacterTable property values. The authored Character model is only a
+  // hint: Character::GetCharModelName replaces it with the parent's selected
+  // FaeryTable model when this Character is attached to a parent.
+  std::int32_t ai_table_id = -1;
+  std::int32_t animation_table_id = -1;
+  std::int32_t character_model_dictionary_index = -1;
+  std::string character_model_path;
+  // Raw CharacterTable value. Character::GetCharFaeryListId selects list row
+  // zero when this authored value is negative or outside the loaded table.
+  std::int32_t faery_list_table_id = -1;
+  // Authored MGP transform before Character initialization; Faery InitFinal
+  // later places it relative to its parent. Module origin is translation-only.
+  float authored_world_transform[9] = {};
+};
+
 struct CryptGeneratedDactSkippedV1 {
   std::uint32_t module_index = 0;
   std::uint32_t source_record = 0;
@@ -62,6 +89,8 @@ struct CryptGeneratedDactV1 {
   // In-memory provenance. DACT itself stores room/module and object name, but
   // has no source_record or stable numeric ObjectManager-handle field.
   std::vector<CryptGeneratedDactSourceV1> source_order;
+  // Typed source descriptors only. These are not serialized into DACT.
+  std::vector<CryptGeneratedFaeryV1> faeries;
   std::vector<CryptGeneratedDactSkippedV1> skipped;
 };
 
@@ -74,9 +103,11 @@ struct CryptGeneratedDactDiagnosticV1 {
 
 // Project source-ordered MGP GameObjects from an already imported generated
 // SourceLevel into the runtime DACT actor subset. Only direct Monster records
-// with resolved CharacterTable data are emitted. Known non-direct Character
-// factories, conditions and scripts are returned as skipped provenance; an
-// unknown Character template or invalid direct actor fails the whole compile.
+// with resolved CharacterTable data are emitted. The known Character template
+// Faery is retained as separate metadata and remains absent from DACT.
+// Other known non-direct factories, conditions and scripts are returned as
+// skipped provenance; unknown Character templates and invalid direct actors
+// fail the whole compile.
 // Module placement must already satisfy world-data's translation-only rule.
 CryptGeneratedDactStatusV1 crypt_compile_generated_dact_v1(
     const world::SourceLevel& source,

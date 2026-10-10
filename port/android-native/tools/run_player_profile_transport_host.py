@@ -78,6 +78,13 @@ target_link_libraries(profile_transport_audit PRIVATE dh2_level_world dh2_game_d
     fixture = out/('fixture-' + uuid.uuid4().hex)
     host = json.loads(run([executable, cache, fixture], live_env))
     assert host['validation'] == 'PASS'
+    # The production assembled writer created slot 9. Reopen it in a distinct
+    # OS process with fresh Save/Transport/index owners to separate durable
+    # file persistence from same-process serialization receipts.
+    cold_process = json.loads(run([executable, '--cold-load', cache,
+        fixture/'gameplay-save-assembled', '9'], live_env))
+    assert cold_process['validation'] == 'PASS' and cold_process['fresh_process_profile_open']
+    host['cold_process_reopen'] = cold_process
     after_commands = run([ninja, '-C', build, '-t', 'commands', 'profile_transport_audit'])
     after_rows = selected_entries(build, after_commands)
     after_inputs = actual_dependencies(build, ninja, after_rows) | {Path(__file__).resolve(), test}
@@ -97,7 +104,7 @@ target_link_libraries(profile_transport_audit PRIVATE dh2_level_world dh2_game_d
             Path(row['file']).resolve().relative_to(ROOT).as_posix() for row in rows},
         'selected_commands': commands, 'wrapper_cmake': body, 'build_stdout': logs,
         'binary_sha256': {path.relative_to(out).as_posix(): sha(path) for path in [executable, *dsos]},
-        'scope': 'Native I/O adapter + selected source Save index/mask1/class/PROP and InitLevelStates/LVLS/FTVL composition over actual 51-level/13-location table owners, 192 defaults and the same six arrays/bitset words. Synthetic mask4 uses a declared offline-global fixture and absent inventory/quest/skill payloads. Distinct preview/gameplay owners, cached no-file fallback, strict missing/corrupt primary rejection, explicit unavailable gameplay providers. Does not establish full native InitPost/mask2/mask4 completion or live gameplay.'}
+        'scope': 'Native I/O adapter + selected source Save index/mask1/class/PROP and InitLevelStates/LVLS/FTVL composition over actual 51-level/13-location table owners, 192 defaults and the same six arrays/bitset words. Synthetic mask4 uses a declared offline-global fixture and absent inventory/quest/skill payloads. Header-gated primary/backup recovery, malformed-index fail-closed behavior, and an OS-process cold reopen of a profile written by the complete same-Save mask1+mask4 writer assembly. Does not establish power-loss-at-every-instruction, full native InitPost/mask2/mask4 completion or live gameplay.'}
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, indent=2)+'\n', encoding='utf-8')
     print(json.dumps({'validation': 'PASS', 'host': host, 'project_inputs': len(before)}))

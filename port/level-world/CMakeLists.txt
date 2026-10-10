@@ -20,6 +20,7 @@ endif()
 add_library(dh2_level_world SHARED world.cpp objects.cpp navigation.cpp navigation_search.cpp navigation_world.cpp navigation_path.cpp navigation_motion.cpp navigation_objects.cpp navigation_avoidance.cpp navigation_producers.cpp navigation_heading.cpp navigation_controller.cpp physical_controls.cpp body_transform.cpp subobjects_update.cpp controller_physical.cpp character_body_config.cpp collision.cpp octree.cpp selector.cpp floor_source.cpp floors.cpp)
 target_sources(dh2_level_world PRIVATE ../floor-types/floor_types.cpp)
 target_sources(dh2_level_world PRIVATE source_level_layout.cpp source_handle_ledger_v1.cpp ../world-data/world.cpp ../world-data/source_layout_adapter.cpp)
+target_sources(dh2_level_world PRIVATE source_level_owner_v1.cpp level_quick_save_v1.cpp level_savegame_save_v1.cpp level_savegame_owner_v1.cpp character_level_save_serialize_v1.cpp level_savegame_object_manager_v1.cpp level_savegame_player_load_v1.cpp source_level_lifecycle_gate_v1.cpp item_manager_pool_v1.cpp)
 if(TARGET dh2_scene_materials)
  # The Android renderer uses the source Module root path to build real
  # per-module Crypt bounds. Keep the portable kernels in the shared world
@@ -29,10 +30,16 @@ if(TARGET dh2_scene_materials)
  target_link_libraries(dh2_level_world PRIVATE dh2_scene_materials)
 endif()
 target_compile_features(dh2_level_world PUBLIC cxx_std_17)
-target_sources(dh2_level_world PRIVATE camera_level_runtime_v1.cpp player_camera_rig_v1.cpp)
+target_sources(dh2_level_world PRIVATE camera_level_runtime_v1.cpp camera_design_zoom_v1.cpp camera_animset_v1.cpp camera_animset_bank_v1.cpp camera_animset_playback_v1.cpp camera_animset_bank_playback_v1.cpp player_camera_rig_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_aggro_character_list.cpp character_aggro_object_manager_list.cpp)
 target_sources(dh2_level_world PRIVATE physical_world.cpp physical_lifecycle.cpp native_body.cpp visual_motion.cpp move_state.cpp player_root_motion_policy_v1.cpp decor_body_config.cpp visual_timeline.cpp actor_rotation.cpp actor_runtime.cpp actor_playback.cpp decor_scene.cpp character_scene.cpp)
+target_sources(dh2_level_world PRIVATE character_physical_component_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_state.cpp animation_blender.cpp)
+target_sources(dh2_level_world PRIVATE character_oid_cache_v1.cpp)
+target_sources(dh2_level_world PRIVATE character_init_spawned_v1.cpp)
+target_sources(dh2_level_world PRIVATE spawn_group_runtime_v1.cpp)
+target_sources(dh2_level_world PRIVATE character_cast_state_dispatch_v1.cpp
+ character_cast_lifecycle_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_coordinator.cpp native_player_character_owner_v1.cpp
  character_ai_skill_machine_projection_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_factory.cpp)
@@ -42,8 +49,12 @@ target_sources(dh2_level_world PRIVATE crypt_spawn_script_session.cpp crypt_spaw
 target_sources(dh2_level_world PRIVATE character_timers.cpp character_stance.cpp)
 target_sources(dh2_level_world PRIVATE character_animation_events.cpp)
 target_sources(dh2_level_world PRIVATE character_animation_ai.cpp)
+target_sources(dh2_level_world PRIVATE character_enemy_pursuit_v1.cpp)
+target_sources(dh2_level_world PRIVATE character_enemy_attack_event_v1.cpp)
+target_sources(dh2_level_world PRIVATE player_attack_step_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_script_selection.cpp)
 target_sources(dh2_level_world PRIVATE character_script_lifecycle.cpp character_combat_queries.cpp)
+target_sources(dh2_level_world PRIVATE character_combat_event_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_script_update.cpp character_script_collision.cpp)
 target_sources(dh2_level_world PRIVATE actor_blended_playback.cpp)
 target_sources(dh2_level_world PRIVATE actor_scene_retention_v1.cpp)
@@ -64,10 +75,11 @@ target_sources(dh2_level_world PRIVATE
  character_aggro_delay.cpp character_ai_turn.cpp
  character_aggro_target_search.cpp character_aggro_candidate_events.cpp
  character_enemy_spotted.cpp monster_external_script_session.cpp
- character_ai_set_target.cpp character_ai_relations.cpp character_ai_in_combat.cpp
+ character_ai_set_target.cpp character_clear_target_v1.cpp character_ai_relations.cpp character_ai_in_combat.cpp
  character_aggro_acquisition_prefix.cpp character_ai_sight.cpp ghost_ai_session.cpp character_monster_retarget.cpp
  source_random_lifecycle_v1.cpp crypt_room_zone_owner_v1.cpp
  object_manager_runtime_owner_v1.cpp object_manager_init_post_v1.cpp
+ projectile_lifecycle_runtime_v1.cpp
  crypt_room_zone_manager_bridge_v1.cpp
  crypt_generated_spawnpoints_v1.cpp crypt_generated_source_dact_v1.cpp
  crypt_generated_mvp_v1.cpp
@@ -86,7 +98,8 @@ target_sources(dh2_level_world PRIVATE
  ../random-level/crypt_generated_dact_v1.cpp
  ../random/random.c ../lua-numeric/numeric.c)
 
-target_sources(dh2_level_world PRIVATE character_ai_attack.cpp)
+target_sources(dh2_level_world PRIVATE character_ai_attack.cpp
+ character_kill_death_tail_v1.cpp character_kill_source_bridge_v1.cpp)
 
 target_sources(dh2_level_world PRIVATE character_ai_classification.cpp character_zonability.cpp
  character_update_eligibility.cpp lua_script_load_once.cpp)
@@ -107,12 +120,14 @@ target_sources(dh2_level_world PRIVATE character_ai_melee_range.cpp)
 
 target_sources(dh2_level_world PRIVATE character_ai_interaction_range.cpp ais_external_update.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_ranged_range.cpp)
-target_sources(dh2_level_world PRIVATE character_range_capability.cpp character_ai_queue.cpp)
+target_sources(dh2_level_world PRIVATE character_range_capability.cpp character_ai_queue.cpp character_ai_queue_owner_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_interactive.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_initialization.cpp)
+target_sources(dh2_level_world PRIVATE ais_faery_update_v1.cpp)
 target_sources(dh2_level_world PRIVATE ais_external_init_vcb.cpp)
 target_sources(dh2_level_world PRIVATE ais_player_init_vcb.cpp)
-target_sources(dh2_level_world PRIVATE character_skill_cooldown_services.cpp)
+target_sources(dh2_level_world PRIVATE character_skill_cooldown_services.cpp
+ player_skill_timer_provider_v1.cpp player_script_timer_dispatch_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_player_buffs_v1.cpp)
 target_sources(dh2_level_world PRIVATE player_initial_skill_grants_v1.cpp player_skill_progression_v1.cpp)
 target_sources(dh2_level_world PRIVATE player_initial_equipment_v1.cpp)
@@ -122,7 +137,8 @@ target_sources(dh2_level_world PRIVATE character_regen_tick_v1.cpp player_ai_tim
 target_sources(dh2_level_world PRIVATE player_skill_cleanup_session_v1.cpp)
 
 target_sources(dh2_level_world PRIVATE player_ai_death_v1.cpp character_aggro_cleanup.cpp)
-target_sources(dh2_level_world PRIVATE player_kill_continuation_v1.cpp)
+target_sources(dh2_level_world PRIVATE player_kill_continuation_v1.cpp
+ character_kill_quest_tail_v1.cpp)
 
 target_sources(dh2_level_world PRIVATE character_dead_focus_services_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_dot_tick.cpp character_dot_attack.cpp)
@@ -168,11 +184,25 @@ target_sources(dh2_level_world PRIVATE character_level_runtime.cpp character_ini
   ../player-info-level/player_metadata_prepare_v1.cpp
  player_saved_inventory_v1.cpp player_save_inventory_v1.cpp player_gear_save_writer_v1.cpp
  character_saved_class_v1.cpp character_gameplay_save_v1.cpp
- character_init_post_player_v1.cpp character_init_final_v1.cpp character_template_random.cpp)
+ character_init_post_player_v1.cpp character_init_final_v1.cpp character_template_random.cpp
+ character_template_factory.cpp character_template_catalog_v1.cpp
+ character_template_runtime_v1.cpp
+ crypt_template_character_projection_v1.cpp
+ object_creation_map_v1.cpp character_constructor_owner_v1.cpp
+ character_net_state_owner_v1.cpp
+ character_runtime_factory_v1.cpp object_manager_character_factory_walk_v1.cpp
+ character_factory_role_query_v1.cpp
+ crypt_conditional_character_runtime_v1.cpp
+ character_faery_links_v1.cpp character_init_post_nonplayer_v1.cpp
+ game_object_visual_attachment_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_update_all_skills.cpp
  character_ai_update_skills.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_set_skills_and_spells.cpp
- character_faery_selection.cpp character_ai_skill_script_constructor.cpp
+ character_faery_selection.cpp character_faery_placement_v1.cpp
+ character_faery_live_binding_v1.cpp character_faery_level_registry_v1.cpp
+ character_faery_script_session_v1.cpp
+ character_faery_record_session_v1.cpp
+ character_ai_skill_script_constructor.cpp
  character_skill_state_queries.cpp)
 
 target_sources(dh2_level_world PRIVATE ais_state_callbacks.cpp)
@@ -183,11 +213,15 @@ target_sources(dh2_level_world PRIVATE character_ai_pause_update.cpp)
 
 target_sources(dh2_level_world PRIVATE ais_default_collision_persist.cpp)
 target_sources(dh2_level_world PRIVATE character_ai_events.cpp player_enemy_kill_credit_v1.cpp
- character_give_xp_v1.cpp)
-target_sources(dh2_level_world PRIVATE character_distribute_xp_v1.cpp)
+ character_give_xp_v1.cpp character_level_up_properties_v1.cpp)
+target_sources(dh2_level_world PRIVATE character_distribute_xp_v1.cpp
+ character_distribute_give_xp_dispatch_v1.cpp
+ design_settings_xp_provider_v1.cpp character_distribute_xp_player_owners_v1.cpp)
 target_sources(dh2_level_world PRIVATE character_attack_geometry.cpp)
 target_sources(dh2_level_world PRIVATE loot_pickup_quest_tail_v10.cpp
- current_level_quest_event_v1.cpp)
+ loot_pickup_event_bridge_v1.cpp current_level_quest_event_v1.cpp)
+target_sources(dh2_level_world PRIVATE game_object_position_owner_v1.cpp
+ player_sct_position_provider_v1.cpp)
 target_sources(dh2_level_world PRIVATE ais_combat_result_dispatch_v1.cpp)
 target_include_directories(dh2_level_world PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_compile_options(dh2_level_world PRIVATE -Wall -Wextra -fno-fast-math -ffp-contract=off)
@@ -195,6 +229,10 @@ target_link_libraries(dh2_level_world PUBLIC dh2_engine_skinning dh2_game_data d
 if(ANDROID)
  target_link_options(dh2_level_world PRIVATE -Wl,-z,max-page-size=16384 -Wl,--no-undefined)
 else()
+ add_executable(source_level_owner_v1_audit tests/source_level_owner_v1.cpp)
+ target_link_libraries(source_level_owner_v1_audit PRIVATE dh2_level_world dh2_game_data)
+ target_compile_features(source_level_owner_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(source_level_owner_v1_audit PRIVATE -Wall -Wextra -Werror)
  if(NOT TARGET dh2_random_level)
   add_subdirectory(../random-level "${CMAKE_CURRENT_BINARY_DIR}/random-level")
  endif()
@@ -206,15 +244,82 @@ else()
  target_link_libraries(source_handle_ledger_v1_audit PRIVATE dh2_random_level dh2_game_data)
  target_compile_features(source_handle_ledger_v1_audit PRIVATE cxx_std_17)
  target_compile_options(source_handle_ledger_v1_audit PRIVATE -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
- add_executable(object_manager_runtime_owner_v1_audit
+add_executable(crypt_generated_template_character_source_v1_audit
+ tests/crypt_generated_template_character_source_v1.cpp)
+ target_link_libraries(crypt_generated_template_character_source_v1_audit
+  PRIVATE dh2_level_world dh2_game_data)
+ target_compile_features(crypt_generated_template_character_source_v1_audit
+  PRIVATE cxx_std_17)
+target_compile_options(crypt_generated_template_character_source_v1_audit
+ PRIVATE -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+add_executable(character_template_runtime_v1_audit
+ tests/character_template_runtime_v1.cpp)
+target_link_libraries(character_template_runtime_v1_audit
+ PRIVATE dh2_level_world dh2_game_data)
+target_compile_features(character_template_runtime_v1_audit PRIVATE cxx_std_17)
+target_compile_options(character_template_runtime_v1_audit
+ PRIVATE -UNDEBUG -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+add_executable(object_manager_runtime_owner_v1_audit
   tests/object_manager_runtime_owner_v1.cpp object_manager_runtime_owner_v1.cpp)
  target_compile_features(object_manager_runtime_owner_v1_audit PRIVATE cxx_std_17)
  target_compile_options(object_manager_runtime_owner_v1_audit PRIVATE -UNDEBUG -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+ add_executable(projectile_lifecycle_runtime_v1_audit
+  tests/projectile_lifecycle_runtime_v1.cpp projectile_lifecycle_runtime_v1.cpp
+  object_manager_runtime_owner_v1.cpp)
+ target_compile_features(projectile_lifecycle_runtime_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(projectile_lifecycle_runtime_v1_audit PRIVATE -UNDEBUG -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
  add_executable(object_manager_init_post_v1_audit
   tests/object_manager_init_post_v1.cpp object_manager_init_post_v1.cpp
   object_manager_runtime_owner_v1.cpp)
  target_compile_features(object_manager_init_post_v1_audit PRIVATE cxx_std_17)
  target_compile_options(object_manager_init_post_v1_audit PRIVATE -UNDEBUG -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+ add_executable(character_constructor_owner_v1_audit
+  tests/character_constructor_owner_v1.cpp)
+ target_link_libraries(character_constructor_owner_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(character_constructor_owner_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_constructor_owner_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(character_runtime_factory_v1_audit
+  tests/character_runtime_factory_v1.cpp
+  ../android-native/app/src/main/cpp/native_character_list.cpp)
+ target_link_libraries(character_runtime_factory_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(character_runtime_factory_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_runtime_factory_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(object_manager_character_factory_walk_v1_audit
+  tests/object_manager_character_factory_walk_v1.cpp)
+ target_link_libraries(object_manager_character_factory_walk_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(object_manager_character_factory_walk_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(object_manager_character_factory_walk_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(character_faery_links_v1_audit
+  tests/character_faery_links_v1.cpp)
+ target_link_libraries(character_faery_links_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(character_faery_links_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_faery_links_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(character_faery_live_binding_v1_audit
+  tests/character_faery_live_binding_v1.cpp)
+ target_link_libraries(character_faery_live_binding_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(character_faery_live_binding_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_faery_live_binding_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(character_faery_level_registry_v1_audit
+  tests/character_faery_level_registry_v1.cpp)
+ target_link_libraries(character_faery_level_registry_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(character_faery_level_registry_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_faery_level_registry_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(character_faery_script_session_v1_audit
+  tests/character_faery_script_session_v1.cpp)
+ target_link_libraries(character_faery_script_session_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(character_faery_script_session_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_faery_script_session_v1_audit PRIVATE -Wall -Wextra -Werror)
+
+ add_executable(character_faery_record_session_v1_audit
+  tests/character_faery_record_session_v1.cpp)
+ target_link_libraries(character_faery_record_session_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(character_faery_record_session_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_faery_record_session_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(ais_faery_update_v1_audit
+  tests/ais_faery_update_v1.cpp)
+ target_link_libraries(ais_faery_update_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(ais_faery_update_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(ais_faery_update_v1_audit PRIVATE -Wall -Wextra -Werror)
  add_executable(source_spawnpoints_adapter_audit
   tests/source_spawnpoints_adapter.cpp ../world-data/world.cpp ../world-data/source_layout_adapter.cpp)
  target_link_libraries(source_spawnpoints_adapter_audit PRIVATE dh2_game_data)
@@ -232,6 +337,18 @@ else()
   tests/character_init_post_player_v1.cpp character_init_post_player_v1.cpp)
  target_compile_features(character_init_post_player_v1_audit PRIVATE cxx_std_17)
  target_compile_options(character_init_post_player_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(character_init_spawned_v1_audit tests/character_init_spawned_v1.cpp)
+ target_link_libraries(character_init_spawned_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(character_init_spawned_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_init_spawned_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(spawn_group_runtime_v1_audit tests/spawn_group_runtime_v1.cpp)
+ target_link_libraries(spawn_group_runtime_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(spawn_group_runtime_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(spawn_group_runtime_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(character_ai_queue_owner_v1_audit tests/character_ai_queue_owner_v1.cpp)
+ target_link_libraries(character_ai_queue_owner_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(character_ai_queue_owner_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_ai_queue_owner_v1_audit PRIVATE -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
  add_executable(source_random_lifecycle_v1_audit tests/source_random_lifecycle_v1.cpp)
  target_link_libraries(source_random_lifecycle_v1_audit PRIVATE dh2_level_world)
  add_executable(player_gear_save_writer_v1_audit tests/player_gear_save_writer_v1.cpp)
@@ -250,6 +367,12 @@ else()
  target_link_libraries(objects_spawn_audit PRIVATE dh2_level_world)
  add_executable(character_coordinator_audit tests/character_coordinator.cpp)
  target_link_libraries(character_coordinator_audit PRIVATE dh2_level_world)
+ add_executable(character_cast_coordinator_v1_audit
+  tests/character_cast_coordinator_v1.cpp)
+ target_link_libraries(character_cast_coordinator_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(character_cast_coordinator_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_cast_coordinator_v1_audit PRIVATE
+  -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
  add_executable(native_player_character_owner_v1_audit tests/native_player_character_owner_v1.cpp)
  target_link_libraries(native_player_character_owner_v1_audit PRIVATE dh2_level_world)
  add_executable(character_spawn_audit tests/character_spawn.cpp)
@@ -263,12 +386,29 @@ else()
  target_compile_options(ais_combat_result_dispatch_v1_audit PRIVATE -UNDEBUG -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
  add_executable(character_ai_events_audit tests/character_ai_events.cpp)
  target_link_libraries(character_ai_events_audit PRIVATE dh2_level_world ${CMAKE_DL_LIBS})
+ add_executable(character_ai_event_zero_equivalence_audit
+  tests/character_ai_event_zero_equivalence.cpp)
+ target_link_libraries(character_ai_event_zero_equivalence_audit PRIVATE dh2_level_world)
+ target_compile_features(character_ai_event_zero_equivalence_audit PRIVATE cxx_std_17)
+ target_compile_options(character_ai_event_zero_equivalence_audit PRIVATE -Wall -Wextra -Werror)
  add_executable(player_enemy_kill_credit_v1_audit tests/player_enemy_kill_credit_v1.cpp)
  target_link_libraries(player_enemy_kill_credit_v1_audit PRIVATE dh2_level_world)
+ add_executable(character_kill_quest_tail_v1_audit tests/character_kill_quest_tail_v1.cpp)
+ target_link_libraries(character_kill_quest_tail_v1_audit PRIVATE dh2_level_world)
+ add_executable(character_kill_death_tail_v1_audit tests/character_kill_death_tail_v1.cpp)
+ target_link_libraries(character_kill_death_tail_v1_audit PRIVATE dh2_level_world)
+ add_executable(character_kill_ctrl_composition_v1_audit
+  tests/character_kill_ctrl_composition_v1.cpp)
+ target_link_libraries(character_kill_ctrl_composition_v1_audit PRIVATE dh2_level_world)
  add_executable(character_give_xp_v1_audit tests/character_give_xp_v1.cpp)
  target_link_libraries(character_give_xp_v1_audit PRIVATE dh2_level_world)
  add_executable(character_distribute_xp_v1_audit tests/character_distribute_xp_v1.cpp)
  target_link_libraries(character_distribute_xp_v1_audit PRIVATE dh2_level_world)
+ add_executable(design_settings_xp_provider_v1_audit tests/design_settings_xp_provider_v1.cpp)
+ target_link_libraries(design_settings_xp_provider_v1_audit PRIVATE dh2_level_world)
+ add_executable(character_distribute_xp_player_owners_v1_audit
+  tests/character_distribute_xp_player_owners_v1.cpp)
+ target_link_libraries(character_distribute_xp_player_owners_v1_audit PRIVATE dh2_level_world)
  add_executable(character_script_timers_audit tests/character_script_timers.cpp)
  target_link_libraries(character_script_timers_audit PRIVATE dh2_level_world dh2_script_runtime)
  add_executable(character_controller_commands_audit tests/character_controller_commands.cpp)
@@ -287,6 +427,16 @@ else()
  target_link_libraries(character_ai_frame_audit PRIVATE dh2_level_world ${CMAKE_DL_LIBS})
  add_executable(character_animation_ai_audit tests/character_animation_ai.cpp)
  target_link_libraries(character_animation_ai_audit PRIVATE dh2_level_world)
+ add_executable(character_enemy_pursuit_v1_audit tests/character_enemy_pursuit_v1.cpp)
+ target_link_libraries(character_enemy_pursuit_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(character_enemy_pursuit_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_enemy_pursuit_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(character_enemy_attack_event_v1_audit tests/character_enemy_attack_event_v1.cpp)
+ target_link_libraries(character_enemy_attack_event_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(character_enemy_attack_event_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_enemy_attack_event_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(player_attack_step_v1_audit tests/player_attack_step_v1.cpp)
+ target_link_libraries(player_attack_step_v1_audit PRIVATE dh2_level_world)
  add_executable(character_script_lifecycle_audit tests/character_script_lifecycle.cpp)
  target_link_libraries(character_script_lifecycle_audit PRIVATE dh2_level_world)
  add_executable(character_script_update_audit tests/character_script_update.cpp)
@@ -295,6 +445,10 @@ else()
  target_link_libraries(character_script_collision_audit PRIVATE dh2_level_world)
  add_executable(character_combat_queries_audit tests/character_combat_queries.cpp)
  target_link_libraries(character_combat_queries_audit PRIVATE dh2_level_world)
+ add_executable(character_combat_event_v1_audit tests/character_combat_event_v1.cpp)
+ target_link_libraries(character_combat_event_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(character_combat_event_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_combat_event_v1_audit PRIVATE -Wall -Wextra -Werror)
  add_executable(items_audit ../game-data/tests/items.cpp)
  target_link_libraries(items_audit PRIVATE dh2_game_data dh2_level_world)
  add_executable(character_script_selection_audit tests/character_script_selection.cpp character_script_selection.cpp)
@@ -365,6 +519,8 @@ else()
  target_link_libraries(controller_physical_audit PRIVATE dh2_level_world)
  add_executable(character_body_config_audit tests/character_body_config.cpp)
  target_link_libraries(character_body_config_audit PRIVATE dh2_level_world)
+ add_executable(character_physical_component_v1_audit tests/character_physical_component_v1.cpp)
+ target_link_libraries(character_physical_component_v1_audit PRIVATE dh2_level_world)
  add_executable(navigation_controller_audit tests/navigation_controller.cpp)
  target_link_libraries(navigation_controller_audit PRIVATE dh2_level_world)
  add_executable(navigation_heading_audit tests/navigation_heading.cpp)
@@ -434,8 +590,65 @@ else()
  target_compile_features(current_level_quest_event_v1_audit PRIVATE cxx_std_17)
  target_compile_options(current_level_quest_event_v1_audit PRIVATE
   -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+ add_executable(loot_pickup_event_bridge_v1_audit
+  tests/loot_pickup_event_bridge_v1.cpp)
+ target_link_libraries(loot_pickup_event_bridge_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(loot_pickup_event_bridge_v1_audit PRIVATE cxx_std_17)
+ add_executable(loot_pickup_generated_qest_v1_audit
+  tests/loot_pickup_generated_qest_v1.cpp)
+ target_link_libraries(loot_pickup_generated_qest_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(loot_pickup_generated_qest_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(loot_pickup_event_bridge_v1_audit PRIVATE
+  -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
  add_executable(player_camera_rig_v1_audit tests/player_camera_rig_v1.cpp)
  target_link_libraries(player_camera_rig_v1_audit PRIVATE dh2_level_world)
  target_compile_features(player_camera_rig_v1_audit PRIVATE cxx_std_17)
  target_compile_options(player_camera_rig_v1_audit PRIVATE -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+ add_executable(camera_animset_v1_audit tests/camera_animset_v1.cpp)
+ target_link_libraries(camera_animset_v1_audit PRIVATE dh2_level_world dh2_game_data)
+ target_compile_features(camera_animset_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(camera_animset_v1_audit PRIVATE -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+ add_executable(camera_design_zoom_v1_audit
+  tests/camera_design_zoom_v1_host.cpp camera_design_zoom_v1.cpp)
+ target_compile_features(camera_design_zoom_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(camera_design_zoom_v1_audit PRIVATE -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+ add_executable(character_oid_cache_v1_audit
+  tests/character_oid_cache_v1.cpp character_oid_cache_v1.cpp)
+ target_compile_features(character_oid_cache_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_oid_cache_v1_audit PRIVATE
+  -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+ add_executable(game_object_position_owner_v1_audit
+  tests/game_object_position_owner_v1.cpp game_object_position_owner_v1.cpp)
+ target_compile_features(game_object_position_owner_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(game_object_position_owner_v1_audit PRIVATE
+  -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+ add_executable(level_savegame_owner_v1_audit
+  tests/level_savegame_owner_v1.cpp level_savegame_owner_v1.cpp)
+ target_compile_features(level_savegame_owner_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(level_savegame_owner_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(character_net_state_owner_v1_audit
+  tests/character_net_state_owner_v1.cpp character_net_state_owner_v1.cpp)
+ target_compile_features(character_net_state_owner_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_net_state_owner_v1_audit PRIVATE
+  -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+ add_executable(game_object_visual_attachment_v1_audit
+  tests/game_object_visual_attachment_v1.cpp game_object_visual_attachment_v1.cpp)
+ target_compile_features(game_object_visual_attachment_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(game_object_visual_attachment_v1_audit PRIVATE
+  -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off)
+ add_executable(character_level_save_serialize_v1_audit
+  tests/character_level_save_serialize_v1.cpp character_level_save_serialize_v1.cpp
+  level_savegame_owner_v1.cpp)
+ target_compile_features(character_level_save_serialize_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(character_level_save_serialize_v1_audit PRIVATE -Wall -Wextra -Werror)
+ add_executable(level_savegame_object_manager_v1_audit
+  tests/level_savegame_object_manager_v1.cpp)
+ target_link_libraries(level_savegame_object_manager_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(level_savegame_object_manager_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(level_savegame_object_manager_v1_audit PRIVATE -Wall -Wextra -Werror -UNDEBUG)
+ add_executable(level_savegame_player_load_v1_audit
+  tests/level_savegame_player_load_v1.cpp)
+ target_link_libraries(level_savegame_player_load_v1_audit PRIVATE dh2_level_world)
+ target_compile_features(level_savegame_player_load_v1_audit PRIVATE cxx_std_17)
+ target_compile_options(level_savegame_player_load_v1_audit PRIVATE -Wall -Wextra -Werror -UNDEBUG)
 endif()

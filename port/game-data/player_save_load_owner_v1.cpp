@@ -65,6 +65,7 @@ bool PlayerSaveLoadOwnerV1::initialize(PlayerSaveLoadOpV1 op,
 }
 bool PlayerSaveLoadOwnerV1::section(const char* name,
     const PlayerSaveProfileV1& profile, bool reader, std::string& error) {
+    ++section_calls_;
     PlayerSaveLoadRequestV1 request{PlayerSaveLoadOpV1::load_section};
     request.profile = profile;
     request.section = name;
@@ -161,7 +162,7 @@ bool PlayerSaveLoadOwnerV1::load(std::int32_t mask, std::string& error) {
     if (!coherent(profile_)) { error = "invalid canonical profile binding"; return false; }
     struct Guard { bool& active; ~Guard() { active = false; } } guard{active_};
     active_ = true;
-    error.clear(); phase_ = 0; calls_ = 0;
+    error.clear(); phase_ = 0; calls_ = 0; section_calls_ = 0;
     return load_fields(std::uint32_t(mask), error) && load_volatile(std::uint32_t(mask), error);
 }
 

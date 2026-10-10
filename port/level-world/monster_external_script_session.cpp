@@ -30,6 +30,7 @@ const char* callback_name(Event event) {
         case Event::target_in_melee_range: return "OnTargetInMeleeRange";
         case Event::target_hit: return "OnTargetHit";
         case Event::target_missed: return "OnTargetMissed";
+        case Event::animation_end: return "OnEndOfAnim";
     }
     return nullptr;
 }
@@ -66,9 +67,9 @@ struct Session::Impl {
                      to_fixed, mul_fixed, div_fixed, alias_add, alias_push, alias_pop,
                      bit_not, bit_xor, bit_and, bit_or, py_oid, position,
                      host_level, host_difficulty, level_range, level_set, stop,
-                     attack, unsupported };
+                     attack, register_summon, play_sound, stop_sound, unsupported };
     struct Binding { Impl* session; Operation operation; const char* name; };
-    static constexpr std::size_t max_bindings = 47;
+    static constexpr std::size_t max_bindings = 48;
     Services services;
     dh2_script_vm* vm = nullptr;
     dh2_script_aliases* aliases = nullptr;
@@ -113,6 +114,15 @@ struct Session::Impl {
     }
     static bool identity(const dh2_script_value& value) noexcept {
         return value.type == DH2_SCRIPT_IDENTITY || value.type == 7;
+    }
+    static bool unsigned_integer(const dh2_script_value& value,
+                                 character_oid_cache_v1::Argument* out) noexcept {
+        if (!out || value.type != DH2_SCRIPT_NUMBER || !std::isfinite(value.number) ||
+            value.number < 0.0f || std::floor(value.number) != value.number ||
+            static_cast<double>(value.number) > 4294967295.0) return false;
+        out->kind = character_oid_cache_v1::ValueKind::unsigned_integer;
+        out->value = static_cast<std::uint32_t>(value.number);
+        return true;
     }
 
     static int invoke(void* opaque, const dh2_script_value* arguments,
@@ -160,6 +170,53 @@ struct Session::Impl {
                 // controller command. Keep that call boundary explicit.
                 if (!services.stop || services.stop(services.context, services.owner) != 0)
                     return reject(error, error_capacity, "monster Stop failed or unsupported");
+                return 0;
+            }
+            if (binding.operation == play_sound) {
+                if (count != 4 || arguments[0].type != DH2_SCRIPT_STRING ||
+                    !arguments[0].text || arguments[0].text_bytes > 256 ||
+                    arguments[1].type != DH2_SCRIPT_BOOLEAN ||
+                    arguments[2].type != DH2_SCRIPT_NUMBER || !std::isfinite(arguments[2].number) ||
+                    arguments[3].type != DH2_SCRIPT_BOOLEAN)
+                    return reject(error, error_capacity, "unsupported monster PlaySound arguments");
+                if (!services.play_sound || services.play_sound(services.context,
+                        arguments[0].text, arguments[0].text_bytes,
+                        arguments[1].boolean != 0, arguments[2].number,
+                        arguments[3].boolean != 0) != 0)
+                    return reject(error, error_capacity, "monster PlaySound failed or unsupported");
+                return 0;
+            }
+            if (binding.operation == stop_sound) {
+                if (count < 2 || arguments[0].type != DH2_SCRIPT_STRING ||
+                    !arguments[0].text || arguments[0].text_bytes > 256 ||
+                    arguments[1].type != DH2_SCRIPT_NUMBER ||
+                    !std::isfinite(arguments[1].number))
+                    return reject(error, error_capacity, "unsupported monster StopSound arguments");
+                const float fade_ms = arguments[1].number;
+                if (!services.stop_sound || services.stop_sound(services.context,
+                        arguments[0].text, arguments[0].text_bytes, fade_ms) != 0)
+                    return reject(error, error_capacity, "monster StopSound failed or unsupported");
+                return 0;
+            }
+            if (binding.operation == register_summon) {
+                // Lua 5.1 exposes numeric arguments as float32 here. Only
+                // losslessly integral UInteger-compatible values are adapted;
+                // bad/missing source arguments retain RegisterSummon's no-op.
+                character_oid_cache_v1::Argument values[2]{};
+                std::uint32_t used = 0;
+                if (count == 0 || !unsigned_integer(arguments[0], &values[0])) return 0;
+                used = 1;
+                if (count > 1 && unsigned_integer(arguments[1], &values[1])) used = 2;
+                auto* cache = services.current_level_oid_cache;
+                if (!cache || !cache->level_identity())
+                    return reject(error, error_capacity,
+                        "RegisterSummon requires the current Level Character OID cache provider");
+                character_oid_cache_v1::Result result{};
+                const character_oid_cache_v1::Arguments input{values, used};
+                const auto status = character_oid_cache_v1::register_summon(*cache, input, &result);
+                if (status != character_oid_cache_v1::Status::complete)
+                    return reject(error, error_capacity,
+                        "RegisterSummon current Level Character OID cache update failed");
                 return 0;
             }
             if (binding.operation == attack) {
@@ -332,6 +389,8 @@ struct Session::Impl {
             case Function::get_host_player_level: return host_level;
             case Function::get_host_player_difficulty: return host_difficulty;
             case Function::get_current_level_range: return level_range;
+            case Function::play_sound: return play_sound;
+            case Function::stop_sound: return stop_sound;
             default: return unsupported;
         }
     }
@@ -383,7 +442,8 @@ struct Session::Impl {
             bind_extra("HasPath", path_exists) && bind_extra("SetTarget", target_set) &&
             bind_extra("HeadTo", face) && bind_extra("MoveTo", move) &&
             bind_extra("GetPosition", position) && bind_extra("SetLevel", level_set) &&
-            bind_extra("Stop", stop) && bind_extra("Attack", attack);
+            bind_extra("Stop", stop) && bind_extra("Attack", attack) &&
+            bind_extra("RegisterSummon", register_summon);
     }
 
     bool bind_functions() {
@@ -759,7 +819,9 @@ bool Session::uses_services(const Services& services) const noexcept {
         own.get_host_player_level == services.get_host_player_level &&
         own.get_host_player_difficulty == services.get_host_player_difficulty &&
         own.get_current_level_range == services.get_current_level_range && own.set_level == services.set_level &&
-        own.stop == services.stop && own.attack == services.attack;
+        own.stop == services.stop && own.attack == services.attack &&
+        own.current_level_oid_cache == services.current_level_oid_cache &&
+        own.play_sound == services.play_sound && own.stop_sound == services.stop_sound;
 }
 const char* Session::source_alias(Event event) const noexcept {
     const char* requested = callback_name(event);

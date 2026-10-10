@@ -8,6 +8,7 @@
 namespace dh2::player_skill_update_session_v1 {
 namespace prep=character_player_skills_preparation_v3;
 namespace all=character_ai_update_all_skills;
+namespace selected=character_ai_update_skills;
 namespace single=character_ai_skill_script_update;
 namespace {
 struct Busy {bool& flag;explicit Busy(bool& f):flag(f){flag=true;}~Busy(){flag=false;}};
@@ -28,7 +29,11 @@ struct Runtime::Impl {
     player_skill_session_v1::Session& session;prep::Owner& owner;
     std::uintptr_t ai,character;const std::int32_t& machine;
     std::map<std::uintptr_t,std::unique_ptr<Returns>> returns;
-    bool busy=false;Result* output=nullptr;std::string error;
+    bool busy=false;
+    std::uint32_t* callbacks=nullptr;
+    std::uint32_t* lua_errors=nullptr;
+    int* last_lua_status=nullptr;
+    std::string error;
     Impl(player_skill_session_v1::Session& s,prep::Owner& p,std::uintptr_t a,
          std::uintptr_t c,const std::int32_t& m):session(s),owner(p),ai(a),character(c),machine(m){}
     static int observe(void* raw,const dh2_script_first_return_v1* v,std::uint32_t count,char* why,std::size_t n){
@@ -63,15 +68,16 @@ struct Runtime::Impl {
             a.push_back(value);
         }
         const int status=session.call_all(fn,a.empty()?nullptr:a.data(),std::uint32_t(a.size()),observe,&r,error);
-        output->last_lua_status=status;
+        if(!last_lua_status||!lua_errors)return -1;
+        *last_lua_status=status;
         if(status<0)return -1;
         projection.error=static_cast<std::uint32_t>(status);
-        if(status){++output->lua_errors;r.values.clear();r.texts.clear();r.sync();}
+        if(status){++*lua_errors;r.values.clear();r.texts.clear();r.sync();}
         return 0;
     }
     static std::int32_t invoke_one(void* raw,single::State* state,const single::Request* q,single::ReturnValues* value){
         auto& s=*static_cast<Impl*>(raw);
-        if(!state||!q||!value||!s.output||state->identity!=q->skill)return -1;
+        if(!state||!q||!value||!s.callbacks||state->identity!=q->skill)return -1;
         if(q->operation==single::Operation::construct_values){
             auto r=std::make_unique<Returns>();const auto id=reinterpret_cast<std::uintptr_t>(r.get());
             value->resource=id;value->error=0;value->values=&r->projection;
@@ -98,7 +104,7 @@ struct Runtime::Impl {
     }
     static std::int32_t invoke_all(void* raw,all::State* state,const all::Request* q,all::Response* value){
         auto& s=*static_cast<Impl*>(raw);
-        if(!state||!q||!value||!s.output||state->ai!=s.ai||state->owner!=s.character)return -1;
+        if(!state||!q||!value||!s.callbacks||state->ai!=s.ai||state->owner!=s.character)return -1;
         if(q->operation!=all::Operation::on_skill_update){
             if(q->subject!=s.character)return -1;
             const character_skill_state_queries::Machine m{&s.machine};character_skill_state_queries::Result result{};
@@ -114,7 +120,39 @@ struct Runtime::Impl {
         const single::Services services{&s,invoke_one};
         const auto status=single::update(&projection,&services,&result);
         if(status!=single::Status::complete){if(s.error.empty())s.error="source skill update failed";return -1;}
-        ++s.output->callbacks;return 0;
+        ++*s.callbacks;return 0;
+    }
+    static std::int32_t invoke_selected_vector(void* raw,selected::State* state,
+                                               selected::List list,
+                                               selected::ScriptVector* output){
+        auto& s=*static_cast<Impl*>(raw);
+        if(!state||!output||!s.callbacks||state->ai!=s.ai||state->owner!=s.character)return -1;
+        const auto which=list==selected::List::skill?prep::source::List::skill:
+            list==selected::List::faery?prep::source::List::faery:prep::source::List::skill;
+        if(list!=selected::List::skill&&list!=selected::List::faery)return -1;
+        const auto& scripts=s.owner.slots(which);
+        const auto* begin=scripts.empty()?nullptr:scripts.data();
+        *output={begin,begin?begin+scripts.size():nullptr};
+        return 0;
+    }
+    static std::int32_t invoke_selected_script(void* raw,selected::State* state,
+                                               selected::List list,std::uint32_t index,
+                                               std::uintptr_t script){
+        auto& s=*static_cast<Impl*>(raw);
+        if(!state||!s.callbacks||state->ai!=s.ai||state->owner!=s.character||!script)return -1;
+        const auto which=list==selected::List::skill?prep::source::List::skill:
+            list==selected::List::faery?prep::source::List::faery:prep::source::List::skill;
+        if(list!=selected::List::skill&&list!=selected::List::faery)return -1;
+        const auto& scripts=s.owner.slots(which);
+        if(index>=scripts.size()||scripts[index]!=script)return -1;
+        const auto* instance=s.owner.instance(script);
+        if(!instance||instance->identity!=script||instance->character!=s.character)return -1;
+        single::Character character{s.character,reinterpret_cast<std::uintptr_t>(s.session.vm())};
+        single::State projection{script,&character};single::Result result{};
+        const single::Services services{&s,invoke_one};
+        const auto status=single::update(&projection,&services,&result);
+        if(status!=single::Status::complete){if(s.error.empty())s.error="source selected-faery update failed";return -1;}
+        ++*s.callbacks;return 0;
     }
 };
 Runtime::Runtime(player_skill_session_v1::Session& s,prep::Owner& p,std::uintptr_t ai,
@@ -125,14 +163,32 @@ Runtime::~Runtime()=default;
 std::size_t Runtime::retained_failed_returns()const noexcept{return impl_->returns.size();}
 int Runtime::update(Result& output,std::string& error){
     auto& s=*impl_;if(s.busy){error="player skill update reentry";return -1;}
-    Busy busy(s.busy);output={};s.output=&output;s.error.clear();
+    Busy busy(s.busy);output={};s.callbacks=&output.callbacks;s.lua_errors=&output.lua_errors;s.last_lua_status=&output.last_lua_status;s.error.clear();
     try{
         if(s.owner.state().owner!=s.character)throw std::runtime_error("player skill owner changed");
         all::State state{s.ai,s.character,range(s.owner.slots(prep::source::List::skill)),range(s.owner.slots(prep::source::List::faery))};
         const all::Services services{&s,Impl::invoke_all};
-        output.status=all::update(&state,&services,&output.source);s.output=nullptr;error=s.error;
+        output.status=all::update(&state,&services,&output.source);s.callbacks=nullptr;s.lua_errors=nullptr;s.last_lua_status=nullptr;error=s.error;
         return output.status==all::Status::complete?0:-1;
-    }catch(const std::exception& e){s.output=nullptr;error=e.what();return -1;}
-    catch(...){s.output=nullptr;error="player skill update exception";return -1;}
+    }catch(const std::exception& e){s.callbacks=nullptr;s.lua_errors=nullptr;s.last_lua_status=nullptr;error=e.what();return -1;}
+    catch(...){s.callbacks=nullptr;s.lua_errors=nullptr;s.last_lua_status=nullptr;error="player skill update exception";return -1;}
+}
+int Runtime::update_current_faery(const data::PlayerSavegameV1& savegame,
+                                  const std::int32_t& difficulty,
+                                  SelectedFaeryResult& output,std::string& error){
+    auto& s=*impl_;if(s.busy){error="player selected-faery update reentry";return -1;}
+    if(savegame.character()!=s.character||s.owner.state().owner!=s.character||
+       s.session.character_identity()!=s.character||!s.session.vm()){
+        error="selected-faery Save, Character, preparation owner and VM identities differ";return -1;
+    }
+    Busy busy(s.busy);output={};s.callbacks=&output.callbacks;s.lua_errors=&output.lua_errors;s.last_lua_status=&output.last_lua_status;s.error.clear();
+    try{
+        selected::State state{s.ai,s.character,&s.machine,&savegame,&difficulty};
+        const selected::Services services{&s,Impl::invoke_selected_vector,Impl::invoke_selected_script};
+        output.status=selected::update(&state,&services,&output.source);
+        s.callbacks=nullptr;s.lua_errors=nullptr;s.last_lua_status=nullptr;error=s.error;
+        return output.status==selected::Status::complete?0:-1;
+    }catch(const std::exception& e){s.callbacks=nullptr;s.lua_errors=nullptr;s.last_lua_status=nullptr;error=e.what();return -1;}
+    catch(...){s.callbacks=nullptr;s.lua_errors=nullptr;s.last_lua_status=nullptr;error="player selected-faery update exception";return -1;}
 }
 }

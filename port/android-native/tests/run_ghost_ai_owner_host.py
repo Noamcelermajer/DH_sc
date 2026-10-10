@@ -24,6 +24,7 @@ CPP = [
     LEVEL / "character_aggro_object_manager_list.cpp",
     LEVEL / "character_aggro_candidate_events.cpp",
     LEVEL / "character_ai_relations.cpp", LEVEL / "character_enemy_spotted.cpp",
+    LEVEL / "character_oid_cache_v1.cpp",
     LEVEL / "character_ai_events.cpp", LEVEL / "character_ai_set_target.cpp",
     LEVEL / "character_controller_commands.cpp", LEVEL / "character_path_commands.cpp",
     LEVEL / "navigation_heading.cpp", LEVEL / "character_ai_sight.cpp",

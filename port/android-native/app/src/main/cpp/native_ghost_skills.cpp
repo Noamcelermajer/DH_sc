@@ -387,6 +387,28 @@ Status Runtime::prepare(const Bindings& bindings, Result& result) {
         result.source.declarations != 0 ||
         result.source.script_allocations != 0 || result.arguments_created != result.arguments_destroyed)
         return Status::invalid_source_tables;
+    prepared_ = true;
+    return Status::complete;
+}
+
+Status Runtime::cleanup_death_list(Source::List list,
+                                   DeathCleanupResult& output) const noexcept {
+    if (!prepared_ || (list != Source::List::skill && list != Source::List::faery))
+        return Status::invalid_argument;
+    DeathCleanupResult result{};
+    result.list = list;
+    const auto& scripts = list == Source::List::skill ? skill_scripts_ : faery_scripts_;
+    if (scripts.size() > kMaximumRows) return Status::invalid_source_tables;
+    for (const auto script : scripts) {
+        ++result.slots_examined;
+        if (script) {
+            output = result;
+            return Status::unsupported_script_dependency;
+        }
+        ++result.null_slots;
+    }
+    result.completed = 1;
+    output = result;
     return Status::complete;
 }
 

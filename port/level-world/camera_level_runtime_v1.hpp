@@ -1,5 +1,7 @@
 #pragma once
 
+#include "camera_design_zoom_v1.hpp"
+
 #include <cstdint>
 
 namespace dh2::camera_level_runtime_v1 {
@@ -55,10 +57,7 @@ struct FrameInput {
     // silently invent projection, multiplayer, asset-timeline or table data.
     CameraBaseOffsetInput center_offset_source{}; // raw CameraBase scene-node/FOV inputs
     Vec3 multiplayer_centering_delta{};   // CameraLevel::HandleCentering result
-    float normal_design_min_zoom=0.0f;    // DesignSettingsTable +172
-    float normal_design_max_zoom=0.0f;    // DesignSettingsTable +168
-    float alternate_design_min_zoom=0.0f; // DesignSettingsTable +76
-    float alternate_design_max_zoom=0.0f; // DesignSettingsTable +72
+    camera_design_zoom_v1::Bounds design_zoom_bounds{}; // one global DesignSettingsTable row
     bool infinite_zoom=false;             // DebugSwitches::InfiniteZoom
     bool zoom_clamp_disabled=false;       // CameraLevel +134
     Vec3 camera_world_position{};         // CameraBase camera-node absolute position
@@ -101,7 +100,11 @@ public:
     float current_zoom() const noexcept { return current_zoom_; }
     float target_zoom() const noexcept { return target_zoom_; }
     float effective_zoom() const noexcept { return effective_zoom_; }
+    // CameraLevel+0x85 is the original object-position/gesture mode byte.
+    // Its value is supplied by the selected source frame provider.
+    bool use_object_position() const noexcept { return use_object_position_; }
     std::int32_t transition_remaining_ms() const noexcept { return transition_remaining_ms_; }
+    bool animation_active() const noexcept { return zoom_animation_active_; }
 
 private:
     std::uintptr_t target_identity_=0;
@@ -117,6 +120,7 @@ private:
     Vec3 ghost_camera_offset_{};
     bool zoom_animation_active_=false;
     bool preserve_zoom_=false;
+    bool use_object_position_=false;
     float current_zoom_=0.0f;
     // ZoomHandler's constructor initializes current to 0 and target to 1
     // (IDA source finding). Keep this distinct from effective_zoom_, which
@@ -129,16 +133,19 @@ private:
 // Source-derived ZoomHandler input math (ZoomHandler::setCamera 0x381fb0,
 // onEvent 0x382040, and touch onEvent 0x382bdc). Event decoding, menu hit
 // testing, and native pointer tracking remain caller-owned providers.
-struct ZoomSensitivityCounts {
-    std::int32_t difficulty_count_12=0;
-    std::int32_t difficulty_count_16=0;
+struct DrawableTargetSize {
+    std::int32_t width=0;
+    std::int32_t height=0;
 };
 
 class ZoomInput {
 public:
-    // setCamera computes 1 / max(table +12, table +16). Rebinding resets the
-    // mouse drag gesture just as ZoomHandler::setCamera clears its state.
-    bool set_camera(Owner* owner, ZoomSensitivityCounts counts) noexcept;
+    // setCamera reads the active IRenderTarget width/height and computes
+    // 1 / max(width,height). Rebinding resets the mouse drag gesture.
+    bool set_camera(Owner* owner, DrawableTargetSize target) noexcept;
+    // Surface resize updates ZoomHandler's live render-target sensitivity
+    // without rebinding the CameraLevel or disturbing an active gesture.
+    bool update_drawable_target(DrawableTargetSize target) noexcept;
     void clear_camera() noexcept;
     void set_mouse_pan_enabled(bool enabled) noexcept { mouse_pan_enabled_=enabled; }
 

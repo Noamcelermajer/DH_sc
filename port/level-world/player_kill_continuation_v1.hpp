@@ -55,6 +55,7 @@ class CtrlCaller {
  std::uintptr_t character_;Backend backend_;bool busy_=false,failed_=false;
 public:
  CtrlCaller(std::uintptr_t character,Backend);
+ std::uintptr_t character()const noexcept{return character_;}
  Status kill(std::uintptr_t killer,std::uint32_t force,Result*,std::string& error);
 };
 // All providers read their actual owner at each request. application returns

@@ -85,9 +85,14 @@ bool make_approximate_trigger_bounds(Aabb *bounds) {
     return true;
 }
 
-Status update(dh2_script_runtime::Runtime *runtime,
-              State *state,
-              const Frame *frame) {
+namespace {
+Status update_impl(dh2_script_runtime::Runtime *runtime,
+                   State *state,
+                   const Frame *frame,
+                   const char *trigger_name,
+                   int32_t trigger_script_id,
+                   int32_t trigger_count,
+                   bool source_specific) {
     using namespace dh2_script_runtime;
 
     if (runtime == NULL || state == NULL || frame == NULL ||
@@ -104,9 +109,12 @@ Status update(dh2_script_runtime::Runtime *runtime,
     }
     if (door_blocks(frame)) return STATUS_BLOCKED_DOOR;
     if (!frame->enabled) return STATUS_BLOCKED_DISABLED;
-    if (runtime->trigger_count >= 0 &&
-        runtime->trigger_activations >=
-            (uint32_t)runtime->trigger_count) {
+    const auto activation_count = source_specific
+        ? state->trigger_activations : runtime->trigger_activations;
+    const auto activation_limit = source_specific
+        ? trigger_count : runtime->trigger_count;
+    if (activation_limit >= 0 &&
+        activation_count >= static_cast<uint32_t>(activation_limit)) {
         return STATUS_BLOCKED_ACTIVATION_COUNT;
     }
     if (frame->delay_timer_ms >= 1) return STATUS_BLOCKED_DELAY;
@@ -142,7 +150,13 @@ Status update(dh2_script_runtime::Runtime *runtime,
 
     state->qualifying_contact = 1;
     const uint32_t events_before = runtime->event_count;
-    if (!enter_trigger(runtime)) return STATUS_RUNTIME_ERROR;
+    if (source_specific) {
+        if (!enter_trigger_for(runtime, trigger_script_id, trigger_name,
+                trigger_count, &state->trigger_activations,
+                &state->trigger_fired)) return STATUS_RUNTIME_ERROR;
+    } else if (!enter_trigger(runtime)) {
+        return STATUS_RUNTIME_ERROR;
+    }
 
     for (uint32_t i = events_before; i < runtime->event_count; ++i) {
         if (runtime->events[i].type == EVENT_TRIGGER_SCRIPT_ALREADY_RUNNING) {
@@ -153,6 +167,24 @@ Status update(dh2_script_runtime::Runtime *runtime,
         }
     }
     return STATUS_RUNTIME_ERROR;
+}
+}  // namespace
+
+Status update(dh2_script_runtime::Runtime *runtime,
+              State *state,
+              const Frame *frame) {
+    return update_impl(runtime, state, frame, NULL, -1, 0, false);
+}
+
+Status update_for(dh2_script_runtime::Runtime *runtime,
+                  State *state,
+                  const Frame *frame,
+                  const char *trigger_name,
+                  int32_t trigger_script_id,
+                  int32_t trigger_count) {
+    if (!trigger_name || trigger_script_id < 0) return STATUS_INVALID_ARGUMENT;
+    return update_impl(runtime, state, frame, trigger_name,
+                       trigger_script_id, trigger_count, true);
 }
 
 const char *status_name(Status status) {

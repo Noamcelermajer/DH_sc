@@ -18,24 +18,25 @@ def main():
  print('Replaying original complete creation/writer/saveAll bodies',flush=True)
  run([sys.executable,MODULE/'tests/player_profile_create_v1_original.py','--original-elf',a.original_elf.resolve()]);original=json.loads((REF/'original-capture.json').read_text())
  native=ROOT/'port/android-native/app/src/main/cpp';source=MODULE/'player_profile_create_v1.cpp';selected=source.name in (MODULE/'CMakeLists.txt').read_text()
+ world=ROOT/'port/level-world'
  body=f'''cmake_minimum_required(VERSION 3.22)
 project(profile_create_selected LANGUAGES C CXX)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_subdirectory("{MODULE.as_posix()}" selected-game)
+add_subdirectory("{world.as_posix()}" selected-world)
 '''
  if not selected:body+=f'target_sources(dh2_game_data PRIVATE "{source.as_posix()}")\n'
- body+=f'''add_executable(profile_create_audit "{(MODULE/'tests/player_profile_create_v1.cpp').as_posix()}" "{(native/'native_player_profile.cpp').as_posix()}")
+ body+=f'''add_executable(profile_create_audit "{(MODULE/'tests/player_profile_create_v1.cpp').as_posix()}" "{(native/'native_player_profile.cpp').as_posix()}" "{(native/'native_quest_owner.cpp').as_posix()}" "{(native/'native_quest_cursor.cpp').as_posix()}")
 target_include_directories(profile_create_audit PRIVATE "{native.as_posix()}")
 target_compile_features(profile_create_audit PRIVATE cxx_std_17)
 target_compile_options(profile_create_audit PRIVATE -Wall -Wextra -Werror -fno-fast-math)
-target_link_libraries(profile_create_audit PRIVATE dh2_game_data)
+target_link_libraries(profile_create_audit PRIVATE dh2_level_world dh2_game_data)
 '''
  (wrapper/'CMakeLists.txt').write_text(body)
  logs=[run([cmake,'-S',wrapper,'-B',build,'-G','Ninja',f'-DCMAKE_MAKE_PROGRAM={ninja}',f'-DCMAKE_CXX_COMPILER={cxx}',f'-DCMAKE_C_COMPILER={cc}','-DCMAKE_BUILD_TYPE=Release','-DCMAKE_CXX_FLAGS_RELEASE=-O1','-DCMAKE_C_FLAGS_RELEASE=-O1'])]
  logs.append(run([cmake,'--build',build,'--target','profile_create_audit','--parallel','2']))
  commands=run([ninja,'-C',build,'-t','commands','profile_create_audit']);rows=selected_entries(build,commands);reached=[Path(r['file']).resolve() for r in rows]
- expected=[source,MODULE/'player_savegame_v1.cpp',MODULE/'player_save_load_owner_v1.cpp',MODULE/'player_profile_index_v1.cpp',native/'native_player_profile.cpp'];assert all(reached.count(p.resolve())==1 for p in expected)
+ expected=[source,MODULE/'player_savegame_v1.cpp',MODULE/'player_save_load_owner_v1.cpp',MODULE/'player_profile_index_v1.cpp',native/'native_player_profile.cpp',native/'native_quest_owner.cpp',native/'native_quest_cursor.cpp',world/'player_save_inventory_v1.cpp',world/'player_gear_save_writer_v1.cpp'];assert all(reached.count(p.resolve())==1 for p in expected)
  # These five modules are actually imported by the inherited original CPU
  # fixture, including its memory/import leaves; they are not a header superset.
  inherited={'aggro_differential.py','combat_application_differential.py','combat_differential.py','combat_result_differential.py','health_differential.py'}

@@ -2,24 +2,52 @@ package com.example.dh2;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import java.io.IOException;
+import java.util.Locale;
 
-/** Plays the original 16:9 opening movie over the native menu during startup. */
-final class IntroCinematicView extends TextureView implements TextureView.SurfaceTextureListener {
+/** Plays the original 16:9 opening movie full-screen over the native menu. */
+final class IntroCinematicView extends FrameLayout implements TextureView.SurfaceTextureListener {
     private static final String TAG = "DH2Native";
     private static final String ASSET = "original-media/intro.mp4";
 
     private final Runnable onFinished;
+    private final TextureView video;
+    private final TextView subtitles;
+    private final TextView skipButton;
+    private final IntroSkipPolicy skipPolicy = new IntroSkipPolicy();
+    private final Handler subtitleHandler = new Handler(Looper.getMainLooper());
+    private volatile int subtitleLanguage = IntroSubtitleTrack.languageIndex(Locale.getDefault());
+    private final Runnable subtitleTick = new Runnable() {
+        @Override public void run() {
+            if (finished || !prepared || player == null) return;
+            try {
+                subtitles.setText(IntroSubtitleTrack.textAt(player.getCurrentPosition(), subtitleLanguage));
+                subtitles.setVisibility(subtitles.length() == 0 ? View.GONE : View.VISIBLE);
+                if (player.isPlaying()) subtitleHandler.postDelayed(this, 100L);
+            } catch (IllegalStateException e) {
+                Log.w(TAG, "Could not update opening subtitles", e);
+            }
+        }
+    };
     private MediaPlayer player;
     private Surface videoSurface;
     private int videoWidth;
@@ -27,26 +55,87 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
     private boolean requested;
     private boolean prepared;
     private boolean seekPending;
-    private boolean paused;
+    // MainActivity requests playback during onCreate, before Android resumes
+    // the window. Hold the prepared decoder until resumePlayback() explicitly
+    // opens the gate; otherwise a slow startup can consume the intro off-screen.
+    private boolean paused = true;
     private boolean finished;
     private int resumePositionMs;
+    private float musicVolume = 1f;
+    private boolean audioFocusGained = true;
 
     IntroCinematicView(Context context, Runnable onFinished) {
         this(context, null, onFinished);
     }
 
+    /** Replaces the provisional device locale with the game's persisted source setting. */
+    void setSourceLanguageIndex(int languageIndex) {
+        if (languageIndex >= 0 && languageIndex < 8) subtitleLanguage = languageIndex;
+    }
+
     private IntroCinematicView(Context context, AttributeSet attrs, Runnable onFinished) {
         super(context, attrs);
         this.onFinished = onFinished;
-        setOpaque(true);
+        video = new TextureView(context);
+        video.setOpaque(true);
+        video.setSurfaceTextureListener(this);
+        addView(video, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        subtitles = new TextView(context);
+        subtitles.setTextColor(Color.WHITE);
+        subtitles.setTextSize(16);
+        subtitles.setTypeface(Typeface.SERIF, Typeface.BOLD);
+        subtitles.setGravity(Gravity.CENTER);
+        subtitles.setMaxLines(2);
+        subtitles.setShadowLayer(2f, 1f, 1f, Color.BLACK);
+        subtitles.setPadding(dp(12), dp(8), dp(12), dp(8));
+        GradientDrawable captionBackground = new GradientDrawable();
+        captionBackground.setColor(Color.argb(145, 0, 0, 0));
+        captionBackground.setCornerRadius(dp(6));
+        subtitles.setBackground(captionBackground);
+        subtitles.setVisibility(View.GONE);
+        FrameLayout.LayoutParams captionLayout = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+        captionLayout.setMargins(dp(28), 0, dp(28), dp(28));
+        addView(subtitles, captionLayout);
+        skipButton = new TextView(context);
+        skipButton.setText("Skip");
+        skipButton.setTextColor(Color.WHITE);
+        skipButton.setTextSize(14);
+        skipButton.setTypeface(Typeface.SERIF, Typeface.BOLD);
+        skipButton.setGravity(Gravity.CENTER);
+        skipButton.setPadding(dp(16), dp(8), dp(16), dp(8));
+        GradientDrawable skipBackground = new GradientDrawable();
+        skipBackground.setColor(Color.argb(190, 20, 16, 12));
+        skipBackground.setCornerRadius(dp(5));
+        skipBackground.setStroke(dp(1), Color.rgb(190, 157, 83));
+        skipButton.setBackground(skipBackground);
+        skipButton.setContentDescription("Skip opening cinematic");
+        skipButton.setVisibility(View.GONE);
+        FrameLayout.LayoutParams skipLayout = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP | Gravity.END);
+        skipLayout.setMargins(0, dp(24), dp(24), 0);
+        addView(skipButton, skipLayout);
+        skipButton.setOnClickListener(v -> finish(true));
         // Keep the native menu visible while MediaPlayer prepares the movie.
         // An opaque TextureView otherwise covers the already-rendered menu
         // with an empty black buffer for several seconds on a cold launch.
         setAlpha(0f);
-        setContentDescription("Opening cinematic. Tap to skip.");
-        setSurfaceTextureListener(this);
-        setOnClickListener(v -> finish());
+        setContentDescription("Opening cinematic. Tap to show or hide skip control.");
+        setOnClickListener(v -> {
+            if (player == null || !prepared) return;
+            boolean visible = skipPolicy.onMovieTap(currentPositionMs());
+            skipButton.setVisibility(visible ? View.VISIBLE : View.GONE);
+            if (visible) Log.i(TAG, "Opening cinematic skip control shown");
+            else if (currentPositionMs() > 7300) Log.i(TAG, "Opening cinematic skip control hidden");
+        });
         setClickable(true);
+    }
+
+    private int dp(float value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     void startPlayback() {
@@ -61,6 +150,7 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
 
     void pausePlayback() {
         paused = true;
+        subtitleHandler.removeCallbacks(subtitleTick);
         if (player != null) {
             try {
                 if (player.isPlaying()) player.pause();
@@ -88,6 +178,27 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
 
     boolean isPending() { return !finished; }
 
+    void setMusicVolume(float volume) {
+        musicVolume = Math.max(0f, Math.min(1f, volume));
+        applyMusicVolume();
+    }
+
+    void setAudioFocusGained(boolean gained) {
+        audioFocusGained = gained;
+        applyMusicVolume();
+    }
+
+    private void applyMusicVolume() {
+        if (player != null && prepared) {
+            try {
+                float output = OriginalMusicVolume.outputGain(musicVolume, audioFocusGained);
+                player.setVolume(output, output);
+            } catch (IllegalStateException e) {
+                Log.w(TAG, "Could not apply opening movie music volume", e);
+            }
+        }
+    }
+
     int currentPositionMs() {
         if (player != null && prepared && !finished) {
             try {
@@ -100,7 +211,7 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
     }
 
     private void startIfReady() {
-        if (!requested || finished || player != null || !isAvailable()) return;
+        if (!requested || finished || player != null || !video.isAvailable()) return;
         // Surface recreation can leave the old opaque frame in the view while
         // a new decoder is preparing. Re-hide it until the new first frame.
         setAlpha(0f);
@@ -109,12 +220,14 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
             MediaPlayer candidate = new MediaPlayer();
             player = candidate;
             videoWidth = videoHeight = 0;
-            videoSurface = new Surface(getSurfaceTexture());
+            videoSurface = new Surface(video.getSurfaceTexture());
             candidate.setSurface(videoSurface);
             candidate.setAudioAttributes(new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_MEDIA)
                     .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)
                     .build());
+            float outputVolume = OriginalMusicVolume.outputGain(musicVolume, audioFocusGained);
+            candidate.setVolume(outputVolume, outputVolume);
             candidate.setOnVideoSizeChangedListener((mp, width, height) -> {
                 videoWidth = width;
                 videoHeight = height;
@@ -133,6 +246,8 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
             candidate.setOnPreparedListener(mp -> {
                 if (finished || player != mp) return;
                 prepared = true;
+                float output = OriginalMusicVolume.outputGain(musicVolume, audioFocusGained);
+                mp.setVolume(output, output);
                 videoWidth = mp.getVideoWidth();
                 videoHeight = mp.getVideoHeight();
                 fitVideo();
@@ -174,23 +289,25 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
     }
 
     private void fitVideo() {
-        if (videoWidth <= 0 || videoHeight <= 0 || getWidth() <= 0 || getHeight() <= 0) return;
-        float scale = Math.min(getWidth() / (float) videoWidth, getHeight() / (float) videoHeight);
-        float fittedWidth = videoWidth * scale;
-        float fittedHeight = videoHeight * scale;
+        IntroVideoFit.Result fitted = IntroVideoFit.contain(
+                videoWidth, videoHeight, video.getWidth(), video.getHeight());
+        if (fitted == null) return;
+        // Preserve every authored frame; wider and portrait surfaces get
+        // centered opaque bars rather than cropping the movie.
         // TextureView's transform maps its view-sized buffer, so normalize the
         // fitted movie rectangle to view coordinates before centering it.
-        float scaleX = fittedWidth / getWidth();
-        float scaleY = fittedHeight / getHeight();
         Matrix transform = new Matrix();
-        transform.setScale(scaleX, scaleY, getWidth() * 0.5f, getHeight() * 0.5f);
-        setTransform(transform);
+        transform.setScale(fitted.scaleX, fitted.scaleY,
+                video.getWidth() * 0.5f, video.getHeight() * 0.5f);
+        video.setTransform(transform);
     }
 
     private void startPreparedPlayback(MediaPlayer target) {
         if (finished || paused || seekPending || !prepared || target == null || player != target) return;
         try {
             if (!target.isPlaying()) target.start();
+            subtitleHandler.removeCallbacks(subtitleTick);
+            subtitleHandler.post(subtitleTick);
         } catch (IllegalStateException e) {
             Log.w(TAG, "Could not start opening movie", e);
             finish();
@@ -203,17 +320,27 @@ final class IntroCinematicView extends TextureView implements TextureView.Surfac
         // SurfaceTexture. Refit here as well as on texture/video callbacks so
         // rotation, cutout policy, and resizable-window changes keep the movie
         // centered at its source aspect ratio.
-        fitVideo();
+        video.post(this::fitVideo);
     }
 
     private void finish() {
+        finish(false);
+    }
+
+    private void finish(boolean skippedByUser) {
         if (finished) return;
         finished = true;
+        subtitleHandler.removeCallbacks(subtitleTick);
+        subtitles.setText("");
+        subtitles.setVisibility(View.GONE);
+        skipButton.setVisibility(View.GONE);
+        if (skippedByUser) Log.i(TAG, "Opening cinematic skipped by user");
         releasePlayer();
         post(onFinished);
     }
 
     private void releasePlayer() {
+        subtitleHandler.removeCallbacks(subtitleTick);
         MediaPlayer old = player;
         if (!finished && old != null && prepared && !seekPending) {
             try {

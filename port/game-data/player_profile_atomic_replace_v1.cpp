@@ -25,27 +25,40 @@ namespace {
 constexpr std::size_t kMaximumProfileBytes = 32u * 1024u * 1024u;
 std::atomic<std::uint64_t> g_temporary_sequence{0};
 
-bool read_file(const std::filesystem::path& path,
-               std::vector<std::uint8_t>& bytes, std::string& error) {
-    std::ifstream file(path, std::ios::binary | std::ios::ate);
-    if (!file) {
-        error = "existing campaign primary unavailable";
-        return false;
+bool read_snapshot(const std::filesystem::path& path,
+                   std::vector<std::uint8_t>& bytes, bool& exists,
+                   std::string& error) {
+    std::error_code ec;
+    const auto status = std::filesystem::status(path, ec);
+    if (ec == std::errc::no_such_file_or_directory) {
+        bytes.clear(); exists = false; return true;
     }
-    const auto end = file.tellg();
-    if (end < std::streamoff(4) ||
-        static_cast<std::uint64_t>(end) > kMaximumProfileBytes) {
-        error = "existing campaign size outside native span";
-        return false;
+    if (ec) { error = "campaign inspection failed: " + path.string(); return false; }
+    if (!std::filesystem::exists(status)) { bytes.clear(); exists = false; return true; }
+    if (!std::filesystem::is_regular_file(status)) {
+        error = "campaign is not a regular file: " + path.string(); return false;
     }
-    bytes.resize(static_cast<std::size_t>(end));
-    file.seekg(0);
-    if (!file.read(reinterpret_cast<char*>(bytes.data()),
-                   static_cast<std::streamsize>(bytes.size()))) {
-        error = "existing campaign read failed";
-        return false;
+    const auto size = std::filesystem::file_size(path, ec);
+    if (ec || size > kMaximumProfileBytes) {
+        error = "campaign size outside native span: " + path.string(); return false;
     }
+    std::ifstream file(path, std::ios::binary);
+    if (!file) { error = "campaign open failed: " + path.string(); return false; }
+    bytes.resize(static_cast<std::size_t>(size));
+    if (!bytes.empty() && !file.read(reinterpret_cast<char*>(bytes.data()),
+            static_cast<std::streamsize>(bytes.size()))) {
+        error = "campaign read failed: " + path.string(); return false;
+    }
+    if (file.peek() != std::char_traits<char>::eof()) {
+        error = "campaign changed during read: " + path.string(); return false;
+    }
+    exists = true;
     return true;
+}
+
+bool usable_header(const std::vector<std::uint8_t>& bytes) {
+    return bytes.size() > 3 && !(bytes[0] == 0xff && bytes[1] == 0xff &&
+        bytes[2] == 0xff && bytes[3] == 0xff);
 }
 
 bool write_synced_file(const std::filesystem::path& path,
@@ -151,12 +164,26 @@ bool replace_existing_profile_sections_v1(
         return false;
     }
 
-    std::vector<std::uint8_t> previous;
-    if (!read_file(primary, previous, error)) return false;
+    std::vector<std::uint8_t> observed_primary;
+    bool primary_exists = false;
+    if (!read_snapshot(primary, observed_primary, primary_exists, error)) return false;
     const auto& indexed = canonical_profile.bytes();
-    if (previous != indexed) {
-        error = "campaign primary changed since its canonical index was loaded";
-        return false;
+    std::vector<std::uint8_t> previous;
+    const bool recovered = !primary_exists || !usable_header(observed_primary);
+    if (!recovered) {
+        previous = observed_primary;
+        if (previous != indexed) {
+            error = "campaign primary changed since its canonical index was loaded";
+            return false;
+        }
+    } else {
+        bool backup_exists = false;
+        const auto backup = std::filesystem::path(primary.string() + ".bak");
+        if (!read_snapshot(backup, previous, backup_exists, error)) return false;
+        if (!backup_exists || !usable_header(previous) || previous != indexed) {
+            error = "recovered campaign backup differs from the canonical profile";
+            return false;
+        }
     }
 
     std::vector<std::uint8_t> next;
@@ -184,10 +211,21 @@ bool replace_existing_profile_sections_v1(
     // Recheck immediately before replacing the backup/primary so stale callers
     // cannot overwrite an intervening save with a snapshot they loaded earlier.
     std::vector<std::uint8_t> current;
-    if (!read_file(primary, current, error)) return false;
-    if (current != previous) {
+    bool current_exists = false;
+    if (!read_snapshot(primary, current, current_exists, error)) return false;
+    if (current_exists != primary_exists || current != observed_primary) {
         error = "campaign primary changed during section replacement";
         return false;
+    }
+    if (recovered) {
+        std::vector<std::uint8_t> backup_now;
+        bool backup_exists = false;
+        if (!read_snapshot(std::filesystem::path(primary.string() + ".bak"),
+                           backup_now, backup_exists, error)) return false;
+        if (!backup_exists || backup_now != previous) {
+            error = "recovered campaign backup changed during section replacement";
+            return false;
+        }
     }
 
     const auto backup = std::filesystem::path(primary.string() + ".bak");

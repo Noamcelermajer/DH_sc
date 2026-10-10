@@ -15,7 +15,6 @@ DEFAULT_CACHE = Path(
     r"C:\Users\noamc\Documents\Codex\2026-10-02\ex\outputs\DH2_Remaster\original_assets\com.gameloft.android.GAND.GloftD2SS\files"
 )
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--cache-root", type=Path, default=DEFAULT_CACHE,
@@ -36,6 +35,11 @@ def main():
         sources = [
             PORT / "world-data/world.cpp",
             PORT / "game-data/data.cpp",
+        PORT / "game-data/condition_data_v1.cpp",
+        PORT / "game-data/quest_condition_eval_v1.cpp",
+        PORT / "game-data/quest_condition_factory_v1.cpp",
+        PORT / "game-data/quest_table_bindings_v1.cpp",
+        PORT / "quest-data/quests.c",
             PORT / "random-level/crypt_generated_dact_v1.cpp",
             TESTS / "crypt_generated_dact_v1.cpp",
         ]

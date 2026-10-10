@@ -10,11 +10,31 @@
 #include "../character_player_buffs_v1.hpp"
 #include "../character_coordinator.hpp"
 #include "../../game-data/player_savegame_v1.hpp"
+#include "../../game-data/player_faery_change_v1.hpp"
 
 namespace ps=dh2::player_skill_property_services_v1;
 namespace bs=dh2::character_player_buffs_v1;
 namespace fs=dh2::character_current_spell_v1;
 namespace scalar=dh2::character_player_scalar_services_v1;
+namespace faery_change=dh2::data::player_faery_change_v1;
+namespace skill_updates=dh2::player_skill_update_session_v1;
+struct FaeryChangeContext {skill_updates::Runtime* updates;skill_updates::Result* result;};
+bool update_all_for_faery_change(void* raw,std::string& error){
+    auto& context=*static_cast<FaeryChangeContext*>(raw);
+    return context.updates&&context.result&&context.updates->update(*context.result,error)==0;
+}
+struct SavedSkillUpdateContext {
+    skill_updates::Runtime* updates;d::PlayerSavegameV1* save;
+    const std::int32_t* difficulty;skill_updates::SelectedFaeryResult* result;
+    std::uintptr_t character;
+};
+bool update_selected_after_slot_write(void* raw,std::uintptr_t character,std::string& error){
+    auto& context=*static_cast<SavedSkillUpdateContext*>(raw);
+    if(character!=context.character||!context.updates||!context.save||!context.difficulty||!context.result){
+        error="saved slot UpdateSkills crossed the fixture Character";return false;
+    }
+    return context.updates->update_current_faery(*context.save,*context.difficulty,*context.result,error)==0;
+}
 struct ClassFixture {
     std::filesystem::path cache;Catalogue& cat;d::PropertyState state;d::PropertyView view;
     d::PropertySheet temp{};d::PlayerSavegameV1 save;
@@ -126,12 +146,42 @@ struct ClassFixture {
 int main(int argc,char** argv){try{
     check(argc==3,"cache and private test output required");Catalogue cat(argv[1]);std::filesystem::path output=argv[2];std::filesystem::create_directories(output);
     std::ofstream captures(output/"temporary-class-calls.bin",std::ios::binary);check(bool(captures),"private original comparison output unavailable");
-    unsigned callbacks=0,cases=0,captured=0,failures=0,common_calls=0;std::set<std::string> resources;
+    unsigned callbacks=0,cases=0,captured=0,failures=0,common_calls=0,selected_faery_updates=0,faery_change_callbacks=0;std::set<std::string> resources;
     for(const char* name:{"KnightPlayerBase","RoguePlayerBase","MagePlayerBase"}){
         ClassFixture f(argv[1],output/name,cat,name,captures);auto* vm=f.session->vm();std::string error;dh2::player_skill_update_session_v1::Result r{};
         auto update=[&](){const auto status=f.updates->update(r,error);if(status||r.callbacks!=13||r.lua_errors)throw std::runtime_error(std::string(name)+" actual update: "+error+" | "+f.last_request);callbacks+=r.callbacks;};
         update();
         check(f.session->vm()==vm&&f.properties.owner_view==&f.view&&f.view.group_count==1&&f.buffs->count()==1,"startup replaced VM/properties/buff owner");
+        std::uint32_t celest_slot=0;bool celest_found=false;
+        for(const auto id:f.owner->slots(p::source::List::faery)){
+            const auto* script=f.owner->instance(id);
+            if(script&&script->script_name==std::string("faerie_celest")){celest_found=true;break;}
+            ++celest_slot;
+        }
+        check(celest_found&&celest_slot<5,"actual Celest source Faery slot missing");
+        std::string selected_error;
+        check(f.save.set_current_faery(celest_slot,0,selected_error),selected_error.c_str());
+        dh2::player_skill_update_session_v1::SelectedFaeryResult selected{};
+        SavedSkillUpdateContext saved_update{f.updates.get(),&f.save,&f.difficulty,&selected,CHAR};
+        const d::SavedSkillUpdateServicesV1 saved_services{&saved_update,update_selected_after_slot_write};
+        if(!(f.save.set_skill_in_slot(0,0,saved_services,selected_error)&&
+              selected.status==dh2::character_ai_update_skills::Status::complete&&
+              selected.source.decision==dh2::character_ai_update_skills::Decision::updated&&
+              selected.source.faery_index==celest_slot&&selected.source.saved_slots==1&&selected.source.faery_updated==1&&
+              selected.source.script_updates==2&&selected.callbacks==2&&f.save.skill_in_slot(0)==0&&
+              !selected.lua_errors&&f.session->vm()==vm))
+            throw std::runtime_error(std::string("actual selected Celest UpdateSkills path failed: ")+selected_error+" | "+f.last_request);
+        ++selected_faery_updates;
+        const auto next_faery=std::uint32_t((celest_slot+1)%5);
+        skill_updates::Result changed_update{};FaeryChangeContext change_context{f.updates.get(),&changed_update};
+        faery_change::Result changed{};std::string change_error;
+        const faery_change::Services change_services{&change_context,update_all_for_faery_change};
+        check(faery_change::change(&f.save,0,next_faery,change_services,&changed,change_error)==faery_change::Status::complete,
+              change_error.c_str());
+        check(changed.save_changed&&changed.skills_updated&&f.save.current_faery(0)==std::int32_t(next_faery)&&
+              changed_update.callbacks==13&&changed_update.source.decision==dh2::character_ai_update_all_skills::Decision::completed&&
+              f.session->vm()==vm,"actual ChangeFaery did not save then UpdateAllSkills in the same VM");
+        faery_change_callbacks+=changed_update.callbacks;callbacks+=changed_update.callbacks;
         if(std::string(name)=="RoguePlayerBase")check(std::find(f.applied.begin(),f.applied.end(),210)!=f.applied.end(),"Rogue did not execute actual failing Roundhouse row210");
         update();
         update();
@@ -156,6 +206,6 @@ int main(int argc,char** argv){try{
         check(f.temp==f.state.resolved&&f.state.resolved[172]==0,"failed class did not retain ClearProps and SetProp prefix");++failures;
         captured+=f.capture_count;
     }
-    captures.close();std::cout<<"{\"validation\":\"PASS\",\"class_cases\":"<<cases<<",\"unchanged_lua_update_callbacks\":"<<callbacks<<",\"positive_level_common_calls\":"<<common_calls<<",\"temporary_class_calls\":"<<captured<<",\"required_failure_prefixes\":"<<failures<<",\"resources\":[";
+    captures.close();std::cout<<"{\"validation\":\"PASS\",\"class_cases\":"<<cases<<",\"unchanged_lua_update_callbacks\":"<<callbacks<<",\"selected_faery_script_updates\":"<<selected_faery_updates<<",\"change_faery_all_skill_callbacks\":"<<faery_change_callbacks<<",\"positive_level_common_calls\":"<<common_calls<<",\"temporary_class_calls\":"<<captured<<",\"required_failure_prefixes\":"<<failures<<",\"resources\":[";
     bool first=true;for(const auto& path:resources){if(!first)std::cout<<',';first=false;std::cout<<'"'<<path<<'"';}std::cout<<"]}\n";return 0;
 }catch(const std::exception& e){std::cerr<<"class script property fixture FAIL: "<<e.what()<<'\n';return 1;}}

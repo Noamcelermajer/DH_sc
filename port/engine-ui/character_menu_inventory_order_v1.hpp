@@ -7,6 +7,8 @@ bool character_menu_slot_candidate_v1(const data::ItemInstanceV1&,
  const data::ItemRecord164&,const data::PropertySheet&,std::uint32_t slot)noexcept;
 bool character_menu_item_name_less_v1(const data::ItemInstanceV1&,
  const data::ItemInstanceV1&)noexcept;
+bool character_menu_item_equipped_in_requested_slot_v1(bool equipped,
+ bool equipped_other_hand)noexcept;
 bool character_menu_item_value_less_v1(const data::ItemInstanceV1&,
  const data::ItemRecord164&,const data::ItemInstanceV1&,
  const data::ItemRecord164&,std::int32_t class_index)noexcept;

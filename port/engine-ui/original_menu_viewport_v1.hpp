@@ -2,16 +2,22 @@
 
 #include <array>
 #include <cstdint>
+#include <string>
+
+#include "gameplay_menu_stack_v1.hpp"
 
 namespace dh2::ui::original_menu_viewport_v1 {
 
 // The original front SWFs' authored stage rectangle is [0,9600] x [0,6400]
 // twips. SWF coordinates use 20 twips per logical pixel: 480 x 320 (3:2).
+// Keep this logical stage separate from the source MenuFlash2DCamera's live
+// full-driver display viewport.
 inline constexpr std::int32_t stage_width_twips = 9600;
 inline constexpr std::int32_t stage_height_twips = 6400;
 
-// The original front menu and its backdrop share the same 3:2 presentation
-// frame. Keep black pillarboxes outside that frame on wider modern displays.
+// The original MenuFlash2DCamera passes the full driver bounds to the SWF
+// renderer with display mode 0. Keep the authored stage dimensions for input
+// conversion, but use the complete live surface for display and backdrop.
 inline float surface_aspect(std::int32_t surface_width,
                             std::int32_t surface_height) noexcept {
     if (surface_width <= 0 || surface_height <= 0)
@@ -19,36 +25,48 @@ inline float surface_aspect(std::int32_t surface_width,
     return static_cast<float>(surface_width) / surface_height;
 }
 
-// Center the original stage in a modern surface without stretching/cropping it.
-// Returned coordinates are Android/OpenGL pixel coordinates [x,y,width,height].
-inline std::array<std::int32_t, 4> fit(std::int32_t surface_width,
-                                       std::int32_t surface_height) noexcept {
+// Android/OpenGL pixel coordinates [x,y,width,height].
+inline std::array<std::int32_t, 4> full_surface(std::int32_t surface_width,
+                                               std::int32_t surface_height) noexcept {
     if (surface_width <= 0 || surface_height <= 0) return {};
-    const auto sw = static_cast<std::int64_t>(surface_width);
-    const auto sh = static_cast<std::int64_t>(surface_height);
-    const auto stage_width = static_cast<std::int64_t>(stage_width_twips);
-    const auto stage_height = static_cast<std::int64_t>(stage_height_twips);
-
-    std::int64_t width{};
-    std::int64_t height{};
-    if (sw * stage_height > sh * stage_width) {
-        height = sh;
-        width = sh * stage_width / stage_height;
-    } else {
-        width = sw;
-        height = sw * stage_height / stage_width;
-    }
-    return {static_cast<std::int32_t>((sw - width) / 2),
-            static_cast<std::int32_t>((sh - height) / 2),
-            static_cast<std::int32_t>(width),
-            static_cast<std::int32_t>(height)};
+    return {0, 0, surface_width, surface_height};
 }
 
-// The backdrop is part of the same authored stage, so use the exact fitted
-// rectangle that the SWF hit-test and display bounds use.
+// A contained-stage helper remains useful for comparisons and static artwork.
+// It is not the source MenuFlash2DCamera policy for front/menu SWFs.
+inline std::array<std::int32_t, 4> authored_stage_viewport(
+        std::int32_t surface_width, std::int32_t surface_height) noexcept {
+    if (surface_width <= 0 || surface_height <= 0) return {};
+    if (std::int64_t(surface_width) * stage_height_twips <=
+            std::int64_t(surface_height) * stage_width_twips) {
+        const auto height = static_cast<std::int32_t>(
+                std::int64_t(surface_width) * stage_height_twips / stage_width_twips);
+        return {0, (surface_height - height) / 2, surface_width, height};
+    }
+    const auto width = static_cast<std::int32_t>(
+            std::int64_t(surface_height) * stage_width_twips / stage_height_twips);
+    return {(surface_width - width) / 2, 0, width, surface_height};
+}
+
+// This classifier identifies front-menu states for callers. It does not pick
+// a smaller aspect-fit rectangle: the source camera uses the full driver bounds
+// and the SWF maps its authored stage across those bounds.
+inline bool uses_authored_menu_stage_v1(const std::string& state) {
+    return state == "main" || gameplay_menu_state_v1(state);
+}
+
+inline std::array<std::int32_t, 4> viewport_for_screen_state_v1(
+        const std::string& state, std::int32_t surface_width,
+        std::int32_t surface_height) {
+    (void) state;
+    return full_surface(surface_width, surface_height);
+}
+
+// The original MenuFlash2DCamera uses the full driver bounds for front SWFs;
+// the 3D menu backdrop receives the same full-surface rectangle.
 inline std::array<std::int32_t, 4> background_viewport(
         std::int32_t surface_width, std::int32_t surface_height) noexcept {
-    return fit(surface_width, surface_height);
+    return full_surface(surface_width, surface_height);
 }
 
 }  // namespace dh2::ui::original_menu_viewport_v1

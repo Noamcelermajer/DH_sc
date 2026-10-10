@@ -4,8 +4,17 @@
 #include <string>
 #include <cstdint>
 #include "item_presentation_v5.hpp"
+#include "../../../../../engine-ui/game_option_table_v1.hpp"
 
 namespace dh2::android_ui {
+// Source NativeStartGame arguments captured after the authored Assign call.
+// This is only an asynchronous delivery record; PlayerInfo/save/profile remain
+// owned by the existing native runtime.
+struct NativeStartGameIntentV1 {
+    std::int32_t slot{-1};
+    bool has_numeric_difficulty{};
+    std::int32_t requested_difficulty{};
+};
 // Synchronous borrowed source services. Creation publishes a result only after
 // the original caller reaches persistence; invalid class is success/no-result.
 // The real authored Start button calls Assign before NativeStartGame. The
@@ -39,13 +48,34 @@ public:
     OriginalUiSession& operator=(const OriginalUiSession&)=delete;
     bool initialize(AAssetManager*,std::string&);
     void bind_front_runtime(const FrontRuntimeServices&);
-    bool consume_launch_request(std::int32_t& slot);
+    bool consume_launch_request(NativeStartGameIntentV1& request);
     bool game_difficulty_count(std::uint32_t& count,std::string&);
+    // Borrow row zero from the one retained Application DesignSettings owner.
+    // Valid while the main/gameplay session keeps its GameOption snapshot.
+    dh2::ui::GameOptionBytesV1 design_settings_table() const noexcept;
+    // Borrow the same persisted source Language value used by GSInit when it
+    // selects the opening movie and MyVideoView subtitle table.
+    std::int32_t language() const noexcept;
     bool load_front_screen(const std::string& private_directory,const std::string& screen,std::string&);
     bool load_health_panel(const std::string& private_directory,std::string&);
     bool attach_player(const std::string& private_directory,std::string&);
     bool render_player(int width,int height,const std::int32_t*,std::size_t,
                        std::uintptr_t character,std::string&);
+    // Source FlashAnimManager text is rendered by the retained dqhud movie;
+    // callers supply its already projected authored-stage position and color.
+    bool play_authored_animation_text(const char* style,std::uint32_t slot,
+        float x_twips,float y_twips,const char* text,std::uint8_t r,std::uint8_t g,
+        std::uint8_t b,std::uint8_t a,std::string&);
+    bool play_authored_animation_screen(const char* style,std::uint32_t slot,
+        float screen_x_px,float screen_y_px,const char* text,std::uint8_t r,
+        std::uint8_t g,std::uint8_t b,std::uint8_t a,std::string&);
+    bool authored_animation_style_id(const char* style,std::int32_t& id,std::string&);
+    bool source_combat_text_constant(const char* group,const char* name,
+                                     std::int32_t& value,std::string&);
+    bool source_combat_text_string(std::int32_t string_id,std::string&,
+                                   std::string&);
+    bool source_combat_text_format_int(std::int32_t string_id,std::int32_t argument,
+                                       std::string&,std::string&);
     bool render(int width,int height,std::string&);
     std::string consume_menu_sound(); // GL owner thread; drains one source request
     std::string consume_menu_audio(); // GL owner -> Android audio control delivery
@@ -57,6 +87,11 @@ public:
                                                const data::CharacterTable&) noexcept;
     bool touch(float x,float y,int action,std::string&);
     bool touch(float x,float y,int action,std::uint32_t cursor_index,std::string&);
+    // Android keyboard events are accepted only while the authored name
+    // entry menu owns the front stack; printable text still uses GameSWF's
+    // focused editable-text path.
+    bool menu_text_input_active() const noexcept;
+    bool menu_key_event(std::uint32_t key_code,bool down,std::string&);
     bool camera_pan_allowed() const noexcept;
     // Android system Back uses the same live gameplay menu owner as the
     // authored NativeBackToHud callback; it never reloads the selected level.
@@ -64,6 +99,9 @@ public:
     bool active() const;
     bool overlays_player() const;
     void deactivate();
+    // Re-enable the retained authored front renderer after a failed deferred
+    // NativeStartGame continuation without resetting its current menu stack.
+    bool resume_front_after_start_failure(std::string&);
 private:
     struct Impl;
     std::unique_ptr<Impl> impl_;

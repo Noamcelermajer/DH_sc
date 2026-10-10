@@ -77,17 +77,17 @@ bool swf_menu_preview_save_slot_v1(const gameswf::fn_call& fn,const SwfMenuLaunc
   return s.change_preview_slot(s.context,slot,force,e);
  }catch(const std::exception& ex){e=ex.what();return false;}
 }
-bool swf_menu_start_game_development_v1(const gameswf::fn_call& fn,const SwfMenuLaunchServicesV1& s,std::string& e){
- e.clear();if(!fn.env){e="Malformed development StartGame AS call";return false;}
+bool swf_menu_start_game_continuation_v1(const gameswf::fn_call& fn,const SwfMenuLaunchServicesV1& s,std::string& e){
+ e.clear();if(!fn.env){e="Malformed NativeStartGame AS call";return false;}
  try {
   const bool numeric=fn.nargs==1&&fn.arg(0).is_number();
   std::int32_t requested=0;
   if(numeric){
    const double value=fn.arg(0).to_number();
-   if(!std::isfinite(value)){e="Nonfinite development StartGame difficulty";return false;}
+   if(!std::isfinite(value)){e="Nonfinite NativeStartGame difficulty";return false;}
    if(!integer(s,value,requested,e))return false;
   }
-  if(!s.request_start_game){e="Development Crypt startup continuation unavailable";return false;}
+  if(!s.request_start_game){e="NativeStartGame continuation unavailable";return false;}
   return s.request_start_game(s.context,numeric,requested,e);
  }catch(const std::exception& ex){e=ex.what();return false;}
 }

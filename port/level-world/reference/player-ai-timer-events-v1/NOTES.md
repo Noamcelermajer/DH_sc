@@ -84,6 +84,14 @@ older aggregates. The existing before observer runs, then the typed route:
 preserves timer/provider effects and skips FSM and after observer. Successful
 delivery runs the existing after observer. There is one timer traversal/store.
 
+Player event `0x35` now enters `dh2_character_ai_event_script_timer` from the
+existing `prince_timer_before` hook. Its active-AIS gate and slot `+0x90` call
+are identity-bound to the same Character, Coordinator timer and retained
+AISDefault/VM; the virtual adapter invokes that VM's `OnTimer(id)`. An inactive
+AIS is a source no-op; a different active AIS fails closed. This is a bounded
+callback adapter, not a new AIS vtable or complete `AISDefault::OnScriptTimer`
+body reconstruction.
+
 ## Selected host proof and native limits
 
 The runner builds the actual selected dh2_level_world DSO and single selected

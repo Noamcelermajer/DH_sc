@@ -8,11 +8,20 @@ final class NativeBridge {
     static native byte[] readAsset(String name,android.content.res.AssetManager assets) throws java.io.IOException;
     static native String initialize(android.content.res.AssetManager assets);
     static native String loadFrontScreen(String directory,android.content.res.AssetManager assets);
+    /** Returns the one persisted source Language option, or -1 before settings load. */
+    static native int frontLanguage();
     static native String returnToMainMenu(String directory,android.content.res.AssetManager assets);
+    /** Routes Android system Back through the retained gameplay menu owner. */
+    static native String backToHud();
     /** Sends UI input in GLSurfaceView-local physical pixels (top-left origin); action uses MotionEvent DOWN/UP/MOVE/CANCEL values. */
     static native String menuTouch(float x,float y,int action);
-    static native int consumeMenuLaunch();
-    static native String startMenuGame(int slot,android.content.res.AssetManager assets,int debugLevelRow);
+    /** True only while the retained authored front menu is on EnterName. */
+    static native boolean menuTextInputActive();
+    /** Delivers a GameSWF key code on the GL thread while EnterName is active. */
+    static native String menuKey(int gameSwfKeyCode,boolean down);
+    static native int consumeMenuLaunch(int[] request);
+    static native String startMenuGame(int slot,android.content.res.AssetManager assets,int debugLevelRow,
+                                       boolean hasNumericDifficulty,int requestedDifficulty);
     static native String consumeMenuAudio();
     static native String consumeMenuSound();
     static native String loadTexture(byte[] encoded);

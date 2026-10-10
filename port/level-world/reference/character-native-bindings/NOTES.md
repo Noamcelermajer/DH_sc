@@ -28,6 +28,14 @@ registration. The inherited final entry is method `SetMaxPath`, followed by
 Character's function `SetActorPosition`. The final Character entry is method
 `SetSpellCooldownTimerId__`, retaining the original suffix.
 
+`Character::_ClearTarget` at `0x3b5690` (36 ARM bytes, SHA-256
+`ce58d0a76509f4cc7d385605a5a25a935dde198dd8f4a2c18472383d9f25f9db`)
+ignores Lua arguments and returns, then calls `CharAI::AI_SetTarget` on
+`Character+0x3c8` with `(nullptr, false)`. The player-skill adapter projects
+the existing CharAI target fields and invokes the retained `AI_SetTarget`
+owner, preserving writes even if its debug-switch provider fails. It creates
+no separate target state.
+
 Global function registrations use the captured Character as userdata except for
 the four original null-context functions:
 

@@ -35,6 +35,7 @@ def main():
     inputs = [
         ROOT / "port/engine-ui/authored_gameplay_hud_v1.cpp",
         ROOT / "port/engine-ui/authored_gameplay_hud_v1.hpp",
+        ROOT / "port/engine-ui/gameplay_hud_usable_refresh_v1.hpp",
         ROOT / "port/engine-ui/authored_hud_edge_layout_v6.cpp",
         ROOT / "port/engine-ui/authored_hud_edge_layout_v6.hpp",
         ROOT / "port/engine-ui/authored_joystick_v1.cpp",
@@ -65,10 +66,15 @@ def main():
             raise RuntimeError((result.stdout + result.stderr)[-8000:])
         return result.stdout
 
+    # CMake 3.22 writes compiler paths into generated CMake scripts. Native
+    # Windows backslashes become escapes there (for example, ``\m`` in
+    # ``C:\msys64``), so pass canonical forward-slash paths for -D values.
+    compiler_path = args.compiler.resolve().as_posix()
+    gcc_path = gcc.resolve().as_posix()
     run(["cmake", "-S", wrapper, "-B", args.build, "-G", "Ninja",
          "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-         "-DCMAKE_CXX_COMPILER=" + str(args.compiler),
-         "-DCMAKE_C_COMPILER=" + str(gcc)])
+         "-DCMAKE_CXX_COMPILER=" + compiler_path,
+         "-DCMAKE_C_COMPILER=" + gcc_path])
     compilation = json.loads((args.build / "compile_commands.json").read_text())
     selected = [entry for entry in compilation
                 if "CMakeFiles/dh2_engine_ui.dir" in entry["command"].replace("\\", "/")]

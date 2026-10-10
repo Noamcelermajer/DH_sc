@@ -17,6 +17,15 @@ struct Result {
     std::int32_t value=-1;
     PlayerInfo* player=nullptr;
 };
+// _InitEquipment runs while the single selected Character may not yet be
+// present in PlayerManager's registered list. Source loot weighting still
+// receives the current player's class count; this projection represents that
+// one offline Character using its CharacterTable row index.
+struct SinglePlayerClassCounts {
+    std::int32_t mage=0,rogue=0,warrior=0;
+};
+Status project_single_player_class_counts(std::int32_t character_class_row,
+                                           SinglePlayerClassCounts*);
 // Source manager+6a0 or online vector+6a8/6ac. Friendly ordinal selection
 // scans all players, rather than GetLocalPlayer's separate local-only scan.
 // All fields/providers borrow the same canonical owner; no new player store.

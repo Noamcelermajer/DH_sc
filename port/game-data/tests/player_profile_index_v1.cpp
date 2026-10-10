@@ -155,6 +155,8 @@ int source_load(Reader& r,unsigned& boundaries,unsigned& failures,unsigned& guar
     check(r.at==r.b.size(),"load gold consumed");
     Fixture dynamic;dynamic.canonical=dynamic.profile(1);dynamic.flags=1;dynamic.replace_after_faeries=true;dynamic.replace_on_online=true;
     PlayerSaveLoadOwnerV1 runtime(dynamic.save,dynamic.canonical,dynamic.services());check(runtime.load(4,error),"mutable canonical profile source");
+    check(runtime.delivered_calls()>=9&&runtime.delivered_section_calls()==8,
+          "profile-backed mask4 dispatches all eight section requests");++guards;
     auto cfee=std::find_if(dynamic.events.begin(),dynamic.events.end(),[](const auto& e){return e[0]==2&&e[3]==10;});
     auto quests=std::find_if(dynamic.events.begin(),dynamic.events.end(),[](const auto& e){return e[0]==2&&e[3]==11;});
     check(cfee!=dynamic.events.end()&&(*cfee)[2]==2&&quests!=dynamic.events.end()&&(*quests)[2]==3,"CFEE captured profile vs fresh following tags");++guards;
@@ -169,6 +171,12 @@ int source_load(Reader& r,unsigned& boundaries,unsigned& failures,unsigned& guar
     thrown.throw_failure=false;thrown.failure=SIZE_MAX;thrown.events.clear();check(exceptional.load(1,error)&&thrown.events.size()==7,"explicit later source load allowed");++guards;
     Fixture absent;PlayerSaveLoadOwnerV1 unbound(absent.save,absent.canonical);
     check(!unbound.load(2,error)&&unbound.reached_phase()==4&&unbound.delivered_calls()==1,"missing reached init_levels fails");++guards;
+    Fixture inspection;inspection.save.set_slot(-1);
+    PlayerSaveLoadOwnerV1 no_profile(inspection.save,inspection.canonical,inspection.services());
+    check(no_profile.load(4,error)&&!inspection.canonical.identity&&
+          no_profile.delivered_calls()==1&&no_profile.delivered_section_calls()==0&&
+          inspection.events.size()==1&&inspection.events[0][0]==std::uint32_t(PlayerSaveLoadOpV1::online),
+          "slot -1 mask4 skips profile sections but completes the online guard");++guards;
     check(!unbound.publish_profile({1,{},{}},error)&&!absent.canonical.identity,"incoherent publication rejected");++guards;
     return static_cast<int>(count);
 }
@@ -295,6 +303,27 @@ void actual_private_metadata(const std::filesystem::path& cache,const CharacterT
 }
 int main(int argc,char** argv) {
     try {
+        if(argc==2&&!std::strcmp(argv[1],"--mask4-dispatch")) {
+            std::string error;
+            Fixture published;published.canonical=published.profile(1);
+            PlayerSaveLoadOwnerV1 with_profile(published.save,published.canonical,published.services());
+            check(with_profile.load(4,error)&&with_profile.delivered_calls()>=9&&
+                  with_profile.delivered_section_calls()==8,
+                  "published profile dispatches eight mask4 section requests plus online guard");
+            Fixture inspection;inspection.save.set_slot(-1);
+            PlayerSaveLoadOwnerV1 without_profile(inspection.save,inspection.canonical,inspection.services());
+            check(without_profile.load(4,error)&&!inspection.canonical.identity&&
+                  without_profile.delivered_calls()==1&&without_profile.delivered_section_calls()==0&&
+                  inspection.events.size()==1&&
+                  inspection.events[0][0]==std::uint32_t(PlayerSaveLoadOpV1::online),
+                  "slot -1 skips mask4 sections but completes online guard");
+            std::cout<<"{\"validation\":\"PASS\",\"published_profile_section_requests\":8,"
+                     "\"published_profile_total_deliveries\":"<<with_profile.delivered_calls()
+                     <<",\"slot_minus_one_section_requests\":0,"
+                     "\"slot_minus_one_total_deliveries\":"<<without_profile.delivered_calls()
+                     <<",\"mismatches\":0}\n";
+            return 0;
+        }
         if(argc==5&&!std::strcmp(argv[1],"--filename")) {
             const auto slot=std::stoull(argv[2]);check(slot<=UINT32_MAX,"uint32 slot required");
             std::cout<<'"'<<player_profile_filename_v1(static_cast<std::uint32_t>(slot),std::stoi(argv[3])!=0,std::stoi(argv[4])!=0)<<"\"\n";

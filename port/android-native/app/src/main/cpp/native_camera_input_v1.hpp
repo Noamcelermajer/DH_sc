@@ -130,4 +130,12 @@ inline int map_hud_touch_input(float* direction, bool* active) {
     return 0;
 }
 
+// MainActivity's MovementControl mirrors the original HUD thumbstick. The
+// source HUDControls::Update sends this screen-basis vector directly through
+// Cmd_HeadTowards; only v2GamepadController adds a radial deadzone and
+// CameraBase-relative rotation. Keep those two input routes distinct.
+inline int map_movement_control_input(float* direction, bool* active) {
+    return map_hud_touch_input(direction, active);
+}
+
 }  // namespace dh2::native::camera_input_v1

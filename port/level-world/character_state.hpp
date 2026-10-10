@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 namespace dh2::character_skill_state_dispatch_v1 { struct Projection; }
+namespace dh2::character_cast_lifecycle_v1 { struct Projection; }
 namespace dh2::character {
 // Logical projection of Character and CharStateMachine, never an ARM32 overlay.
 struct State {
@@ -37,7 +38,7 @@ enum Service : std::uint32_t {
  init_physical_object,enable_collisions,
  // Source CSDead OnFocus begins with two real Debug load/query calls before
  // flags/LookAt. Appended service preserves all previous enum values and ABI.
- dead_focus_prelude
+ dead_focus_prelude,store_previous_flags // CSDespawn saves Character flags before replacing them.
 };
 struct Request {
  std::uint32_t service;
@@ -103,6 +104,11 @@ int dh2_character_state_update(dh2::character::State*,const dh2::character::Fact
 // layouts and ordinary state entry points remain unchanged.
 int dh2_character_skill_state_transition(dh2::character::State*,const dh2::character::Facts*,
  dh2::character_skill_state_dispatch_v1::Projection*,std::int32_t next,
+ std::int32_t event,std::uint64_t payload,const dh2::character::Services*);
+// CSCast state7 transitions borrow the same Coordinator State and a separate
+// callback projection for Character RaiseEvent32/33 and owner services.
+int dh2_character_cast_state_transition(dh2::character::State*,const dh2::character::Facts*,
+ dh2::character_cast_lifecycle_v1::Projection*,std::int32_t next,
  std::int32_t event,std::uint64_t payload,const dh2::character::Services*);
 // Source-backed Limbus(0), Spawn(1), and existing Idle(3) transitions. The
 // original SpawnCharacter script and Limbus respawn timer both arrive here.

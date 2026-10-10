@@ -10,6 +10,14 @@ namespace dh2::native::character_controller_v1 {
 enum class Outcome : std::uint32_t { unchanged, heading, stopped, skill_blocked };
 enum class Status : std::int32_t { complete, invalid_argument, service_failed };
 
+inline constexpr float kSourceHeadingLengthSquared = 0.0001f;
+inline bool has_source_head_towards_vector(bool controller_enabled,
+                                           bool mapped_input_active,
+                                           float length_squared) noexcept {
+    return controller_enabled && mapped_input_active &&
+        length_squared > kSourceHeadingLengthSquared;
+}
+
 struct Services {
     void* context;
     // Character::RaiseEvent receives 0 for accepted HeadTowards and 63 after
@@ -51,9 +59,8 @@ inline Status dispatch_head_towards(dh2::navigation::HeadingState* heading,
     // after controller activity has been produced. A calibrated gamepad value
     // just above its radial deadzone can still enter the source zero-vector
     // branch; the authored touchscreen can also be held at its center.
-    constexpr float kSourceHeadingLengthSquared = 0.0001f;
-    const bool source_nonzero_head_towards =
-        mapped_input_active && length_squared > kSourceHeadingLengthSquared;
+    const bool source_nonzero_head_towards = has_source_head_towards_vector(
+        controller_enabled, mapped_input_active, length_squared);
     if (source_nonzero_head_towards) {
         if (using_skill || casting) {
             *outcome = Outcome::skill_blocked;

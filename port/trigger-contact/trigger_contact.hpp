@@ -69,6 +69,8 @@ struct Frame {
 
 struct State {
     uint8_t qualifying_contact;
+    uint8_t trigger_fired;
+    uint32_t trigger_activations;
 };
 
 enum Status {
@@ -95,6 +97,12 @@ bool overlaps_closed(const Aabb *left, const Aabb *right);
 Status update(dh2_script_runtime::Runtime *runtime,
               State *state,
               const Frame *frame);
+Status update_for(dh2_script_runtime::Runtime *runtime,
+                  State *state,
+                  const Frame *frame,
+                  const char *trigger_name,
+                  int32_t trigger_script_id,
+                  int32_t trigger_count);
 const char *status_name(Status status);
 
 }  // namespace dh2_trigger_contact

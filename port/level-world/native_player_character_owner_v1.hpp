@@ -2,6 +2,7 @@
 
 #include "character_coordinator.hpp"
 #include "../game-data/fresh_inventory_owned_v4.hpp"
+#include "../game-data/item_presentation_v5.hpp"
 #include "../game-data/player_savegame_v1.hpp"
 #include <cstdint>
 #include <string>
@@ -66,6 +67,14 @@ public:
     data::PlayerSavegameV1* save_for(std::uintptr_t character) const noexcept;
     data::PropertyState* properties_for(std::uintptr_t character) const noexcept;
     data::FreshInventoryOwnedV4* inventory_for(std::uintptr_t character) const noexcept;
+    // SavegameManager::SetLanguage's Character::UpdateInventoryLocalization
+    // player branch. Resolves only this published Character's one V4 inventory
+    // and refreshes its same V5 presentation records; it is not a Level walk.
+    bool update_inventory_localization(
+        std::uintptr_t character,
+        data::ItemPresentationOwnerV5& presentation,
+        const data::ItemTextServicesV5& text,
+        std::string& error) const;
 };
 
 static_assert(sizeof(std::uintptr_t) == 8,

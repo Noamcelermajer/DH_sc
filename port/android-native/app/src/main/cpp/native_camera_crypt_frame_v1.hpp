@@ -10,11 +10,11 @@ namespace dh2::native::crypt_camera_frame_v1 {
 using Vec3 = std::array<float, 3>;
 using Matrix = std::array<float, 16>;
 
-// The source-backed Crypt frame is isolated to the exact level identity.
-// Level::_LoadCamera (original ELF VA 0x3f1008) calls CameraBase::SetData
-// (0x40e9a8) after loading the CameraLevel BDAE. Its FOV is the immediate
-// 0x3edbf877 (0.429630011 rad); near/far are camera_znear/camera_zfar from
-// 007_crypt_01.rule.xml (900/5000) read from LevelConfig +0x294/+0x298.
+// Source player-camera frames are bounded to Crypt and SWAMP. IDA confirms
+// Level::_LoadCamera (0x3f1008) calls CameraBase::SetData (0x40e9a8) with the
+// same FOV immediate 0x3edbf877 (0.429630011 rad) on both routes. Near/far
+// remain level-specific camera_znear/camera_zfar values from LevelConfig.
+// Crypt's 007_crypt_01.rule.xml values are 900/5000 from +0x294/+0x298.
 // Those runtime SetData values replace the playercamera.bdae Camera record
 // (45, 1.5, 600, 3800); do not feed the BRES values into the gameplay frame.
 // The old runtime also supplies aspect 0x3fd578e9 (1.6677524), but this port
@@ -76,15 +76,16 @@ inline bool source_camera_rig_route_ready(std::string_view level_name,
            level_projection_ready && authored_rig_ready;
 }
 
-// This projection receipt and the authored camera-rig handoff are only
-// verified for Crypt. Other levels may expose clip-plane fields without
-// providing the matching CameraLevel FOV/target path.
+// Both routes require their exact LevelConfig clip planes and the authored
+// LevelConfig camera resource plus selected CamAnimSet idle. An empty
+// camera_file resolves to CameraTests.bdae and an empty camera_animset to
+// Default, as supplied by LevelConfig::InitPost/DeclareProperties.
 inline bool source_player_camera_route_ready(std::string_view level_name,
                                              std::string_view level_file,
                                              bool level_projection_ready,
                                              bool authored_rig_ready) noexcept {
-    return verified_crypt_route(level_name, level_file) &&
-           level_projection_ready && authored_rig_ready;
+    return source_camera_rig_route_ready(level_name, level_file,
+                                         level_projection_ready, authored_rig_ready);
 }
 
 struct Frame {
@@ -245,7 +246,12 @@ inline bool update_forward_anchor(ForwardAnchorState* state,
             actor_position[2] + state->distance * state->previous_actor_look_at[2]};
     }
 
-    state->previous_actor_position = actor_position;
+    // AnchorForward keeps the last idle actor position in its +0x40..+0x48
+    // fields while its movement transition is active. Compare displacement
+    // from that stable baseline, rather than the immediately preceding frame;
+    // otherwise slow joystick movement can never unlock the full target range.
+    if (!heading_active || (!moving && !attacking))
+        state->previous_actor_position = actor_position;
     state->previous_actor_look_at = current_actor_look_at;
     state->has_previous_actor_look_at = true;
     return true;
@@ -311,23 +317,23 @@ inline bool normalize(Vec3& v) noexcept {
     for (float& component : v) component *= inverse;
     return std::isfinite(v[0]) && std::isfinite(v[1]) && std::isfinite(v[2]);
 }
-// CameraLevel writes its zoom as a Camera/target-camera local-Z displacement.
-// In the authored camera frame, local Z is the target-to-eye axis. A negative
-// zoom offset therefore moves the eye toward its target without changing the
-// authored look-at point or orientation.
-inline bool apply_target_camera_local_z(Vec3 eye_from_target, float local_z,
-                                        Vec3* out_eye_from_target) noexcept {
-    if (!out_eye_from_target || !std::isfinite(local_z)) return false;
-    for (float value : eye_from_target) if (!std::isfinite(value)) return false;
-    Vec3 direction = eye_from_target;
-    if (!normalize(direction)) return false;
+// CameraLevel writes zoom to the target-camera node's local position Z. Apply
+// that local translation through the authored node basis; the camera eye stays
+// at its authored position. The basis is relative to Root_Camera-node and is
+// supplied from the target node's world matrix column 2.
+inline bool apply_target_camera_local_z(Vec3 target_from_root,
+                                        Vec3 target_local_z_axis,
+                                        float local_z,
+                                        Vec3* out_target_from_root) noexcept {
+    if (!out_target_from_root || !std::isfinite(local_z)) return false;
+    for (float value : target_from_root) if (!std::isfinite(value)) return false;
+    for (float value : target_local_z_axis) if (!std::isfinite(value)) return false;
     Vec3 result{};
     for (std::size_t i = 0; i < result.size(); ++i) {
-        result[i] = eye_from_target[i] + direction[i] * local_z;
+        result[i] = target_from_root[i] + target_local_z_axis[i] * local_z;
         if (!std::isfinite(result[i])) return false;
     }
-    if (!(dot(result, result) > 0.0f)) return false;
-    *out_eye_from_target = result;
+    *out_target_from_root = result;
     return true;
 }
 inline Matrix multiply(const Matrix& a, const Matrix& b) noexcept {
@@ -348,7 +354,8 @@ inline bool build_player_frame(Vec3 target, int width, int height, Frame* out,
                                Vec3 eye_from_target,
                                Vec3 up_direction,
                                Vec3 target_from_anchor = Vec3{0.0f, 0.0f, 0.0f},
-                               float camera_local_z_offset = 0.0f) noexcept {
+                               float camera_local_z_offset = 0.0f,
+                               Vec3 target_camera_local_z_axis = Vec3{0.0f,0.0f,1.0f}) noexcept {
     if (!out || width <= 1 || height <= 1 ||
         !std::isfinite(vertical_fov_radians) ||
         !(vertical_fov_radians > 0.0f && vertical_fov_radians < 3.14159265358979323846f) ||
@@ -359,17 +366,19 @@ inline bool build_player_frame(Vec3 target, int width, int height, Frame* out,
     for (float value : eye_from_target) if (!std::isfinite(value)) return false;
     for (float value : up_direction) if (!std::isfinite(value)) return false;
     for (float value : target_from_anchor) if (!std::isfinite(value)) return false;
+    for (float value : target_camera_local_z_axis) if (!std::isfinite(value)) return false;
 
     Frame frame{};
-    frame.target = add(target,target_from_anchor);
-    Vec3 composed_eye_offset{};
-    if (!apply_target_camera_local_z(eye_from_target, camera_local_z_offset,
-                                     &composed_eye_offset)) return false;
-    frame.eye = add(frame.target, composed_eye_offset);
+    const Vec3 unzoomed_target = add(target,target_from_anchor);
+    frame.target = unzoomed_target;
+    if (!apply_target_camera_local_z(frame.target,target_camera_local_z_axis,
+                                     camera_local_z_offset,&frame.target)) return false;
+    frame.eye = add(unzoomed_target,eye_from_target);
     frame.aspect = static_cast<float>(width) / static_cast<float>(height);
-    frame.input_yaw = std::atan2(composed_eye_offset[1], composed_eye_offset[0]);
-    frame.input_pitch = std::atan2(composed_eye_offset[2],
-        std::hypot(composed_eye_offset[0], composed_eye_offset[1]));
+    const Vec3 eye_from_adjusted_target = subtract(frame.eye,frame.target);
+    frame.input_yaw = std::atan2(eye_from_adjusted_target[1],eye_from_adjusted_target[0]);
+    frame.input_pitch = std::atan2(eye_from_adjusted_target[2],
+        std::hypot(eye_from_adjusted_target[0],eye_from_adjusted_target[1]));
 
     Vec3 forward = subtract(frame.target, frame.eye);
     if (!normalize(forward)) return false;

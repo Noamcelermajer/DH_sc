@@ -86,6 +86,15 @@ class SwfMovie {
  bool clip(const char* path,SwfClipInfo&,std::string&);
  bool set_number(const char* path,double,std::string&);
  bool set_visible(const char* path,bool,std::string&);
+ // Play a source animation clone at authored-stage twips. The movie owns the
+ // source 12 global playback contexts and each style's 8 clone slots; a
+ // saturated style reuses its existing eighth clone, while context saturation
+ // fails closed. UINT32_MAX requests the source's automatic context allocator.
+ bool play_authored_animation_text(const char* style,std::uint32_t slot,
+     float x_twips,float y_twips,const char* text,std::uint8_t r,std::uint8_t g,
+     std::uint8_t b,std::uint8_t a,std::string&);
+ bool authored_animation_style_id(const char* style,std::int32_t& id,std::string&);
+ bool display_authored_animations(std::string&);
  // PostLoad/RegisterState visibility stage only; does not fabricate native
  // menu instances, run Create, or install stack/lifecycle ownership.
  bool hide_menu_state_clips(std::vector<std::string>& names,std::string&);
@@ -123,6 +132,9 @@ class SwfMovie {
  bool input_cancel(float x,float y,std::uint32_t cursor_index,std::string&);
  bool input_advance(std::int32_t milliseconds,std::string&);
  bool input_raw_position(int& x,int& y,std::string&);
+ // Deliver a source GameSWF key event to its retained root. Codes use
+ // gameswf::key::code so Android adapters do not leak platform key values.
+ bool input_key_event(std::uint32_t key_code,bool down,std::string&);
  gameswf::font* borrowed_font(std::int32_t resource_id) const; // invalidated by destruction/reload
  const std::vector<std::string>& diagnostics() const;
  std::uintptr_t player_identity() const noexcept; // retained graph identity, no VM operation

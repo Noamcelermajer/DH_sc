@@ -29,6 +29,14 @@ struct ReplayContext {
  BlendedPlayback* playback;const ClipBank* bank;visual::SceneBinding* visual;
  scene::Scene* scene;std::string* error;bool success=true;
 };
+bool selected_frame_step(void* raw,data::AnimationScheduler& scheduler,
+                         std::uint32_t step,std::uint32_t count){
+ auto& c=*static_cast<ReplayContext*>(raw);auto& p=*c.playback;
+ if(!count||step>=count||scheduler.frames().empty()||
+    scheduler.frames().back().step!=step||p.blend.current>=p.slots.size())return false;
+ return !p.observer.frame_step||
+        p.observer.frame_step(p.observer.context,p,p.blend.current,step,count);
+}
 void replay(void* context,std::uint32_t event,timeline::State*,const timeline::ReplayResult* result){
  auto& c=*static_cast<ReplayContext*>(context);
  if(event!=timeline::new_animation)return;
@@ -252,7 +260,8 @@ bool BlendedPlayback::start(const data::AnimationTables& tables,int sequence,dat
  const data::AnimationSelectionServices services{
   &context,
   [](void* raw,data::AnimationScheduler&,std::uint32_t id){static_cast<ReplayContext*>(raw)->playback->scheduler_event(id);},
-  [](void* raw,data::AnimationScheduler&){auto& c=*static_cast<ReplayContext*>(raw);return c.playback->apply_selection(*c.bank,*c.visual,*c.scene,*c.error);}
+  [](void* raw,data::AnimationScheduler&){auto& c=*static_cast<ReplayContext*>(raw);return c.playback->apply_selection(*c.bank,*c.visual,*c.scene,*c.error);},
+  selected_frame_step
  };
  return scheduler.start_with_services(tables,sequence,random,error,services);
 }
@@ -385,7 +394,13 @@ bool BlendedPlayback::animator_phase(const data::AnimationTables& tables,data::A
  const data::AnimationSelectionServices selection{
   &context,
   [](void* raw,data::AnimationScheduler&,std::uint32_t id){static_cast<Context*>(raw)->p->scheduler_event(id);},
-  [](void* raw,data::AnimationScheduler&){auto& c=*static_cast<Context*>(raw);return c.p->apply_selection(*c.bank,*c.visual,*c.scene,*c.error);}
+  [](void* raw,data::AnimationScheduler&){auto& c=*static_cast<Context*>(raw);return c.p->apply_selection(*c.bank,*c.visual,*c.scene,*c.error);},
+  [](void* raw,data::AnimationScheduler& scheduler,std::uint32_t step,std::uint32_t count){
+   auto& c=*static_cast<Context*>(raw);auto& p=*c.p;
+   if(!count||step>=count||scheduler.frames().empty()||scheduler.frames().back().step!=step||
+      p.blend.current>=p.slots.size())return false;
+   return !p.observer.frame_step||p.observer.frame_step(p.observer.context,p,p.blend.current,step,count);
+  }
  };
  const data::AnimationCompletionServices services{
   &context,

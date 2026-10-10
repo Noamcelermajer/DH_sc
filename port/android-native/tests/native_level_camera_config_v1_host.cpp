@@ -19,8 +19,9 @@ bool near(float a,float b,float epsilon=1e-5f) {
 }
 
 int main(int argc,char** argv) {
-    if(argc!=3){std::fprintf(stderr,"usage: native_level_camera_config_v1_host swamp.mlx crypt.rule.xml\n");return 2;}
+    if(argc!=4){std::fprintf(stderr,"usage: native_level_camera_config_v1_host swamp.mlx crypt.rule.xml crypt.mlx\n");return 2;}
     const auto swamp_xml=read(argv[1]),crypt_xml=read(argv[2]);
+    const auto crypt_mlx=read(argv[3]);
     dh2::native::level_camera_config_v1::ClipPlanes swamp{},crypt{};
     if(!near(dh2::native::level_camera_config_v1::kVerticalFovRadians,
              0.42963001132011414f,1e-8f)){
@@ -33,6 +34,23 @@ int main(int argc,char** argv) {
     if(!dh2::native::level_camera_config_v1::parse_clip_planes(crypt_xml,&crypt)||
        !near(crypt.near_clip,900.0f)||!near(crypt.far_clip,5000.0f)){
         std::fprintf(stderr,"FAIL: Crypt rule clip planes must come from 007_crypt_01.rule.xml\n");return 1;
+    }
+    using dh2::native::level_camera_config_v1::CameraRoute;
+    CameraRoute swamp_route{},crypt_route{},explicit_route{};
+    if(!dh2::native::level_camera_config_v1::parse_camera_route(swamp_xml,&swamp_route)||
+       !dh2::native::level_camera_config_v1::parse_camera_route(crypt_mlx,&crypt_route)||
+       swamp_route.camera_file!="CameraTests.bdae"||
+       crypt_route.camera_file!="CameraTests.bdae"||
+       swamp_route.camera_name!="PlayerCamera_Default"||
+       crypt_route.camera_name!="PlayerCamera_Default"||
+       swamp_route.animset!="Default"||crypt_route.animset!="Default"){
+        std::fprintf(stderr,"FAIL: empty source camera fields did not resolve to CameraTests.bdae / PlayerCamera_Default / Default\n");return 1;
+    }
+    if(!dh2::native::level_camera_config_v1::parse_camera_route(
+       "<Level camera_file=\"data/3d/camera/custom.bdae\" camera_animset=\"Boss\" />",
+       &explicit_route)||explicit_route.camera_file!="data/3d/camera/custom.bdae"||
+       explicit_route.animset!="Boss"){
+        std::fprintf(stderr,"FAIL: explicit LevelConfig camera resource/animset was not preserved\n");return 1;
     }
 
     using namespace dh2::native::crypt_camera_frame_v1;
@@ -58,6 +76,6 @@ int main(int argc,char** argv) {
                           900.0f,900.0f,eye_offset,up_direction)){
         std::fprintf(stderr,"FAIL: invalid near/far order accepted\n");return 1;
     }
-    std::puts("PASS: per-level camera clip planes and shared player-rig projection");
+    std::puts("PASS: per-level camera clip planes, LevelConfig camera resource/animset route, shared player-rig projection");
     return 0;
 }

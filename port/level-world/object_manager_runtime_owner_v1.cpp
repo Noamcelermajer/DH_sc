@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <new>
 
 namespace dh2::object_manager_runtime_owner_v1 {
@@ -57,23 +58,103 @@ dh2::room_zone_enrollment::GameObject GameObject::enrollment_view() noexcept {
 
 Status Owner::add_object(SourceHandle source_handle, const GameObject& object,
                          GameObject** stored) noexcept {
+    return add_named_object(source_handle, {}, object, stored);
+}
+
+Status Owner::add_named_object(SourceHandle source_handle, std::string_view name,
+                               const GameObject& object,
+                               GameObject** stored) noexcept {
     if (stored == nullptr || object.identity == 0) return Status::invalid_argument;
     *stored = nullptr;
-    if (objects_.find(source_handle) != objects_.end()) {
-        return Status::duplicate_source_handle;
+    auto existing = objects_.find(source_handle);
+    if (existing != objects_.end()) {
+        // GetObjectByName may reserve the keyed ObjectListItem before the
+        // factory's Add publishes its concrete object. Fill that exact row in
+        // place; unrelated or differently named rows remain collisions.
+        if (existing->second.identity != 0) return Status::duplicate_source_handle;
+        if (!name.empty() && existing->second.name != name)
+            return Status::source_handle_collision;
+        if (find_by_identity(object.identity) != nullptr)
+            return Status::duplicate_identity;
+        try {
+            GameObject value = object;
+            value.source_handle = source_handle;
+            value.name = existing->second.name;
+            value.visual_view_ = {};
+            existing->second = std::move(value);
+            *stored = &existing->second;
+            return Status::ok;
+        } catch (...) {
+            return Status::allocation_failed;
+        }
     }
     if (find_by_identity(object.identity) != nullptr) return Status::duplicate_identity;
 
     try {
         GameObject value = object;
         value.source_handle = source_handle;
+        if (!name.empty()) value.name.assign(name.data(), name.size());
+        else value.name.clear();
         value.visual_view_ = {};
         const auto inserted = objects_.emplace(source_handle, value);
         if (!inserted.second) return Status::duplicate_source_handle;
+        if (!name.empty()) {
+            try {
+                names_[inserted.first->second.name].insert(source_handle);
+            } catch (...) {
+                const auto indexed = names_.find(inserted.first->second.name);
+                if (indexed != names_.end() && indexed->second.empty()) names_.erase(indexed);
+                objects_.erase(inserted.first);
+                return Status::allocation_failed;
+            }
+        }
         *stored = &inserted.first->second;
         return Status::ok;
     } catch (const std::bad_alloc&) {
         return Status::allocation_failed;
+    } catch (...) {
+        return Status::allocation_failed;
+    }
+}
+
+Status Owner::get_or_reserve_named_handle(std::string_view name,
+                                           bool create_if_missing,
+                                           SourceHandle* source_handle,
+                                           bool* created) noexcept {
+    if (!source_handle || !created || name.empty()) return Status::invalid_argument;
+    *source_handle = 0;
+    *created = false;
+    if (const auto* existing = find_by_name(name)) {
+        *source_handle = existing->source_handle;
+        return Status::ok;
+    }
+    if (!create_if_missing) return Status::not_found;
+    if (next_source_handle_ == std::numeric_limits<SourceHandle>::max())
+        return Status::source_handle_exhausted;
+
+    // The ARM source pre-increments +0x4c, then indexes the signed-key map.
+    // Preserve the consumed key on a collision/failure, matching that order.
+    const SourceHandle reserved = next_source_handle_++;
+    *source_handle = reserved;
+    const auto occupied = objects_.find(reserved);
+    if (occupied != objects_.end()) return Status::source_handle_collision;
+
+    try {
+        GameObject row{};
+        row.source_handle = reserved;
+        row.name.assign(name.data(), name.size());
+        const auto inserted = objects_.emplace(reserved, std::move(row));
+        if (!inserted.second) return Status::source_handle_collision;
+        try {
+            names_[inserted.first->second.name].insert(reserved);
+        } catch (...) {
+            const auto indexed = names_.find(inserted.first->second.name);
+            if (indexed != names_.end() && indexed->second.empty()) names_.erase(indexed);
+            objects_.erase(inserted.first);
+            return Status::allocation_failed;
+        }
+        *created = true;
+        return Status::ok;
     } catch (...) {
         return Status::allocation_failed;
     }
@@ -86,10 +167,19 @@ Status Owner::remove_object(SourceHandle source_handle, bool* removed) noexcept 
     if (found == objects_.end()) return Status::not_found;
 
     bool no_room_removed = false;
-    const Status no_room_status =
-        remove_no_room_object(found->second.identity, &no_room_removed);
-    (void)no_room_removed;
-    if (no_room_status != Status::ok) return no_room_status;
+    if (found->second.identity != 0) {
+        const Status no_room_status =
+            remove_no_room_object(found->second.identity, &no_room_removed);
+        (void)no_room_removed;
+        if (no_room_status != Status::ok) return no_room_status;
+    }
+    if (!found->second.name.empty()) {
+        const auto named = names_.find(found->second.name);
+        if (named != names_.end()) {
+            named->second.erase(source_handle);
+            if (named->second.empty()) names_.erase(named);
+        }
+    }
     objects_.erase(found);
     *removed = true;
     return Status::ok;
@@ -106,6 +196,7 @@ const GameObject* Owner::find_by_source_handle(SourceHandle source_handle) const
 }
 
 GameObject* Owner::find_by_identity(Address identity) noexcept {
+    if (identity == 0) return nullptr;
     for (auto& item : objects_) {
         if (item.second.identity == identity) return &item.second;
     }
@@ -113,10 +204,23 @@ GameObject* Owner::find_by_identity(Address identity) noexcept {
 }
 
 const GameObject* Owner::find_by_identity(Address identity) const noexcept {
+    if (identity == 0) return nullptr;
     for (const auto& item : objects_) {
         if (item.second.identity == identity) return &item.second;
     }
     return nullptr;
+}
+
+GameObject* Owner::find_by_name(std::string_view name) noexcept {
+    const auto found = names_.find(name);
+    if (found == names_.end() || found->second.empty()) return nullptr;
+    return find_by_source_handle(*found->second.begin());
+}
+
+const GameObject* Owner::find_by_name(std::string_view name) const noexcept {
+    const auto found = names_.find(name);
+    if (found == names_.end() || found->second.empty()) return nullptr;
+    return find_by_source_handle(*found->second.begin());
 }
 
 void Owner::reset(Cursor* cursor) const noexcept {
@@ -235,9 +339,11 @@ void Owner::reset_after_native_flush() noexcept {
     // the source destruction phase. This does not reproduce the other
     // ObjectManager collections or native destructor side effects.
     objects_.clear();
+    names_.clear();
     no_room_objects_.clear();
     room_objects_.clear();
     visible_room_zone_count_ = 0;
+    next_source_handle_ = 1;
 }
 
 } // namespace dh2::object_manager_runtime_owner_v1

@@ -84,8 +84,8 @@ void Owner::set_zoom_animation_state(bool active,bool preserve_zoom) noexcept {
 }
 void Owner::set_default_target_distance(float distance) noexcept { default_target_distance_=distance; }
 
-bool ZoomInput::set_camera(Owner* owner,ZoomSensitivityCounts counts) noexcept {
-    const auto count=std::max(counts.difficulty_count_12,counts.difficulty_count_16);
+bool ZoomInput::set_camera(Owner* owner,DrawableTargetSize target) noexcept {
+    const auto count=std::max(target.width,target.height);
     if(!owner||count<=0)return false;
     owner_=owner;
     sensitivity_=1.0f/static_cast<float>(count);
@@ -94,6 +94,15 @@ bool ZoomInput::set_camera(Owner* owner,ZoomSensitivityCounts counts) noexcept {
     mouse_start_x_=mouse_start_y_=0;
     mouse_pan_baseline_={};
     return std::isfinite(sensitivity_)&&sensitivity_>0.0f;
+}
+
+bool ZoomInput::update_drawable_target(DrawableTargetSize target) noexcept {
+    const auto count=std::max(target.width,target.height);
+    if(!owner_||count<=0)return false;
+    const float next=1.0f/static_cast<float>(count);
+    if(!std::isfinite(next)||next<=0.0f)return false;
+    sensitivity_=next;
+    return true;
 }
 
 void ZoomInput::clear_camera() noexcept {
@@ -138,7 +147,8 @@ bool ZoomInput::end_mouse_pan() noexcept {
 
 bool ZoomInput::touch_pan(std::int32_t delta_x,std::int32_t delta_y,Vec3* camera_offset,
                           bool touch_pan_enabled) const noexcept {
-    if(!owner_||!camera_offset||!touch_pan_enabled||!finite(*camera_offset))return false;
+    if(!owner_||!owner_->use_object_position()||!camera_offset||!touch_pan_enabled||
+       !finite(*camera_offset))return false;
     const Vec3 next{camera_offset->x-static_cast<float>(delta_x)*50.0f,
                     camera_offset->y+static_cast<float>(delta_y)*50.0f,
                     camera_offset->z};
@@ -148,7 +158,8 @@ bool ZoomInput::touch_pan(std::int32_t delta_x,std::int32_t delta_y,Vec3* camera
 }
 
 bool ZoomInput::pinch_zoom(float previous_distance,float current_distance) noexcept {
-    if(!owner_||!std::isfinite(previous_distance)||!std::isfinite(current_distance)||
+    if(!owner_||!owner_->use_object_position()||!std::isfinite(previous_distance)||
+       !std::isfinite(current_distance)||
        previous_distance<0.0f||current_distance<0.0f)return false;
     const float zoom=owner_->current_zoom();
     const float next=zoom+(current_distance-previous_distance)*sensitivity_;
@@ -158,10 +169,15 @@ bool ZoomInput::pinch_zoom(float previous_distance,float current_distance) noexc
 }
 
 Status Owner::update(const FrameInput& in,FrameOutput* out) noexcept {
-    if(!out||in.dt_ms<0||!std::isfinite(in.normal_design_min_zoom)||!std::isfinite(in.normal_design_max_zoom)||
-       !std::isfinite(in.alternate_design_min_zoom)||!std::isfinite(in.alternate_design_max_zoom)||
+    if(!out||in.dt_ms<0||!std::isfinite(in.design_zoom_bounds.normal_min)||
+       !std::isfinite(in.design_zoom_bounds.normal_max)||
+       !std::isfinite(in.design_zoom_bounds.alternate_min)||
+       !std::isfinite(in.design_zoom_bounds.alternate_max)||
+       in.design_zoom_bounds.normal_min>in.design_zoom_bounds.normal_max||
+       in.design_zoom_bounds.alternate_min>in.design_zoom_bounds.alternate_max||
        !std::isfinite(in.camera_world_position.x)||!std::isfinite(in.camera_world_position.y)||
        !std::isfinite(in.camera_world_position.z))return Status::invalid_input;
+    use_object_position_=in.use_object_position;
     *out={};
     if(!in.active_camera||!in.camera_node_present||!in.target_cam_node_present||
        !in.target_game_object_present||!target_identity_||!in.target.present||
@@ -206,9 +222,10 @@ Status Owner::update(const FrameInput& in,FrameOutput* out) noexcept {
     if(!zoom_animation_active_||preserve_zoom_){
         if(in.infinite_zoom)effective_zoom_=current_zoom_;
         else if(!in.zoom_clamp_disabled){
-            const float min_zoom=in.use_object_position?in.alternate_design_min_zoom:in.normal_design_min_zoom;
-            const float max_zoom=in.use_object_position?in.alternate_design_max_zoom:in.normal_design_max_zoom;
-            if(min_zoom>max_zoom)return Status::invalid_input;
+            const float min_zoom=in.use_object_position?in.design_zoom_bounds.alternate_min:
+                                                        in.design_zoom_bounds.normal_min;
+            const float max_zoom=in.use_object_position?in.design_zoom_bounds.alternate_max:
+                                                        in.design_zoom_bounds.normal_max;
             current_zoom_=clamp(current_zoom_,min_zoom,max_zoom);
             target_zoom_=clamp(target_zoom_,min_zoom,max_zoom);
             effective_zoom_=std::fmin(current_zoom_,target_zoom_);

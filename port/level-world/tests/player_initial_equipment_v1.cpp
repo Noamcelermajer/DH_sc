@@ -124,9 +124,25 @@ int main(int argc,char** argv){try{
  }
  for(const char* name:{"KnightPlayerBase","MagePlayerBase","RoguePlayerBase"}){
   World world(tables,cache,name);world.real_loot=world.real_text=true;const auto loot=world.properties.resolved[9];const auto borrow=tables.loot.borrow();ck(loot>=0&&std::size_t(loot)<borrow.loots().size(),"actual starter Loot unavailable");const auto& row=borrow.loots()[loot];
-  ck(row.random_entries.empty()&&row.sub_loots.empty(),"actual starter reaches unsupported random/subloot");for(const auto& entry:row.fixed_entries)ck(entry.words[1]==-1,"actual starter reaches powered loot");
+  const auto* profile_class_id=data::property(tables.chars,name,"ClassID");
+  ck(profile_class_id&&*profile_class_id==world.properties.base[26],"authored profile class id differs from selected Character row");
+  ck(row.random_entries.empty()&&row.sub_loots.empty(),"actual starter reaches unsupported random/subloot");
+  std::vector<std::pair<std::int32_t,std::uint8_t>> authored_equipment;
+  for(const auto& entry:row.fixed_entries){
+   ck(entry.words[1]==-1,"actual starter reaches powered loot");
+   const auto list=entry.words[0];ck(list>=0&&std::size_t(list)<borrow.item_lists().size(),"authored starter item list absent");
+   const auto& items=borrow.item_lists()[std::size_t(list)];
+   ck(items.size()==1&&items[0].probability==1&&items[0].quantity,"authored starter equipment row is not a fixed singleton");
+   authored_equipment.emplace_back(items[0].item,items[0].quantity);
+  }
   initial::Result r{};std::string e;if(world.runtime->initialize(&r,e)!=initial::Status::complete)throw std::runtime_error(std::string(name)+": "+e);
   ck(r.loot==loot&&r.add_loot_calls==1&&r.equippable_queries==world.inventory->items().size()&&r.captured_items==world.inventory->items().size(),"actual starter scan count changed");
+  ck(world.inventory->items().size()==authored_equipment.size(),"new-save V4 inventory count differs from authored class starter loot");
+  for(std::size_t i=0;i<authored_equipment.size();++i){
+   const auto& owned=world.inventory->items()[i]->item;
+   ck(owned&&owned->id==authored_equipment[i].first&&owned->signed_quantity()==authored_equipment[i].second,
+      "new-save V4 inventory item/quantity differs from authored class starter row");
+  }
   unsigned equippable=0;for(const auto& cell:world.inventory->items()){const auto* record=data::item(world.inventory->table(),cell->item->id);ck(record&&!cell->item->name.empty(),"actual Item/text owner absent");equippable+=record->record.words[26]!=-1;}
   ck(r.auto_equip_calls==equippable&&world.updates==equippable&&world.skin_calls==equippable&&world.vitals==equippable,"actual ordered auto-equip tail changed");
   data::PlayerEquipmentQueriesLiveV1 queries(*world.inventory,world.view);data::EquipmentWeaponFacts12V1 weapons{};ck(queries.facts(weapons,e)&&weapons.flags&data::weapon_main,"real starter weapon facts absent");

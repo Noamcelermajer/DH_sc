@@ -210,22 +210,43 @@ bool load_impl(const Assets& assets,scene::Scene& out_scene,animation::Player& o
 }
 
 bool Rig::load(const Assets& assets,std::string& error) {
-    error.clear();loaded_=false;scene_={};idle_=animation::Player{};projection_={};
+    error.clear();loaded_=false;scene_={};animation_=animation::Player{};projection_={};
     root_=camera_=target_=up_vector_=0;
     try{
         scene::Scene candidate_scene;animation::Player candidate_idle;Projection candidate_projection{};
         std::size_t root=0,camera=0,target=0,up=0;
         if(!load_impl(assets,candidate_scene,candidate_idle,candidate_projection,
                       root,camera,target,up,error))return false;
-        scene_=std::move(candidate_scene);idle_=std::move(candidate_idle);projection_=candidate_projection;
+        scene_=std::move(candidate_scene);animation_=std::move(candidate_idle);projection_=candidate_projection;
         root_=root;camera_=camera;target_=target;up_vector_=up;loaded_=true;return true;
     }
-    catch(const std::exception& e){error=e.what();loaded_=false;scene_={};idle_=animation::Player{};return false;}
+    catch(const std::exception& e){error=e.what();loaded_=false;scene_={};animation_=animation::Player{};return false;}
+}
+
+bool Rig::load_animation(const std::uint8_t* bytes,std::size_t size,std::string& error) {
+    error.clear();
+    if(!loaded_){error="Camera scene must be loaded before selecting an animation";return false;}
+    animation::Player candidate;
+    if(!candidate.load(bytes,size,scene_,error))return false;
+    // The native scene sampler consumes node position/quaternion/scale tracks;
+    // camera BDAEs can also contain non-transform channels that this sampler
+    // intentionally skips. A nonzero unbound count is different: it means a
+    // selected transform names a node absent from this camera scene.
+    if(candidate.track_count()==0||candidate.unbound||candidate.end<=candidate.start){
+        error="Selected camera animation has no bound transform tracks (tracks="+
+              std::to_string(candidate.track_count())+", skipped="+
+              std::to_string(candidate.skipped)+", unbound="+
+              std::to_string(candidate.unbound)+", range="+
+              std::to_string(candidate.start)+".."+std::to_string(candidate.end)+")";
+        return false;
+    }
+    animation_=std::move(candidate);
+    return true;
 }
 
 bool Rig::sample(std::int32_t milliseconds,Pose* out,std::string& error) {
     error.clear();if(!loaded_||!out){error="Camera rig is not loaded or pose output is null";return false;}
-    if(!idle_.sample(scene_,milliseconds,error))return false;
+    if(!animation_.sample(scene_,milliseconds,error))return false;
     if(root_>=scene_.graph.size()||camera_>=scene_.graph.size()||target_>=scene_.graph.size()
        ||up_vector_>=scene_.graph.size()){
         error="Camera rig node binding became invalid";return false;
@@ -238,38 +259,55 @@ bool Rig::sample(std::int32_t milliseconds,Pose* out,std::string& error) {
     candidate.camera=scene::multiply(root_inverse,scene_.graph[camera_].world);
     candidate.target=scene::multiply(root_inverse,scene_.graph[target_].world);
     candidate.up_vector=scene::multiply(root_inverse,scene_.graph[up_vector_].world);
+    const auto target_parent=scene_.graph[target_].parent;
+    Matrix target_parent_world{};
+    if(target_parent>=0){
+        if(static_cast<std::size_t>(target_parent)>=scene_.graph.size()){
+            error="Camera target parent binding became invalid";return false;
+        }
+        target_parent_world=scene::multiply(
+            root_inverse,scene_.graph[static_cast<std::size_t>(target_parent)].world);
+    }else{
+        // A parentless target receives positions in scene space. Express its
+        // local Z translation in the same Root_Camera-relative coordinates.
+        target_parent_world=root_inverse;
+    }
+    candidate.target_parent_z_axis={target_parent_world[8],target_parent_world[9],
+                                    target_parent_world[10]};
     for(float value:candidate.camera)if(!std::isfinite(value)){error="Nonfinite camera pose";return false;}
     for(float value:candidate.target)if(!std::isfinite(value)){error="Nonfinite target pose";return false;}
     for(float value:candidate.up_vector)if(!std::isfinite(value)){error="Nonfinite up-vector pose";return false;}
+    for(float value:candidate.target_parent_z_axis)
+        if(!std::isfinite(value)){error="Nonfinite target parent basis";return false;}
     *out=candidate;return true;
 }
 
 bool Playback::start(const Rig& rig,std::string& error) {
     error.clear();started_=false;source_clock_ms_=0;timeline_={};
     if(rig.track_count()==0||rig.animation_end()<=rig.animation_start()){
-        error="Camera idle timeline has no supported animation range";return false;
+        error="Camera timeline has no supported animation range";return false;
     }
     // IDA: Level::_LoadCamera calls CameraLevel::PlayAnim(idle, 0, 0).
     // AnimSetController::PlayClip forwards loop=false and sets scale=1.
     if(dh2_timeline_clip(&timeline_,0,rig.animation_start(),rig.animation_end())||
        dh2_timeline_loop(&timeline_,0)||dh2_timeline_scale(&timeline_,1.0f)){
-        error="Camera idle source timeline rejected its clip range";timeline_={};return false;
+        error="Camera source timeline rejected its clip range";timeline_={};return false;
     }
     // Prime the source timeline at the PlayClip start timestamp. This makes
     // the next game-frame delta advance the clip immediately, as the native
     // timeline does from its play-time baseline.
     if(dh2_timeline_update(&timeline_,signed_time(source_clock_ms_),nullptr)){
-        error="Camera idle source timeline rejected its initial timestamp";timeline_={};return false;
+        error="Camera source timeline rejected its initial timestamp";timeline_={};return false;
     }
     started_=true;return true;
 }
 
 bool Playback::advance(Rig& rig,std::uint32_t dt_ms,Pose* out,std::string& error) {
     error.clear();
-    if(!started_||!out){error="Camera idle playback is not started or pose output is null";return false;}
+    if(!started_||!out){error="Camera playback is not started or pose output is null";return false;}
     source_clock_ms_+=dt_ms;
     if(dh2_timeline_update(&timeline_,signed_time(source_clock_ms_),nullptr)){
-        error="Camera idle source timeline update rejected its timestamp";return false;
+        error="Camera source timeline update rejected its timestamp";return false;
     }
     return rig.sample(timeline_.current_ms,out,error);
 }

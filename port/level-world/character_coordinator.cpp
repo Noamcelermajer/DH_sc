@@ -34,6 +34,24 @@ void Coordinator::bind(const CoordinatorBindings& bindings) {
         throw std::logic_error("Character bindings cannot change during dispatch");
     if (!bindings.facts || !bindings.services.invoke)
         throw std::invalid_argument("Character facts and services are required");
+    if (bindings.cast_projection &&
+        (bindings.cast_projection->character.coordinator_state != &state ||
+         bindings.cast_projection->character.flags_520 != &state.flags ||
+         !bindings.cast_projection->character.identity ||
+         !bindings.cast_projection->character.machine ||
+         !bindings.cast_projection->character.animator ||
+         !bindings.cast_projection->character.ooi_intent_412 ||
+         !bindings.cast_projection->globals.debug_switches ||
+         !bindings.cast_projection->services.invoke || state.current == 7))
+        throw std::invalid_argument("Cast projection must borrow this Coordinator and valid source owners before state7");
+    if (bindings.ai_identity || bindings.ai_owner_projection ||
+        bindings.controller_identity) {
+        if (!bindings.ai_identity || !bindings.ai_owner_projection ||
+            !bindings.controller_identity ||
+            bindings.ai_owner_projection->owner != timers_.owner ||
+            bindings.ai_owner_projection->controller != bindings.controller_identity)
+            throw std::invalid_argument("CharAI frame binding must use this Character and its canonical controller owner");
+    }
     bindings_ = bindings;
 }
 
@@ -61,6 +79,58 @@ bool Coordinator::unbind_skill_projection(
     return true;
 }
 
+bool Coordinator::retire_skill_projection(
+    character_skill_state_dispatch_v1::Projection* projection) {
+    if (!bound() || active_facts_ || timers_.update_depth || !projection ||
+        bindings_.skill_projection != projection)
+        return false;
+    bindings_.skill_projection = nullptr;
+    return true;
+}
+
+SkillProjectionRetirementStatus Coordinator::skill_projection_retirement_status(
+    const character_skill_state_dispatch_v1::Projection* projection) const noexcept {
+    return {bound(),projection&&bindings_.skill_projection==projection,
+            active_facts_!=nullptr,timers_.update_depth,
+            reinterpret_cast<std::uintptr_t>(projection),
+            reinterpret_cast<std::uintptr_t>(bindings_.skill_projection),
+            state.current};
+}
+
+bool Coordinator::bind_cast_projection(
+    character_cast_lifecycle_v1::Projection* projection) {
+    if (!bound() || active_facts_ || timers_.update_depth || !projection ||
+        projection->character.coordinator_state != &state ||
+        projection->character.flags_520 != &state.flags ||
+        !projection->character.identity || !projection->character.machine ||
+        !projection->character.animator || !projection->character.ooi_intent_412 ||
+        !projection->globals.debug_switches || !projection->services.invoke ||
+        (!bindings_.cast_projection && state.current == 7))
+        return false;
+    if (bindings_.cast_projection)
+        return bindings_.cast_projection == projection;
+    bindings_.cast_projection = projection;
+    return true;
+}
+
+bool Coordinator::unbind_cast_projection(
+    character_cast_lifecycle_v1::Projection* projection) {
+    if (!bound() || active_facts_ || timers_.update_depth || !projection ||
+        bindings_.cast_projection != projection || state.current == 7)
+        return false;
+    bindings_.cast_projection = nullptr;
+    return true;
+}
+
+bool Coordinator::retire_cast_projection(
+    character_cast_lifecycle_v1::Projection* projection) {
+    if (!bound() || active_facts_ || timers_.update_depth || !projection ||
+        bindings_.cast_projection != projection)
+        return false;
+    bindings_.cast_projection = nullptr;
+    return true;
+}
+
 Services Coordinator::state_services() { return {this, invoke_service}; }
 TimerServices32 Coordinator::timer_services() {
     return {this, timer_expired, grow_timers, 0};
@@ -85,6 +155,19 @@ int Coordinator::event(std::uint32_t event_id, std::uint64_t payload) {
         bindings_.spawn_facts) return spawn_event(event_id);
     auto facts = bindings_.facts(bindings_.context);
     Scope scope(*this, facts, event_id);
+    const bool cast_source_state=state.current==3||state.current==4||state.current==5;
+    if(state.current==7||(event_id==50006u&&cast_source_state)){
+        auto* projection=bindings_.cast_projection;
+        if(!projection||projection->character.coordinator_state!=&state||
+           projection->character.flags_520!=&state.flags)return -1;
+        character_cast_state_dispatch_v1::Result result{};
+        if(character_cast_state_dispatch_v1::event(&state,event_id,&result)!=
+           character_cast_state_dispatch_v1::Status::complete)return -1;
+        if(!result.registered)return 0;
+        const auto services=state_services();
+        return dh2_character_cast_state_transition(&state,&facts,projection,
+            result.next,static_cast<std::int32_t>(event_id),payload,&services);
+    }
     const bool selected_skill_state=state.current==3||state.current==4||
         state.current==5||state.current==6;
     if(state.current==6||(event_id==0xc355&&selected_skill_state)){
@@ -110,6 +193,13 @@ int Coordinator::transition(std::int32_t next, std::int32_t event_id,
     auto facts = bindings_.facts(bindings_.context);
     Scope scope(*this, facts, static_cast<std::uint32_t>(event_id));
     const auto services = state_services();
+    if(state.current==7||next==7){
+        auto* projection=bindings_.cast_projection;
+        if(!projection||projection->character.coordinator_state!=&state||
+           projection->character.flags_520!=&state.flags)return -1;
+        return dh2_character_cast_state_transition(&state,&facts,projection,next,
+            event_id,payload,&services);
+    }
     if(state.current==6||next==6){
         auto* projection=bindings_.skill_projection;
         if(!projection||projection->machine!=&state)return -1;
@@ -122,6 +212,13 @@ int Coordinator::transition(std::int32_t next, std::int32_t event_id,
 
 int Coordinator::update_state(std::uint32_t dt_ms) {
     if (!bound()) return -1;
+    if(state.current==7){
+        if(!bindings_.cast_projection||
+           bindings_.cast_projection->character.coordinator_state!=&state||
+           bindings_.cast_projection->character.flags_520!=&state.flags)return -1;
+        state.elapsed_ms+=dt_ms; // CSCast::OnUpdate is a source no-op.
+        return 1;
+    }
     if ((state.current == 0 || state.current == 1) &&
         bindings_.spawn_facts) {
         const auto spawn = bindings_.spawn_facts(bindings_.context);
@@ -142,6 +239,21 @@ int Coordinator::update_state(std::uint32_t dt_ms) {
     Scope scope(*this, facts, event_cause_);
     const auto services = state_services();
     return dh2_character_state_update(&state, &facts, dt_ms, &services);
+}
+
+int Coordinator::update_ai_frame(AIFrameState32* frame,
+                                const AIFrameServices24* services,
+                                AIFrameResult16* result) {
+    if (!bound() || !frame || !frame->owner || !bindings_.ai_identity ||
+        !bindings_.ai_owner_projection || !bindings_.controller_identity ||
+        frame->ai != bindings_.ai_identity ||
+        frame->owner != bindings_.ai_owner_projection ||
+        frame->owner->controller != bindings_.controller_identity ||
+        frame->owner->owner != owner() ||
+        frame->owner->flags520 != state.flags ||
+        frame->owner->locked != state.controller_locked)
+        return -1;
+    return dh2_character_ai_frame(result, frame, services);
 }
 
 int Coordinator::spawn_transition(std::int32_t next) {
@@ -222,6 +334,42 @@ int Coordinator::update_timers(std::uint32_t dt_ms, std::uint32_t script_blocked
     }
 }
 
+int Coordinator::update_logic_frame(std::uint32_t dt_ms,
+                                    std::uint32_t script_blocked,
+                                    AIFrameState32* frame,
+                                    const AIFrameServices24* ai_services,
+                                    LogicFrameResult* result) {
+    if (!result || !bound() || !frame || !ai_services ||
+        !bindings_.ai_owner_projection)
+        return -1;
+    *result = {};
+
+    result->phase = LogicFramePhase::character_timers;
+    result->timer_status = update_timers(dt_ms, script_blocked);
+    if (result->timer_status != 1) return -2;
+
+    // CharTimers can synchronously transition Character state. This is the
+    // same canonical owner projection already required by update_ai_frame,
+    // refreshed from this Coordinator rather than copied into a second owner.
+    bindings_.ai_owner_projection->flags520 = state.flags;
+    bindings_.ai_owner_projection->locked = state.controller_locked;
+
+    result->phase = LogicFramePhase::char_ai;
+    result->ai_status = update_ai_frame(frame, ai_services, &result->ai);
+    if (result->ai_status != 0) return -3;
+
+    // CharAI callbacks may synchronously change the same Character fields.
+    bindings_.ai_owner_projection->flags520 = state.flags;
+    bindings_.ai_owner_projection->locked = state.controller_locked;
+
+    result->phase = LogicFramePhase::character_state;
+    result->state_status = update_state(dt_ms);
+    if (result->state_status < 0) return -4;
+
+    result->phase = LogicFramePhase::complete;
+    return 0;
+}
+
 std::int32_t Coordinator::start_timer(std::uint32_t duration_ms,
     std::int32_t repeat, std::int32_t event_id, std::uintptr_t user_ref) {
     if (!bound()) return -1;
@@ -237,6 +385,15 @@ int Coordinator::stop_timer(std::uint32_t id) {
     return dh2_character_timer_stop(&timers_, id);
 }
 int Coordinator::stop_timers() { return dh2_character_timers_stop_all(&timers_); }
+
+bool Coordinator::retire_timers() noexcept {
+    if (active_facts_ || timers_.update_depth) return false;
+    const auto owner = timers_.owner;
+    std::vector<Timer32> empty;
+    timer_storage_.swap(empty);
+    timers_ = {nullptr, 0, 0, owner, 0, 0};
+    return true;
+}
 
 void Coordinator::reset_timers(std::uintptr_t owner, std::uint32_t initial_timers) {
     if (active_facts_ || timers_.update_depth)

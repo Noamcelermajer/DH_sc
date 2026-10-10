@@ -122,6 +122,63 @@ public:
 class Metadata {
  struct Impl;std::unique_ptr<Impl> impl_;
 public:
+ // Retained view of the exact metadata Save, +8 profile index, and transport.
+ // Passing this bundle into the next owner preserves object identity; it does
+ // not create or copy a Save. The caller must keep the bundle alive while the
+ // transport or any Save callbacks are in use.
+ struct SharedSession {
+  std::shared_ptr<data::PlayerSavegameV1> save;
+  std::shared_ptr<data::PlayerSaveProfileV1> profile;
+  std::shared_ptr<Transport> transport;
+  SharedSession()=default;
+  SharedSession(std::shared_ptr<data::PlayerSavegameV1> s,
+      std::shared_ptr<data::PlayerSaveProfileV1> p,
+      std::shared_ptr<Transport> t) noexcept
+   :save(std::move(s)),profile(std::move(p)),transport(std::move(t)){}
+  SharedSession(const SharedSession& other)
+   :save(other.save),profile(other.profile),transport(other.transport){}
+  SharedSession& operator=(const SharedSession& other){
+   if(this!=&other){reset();save=other.save;profile=other.profile;transport=other.transport;}
+   return *this;
+  }
+  SharedSession(SharedSession&& other) noexcept
+   :save(std::move(other.save)),profile(std::move(other.profile)),
+    transport(std::move(other.transport)){}
+  SharedSession& operator=(SharedSession&& other) noexcept {
+   if(this!=&other){reset();save=std::move(other.save);
+    profile=std::move(other.profile);transport=std::move(other.transport);}
+   return *this;
+  }
+  ~SharedSession(){reset();}
+  void reset() noexcept {transport.reset();profile.reset();save.reset();}
+  explicit operator bool()const noexcept{return save&&profile&&transport;}
+ };
+ // A Character session is a different source lifetime from NativeStartGame's
+ // temporary metadata Save. Keeping a distinct type prevents callers from
+ // accidentally adopting the metadata bundle as gameplay ownership.
+ struct CharacterSession {
+  std::shared_ptr<data::PlayerSavegameV1> save;
+  std::shared_ptr<data::PlayerSaveProfileV1> profile;
+  std::shared_ptr<Transport> transport;
+  CharacterSession()=default;
+  CharacterSession(std::shared_ptr<data::PlayerSavegameV1> s,
+      std::shared_ptr<data::PlayerSaveProfileV1> p,
+      std::shared_ptr<Transport> t) noexcept
+   :save(std::move(s)),profile(std::move(p)),transport(std::move(t)){}
+  CharacterSession(const CharacterSession&)=delete;
+  CharacterSession& operator=(const CharacterSession&)=delete;
+  CharacterSession(CharacterSession&& other) noexcept
+   :save(std::move(other.save)),profile(std::move(other.profile)),
+    transport(std::move(other.transport)){}
+  CharacterSession& operator=(CharacterSession&& other) noexcept {
+   if(this!=&other){reset();save=std::move(other.save);
+    profile=std::move(other.profile);transport=std::move(other.transport);}
+   return *this;
+  }
+  ~CharacterSession(){reset();}
+  void reset() noexcept {transport.reset();profile.reset();save.reset();}
+  explicit operator bool()const noexcept{return save&&profile&&transport;}
+ };
  Metadata();~Metadata();
  Metadata(const Metadata&)=delete;Metadata& operator=(const Metadata&)=delete;
  bool load(std::int32_t selected_slot,const std::filesystem::path& directory,
@@ -138,6 +195,13 @@ public:
            std::string&);
  const Receipt& receipt()const noexcept;
  const data::PlayerSavegameV1& save()const noexcept;
+ SharedSession share_session()const noexcept;
+ // Source Character::InitializePlayerSavegame starts a distinct +14e8 Save,
+ // assigns the selected slot, and later SG_Load(4)s it from the persisted
+ // profile. This creates that independent Save/Profile/Transport; it copies
+ // no mutable metadata state and shares no QEST owner.
+ bool create_character_session(std::uintptr_t character,CharacterSession&,
+                               std::string&)const;
  std::uintptr_t profile_identity()const noexcept;
  std::uintptr_t save_identity()const noexcept;
 };

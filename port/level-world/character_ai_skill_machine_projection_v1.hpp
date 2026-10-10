@@ -63,10 +63,13 @@ public:
         const std::uintptr_t* physical_2dc,
         const character_skill_fsm_callbacks_v1::Services&,
         std::string& error);
-    // Must be called after the Coordinator has left state 6 and before this
-    // projection is retired. Coordinator rejects detachment while state 6 is
-    // active, because the outgoing Blur still needs this borrowed graph.
+    // Normal unbind must follow leaving state 6 because outgoing Blur needs
+    // this graph. Terminal Character destruction uses the separate retire
+    // path and does not invoke that callback.
     bool unbind_skill_state_callbacks(std::string& error);
+    // Character destruction discards the whole source state machine without
+    // invoking CSSkill::OnBlur; use only after the owning session is terminal.
+    bool retire_skill_state_callbacks(std::string& error);
     bool skill_state_callbacks_bound() const noexcept { return fsm_bound_; }
 };
 

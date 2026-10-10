@@ -60,6 +60,16 @@ struct Cache {
  }
 };
 std::uint64_t position(n::Cursor& cursor){std::uint64_t value=0;check(cursor.tell(cursor.stream(),&value));return value;}
+struct QuestSaveSink {Bytes bytes;};
+bool append_quest_save(void* raw,d::Bytes bytes,std::string& error){
+ auto* sink=static_cast<QuestSaveSink*>(raw);
+ if(!sink||(!bytes.data&&bytes.size)){error="invalid test QEST sink";return false;}
+ sink->bytes.insert(sink->bytes.end(),bytes.data,bytes.data+bytes.size);return true;
+}
+Bytes save_quests(n::Owner& owner){
+ QuestSaveSink sink;const d::player_save_section_writers_v1::WriteServicesV1 stream{&sink,append_quest_save};
+ std::string error;check(owner.save_quests(stream,error)&&error.empty());return sink.bytes;
+}
 std::unique_ptr<n::Cursor> campaign(const Bytes& payload){
  Bytes bytes;word(bytes,2);word(bytes,11);
  for(char c:std::string("PNAM"))bytes.push_back(std::uint8_t(c));
@@ -127,6 +137,20 @@ void complete(Cache& cache){
  // Both logs read one packet. Without rewinding the same retained stream,
  // the second log would encounter physical EOF at absolute31+2826.
  check(position(*cursor)==31+bytes.size()&&cursor->stream().identity==identity);
+ save->set_source_save_mode(1);const auto saved_b8=save_quests(owner);
+ save->set_source_save_mode(2);const auto saved_118=save_quests(owner);
+ check(saved_b8==saved_118);
+ auto* selected=owner.resolve(log(*save,0).quests[0][0]);check(selected);
+ ++selected->state_0;
+ save->set_source_save_mode(1);check(save_quests(owner)!=saved_b8);
+ save->set_source_save_mode(2);check(save_quests(owner)==saved_118);
+ --selected->state_0;
+ auto roundtrip_save=std::make_shared<d::PlayerSavegameV1>();
+ n::Owner roundtrip_owner(roundtrip_save,cache.view,cache.constants);
+ initialize(roundtrip_owner,*roundtrip_save);auto roundtrip_cursor=campaign(saved_b8);
+ check(roundtrip_owner.load_quests(*roundtrip_cursor,error)&&error.empty());
+ roundtrip_save->set_source_save_mode(1);check(save_quests(roundtrip_owner)==saved_b8);
+ close(roundtrip_owner,*roundtrip_save);
  check(&save->source_quest_log_b8()==canonical0&&&save->source_quest_log_118()==canonical1);
  for(unsigned index=0;index<2;++index)for(unsigned difficulty=0;difficulty<3;++difficulty){auto& store=log(*save,index);
   check(store.word_2c[difficulty]==signed_word(0x81220000u+difficulty)&&store.word_38[difficulty]==signed_word(0x92330000u+difficulty));

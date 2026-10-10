@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../../../../../port/level-world/character_aggro_object_manager_list.hpp"
+#include "../../../../../../port/level-world/character_runtime_factory_v1.hpp"
 #include <memory>
 #include <vector>
 
@@ -25,6 +26,8 @@ public:
 
     Status enroll_after_add(Character*, bool duplicate_resolved, bool* appended);
     Status remove_after_remove(Character*, std::size_t* removed);
+    bool contains_identity(std::uintptr_t identity,
+                          std::size_t* occurrences = nullptr) const noexcept;
     // Native teardown clears owned nodes and resets the cursor. It does not
     // claim original ObjectManager destructor/map/group cleanup behavior.
     void clear() noexcept;
@@ -40,5 +43,10 @@ private:
     character::aggro_character_list::ObjectListMethods methods_{};
     std::vector<std::unique_ptr<Node>> nodes_;
 };
+
+// Direct bridge for the selected level-world Character factory. It borrows
+// this roster owner; the factory owns the Character projection it enrolls.
+dh2::character_runtime_factory_v1::RosterServices factory_services(
+    Owner& owner) noexcept;
 
 } // namespace dh2::native::character_list

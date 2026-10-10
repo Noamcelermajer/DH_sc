@@ -1,7 +1,10 @@
 #include "../native_debug_files.hpp"
+#include "../native_ghost_death_v1.hpp"
 #include "../native_ghost_skills.hpp"
 
 #include "port/game-data/data.hpp"
+#include "port/level-world/native_monster_attack_request_v1.hpp"
+#include "port/level-world/character_ai_set_target.hpp"
 #include "port/level-world/debug_switches_runtime.hpp"
 extern "C" {
 #include "port/pydata-constants/constants.h"
@@ -19,6 +22,7 @@ extern "C" {
 
 namespace data = dh2::data;
 namespace native = dh2::native::ghost_skills;
+namespace death = dh2::native::ghost_death;
 
 namespace {
 std::vector<std::uint8_t> read_file(const char* path) {
@@ -52,11 +56,45 @@ std::int32_t init_vcb(void* raw, std::uintptr_t active) {
     return 0;
 }
 
+struct MonsterClassFixture {
+    dh2::character_ai_classification::AiRow row{0, 4};
+    dh2::character_ai_classification::AiTable table{&row, 1};
+};
+std::int32_t monster_class_invoke(
+    void* raw, dh2::character_ai_classification::State*,
+    const dh2::character_ai_classification::Request* request,
+    dh2::character_ai_classification::Response* response) {
+    if (!raw || !request || !response) return 1;
+    const auto& fixture = *static_cast<MonsterClassFixture*>(raw);
+    if (request->operation == dh2::character_ai_classification::Operation::ai_count) {
+        response->count = 1;
+        return 0;
+    }
+    if (request->operation == dh2::character_ai_classification::Operation::ai_table) {
+        response->table = &fixture.table;
+        return 0;
+    }
+    return 1;
+}
+struct TargetFixture { unsigned calls = 0; };
+int source_target_service(void* raw,
+    const dh2::character::set_target::Request* request,
+    dh2::character::set_target::Response* response) {
+    if (!raw || !request || !response) return 1;
+    auto& fixture = *static_cast<TargetFixture*>(raw);
+    ++fixture.calls;
+    if (request->operation == dh2::character::set_target::debug_switches_load ||
+        request->operation == dh2::character::set_target::debug_switch_lookup)
+        return 0;
+    return 1;
+}
+
 void run_actor(const char* name, std::size_t row_index,
                const data::CharacterTable& character_table,
                const data::PropertyRules& rules,
                const data::SkillTables& skills, const data::FaeryTables& faeries,
                const dh2_pycst_view& constants,
+               const dh2_pycst_view& animation_constants,
                dh2::native::debug_files::Backend& debug) {
     data::PropertyState properties{};
     data::reset_properties(rules, properties, &character_table.rows[row_index]);
@@ -76,6 +114,12 @@ void run_actor(const char* name, std::size_t row_index,
     native::Bindings bindings{&ai, &property_view, &skills, &faeries, &ais_path,
                               0, &constants, &debug.globals(), &debug.services(),
                               &vcb, init_vcb};
+    native::DeathCleanupResult premature_cleanup{};
+    require(runtime.cleanup_death_list(
+                dh2::character_ai_set_skills_and_spells::List::skill,
+                premature_cleanup) == native::Status::invalid_argument &&
+            premature_cleanup.completed == 0 && premature_cleanup.slots_examined == 0,
+            "death cleanup accepted vectors before source initialization");
     native::Result first{};
     require(runtime.prepare(bindings, first) == native::Status::complete,
             "source Ghost skill/five-null-faery preparation failed");
@@ -98,6 +142,97 @@ void run_actor(const char* name, std::size_t row_index,
     require(ais_path == "data/scripts/ai/",
             "AIS script path was not restored after the source call");
 
+    native::DeathCleanupResult skill_cleanup{}, spell_cleanup{};
+    require(runtime.cleanup_death_list(
+                dh2::character_ai_set_skills_and_spells::List::skill,
+                skill_cleanup) == native::Status::complete &&
+            skill_cleanup.completed == 1 && skill_cleanup.slots_examined == 0 &&
+            skill_cleanup.null_slots == 0,
+            "source _SkillCleanUp did not consume the real empty Ghost vector");
+    require(runtime.cleanup_death_list(
+                dh2::character_ai_set_skills_and_spells::List::faery,
+                spell_cleanup) == native::Status::complete &&
+            spell_cleanup.completed == 1 && spell_cleanup.slots_examined == 5 &&
+            spell_cleanup.null_slots == 5,
+            "source _SpellCleanUp did not skip the five real null Ghost entries");
+
+    const auto target_identity = ai.owner_04 + 0x200;
+    const dh2::native_monster_attack_request_v1::Input attack_request{
+        ai.owner_04, ai.owner_04, ai.owner_04, target_identity, target_identity,
+        target_identity, -2, 0};
+    require(dh2::native_monster_attack_request_v1::accepts(attack_request),
+            "Crypt attack request rejected the retained Character/CharAI owner pair");
+    dh2::character::set_target::OwnerFacts target_owner{
+        ai.owner_04, 4, 0, 0};
+    dh2::character::set_target::State target_state{
+        ai.identity, &target_owner, target_identity, target_identity,
+        target_identity, 1, 1, 0, 0};
+    TargetFixture target_fixture;
+    const dh2::character::set_target::Services target_services{
+        &target_fixture, 0, source_target_service};
+    require(dh2::character::set_target::dh2_character_ai_set_target(
+                &target_state, 0, 0, &target_services) ==
+                dh2::character::set_target::complete && target_state.target == 0 &&
+            target_state.requested_target == 0 && target_fixture.calls == 2,
+            "source AI_SetTarget did not clear the live Crypt target on the same CharAI");
+
+    data::AnimationTables animation_tables;
+    animation_tables.state_names = {"Interact", "Spells", "Idle", "Move",
+        "DeadlyGreatKB", "Despawn", "DespawnGreatKB", "Died"};
+    animation_tables.characters.resize(18);
+    animation_tables.characters[17].fields[4] = {20};
+    animation_tables.characters[17].fields[5] = {30};
+    animation_tables.characters[17].fields[6] = {40};
+    animation_tables.characters[17].fields[7] = {10};
+    MonsterClassFixture class_fixture;
+    dh2::character_ai_classification::State classification{
+        ai.owner_04, 0, -1, name, 0};
+    const dh2::character_ai_classification::Services class_services{
+        &class_fixture, monster_class_invoke};
+    death::Bindings death_bindings{ai.identity, ai.owner_04, &property_view,
+        &animation_tables, &animation_constants, &classification, &class_services,
+        &runtime};
+    dh2::player_ai_death_v1::Request death_request{};
+    death_request.ai = ai.identity;
+    death_request.character = ai.owner_04;
+    dh2::player_ai_death_v1::Reply death_reply{};
+    error.clear();
+    death_request.operation = dh2::player_ai_death_v1::Operation::animation_table;
+    require(death::invoke(&death_bindings, &death_request, &death_reply, error) == 0 &&
+            death_reply.word == 17 && death_reply.count == 18,
+            "player_ai_death backend did not resolve the current Monster animation table");
+    death_request.operation = dh2::player_ai_death_v1::Operation::animation_value;
+    death_request.animation = dh2::player_ai_death_v1::Animation::died;
+    death_request.row = death_reply.word;
+    require(death::invoke(&death_bindings, &death_request, &death_reply, error) == 0 &&
+            death_reply.word == 10,
+            "player_ai_death backend did not resolve the authored Died scalar");
+    death_request.operation = dh2::player_ai_death_v1::Operation::stance_mask;
+    death_request.group = "AnimStancedAnim";
+    death_request.key = "SL__LIST_IPHONE";
+    require(death::invoke(&death_bindings, &death_request, &death_reply, error) == 0 &&
+            death_reply.word == 210,
+            "player_ai_death backend did not read the authored stance mask");
+    death_request.operation = dh2::player_ai_death_v1::Operation::anim_stance;
+    require(death::invoke(&death_bindings, &death_request, &death_reply, error) == 0 &&
+            death_reply.word == 0,
+            "player_ai_death backend did not use the verified Monster stance owner");
+    death_request.operation = dh2::player_ai_death_v1::Operation::skill_cleanup;
+    require(death::invoke(&death_bindings, &death_request, &death_reply, error) == 0 &&
+            death_reply.count == 0,
+            "player_ai_death backend did not clean the canonical Ghost skill vector");
+    death_request.operation = dh2::player_ai_death_v1::Operation::spell_cleanup;
+    require(death::invoke(&death_bindings, &death_request, &death_reply, error) == 0 &&
+            death_reply.count == 5,
+            "player_ai_death backend did not clean the canonical Ghost faery vector");
+    death_request.ai++;
+    require(death::invoke(&death_bindings, &death_request, &death_reply, error) != 0,
+            "player_ai_death backend accepted a different retained CharAI identity");
+    death_request.ai = ai.identity;
+    death_request.operation = dh2::player_ai_death_v1::Operation::group_died;
+    require(death::invoke(&death_bindings, &death_request, &death_reply, error) != 0,
+            "Ghost provider reported success for a source service owned by another backend");
+
     const auto first_snapshot = runtime.faery_scripts();
     native::Result repeated{};
     require(runtime.prepare(bindings, repeated) == native::Status::complete,
@@ -116,9 +251,9 @@ void run_actor(const char* name, std::size_t row_index,
 
 int main(int argc, char** argv) {
     try {
-        if (argc != 13) throw std::runtime_error(
-            "expected six Skill/Faery table files, three Character files, Faery constants, debug seed, output directory");
-        std::array<std::vector<std::uint8_t>, 11> input;
+        if (argc != 14) throw std::runtime_error(
+            "expected six Skill/Faery table files, three Character files, two constants files, debug seed, output directory");
+        std::array<std::vector<std::uint8_t>, 12> input;
         for (std::size_t i = 0; i < input.size(); ++i) input[i] = read_file(argv[i + 1]);
 
         data::SkillTables skills;
@@ -156,11 +291,23 @@ int main(int argc, char** argv) {
         require(dh2_pycst_get(&constants, "FaeryTypes", 10, "COUNT", 5, &count) == 0 &&
                 count.found && count.value == 5,
                 "source FaeryTypes/COUNT value changed");
+        dh2_pycst_view animation_constants{};
+        require(dh2_pycst_open(&animation_constants, input[10].data(),
+                               static_cast<std::uint32_t>(input[10].size())) == 0,
+                "animation constants cache did not parse");
+        dh2_pycst_result stance_mask{}, stance_count{};
+        require(dh2_pycst_get(&animation_constants, "AnimStancedAnim", 15,
+                              "SL__LIST_IPHONE", 15, &stance_mask) == 0 &&
+                stance_mask.found && stance_mask.value == 210 &&
+                dh2_pycst_get(&animation_constants, "AnimStances", 11,
+                              "COUNT_IPHONE", 12, &stance_count) == 0 &&
+                stance_count.found && stance_count.value == 5,
+                "authored animation stance constants changed");
 
-        const auto debug_dir = std::filesystem::absolute(argv[12]);
+        const auto debug_dir = std::filesystem::absolute(argv[13]);
         std::filesystem::create_directories(debug_dir);
         dh2::native::debug_files::Backend debug;
-        require(debug.initialize(debug_dir, input[10].data(), input[10].size(), error), error.c_str());
+        require(debug.initialize(debug_dir, input[11].data(), input[11].size(), error), error.c_str());
         const auto ghost = row_id(characters, "Crypt_Ghost");
         const auto ghost_re = row_id(characters, "Crypt_Ghost_RE");
         const auto skill_tree = property_id(characters, "SkillTree");
@@ -168,8 +315,10 @@ int main(int argc, char** argv) {
         require(skill_tree == 28 && faery_list == 29,
                 "CharacterProperties property identifiers changed");
 
-        run_actor("Crypt_Ghost", ghost, characters, rules, skills, faeries, constants, debug);
-        run_actor("Crypt_Ghost_RE", ghost_re, characters, rules, skills, faeries, constants, debug);
+        run_actor("Crypt_Ghost", ghost, characters, rules, skills, faeries, constants,
+                  animation_constants, debug);
+        run_actor("Crypt_Ghost_RE", ghost_re, characters, rules, skills, faeries, constants,
+                  animation_constants, debug);
         std::cout << "{\"validation\":\"PASS\",\"cache_tables\":\"real\","
                      "\"actors\":2,\"source_vectors\":\"0 skills / 5 null faeries\","
                      "\"repeat_preserves_faeries\":true,\"unsupported_nonnull_script\":\"fail-closed\"}\n";

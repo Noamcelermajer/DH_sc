@@ -85,6 +85,7 @@ target_link_libraries(player_skill_update_session_audit PRIVATE
         MODULE / "player_skill_session_v1.cpp",
         MODULE / "player_skill_update_session_v1.cpp",
         MODULE / "character_ai_update_all_skills.cpp",
+        MODULE / "character_ai_update_skills.cpp",
         MODULE / "character_ai_skill_script_update.cpp",
         MODULE / "player_skill_property_services_v1.cpp",
         MODULE / "tests/player_skill_property_services_v1.cpp",
@@ -143,7 +144,8 @@ target_link_libraries(player_skill_update_session_audit PRIVATE
         "multi_return_updates": 13, "multi_return_set_skill_updates": 13,
         "one_return_set_skill_updates": 13, "ordinary_set_skill_errors": 13,
         "ordinary_update_errors": 13, "required_failures": 1,
-        "retained_failed_resources": 1, "real_cache_preparation": True,
+        "selected_faery_updates": 1, "selected_required_failures": 1,
+        "retained_failed_resources": 2, "real_cache_preparation": True,
         "native_player_wiring": False,
     }
     if any(host.get(key) != value for key, value in expected.items()):

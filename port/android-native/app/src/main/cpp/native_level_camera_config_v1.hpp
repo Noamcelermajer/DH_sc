@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace dh2::native::level_camera_config_v1 {
 
@@ -22,6 +23,54 @@ inline bool xml_space(char c) noexcept {
 
 inline bool xml_name_boundary(char c) noexcept {
     return xml_space(c)||c=='<'||c=='/';
+}
+
+inline bool attribute_text(std::string_view xml,std::string_view name,std::string* out) {
+    if(!out||name.empty()||xml.size()>1024*1024)return false;
+    std::size_t at=0;
+    while((at=xml.find(name,at))!=std::string_view::npos){
+        const bool left=at==0||xml_name_boundary(xml[at-1]);
+        std::size_t cursor=at+name.size();
+        const bool right=cursor==xml.size()||xml_space(xml[cursor])||xml[cursor]=='=';
+        if(left&&right){
+            while(cursor<xml.size()&&xml_space(xml[cursor]))++cursor;
+            if(cursor==xml.size()||xml[cursor++]!='='){at+=name.size();continue;}
+            while(cursor<xml.size()&&xml_space(xml[cursor]))++cursor;
+            if(cursor==xml.size()||(xml[cursor]!='\''&&xml[cursor]!='"'))return false;
+            const char quote=xml[cursor++];
+            const auto end=xml.find(quote,cursor);
+            if(end==std::string_view::npos||end-cursor>4096)return false;
+            *out=std::string(xml.substr(cursor,end-cursor));
+            return true;
+        }
+        at+=name.size();
+    }
+    return false;
+}
+
+struct CameraRoute {
+    std::string camera_file="CameraTests.bdae";
+    std::string camera_name="PlayerCamera_Default";
+    std::string animset="Default";
+};
+
+// LevelConfig::DeclareProperties supplies Default for camera_animset;
+// LevelConfig::InitPost supplies CameraTests.bdae for an empty camera_file.
+inline bool parse_camera_route(std::string_view xml,CameraRoute* out) noexcept {
+    if(!out||xml.size()>1024*1024)return false;
+    try {
+        CameraRoute value{};
+        std::string field;
+        if(attribute_text(xml,"camera_file",&field)&&!field.empty())value.camera_file=field;
+        field.clear();
+        if(attribute_text(xml,"camera_name",&field)&&!field.empty())value.camera_name=field;
+        field.clear();
+        if(attribute_text(xml,"camera_animset",&field)&&!field.empty())value.animset=field;
+        if(value.camera_file.size()>4096||value.camera_name.size()>4096||
+           value.animset.empty()||value.animset.size()>4096)return false;
+        *out=std::move(value);
+        return true;
+    }catch(...){return false;}
 }
 
 inline bool attribute_number(std::string_view xml,std::string_view name,float* out) {

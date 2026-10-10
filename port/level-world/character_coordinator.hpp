@@ -2,13 +2,38 @@
 
 #include "character_state.hpp"
 #include "character_timers.hpp"
+#include "character_ai_frame.hpp"
 #include "character_skill_state_dispatch_v1.hpp"
+#include "character_cast_state_dispatch_v1.hpp"
+#include "character_cast_lifecycle_v1.hpp"
 #include <vector>
 
 namespace dh2::character {
 
 class Coordinator;
 enum class TimerRouting { machine, delivered, failed };
+
+struct SkillProjectionRetirementStatus {
+    bool coordinator_bound=false;
+    bool projection_matches=false;
+    bool dispatch_active=false;
+    std::uint32_t timer_update_depth=0;
+    std::uintptr_t expected_projection=0;
+    std::uintptr_t bound_projection=0;
+    std::int32_t current_state=-1;
+};
+
+enum class LogicFramePhase : std::uint32_t {
+    not_started, character_timers, char_ai, character_state, complete
+};
+
+struct LogicFrameResult {
+    LogicFramePhase phase = LogicFramePhase::not_started;
+    std::int32_t timer_status = 0;
+    std::int32_t ai_status = 0;
+    std::int32_t state_status = 0;
+    AIFrameResult16 ai{};
+};
 
 // Runtime composition of the recovered state and timer kernels. This is a
 // native owner, not an original Character/CharAI memory-layout overlay.
@@ -35,6 +60,17 @@ struct CoordinatorBindings {
     // Optional CSSkill projection. Its machine must be this Coordinator's
     // State; all callback graph storage remains host-owned and borrowed.
     character_skill_state_dispatch_v1::Projection* skill_projection = nullptr;
+    // Optional CSCast callback graph, independent of CSSkill. It borrows this
+    // Coordinator State plus the existing Character/machine/animator owners.
+    character_cast_lifecycle_v1::Projection* cast_projection = nullptr;
+    // Source CharAI identity associated with this Character owner. Zero means
+    // the relationship is not yet established, so frame dispatch stays closed.
+    std::uintptr_t ai_identity = 0;
+    // Canonical native projection of this Character's source AI owner and
+    // controller. CharAI::Update reads forced/locked from this owner; callers
+    // cannot supply a copied owner record with a forged forced bypass.
+    AIFrameOwner48* ai_owner_projection = nullptr;
+    std::uintptr_t controller_identity = 0;
 };
 
 class Coordinator {
@@ -67,12 +103,25 @@ public:
     // CSSkill callback storage is borrowed. These lifecycle methods may be
     // used after bind() without replacing the Coordinator's State/FSM owner.
     // Projection binding through this API is single-assignment (the same
-    // pointer is idempotent); unbind requires that exact pointer and is
-    // refused while CSSkill state 6 is live.
+    // pointer is idempotent); normal unbind requires that exact pointer and
+    // is refused while its state is live. Terminal retirement is separate.
     bool bind_skill_projection(
         character_skill_state_dispatch_v1::Projection* projection);
     bool unbind_skill_projection(
         character_skill_state_dispatch_v1::Projection* projection);
+    // Terminal Character destruction discards the whole state machine without
+    // dispatching an outgoing state callback, matching Character::~Character.
+    // This separate path still refuses to detach during a borrowed dispatch.
+    bool retire_skill_projection(
+        character_skill_state_dispatch_v1::Projection* projection);
+    SkillProjectionRetirementStatus skill_projection_retirement_status(
+        const character_skill_state_dispatch_v1::Projection* projection) const noexcept;
+    bool bind_cast_projection(
+        character_cast_lifecycle_v1::Projection* projection);
+    bool unbind_cast_projection(
+        character_cast_lifecycle_v1::Projection* projection);
+    bool retire_cast_projection(
+        character_cast_lifecycle_v1::Projection* projection);
     std::uintptr_t owner() const { return timers_.owner; }
     std::uint32_t event_cause() const { return event_cause_; }
     const TimerStore32& timers() const { return timers_; }
@@ -89,12 +138,33 @@ public:
     int spawn_transition(std::int32_t next);
     int spawn_event(std::uint32_t event, const char* exact_event_name = nullptr);
     int update_state(std::uint32_t dt_ms);
+    // Dispatch the original CharAI frame through this Character's one FSM
+    // owner. The frame projection must mirror this Coordinator's Character
+    // owner, CharAI identity, canonical owner projection, and controller;
+    // required target/master/aggro/AIS services remain
+    // explicit and unavailable services stop at their source-ordered prefix.
+    // Returns -1 when the projection is not this Character; otherwise returns
+    // dh2_character_ai_frame's status without creating another owner/store.
+    int update_ai_frame(AIFrameState32*, const AIFrameServices24*,
+                        AIFrameResult16*);
     int update_timers(std::uint32_t dt_ms, std::uint32_t script_blocked);
+    // Reconstruct the source Character::Update logic sequence after its
+    // outer eligibility gates and optional TimerUtil phase: CharTimers,
+    // CharAI::Update, then CharStateMachine::Update. Each existing owner and
+    // its service providers remain authoritative; a failure stops at that
+    // phase and leaves completed source effects intact.
+    int update_logic_frame(std::uint32_t dt_ms, std::uint32_t script_blocked,
+                           AIFrameState32*, const AIFrameServices24*,
+                           LogicFrameResult*);
     std::int32_t start_timer(std::uint32_t duration_ms, std::int32_t repeat,
                              std::int32_t event, std::uintptr_t user_ref);
     int pause_timer(std::uint32_t id, std::uint32_t paused);
     int stop_timer(std::uint32_t id);
     int stop_timers();
+    // Terminal Character destruction discards its CharTimers vector. Release
+    // this Coordinator's timer storage without allocation; the next timer
+    // start grows it through the existing owner callback.
+    bool retire_timers() noexcept;
 
     // Fresh level/session allocation; forbidden inside a borrowed state or
     // timer update. In-process Activity recreation may instead retain timers.

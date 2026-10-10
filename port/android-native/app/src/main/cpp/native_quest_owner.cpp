@@ -4,10 +4,13 @@
 #include "quest_condition_factory_v1.hpp"
 #include "quest_objective_factory_v1.hpp"
 #include "quest_reward_factory_v1.hpp"
+#include "quest_compile_v1.hpp"
 #include "quest_objective_payload_v1.hpp"
 #include "quest_stream_read_v1.hpp"
 #include "fresh_inventory_owned_v4.hpp"
 #include "quest_gather_loot_receiver_v1.hpp"
+#include "../../../../../quest-kill/quest.h"
+#include <algorithm>
 #include <map>
 #include <cstring>
 #include <stdexcept>
@@ -25,6 +28,7 @@ namespace o=data::quest_objective_list_v1;
 namespace of=data::quest_objective_factory_v1;
 namespace r=data::quest_reward_list_v1;
 namespace rf=data::quest_reward_factory_v1;
+namespace qc=data::quest_compile_v1;
 namespace {
 template<class T>std::int32_t retire(std::map<std::uintptr_t,std::unique_ptr<T>>& arena,T* record,std::uintptr_t identity){
  const auto found=arena.find(identity);
@@ -71,6 +75,17 @@ struct Owner::Impl {
  std::map<std::uintptr_t,std::unique_ptr<of::Record>> objectives;
  std::map<std::uintptr_t,std::unique_ptr<rf::Record>> rewards;
  std::map<std::uintptr_t,std::unique_ptr<data::quest_gather_loot_receiver_v1::Binding>> gather_loot;
+ struct KillXEnemiesBinding {
+  of::Record* objective=nullptr;
+  of::Dispatch expected_dispatch=of::Dispatch::kill_enemies;
+  std::int32_t event_type=0,match_id=-1,script_id=-1;
+  void* script_context=nullptr;
+  Owner::KillObjectiveStartScript start_script=nullptr;
+  bool attached=false,detach_pending=false;
+  static std::int32_t receive(void*,Owner::LevelEventRuntime&,
+                              Owner::LevelEvent&,std::string&);
+ };
+ std::map<std::uintptr_t,std::unique_ptr<KillXEnemiesBinding>> kill_x_enemies;
  std::map<std::uintptr_t,std::unique_ptr<c::Array>> ca;
  std::map<std::uintptr_t,std::unique_ptr<o::Array>> oa;
  std::map<std::uintptr_t,std::unique_ptr<r::Array>> ra;
@@ -119,6 +134,13 @@ struct Owner::Impl {
   const auto found=slots.find(identity);
   if(found==slots.end()||!found->second->value||found->second->value->record().ref.identity!=identity)return nullptr;
   return found->second->value.get();
+ }
+ of::Record* objective_at(std::uintptr_t quest_identity,std::uint32_t ordinal){
+  auto* quest=resolve_quest_identity(quest_identity);if(!quest)return nullptr;
+  auto& list=quest->objectives();
+  if(list.count_0<0||ordinal>=std::uint32_t(list.count_0)||!list.children_4||
+     !list.children_4->identity||std::uint64_t(std::uint32_t(list.count_0))>list.children_4->slots.size())return nullptr;
+  return resolve_objective(list.children_4->slots[ordinal]);
  }
  of::Record* resolve_objective(o::ObjectiveRef* ref){
   if(!ref||!ref->action.identity)return nullptr;
@@ -219,6 +241,50 @@ struct Owner::Impl {
   return true;
  }
 };
+std::int32_t Owner::Impl::KillXEnemiesBinding::receive(
+ void* raw,Owner::LevelEventRuntime& runtime,Owner::LevelEvent& event,std::string& error){
+ if(!raw){error="KillXEnemies receiver context is null";return 1;}
+ auto& binding=*static_cast<KillXEnemiesBinding*>(raw);
+ if(!binding.objective||!binding.objective->compiled_8||
+    binding.objective->dispatch_0!=binding.expected_dispatch){
+  error="Kill/Clear receiver lost its canonical compiled Objective";return 1;
+ }
+ if(event.objective_type!=binding.event_type||event.network_id!=binding.match_id)return 0;
+ dh2_kill_objective objective{binding.match_id,
+  static_cast<std::int32_t>(binding.objective->quantity_20),
+  static_cast<std::int32_t>(binding.objective->derived_2c),
+  binding.objective->done_14};
+ dh2_kill_progress_event progress{event.network_id,event.subject_id,event.flag0,event.flag1};
+ dh2_kill_progress_result result{};
+ if(dh2_quest_kill_event(&objective,&progress,&result)!=0){
+  error="Kill/Clear source progress rejected invalid Objective/Event fields";return 1;
+ }
+ if(!result.matched){error.clear();return 0;}
+ binding.objective->quantity_20=static_cast<std::uint32_t>(objective.current);
+ binding.objective->done_14=static_cast<std::uint8_t>(objective.completed);
+ event.flag0=static_cast<std::uint8_t>(progress.outbound);
+ event.flag1=static_cast<std::uint8_t>(progress.synchronized);
+ event.subject_id=progress.quantity;
+ if(result.newly_completed&&binding.script_id>=0&&
+    !binding.start_script(binding.script_context,binding.script_id,error)){
+  if(error.empty())error="Kill/Clear completion script provider failed";
+  return 1;
+ }
+ if(result.completion_requested&&!binding.detach_pending){
+  bool scheduled=false;
+  if(!binding.objective->ref.action.identity){
+   error="Kill/Clear Objective vtable+28 cannot resolve its receiver identity";return 1;
+  }
+  const auto status=runtime.delayed_detach(binding.event_type,
+       binding.objective->ref.action.identity,scheduled,error);
+  if(status!=Owner::LevelEventStatus::complete||!scheduled){
+   if(error.empty())error="Kill/Clear Objective::Unregister delayed detach failed";
+   return 1;
+  }
+  binding.detach_pending=true;
+ }
+ error.clear();return 0;
+}
 Owner::Owner(std::shared_ptr<data::PlayerSavegameV1> save,data::quest_table_bindings_v1::View definitions,Constants constants):
  impl_(std::make_unique<Impl>(std::move(save),std::move(definitions),std::move(constants))) {}
 Owner::~Owner(){std::string error;if(!close(error))std::terminate();}
@@ -226,6 +292,258 @@ bool Owner::initialize(std::uint32_t log,std::string& error){
  if(log>1||impl_->busy||impl_->closed){error="Native Quest owner/log unavailable";return false;}
  impl_->busy=true;struct Guard{Impl& owner;~Guard(){owner.busy=false;}}guard{*impl_};error.clear();
  return impl_->run(log,false,error);
+}
+bool compose_objective_description_v1(const std::vector<std::int32_t>& ids,
+ const QuestTextServicesV1& text,std::string& out,std::string& error){
+ std::string value;
+ for(const auto id:ids){
+  if(id<=0)continue;
+  if(!text.string_id){error="Quest objective description requires the existing localization service";return false;}
+  std::string resolved;
+  if(!text.string_id(text.context,id,resolved,error)){
+   if(error.empty())error="Quest objective description localization failed";
+   return false;
+  }
+  if(resolved.empty())continue;
+  if(!value.empty())value.push_back('\n');
+  value+=resolved;
+ }
+ out=std::move(value);error.clear();return true;
+}
+bool Owner::read_quest(std::uint32_t log,std::uint32_t difficulty,
+ std::uint32_t ordinal,QuestReadV1& out,std::string& error,
+ const QuestTextServicesV1* text) const{
+ if(log>1||difficulty>2||impl_->busy||impl_->closed||!impl_->save){
+  error="Native Quest read requires an open source Save log and difficulty";return false;
+ }
+ const auto& store=log?impl_->save->source_quest_log_118():impl_->save->source_quest_log_b8();
+ const auto& quests=store.quests[difficulty];
+ if(ordinal>=quests.size()||!quests[ordinal]){
+  error="Native Quest read ordinal is outside the published source Quest vector";return false;
+ }
+ auto* instance=impl_->resolve(quests[ordinal]);
+ if(!instance||instance->record().ref.identity!=quests[ordinal]->identity||
+    instance->record().fields.row_8<0||!instance->record().py_data_68||
+    impl_->definitions.resolve(instance->record().py_data_68->identity)!=instance->record().py_data_68){
+  error="Native Quest read cannot resolve the same Save-published Quest and pydata row";return false;
+ }
+ const auto* definition=impl_->definitions.record(*instance->record().py_data_68);
+ if(!definition){error="Native Quest read pydata row has no validated immutable definition";return false;}
+ QuestReadV1 value;
+ value.id=instance->record().fields.row_8;
+ value.state=instance->record().state_0;
+ value.priority=definition->priority;
+ for(std::size_t i=0;i<value.text_ids.size();++i)value.text_ids[i]=definition->ids[i];
+ if(text){
+  const auto& list=instance->objectives();
+  std::vector<std::int32_t> objective_text_ids;
+  if(list.count_0>0){
+   if(!list.children_4||!list.children_4->identity||
+      std::uint64_t(std::uint32_t(list.count_0))>list.children_4->slots.size()){
+    error="Quest objective description cannot resolve its canonical ObjectiveList";return false;
+   }
+   objective_text_ids.reserve(std::uint32_t(list.count_0));
+   for(std::int32_t index=0;index<list.count_0;++index){
+    const auto* objective=impl_->resolve_objective(list.children_4->slots[std::size_t(index)]);
+    if(!objective){error="Quest objective description found a foreign canonical Objective";return false;}
+    const auto& retained=objective->fields.py_data_c;
+    if(!retained.list||retained.stub||retained.list->kind!=1){
+     error="Quest objective description requires retained Objective definitions of kind 1";return false;
+    }
+    dh2_quest_objective source{};
+    if(!objective_definition(*objective,source,error))return false;
+    objective_text_ids.push_back(source.common[1]);
+   }
+  }
+  if(!compose_objective_description_v1(objective_text_ids,*text,
+                                      value.objective_description,error))return false;
+ }
+ out=value;error.clear();return true;
+}
+bool Owner::lookup_quest_state(std::int32_t quest_id,std::int32_t difficulty,
+ bool online,std::int32_t* state,QuestLookupStatusV1& status) const noexcept{
+ status=QuestLookupStatusV1::unavailable;
+ if(!state||difficulty<0||difficulty>2||impl_->busy||impl_->closed||!impl_->save)
+  return false;
+ if(quest_id<0||std::uint32_t(quest_id)>=impl_->definitions.count()){
+  status=QuestLookupStatusV1::missing;return false;
+ }
+ const auto& log=online?impl_->save->source_quest_log_118():
+                        impl_->save->source_quest_log_b8();
+ const auto& quests=log.quests[std::uint32_t(difficulty)];
+ if(std::uint32_t(quest_id)>=quests.size()){
+  status=QuestLookupStatusV1::compile_required;return false;
+ }
+ auto* instance=impl_->resolve(quests[std::uint32_t(quest_id)]);
+ if(!instance||!instance->record().py_data_68||
+    instance->record().fields.row_8!=quest_id||
+    impl_->definitions.resolve(instance->record().py_data_68->identity)!=
+      instance->record().py_data_68){
+  status=QuestLookupStatusV1::source_fault;return false;
+ }
+ *state=instance->record().state_0;status=QuestLookupStatusV1::found;return true;
+}
+bool Owner::update_active(std::uintptr_t quest_identity,std::uint32_t log,
+ std::uint32_t difficulty,
+ const QuestUpdateActiveServicesV1& services,QuestUpdateActiveResultV1& out,
+ std::string& error){
+ if(log>1||difficulty>2||impl_->busy||impl_->closed||!impl_->save){
+  error="Quest::UpdateActive requires the open canonical Save/QEST owner";return false;
+ }
+ auto* quest=impl_->resolve_quest_identity(quest_identity);
+ if(!quest||!quest->record().py_data_68||
+    impl_->definitions.resolve(quest->record().py_data_68->identity)!=
+      quest->record().py_data_68){
+  error="Quest::UpdateActive requires a Quest published in this Save and definition generation";return false;
+ }
+ const auto& selected_log=log?impl_->save->source_quest_log_118():
+                              impl_->save->source_quest_log_b8();
+ const auto& selected_quests=selected_log.quests[difficulty];
+ if(std::none_of(selected_quests.begin(),selected_quests.end(),[&](const auto* ref){
+     return ref&&ref->identity==quest_identity&&ref==&quest->record().ref;
+    })){
+  error="Quest::UpdateActive Quest does not belong to the supplied Save log/difficulty";return false;
+ }
+ QuestUpdateActiveResultV1 value;value.quest_identity=quest_identity;
+ value.prior_state=quest->record().state_0;
+ if(value.prior_state!=6){value.outcome=QuestUpdateActiveOutcomeV1::inactive;out=std::move(value);error.clear();return true;}
+
+ // ObjectiveList::Eval is a direct byte scan in source order (ELF 0x47a444):
+ // each canonical Objective+0x14 done byte must be nonzero. Empty lists pass.
+ // Do not call a guessed virtual IsComplete or allocate a parallel done map.
+ auto& list=quest->objectives();
+ if(list.count_0<0||(list.count_0>0&&(!list.children_4||!list.children_4->identity||
+    std::uint64_t(std::uint32_t(list.count_0))>list.children_4->slots.size()))){
+  error="Quest::UpdateActive found invalid canonical ObjectiveList backing";return false;
+ }
+ for(std::uint32_t ordinal=0;ordinal<std::uint32_t(list.count_0);++ordinal){
+  const auto* objective=impl_->resolve_objective(list.children_4->slots[ordinal]);
+  if(!objective){error="Quest::UpdateActive could not resolve a canonical ObjectiveList child";return false;}
+  if(!objective->done_14){value.outcome=QuestUpdateActiveOutcomeV1::objectives_pending;out=std::move(value);error.clear();return true;}
+ }
+
+ const auto* definition=impl_->definitions.record(*quest->record().py_data_68);
+ if(!definition){error="Quest::UpdateActive could not read its retained Quest row";return false;}
+ auto script_suffix=[&](std::uint32_t slot,std::string& suffix)->bool{
+  if(slot>=14){error="Quest::UpdateActive script slot is outside the source row";return false;}
+  const auto& span=definition->scripts[slot];
+  if(!span.size){suffix.clear();return true;}
+  data::quest_table_bindings_v1::Span bytes{};
+  if(!impl_->definitions.bytes(span,&bytes,error)||!bytes.data||!bytes.size){
+   if(error.empty())error="Quest::UpdateActive source script span is invalid";
+   return false;
+  }
+  std::string source(reinterpret_cast<const char*>(bytes.data),bytes.size);
+  const auto nul=source.find('\0');if(nul!=std::string::npos)source.resize(nul);
+  const auto dot=source.find('.');
+  if(dot==std::string::npos||dot+1==source.size()){
+   error="Quest::UpdateActive source script reference has no resolvable manager name";
+   return false;
+  }
+  suffix=source.substr(dot+1);
+  return true;
+ };
+ if(!script_suffix(0,value.active_script)||!script_suffix(5,value.post_active_script))return false;
+ if(!value.active_script.empty()){
+  if(!services.script_is_running){error="Quest::UpdateActive requires the current Level's ScriptManager running-state provider";return false;}
+  bool running=false;
+  if(!services.script_is_running(services.context,value.active_script,running,error)){
+   if(error.empty())error="Quest::UpdateActive ScriptManager query failed";
+   return false;
+  }
+  if(running){value.outcome=QuestUpdateActiveOutcomeV1::completion_script_running;out=std::move(value);error.clear();return true;}
+ }
+ if(!services.application_time_valid){error="Quest::SetState requires the current Application time snapshot";return false;}
+ std::int32_t post_active_state=0;
+ if(impl_->constant("v2QuestState","PostActive",&post_active_state)||
+    post_active_state<0||post_active_state>13){
+  error="Quest::UpdateActive could not resolve the source v2QuestState.PostActive constant";return false;
+ }
+ // Source SetState stores state and timestamp first, unregisters state-6
+ // objectives, then its PostActive switch clears the current Quest and starts
+ // script slot 5. The target state is nonvolatile (IsVolatileState(7)==false).
+ auto& mutable_record=quest->record();
+ mutable_record.state_0=post_active_state;
+ mutable_record.word_4=services.application_time;
+ auto& unregister_list=quest->objectives();
+ for(std::uint32_t ordinal=0;ordinal<std::uint32_t(unregister_list.count_0);++ordinal){
+  auto* objective=impl_->resolve_objective(unregister_list.children_4->slots[ordinal]);
+  if(!objective){error="Quest::SetState could not resolve an Objective during Unregister";return false;}
+  if(!objective->compiled_8)continue;
+  const auto identity=objective->ref.action.identity;
+  bool ok=false;
+  switch(objective->dispatch_0){
+   case of::Dispatch::gather_loot:
+    ok=unregister_gather_loot_objective(identity,error);break;
+   case of::Dispatch::kill_enemies:
+    ok=unregister_kill_x_enemies_objective(quest_identity,ordinal,error);break;
+   case of::Dispatch::clear_enemies:
+    ok=unregister_clear_enemies_objective(quest_identity,ordinal,error);break;
+   case of::Dispatch::clear_enemy_template:
+    ok=unregister_clear_enemy_template_objective(quest_identity,ordinal,error);break;
+   default:
+    error="Quest::SetState ObjectiveList::Unregister reached a compiled Objective without a source owner";return false;
+  }
+  if(!ok)return false;
+ }
+ auto& current_log=log?impl_->save->source_quest_log_118():
+                        impl_->save->source_quest_log_b8();
+ current_log.word_2c[difficulty]=-1;
+ if(!value.post_active_script.empty()){
+  if(!services.start_script){error="Quest::ExecScript(PostActive slot 5) requires the current ScriptManager start provider";return false;}
+  if(!services.start_script(services.context,value.post_active_script,-1,true,error)){
+   if(error.empty())error="Quest::ExecScript(PostActive slot 5) failed";
+   return false;
+  }
+ }
+ value.new_state=post_active_state;value.outcome=QuestUpdateActiveOutcomeV1::state_transitioned;
+ out=std::move(value);error.clear();return true;
+}
+bool Owner::update_active_log(std::uint32_t log,std::uint32_t difficulty,
+ const QuestUpdateActiveServicesV1& services,
+ std::vector<QuestUpdateActiveResultV1>& out,std::string& error){
+ if(log>1||difficulty>2||impl_->busy||impl_->closed||!impl_->save){
+  error="QuestSavegame::UpdateQuests requires its selected open Save log/difficulty";return false;
+ }
+ const auto& store=log?impl_->save->source_quest_log_118():
+                       impl_->save->source_quest_log_b8();
+ const auto& quests=store.quests[difficulty];
+ std::vector<QuestUpdateActiveResultV1> values;values.reserve(quests.size());
+ for(const auto* ref:quests){
+  if(!ref){error="QuestSavegame::UpdateQuests found a null canonical Quest entry";return false;}
+  QuestUpdateActiveResultV1 value{};
+  if(!update_active(ref->identity,log,difficulty,services,value,error))return false;
+  values.push_back(std::move(value));
+ }
+ out=std::move(values);error.clear();return true;
+}
+bool Owner::complete_objective(std::uintptr_t quest_identity,
+ std::uint32_t objective_ordinal,void* script_context,
+ KillObjectiveStartScript start_script,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for Objective::SetIsCompleted";return false;}
+ auto* objective=impl_->objective_at(quest_identity,objective_ordinal);
+ if(!objective){error="Objective::SetIsCompleted requires a canonical ObjectiveList child";return false;}
+ if(objective->done_14){error.clear();return true;}
+ objective->done_14=1;
+ dh2_quest_objective definition{};
+ if(!objective_definition(*objective,definition,error))return false;
+ const auto script_id=definition.common[2];
+ if(script_id<0){error.clear();return true;}
+ if(!start_script){error="Objective::SetIsCompleted requires the current ScriptManager start provider";return false;}
+ if(!start_script(script_context,script_id,error)){
+  if(error.empty())error="Objective::SetIsCompleted script activation failed";
+  return false;
+ }
+ error.clear();return true;
+}
+bool quest_state_lookup_v1(void* raw,std::int32_t quest_id,
+ std::int32_t* state) noexcept{
+ if(!raw)return false;
+ auto& context=*static_cast<QuestLookupContextV1*>(raw);
+ context.status=QuestLookupStatusV1::unavailable;
+ if(!context.owner||!context.current_difficulty||!context.online)return false;
+ return context.owner->lookup_quest_state(quest_id,*context.current_difficulty,
+      *context.online!=0,state,context.status);
 }
 bool Owner::load_quests(Cursor& cursor,std::string& error){
  if(impl_->busy||impl_->closed){error="Native Quest owner unavailable during payload load";return false;}
@@ -260,6 +578,76 @@ bool Owner::load_quests(Cursor& cursor,std::string& error){
   &impl_->save->source_quest_log_118(),&cursor.stream(),services});saved::Result answer;
  return runtime.load(&answer,error)==saved::Status::complete;
 }
+bool Owner::save_quests(
+ const data::player_save_section_writers_v1::WriteServicesV1& stream,
+ std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable during payload save";return false;}
+ if(!stream.write){error="Native QEST output stream unavailable";return false;}
+ impl_->busy=true;struct Guard{Impl& owner;~Guard(){owner.busy=false;}}guard{*impl_};
+ error.clear();
+ // PlayerSavegame::__SaveQuests selects the live Save's embedded log from
+ // save_mode_ (+0x178): odd modes use +0xb8, even modes use +0x118.
+ auto& store=(impl_->save->source_save_mode()&1)?
+  impl_->save->source_quest_log_b8():impl_->save->source_quest_log_118();
+ const auto write_word=[&](std::uint32_t value){
+  const std::uint8_t bytes[]{std::uint8_t(value),std::uint8_t(value>>8),
+   std::uint8_t(value>>16),std::uint8_t(value>>24)};
+  if(stream.write(stream.context,{bytes,sizeof(bytes)},error))return true;
+  if(error.empty())error="Native QEST source word write failed";
+  return false;
+ };
+ const auto save_objective=[&](const data::quest_runtime_fields_v1::ActionRef* action){
+  if(!action||!action->identity){error="Native QEST ActionRef is unavailable";return false;}
+  const auto found=impl_->objectives.find(action->identity);
+  if(found==impl_->objectives.end()||&found->second->ref.action!=action){
+   error="Native QEST ActionRef is outside the same-Save Objective factory";return false;
+  }
+  of::Result result{};
+  const auto status=impl_->objective_factory.save_data(*found->second,stream,&result,error);
+  if(status==of::Status::complete)return true;
+  if(error.empty())error="Native QEST Objective virtual save provider failed";
+  return false;
+ };
+ for(std::uint32_t difficulty=0;difficulty<3;++difficulty){
+  const auto& quests=store.quests[difficulty];
+  if(quests.size()>std::uint32_t(INT32_MAX)){
+   error="Native QEST quest vector exceeds source signed ordinal range";return false;
+  }
+  if(!write_word(std::uint32_t(quests.size())))return false;
+  for(std::uint32_t ordinal=0;ordinal<quests.size();++ordinal){
+   auto* ref=quests[ordinal];auto* quest=impl_->resolve(ref);
+   if(!quest||&quest->record().ref!=ref||quest->record().difficulty_10!=std::int32_t(difficulty)){
+    error="Native QEST vector contains a Quest outside its same-Save factory";return false;
+   }
+   if(!write_word(ordinal)||!write_word(std::uint32_t(quest->record().state_0))||
+      !save_objective(quest->record().action_18)||
+      !save_objective(quest->record().action_1c))return false;
+   auto& list=quest->objectives();
+   if(list.count_0<0||
+      (list.count_0&&(!list.children_4||
+       std::uint32_t(list.count_0)>list.children_4->slots.size()))){
+    error="Native QEST ObjectiveList storage is outside its same-Save bounds";return false;
+   }
+   for(std::int32_t i=0;i<list.count_0;++i){
+    const auto* ref=list.children_4->slots[std::size_t(i)];
+    if(!ref||!ref->action.identity){error="Native QEST ObjectiveList contains a missing Objective";return false;}
+    const auto found=impl_->objectives.find(ref->action.identity);
+    if(found==impl_->objectives.end()||&found->second->ref!=ref){
+     error="Native QEST ObjectiveList entry is outside the same-Save factory";return false;
+    }
+    of::Result result{};
+    if(impl_->objective_factory.save_data(*found->second,stream,&result,error)!=of::Status::complete){
+     if(error.empty())error="Native QEST ObjectiveList virtual save provider failed";
+     return false;
+    }
+   }
+  }
+  if(!write_word(std::uint32_t(store.word_2c[difficulty]))||
+     !write_word(std::uint32_t(store.word_38[difficulty]))||
+     !write_word(std::uint32_t(store.word_44[difficulty])))return false;
+ }
+ error.clear();return true;
+}
 bool Owner::attach_current_level_receiver(std::int32_t event_type,
  std::uintptr_t receiver,std::int32_t priority,void* context,
  LevelEventReceiver invoke,std::string& error){
@@ -290,10 +678,24 @@ bool Owner::raise_current_level_event(LevelEvent& event,std::string& error){
  return impl_->current_level_events.raise(event,result,error)==
   LevelEventStatus::complete;
 }
+bool Owner::raise_character_kill_event(character_kill_quest_tail_v1::Event& source,
+ std::string& error){
+ LevelEvent event{};event.objective_type=source.objective_type;
+ event.character=source.character_word_25;
+ event.network_id=source.source_word_24;
+ event.subject_id=source.source_subject;
+ event.flag0=source.flag0;event.flag1=source.flag1;
+ if(!raise_current_level_event(event,error))return false;
+ source.source_subject=event.subject_id;source.flag0=event.flag0;source.flag1=event.flag1;
+ error.clear();return true;
+}
 bool Owner::flush_current_level_detaches(std::string& error){
  if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for current-Level detach flush";return false;}
  LevelEventResult result{};
  if(impl_->current_level_events.flush_delayed_detaches(result,error)!=LevelEventStatus::complete)return false;
+ for(auto at=impl_->kill_x_enemies.begin();at!=impl_->kill_x_enemies.end();){
+  if(at->second->detach_pending)at=impl_->kill_x_enemies.erase(at);else ++at;
+ }
  for(auto at=impl_->gather_loot.begin();at!=impl_->gather_loot.end();){
   const auto& binding=*at->second;
   if(binding.detach_pending&&!binding.inventory_registered)at=impl_->gather_loot.erase(at);
@@ -369,6 +771,469 @@ bool Owner::register_gather_loot_objective(std::uintptr_t identity,
  // then adds its item ID to Character::ItemInventory+0x30.
  if(!inventory.register_quest_gathering_item_id(item_id,error))return false;
  context->inventory_registered=true;
+ error.clear();return true;
+}
+bool Owner::compile_kill_x_enemies_objective(std::uintptr_t quest_identity,
+ std::uint32_t objective_ordinal,
+ std::int32_t current_level_id,std::int32_t loaded_match_count,
+ void* script_context,KillObjectiveStartScript start_script,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for KillXEnemies Compile";return false;}
+ auto* objective=impl_->objective_at(quest_identity,objective_ordinal);
+ if(!objective){error="KillXEnemies Compile requires an Objective in this Owner's canonical Quest list";return false;}
+ if(objective->dispatch_0!=of::Dispatch::kill_enemies||current_level_id<0||loaded_match_count<0){
+  error="KillXEnemies Compile requires type 0, a live Level ID, and a nonnegative loaded-enemy count";return false;
+ }
+ dh2_quest_objective definition{};
+ if(!objective_definition(*objective,definition,error))return false;
+ if(definition.common[0]!=objective->fields.type_4){
+  error="KillXEnemies Compile found a changed Objective type selector";return false;
+ }
+ objective->derived_24=objective->fields.py_data_c;
+ const auto required_kills=definition.args[2];
+ objective->derived_2c=static_cast<std::uint32_t>(required_kills);
+ const auto level_filter=definition.args[1];
+ if(level_filter!=-1&&level_filter!=current_level_id){
+  objective->compiled_8=0;error.clear();return true;
+ }
+ // The source population query is only an availability gate for KillXEnemies;
+ // its target is the independent row field at definition +0x28.
+ if(loaded_match_count==0||required_kills<=0){
+  objective->compiled_8=0;error.clear();return true;
+ }
+ objective->compiled_8=1;
+ if(required_kills<=static_cast<std::int32_t>(objective->quantity_20)&&!objective->done_14){
+  objective->done_14=1;
+  if(definition.common[2]>=0&&
+     (!start_script||!start_script(script_context,definition.common[2],error))){
+   if(error.empty())error="KillXEnemies Compile completion needs the source script-base provider";
+   return false;
+  }
+ }
+ error.clear();return true;
+}
+bool Owner::compile_kill_x_enemies_objective_from_level(
+ std::uintptr_t quest_identity,std::uint32_t objective_ordinal,
+ const KillEnemiesPopulationServicesV1& population,
+ void* script_context,KillObjectiveStartScript start_script,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for live KillXEnemies Compile";return false;}
+ if(!population.read_current_level_population||!population.expected_level_identity){
+  error="Live KillXEnemies Compile requires the current-Level population provider and identity";return false;
+ }
+ auto* objective=impl_->objective_at(quest_identity,objective_ordinal);
+ if(!objective||objective->dispatch_0!=of::Dispatch::kill_enemies){
+  error="Live KillXEnemies Compile requires its canonical KillXEnemies Objective";return false;
+ }
+ dh2_quest_objective definition{};
+ if(!objective_definition(*objective,definition,error))return false;
+ if(definition.common[0]!=objective->fields.type_4||definition.args[0]<-32768||
+    definition.args[0]>32767){
+  error="Live KillXEnemies Compile found an invalid source property selector";return false;
+ }
+ const auto expected_owner=reinterpret_cast<std::uintptr_t>(this);
+ ClearEnemiesPopulationSnapshotV1 snapshot{};
+ try{
+  if(!population.read_current_level_population(population.context,expected_owner,
+       population.expected_level_identity,
+       definition.args[0],snapshot,error)){
+   if(error.empty())error="Current-Level KillXEnemies population query failed";
+   return false;
+  }
+ }catch(const std::exception& ex){error=ex.what();return false;}
+ catch(...){error="Current-Level KillXEnemies population provider threw";return false;}
+ if(snapshot.event_owner_identity!=expected_owner||
+    snapshot.level_identity!=population.expected_level_identity||snapshot.level_id<0||
+    snapshot.loaded_match_count<0){
+  error="Live KillXEnemies Compile rejected a stale Level owner or invalid population";return false;
+ }
+ return compile_kill_x_enemies_objective(quest_identity,objective_ordinal,
+       snapshot.level_id,snapshot.loaded_match_count,script_context,start_script,error);
+}
+bool Owner::compile_kill_x_enemies_objective_list_v1(
+ std::uintptr_t quest_identity,const KillEnemiesPopulationServicesV1& population,
+ void* script_context,KillObjectiveStartScript start_script,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for ObjectiveList::Compile";return false;}
+ auto* quest=impl_->resolve_quest_identity(quest_identity);
+ if(!quest||!population.read_current_level_population||!population.expected_level_identity){
+  error="ObjectiveList::Compile requires this canonical Quest and current-Level population provider";return false;
+ }
+ auto& list=quest->objectives();
+ if(list.count_0<0||(list.count_0>0&&(!list.children_4||
+    std::uint64_t(list.count_0)>list.children_4->slots.size()))){
+  error="ObjectiveList::Compile saw invalid canonical list storage";return false;
+ }
+ struct Context {
+  Owner* owner=nullptr;instance::Instance* quest=nullptr;
+  std::uintptr_t quest_identity=0;
+  const KillEnemiesPopulationServicesV1* population=nullptr;
+  void* script_context=nullptr;KillObjectiveStartScript start_script=nullptr;
+  std::string* error=nullptr;
+ } context{this,quest,quest_identity,&population,script_context,start_script,&error};
+ const qc::Services services{&context,
+  [](void* raw,scalar::ActionRef* action)->of::Record*{
+   auto& c=*static_cast<Context*>(raw);if(!action)return nullptr;
+   auto& children=c.quest->objectives();if(children.count_0<0||!children.children_4)return nullptr;
+   for(std::uint32_t ordinal=0;ordinal<std::uint32_t(children.count_0)&&
+       ordinal<children.children_4->slots.size();++ordinal){
+    auto* ref=children.children_4->slots[ordinal];
+    if(ref&&&ref->action==action)return c.owner->impl_->resolve_objective(ref);
+   }
+   return nullptr;
+  },nullptr,
+  [](void* raw,of::Record& objective,const qc::MemberCall& call)->std::int32_t{
+   auto& c=*static_cast<Context*>(raw);auto& children=c.quest->objectives();
+   std::uint32_t ordinal=UINT32_MAX;
+   if(children.count_0<0||!children.children_4)return 1;
+   for(std::uint32_t index=0;index<std::uint32_t(children.count_0)&&
+       index<children.children_4->slots.size();++index){
+    auto* ref=children.children_4->slots[index];
+    if(ref&&ref->action.identity==objective.ref.action.identity&&
+       c.owner->impl_->resolve_objective(ref)==&objective){ordinal=index;break;}
+   }
+   if(ordinal==UINT32_MAX){*c.error="Objective Compile callback lost the canonical Quest child";return 1;}
+   bool ok=false;
+   if(call.is_virtual&&call.adjustment==0&&call.function==8){
+    if(objective.dispatch_0!=of::Dispatch::kill_enemies){
+     *c.error="ObjectiveList::Compile has no source provider for this Objective dispatch";return 1;
+    }
+    ok=c.owner->compile_kill_x_enemies_objective_from_level(
+      c.quest_identity,ordinal,*c.population,c.script_context,c.start_script,*c.error);
+   }else if(call.is_virtual&&call.adjustment==0&&call.function==0x18){
+    if(!objective.compiled_8)return 0;
+    if(objective.dispatch_0!=of::Dispatch::kill_enemies){
+     *c.error="ObjectiveList::Register has no source provider for this Objective dispatch";return 1;
+    }
+    ok=c.owner->register_kill_x_enemies_objective(
+      c.quest_identity,ordinal,c.script_context,c.start_script,*c.error);
+   }else{
+    *c.error="ObjectiveList reached an unsupported virtual member call";return 1;
+   }
+   return ok?0:1;
+  }};
+ qc::Runtime runtime(*quest,impl_->definitions,services);qc::Result result{};
+ auto status=runtime.invalidate_objectives(&result);
+ if(status==qc::Status::complete)status=runtime.compile_objectives(&result);
+ if(status==qc::Status::complete&&quest->record().state_0==6)
+  status=runtime.register_objectives(&result);
+ if(status!=qc::Status::complete){
+  if(error.empty())error="KillXEnemies ObjectiveList source adapter failed at operation "+
+      std::to_string(static_cast<unsigned>(result.last_operation));
+  return false;
+ }
+ error.clear();return true;
+}
+bool Owner::register_kill_x_enemies_objective(std::uintptr_t quest_identity,
+ std::uint32_t objective_ordinal,
+ void* script_context,KillObjectiveStartScript start_script,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for KillXEnemies Register";return false;}
+ auto* resolved=impl_->objective_at(quest_identity,objective_ordinal);
+ if(!resolved){error="KillXEnemies Register requires an Objective in this Owner's canonical Quest list";return false;}
+ auto& objective=*resolved;const auto identity=objective.ref.action.identity;
+ if(objective.dispatch_0!=of::Dispatch::kill_enemies||!objective.compiled_8){
+  error="KillXEnemies Register requires the source Compile projection";return false;
+ }
+ dh2_quest_objective definition{};
+ if(!objective_definition(objective,definition,error))return false;
+ if(definition.common[0]!=objective.fields.type_4){error="KillXEnemies Register found a changed Objective selector";return false;}
+ const auto script_id=definition.common[2];
+ if(script_id>=0&&!start_script){error="KillXEnemies Register requires its source completion-script provider";return false;}
+ std::int32_t event_type=0;
+ if(impl_->constant("v2QuestObjectiveType","KillXEnemies",&event_type)){
+  error="Actual v2QuestObjectiveType.KillXEnemies constant unavailable";return false;
+ }
+ if(const auto prior=impl_->kill_x_enemies.find(identity);prior!=impl_->kill_x_enemies.end()){
+  const auto& binding=*prior->second;
+  if(binding.objective!=&objective||binding.event_type!=event_type||
+     binding.match_id!=definition.args[0]||binding.script_id!=script_id||
+     binding.script_context!=script_context||binding.start_script!=start_script||
+     binding.detach_pending){error="KillXEnemies Objective is already registered with different services";return false;}
+  error.clear();return true;
+ }
+ auto binding=std::make_unique<Impl::KillXEnemiesBinding>();
+ binding->objective=&objective;binding->event_type=event_type;
+ binding->match_id=definition.args[0];binding->script_id=script_id;
+ binding->script_context=script_context;binding->start_script=start_script;
+ auto* context=binding.get();
+ try{if(!impl_->kill_x_enemies.emplace(identity,std::move(binding)).second){
+  error="KillXEnemies receiver registration raced an existing binding";return false;
+ }}catch(const std::exception&){error="KillXEnemies receiver metadata allocation failed";return false;}
+ bool attached=false;
+ const auto status=impl_->current_level_events.attach(event_type,identity,0,context,
+  Impl::KillXEnemiesBinding::receive,attached,error);
+ if(status!=LevelEventStatus::complete||!attached){
+  impl_->kill_x_enemies.erase(identity);
+  if(error.empty())error="KillXEnemies receiver was already attached outside this Owner";
+  return false;
+ }
+ context->attached=true;error.clear();return true;
+}
+bool Owner::unregister_kill_x_enemies_objective(std::uintptr_t quest_identity,
+ std::uint32_t objective_ordinal,
+ std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for KillXEnemies Unregister";return false;}
+ auto* objective=impl_->objective_at(quest_identity,objective_ordinal);
+ if(!objective){error="KillXEnemies Unregister requires an Objective in this Owner's canonical Quest list";return false;}
+ const auto identity=objective->ref.action.identity;
+ const auto found=impl_->kill_x_enemies.find(identity);
+ if(found==impl_->kill_x_enemies.end()){error="KillXEnemies Objective is not registered by this Owner";return false;}
+ auto& binding=*found->second;
+ if(!binding.detach_pending){bool scheduled=false;
+  if(impl_->current_level_events.delayed_detach(binding.event_type,identity,scheduled,error)!=LevelEventStatus::complete)return false;
+  if(!scheduled){error="KillXEnemies receiver disappeared before Objective::Unregister";return false;}
+  binding.detach_pending=true;
+ }
+ error.clear();return true;
+}
+bool Owner::compile_clear_enemies_objective(std::uintptr_t quest_identity,
+ std::uint32_t objective_ordinal,
+ std::int32_t current_level_id,std::int32_t loaded_match_count,
+ void* script_context,KillObjectiveStartScript start_script,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for ClearEnemies Compile";return false;}
+ auto* objective=impl_->objective_at(quest_identity,objective_ordinal);
+ if(!objective){error="ClearEnemies Compile requires an Objective in this Owner's canonical Quest list";return false;}
+ if(objective->dispatch_0!=of::Dispatch::clear_enemies||current_level_id<0||loaded_match_count<0){
+  error="ClearEnemies Compile requires type 1, a live Level ID, and a nonnegative loaded-enemy count";return false;
+ }
+ dh2_quest_objective definition{};
+ if(!objective_definition(*objective,definition,error))return false;
+ if(definition.common[0]!=objective->fields.type_4){error="ClearEnemies Compile found a changed Objective type selector";return false;}
+ objective->derived_24=objective->fields.py_data_c;
+ const auto level_filter=definition.args[1];
+ if(level_filter!=-1&&level_filter!=current_level_id){error.clear();return true;}
+ if(loaded_match_count==0){error.clear();return true;}
+ objective->derived_2c=static_cast<std::uint32_t>(loaded_match_count);
+ objective->compiled_8=1;
+ if(loaded_match_count<=static_cast<std::int32_t>(objective->quantity_20)&&!objective->done_14){
+  objective->done_14=1;
+  if(definition.common[2]>=0&&
+     (!start_script||!start_script(script_context,definition.common[2],error))){
+   if(error.empty())error="ClearEnemies Compile completion needs the source script-base provider";
+   return false;
+  }
+ }
+ error.clear();return true;
+}
+bool Owner::compile_clear_enemies_objective_from_level(
+ std::uintptr_t quest_identity,std::uint32_t objective_ordinal,
+ const ClearEnemiesPopulationServicesV1& population,
+ void* script_context,KillObjectiveStartScript start_script,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for live ClearEnemies Compile";return false;}
+ if(!population.read_current_level_population||!population.expected_level_identity){
+  error="Live ClearEnemies Compile requires the current-Level population provider and identity";return false;
+ }
+ auto* objective=impl_->objective_at(quest_identity,objective_ordinal);
+ if(!objective||objective->dispatch_0!=of::Dispatch::clear_enemies){
+  error="Live ClearEnemies Compile requires its canonical ClearEnemies Objective";return false;
+ }
+ dh2_quest_objective definition{};
+ if(!objective_definition(*objective,definition,error))return false;
+ if(definition.common[0]!=objective->fields.type_4||definition.args[0]<-32768||
+    definition.args[0]>32767){
+  error="Live ClearEnemies Compile found an invalid source property selector";return false;
+ }
+ const auto expected_owner=reinterpret_cast<std::uintptr_t>(this);
+ ClearEnemiesPopulationSnapshotV1 snapshot{};
+ try{
+  if(!population.read_current_level_population(population.context,expected_owner,
+       population.expected_level_identity,
+       definition.args[0],snapshot,error)){
+   if(error.empty())error="Current-Level ClearEnemies population query failed";
+   return false;
+  }
+ }catch(const std::exception& ex){error=ex.what();return false;}
+ catch(...){error="Current-Level ClearEnemies population provider threw";return false;}
+ if(snapshot.event_owner_identity!=expected_owner||
+    snapshot.level_identity!=population.expected_level_identity||snapshot.level_id<0||
+    snapshot.loaded_match_count<0){
+  error="Live ClearEnemies Compile rejected a stale Level owner or invalid population";return false;
+ }
+ return compile_clear_enemies_objective(quest_identity,objective_ordinal,
+       snapshot.level_id,snapshot.loaded_match_count,script_context,start_script,error);
+}
+bool Owner::register_clear_enemies_objective(std::uintptr_t quest_identity,
+ std::uint32_t objective_ordinal,
+ void* script_context,KillObjectiveStartScript start_script,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for ClearEnemies Register";return false;}
+ auto* resolved=impl_->objective_at(quest_identity,objective_ordinal);
+ if(!resolved){error="ClearEnemies Register requires an Objective in this Owner's canonical Quest list";return false;}
+ auto& objective=*resolved;const auto identity=objective.ref.action.identity;
+ if(objective.dispatch_0!=of::Dispatch::clear_enemies||!objective.compiled_8){
+  error="ClearEnemies Register requires the source Compile projection";return false;
+ }
+ dh2_quest_objective definition{};
+ if(!objective_definition(objective,definition,error))return false;
+ if(definition.common[0]!=objective.fields.type_4){error="ClearEnemies Register found a changed Objective selector";return false;}
+ const auto script_id=definition.common[2];
+ if(script_id>=0&&!start_script){error="ClearEnemies Register requires its source completion-script provider";return false;}
+ std::int32_t event_type=0;
+ if(impl_->constant("v2QuestObjectiveType","ClearEnemies",&event_type)){
+  error="Actual v2QuestObjectiveType.ClearEnemies constant unavailable";return false;
+ }
+ if(const auto prior=impl_->kill_x_enemies.find(identity);prior!=impl_->kill_x_enemies.end()){
+  const auto& binding=*prior->second;
+  if(binding.objective!=&objective||binding.expected_dispatch!=of::Dispatch::clear_enemies||
+     binding.event_type!=event_type||binding.match_id!=definition.args[0]||
+     binding.script_id!=script_id||binding.script_context!=script_context||
+     binding.start_script!=start_script||binding.detach_pending){
+   error="ClearEnemies Objective is already registered with different services";return false;
+  }
+  error.clear();return true;
+ }
+ auto binding=std::make_unique<Impl::KillXEnemiesBinding>();
+ binding->objective=&objective;binding->expected_dispatch=of::Dispatch::clear_enemies;
+ binding->event_type=event_type;binding->match_id=definition.args[0];
+ binding->script_id=script_id;binding->script_context=script_context;binding->start_script=start_script;
+ auto* context=binding.get();
+ try{if(!impl_->kill_x_enemies.emplace(identity,std::move(binding)).second){
+  error="ClearEnemies receiver registration raced an existing binding";return false;
+ }}catch(const std::exception&){error="ClearEnemies receiver metadata allocation failed";return false;}
+ bool attached=false;
+ const auto status=impl_->current_level_events.attach(event_type,identity,0,context,
+  Impl::KillXEnemiesBinding::receive,attached,error);
+ if(status!=LevelEventStatus::complete||!attached){
+  impl_->kill_x_enemies.erase(identity);
+  if(error.empty())error="ClearEnemies receiver was already attached outside this Owner";
+  return false;
+ }
+ context->attached=true;error.clear();return true;
+}
+bool Owner::unregister_clear_enemies_objective(std::uintptr_t quest_identity,
+ std::uint32_t objective_ordinal,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for ClearEnemies Unregister";return false;}
+ auto* objective=impl_->objective_at(quest_identity,objective_ordinal);
+ if(!objective||objective->dispatch_0!=of::Dispatch::clear_enemies){
+  error="ClearEnemies Unregister requires its Objective in this Owner's canonical Quest list";return false;
+ }
+ const auto identity=objective->ref.action.identity;
+ const auto found=impl_->kill_x_enemies.find(identity);
+ if(found==impl_->kill_x_enemies.end()||found->second->expected_dispatch!=of::Dispatch::clear_enemies){
+  error="ClearEnemies Objective is not registered by this Owner";return false;
+ }
+ auto& binding=*found->second;
+ if(!binding.detach_pending){bool scheduled=false;
+  if(impl_->current_level_events.delayed_detach(binding.event_type,identity,scheduled,error)!=LevelEventStatus::complete)return false;
+  if(!scheduled){error="ClearEnemies receiver disappeared before Objective::Unregister";return false;}
+  binding.detach_pending=true;
+ }
+ error.clear();return true;
+}
+bool Owner::compile_clear_enemy_template_objective_from_level(
+ std::uintptr_t quest_identity,std::uint32_t objective_ordinal,
+ const ClearEnemyTemplatePopulationServicesV1& population,
+ void* script_context,KillObjectiveStartScript start_script,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for live ClearEnemyTemplate Compile";return false;}
+ if(!population.read_current_level_population||!population.expected_level_identity){
+  error="Live ClearEnemyTemplate Compile requires the current-Level population provider and identity";return false;
+ }
+ auto* objective=impl_->objective_at(quest_identity,objective_ordinal);
+ if(!objective||objective->dispatch_0!=of::Dispatch::clear_enemy_template){
+  error="Live ClearEnemyTemplate Compile requires its canonical Objective";return false;
+ }
+ dh2_quest_objective definition{};
+ if(!objective_definition(*objective,definition,error))return false;
+ if(definition.common[0]!=objective->fields.type_4||definition.args[0]<-32768||
+    definition.args[0]>32767){
+  error="Live ClearEnemyTemplate Compile found an invalid source template selector";return false;
+ }
+ const auto expected_owner=reinterpret_cast<std::uintptr_t>(this);
+ ClearEnemiesPopulationSnapshotV1 snapshot{};
+ try{
+  if(!population.read_current_level_population(population.context,expected_owner,
+       population.expected_level_identity,
+       definition.args[0],snapshot,error)){
+   if(error.empty())error="Current-Level ClearEnemyTemplate population query failed";
+   return false;
+  }
+ }catch(const std::exception& ex){error=ex.what();return false;}
+ catch(...){error="Current-Level ClearEnemyTemplate population provider threw";return false;}
+ if(snapshot.event_owner_identity!=expected_owner||
+    snapshot.level_identity!=population.expected_level_identity||snapshot.level_id<0||
+    snapshot.loaded_match_count<0){
+  error="Live ClearEnemyTemplate Compile rejected a stale Level owner or invalid population";return false;
+ }
+ if(impl_->busy||impl_->closed){error="Native Quest owner changed during ClearEnemyTemplate population query";return false;}
+ objective=impl_->objective_at(quest_identity,objective_ordinal);
+ if(!objective||objective->dispatch_0!=of::Dispatch::clear_enemy_template){
+  error="ClearEnemyTemplate Objective changed during population query";return false;
+ }
+ objective->derived_24=objective->fields.py_data_c;
+ if(definition.args[1]!=-1&&definition.args[1]!=snapshot.level_id){error.clear();return true;}
+ if(snapshot.loaded_match_count==0){error.clear();return true;}
+ objective->derived_2c=static_cast<std::uint32_t>(snapshot.loaded_match_count);
+ objective->compiled_8=1;
+ if(snapshot.loaded_match_count<=static_cast<std::int32_t>(objective->quantity_20)&&!objective->done_14){
+  objective->done_14=1;
+  if(definition.common[2]>=0&&(!start_script||!start_script(script_context,definition.common[2],error))){
+   if(error.empty())error="ClearEnemyTemplate Compile completion needs the source script-base provider";
+   return false;
+  }
+ }
+ error.clear();return true;
+}
+bool Owner::register_clear_enemy_template_objective(std::uintptr_t quest_identity,
+ std::uint32_t objective_ordinal,void* script_context,
+ KillObjectiveStartScript start_script,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for ClearEnemyTemplate Register";return false;}
+ auto* resolved=impl_->objective_at(quest_identity,objective_ordinal);
+ if(!resolved){error="ClearEnemyTemplate Register requires a canonical Objective";return false;}
+ auto& objective=*resolved;const auto identity=objective.ref.action.identity;
+ if(objective.dispatch_0!=of::Dispatch::clear_enemy_template||!objective.compiled_8){
+  error="ClearEnemyTemplate Register requires its source Compile projection";return false;
+ }
+ dh2_quest_objective definition{};
+ if(!objective_definition(objective,definition,error))return false;
+ if(definition.common[0]!=objective.fields.type_4){error="ClearEnemyTemplate Register found a changed Objective selector";return false;}
+ const auto script_id=definition.common[2];
+ if(script_id>=0&&!start_script){error="ClearEnemyTemplate Register requires its completion-script provider";return false;}
+ std::int32_t event_type=0;
+ if(impl_->constant("v2QuestObjectiveType","ClearEnemyTemplate",&event_type)){
+  error="Actual v2QuestObjectiveType.ClearEnemyTemplate constant unavailable";return false;
+ }
+ if(const auto prior=impl_->kill_x_enemies.find(identity);prior!=impl_->kill_x_enemies.end()){
+  const auto& binding=*prior->second;
+  if(binding.objective!=&objective||binding.expected_dispatch!=of::Dispatch::clear_enemy_template||
+     binding.event_type!=event_type||binding.match_id!=definition.args[0]||
+     binding.script_id!=script_id||binding.script_context!=script_context||
+     binding.start_script!=start_script||binding.detach_pending){
+   error="ClearEnemyTemplate Objective is already registered with different services";return false;
+  }
+  error.clear();return true;
+ }
+ auto binding=std::make_unique<Impl::KillXEnemiesBinding>();
+ binding->objective=&objective;binding->expected_dispatch=of::Dispatch::clear_enemy_template;
+ binding->event_type=event_type;binding->match_id=definition.args[0];
+ binding->script_id=script_id;binding->script_context=script_context;binding->start_script=start_script;
+ auto* context=binding.get();
+ try{if(!impl_->kill_x_enemies.emplace(identity,std::move(binding)).second){
+  error="ClearEnemyTemplate receiver registration raced an existing binding";return false;
+ }}catch(const std::exception&){error="ClearEnemyTemplate receiver metadata allocation failed";return false;}
+ bool attached=false;
+ const auto status=impl_->current_level_events.attach(event_type,identity,0,context,
+  Impl::KillXEnemiesBinding::receive,attached,error);
+ if(status!=LevelEventStatus::complete||!attached){
+  impl_->kill_x_enemies.erase(identity);
+  if(error.empty())error="ClearEnemyTemplate receiver was already attached outside this Owner";
+  return false;
+ }
+ context->attached=true;error.clear();return true;
+}
+bool Owner::unregister_clear_enemy_template_objective(std::uintptr_t quest_identity,
+ std::uint32_t objective_ordinal,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for ClearEnemyTemplate Unregister";return false;}
+ auto* objective=impl_->objective_at(quest_identity,objective_ordinal);
+ if(!objective||objective->dispatch_0!=of::Dispatch::clear_enemy_template){
+  error="ClearEnemyTemplate Unregister requires its canonical Objective";return false;
+ }
+ const auto identity=objective->ref.action.identity;
+ const auto found=impl_->kill_x_enemies.find(identity);
+ if(found==impl_->kill_x_enemies.end()||found->second->expected_dispatch!=of::Dispatch::clear_enemy_template){
+  error="ClearEnemyTemplate Objective is not registered by this Owner";return false;
+ }
+ auto& binding=*found->second;
+ if(!binding.detach_pending){bool scheduled=false;
+  if(impl_->current_level_events.delayed_detach(binding.event_type,identity,scheduled,error)!=LevelEventStatus::complete)return false;
+  if(!scheduled){error="ClearEnemyTemplate receiver disappeared before Objective::Unregister";return false;}
+  binding.detach_pending=true;
+ }
  error.clear();return true;
 }
 bool Owner::unregister_gather_loot_objective(std::uintptr_t identity,std::string& error){
@@ -468,10 +1333,86 @@ bool Owner::transition_gather_loot_registration(std::uintptr_t quest_identity,
  }
  error.clear();return true;
 }
+bool Owner::transition_combat_objective_registration(
+ std::uintptr_t quest_identity,std::int32_t prior_state,
+ std::int32_t stored_state,void* script_context,
+ KillObjectiveStartScript start_script,std::string& error){
+ if(impl_->busy||impl_->closed){error="Native Quest owner unavailable for combat ObjectiveList transition";return false;}
+ auto* quest=impl_->resolve_quest_identity(quest_identity);
+ if(!quest||quest->record().state_0!=stored_state||stored_state<0||stored_state>13){
+  error="Combat ObjectiveList transition requires the already-stored canonical Quest state";return false;
+ }
+ if(prior_state==stored_state&&!quest->record().byte_64){error.clear();return true;}
+ if(prior_state==6&&stored_state==6){
+  error="ObjectiveList volatile state-6 self-transition needs source delayed-detach/refcount reattach semantics";return false;
+ }
+ auto& list=quest->objectives();
+ if(list.count_0<0||(list.count_0>0&&(!list.children_4||
+    std::uint64_t(std::uint32_t(list.count_0))>list.children_4->slots.size()))){
+  error="Combat ObjectiveList transition found invalid canonical list backing";return false;
+ }
+ for(std::uint32_t ordinal=0;ordinal<std::uint32_t(list.count_0);++ordinal){
+  auto* objective=impl_->resolve_objective(list.children_4->slots[ordinal]);
+  if(!objective){error="Combat ObjectiveList transition could not resolve its canonical Objective";return false;}
+  const auto identity=objective->ref.action.identity;
+  const bool supported=objective->dispatch_0==of::Dispatch::kill_enemies||
+      objective->dispatch_0==of::Dispatch::clear_enemies||
+      objective->dispatch_0==of::Dispatch::clear_enemy_template;
+  if(!supported){
+   if(objective->compiled_8){
+    error="ObjectiveList Register/Unregister reached an unbound compiled Objective kind";return false;
+   }
+   continue;
+  }
+  const auto binding=impl_->kill_x_enemies.find(identity);
+  if(prior_state==6&&stored_state!=6){
+   if(binding==impl_->kill_x_enemies.end())continue;
+   if(binding->second->expected_dispatch!=objective->dispatch_0){
+    error="Combat Objective receiver dispatch differs from its canonical Objective";return false;
+   }
+   bool ok=false;
+   switch(objective->dispatch_0){
+    case of::Dispatch::kill_enemies:
+     ok=unregister_kill_x_enemies_objective(quest_identity,ordinal,error);break;
+    case of::Dispatch::clear_enemies:
+     ok=unregister_clear_enemies_objective(quest_identity,ordinal,error);break;
+    case of::Dispatch::clear_enemy_template:
+     ok=unregister_clear_enemy_template_objective(quest_identity,ordinal,error);break;
+    default:break;
+   }
+   if(!ok)return false;
+  }else if(stored_state==6&&objective->compiled_8){
+   bool ok=false;
+   switch(objective->dispatch_0){
+    case of::Dispatch::kill_enemies:
+     ok=register_kill_x_enemies_objective(quest_identity,ordinal,
+                                            script_context,start_script,error);break;
+    case of::Dispatch::clear_enemies:
+     ok=register_clear_enemies_objective(quest_identity,ordinal,
+                                          script_context,start_script,error);break;
+    case of::Dispatch::clear_enemy_template:
+     ok=register_clear_enemy_template_objective(quest_identity,ordinal,
+                                                 script_context,start_script,error);break;
+    default:break;
+   }
+   if(!ok)return false;
+  }
+ }
+ error.clear();return true;
+}
 bool Owner::close(std::string& error){
  if(impl_->closed){error.clear();return true;}
  if(impl_->busy){error="Native Quest owner is executing";return false;}
  impl_->busy=true;struct Guard{Impl& owner;~Guard(){owner.busy=false;}}guard{*impl_};error.clear();
+ while(!impl_->kill_x_enemies.empty()){
+  const auto found=impl_->kill_x_enemies.begin();const auto identity=found->first;
+  if(found->second->attached){bool detached=false;
+   if(impl_->current_level_events.detach(found->second->event_type,identity,detached,error)!=LevelEventStatus::complete)return false;
+   if(!detached){error="KillXEnemies receiver disappeared during Owner close";return false;}
+   found->second->attached=false;
+  }
+  impl_->kill_x_enemies.erase(found);
+ }
  while(!impl_->gather_loot.empty()){
   const auto found=impl_->gather_loot.begin();const auto identity=found->first;
   // Close is the Objective teardown boundary. Retire each receiver and its

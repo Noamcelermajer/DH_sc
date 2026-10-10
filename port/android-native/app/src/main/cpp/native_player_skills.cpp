@@ -1,4 +1,6 @@
 #include "native_player_skills.hpp"
+#include "../../../../../level-world/character_clear_target_v1.hpp"
+#include "player_gameplay_audio.hpp"
 #include "player_skill_session_v1.hpp"
 #include "player_skill_update_session_v1.hpp"
 #include "player_skill_use_session_v1.hpp"
@@ -29,6 +31,8 @@
 #include "native_debug_files.hpp"
 #include "mod_assets.hpp"
 #include "../../../../../../port/adam-script-runtime/script_game_bindings.h"
+#include "../../../../../../port/level-world/player_skill_timer_provider_v1.hpp"
+#include "../../../../../../port/level-world/player_script_timer_dispatch_v1.hpp"
 extern "C" {
 #include "../../../../../../port/pydata-names/names.h"
 #include "../../../../../../port/pydata-constants/constants.h"
@@ -38,6 +42,7 @@ extern "C" {
 #include <cmath>
 #include <cstring>
 #include <cstdio>
+#include <exception>
 #include <map>
 #include <stdexcept>
 
@@ -86,6 +91,7 @@ struct Runtime::Impl {
  dh2::character::set_target::Services target_services{};
  std::unique_ptr<dh2::character_ai_skill_machine_projection_v1::Projection> skill_machine;
  std::uintptr_t skill_animation_owner=0;
+ std::unique_ptr<dh2::character_cast_lifecycle_v1::Projection> cast_state_projection;
  dh2::player_ai_death_v1::Result died_result{};
  dh2::character_skill_cooldown_services::Services cooldown{};
  dh2::player_skill_property_services_v1::Bindings property_services{};
@@ -105,15 +111,19 @@ struct Runtime::Impl {
  dh2::character_player_scalar_services_v1::IntegerMap script_integers;
  dh2::character_player_scalar_services_v1::State scalar_state{};
  dh2::character_player_scalar_services_v1::Bindings scalar_callbacks{};
- dh2_script_game_bindings timer_bindings{};
+ dh2::player_skill_timer_provider_v1::Bindings timer_bindings{};
+ dh2::player_script_timer_dispatch_v1::Bindings timer_dispatch{};
  std::map<std::string,std::vector<std::uint8_t>> named_bytes;
  std::map<std::string,dh2_pynames_view> named_views;
  std::vector<std::uint8_t> animation_constants_bytes;
  dh2_pycst_view animation_constants{};
  dh2::character_ai_set_skills_and_spells::Result prepared{};
  dh2::player_skill_update_session_v1::Result updated{};
- unsigned update_attempts=0,timers_started=0,timer_callbacks=0;
+ dh2::player_skill_update_session_v1::SelectedFaeryResult selected_updated{};
+ unsigned update_attempts=0,timer_callbacks=0;
  bool update_blocked=false,initialized=false;
+ bool terminal_cleanup_attempted=false,terminal_cleanup_complete=false;
+ std::string terminal_cleanup_failure;
  std::string error;
  explicit Impl(Bindings b):bindings(std::move(b)),assets(bindings.assets),declaration(*bindings.declaration){
   // Retain the immutable authored row used by this AIS. GL reload replaces
@@ -121,6 +131,14 @@ struct Runtime::Impl {
   bindings.declaration=&declaration;
  }
  ~Impl(){
+  // The Coordinator borrows this projection. Explicitly detach it before
+  // destruction; never synthesize a state transition to make teardown pass.
+  if(cast_state_projection){
+   if(!bindings.coordinator||
+      !bindings.coordinator->unbind_cast_projection(cast_state_projection.get()))
+    std::terminate();
+   cast_state_projection.reset();
+  }
   // Prevent callbacks to retiring instances. The retained Coordinator remains
   // the sole timer owner; unrelated Character timers are not removed here.
   const auto stop_owned=[&](std::uint32_t id,std::int32_t event,std::uintptr_t ref){
@@ -332,18 +350,6 @@ struct Runtime::Impl {
   *out={found.instance,found.field18};return 0;
  }
  static std::int32_t unsupported_number(void*,const dh2_script_value*,float*){return 1;}
- static std::int32_t start_timer(void* raw,std::uintptr_t character,std::uint32_t ms,
-                               std::int32_t repeat,std::int32_t event,std::uintptr_t ref){
-  auto& s=self(raw);if(!s.bindings.character||character!=s.bindings.character)return -1;
-  const auto id=s.bindings.coordinator->start_timer(ms,repeat,event,ref);
-  if(id<0)throw std::runtime_error("Player native timer allocation failed");
-  if(id>=0)++s.timers_started;
-  return id;
- }
- static void stop_timer(void* raw,std::uintptr_t character,std::uint32_t id){
-  auto& s=self(raw);
-  if(character!=s.bindings.coordinator->owner()||s.bindings.coordinator->stop_timer(id)<0)throw std::runtime_error("Player skill timer stop failed");
- }
  static int buff_service(void* raw,dh2::data::PropertyView* view,
                const dh2::character_player_buffs_v1::Request* q,
                dh2::character_player_buffs_v1::Response* out){
@@ -410,6 +416,19 @@ struct Runtime::Impl {
   *returned=0;
   if(q.domain==dh2::player_skill_session_v1::Domain::ais){
    using Fn=dh2::ais_native_bindings::Function;
+   if(q.ais_function==Fn::play_sound){
+    if(q.userdata!=s.ais.ais||count!=4||a[0].type!=DH2_SCRIPT_STRING||!a[0].text||
+       a[0].text_bytes>256)return fail(text,bytes,q.name);
+    bool looping=false,stop_music=false;float fade_ms=0.f;
+    if(count>1){if(a[1].type!=DH2_SCRIPT_BOOLEAN)return fail(text,bytes,q.name);looping=a[1].boolean!=0;}
+    if(count>2){if(a[2].type!=DH2_SCRIPT_NUMBER||!std::isfinite(a[2].number))return fail(text,bytes,q.name);fade_ms=a[2].number;}
+    if(count>3){if(a[3].type!=DH2_SCRIPT_BOOLEAN)return fail(text,bytes,q.name);stop_music=a[3].boolean!=0;}
+    // The current Android owner has no source-matched fade or gameplay-music
+    // implementation. Do not reinterpret those arguments as simple WAV FX.
+    if(fade_ms!=0.f||stop_music||!dh2::player_gameplay_audio::enqueue(a[0].text,a[0].text_bytes,looping))
+     return fail(text,bytes,"unsupported Player PlaySound format/flags");
+    return 0;
+   }
    if(q.ais_function==Fn::get_int||q.ais_function==Fn::set_int){
     if(q.userdata!=s.ais.ais)return fail(text,bytes,q.name);
     return q.ais_function==Fn::get_int?
@@ -450,14 +469,47 @@ struct Runtime::Impl {
    }
   }else{
    using Fn=dh2::character_native_bindings::Function;
+   const auto skill_gameplay_call=[&](){
+    if(!s.bindings.skill_gameplay_native||!s.bindings.skill_gameplay_context)
+     return fail(text,bytes,q.name);
+    return s.bindings.skill_gameplay_native(s.bindings.skill_gameplay_context,
+        static_cast<std::uint32_t>(q.character_function),a,count,out,capacity,
+        returned,text,bytes,q.name);
+   };
+   if(q.character_function==Fn::character_clear_target){
+    if(!s.bindings.source_ai||s.bindings.source_ai->identity!=s.bindings.ai)
+     return fail(text,bytes,q.name);
+    const auto status=dh2::character_clear_target_v1::clear(
+      s.bindings.source_ai,s.bindings.target_owner,s.bindings.character,
+      &s.target_services);
+    return status==dh2::character_clear_target_v1::Status::complete
+      ?0:fail(text,bytes,q.name);
+   }
+   switch(q.character_function){
+   case Fn::game_object_set_target_list_character_filter:
+   case Fn::game_object_set_target_list_object_filter:
+   case Fn::game_object_set_target_list_sorting:
+   case Fn::game_object_target_list_search:
+   case Fn::game_object_target_list_search_rect:
+   case Fn::game_object_target_list_resort:
+   case Fn::game_object_target_list_backup:
+   case Fn::game_object_is_target_list_empty:
+   case Fn::game_object_get_target_list_size:
+   case Fn::game_object_get_target_list_top:
+   case Fn::game_object_pop_target_list:
+   case Fn::character_look_at:
+   case Fn::character_skill_combat_roll:
+    return skill_gameplay_call();
+   default:break;
+   }
    if(q.character_function==Fn::character_set_skill_cooldown_timer_id)
     return dh2::character_skill_cooldown_services::skill(&s.cooldown,a,count,out,capacity,returned,text,bytes);
    if(q.character_function==Fn::character_set_spell_cooldown_timer_id)
     return dh2::character_skill_cooldown_services::spell(&s.cooldown,a,count,out,capacity,returned,text,bytes);
    if(q.character_function==Fn::character_start_timer)
-    return dh2_script_game_start_timer(&s.timer_bindings,a,count,out,capacity,returned,text,bytes);
+    return dh2::player_skill_timer_provider_v1::start(&s.timer_bindings,a,count,out,capacity,returned,text,bytes);
    if(q.character_function==Fn::character_stop_timer)
-    return dh2_script_game_stop_timer(&s.timer_bindings,a,count,out,capacity,returned,text,bytes);
+    return dh2::player_skill_timer_provider_v1::stop(&s.timer_bindings,a,count,out,capacity,returned,text,bytes);
    if(q.character_function==Fn::character_create_buff)
     return dh2::character_player_buffs_v1::create_buff(&s.buff_callbacks,a,count,out,capacity,returned,text,bytes);
    if(q.character_function==Fn::character_remove_buff)
@@ -567,7 +619,9 @@ struct Runtime::Impl {
   element_callback={bindings.character,dh2::character_equipped_faery_element_v1::saved_services(&spell_saved)};
   equipped_callback={bindings.character,dh2::character_current_spell_v1::saved_services(&spell_saved)};
   cooldown={this,bindings.character,list_count,slot,unsupported_number};
-  timer_bindings={this,bindings.character,start_timer,stop_timer,0};
+  if(!dh2::player_skill_timer_provider_v1::bind(
+       &timer_bindings,bindings.coordinator,bindings.character))
+   throw std::runtime_error("Native Player timer provider rejected Character Coordinator identity");
   refresh_properties();
   refresh_class_rows();
   buffs=dh2::character_player_buffs_v1::Owner::create({bindings.character,&property_view,{this,buff_service},std::uint32_t(class_rows.size()),UINT32_MAX});
@@ -594,6 +648,9 @@ struct Runtime::Impl {
    throw std::runtime_error("Native Player source InitProcess: "+error);
   if(initialized_result.init_phase_mask!=31||bindings.source_ai->active_ais_1c!=ais.ais||bindings.source_ai->alternate_ais_20!=ais.ais)
    throw std::runtime_error("Native Player completed InitProcess owners differ");
+  timer_dispatch={bindings.character,bindings.ai,ais.ais,bindings.controller,
+                  reinterpret_cast<std::uintptr_t>(bindings.properties),
+                  bindings.source_ai,bindings.coordinator,session->vm()};
   cleanups=std::make_unique<dh2::player_skill_cleanup_session_v1::Runtime>(&session_slot,*preparation,bindings.character);
   target_services={this,std::int32_t(bindings.ai_tables->rows.size()),target_service};
   dh2::player_ai_death_v1::Bindings death_bindings{};
@@ -633,9 +690,24 @@ struct Runtime::Impl {
   try{refresh_properties();}
   catch(const std::exception& e){output_error=e.what();return false;}
   ++update_attempts;
+  // SG_SetSkillInSlot ends at CharAI::UpdateSkills: saved slot keys plus the
+  // current difficulty's one Faery, through this Save/Character/VM owner.
+  if(updates->update_current_faery(*bindings.savegame,*bindings.current_difficulty,selected_updated,error)){
+   update_blocked=true;
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player UpdateSkills blocked | attempt %u | callbacks %u | VM status %d | faery %u | %s | source effects retained; remaining providers pending",update_attempts,selected_updated.callbacks,selected_updated.last_lua_status,selected_updated.source.faery_index,error.c_str());
+   output_error=error;return false;
+  }
+  output_error.clear();return true;
+ }
+ bool update_after_source_skill_inputs_changed(std::string& output_error){
+  if(!initialized||update_blocked||!updates){output_error="Native Player UpdateAllSkills owner is unavailable or blocked";return false;}
+  try{refresh_properties();}
+  catch(const std::exception& e){output_error=e.what();return false;}
+  ++update_attempts;
+  // ChangeFaery's source tail is UpdateAllSkills and stays distinct above.
   if(updates->update(updated,error)){
    update_blocked=true;
-   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player skill update blocked | attempt %u | callbacks %u | VM status %d | %s | source effects retained; remaining providers pending",update_attempts,updated.callbacks,updated.last_lua_status,error.c_str());
+   __android_log_print(ANDROID_LOG_INFO,"DH2Native","Native Player UpdateAllSkills blocked | attempt %u | callbacks %u | VM status %d | %s | source effects retained; remaining providers pending",update_attempts,updated.callbacks,updated.last_lua_status,error.c_str());
    output_error=error;return false;
   }
   output_error.clear();return true;
@@ -674,7 +746,7 @@ struct Runtime::Impl {
     return dh2_property_add(&owner.property_view,request->arguments[0],fixed)?1:0;
    }
    case Operation::update_all_skills:{
-    std::string error;return owner.update_after_saved_skill_slot_write(error)?0:1;
+    std::string error;return owner.update_after_source_skill_inputs_changed(error)?0:1;
    }
    case Operation::recalculate_properties:
     if(request->arguments[0]!=1||!owner.bindings.classes||owner.class_rows.empty()||
@@ -809,11 +881,11 @@ struct Runtime::Impl {
   std::string ignored;update_after_saved_skill_slot_write(ignored);
  }
  void timer(std::uint32_t id){
-  dh2_script_value argument{};std::int32_t signed_id;std::memcpy(&signed_id,&id,4);
-  number(argument,static_cast<float>(signed_id));
-  const auto discard=[](void*,const dh2_script_first_return_v1*,char*,std::size_t){return 0;};
-  const int status=session->call("OnTimer",&argument,1,0,discard,nullptr,error);
-  if(status)throw std::runtime_error("Player skill timer callback failed: "+error);
+  const auto status=dh2::player_script_timer_dispatch_v1::dispatch(
+      timer_dispatch,id,error);
+  if(status==dh2::player_script_timer_dispatch_v1::Status::inactive_ais)return;
+  if(status!=dh2::player_script_timer_dispatch_v1::Status::delivered)
+   throw std::runtime_error("Player source OnScriptTimer dispatch failed: "+error);
   ++timer_callbacks;
   dh2::character_player_skills_preparation_v3::Owner::TimerFieldSlot found{};
   if(timer_fields->slot(bindings.character,dh2::character_ai_set_skills_and_spells::List::skill,0,found)&&found.field18)
@@ -936,12 +1008,15 @@ std::unique_ptr<Runtime> Runtime::create(Bindings b,std::string& error){
  return owner;
 }
 bool Runtime::initialized()const noexcept{return impl_->initialized;}
+std::uintptr_t Runtime::character_identity()const noexcept{
+ return impl_->initialized?impl_->bindings.character:0;
+}
 void Runtime::update(){impl_->update();}
 bool Runtime::update_after_saved_skill_slot_write(std::string& error){
  return impl_->update_after_saved_skill_slot_write(error);
 }
 bool Runtime::update_after_source_skill_inputs_changed(std::string& error){
- return impl_->update_after_saved_skill_slot_write(error);
+ return impl_->update_after_source_skill_inputs_changed(error);
 }
 bool Runtime::reload_skill_instances(data::PlayerSaveLoadOwnerV1& save_loader,
                                      std::string& error){
@@ -1015,6 +1090,104 @@ bool Runtime::remove_all_buffs(std::string& error){
  if(status!=dh2::character_player_buffs_v1::Status::complete){
   error="Same-owner RemoveAllBuffs failed at provider operation "+std::to_string(std::uint32_t(result.last_operation));
   return false;
+ }
+ error.clear();return true;
+}
+bool Runtime::cleanup_ai_scripts(std::string& error){
+ auto& s=*impl_;error.clear();
+ if(s.terminal_cleanup_complete)return true;
+ if(s.terminal_cleanup_attempted){
+  error=s.terminal_cleanup_failure.empty()?"CharAI terminal cleanup already failed":s.terminal_cleanup_failure;
+  return false;
+ }
+ if(!s.cleanups)return true;
+ s.terminal_cleanup_attempted=true;
+ dh2::player_skill_cleanup_session_v1::Result result{};
+ if(s.cleanups->cleanup_all(result,error)!=0){
+  if(error.empty())error="CharAI AI_ScriptCleanUp skill/faery cleanup failed";
+  s.terminal_cleanup_failure=error;
+  return false;
+ }
+ s.terminal_cleanup_complete=true;
+ __android_log_print(ANDROID_LOG_INFO,"DH2Native",
+  "Player CharAI terminal cleanup | skill slots %u | faery slots %u | callbacks %u | completed %u | same retained VM/Character timers",
+  result.skill_slots,result.faery_slots,result.cleanup_calls,result.completed);
+ return true;
+}
+bool Runtime::cancel_sneaking(std::uint8_t* character_byte_415,
+                              std::string& error){
+ auto& s=*impl_;error.clear();
+ if(!character_byte_415||!s.initialized||s.update_blocked||!s.buffs||
+    s.buffs->character_identity()!=s.bindings.character||!s.bindings.is_player||
+    !s.bindings.tables||!s.preparation||!s.uses||!s.session||
+    !s.bindings.source_ai||s.bindings.source_ai->owner_04!=s.bindings.character||
+    s.bindings.source_ai->active_ais_1c!=s.ais.ais||
+    s.session->character_identity()!=s.bindings.character){
+  error="Character::CancelSneaking requires the initialized same Player, BuffOwner, SkillList, AIS and VM";
+  return false;
+ }
+ try{s.refresh_properties();}
+ catch(const std::exception& failure){error=failure.what();return false;}
+ std::uint32_t is_player=0;
+ if(s.bindings.is_player(s.bindings.character_queries_context,
+       s.bindings.character,&is_player,error)){
+  if(error.empty())error="Character::CancelSneaking IsPlayer provider failed";
+  return false;
+ }
+ if(!is_player){error.clear();return true;}
+
+ // Character::CancelSneaking (IDA 0x3bc6b8) removes only buff 146, then
+ // writes Character+0x415 before querying the post-removal property 198.
+ // This is the existing canonical BuffOwner and does not clear other buffs.
+ dh2::character_player_buffs_v1::Result removed{};
+ if(s.buffs->remove(146,0,&removed)!=
+       dh2::character_player_buffs_v1::Status::complete){
+  error="Character::CancelSneaking PROPS_DelBuff(146) failed at BuffOwner operation "+
+        std::to_string(std::uint32_t(removed.last_operation));
+  return false;
+ }
+ *character_byte_415=1;
+ const auto sneak_property=s.property_view.resolved[198];
+ if(sneak_property<=0){error.clear();return true;}
+
+ // IsSneaking is computed from property 198 (IDA 0x3bc690). The source then
+ // scans this Character's selected SkillList for flag 0x02000000 and calls
+ // AI_CancelSkill at the matching list slot. AI_CancelSkill runs the same
+ // retained OnSkillCheck_Active and, only when true, OnPreSkill.
+ auto selector=s.property_view.resolved[28];
+ if(selector<0||std::size_t(selector)>=s.bindings.tables->skills().skill_lists.size())
+  selector=3;
+ const auto* list=s.bindings.tables->skill_list(selector);
+ if(!list){error="Character::CancelSneaking selected source SkillList is unavailable";return false;}
+ const auto& table=s.bindings.tables->skills().skills;
+ const auto& scripts=s.preparation->slots(
+     dh2::character_ai_set_skills_and_spells::List::skill);
+ for(std::size_t slot=0;slot<list->members.size();++slot){
+  const auto row_index=list->members[slot];
+  if(row_index<0||std::size_t(row_index)>=table.size()){
+   error="Character::CancelSneaking selected SkillList contains an invalid SkillTable row";
+   return false;
+  }
+  if((std::uint32_t(table[std::size_t(row_index)].flags)&0x02000000u)==0)continue;
+  // Character::CancelSneaking selects the first flagged row and calls
+  // AI_CancelSkill(slot). AI_CancelSkill does not continue to another row:
+  // it returns for a null script or when GetCharSkill(slot).Type != 1.
+  if(slot>=scripts.size()||!scripts[slot]||table[std::size_t(row_index)].type!=1){
+   error.clear();return true;
+  }
+  std::uint32_t active=0;
+  if(skill_check(std::uint32_t(slot),true,active,error)<0){
+   if(error.empty())error="Character::CancelSneaking OnSkillCheck_Active failed";
+   return false;
+  }
+  if(!active){error.clear();return true;}
+  SkillCallbackResult callback{};
+  if(invoke_skill_callback(std::uint32_t(slot),SkillCallback::pre,
+        callback,error)<0){
+   if(error.empty())error="Character::CancelSneaking OnPreSkill failed";
+   return false;
+  }
+  error.clear();return true;
  }
  error.clear();return true;
 }
@@ -1265,6 +1438,431 @@ bool Runtime::unbind_skill_state_callbacks(std::string& error){
  auto& s=*impl_;error.clear();
  if(!s.skill_machine){error="CSSkill callback binding has no retained skill-machine projection";return false;}
  return s.skill_machine->unbind_skill_state_callbacks(error);
+}
+bool Runtime::retire_skill_state_callbacks(std::string& error){
+ auto& s=*impl_;error.clear();
+ if(!s.skill_machine){error="CSSkill callback binding has no retained skill-machine projection";return false;}
+ return s.skill_machine->retire_skill_state_callbacks(error);
+}
+bool Runtime::skill_state_callbacks_bound()const noexcept{
+ const auto& s=*impl_;
+ return s.skill_machine&&s.skill_machine->skill_state_callbacks_bound();
+}
+
+bool Runtime::bind_cast_state_callbacks(std::uintptr_t animation_owner_identity,
+    const CastStateServices& external,std::string& error){
+ auto& s=*impl_;error.clear();
+ auto* coordinator=s.bindings.coordinator;
+ if(!animation_owner_identity||!s.initialized||s.update_blocked||
+    !s.preparation||!s.uses||!s.session||!s.session->vm()||
+    !s.bindings.tables||!s.bindings.source_ai||!coordinator||!coordinator->bound()||
+    coordinator->owner()!=s.bindings.character||
+    s.session->character_identity()!=s.bindings.character||
+    s.bindings.source_ai->owner_04!=s.bindings.character||
+    s.bindings.source_ai->active_ais_1c!=s.ais.ais||!s.ais.ais||
+    !s.bindings.source_ai->identity||s.bindings.ai!=s.bindings.source_ai->identity){
+  error="CSCast callback binding requires the initialized same Character, AIS, Coordinator and retained Player VM";
+  return false;
+ }
+ if(!s.skill_machine){
+  error="CSCast callback binding requires the existing retained skill-machine projection";
+  return false;
+ }
+ auto* machine=s.skill_machine->machine();
+ auto* character=s.skill_machine->character();
+ const auto* machine_state=s.skill_machine->state_query();
+ if(!machine||!character||!machine_state||!machine->identity||
+    machine->owner_04!=s.bindings.character||
+    machine->state_query!=machine_state||
+    machine_state->current_state_id!=&coordinator->state.current||
+    !machine->animation_28||character->identity!=s.bindings.character||
+    character->skill_machine_4fc!=machine||
+    character->stop_skill_loop_receiver_49c!=animation_owner_identity||
+    s.skill_animation_owner!=animation_owner_identity){
+  error="CSCast callback binding differs from the retained Character/Coordinator/machine/animator owners";
+  return false;
+ }
+ if(!external.debug_switches_identity||!external.ooi_intent_412||
+    !external.callbacks.invoke){
+  error="CSCast callback binding requires DebugSwitches, OOI intent and every real source service";
+  return false;
+ }
+
+ if(s.cast_state_projection){
+  const auto& current=*s.cast_state_projection;
+  const bool same=current.character.identity==s.bindings.character&&
+      current.character.coordinator_state==&coordinator->state&&
+      current.character.flags_520==&coordinator->state.flags&&
+      current.character.machine==machine->identity&&
+      current.character.animator==animation_owner_identity&&
+      current.character.ooi_intent_412==external.ooi_intent_412&&
+      current.globals.debug_switches==external.debug_switches_identity&&
+      current.services.context==external.callbacks.context&&
+      current.services.invoke==external.callbacks.invoke;
+  if(!same){error="CSCast callback graph is already bound to different borrowed owners";return false;}
+  if(!coordinator->bind_cast_projection(s.cast_state_projection.get())){
+   error="CSCast callback projection no longer belongs to the active Coordinator";return false;
+  }
+  return true;
+ }
+
+ std::unique_ptr<dh2::character_cast_lifecycle_v1::Projection> projection;
+ try{
+  projection=std::make_unique<dh2::character_cast_lifecycle_v1::Projection>();
+ }catch(const std::exception& failure){error=failure.what();return false;}
+ projection->character={s.bindings.character,&coordinator->state,
+     &coordinator->state.flags,machine->identity,animation_owner_identity,
+     external.ooi_intent_412};
+ projection->globals={external.debug_switches_identity};
+ projection->services=external.callbacks;
+ if(!coordinator->bind_cast_projection(projection.get())){
+  error="Coordinator rejected the CSCast projection or state7 is already active";
+  return false;
+ }
+ s.cast_state_projection=std::move(projection);
+ return true;
+}
+
+bool Runtime::unbind_cast_state_callbacks(std::string& error){
+ auto& s=*impl_;error.clear();
+ if(!s.cast_state_projection){error="CSCast callback projection is not bound";return false;}
+ if(!s.bindings.coordinator||
+    !s.bindings.coordinator->unbind_cast_projection(s.cast_state_projection.get())){
+  error="CSCast callback projection cannot detach during state7 or active Coordinator dispatch";
+  return false;
+ }
+ s.cast_state_projection.reset();
+ return true;
+}
+
+bool Runtime::retire_cast_state_callbacks(std::string& error){
+ auto& s=*impl_;error.clear();
+ if(!s.cast_state_projection){error="CSCast callback projection is not bound";return false;}
+ if(!s.bindings.coordinator||
+    !s.bindings.coordinator->retire_cast_projection(s.cast_state_projection.get())){
+  error="CSCast callback projection cannot retire during active Coordinator dispatch";
+  return false;
+ }
+ s.cast_state_projection.reset();
+ return true;
+}
+
+bool Runtime::cast_state_callbacks_bound()const noexcept{
+ const auto& s=*impl_;
+ if(!s.cast_state_projection||!s.bindings.coordinator||!s.skill_machine)return false;
+ const auto* machine=s.skill_machine->machine();
+ return machine&&machine->identity&&
+     s.cast_state_projection->character.coordinator_state==&s.bindings.coordinator->state&&
+     s.cast_state_projection->character.flags_520==&s.bindings.coordinator->state.flags&&
+     s.cast_state_projection->character.identity==s.bindings.character&&
+     s.cast_state_projection->character.machine==machine->identity&&
+     s.cast_state_projection->character.animator==s.skill_animation_owner;
+}
+
+bool Runtime::cast_state_machine_identity(std::uintptr_t& identity)const noexcept{
+ identity=0;const auto& s=*impl_;
+ if(!s.skill_machine||!s.bindings.coordinator)return false;
+ const auto* machine=s.skill_machine->machine();
+ const auto* character=s.skill_machine->character();
+ const auto* state=s.skill_machine->state_query();
+ if(!machine||!character||!state||!machine->identity||
+    machine->owner_04!=s.bindings.character||machine->state_query!=state||
+    state->current_state_id!=&s.bindings.coordinator->state.current||
+    character->identity!=s.bindings.character||character->skill_machine_4fc!=machine)
+  return false;
+ identity=machine->identity;return true;
+}
+
+bool Runtime::select_skill_animation(std::uintptr_t animation_owner_identity,
+    std::int32_t requested_animation,std::int32_t& selected_animation,
+    std::string& error){
+ auto& s=*impl_;error.clear();
+ if(!animation_owner_identity||!s.initialized||s.update_blocked||
+    !s.skill_machine||s.skill_animation_owner!=animation_owner_identity||
+    !s.skill_machine->skill_state_callbacks_bound()){
+  error="SM_SetAnim requires the bound retained Character skill-machine and animation owners";
+  return false;
+ }
+ auto* machine=s.skill_machine->machine();
+ if(!machine||machine->owner_04!=s.bindings.character||!machine->identity||
+    !machine->animation_28){
+  error="SM_SetAnim retained source animation field is unavailable";return false;
+ }
+ // IDA CharStateMachine::SM_SetAnim (0x3c0b50): if the remembered animation
+ // is not -1, store -1 and replay the remembered animation; if it is -1,
+ // pass the caller's value through and leave the sentinel in place.
+ auto selected=*machine->animation_28;
+ if(selected!=-1)*machine->animation_28=-1;
+ else selected=requested_animation;
+ selected_animation=selected;error.clear();return true;
+}
+
+bool Runtime::select_cast_animation(std::int32_t animation_table_id,
+    std::int32_t saved_faery_slot,
+    std::uintptr_t animation_owner_identity,
+    std::int32_t& selected_animation,std::string& error){
+ auto& s=*impl_;error.clear();
+ const auto& b=s.bindings;
+ if(!animation_owner_identity||!s.initialized||s.update_blocked||
+    !b.coordinator||!b.coordinator->bound()||
+    b.coordinator->owner()!=b.character||!b.animation_tables||!b.properties){
+  error="SM_SetCastState requires the active Character, Coordinator, animation table and properties";
+  return false;
+ }
+
+ const auto& animation_tables=*b.animation_tables;
+ if(animation_tables.characters.empty()){
+  error="SM_SetCastState CharAnimTable has no decoded rows";return false;
+ }
+ // Character::GetCharAnimTableId (IDA 0x3a3228) reads the active resolved
+ // property and falls back to row 17 when it is outside CharAnimTable.
+ auto active_table=b.properties->resolved[2];
+ if(active_table<0||std::size_t(active_table)>=animation_tables.characters.size())
+  active_table=17;
+ if(std::size_t(active_table)>=animation_tables.characters.size()||
+    animation_table_id!=active_table){
+  error="SM_SetCastState animation-table ID differs from the active Character source row";
+  return false;
+ }
+
+ if(saved_faery_slot<0){
+  error="SM_SetCastState faery animation slot is negative";return false;
+ }
+
+ // SM_SetCastState (IDA 0x3c6394) directly indexes the active
+ // CharAnimTable.Spells[faeryId]. It does not resolve the FaeryList, inspect
+ // FaeryTable, or require a prepared spell script; those owners are consulted
+ // by AI_BeginSpell before this source operation. Keep this animation helper
+ // faithful to its own boundary so valid CharAnimTable entries are not
+ // rejected by unrelated inventory/script projections.
+ const auto* sequence=dh2::data::animation_state(animation_tables,
+     animation_table_id,"Spells",saved_faery_slot);
+ if(!sequence){
+  error="SM_SetCastState CharAnimTable Spells entry is unavailable or outside the sequence table";
+  return false;
+ }
+ const auto sequence_id=sequence-animation_tables.sequences.data();
+ if(sequence_id<0||sequence_id>INT32_MAX){
+  error="SM_SetCastState Spells sequence ID is outside the source integer domain";
+  return false;
+ }
+
+ // The verified Android animations_pycst asset has
+ // AnimStancedAnim/SL__LIST_IPHONE = 210 (0xd2). IDA tests bit 0x400000;
+ // it is clear, so GetAnimStance is not reached and the selected sequence is
+ // used unchanged. Preserve an explicit failure if a different asset reaches
+ // that source branch without a live stance provider.
+ constexpr char stance_group[]="AnimStancedAnim";
+ constexpr char stance_key[]="SL__LIST_IPHONE";
+ dh2_pycst_result stance_mask{};
+ if(dh2_pycst_get(&s.animation_constants,stance_group,sizeof(stance_group)-1,
+       stance_key,sizeof(stance_key)-1,&stance_mask)||!stance_mask.found){
+  error="SM_SetCastState Android stance constant is unavailable";return false;
+ }
+ if((static_cast<std::uint32_t>(stance_mask.value)&0x400000u)!=0){
+  error="SM_SetCastState reached source GetAnimStance without a live stance provider";
+  return false;
+ }
+
+ if(s.skill_machine&&s.skill_animation_owner!=animation_owner_identity){
+  error="SM_SetCastState animation owner differs from the retained Character machine projection";
+  return false;
+ }
+ if(!s.skill_machine){
+  try{
+   s.skill_machine=std::make_unique<dh2::character_ai_skill_machine_projection_v1::Projection>(
+       *b.coordinator,b.character,animation_owner_identity);
+   s.skill_animation_owner=animation_owner_identity;
+  }catch(const std::exception& failure){error=failure.what();return false;}
+ }
+ if(!s.skill_machine){
+  error="SM_SetCastState has no retained Character skill-machine projection";
+  return false;
+ }
+ auto* machine=s.skill_machine->machine();
+ if(!machine||machine->owner_04!=b.character||!machine->identity||
+    !machine->animation_28||s.skill_animation_owner!=animation_owner_identity){
+  error="SM_SetCastState retained Character machine animation field is unavailable";
+  return false;
+ }
+ *machine->animation_28=static_cast<std::int32_t>(sequence_id);
+ selected_animation=static_cast<std::int32_t>(sequence_id);
+ error.clear();return true;
+}
+
+bool Runtime::begin_spell(std::uintptr_t animation_owner_identity,
+    SpellOperationResult& output,std::string& error){
+ auto& s=*impl_;const auto& b=s.bindings;error.clear();output={};
+ if(!animation_owner_identity||!s.initialized||s.update_blocked||
+    !s.preparation||!s.uses||!s.session||!s.session->vm()||
+    !b.savegame||b.savegame->character()!=b.character||!b.current_difficulty||
+    !b.tables||!b.properties||!b.animation_tables||!b.online||!b.online_identity||
+    !b.source_ai||b.source_ai->owner_04!=b.character||
+    b.source_ai->active_ais_1c!=s.ais.ais||!b.coordinator||
+    !b.coordinator->bound()||b.coordinator->owner()!=b.character||
+    !s.skill_machine||s.skill_animation_owner!=animation_owner_identity||
+    !cast_state_callbacks_bound()){
+  error="AI_BeginSpell requires the active same Character, offline session, Save, AIS, Coordinator, cast lifecycle and retained faery VM/animation owners";
+  return false;
+ }
+ // AI_IsSpellUsable (IDA 0x3d80b4) first rejects SM_IsUsingSkill/state 6,
+ // SM_IsCasting/state 7 and an unloaded CharAI script process (>6 is loaded).
+ // Match those source guards before reading the current saved faery.
+ const auto state=b.coordinator->state.current;
+ if(state==6||state==7||b.source_ai->pointer_28<=6){
+  error.clear();return true;
+ }
+ if(*b.online){
+  error="AI_BeginSpell reached online controller messaging without a source messaging provider";
+  return false;
+ }
+ if(!b.properties||!b.savegame||!b.tables||!b.current_difficulty){
+  error="AI_BeginSpell active Save/property/faery table owners disappeared";return false;
+ }
+ try{s.refresh_properties();}
+ catch(const std::exception& failure){error=failure.what();return false;}
+ const auto difficulty=*b.current_difficulty;
+ if(difficulty<0||difficulty>=3||
+    !b.savegame->faeries_initialized()[static_cast<std::size_t>(difficulty)]){
+  error="AI_BeginSpell SG_GetCurrentFaerieId has no initialized active difficulty";
+  return false;
+ }
+ const auto slot=b.savegame->current_faery(static_cast<std::uint32_t>(difficulty));
+ if(slot<0){error="AI_BeginSpell SG_GetCurrentFaerieId returned an invalid saved faery slot";return false;}
+ output.saved_faery_slot=slot;
+
+ // GetCharFaery uses the slot as a position in the selected FaeryList and
+ // validates FaeryRow.Type (+32) against that saved position. SpellType (+28)
+ // is a separate field and controls the AI_BeginSpell/AI_EndSpell branches.
+ const auto& faeries=b.tables->faeries();
+ auto list_id=b.properties->resolved[29];
+ if(list_id<0||static_cast<std::size_t>(list_id)>=faeries.faery_lists.size())list_id=0;
+ if(static_cast<std::size_t>(list_id)>=faeries.faery_lists.size()){
+  error="AI_BeginSpell selected FaeryList fallback row is unavailable";return false;
+ }
+ const auto& members=faeries.faery_lists[static_cast<std::size_t>(list_id)].members;
+ const auto slot_index=static_cast<std::size_t>(slot);
+ const auto& scripts=s.preparation->slots(
+      dh2::character_ai_set_skills_and_spells::List::faery);
+ if(slot_index>=members.size()||slot_index>=scripts.size()){
+  error="AI_BeginSpell current faery slot is outside GetCharFaery or m_spellScripts";
+  return false;
+ }
+ const auto row_id=members[slot_index];
+ if(row_id<0||static_cast<std::size_t>(row_id)>=faeries.faeries.size()||
+    faeries.faeries[static_cast<std::size_t>(row_id)].type!=slot){
+  error="AI_BeginSpell GetCharFaery row/type validation failed for the saved slot";
+  return false;
+ }
+ const auto& row=faeries.faeries[static_cast<std::size_t>(row_id)];
+ output.spell_type=row.spell_type;
+ // IDA CharAI::AI_IsSpellActive (0x3d7d9c) is `return 0` in this ELF.
+ // Therefore the SpellType==1 OnPreSkill/online special arm at 0x3d82a8 is
+ // unreachable; source falls through to AI_IsSpellUsable for every row.
+ if(row.spell_type==1){ /* AI_IsSpellActive is a verified constant false. */ }
+ if(!scripts[slot_index]){error.clear();return true;}
+ const auto* instance=s.preparation->instance(scripts[slot_index]);
+ if(!instance||instance->character!=b.character||instance->identity!=scripts[slot_index]){
+  error="AI_BeginSpell current faery script is stale or belongs to another Character";
+  return false;
+ }
+ // AI_IsSpellUsable's final source operation is the prepared faery's
+ // OnSkillCheck_Usable on the existing Player VM. A false result stops before
+ // the CharAI byte writes, animation selection and C356 dispatch.
+ dh2::player_skill_use_session_v1::Result usable{};
+ const auto check_status=s.uses->check(dh2::player_skill_use_session_v1::List::faery,
+     slot_index,dh2::player_skill_use_session_v1::Check::usable,usable,error);
+ if(check_status){
+  if(error.empty())error="AI_BeginSpell OnSkillCheck_Usable failed in the retained faery VM";
+  return false;
+ }
+ output.usable=usable.value;
+ if(!output.usable){error.clear();return true;}
+
+ // Source CharAI::AI_BeginSpell (IDA 0x3d81c0) clears these AI bytes only
+ // after AI_IsSpellUsable succeeds, then calls SM_SetCastState and event C356.
+ b.source_ai->byte_d0=0;b.source_ai->byte_d1=0;
+ auto active_table=b.properties->resolved[2];
+ if(active_table<0||static_cast<std::size_t>(active_table)>=b.animation_tables->characters.size())
+  active_table=17;
+ std::int32_t selected_animation=-1;
+ if(!select_cast_animation(active_table,slot,animation_owner_identity,
+       selected_animation,error))return false;
+ const auto event_status=b.coordinator->event(50006u);
+ if(event_status<0){
+  error="AI_BeginSpell SM_SetCastState C356 dispatch failed after the source byte/animation prefix";
+  return false;
+ }
+ output.is_casting=b.coordinator->state.current==7?1u:0u;
+ error.clear();return true;
+}
+
+bool Runtime::end_spell(std::uintptr_t animation_owner_identity,
+    void* animation_context,bool (*stop_loop)(void*,bool,std::string&),
+    SpellOperationResult& output,std::string& error){
+ auto& s=*impl_;const auto& b=s.bindings;error.clear();output={};
+ if(!animation_owner_identity||!s.initialized||s.update_blocked||
+    !b.savegame||b.savegame->character()!=b.character||!b.current_difficulty||
+    !b.tables||!b.properties||!b.online||!b.online_identity||!b.source_ai||
+    b.source_ai->owner_04!=b.character||b.source_ai->active_ais_1c!=s.ais.ais||
+    !b.coordinator||!b.coordinator->bound()||b.coordinator->owner()!=b.character||
+    !s.skill_machine||s.skill_animation_owner!=animation_owner_identity||
+    !cast_state_callbacks_bound()){
+  error="AI_EndSpell requires the active same Character, offline session, Save, AIS, Coordinator, cast lifecycle and retained animation owners";
+  return false;
+ }
+ // AI_EndSpell starts with SM_IsCasting and is otherwise a source no-op.
+ if(b.coordinator->state.current!=7){error.clear();return true;}
+ output.is_casting=1;
+ if(*b.online){
+  error="AI_EndSpell reached online controller messaging without a source messaging provider";
+  return false;
+ }
+ const auto difficulty=*b.current_difficulty;
+ if(difficulty<0||difficulty>=3||
+    !b.savegame->faeries_initialized()[static_cast<std::size_t>(difficulty)]){
+  error="AI_EndSpell SG_GetCurrentFaerieId has no initialized active difficulty";
+  return false;
+ }
+ const auto slot=b.savegame->current_faery(static_cast<std::uint32_t>(difficulty));
+ if(slot<0){error="AI_EndSpell SG_GetCurrentFaerieId returned an invalid saved faery slot";return false;}
+ output.saved_faery_slot=slot;
+ const auto& faeries=b.tables->faeries();
+ auto list_id=b.properties->resolved[29];
+ if(list_id<0||static_cast<std::size_t>(list_id)>=faeries.faery_lists.size())list_id=0;
+ if(static_cast<std::size_t>(list_id)>=faeries.faery_lists.size()){
+  error="AI_EndSpell selected FaeryList fallback row is unavailable";return false;
+ }
+ const auto& members=faeries.faery_lists[static_cast<std::size_t>(list_id)].members;
+ const auto slot_index=static_cast<std::size_t>(slot);
+ if(slot_index>=members.size()){
+  error="AI_EndSpell current faery slot is outside GetCharFaery";return false;
+ }
+ const auto row_id=members[slot_index];
+ if(row_id<0||static_cast<std::size_t>(row_id)>=faeries.faeries.size()||
+    faeries.faeries[static_cast<std::size_t>(row_id)].type!=slot){
+  error="AI_EndSpell GetCharFaery row/type validation failed for the saved slot";
+  return false;
+ }
+ const auto spell_type=faeries.faeries[static_cast<std::size_t>(row_id)].spell_type;
+ output.spell_type=spell_type;
+ // IDA CharAI::AI_EndSpell (0x3d7f60) only changes loop/AI state for
+ // SpellType==2. It raises no FSM event in the supported offline path.
+ if(spell_type==2){
+  if(b.source_ai->byte_d0){
+   if(!stop_loop||!animation_context){
+    error="AI_EndSpell SpellType==2 requires the real retained CharAnimator::ANIM_StopLoop provider";
+    return false;
+   }
+   if(!stop_loop(animation_context,true,error)){
+    if(error.empty())error="AI_EndSpell CharAnimator::ANIM_StopLoop(true) provider failed";
+    return false;
+   }
+  }else{
+   b.source_ai->byte_d1=1;
+  }
+ }
+ error.clear();return true;
 }
 
 bool Runtime::begin_skill(std::uint32_t skill_index,
@@ -1578,6 +2176,54 @@ int Runtime::invoke_skill_callback(std::uint32_t skill_slot,
  player_skill_use_session_v1::Result source_result{};
  const auto status=s.uses->invoke(player_skill_use_session_v1::List::skill,
                                   skill_slot,source_callback,source_result,error);
+ if(status==0){
+  result.value=source_result.value;result.call_count=source_result.call_count;
+  result.last_lua_status=source_result.last_lua_status;
+ }
+ return status;
+}
+int Runtime::invoke_faery_callback(std::uint32_t faery_slot,
+    SkillCallback callback,SkillCallbackResult& result,std::string& error){
+ auto& s=*impl_;error.clear();
+ player_skill_use_session_v1::Callback source_callback{};
+ switch(callback){
+ case SkillCallback::pre:source_callback=player_skill_use_session_v1::Callback::pre;break;
+ case SkillCallback::use:source_callback=player_skill_use_session_v1::Callback::use;break;
+ case SkillCallback::post:source_callback=player_skill_use_session_v1::Callback::post;break;
+ default:error="Player faery callback phase is invalid";return -1;
+ }
+ if(!s.initialized||s.update_blocked||!s.uses||!s.preparation||!s.session||
+    !s.bindings.coordinator||!s.bindings.source_ai||
+    s.bindings.coordinator->owner()!=s.bindings.character||
+    s.session->character_identity()!=s.bindings.character||
+    s.bindings.source_ai->owner_04!=s.bindings.character||
+    s.bindings.source_ai->active_ais_1c!=s.ais.ais){
+  error="Player faery callback requires the initialized same Character, AIS, Coordinator and retained VM";
+  return -1;
+ }
+ using SourceList=dh2::character_ai_set_skills_and_spells::List;
+ const auto& slots=s.preparation->slots(SourceList::faery);
+ if(faery_slot>=slots.size()){
+  // CharAI::_SpellFocus/_SpellBlur/_SpellEvent guard the current ID against
+  // m_spellScripts.size() and return normally when it is outside the vector.
+  result={};error.clear();return 0;
+ }
+ if(!slots[faery_slot]){
+  // Those source helpers also skip a null script entry without invoking Lua.
+  result={};error.clear();return 0;
+ }
+ const auto* instance=s.preparation->instance(slots[faery_slot]);
+ if(!instance||instance->character!=s.bindings.character||instance->identity!=slots[faery_slot]){
+  error="Player faery callback instance no longer belongs to the active Character";
+  return -1;
+ }
+ // IDA CSCast entry/exit raises Character events 32/33, which dispatch
+ // _SpellFocus/_SpellBlur; the state-7 "do_spell" marker dispatches
+ // _SpellEvent. All three invoke the same Player script methods as skills,
+ // but on CharAI's separate faery-script vector (List::faery).
+ player_skill_use_session_v1::Result source_result{};
+ const auto status=s.uses->invoke(player_skill_use_session_v1::List::faery,
+                                  faery_slot,source_callback,source_result,error);
  if(status==0){
   result.value=source_result.value;result.call_count=source_result.call_count;
   result.last_lua_status=source_result.last_lua_status;

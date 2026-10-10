@@ -1,6 +1,7 @@
 #pragma once
 #include "../game-data/player_savegame_v1.hpp"
 #include "../game-data/properties.hpp"
+#include "../player-info-level/player_locality_v1.hpp"
 #include <cstdint>
 #include <string>
 extern "C" {
@@ -35,6 +36,25 @@ struct Request {
     const char* name=nullptr;
 };
 struct Reply {std::int32_t value=0;std::uint32_t word=0;};
+struct PlayerByCharacterBinding {
+    const player_locality_v1::Registry* registry=nullptr;
+    const player_locality_v1::Services* player_services=nullptr;
+};
+struct PlayerByCharacterResult {
+    player_locality_v1::Route route=player_locality_v1::Route::none;
+    player_locality_v1::PlayerInfo* player=nullptr;
+    std::int32_t internal_id=-1;
+};
+enum class PlayerByCharacterStatus : std::uint32_t {
+    complete,invalid_argument,lookup_failed,missing_player
+};
+// Exact `_GiveXP` tail adapter: source invokes
+// GetPlayerByCharacter(character, false), then reads selected PlayerInfo+0x670.
+// The existing PlayerManager/locality owner supplies the exact offline/network
+// selection and manager+8 fallback; this adapter creates no player registry.
+PlayerByCharacterStatus player_by_character_internal_id(
+    const PlayerByCharacterBinding*,std::uintptr_t character,
+    PlayerByCharacterResult*);
 struct Backend {
     void* context=nullptr;
     // Services query the live Character virtuals, current Level, DebugSwitches,
@@ -55,6 +75,9 @@ struct Backend {
     std::int32_t (*get_unlocked_difficulty)(void*,std::uintptr_t,
                                             const data::PlayerSavegameV1*,
                                             std::int32_t*,std::string& error)=nullptr;
+    // When present, source GetPlayerByCharacter and +0x670 reads use the same
+    // canonical PlayerManager registry/services as locality and XP selection.
+    const PlayerByCharacterBinding* player_lookup=nullptr;
 };
 enum class Status : std::uint32_t {
     complete,invalid_argument,busy,property_failed,

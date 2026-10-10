@@ -8,6 +8,9 @@ struct AnimationSelectionServices {
  void* context=nullptr;
  void(*event)(void*,AnimationScheduler&,std::uint32_t)=nullptr;
  bool(*prepare)(void*,AnimationScheduler&)=nullptr;
+ // Dedicated hook after the stored sequence step has selected/prepared the
+ // active playback slot. This is not a Character event.
+ bool(*frame_step)(void*,AnimationScheduler&,std::uint32_t,std::uint32_t)=nullptr;
 };
 // CharAnimator::Update's synchronous services. Event return values are ignored
 // in the original. prepare/finish return bool solely to propagate native backend

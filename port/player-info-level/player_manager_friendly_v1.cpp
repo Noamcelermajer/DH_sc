@@ -66,6 +66,22 @@ bool select(const Registry& registry,const Services& s,int ordinal,unsigned char
     return true;
 }
 }
+Status project_single_player_class_counts(std::int32_t character_class_row,
+                                           SinglePlayerClassCounts* output) {
+    if (!output) return Status::invalid_argument;
+    SinglePlayerClassCounts result{};
+    // PlayerManager's Warrior/Rogue/Mage wrappers pass these CharacterTable
+    // row indices to GetNumPlayerCharactersOfClass (IDA 0x36eab8..0x36eacc).
+    // They are row indices, not each row's separate ClassID property.
+    switch (character_class_row) {
+    case 263: result.warrior=1; break;
+    case 325: result.rogue=1; break;
+    case 290: result.mage=1; break;
+    default: return Status::missing_projection;
+    }
+    *output=result;
+    return Status::complete;
+}
 Status get_num_players(const Registry* registry,const Services* services,Result* output){auto status=guard(registry,services,output);if(status!=Status::complete)return status;Result result;count(*registry,*services,result);*output=result;return result.status;}
 Status get_internal_id_by_friendly_id(const Registry* registry,const Services* services,int ordinal,unsigned require_character,Result* output){auto status=guard(registry,services,output);if(status!=Status::complete)return status;Result result;select(*registry,*services,ordinal,require_character,result);*output=result;return result.status;}
 Status get_player(const Registry* registry,const Services* services,int ordinal,unsigned require_character,Result* output){auto status=guard(registry,services,output);if(status!=Status::complete)return status;Result result;if(select(*registry,*services,ordinal,require_character,result))select_internal(*registry,*services,result.value,result,result.player);*output=result;return result.status;}

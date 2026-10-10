@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <vector>
 
 namespace dh2::data {
 // Caller-owned native storage. Character keys preserve the original ordering,
@@ -34,6 +35,18 @@ struct AggroChange {
 struct AggroQuery {
  std::uint32_t threat_bits,count,has_aggro,is_aggroed;
  std::uint64_t highest;
+};
+
+// Canonical portable storage for the two CharAI maps attached to one
+// Character. Combat mutates these buffers; Character/CharAI adapters borrow
+// the same tables for source cleanup. CharAI TreeHeader::count is only a
+// synchronized scalar projection of these maps, never another map store.
+struct AggroOwner {
+ std::vector<AggroEntry> outgoing,incoming;
+ std::uint32_t out_count=0,in_count=0;
+ void initialize(std::uint32_t capacity){outgoing.resize(capacity);incoming.resize(capacity);out_count=in_count=0;}
+ AggroTable outgoing_table() noexcept {return {outgoing.empty()?nullptr:outgoing.data(),out_count,std::uint32_t(outgoing.size())};}
+ AggroTable incoming_table() noexcept {return {incoming.empty()?nullptr:incoming.data(),in_count,std::uint32_t(incoming.size())};}
 };
 }
 
