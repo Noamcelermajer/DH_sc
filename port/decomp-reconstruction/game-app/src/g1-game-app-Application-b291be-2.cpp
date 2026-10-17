@@ -67,6 +67,8 @@
 #include <list>
 #include <new>
 #include <thread>
+#include <string>
+#include <cstdlib>
 
 #include "core-platform/debug_out.hpp"
 #include "core-platform/device.hpp"
@@ -1103,11 +1105,67 @@ void Application::_Update(int dtMs) {
 // The pacing sleeps are the device virtual at vtable +0x10, CAndroidOSDevice::sleep(unsigned int ms, bool pauseTimer) (0x6a0374) called with
 // (avgSleepTime, 0): with the flag clear it is a plain nanosleep of ms milliseconds and does not touch the device timer, which is what
 // DeviceSleep does here.
+extern const char* RES_PATH;   // core-platform: the data folder, a trailing slash is added when missing
+
 namespace {
 
 // CAndroidOSDevice::sleep(ms, false) (0x6a0374): split into seconds and nanoseconds and nanosleep; the timer is not paused for a clear flag.
 void DeviceSleep(unsigned int milliseconds) {
     std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+}
+
+// IMPROVEMENTS (not in the binary; reports/improvements/CHANGES.md, "Frame-rate option"): an explicit frame-rate cap.
+// Source, first match: environment DH2_FRAMERATE, then the one-line text file <RES_PATH>dh2_framerate.txt ("original", "30", "60", "uncapped").
+// "original" (the default, also for a missing or unreadable file) keeps the binary's pacing exactly; "30" / "60" sleep each frame up to
+// 1000/30 or 1000/60 ms of the device clock (also on devices the original does not pace); "uncapped" never sleeps (the display's vsync then
+// sets the rate). Returns 0 original, 30, 60 or -1 uncapped.
+int FrameRateOption() {
+    static int mode = -2;
+    if (mode != -2) {
+        return mode;
+    }
+    mode = 0;
+    std::string text;
+    if (const char* env = std::getenv("DH2_FRAMERATE")) {
+        text = env;
+    } else {
+        std::string path = RES_PATH != nullptr ? RES_PATH : "";
+        if (!path.empty() && path.back() != '/' && path.back() != 92) {
+            path += '/';
+        }
+        std::FILE* f = std::fopen((path + "dh2_framerate.txt").c_str(), "rb");
+        if (f != nullptr) {
+            char buf[64] = {0};
+            std::fread(buf, 1, sizeof buf - 1, f);
+            std::fclose(f);
+            text = buf;
+        }
+    }
+    if (text.compare(0, 2, "30") == 0) {
+        mode = 30;
+    } else if (text.compare(0, 2, "60") == 0) {
+        mode = 60;
+    } else if (text.compare(0, 8, "uncapped") == 0) {
+        mode = -1;
+    }
+    return mode;
+}
+
+// Sleeps so that frame starts are 1000/fps ms apart on the device clock (a late frame resets the schedule instead of bursting).
+void PaceToFrameRate(int fps) {
+    static double due = 0.0;
+    const double period = 1000.0 / static_cast<double>(fps);
+    const double now = static_cast<double>(glitch::os::Timer::getRealTime());
+    if (due < now - period) {
+        due = now;
+    }
+    due += period;
+    if (due - now > period) {
+        due = now + period;   // never sleep more than one period (clock stopped or stepped backwards)
+    }
+    if (due - now >= 1.0) {
+        DeviceSleep(static_cast<unsigned int>(due - now));
+    }
 }
 
 }  // namespace
@@ -1154,6 +1212,14 @@ void Application::Update() {
     Singleton<PerfCounters>::s_inst.SetCounterValue("FPS", fps, 0.0f, 60.0f);
     if (IsOnlineGame()) {
         GetOnline()->SendPackets();
+    }
+
+    // IMPROVEMENTS: explicit frame-rate option (default "original" = the pacing below, unchanged).
+    switch (FrameRateOption()) {
+        case 30: PaceToFrameRate(30); return;
+        case 60: PaceToFrameRate(60); return;
+        case -1: return;
+        default: break;
     }
 
     // Frame pacing, high-performance devices only. The three averages are function statics in the original (.bss, zero).

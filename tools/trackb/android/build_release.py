@@ -66,6 +66,24 @@ def add_bundle(raw_in, raw_out, zpath):
         zo.write(zpath, "assets/dh2data.zip", compress_type=zipfile.ZIP_STORED)
 
 
+def add_overrides(raw):
+    """IMPROVEMENTS branch: append the script override layer (port/lua-overrides) to an unsigned APK as assets/dh2overrides.txt +
+    assets/dh2overrides/<path>; DataSetup applies it over files/ at start (see port/lua-overrides/README.md). --no-overrides skips it."""
+    ovr = os.path.join(ROOT, "port", "lua-overrides")
+    man = os.path.join(ovr, "manifest.txt")
+    if NO_OVERRIDES or not os.path.exists(man):
+        return
+    with zipfile.ZipFile(raw, "a", zipfile.ZIP_DEFLATED) as z:
+        z.write(man, "assets/dh2overrides.txt")
+        for line in open(man, encoding="utf-8").read().splitlines():
+            if line.strip() and not line.startswith("#"):
+                path = line.split("\t")[0]
+                z.write(os.path.join(ovr, path), "assets/dh2overrides/" + path)
+
+
+NO_OVERRIDES = False
+
+
 def run(*a, **k):
     print(">", " ".join(str(x) for x in a), flush=True)
     subprocess.check_call([str(x) for x in a], **k)
@@ -112,10 +130,12 @@ def main():
     ap.add_argument("--bundle-data", help="Dungeon-Hunter-2-HD-v1-0-2-cache.zip: embed it (stored) so the APK unpacks its own data on first run; writes dh2-trackb-bundled.apk (source Java only)")
     ap.add_argument("--out-root", help="output root instead of build/own-ab")
     ap.add_argument("--build-dir", help="native build dir instead of build/own-ab-arm64")
+    ap.add_argument("--no-overrides", action="store_true", help="do not embed port/lua-overrides (the APK then runs the original scripts)")
     ap.add_argument("--min-sdk", type=int, default=26)
     ap.add_argument("--target-sdk", type=int, default=28)
     a = ap.parse_args()
-    global OUTROOT, OUT, BUILD
+    global OUTROOT, OUT, BUILD, NO_OVERRIDES
+    NO_OVERRIDES = a.no_overrides
     if a.out_root:
         OUTROOT = os.path.abspath(a.out_root)
         OUT = os.path.join(OUTROOT, "out")
@@ -152,10 +172,15 @@ def main():
         if a.bundle_data:
             braw = os.path.join(OUTROOT, "dh2-bundled-raw.apk")
             add_bundle(os.path.join(jout, "dh2-java-raw.apk"), braw, a.bundle_data)
+            add_overrides(braw)
             sign(braw, os.path.join(OUT, "dh2-trackb-bundled.apk"))
             os.remove(braw)
         else:
-            sign(os.path.join(jout, "dh2-java-raw.apk"), os.path.join(OUT, "dh2-trackb-source.apk"))   # same key as the origdex APK
+            sraw = os.path.join(OUTROOT, "dh2-source-raw.apk")
+            shutil.copyfile(os.path.join(jout, "dh2-java-raw.apk"), sraw)
+            add_overrides(sraw)
+            sign(sraw, os.path.join(OUT, "dh2-trackb-source.apk"))
+            os.remove(sraw)   # same key as the origdex APK
 
     # 3. original-dex APK: the original APK's dex/resources, the manifest compiled from the same source manifest (ids are
     #    pinned identical to the original's resources.arsc), our libs, and DataSetup (the first-run data unpacker) as classes2.dex
@@ -181,6 +206,7 @@ def main():
             zo.write(os.path.join(d8dir, "classes.dex"), "classes2.dex")
             zo.write(stripped, "lib/arm64-v8a/libDungeonHunter2.so", compress_type=zipfile.ZIP_STORED)
             zo.write(storm, "lib/arm64-v8a/libStormGLOFT.so", compress_type=zipfile.ZIP_STORED)
+        add_overrides(raw)
         sign(raw, os.path.join(OUT, "dh2-trackb-origdex.apk"))
 
     for f in sorted(os.listdir(OUT)):

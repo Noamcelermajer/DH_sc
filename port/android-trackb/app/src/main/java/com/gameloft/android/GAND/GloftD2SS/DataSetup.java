@@ -340,12 +340,95 @@ public class DataSetup extends Activity {
             return;
         }
         started = true;
+        applyOverrides();
         // NEW_TASK|CLEAR_TASK: never resume a stale DungeonHunter2 task left over from a killed process (e.g. after installing over a running game):
         // the original relies on its activity flow never resuming before nativeInit has built the Application.
         Intent game = new Intent(this, DungeonHunter2.class);
         game.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(game);
         finish();
+    }
+
+    /**
+     * IMPROVEMENTS branch: script override layer (reports/improvements/CHANGES.md, port/lua-overrides/README.md).
+     * assets/dh2overrides.txt lists  path TAB sha256(original) TAB sha256(override) TAB switch ; assets/dh2overrides/<path> holds the override.
+     * Each file under files/ that still has the original's hash is replaced (the original is kept as <path>.orig). A file that is
+     * neither the known original nor the override is left alone. Creating files/dh2_no_overrides restores every original at the next start.
+     */
+    private void applyOverrides() {
+        try {
+            BufferedReader r;
+            try {
+                r = new BufferedReader(new InputStreamReader(getAssets().open("dh2overrides.txt"), "UTF-8"));
+            } catch (Throwable t) {
+                return;   // this APK carries no overrides
+            }
+            File files = filesDir();
+            boolean off = new File(files, "dh2_no_overrides").exists();
+            String l;
+            while ((l = r.readLine()) != null) {
+                if (l.length() == 0 || l.charAt(0) == '#') {
+                    continue;
+                }
+                String[] f = l.split("\t");
+                if (f.length < 3) {
+                    continue;
+                }
+                File dst = new File(files, f[0]);
+                File bak = new File(dst.getPath() + ".orig");
+                if (off) {
+                    if (bak.exists()) {
+                        dst.delete();
+                        bak.renameTo(dst);
+                    }
+                    continue;
+                }
+                if (!dst.exists()) {
+                    continue;
+                }
+                String cur = sha256(new FileInputStream(dst));
+                if (cur.equals(f[2])) {
+                    continue;   // already applied
+                }
+                if (!cur.equals(f[1])) {
+                    continue;   // not the known original: never overwrite
+                }
+                InputStream in = getAssets().open("dh2overrides/" + f[0]);
+                byte[] data = readAll(in);
+                if (!bak.exists()) {
+                    OutputStream bo = new FileOutputStream(bak);
+                    bo.write(readAll(new FileInputStream(dst)));
+                    bo.close();
+                }
+                OutputStream os = new FileOutputStream(dst);
+                os.write(data);
+                os.close();
+            }
+            r.close();
+        } catch (Throwable t) {
+            // an override failure must never stop the game: it then simply runs the original script
+        }
+    }
+
+    private static byte[] readAll(InputStream in) throws java.io.IOException {
+        java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream();
+        byte[] buf = new byte[1 << 14];
+        int n;
+        while ((n = in.read(buf)) > 0) {
+            b.write(buf, 0, n);
+        }
+        in.close();
+        return b.toByteArray();
+    }
+
+    private static String sha256(InputStream in) throws Exception {
+        java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+        byte[] d = md.digest(readAll(in));
+        StringBuilder sb = new StringBuilder();
+        for (byte x : d) {
+            sb.append(String.format("%02x", x & 0xff));
+        }
+        return sb.toString();
     }
 
     private File findArchive() {
