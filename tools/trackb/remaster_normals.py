@@ -26,6 +26,10 @@ HOME = os.path.expanduser('~')
 CHORD = os.path.join(HOME, 'Documents', 'DH2-tools', 'chord')
 SRC = os.path.join(HOME, 'Documents', 'DH2-remaster', 'hd2x', '3d')
 OUT = os.path.join(HOME, 'Documents', 'DH2-remaster', 'chord')
+# Stable Diffusion 2.1 configs + tokenizer (no weights: CHORD's checkpoint holds them). CHORD's default mirror
+# (RedbeardNZ/stable-diffusion-2-1-base) is gone; a local copy of sd2-community/stable-diffusion-2-1-base's *.json and
+# tokenizer files is used instead.
+SD_CONFIG = os.path.join(HOME, 'Documents', 'DH2-tools', 'sd21-config')
 LIT = re.compile(r'^(env_|char_|atlas_modular_|atlas_weapons|atlas_skinned_|atlas_dh2_game_objects_\d+$|dh1_atlas_|walls$)', re.I)
 DATA = re.compile(r'(_spec$|_alpha$|lightmap|_specular$)', re.I)
 
@@ -62,6 +66,7 @@ def main():
     ap.add_argument('--tile', type=int, default=1024)
     ap.add_argument('--overlap', type=int, default=192)
     ap.add_argument('--all', action='store_true')
+    ap.add_argument('--sd-config', default=SD_CONFIG)
     a = ap.parse_args()
 
     sys.path.insert(0, a.chord)
@@ -81,7 +86,10 @@ def main():
     print('textures:', len(names), flush=True)
 
     device = torch.device('cuda')
-    model = ChordModel(OmegaConf.load('config/chord.yaml'))
+    config = OmegaConf.load('config/chord.yaml')
+    if os.path.isdir(a.sd_config):
+        config.model.stable_diffusion.hf_key = a.sd_config
+    model = ChordModel(config)
     model.load_state_dict(load_torch_file(hf_hub_download(repo_id='Ubisoft/ubisoft-laforge-chord', filename='chord_v1.safetensors')))
     model.eval().to(device)
 
