@@ -85,6 +85,7 @@ public:
     int is_layout() const override;                  // 0x7d3d94 (the binary returns a bool in r0; the base returns int)
     int get_internal_width() const override;         // 0x7d3da4
     int get_internal_height() const override;        // 0x7d3dcc
+    void dh2_keep_declared_size(int width, int height) override;  // port addition (remaster), see gameswf.h
     void* lock() override;                           // 0x7d4050
     void unlock() override;                          // 0x7d4048
 

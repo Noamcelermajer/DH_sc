@@ -251,6 +251,7 @@ void substitute_bitmap_character(::tu_string& name, bitmap_character_def* ch, mo
 	glitch::video::ITexture* texture = s_texture_loader_callback(name.c_str(), width, height);
 	if (texture != nullptr) {
 		bi->set_texture(texture);
+		bi->dh2_keep_declared_size(width, height);  // port addition (remaster): an upscaled texture keeps the SWF's UV space
 	}
 }
 

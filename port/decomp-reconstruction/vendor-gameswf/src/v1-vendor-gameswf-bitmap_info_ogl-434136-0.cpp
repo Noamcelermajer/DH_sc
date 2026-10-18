@@ -108,6 +108,21 @@ int bitmap_info_ogl::get_internal_height() const {
     return m_height;
 }
 
+// Port addition (remaster, not in the binary): substitute_bitmap_character calls this with the size the SWF declares for the
+// bitmap. set_texture copied the texture size into m_width/m_height; when the texture is the same picture at an integer scale
+// (an upscaled atlas: both sides scaled by the same factor k >= 2) the declared size is kept, so the UVs (pixel rectangles
+// divided by get_width/get_height) still address the same regions. With the original textures both sizes are equal: no change.
+void bitmap_info_ogl::dh2_keep_declared_size(int width, int height) {
+    if (width <= 0 || height <= 0 || m_width <= width || m_height <= height) {
+        return;
+    }
+    if (m_width % width != 0 || m_height % height != 0 || m_width / width != m_height / height) {
+        return;
+    }
+    m_width = width;
+    m_height = height;
+}
+
 // 0x7d3fcc _ZN15bitmap_info_ogl2p2Ei
 // The smallest power of two that holds value (1 for value <= 1). It is halved when value / power is under 0.6, so the
 // result is the power of two nearest below value when value fills less than 60% of the next one. The binary reads

@@ -766,6 +766,10 @@ namespace gameswf
 		virtual int is_layout() const;  // DH2: +0x34
 		virtual int get_internal_width() const;  // DH2: +0x38, returns the virtual get_width()
 		virtual int get_internal_height() const;  // DH2: +0x3c, returns the virtual get_height()
+		// DH2 port addition (remaster, not in the binary; appended so every slot above keeps its offset): after a SWF bitmap gets
+		// its texture from the texture loader, keep the size the SWF declares when the texture is an exact 2x/4x/... scale of it.
+		// Texture coordinates are pixel rectangles divided by this size, so an upscaled menu atlas keeps mapping the same regions.
+		virtual void dh2_keep_declared_size(int /*width*/, int /*height*/) {}  // +0x40
 	};
 
 	// DH2: Gameloft enum used by render_handler::set_orientation (gameswf::orientation_mode in the binary).
