@@ -29,6 +29,13 @@ ETC2 = next((p for p in (os.path.join(ROOT, 'build', 'rm', 'host-runner', 'dh2_e
 PVR_ETC2_RGB, PVR_ETC2_RGBA, PVR_MIPMAPS = 96, 97, 0x100  # port codes in the PVR v2 container (CImageLoaderPVR), mip flag
 
 
+def pot_or_3pot(n):
+    """n = 2^k or 3 * 2^k."""
+    if n % 3 == 0:
+        n //= 3
+    return n > 0 and (n & (n - 1)) == 0
+
+
 def mip_chain(im):
     """Every level down to 1x1, box-filtered on premultiplied alpha (no dark fringes at cut-out edges)."""
     import numpy as np
@@ -155,8 +162,10 @@ def pack(folder, out, up=None, gpu=None, layer=None):
                 continue
             im = Image.open(os.path.join(d3, f)).convert('RGBA')
             w, h = im.size
-            if (w & (w - 1)) or (h & (h - 1)):
-                print('SKIP (not power of two)', f, im.size)
+            # power-of-two originals at an integer scale: 2^k (1x, 2x) or 3 * 2^k (3x); NPOT sizes need ES3 / OES_texture_npot,
+            # which every device with ETC2 has. ETC2 needs level 0 in whole 4x4 blocks (the engine checks that).
+            if not (pot_or_3pot(w) and pot_or_3pot(h)) or (gpu == 'etc2' and (w % 4 or h % 4)):
+                print('SKIP (not 2^k or 3*2^k)', f, im.size)
                 continue
             dst = os.path.join(texdir, os.path.splitext(f)[0] + '.tga')
             if gpu == 'etc2':
