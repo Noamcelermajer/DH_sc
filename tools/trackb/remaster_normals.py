@@ -1,37 +1,43 @@
 #!/usr/bin/env python3
-"""Normal maps for the remaster with Ubisoft La Forge's CHORD (REMASTER.md, "Normal maps").
+"""Normal maps for the remaster with StableNormal (REMASTER.md, "Normal maps").
 
-Run with CHORD's own environment (it has torch + CUDA); CHORD itself is not part of this repository (research-only
-license; code and weights stay in the user's tools folder):
+  <sn>/.venv/Scripts/python.exe tools/trackb/remaster_normals.py generate [--src <hd3x/3d>] [--out <dir>] [--only a,b] [--all]
+  <sn>/.venv/Scripts/python.exe tools/trackb/remaster_normals.py clean    [--out <dir>] [--sigma 12] [--max-slope 0.8]
+  py -3 tools/trackb/remaster_normals.py pack --data <game data copy> [--out <dir>]
 
-  <chord>/.venv/Scripts/python.exe tools/trackb/remaster_normals.py [--chord <dir>] [--src <hd2x/3d>] [--out <dir>]
-                                    [--only name1,name2] [--tile 1024] [--overlap 192] [--all]
+generate: StableNormal (Stable-X, Apache-2.0; code and weights stay in the user's tools folder, Documents/DH2-tools/
+  StableNormal, own venv: torch cu128, diffusers 0.30.3, huggingface_hub 0.25.2, transformers 4.44.2) estimates a
+  normal map for every lit-surface texture of <src> (world atlases, characters, weapons, objects; menus, skies, effects
+  and data maps are skipped unless --all). It works on 1024 inputs, so a texture is cut into overlapping 1024 tiles
+  blended with feathered weights. Raw output: <out>/<name>/normal.png (StableNormal's camera space: +x = image LEFT,
+  +y = image up, measured on a rendered sphere). A texture whose normal.png is newer than its input is skipped.
+  CHORD (Ubisoft La Forge) was tried first and rejected: on hand-painted art its relief is faint and blurred.
 
-For every lit-surface texture of <src> (world atlases, characters, weapons, objects; menus, splash art, skies, effects
-and data maps are skipped unless --all), CHORD estimates base colour (light removed), normal, roughness and metalness.
-CHORD works on 1024x1024 inputs, so a larger texture is cut into overlapping 1024 tiles whose results are blended with
-feathered weights (normals re-normalised), which keeps the 2x detail. Transparent texels get a flat normal.
-Output per texture: <out>/<name>/{normal,basecolor,roughness,metalness}.png (normal: tangent space as CHORD encodes it, 0.5 + n/2); a texture whose normal.png is newer than the
-input is skipped.
+clean: StableNormal reads atlas pieces as whole 3D objects (a tilted background, whole armour plates leaning) and
+  over-tilts some bevels. The large-scale tilt is removed (normal xy minus its Gaussian blur, --sigma pixels at 3x),
+  the slope is capped (--max-slope = tan of the steepest tilt), x is flipped and transparent texels go flat. Result:
+  <out>/<name>/<name>_n.png, a tangent-space detail map in the convention of the remaster shaders (OpenGL: +x = +u,
+  +y = image up, port setting normalgreen=1).
+
+pack: every <name>_n.png goes into <data>/data/hd/3d/textures/<name>_n.tga as ETC2 RGB with a full mip chain (the
+  HD layer the material hook reads, game-app remaster_normal_maps.cpp).
 """
 import argparse
 import os
 import re
+import shutil
 import sys
 import time
 
 import numpy as np
 
 HOME = os.path.expanduser('~')
-CHORD = os.path.join(HOME, 'Documents', 'DH2-tools', 'chord')
-SRC = os.path.join(HOME, 'Documents', 'DH2-remaster', 'hd2x', '3d')
-OUT = os.path.join(HOME, 'Documents', 'DH2-remaster', 'chord')
-# Stable Diffusion 2.1 configs + tokenizer (no weights: CHORD's checkpoint holds them). CHORD's default mirror
-# (RedbeardNZ/stable-diffusion-2-1-base) is gone; a local copy of sd2-community/stable-diffusion-2-1-base's *.json and
-# tokenizer files is used instead.
-SD_CONFIG = os.path.join(HOME, 'Documents', 'DH2-tools', 'sd21-config')
+SN = os.path.join(HOME, 'Documents', 'DH2-tools', 'StableNormal')
+SRC = os.path.join(HOME, 'Documents', 'DH2-remaster', 'hd3x', '3d')
+OUT = os.path.join(HOME, 'Documents', 'DH2-remaster', 'stablenormal')
 LIT = re.compile(r'^(env_|char_|atlas_modular_|atlas_weapons|atlas_skinned_|atlas_dh2_game_objects_\d+$|dh1_atlas_|walls$)', re.I)
-DATA = re.compile(r'(_spec$|_alpha$|lightmap|_specular$)', re.I)
+DATA = re.compile(r'(_spec$|_alpha$|lightmap|lightingmap|lightspec|_specular$)', re.I)
+TILE, OVERLAP = 1024, 192
 
 
 def wanted(name, everything):
@@ -49,90 +55,125 @@ def feather(n, overlap):
     return w
 
 
-def tiles(size, tile, overlap):
+def starts(size, tile):
     if size <= tile:
         return [0]
-    step = tile - overlap
-    starts = list(range(0, size - tile, step)) + [size - tile]
-    return sorted(set(starts))
+    return sorted(set(list(range(0, size - tile, tile - OVERLAP)) + [size - tile]))
+
+
+def generate(a):
+    import posixpath
+    import types
+    from PIL import Image
+    sys.path.insert(0, a.sn)
+    cwd = os.getcwd()
+    os.chdir(a.sn)
+    import hubconf
+    hubconf.os = types.SimpleNamespace(path=posixpath)  # its repo ids are joined with os.path.join: '\' on Windows
+    pred = hubconf.StableNormal()
+    os.chdir(cwd)
+    Image.MAX_IMAGE_PIXELS = None
+    names = sorted(os.path.splitext(f)[0] for f in os.listdir(a.src) if f.lower().endswith('.png'))
+    only = {n.strip() for n in a.only.split(',') if n.strip()}
+    names = [n for n in names if n in only] if only else [n for n in names if wanted(n, a.all)]
+    print('textures:', len(names), flush=True)
+    for name in names:
+        src = os.path.join(a.src, name + '.png')
+        dst = os.path.join(a.out, name, 'normal.png')
+        if os.path.exists(dst) and os.path.getmtime(dst) >= os.path.getmtime(src):
+            continue
+        t0 = time.time()
+        rgba = Image.open(src).convert('RGBA')
+        rgb = rgba.convert('RGB')
+        alpha = np.asarray(rgba)[..., 3]
+        w, h = rgb.size
+        tile = min(TILE, w, h)
+        acc = np.zeros((h, w, 3), np.float32)
+        wsum = np.zeros((h, w), np.float32)
+        for y in starts(h, tile):
+            for x in starts(w, tile):
+                n = pred(rgb.crop((x, y, x + tile, y + tile)), resolution=tile, match_input_resolution=True)
+                n = np.asarray(n).astype(np.float32) / 255.0 * 2 - 1
+                wt = np.outer(feather(tile, OVERLAP if h > tile else 0), feather(tile, OVERLAP if w > tile else 0))
+                acc[y:y + tile, x:x + tile] += n * wt[..., None]
+                wsum[y:y + tile, x:x + tile] += wt
+        n = acc / np.maximum(wsum, 1e-6)[..., None]
+        n[alpha < 5] = (0, 0, 1)
+        n /= np.maximum(np.linalg.norm(n, axis=2, keepdims=True), 1e-6)
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        Image.fromarray(((n * 0.5 + 0.5) * 255 + 0.5).astype(np.uint8)).save(dst)
+        print('%-44s %dx%d %.1fs' % (name, w, h, time.time() - t0), flush=True)
+
+
+def clean(a):
+    import torch
+    from PIL import Image
+    from torchvision.transforms.functional import gaussian_blur
+    Image.MAX_IMAGE_PIXELS = None
+    k = int(a.sigma * 6) | 1
+    for name in sorted(os.listdir(a.out)):
+        src = os.path.join(a.out, name, 'normal.png')
+        dst = os.path.join(a.out, name, name + '_n.png')
+        if not os.path.exists(src):
+            continue
+        n = np.asarray(Image.open(src).convert('RGB')).astype(np.float32) / 255.0 * 2 - 1
+        xy = torch.from_numpy(np.ascontiguousarray(n[..., :2].transpose(2, 0, 1)))[None]
+        if torch.cuda.is_available():
+            xy = xy.cuda()
+        d = (xy - gaussian_blur(xy, [k, k], [a.sigma, a.sigma]))[0].cpu().numpy().transpose(1, 2, 0)
+        z = np.sqrt(np.clip(1 - (d ** 2).sum(2), 0.05, 1))[..., None]
+        s = d / z
+        m = np.linalg.norm(s, axis=2, keepdims=True)
+        s = s * np.minimum(1, a.max_slope / np.maximum(m, 1e-6))
+        s[..., 0] = -s[..., 0]  # StableNormal +x points to the image left; tangent space +x is +u (image right)
+        out = np.dstack([s, np.ones(s.shape[:2], np.float32)])
+        out /= np.linalg.norm(out, axis=2, keepdims=True)
+        texture = os.path.join(a.src, name + '.png')
+        if os.path.exists(texture):
+            out[np.asarray(Image.open(texture).convert('RGBA'))[..., 3] < 5] = (0, 0, 1)
+        Image.fromarray(((out * 0.5 + 0.5) * 255 + 0.5).astype(np.uint8)).save(dst)
+        print('cleaned', name, flush=True)
+
+
+def pack(a):
+    from PIL import Image
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import textures
+    Image.MAX_IMAGE_PIXELS = None
+    texdir = os.path.join(a.data, 'data', 'hd', '3d', 'textures')
+    tmp = os.path.join(a.data, '_etc2_tmp')
+    os.makedirs(texdir, exist_ok=True)
+    os.makedirs(tmp, exist_ok=True)
+    count = 0
+    for name in sorted(os.listdir(a.out)):
+        src = os.path.join(a.out, name, name + '_n.png')
+        if not os.path.exists(src):
+            continue
+        blob, psnr = textures.etc2_container(Image.open(src).convert('RGBA'), tmp)
+        with open(os.path.join(texdir, name + '_n.tga'), 'wb') as fh:
+            fh.write(blob)
+        count += 1
+        print('%-44s PSNR %s' % (name + '_n', psnr), flush=True)
+    shutil.rmtree(tmp, ignore_errors=True)
+    print('packed', count, 'normal maps into', texdir)
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--chord', default=CHORD)
+    ap.add_argument('cmd', choices=['generate', 'clean', 'pack'])
+    ap.add_argument('--sn', default=SN)
     ap.add_argument('--src', default=SRC)
     ap.add_argument('--out', default=OUT)
     ap.add_argument('--only', default='')
-    ap.add_argument('--tile', type=int, default=1024)
-    ap.add_argument('--overlap', type=int, default=192)
     ap.add_argument('--all', action='store_true')
-    ap.add_argument('--sd-config', default=SD_CONFIG)
+    ap.add_argument('--sigma', type=float, default=12.0)
+    ap.add_argument('--max-slope', type=float, default=0.8)
+    ap.add_argument('--data', default='')
     a = ap.parse_args()
-
-    sys.path.insert(0, a.chord)
-    os.chdir(a.chord)  # CHORD reads config/chord.yaml relative to its folder
-    import torch
-    from huggingface_hub import hf_hub_download
-    from omegaconf import OmegaConf
-    from PIL import Image
-    from torchvision.transforms import v2
-    from chord import ChordModel
-    from chord.io import load_torch_file
-
-    Image.MAX_IMAGE_PIXELS = None
-    names = sorted(os.path.splitext(f)[0] for f in os.listdir(a.src) if f.lower().endswith('.png'))
-    only = {n.strip() for n in a.only.split(',') if n.strip()}
-    names = [n for n in names if (n in only) if only] if only else [n for n in names if wanted(n, a.all)]
-    print('textures:', len(names), flush=True)
-
-    device = torch.device('cuda')
-    config = OmegaConf.load('config/chord.yaml')
-    if os.path.isdir(a.sd_config):
-        config.model.stable_diffusion.hf_key = a.sd_config
-    model = ChordModel(config)
-    model.load_state_dict(load_torch_file(hf_hub_download(repo_id='Ubisoft/ubisoft-laforge-chord', filename='chord_v1.safetensors')))
-    model.eval().to(device)
-
-    for i, name in enumerate(names):
-        src = os.path.join(a.src, name + '.png')
-        dst = os.path.join(a.out, name)
-        if os.path.exists(os.path.join(dst, 'normal.png')) and os.path.getmtime(os.path.join(dst, 'normal.png')) >= os.path.getmtime(src):
-            continue
-        t0 = time.time()
-        rgba = np.asarray(Image.open(src).convert('RGBA')).astype(np.float32) / 255.0
-        h, w = rgba.shape[:2]
-        rgb = rgba[..., :3]
-        alpha = rgba[..., 3]
-        acc = {}
-        wsum = np.zeros((h, w), np.float32)
-        tile = min(a.tile, h, w)
-        for y in tiles(h, tile, a.overlap):
-            for x in tiles(w, tile, a.overlap):
-                crop = torch.from_numpy(np.ascontiguousarray(rgb[y:y + tile, x:x + tile])).movedim(2, 0).to(device)
-                inp = v2.Resize(size=(1024, 1024), antialias=True)(crop).unsqueeze(0)
-                with torch.no_grad(), torch.autocast(device_type='cuda'):
-                    out = model(inp)
-                wt = np.outer(feather(tile, a.overlap if h > tile else 0), feather(tile, a.overlap if w > tile else 0))
-                for key, val in out.items():
-                    if val.dim() == 3:  # roughness, metalness: BxHxW
-                        val = val.unsqueeze(1)
-                    val = v2.Resize(size=(tile, tile), antialias=True)(val.float()).squeeze(0).movedim(0, 2).cpu().numpy()
-                    if key not in acc:
-                        acc[key] = np.zeros((h, w, val.shape[2]), np.float32)
-                    acc[key][y:y + tile, x:x + tile] += val * wt[..., None]
-                wsum[y:y + tile, x:x + tile] += wt
-        os.makedirs(dst, exist_ok=True)
-        for key, val in acc.items():
-            val = val / np.maximum(wsum, 1e-6)[..., None]
-            if key == 'normal':
-                n = val * 2.0 - 1.0
-                n[alpha < 0.02] = (0.0, 0.0, 1.0)
-                n /= np.maximum(np.linalg.norm(n, axis=2, keepdims=True), 1e-6)
-                val = n * 0.5 + 0.5
-            img = (np.clip(val, 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)
-            Image.fromarray(img[..., 0] if img.shape[2] == 1 else img[..., :3]).save(os.path.join(dst, key + '.png'))
-        print('[%d/%d] %-40s %dx%d %.1fs' % (i + 1, len(names), name, w, h, time.time() - t0), flush=True)
+    if a.cmd == 'pack' and not a.data:
+        ap.error('pack needs --data')
+    {'generate': generate, 'clean': clean, 'pack': pack}[a.cmd](a)
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
