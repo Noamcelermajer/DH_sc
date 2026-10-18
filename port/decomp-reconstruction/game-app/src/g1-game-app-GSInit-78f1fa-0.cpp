@@ -75,11 +75,14 @@ void GSInit::Dtor(const StateMachine*) {}
 
 // Port addition (remaster). The splash screens (GSInit, GS_InterruptLoading) blit texels (0, 0, 1280, 752) of the 2048-wide
 // splash art and the spinner cells below it. An HD-layer splash (data/hd/, 3x) is larger, so the rects scale by its width / 2048
-// (`hd`, 1 with the original data); without it the screen showed the art's top-left third. On a screen of another shape the art
-// covers it (centre crop, its proportions kept), like the menu splash (UI12 "cover"), instead of stretching.
+// (`hd`, 1 with the original data); without it the screen showed the art's top-left third. The original stretched the art over
+// the screen. Here the art covers the screen with its proportions kept, framed as the menu splash that follows frames it with
+// the tailored layouts (UI12): a wider screen keeps the full width, slightly below centre, a taller one
+// the centre. `destination` receives the screen rect to draw into (the whole viewport).
 glitch::core::rect<std::int32_t> Dh2SplashSource(const glitch::video::ITexture* texture, const glitch::core::rect<std::int32_t>& viewport,
-                                                 int& hd) {
+                                                 int& hd, glitch::core::rect<std::int32_t>& destination) {
     hd = texture != nullptr && texture->m_width > 2048 ? static_cast<int>(texture->m_width / 2048) : 1;
+    destination = viewport;
     int srcW = 1280, srcH = 752;
     const int vw = viewport.LowerRightCorner.X - viewport.UpperLeftCorner.X;
     const int vh = viewport.LowerRightCorner.Y - viewport.UpperLeftCorner.Y;
@@ -90,7 +93,8 @@ glitch::core::rect<std::int32_t> Dh2SplashSource(const glitch::video::ITexture* 
             srcW = 752 * vw / vh;
         }
     }
-    const int srcX = (1280 - srcW) / 2, srcY = (752 - srcH) / 2;
+    // a wide screen: 60 percent of the spare height above, as the menu splash frames it on the phone (measured on 2520x1080)
+    const int srcX = (1280 - srcW) / 2, srcY = (752 - srcH) * 3 / 5;
     return glitch::core::rect<std::int32_t>{srcX * hd, srcY * hd, (srcX + srcW) * hd, (srcY + srcH) * hd};
 }
 
@@ -118,10 +122,10 @@ void GSInit::Draw(const StateMachine*) {
         // The original dereferences the target stack unconditionally; the port keeps a guard for an empty stack.
         if (!driver->m_renderTargets.empty()) {
             const glitch::core::rect<std::int32_t>& viewport = driver->m_renderTargets.back()->viewport();
-            const glitch::core::rect<std::int32_t> screenRect = viewport;
-            // Port: splash source rect for an HD-layer texture and a screen of another shape (Dh2SplashSource above)
+            // Port: splash source and screen rects for an HD-layer texture and a screen of another shape (Dh2SplashSource above)
             int hd = 1;
-            const glitch::core::rect<std::int32_t> splashSource = Dh2SplashSource(m_splashTexture.get(), viewport, hd);
+            glitch::core::rect<std::int32_t> screenRect = viewport;
+            const glitch::core::rect<std::int32_t> splashSource = Dh2SplashSource(m_splashTexture.get(), viewport, hd, screenRect);
             glitch::video::C2DDriver::draw2DImage(driver, m_splashTexture, screenRect, splashSource, nullptr, nullptr,
                                                   false);
             if (unk_08 < 0) {

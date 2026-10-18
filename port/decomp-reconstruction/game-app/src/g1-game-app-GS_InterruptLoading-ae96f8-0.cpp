@@ -22,7 +22,7 @@
 
 // GSInit.cpp (port, remaster): the splash source rect for an HD-layer texture and the screen's shape
 glitch::core::rect<std::int32_t> Dh2SplashSource(const glitch::video::ITexture* texture, const glitch::core::rect<std::int32_t>& viewport,
-                                                 int& hd);
+                                                 int& hd, glitch::core::rect<std::int32_t>& destination);
 #include "dh2/SavegameManager.hpp"
 #include "dh2/StateMachine.hpp"
 #include "dh2/global/ctrl_camera.hpp"  // ApplicationGetInstance(): the Application singleton (Singleton<Application>::s_inst)
@@ -126,9 +126,12 @@ void GS_InterruptLoading::Draw(const StateMachine*) {
     if (driver != nullptr) {
         driver->beginScene2D();
         viewport = driver->m_renderTargets.back()->viewport();
-        // Port: {0, 0, 0x500, 0x2F0} scaled for an HD-layer splash and cropped to the screen's shape (GSInit.cpp)
-        const glitch::core::rect<std::int32_t> splashSource = Dh2SplashSource(m_loadBackground.get(), viewport, hd);
-        glitch::video::C2DDriver::draw2DImage(driver, m_loadBackground, viewport, splashSource, nullptr, nullptr, false);
+        // Port: {0, 0, 0x500, 0x2F0} scaled for an HD-layer splash and fitted to the screen's shape (GSInit.cpp); the screen is
+        // cleared first, as the art may not cover it all (the original only cleared the first two frames)
+        driver->clearBuffers(1);
+        glitch::core::rect<std::int32_t> destination = viewport;
+        const glitch::core::rect<std::int32_t> splashSource = Dh2SplashSource(m_loadBackground.get(), viewport, hd, destination);
+        glitch::video::C2DDriver::draw2DImage(driver, m_loadBackground, destination, splashSource, nullptr, nullptr, false);
     }
 
     accumulatedTime += ApplicationGetInstance().GetDt();

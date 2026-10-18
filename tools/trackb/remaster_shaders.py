@@ -164,11 +164,13 @@ DIFF_FS_LIGHTING = '''
 	mediump vec3 dhNs = dhNp * length(vNmWorldNormal);
 	if (PixelLighting > 0.0)
 	{
-		mediump vec3 dhLight = Light0Ambientcolor.xyz + Light0Diffusecolor.xyz * (max(dot(dhNs, dhL), 0.0) * dhAtt);
 		// the original light near the player exceeds 2; per vertex it was spread over large triangles, per pixel it peaks right
-		// under the player and bright textures (ice) clip to flat colour: above 1 it rolls off smoothly (asymptote 1.8)
-		mediump vec3 dhOver = max(dhLight - 1.0, 0.0);
-		dhLight = min(dhLight, vec3(1.0)) + dhOver / (1.0 + dhOver * 1.25);
+		// under the player and bright textures (ice) clip to flat colour. Only the direct (diffuse) term rolls off, above 0.6
+		// (asymptote 1.2): the ambient term (full white in many levels) and the light away from the peak are unchanged.
+		mediump float dhDirect = max(dot(dhNs, dhL), 0.0) * dhAtt;
+		mediump float dhOver = max(dhDirect - 0.6, 0.0);
+		dhDirect = min(dhDirect, 0.6) + dhOver / (1.0 + dhOver * 1.67);
+		mediump vec3 dhLight = Light0Ambientcolor.xyz + Light0Diffusecolor.xyz * dhDirect;
 		color = vec4(dhLight * vNmVertexColor.xyz, 1.0) * Diffuse;
 	}
 ''' + RELIEF + '''	// DH2 remaster: dynamic lights

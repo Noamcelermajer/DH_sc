@@ -104,10 +104,13 @@ void main() {
         vec3 q = viewPos(uv);
         vec3 d = q - p;
         float dist = length(d);
-        float facing = max(dot(n, d / max(dist, 1e-4)) - 0.1, 0.0);
+        // only real corners occlude: a neighbour more than ~25 degrees above the surface plane. The normal comes from depth
+        // derivatives and is flat per triangle, so the gentle folds between the triangles of a low-poly floor must not count
+        // (with a small bias they drew grey lines along every fold)
+        float facing = max(dot(n, d / max(dist, 1e-4)) - 0.42, 0.0);
         occ += facing * (1.0 - smoothstep(uRadius * 0.6, uRadius * 1.6, dist));
     }
-    float ao = clamp(1.0 - occ / 12.0 * 2.0, 0.0, 1.0);
+    float ao = clamp(1.0 - occ / 12.0 * 3.4, 0.0, 1.0);
     gl_FragColor = vec4(ao, ao, ao, 1.0);
 }
 )";
