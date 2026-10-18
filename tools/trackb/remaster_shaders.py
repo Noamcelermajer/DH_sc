@@ -222,6 +222,16 @@ def patch_vs(src):
 COVERAGE_NOTE = '// DH2 remaster: alpha to coverage - the cut becomes a one-pixel ramp that MSAA turns into partial coverage'
 
 
+SOFT_CLIP = '''	// DH2 remaster: highlights roll off above 0.8 instead of clipping, so a bright texture under the player's light keeps its
+	// detail (the ice floors went flat); colours below 0.8, most of every level, are unchanged
+	if (PixelLighting > 0.0)
+	{
+		mediump vec3 dhHi = max(color.xyz - 0.8, 0.0);
+		color.xyz = min(color.xyz, vec3(0.8)) + dhHi / (1.0 + dhHi * 5.0);
+	}
+'''
+
+
 def patch_fs(src):
     src = FS_HEAD + src
     src = insert_after(src, 'varying mediump vec4 vTexCoord0;', DIFF_FS_DECLS, 'fs declarations')
@@ -245,6 +255,7 @@ def patch_fs(src):
 	{
 		specularColor *= vAttNdotHV;
 	}''', 'fs specular')
+    src = insert_before(src, '\tgl_FragColor = clamp(color, 0.0, 1.0);', SOFT_CLIP, 'fs soft clip')
     src = replace_once(src, '\tcolor.xyz = mix(color.xyz, fogcolor.xyz, vFogFactor);', '''	mediump float dhFog = vFogFactor;
 	if (FogCurve > 0.0)
 	{
@@ -312,7 +323,9 @@ PC_FS_LIGHTING = '''
 	if (PixelLighting > 0.0)
 	{
 		// the original's vertex shader uses the world normal without normalising it: its length is kept in N.L
-		mediump float nDotVP = max(dot(dhNp, dhL), 0.0) * length(vNmWorldNormal);
+		// wrapped diffuse: the player's light sits just above the characters, so with plain N.L only their tops caught it and they
+		// stayed dark next to the lit floor; wrapping lets it reach their sides
+		mediump float nDotVP = max((dot(dhNp, dhL) + 0.6) / 1.6, 0.0) * length(vNmWorldNormal);
 		mediump float nDotHV = max(dot(dhNp, normalize(dhL + dhV)), 0.0);
 		mediump float pf = nDotVP > 0.0 ? pow(nDotHV, max(shininess, 0.0001)) : 0.0;
 		highp vec4 lit = emissioncolor + (SceneAmbientLight + Light0Ambientcolor * dhAtt) * ambientcolor

@@ -147,7 +147,7 @@ void main() {
     vec3 c = (texture2D(uScene, vUv + uTexel * vec2(-0.5, -0.5)).rgb + texture2D(uScene, vUv + uTexel * vec2(0.5, -0.5)).rgb +
               texture2D(uScene, vUv + uTexel * vec2(-0.5, 0.5)).rgb + texture2D(uScene, vUv + uTexel * vec2(0.5, 0.5)).rgb) * 0.25;
     float l = max(c.r, max(c.g, c.b));
-    float k = clamp((l - 0.9) / 0.1, 0.0, 1.0);
+    float k = clamp((l - 0.96) / 0.04, 0.0, 1.0);
     gl_FragColor = vec4(c * k * k, 1.0);
 }
 )";
