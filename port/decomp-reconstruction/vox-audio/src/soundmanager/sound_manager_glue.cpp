@@ -15,7 +15,6 @@
 #include "dh2/RenderFX.hpp"
 #include "dh2/Singleton.hpp"
 #include "dh2/global/charai_ai.hpp"
-#include "dh2/global/sound_flags.hpp"
 #include "pydata-accessors/w7_pydata12.hpp"
 #include "vendor-gameswf/as_value.hpp"
 #include "vendor-gameswf/gameswf_root.hpp"
@@ -71,10 +70,10 @@ void VoxSoundManager::StopBeat() {
 }
 
 // 0x36bc58 _ZN15VoxSoundManager8PlayBeatEibb
-// Nothing happens while sounds are disabled (the IsDisablingSounds switch) or before the level allows sound (byte_99F7E0). A sound of
+// Nothing happens while sounds are disabled (the IsDisablingSounds switch) or while the sound-allowed byte (Application +0xb4, Hex-Rays byte_99F7E0) is clear. A sound of
 // -1 stops the beat when stop_if_none is set; any other sound that is not already the beat replaces it (type 2, no force).
 void VoxSoundManager::PlayBeat(int sound, bool loop, bool stop_if_none) {
-    if (!ReadDebugSwitch("IsDisablingSounds") && byte_99F7E0) {
+    if (!ReadDebugSwitch("IsDisablingSounds") && Singleton<Application>::s_inst.unk_b4) {
         if (sound == -1) {
             if (stop_if_none) {
                 StopBeat();

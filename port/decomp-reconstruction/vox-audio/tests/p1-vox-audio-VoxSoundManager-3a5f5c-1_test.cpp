@@ -18,7 +18,6 @@
 #include "dh2/DebugSwitches.hpp"
 #include "dh2/MenuBase.hpp"
 #include "dh2/global/net_singletons.hpp"
-#include "dh2/global/sound_flags.hpp"
 #include "pydata-accessors/structs_records.hpp"
 #include "pydata-accessors/w7_arrays_00.hpp"
 #include "vox-audio/vox/engine_handles.hpp"
@@ -36,10 +35,6 @@ float sfx_vfx_volume = 0.0f;
 // gAssertLevel is core-platform's (core-platform/src/memory.cpp, value 0) and comes from the link.
 std::uint8_t* Arrays::Sounds::members = nullptr;
 bool MenuBase::s_igmOpened = false;
-// byte_99F7E0 (dh2/global/sound_flags.hpp): Level::_LoadProcess sets it while a level loads; PlayMusic and
-// PlayBeat return while it is clear. soundmanager/sound_flags.cpp is not linked into this test, so the
-// definition and its default (set, as after a level load) are here.
-unsigned char byte_99F7E0 = 1;
 
 namespace {
 
@@ -162,7 +157,7 @@ void ResetState() {
     Save_Current_Music_ID = -1;
     music_volume = 0.0f;
     sfx_vfx_volume = 0.0f;
-    byte_99F7E0 = 1;
+    Singleton<Application>::s_inst.unk_b4 = true;
     g_onlineGame = false;
     MenuBase::s_igmOpened = false;
     g_emitterHandles = 0;
@@ -512,20 +507,20 @@ void TestOnlineGate() {
 }
 
 void TestSoundAllowedGate() {
-    // byte_99F7E0 (0x36be2c): PlayMusic does nothing while the level load has not allowed sound yet.
+    // Application +0xb4 (0x36be2c, Hex-Rays byte_99F7E0): PlayMusic does nothing while the sound-allowed byte is clear.
     ResetState();
     JAVA_SOUNDS = true;
     music_volume = 0.75f;
     VoxSoundManager m;
     m.music_id_ = -1;
 
-    byte_99F7E0 = 0;
+    Singleton<Application>::s_inst.unk_b4 = false;
     m.PlayMusic(7, true, false, 2000);
     CHECK(m.music_id_ == -1);
     CHECK(Save_Current_Music_ID == -1);
     CHECK(CountCalls("nativePlaySoundBig") == 0);
 
-    byte_99F7E0 = 1;
+    Singleton<Application>::s_inst.unk_b4 = true;
     m.PlayMusic(7, true, false, 2000);
     CHECK(m.music_id_ == 7);
     CHECK(HasCall("nativePlaySoundBig", {7, 0.75, 1, 1}));

@@ -173,7 +173,7 @@ public:
     bool unk_ad;                                       // +0xad 0
     uint8_t pad_ae[2];
     GoToMainMenuEvent m_goToMainMenuEvent;             // +0xb0 written by GoToMainMenu
-    bool unk_b4;                                       // +0xb4 1
+    bool unk_b4;                                       // +0xb4 1; sound-allowed byte: VoxSoundManager::PlayMusic and PlayBeat test it (Hex-Rays byte_99F7E0), Level::_LoadProcess sets it
     uint8_t pad_b5[3];
     UnderlaySceneNode* m_underlayNode;                 // +0xb8 dropped in Quit
     std::string m_uncompiledData;                      // +0xbc non-empty when running from uncompiled data; IsUsingUncompiledData (0x320678) compares the finish/start words at +0xcc/+0xd0 of this STLport string, equal when it is empty
