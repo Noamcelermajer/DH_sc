@@ -141,7 +141,24 @@ public class DataSetup extends Activity {
         if (new File(files, ".dh2_extracting").exists()) {
             return false;
         }
-        return new File(files, "d_o_w_n_l_o_a_d_e_d.txt").exists() && new File(files, "data").isDirectory();
+        if (!new File(files, "d_o_w_n_l_o_a_d_e_d.txt").exists() || !new File(files, "data").isDirectory()) {
+            return false;
+        }
+        // Port: a bundled data set with a stamp (build_release.py --sound-overlay) unpacks again once over older data, so an
+        // update brings the added files (the user-state files are skipped by the unpacker and never deleted)
+        String stamp = readManifest().get("stamp");
+        return stamp == null || stamp.equals(readText(new File(files, ".dh2_stamp")));
+    }
+
+    private static String readText(File f) {
+        try {
+            BufferedReader r = new BufferedReader(new InputStreamReader(new java.io.FileInputStream(f), "UTF-8"));
+            String l = r.readLine();
+            r.close();
+            return l;
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     private void proceed() {
@@ -519,6 +536,11 @@ public class DataSetup extends Activity {
         }
         if (!new File(dest, "d_o_w_n_l_o_a_d_e_d.txt").exists() || !new File(dest, "data").isDirectory()) {
             throw new java.io.IOException("verification failed: data marker missing");
+        }
+        if (archive == null && man.containsKey("stamp")) {
+            OutputStream so = new FileOutputStream(new File(dest, ".dh2_stamp"));
+            so.write(man.get("stamp").getBytes("UTF-8"));
+            so.close();
         }
         flag.delete();
     }

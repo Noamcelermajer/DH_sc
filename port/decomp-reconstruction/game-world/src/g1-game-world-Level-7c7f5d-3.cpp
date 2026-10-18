@@ -69,7 +69,6 @@ namespace dh2host { void recordMissing(const char* kind, const char* name, void*
 #include "dh2/Singleton.hpp"
 #include "dh2/global/Vec3f_Origin.hpp"
 #include "dh2/global/DeviceSceneManager.hpp"
-#include "dh2/global/sound_flags.hpp"
 #include "dh2/global/debug_trace.hpp"
 #include "dh2/global/Globals.hpp"
 #include "core-platform/debug_out.hpp"
@@ -252,7 +251,7 @@ void Level::_LoadProcess() {
             ApplicationGetInstance().CleanGlitch();
             ShowMemoryStats("Before Level Loading");
             VoxSoundManager::s_instance->StopAllSounds(500);
-            byte_99F7E0 = 1;
+            ApplicationGetInstance().unk_b4 = true;  // Application +0xb4 (STRB [s_inst, #0xb4]; Hex-Rays byte_99F7E0)
             m_loadWorkDone = 0;
             m_loadWorkTotal = 0;
             m_loadFileCount = 0;
