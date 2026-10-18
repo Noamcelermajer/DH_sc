@@ -42,11 +42,10 @@ FS_HEAD = '''#ifdef GL_ES
 #endif
 '''
 
-# The tangent frame from derivatives and the mapped normal dhNp; dhN is the geometric world normal. Needs vNmWorldPos and the
-# texture coordinates `UV`.
-NORMAL_MAP = '''		mediump vec3 nm = texture2D(NormalSampler, UV).xyz * 2.0 - 1.0;
-		nm.y *= (NormalGreen < 0.0) ? -1.0 : 1.0;
-		highp vec3 dp1 = dFdx(vNmWorldPos);
+# The mapped normal dhNp; dhN is the geometric world normal. The tangent axes T, B come from the mesh's vertex tangents when it
+# has them (world shader: vNmTangent / vNmBinormal, game-app remaster_tangents.cpp) and otherwise from screen-space derivatives
+# (needs vNmWorldPos and the texture coordinates `UV`), which change from triangle to triangle where a mapping is stretched.
+DERIVATIVE_FRAME = '''		highp vec3 dp1 = dFdx(vNmWorldPos);
 		highp vec3 dp2 = dFdy(vNmWorldPos);
 		highp vec2 duv1 = dFdx(UV);
 		highp vec2 duv2 = dFdy(UV);
@@ -54,7 +53,11 @@ NORMAL_MAP = '''		mediump vec3 nm = texture2D(NormalSampler, UV).xyz * 2.0 - 1.0
 		highp vec3 dp1perp = cross(dhN, dp1);
 		highp vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
 		highp vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
-		// unit axes in the surface plane: each triangle's frame then differs from its neighbour's only by a small rotation.
+'''
+
+NORMAL_MAP = '''		mediump vec3 nm = texture2D(NormalSampler, UV).xyz * 2.0 - 1.0;
+		nm.y *= (NormalGreen < 0.0) ? -1.0 : 1.0;
+%FRAME%		// unit axes in the surface plane: each triangle's frame then differs from its neighbour's only by a small rotation.
 		// (Scaling both by the longer axis, the usual cotangent frame, changed the bump strength from triangle to triangle
 		// where the floor's mapping is stretched unevenly: visible lines along the triangle edges.)
 		T = T - dhN * dot(dhN, T);
@@ -62,6 +65,13 @@ NORMAL_MAP = '''		mediump vec3 nm = texture2D(NormalSampler, UV).xyz * 2.0 - 1.0
 		T *= inversesqrt(max(dot(T, T), 1e-12));
 		B *= inversesqrt(max(dot(B, B), 1e-12));
 		dhNp = normalize(T * nm.x + B * nm.y + dhN * nm.z);
+'''
+
+VERTEX_FRAME = '''		highp vec3 T = vNmTangent.xyz;
+		highp vec3 B = vNmBinormal;
+		if (vNmTangent.w < 1.5)  // no remaster tangents on this mesh (w = 2 marks them)
+		{
+''' + DERIVATIVE_FRAME.replace('highp vec3 T =', 'T =').replace('highp vec3 B =', 'B =') + '''		}
 '''
 
 RELIEF = '''	if (NormalStrength > 0.0)
@@ -83,6 +93,10 @@ varying mediump vec3 vNmWorldNormal;
 varying mediump vec3 vNmLightVec;
 varying mediump vec3 vNmEyeVec;
 varying lowp vec4 vNmVertexColor;
+attribute vec4 Tangent;
+attribute vec3 Binormal;
+varying mediump vec4 vNmTangent;
+varying mediump vec3 vNmBinormal;
 #ifdef FG
 varying mediump float vNmFogDepth;
 #endif
@@ -95,6 +109,8 @@ varying mediump vec3 vNmWorldNormal;
 varying mediump vec3 vNmLightVec;
 varying mediump vec3 vNmEyeVec;
 varying lowp vec4 vNmVertexColor;
+varying mediump vec4 vNmTangent;
+varying mediump vec3 vNmBinormal;
 uniform lowp sampler2D NormalSampler;
 uniform mediump float NormalStrength;
 uniform mediump float NormalGreen;
@@ -120,7 +136,7 @@ DIFF_FS_LIGHTING = '''
 	mediump vec3 dhNp = dhN;
 	if (NormalStrength > 0.0)
 	{
-''' + NORMAL_MAP.replace('UV', 'vTexCoord0.xy') + '''	}
+''' + NORMAL_MAP.replace('%FRAME%', VERTEX_FRAME).replace('UV', 'vTexCoord0.xy') + '''	}
 	highp float dhDist = length(vNmLightVec);
 	mediump vec3 dhL = vNmLightVec / max(dhDist, 1e-4);
 	mediump float dhAtt = 1.0 / (Light0Attenuation.x + Light0Attenuation.y * dhDist + Light0Attenuation.z * dhDist * dhDist);
@@ -129,7 +145,11 @@ DIFF_FS_LIGHTING = '''
 	if (PixelLighting > 0.0)
 	{
 		mediump vec3 dhLight = Light0Ambientcolor.xyz + Light0Diffusecolor.xyz * (max(dot(dhNs, dhL), 0.0) * dhAtt);
-		color = vec4(dhLight * vNmVertexColor.xyz, 1.0) * Diffuse;  // not clamped: the original light near the player exceeds 2
+		// the original light near the player exceeds 2; per vertex it was spread over large triangles, per pixel it peaks right
+		// under the player and bright textures (ice) clip to flat colour: above 1 it rolls off smoothly (asymptote 1.8)
+		mediump vec3 dhOver = max(dhLight - 1.0, 0.0);
+		dhLight = min(dhLight, vec3(1.0)) + dhOver / (1.0 + dhOver * 1.25);
+		color = vec4(dhLight * vNmVertexColor.xyz, 1.0) * Diffuse;
 	}
 ''' + RELIEF
 
@@ -160,6 +180,7 @@ def patch_vs(src):
     src = insert_after(src, 'varying mediump vec4 vTexCoord0;', DIFF_VS_DECLS, 'vs declarations')
     src = insert_after(src, 'highp vec3 worldSpacePos = (matWorld * Vertex).xyz;',
                        '\n\tvNmWorldPos = worldSpacePos;\n\tvNmWorldNormal = transformedNormal;'
+                       '\n\tvNmTangent = vec4((matWorld * vec4(Tangent.xyz, 0.0)).xyz, Tangent.w);\n\tvNmBinormal = (matWorld * vec4(Binormal, 0.0)).xyz;'
                        '\n\tvNmEyeVec = (matWorld * vec4(EyePos, 1.0)).xyz - worldSpacePos;', 'vs position')
     src = insert_before(src, '// Light Attenuation', 'vNmLightVec = Light0Vec;\n    ', 'vs light vector')
     # SP variants: the specular eye vector exactly as the original computes it (its eye position from matViewIT)
@@ -255,7 +276,7 @@ PC_FS_LIGHTING = '''
 	mediump vec3 dhNp = dhN;
 	if (NormalStrength > 0.0)
 	{
-''' + NORMAL_MAP.replace('UV', 'vTexCoord0') + '''	}
+''' + NORMAL_MAP.replace('%FRAME%', DERIVATIVE_FRAME).replace('UV', 'vTexCoord0') + '''	}
 	highp float dhDist = length(vNmLightVec);
 	mediump vec3 dhL = vNmLightVec / max(dhDist, 1e-4);
 	mediump vec3 dhV = normalize(vNmEyeVec);

@@ -21,6 +21,7 @@
 #include "glitch-scene-collada-gui/collada/CRootSceneNode.hpp"
 #include "glitch-scene-collada-gui/collada/CSceneNodeAnimator.hpp"
 #include "glitch-scene-collada-gui/collada/CSkinnedMesh.hpp"
+#include "glitch-scene-collada-gui/scene/CMeshBuffer.hpp"
 #include "glitch-scene-collada-gui/collada/IParticleSystemSceneNode.hpp"
 #include "glitch-core-io/io/interfaces.hpp"
 #include "glitch-core-io/os/device.hpp"
@@ -250,6 +251,10 @@ IMesh* CColladaDatabase::constructGeometry(video::IVideoDriver* driver, const ch
 // 0x61aeb8 _ZNK6glitch7collada16CColladaDatabase17constructGeometryEPNS_5video12IVideoDriverEPNS0_17SInstanceGeometryEPNS0_14CRootSceneNodeE
 // The geometry of the instance: from its own file when the record names one, else from this file by the URL. Then, as for a controller,
 // the material of each binding comes from the root and the factory builds its vertex-attribute map.
+// Port addition (remaster): called for each material binding of a static geometry instance before its vertex-attribute map is
+// built, so the game can extend the mesh buffer's streams (vertex tangents for normal maps, game-app remaster_normal_maps.cpp).
+void (*g_dh2GeometryBindingHook)(video::IVideoDriver* driver, scene::CMeshBuffer* buffer, video::CMaterial* material) = nullptr;
+
 IMesh* CColladaDatabase::constructGeometry(video::IVideoDriver* driver, SInstanceGeometry* instance, CRootSceneNode* root) const {
     IMesh* mesh = instance->file != nullptr ? constructGeometry(driver, instance->file, instance->url + 1)
                                             : constructGeometry(driver, instance->url + 1);
@@ -259,6 +264,10 @@ IMesh* CColladaDatabase::constructGeometry(video::IVideoDriver* driver, SInstanc
     boost::intrusive_ptr<IMesh> handle(mesh, true);  // the builder's own reference stays with the result
     for (std::int32_t i = 0; i < instance->bindingCount; ++i) {
         boost::intrusive_ptr<video::CMaterial> material = root->getMaterial(bindingMaterial(*this, instance->bindings[i]), driver);
+        if (g_dh2GeometryBindingHook != nullptr && material) {
+            boost::intrusive_ptr<scene::CMeshBuffer> buffer = handle->getMeshBuffer(static_cast<std::uint32_t>(i));
+            if (buffer) g_dh2GeometryBindingHook(driver, buffer.get(), material.get());  // port addition (remaster)
+        }
         boost::intrusive_ptr<video::CMaterialVertexAttributeMap> attributeMap = factory->createMaterialVertexAttributeMap(
             *this, &instance->bindings[i], handle, material, static_cast<unsigned int>(i), false);
         mesh->setMaterial(static_cast<std::uint32_t>(i), material, attributeMap);

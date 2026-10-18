@@ -144,7 +144,7 @@ void main() {
     vec3 c = (texture2D(uScene, vUv + uTexel * vec2(-0.5, -0.5)).rgb + texture2D(uScene, vUv + uTexel * vec2(0.5, -0.5)).rgb +
               texture2D(uScene, vUv + uTexel * vec2(-0.5, 0.5)).rgb + texture2D(uScene, vUv + uTexel * vec2(0.5, 0.5)).rgb) * 0.25;
     float l = max(c.r, max(c.g, c.b));
-    float k = clamp((l - 0.78) / 0.2, 0.0, 1.0);
+    float k = clamp((l - 0.9) / 0.1, 0.0, 1.0);
     gl_FragColor = vec4(c * k * k, 1.0);
 }
 )";
@@ -175,7 +175,7 @@ void main() {
     float ao = texture2D(uAo, vUv).r;
     if (uDebug > 0.5) { gl_FragColor = vec4(vec3(ao), 1.0); return; }
     c *= mix(1.0, ao, uAmount.x * 0.75);
-    c += texture2D(uBloom, vUv).rgb * 0.3 * uAmount.y;
+    c += texture2D(uBloom, vUv).rgb * 0.18 * uAmount.y;
     // the input is the game's display-range image, so no HDR curve: a mild contrast S-curve around mid-grey (keeps the average
     // brightness), a light saturation lift and a soft vignette
     c = clamp(c, 0.0, 1.0);
