@@ -3,11 +3,18 @@
 #include <chrono>
 #include <thread>
 
+#if defined(__ANDROID__)
+#include <android/log.h>
+#endif
+
 #include "vox-audio/vox/driver_android.hpp"
 
 namespace vox {
 
 namespace {
+
+// Smallest AudioTrack buffer, in frames: four 1024-frame mixer chunks (see _InitAT).
+constexpr int kMinTrackFrames = 4 * 1024;
 
 // Same stand-in as driver_android.cpp for _GetTime: a steady clock, differences only.
 double DriverAndroidNowSeconds() {
@@ -177,7 +184,21 @@ int DriverAndroid::_InitAT(void* context) {
         mRelease = env->GetMethodID(cAudioTrack, "release", "()V");
         mWrite = env->GetMethodID(cAudioTrack, "write", "([BII)I");
     }
-    int frames = env->CallStaticIntMethod(cAudioTrack, mGetMinBufferSize, 44100, 12, 2) / 4;
+    const int min_frames = env->CallStaticIntMethod(cAudioTrack, mGetMinBufferSize, 44100, 12, 2) / 4;
+    int frames = min_frames;
+    // Port: the track holds at least four 1024-frame mixer chunks (93 ms). The original takes the device minimum
+    // as it is; on its 2011 devices that minimum was 2048-8192 frames (two to eight chunks), so the audio thread
+    // had a chunk or more of slack before AudioFlinger ran dry. Current devices answer two HAL periods (1764-3528
+    // frames at 44.1 kHz): once the thread is in its steady state (blocking writes keep the track full) it must
+    // refill within one period of a pull, and every late cycle is a silent period (the "flicker" of continuous
+    // sounds). The chunk, the pacing and the threshold still derive from frames_ as in the original.
+    if (frames < kMinTrackFrames) {
+        frames = kMinTrackFrames;
+    }
+#if defined(__ANDROID__)
+    __android_log_print(ANDROID_LOG_INFO, "vox", "AudioTrack 44100 Hz stereo: minBufferSize %d frames, track %d frames, chunk %d",
+                        min_frames, frames, frames < 1024 ? frames : 1024);
+#endif
     chunk_ = 1024;
     frames_ = frames;
     if (frames < 1024) {
