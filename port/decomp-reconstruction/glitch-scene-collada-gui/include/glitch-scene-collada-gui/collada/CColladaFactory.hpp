@@ -43,6 +43,10 @@ class CGlitchNewParticleSystemSceneNode;
 struct SEffectList;
 struct SInstanceMaterial;
 
+// Port addition (remaster, not in the binary): called with every material CColladaFactory::createMaterial builds, after
+// it is built. The game layer installs it (game-app remaster_normal_maps.cpp) to attach normal maps; null = nothing.
+extern void (*g_dh2MaterialCreatedHook)(video::IVideoDriver* driver, video::CMaterial* material);
+
 class CColladaFactory {
 public:
     CColladaFactory() = default;

@@ -119,6 +119,8 @@ video::CMaterialRenderer* CColladaFactory::createMaterialRenderer(const CCollada
     return result.detach();
 }
 
+void (*g_dh2MaterialCreatedHook)(video::IVideoDriver* driver, video::CMaterial* material) = nullptr;
+
 // 0x6323d0 _ZN6glitch7collada15CColladaFactory14createMaterialERKNS0_16CColladaDatabaseEPNS_5video12IVideoDriverEPNS0_9SMaterialEPNS0_14CRootSceneNodeE
 // With a root, the material the root already built for the record's name is returned (CRootSceneNode::hasMaterial). Otherwise the renderer is
 // created through slot 0x1c (the record's effect, its effect name - the URL without its '#' - and file name) and, when there is one, the
@@ -136,6 +138,9 @@ video::CMaterial* CColladaFactory::createMaterial(const CColladaDatabase& db, vi
         createMaterialRenderer(db, driver, material->effect, material->effectUrl + 1, material->fileName, root), false);
     if (renderer) {
         result = collada::createMaterial(db, driver, renderer, *material, root);
+        if (result && g_dh2MaterialCreatedHook != nullptr) {
+            g_dh2MaterialCreatedHook(driver, result.get());  // port addition (remaster)
+        }
     }
     return result.detach();
 }

@@ -5,6 +5,9 @@
 // PostInit and InitWin32 are PARTIAL: each note names the part of the original that is not written and why.
 #include "dh2/Application.hpp"
 
+namespace glitch::io { class IFileSystem; }
+void Dh2InstallRemaster(glitch::io::IFileSystem* fileSystem);  // game-app/src/remaster_normal_maps.cpp
+
 #include "dh2/EventManager.hpp"
 #include "dh2/GamepadTweaker.hpp"
 #include "dh2/PlayerLightTweaker.hpp"
@@ -96,6 +99,7 @@ void Application::InitWin32(glitch::IDevice* device) {
     Init(device);
     PostInit();
 
+    Dh2InstallRemaster(device->fileSystem);  // port addition (remaster): its shader zip goes before shaders.pak
     device->fileSystem->addZipFileArchive("shaders.pak", true, false);  // IDevice +0x34, vtable +0x18
 
     char fontFile[256];

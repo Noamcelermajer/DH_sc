@@ -1,6 +1,8 @@
 // CGLSLShader::linkProgram (0x6de9f8). Owner K1b. Hex-Rays cuts this function after the failure path, so the body is transcribed
 // from the ARM listing: it links the GL program, reports a failed link, and on success reads the active vertex attributes and
 // uniforms into the shader's definition lists.
+#include <cstdio>
+#include <cstdlib>
 #include <cstdint>
 #include <cstring>
 #include <new>
@@ -120,6 +122,9 @@ bool CGLSLShader::linkProgram() {
         uint32_t type = 0;
         if (t.getActiveAttrib) t.getActiveAttrib(m_glProgram, static_cast<uint32_t>(i), attributeNameLength, nullptr, &size, &type, name);
         const int32_t attribute = guessShaderVertexAttribute(name);
+#ifdef DH2_HOST_RUNNER
+        if (std::getenv("DH2_SHADER_LOG") != nullptr) std::fprintf(stdout, "SHADERLOG %s attr %s -> %d\n", m_name.c_str(), name, attribute);
+#endif
         if (attribute <= 0x1d) {
             const uint16_t location = static_cast<uint16_t>(t.getAttribLocation ? t.getAttribLocation(m_glProgram, name) : 0);
             glitch::core::detail::SSharedStringData* data =
@@ -152,6 +157,9 @@ bool CGLSLShader::linkProgram() {
         uint32_t parameterType = static_cast<uint32_t>(guessShaderParameterType(name));
         if (parameterType == 0xff) parameterType = (valueType - 0xc) <= 3u ? 2u : 0u;  // samplers are type 2
         const int32_t location = t.getUniformLocation ? t.getUniformLocation(m_glProgram, name) : 0;
+#ifdef DH2_HOST_RUNNER
+        if (std::getenv("DH2_SHADER_LOG") != nullptr) std::fprintf(stdout, "SHADERLOG %s uniform %s type %u\n", m_name.c_str(), name, parameterType);
+#endif
         const uint8_t subId = static_cast<uint8_t>(guessSubIdFromName(name, static_cast<E_SHADER_PARAMETER_TYPE>(parameterType)));
         glitch::core::detail::SSharedStringData* data =
             glitch::core::detail::getSharedString(glitch::core::detail::sharedStringHeapTable(), name, false);
