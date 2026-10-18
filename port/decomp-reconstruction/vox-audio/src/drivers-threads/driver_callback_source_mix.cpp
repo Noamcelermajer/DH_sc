@@ -110,12 +110,19 @@ int DriverCallbackSourceInterface::FreeDisposableData(int requested, int& first,
     const std::int32_t block = buffer_bytes_;
     std::int32_t count = buffer_count_;
     const std::int32_t start_write = write_index_;
-    const std::int64_t period_scaled =
-        static_cast<std::int64_t>(s_driverSampleRate_) +
-        static_cast<std::int64_t>(s_driverCallbackPeriod_) * s_driverSampleRate_;
+    // 32-bit words that wrap, as the ARM computes them (0x890764..0x89079c, two MLA and two ASR #14):
+    // nothing ever calls SetDriverCallbackPeriod, so s_driverCallbackPeriod_ keeps its 0x7fffffff and
+    // rate + 0x7fffffff * rate wraps to 0 (the rate is even), which leaves a look-ahead of 3 blocks
+    // (plus 3 per unit of the pitch scale). A wider product made the span garbage (534540 bytes for
+    // a 32 kHz stream): a music-state switch then freed the playing buffer as well, the upload cursor
+    // fell one slot behind the play cursor, and the stream limped ever after (one refill burst per
+    // ring cycle with empty gaps: the combat-music stutter).
+    const std::int32_t period_scaled = static_cast<std::int32_t>(
+        static_cast<std::uint32_t>(s_driverSampleRate_) +
+        static_cast<std::uint32_t>(s_driverCallbackPeriod_) * static_cast<std::uint32_t>(s_driverSampleRate_));
     const std::int32_t span_scale = static_cast<std::int32_t>(
-        static_cast<std::int64_t>(scale_) +
-        ((period_scaled >> 14) * static_cast<std::int64_t>(scale_)));
+        static_cast<std::uint32_t>(scale_) +
+        static_cast<std::uint32_t>(period_scaled >> 14) * static_cast<std::uint32_t>(scale_));
     const std::int32_t span = 3 * block + (span_scale >> 14) * 3 * block;
 
     std::int32_t stop_index = -1;
