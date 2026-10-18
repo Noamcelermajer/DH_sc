@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """One command: libdh2.so (arm64-v8a Release) -> two signed APKs (and optionally install them).
 
-usage: py -3 tools/trackb/android/build_release.py [--bundle-data CACHE.zip [--out-root DIR --build-dir DIR]] [--skip-native] [--only origdex|source] [--install [--serial S]] [--apk ORIG.apk]
+usage: py -3 tools/trackb/android/build_release.py [--bundle-data CACHE.zip|FILES_DIR [--sound-overlay DIR] [--out-root DIR --build-dir DIR]] [--skip-native] [--only origdex|source] [--install [--serial S]] [--apk ORIG.apk]
 
 Outputs (all under build/own-ab, never tracked):
   build/own-ab/out/dh2-trackb-origdex.apk   original v1.0.2 classes.dex + resources + our libdh2.so (+ DataSetup launcher dex)
@@ -12,7 +12,7 @@ Steps: cmake/ninja dh2 in build/own-ab-arm64 (Release, no DH2_BOOT_DEBUG, abort 
 Prerequisite: your own Dungeon-Hunter-2-HD-v1-0-2.apk (--apk or the default path) for resources; res/ is imported once by
 tools/trackb/java/import_resources.py (this script runs it when port/android-trackb/app/src/main/res is missing).
 """
-import argparse, os, shutil, subprocess, sys, zipfile
+import argparse, hashlib, os, shutil, subprocess, sys, zipfile
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 SDK = os.environ.get("ANDROID_HOME", r"<home>/Documents/Codex/2026-10-09/find/work/tools/android-sdk")
@@ -29,6 +29,52 @@ OUT = os.path.join(OUTROOT, "out")
 BUILD = os.path.join(ROOT, "build", "own-ab-arm64")
 PROJ = os.path.join(ROOT, "port", "android-trackb", "app", "src", "main")
 DEFAULT_APK = r"<home>/Documents/Projects/Dungeon Hunter 2 Recomp/Dungeon-Hunter-2-HD-v1-0-2.apk"
+BUILD_DATA = os.path.join(ROOT, "build_data")   # optional git-ignored folder: android-res/, files/ (the unpacked cache), ios-sounds/
+PREFIX = PKG + "/files/"
+
+
+def is_user_state(n):
+    """top-level files of a developer profile that DataSetup never unpacks (DataSetup.isUserState)."""
+    return n.endswith(".savegame") or n.endswith(".bak") or ".checkpoint" in n or n == "InsTime"
+
+
+def compose_bundle(src, overlay, zout):
+    """the cache zip DataSetup streams, built from a files/ folder or a cache zip plus an overlay folder (same layout as files/,
+    e.g. tools/trackb/sounds/ios_sound_overlay.py output): every entry stored under PKG/files/, overlay files win, user state left out."""
+    entries = {}
+    if os.path.isdir(src):
+        for d, _, fs in os.walk(src):
+            for f in fs:
+                p = os.path.join(d, f)
+                entries[os.path.relpath(p, src).replace(os.sep, "/")] = p
+    else:
+        z = zipfile.ZipFile(src)
+        pre = bundle_manifest(src).splitlines()[0][len("prefix="):]
+        for i in z.infolist():
+            if i.filename.startswith(pre) and not i.is_dir() and len(i.filename) > len(pre):
+                entries[i.filename[len(pre):]] = (z, i)
+    nover = 0
+    if overlay:
+        for d, _, fs in os.walk(overlay):
+            for f in fs:
+                p = os.path.join(d, f)
+                entries[os.path.relpath(p, overlay).replace(os.sep, "/")] = p
+                nover += 1
+    with zipfile.ZipFile(zout, "w", zipfile.ZIP_DEFLATED) as zo:   # deflated entries like the original cache zip (the APK stores the zip itself)
+        for n in sorted(entries):
+            if "/" not in n and is_user_state(n):
+                continue
+            v = entries[n]
+            zi = zipfile.ZipInfo(PREFIX + n, (2011, 1, 1, 0, 0, 0))
+            zi.compress_type = zipfile.ZIP_DEFLATED
+            with zo.open(zi, "w", force_zip64=True) as o:
+                if isinstance(v, tuple):
+                    with v[0].open(v[1]) as i:
+                        shutil.copyfileobj(i, o, 1 << 20)
+                else:
+                    with open(v, "rb") as i:
+                        shutil.copyfileobj(i, o, 1 << 20)
+    print("bundle: %d files (%d from the overlay) -> %s" % (len(entries), nover, zout), flush=True)
 
 
 def bundle_manifest(zpath):
@@ -48,21 +94,22 @@ def bundle_manifest(zpath):
         if not n.startswith(prefix) or i.is_dir() or len(n) == len(prefix):
             continue
         n = n[len(prefix):]
-        if "/" not in n and (n.endswith(".savegame") or n.endswith(".bak") or ".checkpoint" in n or n == "InsTime"):
+        if "/" not in n and is_user_state(n):
             continue
         files += 1
         nbytes += i.file_size
     return "prefix=%s\nfiles=%d\nbytes=%d\n" % (prefix, files, nbytes)
 
 
-def add_bundle(raw_in, raw_out, zpath):
+def add_bundle(raw_in, raw_out, zpath, stamp=None):
     """copy the source APK and add the cache zip as a STORED asset (streamed by DataSetup, never deflated again) + its manifest."""
     with zipfile.ZipFile(raw_in) as zi, zipfile.ZipFile(raw_out, "w", zipfile.ZIP_DEFLATED) as zo:
         for i in zi.infolist():
             if i.filename.startswith("META-INF/"):
                 continue
             zo.writestr(i, zi.read(i.filename), i.compress_type)
-        zo.writestr("assets/dh2data.txt", bundle_manifest(zpath))
+        # stamp: DataSetup unpacks again once on devices whose data predates it (so an update brings the overlay files)
+        zo.writestr("assets/dh2data.txt", bundle_manifest(zpath) + ("stamp=%s\n" % stamp if stamp else ""))
         zo.write(zpath, "assets/dh2data.zip", compress_type=zipfile.ZIP_STORED)
 
 
@@ -112,7 +159,10 @@ def main():
     ap.add_argument("--apk", default=DEFAULT_APK, help="your original Dungeon-Hunter-2-HD-v1-0-2.apk")
     ap.add_argument("--install", action="store_true", help="adb install -r -g the origdex APK (the source one with --only source)")
     ap.add_argument("--serial")
-    ap.add_argument("--bundle-data", help="Dungeon-Hunter-2-HD-v1-0-2-cache.zip: embed it (stored) so the APK unpacks its own data on first run; writes dh2-trackb-bundled.apk (source Java only)")
+    ap.add_argument("--bundle-data", help="Dungeon-Hunter-2-HD-v1-0-2-cache.zip or its unpacked files/ folder: embed it (stored) so the APK unpacks its own data on first run; writes dh2-trackb-bundled.apk (source Java only)")
+    ap.add_argument("--android-res", default=os.path.join(BUILD_DATA, "android-res") if os.path.isdir(os.path.join(BUILD_DATA, "android-res")) else None,
+                    help="res/ + resources/ already extracted by import_resources.py (default build_data/android-res): copied into the project, no --apk needed")
+    ap.add_argument("--sound-overlay", help="folder laid out like files/ (data/sounds/*.wav, from tools/trackb/sounds/ios_sound_overlay.py) added to the --bundle-data set (default build_data/ios-sounds)")
     ap.add_argument("--out-root", help="output root instead of build/own-ab")
     ap.add_argument("--build-dir", help="native build dir instead of build/own-ab-arm64")
     ap.add_argument("--min-sdk", type=int, default=26)
@@ -128,6 +178,8 @@ def main():
         BUILD = os.path.abspath(a.build_dir)
     if a.bundle_data:
         a.only = "source"
+        if a.sound_overlay is None and os.path.isdir(os.path.join(BUILD_DATA, "ios-sounds")):
+            a.sound_overlay = os.path.join(BUILD_DATA, "ios-sounds")
     os.makedirs(OUT, exist_ok=True)
 
     # 1. native library
@@ -144,7 +196,11 @@ def main():
         "-o", storm, os.path.join(ROOT, "tools", "trackb", "boot", "storm_stub.c"))
 
     # 2. source APK (resources imported once from the user's APK; libs placed in the git-ignored jniLibs)
-    if not os.path.isdir(os.path.join(PROJ, "res")):
+    if a.android_res:
+        for d in ("res", "resources"):   # the resources import_resources.py extracts, kept once outside the tree
+            shutil.rmtree(os.path.join(PROJ, d), ignore_errors=True)
+            shutil.copytree(os.path.join(a.android_res, d), os.path.join(PROJ, d))
+    elif not os.path.isdir(os.path.join(PROJ, "res")):
         run(sys.executable, os.path.join(ROOT, "tools", "trackb", "java", "import_resources.py"), "--apk", a.apk, "--so", so)
     jl = os.path.join(PROJ, "jniLibs", "arm64-v8a")
     os.makedirs(jl, exist_ok=True)
@@ -156,7 +212,20 @@ def main():
     if a.only != "origdex":
         if a.bundle_data:
             braw = os.path.join(OUTROOT, "dh2-bundled-raw.apk")
-            add_bundle(os.path.join(jout, "dh2-java-raw.apk"), braw, a.bundle_data)
+            zdata, stamp = a.bundle_data, None
+            if os.path.isdir(a.bundle_data) or a.sound_overlay:
+                zdata = os.path.join(OUTROOT, "dh2data-composed.zip")
+                compose_bundle(a.bundle_data, a.sound_overlay, zdata)
+                if a.sound_overlay:
+                    h = hashlib.sha256()
+                    for d, _, fs in sorted(os.walk(a.sound_overlay)):
+                        for f in sorted(fs):
+                            h.update(os.path.relpath(os.path.join(d, f), a.sound_overlay).replace(os.sep, "/").encode() + bytes(1))
+                            h.update(open(os.path.join(d, f), "rb").read())
+                    stamp = h.hexdigest()[:16]
+            add_bundle(os.path.join(jout, "dh2-java-raw.apk"), braw, zdata, stamp)
+            if zdata != a.bundle_data:
+                os.remove(zdata)
             sign(braw, os.path.join(OUT, "dh2-trackb-bundled.apk"))
             os.remove(braw)
         else:
