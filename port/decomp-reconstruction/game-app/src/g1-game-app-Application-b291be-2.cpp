@@ -110,6 +110,9 @@
 
 namespace glitch { namespace scene { class ICameraSceneNode; } namespace video { class IVideoDriver; } }
 void Dh2PostFx(glitch::video::IVideoDriver* driver, glitch::scene::ICameraSceneNode* camera);  // remaster_postfx.cpp
+namespace glitch { namespace scene { class ISceneNode; } }
+void Dh2UpdateDynamicLights(glitch::video::IVideoDriver* driver, glitch::scene::ISceneNode* root,
+                            glitch::scene::ICameraSceneNode* camera);  // remaster_lights.cpp
 
 // The file-scope job threads #2..#4 (m_updateJobThread1..4) and the first-run flag FirstTime are declared in
 // dh2/global/Globals.hpp (definitions in game-app/src/Globals.cpp). m_updateJobThread0 is the member at +0x04.
@@ -752,6 +755,7 @@ void Application::_Draw() {
                 // game SceneManager::drawAll 0x359338, which registers the nodes, renders the lists and takes the screenshot). The earlier
                 // reading as registerSceneNodes indexed the vtable from its first entry; the object's vptr is five entries in (GSViewer
                 // calls the same slot drawAll(null)). With registerSceneNodes only, nothing was ever rendered in 3D.
+                Dh2UpdateDynamicLights(driver, scene->rootNode, scene->activeCamera);  // port addition (remaster): torch and spell lights
                 scene->drawAll(static_cast<glitch::scene::ISceneNode*>(nullptr));  // vtable +0x3c, r1 = 0
                 // Port addition (remaster): ambient occlusion, bloom and the tone curve over the 3D view, before any 2D layer
                 Dh2PostFx(driver, scene->activeCamera);

@@ -125,6 +125,24 @@ uniform highp vec4 Light0Diffusecolor;
 varying mediump float vNmFogDepth;
 uniform mediump vec2 fogstartend;
 #endif
+// dynamic lights (torches, spells; game-app remaster_lights.cpp): position, colour with intensity in alpha, radius in x
+uniform highp vec4 Light5Position;
+uniform mediump vec4 Light5Diffusecolor;
+uniform highp vec3 Light5Attenuation;
+uniform highp vec4 Light6Position;
+uniform mediump vec4 Light6Diffusecolor;
+uniform highp vec3 Light6Attenuation;
+uniform highp vec4 Light7Position;
+uniform mediump vec4 Light7Diffusecolor;
+uniform highp vec3 Light7Attenuation;
+mediump vec3 dhPointLight(highp vec3 p, mediump vec4 c, highp float r, mediump vec3 n)
+{
+	highp vec3 v = p - vNmWorldPos;
+	highp float d2 = dot(v, v);
+	mediump float w = clamp(1.0 - d2 / max(r * r, 1.0), 0.0, 1.0);
+	w *= w;
+	return c.rgb * (c.a * w * max(dot(n, v * inversesqrt(max(d2, 1.0))), 0.0));
+}
 #ifdef SP
 uniform mediump float Glossiness;
 #endif
@@ -151,7 +169,12 @@ DIFF_FS_LIGHTING = '''
 		dhLight = min(dhLight, vec3(1.0)) + dhOver / (1.0 + dhOver * 1.25);
 		color = vec4(dhLight * vNmVertexColor.xyz, 1.0) * Diffuse;
 	}
-''' + RELIEF
+''' + RELIEF + '''	// DH2 remaster: dynamic lights
+	mediump vec3 dhDyn = dhPointLight(Light5Position.xyz, Light5Diffusecolor, Light5Attenuation.x, dhNp)
+	                   + dhPointLight(Light6Position.xyz, Light6Diffusecolor, Light6Attenuation.x, dhNp)
+	                   + dhPointLight(Light7Position.xyz, Light7Diffusecolor, Light7Attenuation.x, dhNp);
+	color.xyz += dhDyn * vNmVertexColor.xyz * Diffuse.xyz;
+'''
 
 
 def find_or_exit(text, anchor, label, start=0):
