@@ -112,6 +112,71 @@ class GameGLSurfaceView extends GLSurfaceView {
         }
     }
 
+    /**
+     * Port addition (remaster, not in the original): a 32-bit colour buffer (the original asks for RGB565: banding in fog and
+     * light falloff), 24-bit depth and multisample anti-aliasing (MSAA: hardware edge smoothing that leaves texture detail
+     * sharp; cheap on tile-based mobile GPUs). Port settings (dh2_port.cfg): color32 (1 = on, default), msaa (samples:
+     * 4 default, 0 = off). Configs are tried from the best down; with none the original chooser runs.
+     */
+    public class RemasterConfigChooser implements GLSurfaceView.EGLConfigChooser {
+        private final Context context;
+
+        RemasterConfigChooser(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        public EGLConfig chooseConfig(EGL10 egl10, EGLDisplay eGLDisplay) {
+            final int color32 = portSetting(context, "color32", 1);
+            final int msaa = Math.max(0, Math.min(8, portSetting(context, "msaa", 4)));
+            if (color32 != 0) {
+                int[] samples = msaa > 0 ? new int[] {msaa, 2, 0} : new int[] {0};
+                for (int n : samples) {
+                    int[] attribs = n > 0
+                            ? new int[] {12324, 8, 12323, 8, 12322, 8, 12325, 24, 12326, 8, 12352, 4, 12338, 1, 12337, n, 12344}
+                            : new int[] {12324, 8, 12323, 8, 12322, 8, 12325, 24, 12326, 8, 12352, 4, 12344};
+                    EGLConfig[] configs = new EGLConfig[1];
+                    int[] count = new int[1];
+                    if (egl10.eglChooseConfig(eGLDisplay, attribs, configs, 1, count) && count[0] > 0 && configs[0] != null) {
+                        android.util.Log.i("DH2GLINFO", "EGL config: RGB888, depth 24, MSAA " + n + "x");
+                        return configs[0];
+                    }
+                }
+            }
+            android.util.Log.i("DH2GLINFO", "EGL config: original (RGB565)");
+            return new ConfigChooser(5, 6, 5, 0, 16, 8).chooseConfig(egl10, eGLDisplay);
+        }
+    }
+
+    /** One integer of dh2_port.cfg ("key=value" lines in the app's external files dir), read before the game starts. */
+    static int portSetting(Context context, String key, int fallback) {
+        try {
+            java.io.File dir = context.getExternalFilesDir(null);
+            if (dir == null) {
+                return fallback;
+            }
+            java.io.File f = new java.io.File(dir, "dh2_port.cfg");
+            if (!f.exists()) {
+                return fallback;
+            }
+            java.io.BufferedReader r = new java.io.BufferedReader(new java.io.FileReader(f));
+            try {
+                String line;
+                while ((line = r.readLine()) != null) {
+                    int eq = line.indexOf('=');
+                    if (eq > 0 && line.substring(0, eq).trim().equals(key)) {
+                        return Integer.parseInt(line.substring(eq + 1).trim());
+                    }
+                }
+            } finally {
+                r.close();
+            }
+        } catch (Exception e) {
+            // unreadable file or value: the default
+        }
+        return fallback;
+    }
+
     public class ContextFactory implements GLSurfaceView.EGLContextFactory {
 
         public static int f25a = 12440;
@@ -206,13 +271,13 @@ class GameGLSurfaceView extends GLSurfaceView {
         super(context);
         this.e = new GameRenderer(context);
         setEGLContextFactory(new ContextFactory());
-        setEGLConfigChooser(new ConfigChooser(5, 6, 5, 0, 16, 8));
+        setEGLConfigChooser(new RemasterConfigChooser(context));  // port (remaster): 32-bit colour + MSAA, else the original
         setRenderer(this.e);
     }
 
     private void a(boolean z, int i, int i2) {
         setEGLContextFactory(new ContextFactory());
-        setEGLConfigChooser(new ConfigChooser(5, 6, 5, 0, 16, 8));
+        setEGLConfigChooser(new RemasterConfigChooser(getContext()));
         setRenderer(this.e);
     }
 

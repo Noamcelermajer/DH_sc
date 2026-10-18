@@ -8,7 +8,7 @@
 //     map keep NormalStrength 0, which the shader treats as "unchanged".
 // Port settings: normalmaps (1 = the remaster shaders, 0 = the original ones; read at start), normalstrength (percent, default
 // 100), normalgreen (1 = OpenGL green-up maps, -1 = DirectX green-down), pixellighting, specular, fogcurve (percent, default
-// 100) and rimlight (percent, default 35), hdtextures (1 = the HD layer data/hd/).
+// 100) and rimlight (percent, default 35), hdtextures (1 = the HD layer data/hd/), trilinear (1) and anisotropy (8).
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -27,6 +27,10 @@
 #include "glitch-video/video_driver.hpp"
 #include "glitch-core-io/io/interfaces.hpp"
 
+namespace glitch::video {
+extern bool g_dh2Trilinear;     // ccommon_gl_driver.cpp: trilinear minification for mipmapped textures
+extern float g_dh2Anisotropy;   // ccommon_gl_driver.cpp: minimum anisotropy for mipmapped textures
+}  // namespace glitch::video
 extern bool g_dh2HdTextures;  // core-platform filesystem_base.cpp: the HD texture layer (data/hd/) is in use
 extern const char* RES_PATH;  // the files dir (core-platform app_entry; the runner's --data)
 
@@ -144,6 +148,11 @@ void Dh2InstallRemaster(glitch::io::IFileSystem* fileSystem) {
     g_dh2HdTextures = etc2 && dh2port::Get("hdtextures", 1) != 0;
     std::fprintf(stdout, "[remaster] HD textures: %s (setting %d, ETC2 %s)\n", g_dh2HdTextures ? "on" : "off", dh2port::Get("hdtextures", 1),
                  etc2 ? "yes" : "no");
+
+    // Texture filtering: trilinear (1 = on, default) and anisotropy (samples, default 8, clamped to the GPU's maximum; 0 or 1 = off)
+    glitch::video::g_dh2Trilinear = dh2port::Get("trilinear", 1) != 0;
+    glitch::video::g_dh2Anisotropy = static_cast<float>(dh2port::Get("anisotropy", 8));
+    std::fprintf(stdout, "[remaster] filtering: trilinear %d, anisotropy %d\n", glitch::video::g_dh2Trilinear ? 1 : 0, dh2port::Get("anisotropy", 8));
 
     // Normal maps: the shader zip lives in the files dir (RES_PATH), like data/port/ui_layouts.txt.
     const std::string zip = std::string(RES_PATH != nullptr ? RES_PATH : "") + kShaderZip;

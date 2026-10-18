@@ -337,10 +337,17 @@ bool createWindowAndContext(const Options& opt) {
         return false;
     }
     p_eglBindAPI(0x30A0);   // EGL_OPENGL_ES_API
+    // remaster: multisample anti-aliasing like the Android surface (DH2_MSAA = samples, default 4, 0 = off)
+    const char* msaaEnv = std::getenv("DH2_MSAA");
+    const int msaa = msaaEnv ? std::atoi(msaaEnv) : 4;
+    const int cfgAttrMsaa[] = {0x3024, 8, 0x3023, 8, 0x3022, 8, 0x3021, 8, 0x3025, 24, 0x3026, 8, 0x3040, 4 /*ES2*/, 0x3033, 4 /*window*/,
+                               0x3032, 1 /*sample buffers*/, 0x3031, msaa /*samples*/, 0x3038};
     const int cfgAttr[] = {0x3024, 8, 0x3023, 8, 0x3022, 8, 0x3021, 8, 0x3025, 24, 0x3026, 8, 0x3040, 4 /*ES2*/, 0x3033, 4 /*window*/, 0x3038};
     EGLConfig cfg = nullptr;
     int n = 0;
-    if (!p_eglChooseConfig(g_dpy, cfgAttr, &cfg, 1, &n) || n < 1) {
+    if (msaa > 0 && p_eglChooseConfig(g_dpy, cfgAttrMsaa, &cfg, 1, &n) && n >= 1) {
+        std::fprintf(g_runnerOut, "EGL config: MSAA %dx\n", msaa);
+    } else if (!p_eglChooseConfig(g_dpy, cfgAttr, &cfg, 1, &n) || n < 1) {
         std::fprintf(g_runnerOut, "eglChooseConfig failed\n");
         return false;
     }

@@ -1545,6 +1545,13 @@ bool isCompressed(uint32_t format) { return (pixel_format::detail::PFDTable[form
 
 }  // namespace
 
+// Port addition (remaster, not in the binary): textures sampled with mipmaps get trilinear minification (the data asks for
+// one-level-at-a-time filters, which show a seam where the level changes) and anisotropic filtering at least
+// g_dh2Anisotropy (floors and walls at grazing angles stay sharp instead of blurring). Set by Dh2InstallRemaster from the
+// port settings "trilinear" and "anisotropy"; off (the binary's filters) until then.
+bool g_dh2Trilinear = false;
+float g_dh2Anisotropy = 0.0f;
+
 // 0x5afd40 _ZNK...8CTexture16updateParametersEv
 // Pushes the sampler state that changed since the last update: the minification filter (a level-0-only compressed texture falls
 // back to nearest, with an error), the magnification filter, the S and T wrap modes, the R wrap (written through the T bits and
@@ -1568,6 +1575,7 @@ void CCommonGLDriver::CTexture::updateParameters() const {
             }
         } else {
             filter = (m_flags38 >> 12) & 7u;
+            if (g_dh2Trilinear && filter >= 2) filter = 5;  // port (remaster): GL_LINEAR_MIPMAP_LINEAR
         }
         if (gl().texParameteri) gl().texParameteri(target, 0x2801, static_cast<int32_t>(kTextureFilterMap[filter]));
         dirty = m_dirtyFlags40;
@@ -1588,9 +1596,12 @@ void CCommonGLDriver::CTexture::updateParameters() const {
         if (gl().texParameteri) gl().texParameteri(target, 0x2803, static_cast<int32_t>(kTextureWrapModeMap[(m_flags38 >> 21) & 7u]));
         dirty = m_dirtyFlags40;
     }
-    if ((dirty & kDirtyAnisotropy) != 0 && (driver->m_capabilities & 0x20000u) != 0) {
+    // port (remaster): a mipmapped texture also gets its anisotropy pushed with its min filter, at least g_dh2Anisotropy
+    const bool portAniso = g_dh2Anisotropy > 1.0f && ((m_flags38 >> 12) & 7u) >= 2;
+    if (((dirty & kDirtyAnisotropy) != 0 || (portAniso && (dirty & kDirtyMinFilter) != 0)) && (driver->m_capabilities & 0x20000u) != 0) {
+        const float wanted = portAniso && g_dh2Anisotropy > m_anisotropy ? g_dh2Anisotropy : m_anisotropy;
         float anisotropy = driver->m_maxAnisotropy;
-        if (anisotropy >= m_anisotropy) anisotropy = m_anisotropy;
+        if (anisotropy >= wanted) anisotropy = wanted;
         if (gl().texParameterf) gl().texParameterf(target, 0x84fe, anisotropy);
         dirty = m_dirtyFlags40;
     }
