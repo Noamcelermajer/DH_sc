@@ -83,6 +83,25 @@ RELIEF = '''	if (NormalStrength > 0.0)
 	}
 '''
 
+DYN_LIGHT_DECLS = '''// dynamic lights (torches, spells; game-app remaster_lights.cpp): position, colour with intensity in alpha, radius in x
+uniform highp vec4 Light5Position;
+uniform mediump vec4 Light5Diffusecolor;
+uniform highp vec3 Light5Attenuation;
+uniform highp vec4 Light6Position;
+uniform mediump vec4 Light6Diffusecolor;
+uniform highp vec3 Light6Attenuation;
+uniform highp vec4 Light7Position;
+uniform mediump vec4 Light7Diffusecolor;
+uniform highp vec3 Light7Attenuation;
+mediump vec3 dhPointLight(highp vec3 p, mediump vec4 c, highp float r, mediump vec3 n)
+{
+	highp vec3 v = p - vNmWorldPos;
+	highp float d2 = dot(v, v);
+	mediump float w = clamp(1.0 - d2 / max(r * r, 1.0), 0.0, 1.0);
+	w *= w;
+	return c.rgb * (c.a * w * max(dot(n, v * inversesqrt(max(d2, 1.0))), 0.0));
+}'''
+
 # ---- GL_Diffuse_L1 (world, props) ---------------------------------------------------------------------------------------
 
 DIFF_VS_DECLS = '''
@@ -125,24 +144,7 @@ uniform highp vec4 Light0Diffusecolor;
 varying mediump float vNmFogDepth;
 uniform mediump vec2 fogstartend;
 #endif
-// dynamic lights (torches, spells; game-app remaster_lights.cpp): position, colour with intensity in alpha, radius in x
-uniform highp vec4 Light5Position;
-uniform mediump vec4 Light5Diffusecolor;
-uniform highp vec3 Light5Attenuation;
-uniform highp vec4 Light6Position;
-uniform mediump vec4 Light6Diffusecolor;
-uniform highp vec3 Light6Attenuation;
-uniform highp vec4 Light7Position;
-uniform mediump vec4 Light7Diffusecolor;
-uniform highp vec3 Light7Attenuation;
-mediump vec3 dhPointLight(highp vec3 p, mediump vec4 c, highp float r, mediump vec3 n)
-{
-	highp vec3 v = p - vNmWorldPos;
-	highp float d2 = dot(v, v);
-	mediump float w = clamp(1.0 - d2 / max(r * r, 1.0), 0.0, 1.0);
-	w *= w;
-	return c.rgb * (c.a * w * max(dot(n, v * inversesqrt(max(d2, 1.0))), 0.0));
-}
+''' + DYN_LIGHT_DECLS + '''
 #ifdef SP
 uniform mediump float Glossiness;
 #endif
@@ -289,6 +291,7 @@ uniform highp vec4 specularcolor;
 uniform highp float shininess;
 uniform highp vec4 SceneAmbientLight;
 uniform mediump vec4 DiffuseColor;
+''' + DYN_LIGHT_DECLS + '''
 #endif
 '''
 
@@ -320,6 +323,10 @@ PC_FS_LIGHTING = '''
 		mediump float rim = 1.0 - max(dot(dhNp, dhV), 0.0);
 		color.xyz += (rim * rim * rim * RimStrength) * clamp(Light0Diffusecolor.xyz * (0.5 + dhAtt), 0.0, 1.0);
 	}
+	// dynamic lights (torches, spells), before the texture is applied
+	color.xyz += (dhPointLight(Light5Position.xyz, Light5Diffusecolor, Light5Attenuation.x, dhNp)
+	            + dhPointLight(Light6Position.xyz, Light6Diffusecolor, Light6Attenuation.x, dhNp)
+	            + dhPointLight(Light7Position.xyz, Light7Diffusecolor, Light7Attenuation.x, dhNp)) * DiffuseColor.xyz;
 #endif
 '''
 
