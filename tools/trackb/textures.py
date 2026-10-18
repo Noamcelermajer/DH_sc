@@ -96,9 +96,9 @@ Then: py -3 tools/trackb/textures.py pack --folder <this folder> --out <a data c
 """
 
 
-def pack(folder, out):
+def pack(folder, out, up=None):
     from PIL import Image
-    up = os.path.join(folder, 'upscaled')
+    up = up or os.path.join(folder, 'upscaled')
     texdir = os.path.join(out, 'data', '3d', 'textures')
     resdir = os.path.join(out, 'res')
     lines = []
@@ -140,11 +140,12 @@ def main():
     p = sub.add_parser('pack')
     p.add_argument('--folder', required=True)
     p.add_argument('--out', required=True)
+    p.add_argument('--upscaled', help='folder holding 3d/ and res/ (default <folder>/upscaled; e.g. the 2x output of remaster_prep.py)')
     a = ap.parse_args()
     if a.cmd == 'extract':
         extract(a.data, a.out)
     else:
-        pack(a.folder, a.out)
+        pack(a.folder, a.out, a.upscaled)
 
 
 if __name__ == '__main__':
