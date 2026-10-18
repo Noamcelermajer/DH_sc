@@ -98,7 +98,24 @@ void GSInit::Draw(const StateMachine*) {
         if (!driver->m_renderTargets.empty()) {
             const glitch::core::rect<std::int32_t>& viewport = driver->m_renderTargets.back()->viewport();
             const glitch::core::rect<std::int32_t> screenRect = viewport;
-            const glitch::core::rect<std::int32_t> splashSource{0, 0, 1280, 752};
+            // Port (remaster): the source rects are texels of the original 2048-wide splash; an HD-layer splash (data/hd/, 3x)
+            // is larger, so they are scaled by its width / 2048 (1 with the original data). Without this the first frames
+            // showed the splash's top-left third filling the screen.
+            const int hd = m_splashTexture->m_width > 2048 ? static_cast<int>(m_splashTexture->m_width / 2048) : 1;
+            // Port: on a screen wider or taller than the art (1280x752) the art covers it (centre crop, its proportions kept), as
+            // the menu splash that follows does (UI12 "cover"); the original stretched it.
+            int srcW = 1280, srcH = 752;
+            const int vw = viewport.LowerRightCorner.X - viewport.UpperLeftCorner.X;
+            const int vh = viewport.LowerRightCorner.Y - viewport.UpperLeftCorner.Y;
+            if (vw > 0 && vh > 0) {
+                if (vw * 752 > vh * 1280) {
+                    srcH = 1280 * vh / vw;
+                } else {
+                    srcW = 752 * vw / vh;
+                }
+            }
+            const int srcX = (1280 - srcW) / 2, srcY = (752 - srcH) / 2;
+            const glitch::core::rect<std::int32_t> splashSource{srcX * hd, srcY * hd, (srcX + srcW) * hd, (srcY + srcH) * hd};
             glitch::video::C2DDriver::draw2DImage(driver, m_splashTexture, screenRect, splashSource, nullptr, nullptr,
                                                   false);
             if (unk_08 < 0) {
@@ -129,7 +146,7 @@ void GSInit::Draw(const StateMachine*) {
                 const int srcTop = originY + (frame >> 2) * cellH;
                 const int srcRight = srcLeft + cellW;
                 const int srcBottom = srcTop + cellH;
-                const glitch::core::rect<std::int32_t> spinnerSource{srcLeft, srcTop, srcRight, srcBottom};
+                const glitch::core::rect<std::int32_t> spinnerSource{srcLeft * hd, srcTop * hd, srcRight * hd, srcBottom * hd};
 
                 // Destination: the cell-sized box in the viewport's bottom-right corner. The original computes
                 // (int)((float)(right - left) - cellW) and the same for the height, which is the plain subtraction.

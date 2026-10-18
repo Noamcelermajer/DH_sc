@@ -47,6 +47,17 @@ def premul_resize(im, size, flt):
     return np.dstack([np.clip(rgb, 0.0, 1.0), al])
 
 
+def is_data_map(name, oim):
+    """Lightmaps and the debug test always; an "_alpha" texture only when it is a grey mask (env_darkwoods_alpha is colour
+    artwork, the opaque half of the Darkwoods atlas, and takes the upscaler's output like any picture)."""
+    if not DATA_MAP.search(name):
+        return False
+    if name.lower().endswith('_alpha'):
+        a = np.asarray(oim.convert('RGB')).astype(np.float32)
+        return float((a.max(2) - a.min(2)).mean()) < 8.0
+    return True
+
+
 def binary_alpha(im):
     a = np.asarray(im.convert('RGBA'))[..., 3]
     hard = np.count_nonzero((a == 0) | (a == 255))
@@ -102,7 +113,7 @@ def downscale(src, orig, out, scale):
                 continue
             oim = Image.open(opath)
             target = (oim.width * scale, oim.height * scale)
-            if DATA_MAP.search(o):
+            if is_data_map(o, oim):
                 res = premul_resize(oim, target, Image.LANCZOS)
                 how = 'data map: original, lanczos'
             else:
