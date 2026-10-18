@@ -1,25 +1,29 @@
 #!/usr/bin/env python3
-"""Remaster shaders: normal-map relief for the game's lit shader (REMASTER.md, "Normal maps").
+"""Remaster shaders: per-pixel lighting, specular, fog, rim light and normal maps (REMASTER.md, "Shaders").
 
   py -3 tools/trackb/remaster_shaders.py --data <files dir of a game data copy>
 
-Reads GL_Diffuse_L1_iPhone_VS/FS.glsl and ProfileCOMMON_emul_VS/FS.glsl (its lit, textured variants: characters, skinned
-meshes) from <data>/shaders.pak (the user's own game data; the shader text is game data and
-is not kept in this repository), applies the edits below and writes <data>/data/port/remaster_shaders.zip. The game mounts
-that zip before shaders.pak (Application init, port setting "normalmaps"), so these files replace the originals while
-the original pak stays untouched.
+Reads GL_Diffuse_L1_iPhone_VS/FS.glsl (world, props) and ProfileCOMMON_emul_VS/FS.glsl (characters, skinned meshes,
+objects; its lit, textured variants) from <data>/shaders.pak - the user's own game data: the shader text is not kept in
+this repository - applies the edits below and writes <data>/data/port/remaster_shaders.zip. The game mounts that zip
+before shaders.pak (game-app remaster_normal_maps.cpp), so these files replace the originals; the pak stays untouched.
 
-Edits (every original variant keeps its behaviour while NormalStrength is 0, the value of a material without a normal
-map):
-  VS: three varyings carry the world position, the world normal and the vector to Light0 that main() already computes.
-  FS: when NormalStrength > 0 the normal map (NormalSampler, tangent space, 0.5 + n/2) is turned into world space with a
-      tangent frame built from screen-space derivatives of the position and the texture coordinates (no tangents in the
-      meshes needed), and the final colour is scaled by 1 + strength * (N'.L - N.L), L being Light0's direction tipped towards a fixed oblique one: baked lightmaps, vertex colours and
-      the per-vertex light stay as they were, the surface gains relief against Light0. NormalGreen (+1 / -1) flips the
-      green channel for maps of the other convention.
+Every effect is driven by a material uniform that the material hook sets from a port setting; at 0 the original code path
+runs, so each one can be switched off on its own:
+  PixelLighting   (pixellighting)   Light0 (the player light: ambient + diffuse * N.L * attenuation, the original's own
+                                    formula) evaluated per pixel instead of per vertex - a round pool of light instead of
+                                    one smeared over large triangles; the normal map takes part in N.L.
+  NormalStrength  (normalstrength)  normal maps (<diffuse>_n.tga): tangent frame from screen-space derivatives (no mesh
+                                    tangents), plus a detail term against Light0 tipped towards a fixed oblique direction
+                                    (a light from straight above shows almost no relief). NormalGreen flips green.
+  SpecularBoost   (specular)        world: Blinn-Phong per pixel with the camera position (EyePos, an automatic engine
+                                    parameter) and the game's specular maps; characters: the original specular term with
+                                    the real view vector (the original used a fixed "eye" of (0,0,1)).
+  FogCurve        (fogcurve)        per-pixel fog from the view depth with a smoothstep curve (clear near, denser far)
+                                    instead of a per-vertex linear factor.
+  RimStrength     (rimlight)        characters and objects: a light rim on silhouettes, tinted by the player light.
 """
 import argparse
-import io
 import os
 import sys
 import zipfile
@@ -29,109 +33,251 @@ FS_NAME = 'GL_Diffuse_L1_iPhone_FS.glsl'
 PC_VS_NAME = 'ProfileCOMMON_emul_VS.glsl'
 PC_FS_NAME = 'ProfileCOMMON_emul_FS.glsl'
 
-VS_VARYINGS = '''
-// DH2 remaster: normal-map relief (tools/trackb/remaster_shaders.py)
-varying highp vec3 vNmWorldPos;
-varying mediump vec3 vNmWorldNormal;
-varying mediump vec3 vNmLightVec;
-'''
-
 FS_HEAD = '''#ifdef GL_ES
 #extension GL_OES_standard_derivatives : enable
 #endif
 '''
 
-FS_DECLS = '''
-// DH2 remaster: normal-map relief (tools/trackb/remaster_shaders.py)
-varying highp vec3 vNmWorldPos;
-varying mediump vec3 vNmWorldNormal;
-varying mediump vec3 vNmLightVec;
-uniform lowp sampler2D NormalSampler;
-uniform mediump float NormalStrength;
-uniform mediump float NormalGreen;
-'''
-
-FS_RELIEF = '''	// DH2 remaster: normal-map relief. Lightmap, vertex colour and per-vertex light stay; the colour follows how far the
-	// mapped normal turns towards or away from Light0 compared with the geometric normal.
-	if (NormalStrength > 0.0)
-	{
-		mediump vec3 nm = texture2D(NormalSampler, vTexCoord0.xy).xyz * 2.0 - 1.0;
+# The tangent frame from derivatives and the mapped normal dhNp; dhN is the geometric world normal. Needs vNmWorldPos and the
+# texture coordinates `UV`.
+NORMAL_MAP = '''		mediump vec3 nm = texture2D(NormalSampler, UV).xyz * 2.0 - 1.0;
 		nm.y *= (NormalGreen < 0.0) ? -1.0 : 1.0;
-		mediump vec3 N = normalize(vNmWorldNormal);
 		highp vec3 dp1 = dFdx(vNmWorldPos);
 		highp vec3 dp2 = dFdy(vNmWorldPos);
-		highp vec2 duv1 = dFdx(vTexCoord0.xy);
-		highp vec2 duv2 = dFdy(vTexCoord0.xy);
-		highp vec3 dp2perp = cross(dp2, N);
-		highp vec3 dp1perp = cross(N, dp1);
+		highp vec2 duv1 = dFdx(UV);
+		highp vec2 duv2 = dFdy(UV);
+		highp vec3 dp2perp = cross(dp2, dhN);
+		highp vec3 dp1perp = cross(dhN, dp1);
 		highp vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
 		highp vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
 		highp float invmax = inversesqrt(max(max(dot(T, T), dot(B, B)), 1e-12));
-		mediump vec3 Np = normalize(T * (invmax * nm.x) + B * (invmax * nm.y) + N * nm.z);
-		if (NormalStrength > 9.0)  // diagnostic (normalstrength >= 1000): the mapped normal as a colour, the light as alpha-less tint
-		{
-			gl_FragColor = vec4(Np * 0.5 + 0.5, 1.0);
-			return;
-		}
-		// The relief light: Light0's direction tipped towards a fixed oblique direction (world is Z-up; from the upper left of
-		// the usual camera, like the light painted into the textures). A light from straight above shows almost no relief.
-		mediump vec3 L = normalize(normalize(vNmLightVec) + vec3(-0.55, 0.55, 0.35));
-		mediump float relief = 1.0 + NormalStrength * (dot(Np, L) - dot(N, L));
-		color.xyz *= clamp(relief, 0.5, 1.5);
-	}
-
+		dhNp = normalize(T * (invmax * nm.x) + B * (invmax * nm.y) + dhN * nm.z);
 '''
 
+RELIEF = '''	if (NormalStrength > 0.0)
+	{
+		// detail relief against Light0 tipped towards an oblique direction (world is Z-up)
+		mediump vec3 dhRL = normalize(dhL + vec3(-0.55, 0.55, 0.35));
+		mediump float relief = 1.0 + NormalStrength * (dot(dhNp, dhRL) - dot(dhN, dhRL));
+		color.xyz *= clamp(relief, 0.5, 1.5);
+	}
+'''
 
-def insert_after(text, anchor, addition, label):
-    i = text.find(anchor)
+# ---- GL_Diffuse_L1 (world, props) ---------------------------------------------------------------------------------------
+
+DIFF_VS_DECLS = '''
+// DH2 remaster (tools/trackb/remaster_shaders.py)
+uniform highp vec3 EyePos;
+varying highp vec3 vNmWorldPos;
+varying mediump vec3 vNmWorldNormal;
+varying mediump vec3 vNmLightVec;
+varying mediump vec3 vNmEyeVec;
+varying lowp vec4 vNmVertexColor;
+#ifdef FG
+varying mediump float vNmFogDepth;
+#endif
+'''
+
+DIFF_FS_DECLS = '''
+// DH2 remaster (tools/trackb/remaster_shaders.py)
+varying highp vec3 vNmWorldPos;
+varying mediump vec3 vNmWorldNormal;
+varying mediump vec3 vNmLightVec;
+varying mediump vec3 vNmEyeVec;
+varying lowp vec4 vNmVertexColor;
+uniform lowp sampler2D NormalSampler;
+uniform mediump float NormalStrength;
+uniform mediump float NormalGreen;
+uniform mediump float PixelLighting;
+uniform mediump float SpecularBoost;
+uniform mediump float FogCurve;
+uniform highp vec3 Light0Attenuation;
+uniform highp vec4 Light0Ambientcolor;
+uniform highp vec4 Light0Diffusecolor;
+#ifdef FG
+varying mediump float vNmFogDepth;
+uniform mediump vec2 fogstartend;
+#endif
+#ifdef SP
+uniform mediump float Glossiness;
+#endif
+'''
+
+DIFF_FS_LIGHTING = '''
+	// DH2 remaster: normal map and per-pixel lighting
+	mediump vec3 dhN = normalize(vNmWorldNormal);
+	mediump vec3 dhNp = dhN;
+	if (NormalStrength > 0.0)
+	{
+''' + NORMAL_MAP.replace('UV', 'vTexCoord0.xy') + '''	}
+	highp float dhDist = length(vNmLightVec);
+	mediump vec3 dhL = vNmLightVec / max(dhDist, 1e-4);
+	mediump float dhAtt = 1.0 / (Light0Attenuation.x + Light0Attenuation.y * dhDist + Light0Attenuation.z * dhDist * dhDist);
+	// the original's vertex shader uses the world normal without normalising it (scaled meshes light brighter): kept
+	mediump vec3 dhNs = dhNp * length(vNmWorldNormal);
+	if (PixelLighting > 0.0)
+	{
+		mediump vec3 dhLight = Light0Ambientcolor.xyz + Light0Diffusecolor.xyz * (max(dot(dhNs, dhL), 0.0) * dhAtt);
+		color = vec4(dhLight * vNmVertexColor.xyz, 1.0) * Diffuse;  // not clamped: the original light near the player exceeds 2
+	}
+''' + RELIEF
+
+
+def find_or_exit(text, anchor, label, start=0):
+    i = text.find(anchor, start)
     if i < 0:
         sys.exit('anchor not found (%s): %r' % (label, anchor))
-    j = i + len(anchor)
+    return i
+
+
+def insert_after(text, anchor, addition, label, start=0):
+    j = find_or_exit(text, anchor, label, start) + len(anchor)
     return text[:j] + addition + text[j:]
 
 
 def insert_before(text, anchor, addition, label, start=0):
-    i = text.find(anchor, start)
-    if i < 0:
-        sys.exit('anchor not found (%s): %r' % (label, anchor))
+    i = find_or_exit(text, anchor, label, start)
     return text[:i] + addition + text[i:]
 
 
+def replace_once(text, old, new, label):
+    find_or_exit(text, old, label)
+    return text.replace(old, new, 1)
+
+
 def patch_vs(src):
-    src = insert_after(src, 'varying mediump vec4 vTexCoord0;', VS_VARYINGS, 'vs varyings')
+    src = insert_after(src, 'varying mediump vec4 vTexCoord0;', DIFF_VS_DECLS, 'vs declarations')
     src = insert_after(src, 'highp vec3 worldSpacePos = (matWorld * Vertex).xyz;',
-                       '\n\tvNmWorldPos = worldSpacePos;\n\tvNmWorldNormal = transformedNormal;', 'vs position')
+                       '\n\tvNmWorldPos = worldSpacePos;\n\tvNmWorldNormal = transformedNormal;'
+                       '\n\tvNmEyeVec = (matWorld * vec4(EyePos, 1.0)).xyz - worldSpacePos;', 'vs position')
     src = insert_before(src, '// Light Attenuation', 'vNmLightVec = Light0Vec;\n    ', 'vs light vector')
+    # SP variants: the specular eye vector exactly as the original computes it (its eye position from matViewIT)
+    src = insert_after(src, 'highp vec3 eye = normalize(eyePos.xyz - worldSpacePos);', '\n\t\tvNmEyeVec = eyePos.xyz - worldSpacePos;',
+                       'vs specular eye')
+    src = insert_after(src, 'vColor = color * vec4(Color.xyz, 1.0);', '\n    vNmVertexColor = vec4(Color.xyz, 1.0);', 'vs vertex colour')
+    src = insert_after(src, 'float fogDistance = dot(matWorldViewT[2], Vertex);//length(fogVector);',
+                       '\n\tvNmFogDepth = fogDistance;', 'vs fog depth')
     return src
 
 
 def patch_fs(src):
     src = FS_HEAD + src
-    src = insert_after(src, 'varying mediump vec4 vTexCoord0;', FS_DECLS, 'fs declarations')
-    main = src.find('void main()')
-    src = insert_before(src, '#ifdef SP', FS_RELIEF, 'fs relief', main)
+    src = insert_after(src, 'varying mediump vec4 vTexCoord0;', DIFF_FS_DECLS, 'fs declarations')
+    main = find_or_exit(src, 'void main()', 'fs main')
+    src = insert_after(src, '#else\n\tlowp vec4 color = Diffuse;\n#endif', '\n' + DIFF_FS_LIGHTING, 'fs colour init', main)
+    src = replace_once(src, '\tspecularColor *= vAttNdotHV;', '''	if (PixelLighting > 0.0)
+	{
+		mediump vec3 dhH = normalize(dhL + normalize(vNmEyeVec));
+		specularColor *= (dot(dhNs, dhL) > 0.0 ? dhAtt * pow(max(dot(dhNs, dhH), 0.0), Glossiness) : 0.0) * SpecularBoost;
+	}
+	else
+	{
+		specularColor *= vAttNdotHV;
+	}''', 'fs specular')
+    src = replace_once(src, '\tcolor.xyz = mix(color.xyz, fogcolor.xyz, vFogFactor);', '''	mediump float dhFog = vFogFactor;
+	if (FogCurve > 0.0)
+	{
+		mediump float f = clamp((vNmFogDepth - fogstartend.x) / max(fogstartend.y - fogstartend.x, 1e-3), 0.0, 1.0);
+		dhFog = mix(f, f * f * (3.0 - 2.0 * f), FogCurve);
+	}
+	color.xyz = mix(color.xyz, fogcolor.xyz, dhFog);''', 'fs fog')
     return src
 
 
-def guarded(block):
-    return '#if defined LIGHTING && defined TEXTURED' + block + '#endif\n'
+# ---- ProfileCOMMON_emul (characters, skinned meshes, objects) ---------------------------------------------------------
+
+PC_GUARD = '#if defined LIGHTING && defined TEXTURED'
+
+PC_VS_DECLS = '''
+''' + PC_GUARD + '''
+// DH2 remaster (tools/trackb/remaster_shaders.py)
+uniform highp vec3 EyePos;
+varying highp vec3 vNmWorldPos;
+varying mediump vec3 vNmWorldNormal;
+varying mediump vec3 vNmLightVec;
+varying mediump vec3 vNmEyeVec;
+#endif
+'''
+
+PC_FS_DECLS = '''
+''' + PC_GUARD + '''
+// DH2 remaster (tools/trackb/remaster_shaders.py)
+varying highp vec3 vNmWorldPos;
+varying mediump vec3 vNmWorldNormal;
+varying mediump vec3 vNmLightVec;
+varying mediump vec3 vNmEyeVec;
+uniform lowp sampler2D NormalSampler;
+uniform mediump float NormalStrength;
+uniform mediump float NormalGreen;
+uniform mediump float PixelLighting;
+uniform mediump float SpecularBoost;
+uniform mediump float RimStrength;
+uniform highp vec3 Light0Attenuation;
+uniform highp vec4 Light0Ambientcolor;
+uniform highp vec4 Light0Diffusecolor;
+uniform highp vec4 Light0Specularcolor;
+uniform highp vec4 emissioncolor;
+uniform highp vec4 ambientcolor;
+uniform highp vec4 specularcolor;
+uniform highp float shininess;
+uniform highp vec4 SceneAmbientLight;
+uniform mediump vec4 DiffuseColor;
+#endif
+'''
+
+PC_FS_LIGHTING = '''
+''' + PC_GUARD + '''
+	// DH2 remaster: normal map, per-pixel lighting (the original's formula), view-dependent specular, rim light
+	mediump vec3 dhN = normalize(vNmWorldNormal);
+	mediump vec3 dhNp = dhN;
+	if (NormalStrength > 0.0)
+	{
+''' + NORMAL_MAP.replace('UV', 'vTexCoord0') + '''	}
+	highp float dhDist = length(vNmLightVec);
+	mediump vec3 dhL = vNmLightVec / max(dhDist, 1e-4);
+	mediump vec3 dhV = normalize(vNmEyeVec);
+	mediump float dhAtt = 1.0 / (Light0Attenuation.x + Light0Attenuation.y * dhDist + Light0Attenuation.z * dhDist * dhDist);
+	if (PixelLighting > 0.0)
+	{
+		// the original's vertex shader uses the world normal without normalising it: its length is kept in N.L
+		mediump float nDotVP = max(dot(dhNp, dhL), 0.0) * length(vNmWorldNormal);
+		mediump float nDotHV = max(dot(dhNp, normalize(dhL + dhV)), 0.0);
+		mediump float pf = nDotVP > 0.0 ? pow(nDotHV, max(shininess, 0.0001)) : 0.0;
+		highp vec4 lit = emissioncolor + (SceneAmbientLight + Light0Ambientcolor * dhAtt) * ambientcolor
+		               + Light0Diffusecolor * (nDotVP * dhAtt) * DiffuseColor
+		               + Light0Specularcolor * (pf * dhAtt * SpecularBoost) * specularcolor;
+		color = vec4(clamp(lit.xyz, 0.0, 1.0), vColor0.w);
+	}
+	if (RimStrength > 0.0)
+	{
+		mediump float rim = 1.0 - max(dot(dhNp, dhV), 0.0);
+		color.xyz += (rim * rim * rim * RimStrength) * clamp(Light0Diffusecolor.xyz * (0.5 + dhAtt), 0.0, 1.0);
+	}
+#endif
+'''
+
+PC_FS_RELIEF = '''
+''' + PC_GUARD + '''
+''' + RELIEF + '''#endif
+'''
 
 
 def patch_pc_vs(src):
-    """ProfileCOMMON_emul (characters, skinned meshes, props): the lit, textured variants carry the relief varyings."""
-    src = insert_after(src, 'varying lowp vec4 vColor0;', '\n' + guarded(VS_VARYINGS), 'pc vs varyings')
+    src = insert_after(src, 'varying lowp vec4 vColor0;', PC_VS_DECLS, 'pc vs declarations')
     src = insert_after(src, 'vec3 Light0Vec = Light0Position.xyz - worldPosition.xyz * Light0Position.w;',
                        '\n#ifdef TEXTURED\n    vNmWorldPos = worldPosition.xyz;\n    vNmWorldNormal = transformedNormal;\n'
-                       '    vNmLightVec = Light0Vec;\n#endif', 'pc vs assignments')
+                       '    vNmLightVec = Light0Vec;\n    vNmEyeVec = (matWorld * vec4(EyePos, 1.0)).xyz - worldPosition.xyz;\n#endif',
+                       'pc vs assignments')
     return src
 
 
 def patch_pc_fs(src):
     src = FS_HEAD + src
-    src = insert_after(src, 'varying lowp vec4 vColor0;', '\n' + guarded(FS_DECLS), 'pc fs declarations')
-    main = src.find('void main()')
-    src = insert_before(src, '#ifdef ALPHATEST', guarded('\n' + FS_RELIEF), 'pc fs relief', main)
+    src = insert_after(src, 'varying lowp vec4 vColor0;', PC_FS_DECLS, 'pc fs declarations')
+    main = find_or_exit(src, 'void main()', 'pc fs main')
+    src = insert_after(src, 'lowp vec4 color = vColor0;', PC_FS_LIGHTING, 'pc fs lighting', main)
+    main = find_or_exit(src, 'void main()', 'pc fs main')
+    src = insert_before(src, '#ifdef ALPHATEST', PC_FS_RELIEF, 'pc fs relief', main)
     return src
 
 
@@ -140,18 +286,15 @@ def main():
     ap.add_argument('--data', required=True, help='files dir of a game data copy (holds shaders.pak and data/)')
     a = ap.parse_args()
     with zipfile.ZipFile(os.path.join(a.data, 'shaders.pak')) as z:
-        vs = z.read(VS_NAME).decode('latin-1')
-        fs = z.read(FS_NAME).decode('latin-1')
-        pc_vs = z.read(PC_VS_NAME).decode('latin-1')
-        pc_fs = z.read(PC_FS_NAME).decode('latin-1')
+        sources = {n: z.read(n).decode('latin-1').replace(chr(13) + chr(10), chr(10)) for n in (VS_NAME, FS_NAME, PC_VS_NAME, PC_FS_NAME)}
     out_dir = os.path.join(a.data, 'data', 'port')
     os.makedirs(out_dir, exist_ok=True)
     out = os.path.join(out_dir, 'remaster_shaders.zip')
     with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
-        z.writestr(VS_NAME, patch_vs(vs).encode('latin-1'))
-        z.writestr(FS_NAME, patch_fs(fs).encode('latin-1'))
-        z.writestr(PC_VS_NAME, patch_pc_vs(pc_vs).encode('latin-1'))
-        z.writestr(PC_FS_NAME, patch_pc_fs(pc_fs).encode('latin-1'))
+        z.writestr(VS_NAME, patch_vs(sources[VS_NAME]).encode('latin-1'))
+        z.writestr(FS_NAME, patch_fs(sources[FS_NAME]).encode('latin-1'))
+        z.writestr(PC_VS_NAME, patch_pc_vs(sources[PC_VS_NAME]).encode('latin-1'))
+        z.writestr(PC_FS_NAME, patch_pc_fs(sources[PC_FS_NAME]).encode('latin-1'))
     print('wrote', out)
 
 

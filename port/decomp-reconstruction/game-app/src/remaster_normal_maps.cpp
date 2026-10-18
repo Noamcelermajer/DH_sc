@@ -6,8 +6,9 @@
 //   * installs the collada material hook: a material whose shader has a NormalSampler uniform and whose DiffuseSampler
 //     texture X.tga has a sibling X_n.tga gets that texture, NormalStrength and NormalGreen. Materials without a normal
 //     map keep NormalStrength 0, which the shader treats as "unchanged".
-// Port settings: normalmaps (1 = on, 0 = original shaders, read at start), normalstrength (percent, default 100),
-// normalgreen (1 = OpenGL green-up maps, -1 = DirectX green-down).
+// Port settings: normalmaps (1 = the remaster shaders, 0 = the original ones; read at start), normalstrength (percent, default
+// 100), normalgreen (1 = OpenGL green-up maps, -1 = DirectX green-down), pixellighting, specular, fogcurve (percent, default
+// 100) and rimlight (percent, default 35), hdtextures (1 = the HD layer data/hd/).
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -35,11 +36,21 @@ constexpr const char* kShaderZip = "data/port/remaster_shaders.zip";
 glitch::io::IFileSystem* g_fileSystem = nullptr;
 int g_attached = 0;
 
-void AttachNormalMap(glitch::video::IVideoDriver* driver, glitch::video::CMaterial* material) {
+void ConfigureMaterial(glitch::video::IVideoDriver* driver, glitch::video::CMaterial* material) {
     if (driver == nullptr || material == nullptr || g_fileSystem == nullptr || !material->m_renderer) {
         return;
     }
     glitch::video::CMaterialRenderer* renderer = material->m_renderer.get();
+    // The remaster shader effects (tools/trackb/remaster_shaders.py), each from its port setting in percent (0 = the original path).
+    struct Effect { const char* uniform; const char* setting; int fallback; };
+    static const Effect kEffects[] = {{"PixelLighting", "pixellighting", 100}, {"SpecularBoost", "specular", 100},
+                                      {"FogCurve", "fogcurve", 100}, {"RimStrength", "rimlight", 35}};
+    for (const Effect& effect : kEffects) {
+        const uint16_t id = renderer->getParameterID(effect.uniform, 0);
+        if (id != 0xffff) {
+            material->parameters.setParameter(id, 0u, static_cast<float>(dh2port::Get(effect.setting, effect.fallback)) / 100.0f);
+        }
+    }
     const uint16_t normalId = renderer->getParameterID("NormalSampler", 0);
     if (normalId == 0xffff) {
         return;
@@ -142,5 +153,5 @@ void Dh2InstallRemaster(glitch::io::IFileSystem* fileSystem) {
         return;
     }
     g_fileSystem = fileSystem;
-    glitch::collada::g_dh2MaterialCreatedHook = &AttachNormalMap;
+    glitch::collada::g_dh2MaterialCreatedHook = &ConfigureMaterial;
 }
