@@ -84,10 +84,18 @@ mapping in mind, but its fragment shader never samples a normal map. Plan:
 - Before any batch: one texture through the whole chain in the runner, then a contact sheet of six samples per tool
   (DeepBump, a monocular estimator, ArmorLab, a commercial tool if wanted) and pick per texture class.
 
-## Order of work
+## Status (2026-10-18)
 
-1. ✔ Menu atlases accept upscaled textures (this branch).
-2. ASTC + KTX loader + `data/hd/` override layer + `hdtextures` switch; pack tool writes ASTC with mips.
-3. User upscales; pack; contact sheets per level; phone test (memory, load time).
-4. Tangents at load + normal-mapped shader variant + per-level dominant light; one test texture end to end.
-5. Batch normal maps, contact sheets, phone test.
+- **Textures:** all 361 upscaled by the user (6x); `tools/trackb/remaster_prep.py downscale` makes the exact 2x set
+  (`Documents/DH2-remaster/hd2x`), `textures.py pack --upscaled` packs it. Menus and world render correctly at 2x in the
+  runner. To review: effect textures (the water caustics turned into hard cells).
+- **Normal-map relief (done, runner-verified):** `tools/trackb/remaster_shaders.py` writes `data/port/remaster_shaders.zip`
+  from the user's shaders.pak (GL_Diffuse_L1 and the lit, textured ProfileCOMMON variants: world, props, characters,
+  skinned meshes); `Application` mounts it before shaders.pak; `game-app/src/remaster_normal_maps.cpp` binds
+  `<diffuse>_n.tga` to every material whose shader has NormalSampler. No mesh tangents: the tangent frame comes from
+  screen-space derivatives. The relief light is Light0 tipped towards a fixed oblique direction (a light from straight above
+  shows almost no relief). Port settings `normalmaps`, `normalstrength` (percent), `normalgreen`. Stand-in maps (height from
+  brightness) prove the chain; CHORD maps (`tools/trackb/remaster_normals.py`) replace them once the model is unlocked.
+- **Next:** ASTC (new pixel-format ids above the engine's "unknown" id 39, GL table rows, a KTX loader that recognises the
+  file by content so HD files keep their .tga names, a software decode fallback for GPUs without ASTC, e.g. the Windows
+  runner's ANGLE/D3D11) using ARM's astc-encoder; an HD override folder and switch; then the phone build.

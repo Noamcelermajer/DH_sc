@@ -3,7 +3,8 @@
 
   py -3 tools/trackb/remaster_shaders.py --data <files dir of a game data copy>
 
-Reads GL_Diffuse_L1_iPhone_VS/FS.glsl from <data>/shaders.pak (the user's own game data; the shader text is game data and
+Reads GL_Diffuse_L1_iPhone_VS/FS.glsl and ProfileCOMMON_emul_VS/FS.glsl (its lit, textured variants: characters, skinned
+meshes) from <data>/shaders.pak (the user's own game data; the shader text is game data and
 is not kept in this repository), applies the edits below and writes <data>/data/port/remaster_shaders.zip. The game mounts
 that zip before shaders.pak (Application init, port setting "normalmaps"), so these files replace the originals while
 the original pak stays untouched.
@@ -25,6 +26,8 @@ import zipfile
 
 VS_NAME = 'GL_Diffuse_L1_iPhone_VS.glsl'
 FS_NAME = 'GL_Diffuse_L1_iPhone_FS.glsl'
+PC_VS_NAME = 'ProfileCOMMON_emul_VS.glsl'
+PC_FS_NAME = 'ProfileCOMMON_emul_FS.glsl'
 
 VS_VARYINGS = '''
 // DH2 remaster: normal-map relief (tools/trackb/remaster_shaders.py)
@@ -111,6 +114,27 @@ def patch_fs(src):
     return src
 
 
+def guarded(block):
+    return '#if defined LIGHTING && defined TEXTURED' + block + '#endif\n'
+
+
+def patch_pc_vs(src):
+    """ProfileCOMMON_emul (characters, skinned meshes, props): the lit, textured variants carry the relief varyings."""
+    src = insert_after(src, 'varying lowp vec4 vColor0;', '\n' + guarded(VS_VARYINGS), 'pc vs varyings')
+    src = insert_after(src, 'vec3 Light0Vec = Light0Position.xyz - worldPosition.xyz * Light0Position.w;',
+                       '\n#ifdef TEXTURED\n    vNmWorldPos = worldPosition.xyz;\n    vNmWorldNormal = transformedNormal;\n'
+                       '    vNmLightVec = Light0Vec;\n#endif', 'pc vs assignments')
+    return src
+
+
+def patch_pc_fs(src):
+    src = FS_HEAD + src
+    src = insert_after(src, 'varying lowp vec4 vColor0;', '\n' + guarded(FS_DECLS), 'pc fs declarations')
+    main = src.find('void main()')
+    src = insert_before(src, '#ifdef ALPHATEST', guarded('\n' + FS_RELIEF), 'pc fs relief', main)
+    return src
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--data', required=True, help='files dir of a game data copy (holds shaders.pak and data/)')
@@ -118,12 +142,16 @@ def main():
     with zipfile.ZipFile(os.path.join(a.data, 'shaders.pak')) as z:
         vs = z.read(VS_NAME).decode('latin-1')
         fs = z.read(FS_NAME).decode('latin-1')
+        pc_vs = z.read(PC_VS_NAME).decode('latin-1')
+        pc_fs = z.read(PC_FS_NAME).decode('latin-1')
     out_dir = os.path.join(a.data, 'data', 'port')
     os.makedirs(out_dir, exist_ok=True)
     out = os.path.join(out_dir, 'remaster_shaders.zip')
     with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
         z.writestr(VS_NAME, patch_vs(vs).encode('latin-1'))
         z.writestr(FS_NAME, patch_fs(fs).encode('latin-1'))
+        z.writestr(PC_VS_NAME, patch_pc_vs(pc_vs).encode('latin-1'))
+        z.writestr(PC_FS_NAME, patch_pc_fs(pc_fs).encode('latin-1'))
     print('wrote', out)
 
 
