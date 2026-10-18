@@ -108,6 +108,9 @@
 #include "net-session-online/c_matching_base.hpp"
 #include "net-transport/update_job_thread.hpp"
 
+namespace glitch { namespace scene { class ICameraSceneNode; } namespace video { class IVideoDriver; } }
+void Dh2PostFx(glitch::video::IVideoDriver* driver, glitch::scene::ICameraSceneNode* camera);  // remaster_postfx.cpp
+
 // The file-scope job threads #2..#4 (m_updateJobThread1..4) and the first-run flag FirstTime are declared in
 // dh2/global/Globals.hpp (definitions in game-app/src/Globals.cpp). m_updateJobThread0 is the member at +0x04.
 // FirstTime is a bool: the constructor stores it with a byte store (STRB, asm 0x32d980).
@@ -750,6 +753,8 @@ void Application::_Draw() {
                 // reading as registerSceneNodes indexed the vtable from its first entry; the object's vptr is five entries in (GSViewer
                 // calls the same slot drawAll(null)). With registerSceneNodes only, nothing was ever rendered in 3D.
                 scene->drawAll(static_cast<glitch::scene::ISceneNode*>(nullptr));  // vtable +0x3c, r1 = 0
+                // Port addition (remaster): ambient occlusion, bloom and the tone curve over the 3D view, before any 2D layer
+                Dh2PostFx(driver, scene->activeCamera);
                 const bool boundingBoxes = ReadDebugSwitch("IsRenderingGlitchBoundingBoxes");
                 if (boundingBoxes) {
                     // DebugSwitches::GetSwitch returns a signed char in the original's ABI; the value is only tested

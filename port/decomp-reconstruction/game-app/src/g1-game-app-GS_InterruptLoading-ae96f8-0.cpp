@@ -19,6 +19,10 @@
 #include "dh2/global/net_singletons.hpp"
 #include "dh2/MenuBase.hpp"
 #include "dh2/Level.hpp"
+
+// GSInit.cpp (port, remaster): the splash source rect for an HD-layer texture and the screen's shape
+glitch::core::rect<std::int32_t> Dh2SplashSource(const glitch::video::ITexture* texture, const glitch::core::rect<std::int32_t>& viewport,
+                                                 int& hd);
 #include "dh2/SavegameManager.hpp"
 #include "dh2/StateMachine.hpp"
 #include "dh2/global/ctrl_camera.hpp"  // ApplicationGetInstance(): the Application singleton (Singleton<Application>::s_inst)
@@ -118,14 +122,12 @@ void GS_InterruptLoading::Draw(const StateMachine*) {
         return;
     }
     glitch::core::rect<std::int32_t> viewport;
+    int hd = 1;
     if (driver != nullptr) {
         driver->beginScene2D();
         viewport = driver->m_renderTargets.back()->viewport();
-        glitch::core::rect<std::int32_t> splashSource;
-        splashSource.UpperLeftCorner.X = 0;
-        splashSource.UpperLeftCorner.Y = 0;
-        splashSource.LowerRightCorner.X = 0x500;
-        splashSource.LowerRightCorner.Y = 0x2F0;
+        // Port: {0, 0, 0x500, 0x2F0} scaled for an HD-layer splash and cropped to the screen's shape (GSInit.cpp)
+        const glitch::core::rect<std::int32_t> splashSource = Dh2SplashSource(m_loadBackground.get(), viewport, hd);
         glitch::video::C2DDriver::draw2DImage(driver, m_loadBackground, viewport, splashSource, nullptr, nullptr, false);
     }
 
@@ -145,10 +147,10 @@ void GS_InterruptLoading::Draw(const StateMachine*) {
         const std::int32_t width = viewport.LowerRightCorner.X - viewport.UpperLeftCorner.X;
         const std::int32_t height = viewport.LowerRightCorner.Y - viewport.UpperLeftCorner.Y;
         glitch::core::rect<std::int32_t> spinnerSource;
-        spinnerSource.UpperLeftCorner.X = 0x36 * column + 0x17;
-        spinnerSource.UpperLeftCorner.Y = 0x38 * row + 0x318;
-        spinnerSource.LowerRightCorner.X = 0x36 * column + 0x4D;
-        spinnerSource.LowerRightCorner.Y = 0x38 * row + 0x350;
+        spinnerSource.UpperLeftCorner.X = (0x36 * column + 0x17) * hd;   // port: * hd, the HD splash scale
+        spinnerSource.UpperLeftCorner.Y = (0x38 * row + 0x318) * hd;
+        spinnerSource.LowerRightCorner.X = (0x36 * column + 0x4D) * hd;
+        spinnerSource.LowerRightCorner.Y = (0x38 * row + 0x350) * hd;
         glitch::core::rect<std::int32_t> spinnerDestination;
         spinnerDestination.UpperLeftCorner.X = width - 54;
         spinnerDestination.UpperLeftCorner.Y = height - 56;

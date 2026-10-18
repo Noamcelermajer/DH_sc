@@ -7,7 +7,8 @@
 //     texture X.tga has a sibling X_n.tga gets that texture, NormalStrength and NormalGreen. Materials without a normal
 //     map keep NormalStrength 0, which the shader treats as "unchanged".
 // Port settings: normalmaps (1 = the remaster shaders, 0 = the original ones; read at start), normalstrength (percent, default
-// 100), normalgreen (1 = OpenGL green-up maps, -1 = DirectX green-down), pixellighting, specular, fogcurve (percent, default
+// 0 until the meshes get vertex tangents: the frame from screen derivatives changes from triangle to triangle where a floor's
+// mapping is stretched unevenly, which drew lines along triangle edges; 100 = full maps), normalgreen (1 = OpenGL green-up maps, -1 = DirectX green-down), pixellighting, specular, fogcurve (percent, default
 // 100) and rimlight (percent, default 35), hdtextures (1 = the HD layer data/hd/), trilinear (1) and anisotropy (8).
 #include <cctype>
 #include <cstdio>
@@ -137,7 +138,7 @@ void ConfigureMaterial(glitch::video::IVideoDriver* driver, glitch::video::CMate
     material->parameters.setParameter(normalId, 0u, normal);
     const uint16_t strengthId = renderer->getParameterID("NormalStrength", 0);
     if (strengthId != 0xffff) {
-        const bool ok = material->parameters.setParameter(strengthId, 0u, static_cast<float>(dh2port::Get("normalstrength", 100)) / 100.0f);
+        const bool ok = material->parameters.setParameter(strengthId, 0u, static_cast<float>(dh2port::Get("normalstrength", 0)) / 100.0f);
 #ifdef DH2_HOST_RUNNER
         if (std::getenv("DH2_NM_LOG") != nullptr) {
             const glitch::video::detail::SParameterEntry& e = renderer->m_entryStorage[strengthId];

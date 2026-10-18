@@ -54,8 +54,14 @@ NORMAL_MAP = '''		mediump vec3 nm = texture2D(NormalSampler, UV).xyz * 2.0 - 1.0
 		highp vec3 dp1perp = cross(dhN, dp1);
 		highp vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
 		highp vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
-		highp float invmax = inversesqrt(max(max(dot(T, T), dot(B, B)), 1e-12));
-		dhNp = normalize(T * (invmax * nm.x) + B * (invmax * nm.y) + dhN * nm.z);
+		// unit axes in the surface plane: each triangle's frame then differs from its neighbour's only by a small rotation.
+		// (Scaling both by the longer axis, the usual cotangent frame, changed the bump strength from triangle to triangle
+		// where the floor's mapping is stretched unevenly: visible lines along the triangle edges.)
+		T = T - dhN * dot(dhN, T);
+		B = B - dhN * dot(dhN, B);
+		T *= inversesqrt(max(dot(T, T), 1e-12));
+		B *= inversesqrt(max(dot(B, B), 1e-12));
+		dhNp = normalize(T * nm.x + B * nm.y + dhN * nm.z);
 '''
 
 RELIEF = '''	if (NormalStrength > 0.0)

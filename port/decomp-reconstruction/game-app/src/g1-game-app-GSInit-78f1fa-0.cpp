@@ -73,6 +73,27 @@ GSInit::GSInit() {
 // The original body is empty (asm: BX LR).
 void GSInit::Dtor(const StateMachine*) {}
 
+// Port addition (remaster). The splash screens (GSInit, GS_InterruptLoading) blit texels (0, 0, 1280, 752) of the 2048-wide
+// splash art and the spinner cells below it. An HD-layer splash (data/hd/, 3x) is larger, so the rects scale by its width / 2048
+// (`hd`, 1 with the original data); without it the screen showed the art's top-left third. On a screen of another shape the art
+// covers it (centre crop, its proportions kept), like the menu splash (UI12 "cover"), instead of stretching.
+glitch::core::rect<std::int32_t> Dh2SplashSource(const glitch::video::ITexture* texture, const glitch::core::rect<std::int32_t>& viewport,
+                                                 int& hd) {
+    hd = texture != nullptr && texture->m_width > 2048 ? static_cast<int>(texture->m_width / 2048) : 1;
+    int srcW = 1280, srcH = 752;
+    const int vw = viewport.LowerRightCorner.X - viewport.UpperLeftCorner.X;
+    const int vh = viewport.LowerRightCorner.Y - viewport.UpperLeftCorner.Y;
+    if (vw > 0 && vh > 0) {
+        if (vw * 752 > vh * 1280) {
+            srcH = 1280 * vh / vw;
+        } else {
+            srcW = 752 * vw / vh;
+        }
+    }
+    const int srcX = (1280 - srcW) / 2, srcY = (752 - srcH) / 2;
+    return glitch::core::rect<std::int32_t>{srcX * hd, srcY * hd, (srcX + srcW) * hd, (srcY + srcH) * hd};
+}
+
 // 0x384a4c GSInit::Draw(StateMachine const*)
 // The whole body, checked against the asm (0x384a4c). The driver is Application::m_device (+0x10) -> videoDriver
 // (IDevice +0x10), which IDevice now declares.
@@ -98,24 +119,9 @@ void GSInit::Draw(const StateMachine*) {
         if (!driver->m_renderTargets.empty()) {
             const glitch::core::rect<std::int32_t>& viewport = driver->m_renderTargets.back()->viewport();
             const glitch::core::rect<std::int32_t> screenRect = viewport;
-            // Port (remaster): the source rects are texels of the original 2048-wide splash; an HD-layer splash (data/hd/, 3x)
-            // is larger, so they are scaled by its width / 2048 (1 with the original data). Without this the first frames
-            // showed the splash's top-left third filling the screen.
-            const int hd = m_splashTexture->m_width > 2048 ? static_cast<int>(m_splashTexture->m_width / 2048) : 1;
-            // Port: on a screen wider or taller than the art (1280x752) the art covers it (centre crop, its proportions kept), as
-            // the menu splash that follows does (UI12 "cover"); the original stretched it.
-            int srcW = 1280, srcH = 752;
-            const int vw = viewport.LowerRightCorner.X - viewport.UpperLeftCorner.X;
-            const int vh = viewport.LowerRightCorner.Y - viewport.UpperLeftCorner.Y;
-            if (vw > 0 && vh > 0) {
-                if (vw * 752 > vh * 1280) {
-                    srcH = 1280 * vh / vw;
-                } else {
-                    srcW = 752 * vw / vh;
-                }
-            }
-            const int srcX = (1280 - srcW) / 2, srcY = (752 - srcH) / 2;
-            const glitch::core::rect<std::int32_t> splashSource{srcX * hd, srcY * hd, (srcX + srcW) * hd, (srcY + srcH) * hd};
+            // Port: splash source rect for an HD-layer texture and a screen of another shape (Dh2SplashSource above)
+            int hd = 1;
+            const glitch::core::rect<std::int32_t> splashSource = Dh2SplashSource(m_splashTexture.get(), viewport, hd);
             glitch::video::C2DDriver::draw2DImage(driver, m_splashTexture, screenRect, splashSource, nullptr, nullptr,
                                                   false);
             if (unk_08 < 0) {

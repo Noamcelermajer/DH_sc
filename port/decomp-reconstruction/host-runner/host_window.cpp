@@ -13,6 +13,8 @@
 #include "glitch-shared/gl_function_table.hpp"
 #include "host_runner.hpp"
 
+extern void* (*g_dh2GLGetProc)(const char* name);  // game-app remaster_postfx.cpp
+
 namespace dh2host { void rtCharDump(); }
 extern "C" int appOnTouch(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8);
 
@@ -352,8 +354,12 @@ bool createWindowAndContext(const Options& opt) {
         return false;
     }
     g_surf = p_eglCreateWindowSurface(g_dpy, cfg, g_hwnd, nullptr);
+    // remaster: an OpenGL ES 3 context like the phone's (the post-processing resolve needs glBlitFramebuffer); ES 2 if refused
+    const int ctxAttr3[] = {0x3098, 3, 0x3038};
     const int ctxAttr[] = {0x3098, 2, 0x3038};
-    g_ctx = p_eglCreateContext(g_dpy, cfg, nullptr, ctxAttr);
+    g_ctx = p_eglCreateContext(g_dpy, cfg, nullptr, ctxAttr3);
+    if (!g_ctx) g_ctx = p_eglCreateContext(g_dpy, cfg, nullptr, ctxAttr);
+    g_dh2GLGetProc = [](const char* name) -> void* { return reinterpret_cast<void*>(GetProcAddress(g_libGLES, name)); };
     if (!g_surf || !g_ctx || !p_eglMakeCurrent(g_dpy, g_surf, g_surf, g_ctx)) {
         std::fprintf(g_runnerOut, "EGL surface/context failed 0x%x\n", p_eglGetError());
         return false;
