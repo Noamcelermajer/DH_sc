@@ -23,6 +23,8 @@
 // GSInit.cpp (port, remaster): the splash source rect for an HD-layer texture and the screen's shape
 glitch::core::rect<std::int32_t> Dh2SplashSource(const glitch::video::ITexture* texture, const glitch::core::rect<std::int32_t>& viewport,
                                                  int& hd, glitch::core::rect<std::int32_t>& destination);
+void Dh2DrawSplashBackdrop(glitch::video::IVideoDriver* driver, const boost::intrusive_ptr<glitch::video::ITexture>& texture,
+                           const glitch::core::rect<std::int32_t>& viewport, const glitch::core::rect<std::int32_t>& destination, int hd);
 #include "dh2/SavegameManager.hpp"
 #include "dh2/StateMachine.hpp"
 #include "dh2/global/ctrl_camera.hpp"  // ApplicationGetInstance(): the Application singleton (Singleton<Application>::s_inst)
@@ -131,6 +133,7 @@ void GS_InterruptLoading::Draw(const StateMachine*) {
         driver->clearBuffers(1);
         glitch::core::rect<std::int32_t> destination = viewport;
         const glitch::core::rect<std::int32_t> splashSource = Dh2SplashSource(m_loadBackground.get(), viewport, hd, destination);
+        Dh2DrawSplashBackdrop(driver, m_loadBackground, viewport, destination, hd);
         glitch::video::C2DDriver::draw2DImage(driver, m_loadBackground, destination, splashSource, nullptr, nullptr, false);
     }
 

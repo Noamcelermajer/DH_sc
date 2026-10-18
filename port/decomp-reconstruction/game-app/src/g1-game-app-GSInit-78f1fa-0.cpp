@@ -76,26 +76,52 @@ void GSInit::Dtor(const StateMachine*) {}
 // Port addition (remaster). The splash screens (GSInit, GS_InterruptLoading) blit texels (0, 0, 1280, 752) of the 2048-wide
 // splash art and the spinner cells below it. An HD-layer splash (data/hd/, 3x) is larger, so the rects scale by its width / 2048
 // (`hd`, 1 with the original data); without it the screen showed the art's top-left third. The original stretched the art over
-// the screen. Here the art covers the screen with its proportions kept, framed as the menu splash that follows frames it with
-// the tailored layouts (UI12): a wider screen keeps the full width, slightly below centre, a taller one
-// the centre. `destination` receives the screen rect to draw into (the whole viewport).
+// the screen. Here the proportions are kept: a wider screen shows the whole art at the screen's height, centred, over a dimmed
+// enlarged copy (Dh2DrawSplashBackdrop); a taller screen is covered (centre crop). `destination` receives the screen rect.
 glitch::core::rect<std::int32_t> Dh2SplashSource(const glitch::video::ITexture* texture, const glitch::core::rect<std::int32_t>& viewport,
                                                  int& hd, glitch::core::rect<std::int32_t>& destination) {
     hd = texture != nullptr && texture->m_width > 2048 ? static_cast<int>(texture->m_width / 2048) : 1;
     destination = viewport;
-    int srcW = 1280, srcH = 752;
     const int vw = viewport.LowerRightCorner.X - viewport.UpperLeftCorner.X;
     const int vh = viewport.LowerRightCorner.Y - viewport.UpperLeftCorner.Y;
     if (vw > 0 && vh > 0) {
         if (vw * 752 > vh * 1280) {
-            srcH = 1280 * vh / vw;
+            const int w = vh * 1280 / 752;
+            destination.UpperLeftCorner.X = viewport.UpperLeftCorner.X + (vw - w) / 2;
+            destination.LowerRightCorner.X = destination.UpperLeftCorner.X + w;
         } else {
-            srcW = 752 * vw / vh;
+            // a taller screen is covered (centre crop of the width): a dimmed copy above and below would repeat the logo
+            const int srcW = 752 * vw / vh, srcX = (1280 - srcW) / 2;
+            return glitch::core::rect<std::int32_t>{srcX * hd, 0, (srcX + srcW) * hd, 752 * hd};
         }
     }
-    // a wide screen: 60 percent of the spare height above, as the menu splash frames it on the phone (measured on 2520x1080)
-    const int srcX = (1280 - srcW) / 2, srcY = (752 - srcH) * 3 / 5;
-    return glitch::core::rect<std::int32_t>{srcX * hd, srcY * hd, (srcX + srcW) * hd, (srcY + srcH) * hd};
+    return glitch::core::rect<std::int32_t>{0, 0, 1280 * hd, 752 * hd};
+}
+
+// Port addition (remaster): where the fitted splash does not cover the screen, the same art enlarged to cover it (centre crop) and
+// darkened goes underneath, so the sides are a dim continuation of the picture instead of black bars.
+void Dh2DrawSplashBackdrop(glitch::video::IVideoDriver* driver, const boost::intrusive_ptr<glitch::video::ITexture>& texture,
+                           const glitch::core::rect<std::int32_t>& viewport, const glitch::core::rect<std::int32_t>& destination, int hd) {
+    if (driver == nullptr || !texture || (destination.UpperLeftCorner.X == viewport.UpperLeftCorner.X &&
+                                          destination.LowerRightCorner.X == viewport.LowerRightCorner.X &&
+                                          destination.UpperLeftCorner.Y == viewport.UpperLeftCorner.Y &&
+                                          destination.LowerRightCorner.Y == viewport.LowerRightCorner.Y)) {
+        return;
+    }
+    const int vw = viewport.LowerRightCorner.X - viewport.UpperLeftCorner.X;
+    const int vh = viewport.LowerRightCorner.Y - viewport.UpperLeftCorner.Y;
+    if (vw <= 0 || vh <= 0) return;
+    int srcW = 1280, srcH = 752;
+    if (vw * 752 > vh * 1280) {
+        srcH = 1280 * vh / vw;
+    } else {
+        srcW = 752 * vw / vh;
+    }
+    const int srcX = (1280 - srcW) / 2, srcY = (752 - srcH) / 2;
+    const glitch::core::rect<std::int32_t> source{srcX * hd, srcY * hd, (srcX + srcW) * hd, (srcY + srcH) * hd};
+    glitch::video::SColor dim[4];
+    for (glitch::video::SColor& c : dim) c.color = 0xFF3A3A3Au;
+    glitch::video::C2DDriver::draw2DImage(driver, texture, viewport, source, nullptr, dim, false);
 }
 
 // 0x384a4c GSInit::Draw(StateMachine const*)
@@ -126,6 +152,7 @@ void GSInit::Draw(const StateMachine*) {
             int hd = 1;
             glitch::core::rect<std::int32_t> screenRect = viewport;
             const glitch::core::rect<std::int32_t> splashSource = Dh2SplashSource(m_splashTexture.get(), viewport, hd, screenRect);
+            Dh2DrawSplashBackdrop(driver, m_splashTexture, viewport, screenRect, hd);
             glitch::video::C2DDriver::draw2DImage(driver, m_splashTexture, screenRect, splashSource, nullptr, nullptr,
                                                   false);
             if (unk_08 < 0) {
