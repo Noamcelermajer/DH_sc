@@ -22,6 +22,10 @@ runs, so each one can be switched off on its own:
   FogCurve        (fogcurve)        per-pixel fog from the view depth with a smoothstep curve (clear near, denser far)
                                     instead of a per-vertex linear factor.
   RimStrength     (rimlight)        characters and objects: a light rim on silhouettes, tinted by the player light.
+  AlphaCoverage   (alphacoverage)   alpha-tested surfaces (foliage, grates, hair): the hard alpha cut becomes a one-pixel
+                                    ramp that alpha-to-coverage turns into MSAA edge coverage (smooth cut-out edges). The
+                                    uniform only survives in the alpha-tested variants, which is how the hook finds them;
+                                    it switches the pass's SampleAlphaToCoverage state on (non-blended passes, MSAA only).
 """
 import argparse
 import os
@@ -91,6 +95,7 @@ uniform mediump float NormalGreen;
 uniform mediump float PixelLighting;
 uniform mediump float SpecularBoost;
 uniform mediump float FogCurve;
+uniform mediump float AlphaCoverage;
 uniform highp vec3 Light0Attenuation;
 uniform highp vec4 Light0Ambientcolor;
 uniform highp vec4 Light0Diffusecolor;
@@ -160,9 +165,21 @@ def patch_vs(src):
     return src
 
 
+COVERAGE_NOTE = '// DH2 remaster: alpha to coverage - the cut becomes a one-pixel ramp that MSAA turns into partial coverage'
+
+
 def patch_fs(src):
     src = FS_HEAD + src
     src = insert_after(src, 'varying mediump vec4 vTexCoord0;', DIFF_FS_DECLS, 'fs declarations')
+    src = replace_once(src, '#ifdef AT\n\tif (Diffuse.w < 0.8) discard;\t\n#endif', '''#ifdef AT
+	if (AlphaCoverage > 0.0)
+	{
+		''' + COVERAGE_NOTE + '''
+		Diffuse.w = clamp((Diffuse.w - 0.8) / max(fwidth(Diffuse.w), 1e-3) + 0.5, 0.0, 1.0);
+		if (Diffuse.w <= 0.0) discard;
+	}
+	else if (Diffuse.w < 0.8) discard;
+#endif''', 'fs alpha test')
     main = find_or_exit(src, 'void main()', 'fs main')
     src = insert_after(src, '#else\n\tlowp vec4 color = Diffuse;\n#endif', '\n' + DIFF_FS_LIGHTING, 'fs colour init', main)
     src = replace_once(src, '\tspecularColor *= vAttNdotHV;', '''	if (PixelLighting > 0.0)
@@ -273,7 +290,19 @@ def patch_pc_vs(src):
 
 def patch_pc_fs(src):
     src = FS_HEAD + src
-    src = insert_after(src, 'varying lowp vec4 vColor0;', PC_FS_DECLS, 'pc fs declarations')
+    src = insert_after(src, 'varying lowp vec4 vColor0;', PC_FS_DECLS + '\nuniform mediump float AlphaCoverage;\n', 'pc fs declarations')
+    src = replace_once(src, '#ifdef ALPHATEST\n\tif (color.a <= AlphaRef)\n\t{\n\t\tdiscard;\n\t}\n#endif', '''#ifdef ALPHATEST
+	if (AlphaCoverage > 0.0)
+	{
+		''' + COVERAGE_NOTE + '''
+		color.a = clamp((color.a - AlphaRef) / max(fwidth(color.a), 1e-3) + 0.5, 0.0, 1.0);
+		if (color.a <= 0.0) discard;
+	}
+	else if (color.a <= AlphaRef)
+	{
+		discard;
+	}
+#endif''', 'pc fs alpha test')
     main = find_or_exit(src, 'void main()', 'pc fs main')
     src = insert_after(src, 'lowp vec4 color = vColor0;', PC_FS_LIGHTING, 'pc fs lighting', main)
     main = find_or_exit(src, 'void main()', 'pc fs main')

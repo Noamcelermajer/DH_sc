@@ -39,6 +39,7 @@ namespace {
 constexpr const char* kShaderZip = "data/port/remaster_shaders.zip";
 glitch::io::IFileSystem* g_fileSystem = nullptr;
 int g_attached = 0;
+bool g_alphaCoverage = false;  // MSAA surface and setting alphacoverage on
 
 void ConfigureMaterial(glitch::video::IVideoDriver* driver, glitch::video::CMaterial* material) {
     if (driver == nullptr || material == nullptr || g_fileSystem == nullptr || !material->m_renderer) {
@@ -54,6 +55,25 @@ void ConfigureMaterial(glitch::video::IVideoDriver* driver, glitch::video::CMate
         if (id != 0xffff) {
             material->parameters.setParameter(id, 0u, static_cast<float>(dh2port::Get(effect.setting, effect.fallback)) / 100.0f);
         }
+    }
+    // Alpha-tested variants (the only ones that keep the AlphaCoverage uniform): SampleAlphaToCoverageEnable (state word 1,
+    // bit 24) on every pass that does not blend (bit 16), and the shader's soft cut with it. The renderer is shared by its
+    // materials; setting the bit again is harmless.
+    const uint16_t coverageId = renderer->getParameterID("AlphaCoverage", 0);
+    if (coverageId != 0xffff && g_alphaCoverage) {
+        bool any = false;
+        for (uint8_t t = 0; t < renderer->m_techniqueCount; ++t) {
+            const glitch::video::STechnique& technique = renderer->m_techniques[t];
+            for (uint8_t p = 0; p < technique.passCount; ++p) {
+                auto& pass = const_cast<glitch::video::SRenderPass&>(technique.passes[p]);
+                if ((pass.stateWords[1] & 0x10000u) == 0) {
+                    pass.stateWords[1] |= 0x1000000u;
+                    pass.flag30 = 1;
+                    any = true;
+                }
+            }
+        }
+        material->parameters.setParameter(coverageId, 0u, any ? 1.0f : 0.0f);
     }
     const uint16_t normalId = renderer->getParameterID("NormalSampler", 0);
     if (normalId == 0xffff) {
@@ -153,6 +173,12 @@ void Dh2InstallRemaster(glitch::io::IFileSystem* fileSystem) {
     glitch::video::g_dh2Trilinear = dh2port::Get("trilinear", 1) != 0;
     glitch::video::g_dh2Anisotropy = static_cast<float>(dh2port::Get("anisotropy", 8));
     std::fprintf(stdout, "[remaster] filtering: trilinear %d, anisotropy %d\n", glitch::video::g_dh2Trilinear ? 1 : 0, dh2port::Get("anisotropy", 8));
+
+    // Alpha to coverage for alpha-tested surfaces: only with a multisampled surface (GL_SAMPLES > 0); setting alphacoverage (1)
+    int32_t samples = 0;
+    if (glitch::video::deps::activeGLFunctionTable().getIntegerv) glitch::video::deps::activeGLFunctionTable().getIntegerv(0x80a9, &samples);
+    g_alphaCoverage = samples > 0 && dh2port::Get("alphacoverage", 1) != 0;
+    std::fprintf(stdout, "[remaster] MSAA samples %d, alpha to coverage %d\n", samples, g_alphaCoverage ? 1 : 0);
 
     // Normal maps: the shader zip lives in the files dir (RES_PATH), like data/port/ui_layouts.txt.
     const std::string zip = std::string(RES_PATH != nullptr ? RES_PATH : "") + kShaderZip;
