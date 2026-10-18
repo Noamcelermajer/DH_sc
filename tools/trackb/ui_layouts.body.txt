@@ -1,5 +1,5 @@
 # ---- title -----------------------------------------------------------------------------------------------------------
-menu_splash/#0                               cover  amount=0.5
+menu_splash/#0                               cover  amount=0.5  anchor=0.5,1
 menu_splash/ClickToContinue                  shape  grow
 menu_splash/MENU_COPYRIGHT                   shape  edge=bottom-left
 

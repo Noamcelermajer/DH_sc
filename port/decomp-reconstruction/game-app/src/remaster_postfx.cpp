@@ -92,7 +92,14 @@ uniform float uFar;      // camera far: sky and background get no occlusion
 void main() {
     vec3 p = viewPos(vUv);
     if (p.z > uFar * 0.95) { gl_FragColor = vec4(1.0); return; }
-    vec3 n = normalize(cross(dFdx(p), dFdy(p)));
+    // the surface normal from the neighbours on the side with the smaller depth step: dFdx / dFdy straddle the triangle
+    // edges, where they mix two surfaces and gave a wrong normal along every edge of a low-poly floor (dark lines)
+    vec3 pl = viewPos(vUv - vec2(uTexel.x * 2.0, 0.0)), pr = viewPos(vUv + vec2(uTexel.x * 2.0, 0.0));
+    vec3 pd = viewPos(vUv - vec2(0.0, uTexel.y * 2.0)), pu = viewPos(vUv + vec2(0.0, uTexel.y * 2.0));
+    vec3 dx = abs(pr.z - p.z) < abs(p.z - pl.z) ? pr - p : p - pl;
+    vec3 dy = abs(pu.z - p.z) < abs(p.z - pd.z) ? pu - p : p - pd;
+    vec3 n = normalize(cross(dx, dy));
+    if (dot(n, -p) < 0.0) n = -n;  // facing the camera
     // screen radius of uRadius at this depth
     vec2 rad = uRadius * uFocal * 0.5 / p.z;
     float ang = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
