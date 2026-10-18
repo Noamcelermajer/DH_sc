@@ -13,7 +13,10 @@ namespace glitch::video::pixel_format {
 
 namespace detail {
 
-constexpr int kFormatCount = 40;
+// The original's 40 rows (39 = "unknown"), then the port's ETC2 rows (remaster HD textures, REMASTER.md "GPU textures").
+constexpr int kFormatCount = 42;
+constexpr int kFormatETC2RGB8 = 40;      // GL_COMPRESSED_RGB8_ETC2 (0x9274), 4x4 blocks of 8 bytes
+constexpr int kFormatETC2RGBA8 = 41;     // GL_COMPRESSED_RGBA8_ETC2_EAC (0x9278), 4x4 blocks of 16 bytes
 
 // One row of PFDTable, 0x28 bytes in the original.
 struct SFormatEntry {
@@ -31,7 +34,7 @@ struct SFormatEntry {
 };
 static_assert(sizeof(SFormatEntry) == 0x28, "PFDTable entries are 0x28 bytes");
 
-// Table data: the original's 40 rows, defined in src/pixel_format_table.cpp.
+// Table data: the original's 40 rows and the port's two ETC2 rows, defined in src/pixel_format_table.cpp.
 extern SFormatEntry PFDTable[kFormatCount];
 
 }  // namespace detail

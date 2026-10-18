@@ -14,7 +14,8 @@ Turns the upscaler's output (any integer or non-integer factor, any file-name su
   * hard cut-out alpha stays hard: when the original alpha is (almost) only 0 and 255, the result is thresholded at 128;
   * data maps (lightmaps, alpha masks, the debug alpha test) are taken from the ORIGINAL with Lanczos instead of the AI
     output, because an upscaler invents detail in data that is not a picture;
-  * a file is skipped when its output is newer than its input, so the command can be re-run while the upscaler works.
+  * a file is skipped when its output is newer than its input, so the command can be re-run while the upscaler works;
+  * an original the upscaler skipped gets a Lanczos 2x copy, so the output always covers every texture.
 
 Writes <out>/<sub>/<original name>.png for <sub> in 3d and res, and <out>/prep_log.csv.
 """
@@ -116,6 +117,23 @@ def downscale(src, orig, out, scale):
             Image.fromarray((res * 255.0 + 0.5).astype(np.uint8), 'RGBA').save(dpath, optimize=False)
             rows.append([sub, f, o, how, '%dx%d' % oim.size, '%dx%d' % target])
             print('%-40s %s' % (o, how), flush=True)
+    # every original gets a 2x file: one the upscaler skipped (tiny icons, 1-pixel gradient strips) is enlarged with Lanczos
+    for sub, table in originals.items():
+        os.makedirs(os.path.join(out, sub), exist_ok=True)
+        for name, fname in sorted(table.items()):
+            dpath = os.path.join(out, sub, name + '.png')
+            if os.path.exists(dpath):
+                continue
+            oim = Image.open(os.path.join(orig, sub, fname))
+            target = (oim.width * scale, oim.height * scale)
+            res = premul_resize(oim, target, Image.LANCZOS)
+            how = 'not upscaled: original, lanczos'
+            if 'A' in oim.mode and binary_alpha(oim):
+                res[..., 3] = (res[..., 3] >= 0.5).astype(np.float32)
+                how += ', hard alpha'
+            Image.fromarray((res * 255.0 + 0.5).astype(np.uint8), 'RGBA').save(dpath)
+            rows.append([sub, '', name, how, '%dx%d' % oim.size, '%dx%d' % target])
+            print('%-40s %s' % (name, how), flush=True)
     with open(os.path.join(out, 'prep_log.csv'), 'w', newline='', encoding='utf-8') as fh:
         w = csv.writer(fh)
         w.writerow(['folder', 'upscaled file', 'original', 'method', 'original size', 'output size'])

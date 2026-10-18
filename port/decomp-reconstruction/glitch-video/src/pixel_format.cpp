@@ -37,11 +37,11 @@ char getPackedType(E_PIXEL_FORMAT format) {
 
 // 0x5eda70 _ZN6glitch5video12pixel_format9getFormatEjjjj
 int getFormat(uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
-    for (int i = 0; i < detail::kFormatCount; ++i) {
+    for (int i = 0; i < 39; ++i) {  // the original's rows only (the port's ETC2 rows have no key)
         const SFormatEntry& e = PFDTable[i];
         if (e.key[0] == a && e.key[1] == b && e.key[2] == c && e.key[3] == d) return i;
     }
-    return detail::kFormatCount - 1;  // the original returns 0x27 when no row matches
+    return 39;  // the original returns 0x27 (the "unknown" row) when no row matches; the port's ETC2 rows come after it
 }
 
 // 0x5edaec _ZN6glitch5video12pixel_format12computePitchENS0_14E_PIXEL_FORMATEj

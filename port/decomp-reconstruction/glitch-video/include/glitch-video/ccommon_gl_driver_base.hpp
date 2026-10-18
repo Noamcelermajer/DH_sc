@@ -306,7 +306,7 @@ public:
     uint8_t m_maxColorAttachments = 0;         // +0x4a1: the colour attachment limit of a render target (setTarget)
     uint32_t m_glVersion = 0;                  // +0x4a4: 100 x major + minor of the GL version string (genericDriverInit)
     float m_maxAnisotropy = 0.0f;              // +0x4a8
-    SFormatRow m_formatTable[39];              // +0x4ac..+0x7b7
+    SFormatRow m_formatTable[42];              // +0x4ac..+0x7b7 in the original (39 rows); the port adds row 39 (unused) and the ETC2 rows 40, 41
     uint32_t m_unk7b8[14] = {};                // +0x7b8..+0x7ef; word 13 (+0x7ec) is capability word 2
 };
 

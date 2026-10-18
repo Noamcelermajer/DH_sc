@@ -62,6 +62,9 @@ const char* const kPixelFormatNames[] = {"L8",
                                          "STENCIL1",
                                          "STENCIL4",
                                          "STENCIL8",
+                                         "UNKNOWN",                    // port: id 39 is the "unknown" format
+                                         "COMPRESSED_RGB8_ETC2",       // port rows 40, 41 (remaster)
+                                         "COMPRESSED_RGBA8_ETC2_EAC",
                                          nullptr};  // 0x5ed944, ELF 0x957470
 
 }  // namespace

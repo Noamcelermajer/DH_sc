@@ -50,6 +50,8 @@ boost::intrusive_ptr<CImage> CImageLoaderPVR::loadImage(io::IReadFile* file) con
         case 23: format = 4; break;
         case 24: format = alternate ? 25 : 24; break;
         case 25: format = alternate ? 27 : 26; break;
+        case 96: format = 40; break;  // port (remaster): ETC2 RGB8
+        case 97: format = 41; break;  // port (remaster): ETC2 RGBA8 EAC
         default:
             os::Printer::log("PVR loader", "unsupported format", ELL_ERROR);
             delete[] data;
@@ -132,6 +134,9 @@ bool CImageLoaderPVR::loadTextureHeader(io::IReadFile* file, STextureDesc& desc)
         case 80: format = 31; break;
         case 83: format = 30; break;
         case 86: format = 29; break;
+        // Port codes (remaster, not in the binary): tools/trackb/textures.py packs the HD textures as ETC2 in this container.
+        case 96: format = 40; break;  // ETC2 RGB8 (GL_COMPRESSED_RGB8_ETC2)
+        case 97: format = 41; break;  // ETC2 RGBA8 EAC (GL_COMPRESSED_RGBA8_ETC2_EAC)
         default:
             // The original format string is "%0x02u": a hex conversion with the 0 flag, then "02u".
             os::Printer::logf(os::ELL_ERROR, "loading %s: pixel format %0x02u not supported", file->getFileName(),

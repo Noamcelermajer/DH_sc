@@ -2937,6 +2937,27 @@ LABEL_64:
   m_formatTable[38].m_internalFormat = 0;
   m_formatTable[38].m_format = 0;
   m_formatTable[38].m_unk10 = 36168;
+  // Port addition (remaster, not in the binary): the ETC2 rows. ETC2/EAC is core in OpenGL ES 3.0 (the Fold reports 3.2; ANGLE
+  // decodes it itself on Direct3D), so a 3.x context or an ETC2 extension makes them usable as they are; otherwise 39 (not usable:
+  // the remaster layer then keeps the original textures). Compressed formats are not render targets (+2 = 39).
+  {
+      const char* version = reinterpret_cast<const char*>(gl().getString ? gl().getString(0x1f02) : nullptr);
+      const char* extensions = reinterpret_cast<const char*>(gl().getString ? gl().getString(0x1f03) : nullptr);
+      const bool etc2 = (version != nullptr && std::strstr(version, "OpenGL ES 3") != nullptr) ||
+                        (extensions != nullptr && (std::strstr(extensions, "GL_OES_compressed_ETC2_RGB8_texture") != nullptr ||
+                                                   std::strstr(extensions, "GL_ANGLE_compressed_texture_etc") != nullptr));
+      const uint32_t formats[2] = {0x9274u, 0x9278u};
+      for (int i = 0; i < 2; ++i) {
+          SFormatRow& row = m_formatTable[pixel_format::detail::kFormatETC2RGB8 + i];
+          row.m_unk00 = static_cast<uint16_t>(etc2 ? pixel_format::detail::kFormatETC2RGB8 + i : 39);
+          row.m_unk02 = 39;
+          row.m_internalFormat = formats[i];
+          row.m_format = 0;
+          row.m_type = 0;
+          row.m_unk10 = 0;
+      }
+      glitch::os::Printer::log("ETC2 textures", etc2 ? "supported" : "not supported", glitch::os::ELL_INFORMATION);
+  }
 
     glitch::os::Printer::log("Driver informations:", glitch::os::ELL_INFORMATION);
     const char* glVersion = reinterpret_cast<const char*>(gl().getString ? gl().getString(0x1f02) : nullptr);

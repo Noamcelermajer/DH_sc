@@ -29,3 +29,7 @@ target_link_options(dh2_win_headless_ph PRIVATE -Wl,--wrap=malloc,--wrap=calloc,
 
 # Texture decoder for the upscale pipeline (tools/trackb/textures.py): the game's own PVRTC decode to plain TGA.
 dh2_host_exe(dh2_texconv tool_texconv.cpp)
+
+# ETC2 / EAC encoder and decoder for the remaster's GPU textures (tools/trackb/textures.py pack --gpu etc2): standalone, no game code.
+add_executable(dh2_etc2 tool_etc2.cpp)
+target_compile_options(dh2_etc2 PRIVATE -O2 -Wall)

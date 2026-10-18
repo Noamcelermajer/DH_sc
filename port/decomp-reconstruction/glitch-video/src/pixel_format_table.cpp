@@ -46,6 +46,9 @@ SFormatEntry PFDTable[kFormatCount] = {
     {0x60u, {0xfffffff8u, 0x0u, 0x0u, 0x0u}, -1, 1, 4, 1, {4, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255}, 1, 1, 1, 0}, // row 37
     {0x20u, {0xfffffff0u, 0x0u, 0x0u, 0x0u}, 0, 1, 8, 1, {8, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255}, 1, 1, 1, 0}, // row 38
     {0x0u, {0x0u, 0x0u, 0x0u, 0x0u}, 0, 0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255}, 0, 0, 0, 0}, // row 39
+    // Port rows (remaster, not in the binary): ETC2, laid out like the DXT1 (row 17) and DXT5 (row 20) rows.
+    {0x8u, {0x0u, 0x0u, 0x0u, 0x0u}, 0, 8, 4, 3, {0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255}, 4, 4, 1, 0}, // row 40 ETC2 RGB8
+    {0x9u, {0x0u, 0x0u, 0x0u, 0x0u}, 0, 16, 8, 4, {0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255}, 4, 4, 1, 0}, // row 41 ETC2 RGBA8 EAC
 };
 
 }  // namespace glitch::video::pixel_format::detail

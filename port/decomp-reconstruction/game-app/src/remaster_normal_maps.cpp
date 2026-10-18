@@ -11,11 +11,13 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <string>
 
 #include "core-platform/port_settings.hpp"
 #include "glitch-shared/shared_string_heap.hpp"
 #include "glitch-scene-collada-gui/collada/CColladaFactory.hpp"
+#include "glitch-video/deps/gl_function_table.hpp"
 #include "glitch-video/material.hpp"
 #include "glitch-video/material_parameters.hpp"
 #include "glitch-video/material_renderer.hpp"
@@ -24,6 +26,7 @@
 #include "glitch-video/video_driver.hpp"
 #include "glitch-core-io/io/interfaces.hpp"
 
+extern bool g_dh2HdTextures;  // core-platform filesystem_base.cpp: the HD texture layer (data/hd/) is in use
 extern const char* RES_PATH;  // the files dir (core-platform app_entry; the runner's --data)
 
 namespace {
@@ -78,7 +81,12 @@ void AttachNormalMap(glitch::video::IVideoDriver* driver, glitch::video::CMateri
     const std::string& name = diffuse->m_name;
     const std::size_t dot = name.rfind('.');
     const std::string normalPath = (dot == std::string::npos ? name : name.substr(0, dot)) + "_n.tga";
-    const bool exists = g_fileSystem->existFile((std::string(RES_PATH != nullptr ? RES_PATH : "") + normalPath).c_str());  // existFile adds no prefix
+    // existFile adds no prefix; the map lives in the HD layer (data/hd/3d/textures/) or next to the diffuse texture
+    const std::string root = RES_PATH != nullptr ? RES_PATH : "";
+    const std::size_t at = normalPath.find("3d/textures/");
+    const bool exists = g_fileSystem->existFile((root + normalPath).c_str()) ||
+                        (g_dh2HdTextures && at != std::string::npos &&
+                         g_fileSystem->existFile((root + normalPath.substr(0, at) + "hd/" + normalPath.substr(at)).c_str()));
 #ifdef DH2_HOST_RUNNER
     if (std::getenv("DH2_NM_LOG") != nullptr) {
         std::fprintf(stdout, "NMLOG material diffuse=%s normal=%s exists=%d\n", name.c_str(), normalPath.c_str(), exists ? 1 : 0);
@@ -114,7 +122,19 @@ void AttachNormalMap(glitch::video::IVideoDriver* driver, glitch::video::CMateri
 }  // namespace
 
 void Dh2InstallRemaster(glitch::io::IFileSystem* fileSystem) {
-    // The shader zip lives in the files dir (RES_PATH), like data/port/ui_layouts.txt; existFile does not add the prefix.
+    // HD textures (data/hd/): ETC2 is core in OpenGL ES 3.0; without it the original textures stay.
+    const char* version = reinterpret_cast<const char*>(glitch::video::deps::activeGLFunctionTable().getString
+                                                            ? glitch::video::deps::activeGLFunctionTable().getString(0x1f02) : nullptr);
+    const char* extensions = reinterpret_cast<const char*>(glitch::video::deps::activeGLFunctionTable().getString
+                                                               ? glitch::video::deps::activeGLFunctionTable().getString(0x1f03) : nullptr);
+    const bool etc2 = (version != nullptr && std::strstr(version, "OpenGL ES 3") != nullptr) ||
+                      (extensions != nullptr && (std::strstr(extensions, "GL_OES_compressed_ETC2_RGB8_texture") != nullptr ||
+                                                 std::strstr(extensions, "GL_ANGLE_compressed_texture_etc") != nullptr));
+    g_dh2HdTextures = etc2 && dh2port::Get("hdtextures", 1) != 0;
+    std::fprintf(stdout, "[remaster] HD textures: %s (setting %d, ETC2 %s)\n", g_dh2HdTextures ? "on" : "off", dh2port::Get("hdtextures", 1),
+                 etc2 ? "yes" : "no");
+
+    // Normal maps: the shader zip lives in the files dir (RES_PATH), like data/port/ui_layouts.txt.
     const std::string zip = std::string(RES_PATH != nullptr ? RES_PATH : "") + kShaderZip;
     const bool found = fileSystem != nullptr && fileSystem->existFile(zip.c_str());
     std::fprintf(stdout, "[remaster] normal maps: setting %d, %s %s\n", dh2port::Get("normalmaps", 1), zip.c_str(), found ? "found" : "not found");

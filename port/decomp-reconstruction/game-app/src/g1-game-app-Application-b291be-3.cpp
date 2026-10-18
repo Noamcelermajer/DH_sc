@@ -88,6 +88,7 @@ void Application::RegisterForIrrlichtEvents(glitch::IEventReceiver* receiver) {
 // (IGUIEnvironment::getSkin, slot +0x38) as IGUISkin::setFont(font, default font) (slot +0x2c). Finally the menu manager (operator new(0x114)).
 void Application::InitWin32(glitch::IDevice* device) {
     glitch::video::IVideoDriver* driver = device->videoDriver;  // +0x10
+    Dh2InstallRemaster(device->fileSystem);  // port addition (remaster): HD textures and normal-map shaders, before any texture or shader loads
     const glitch::video::IRenderTarget* target = driver->m_renderTargets.back().get();  // +0xc8, the last entry
     TouchScreenWin32* touchScreen = new TouchScreenWin32(
         static_cast<short>(target->m_width), static_cast<short>(target->m_height));  // +0x0c, +0x10
@@ -99,7 +100,6 @@ void Application::InitWin32(glitch::IDevice* device) {
     Init(device);
     PostInit();
 
-    Dh2InstallRemaster(device->fileSystem);  // port addition (remaster): its shader zip goes before shaders.pak
     device->fileSystem->addZipFileArchive("shaders.pak", true, false);  // IDevice +0x34, vtable +0x18
 
     char fontFile[256];

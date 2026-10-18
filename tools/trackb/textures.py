@@ -23,6 +23,49 @@ import sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 TEXCONV = os.path.join(ROOT, 'build', 'own-v2b', 'host-runner', 'dh2_texconv.exe')
+ETC2 = next((p for p in (os.path.join(ROOT, 'build', 'rm', 'host-runner', 'dh2_etc2.exe'),
+                         os.path.join(ROOT, 'build', 'own-v2b', 'host-runner', 'dh2_etc2.exe')) if os.path.exists(p)),
+            os.path.join(ROOT, 'build', 'rm', 'host-runner', 'dh2_etc2.exe'))
+PVR_ETC2_RGB, PVR_ETC2_RGBA, PVR_MIPMAPS = 96, 97, 0x100  # port codes in the PVR v2 container (CImageLoaderPVR), mip flag
+
+
+def mip_chain(im):
+    """Every level down to 1x1, box-filtered on premultiplied alpha (no dark fringes at cut-out edges)."""
+    import numpy as np
+    from PIL import Image
+    levels = [im]
+    a = np.asarray(im).astype(np.float32) / 255.0
+    pm = np.dstack([a[..., :3] * a[..., 3:4], a[..., 3:4]])
+    while pm.shape[0] > 1 or pm.shape[1] > 1:
+        h, w = pm.shape[:2]
+        h2, w2 = max(1, h // 2), max(1, w // 2)
+        pm = pm.reshape(h2, h // h2, w2, w // w2, 4).mean(axis=(1, 3))
+        al = pm[..., 3:4]
+        rgb = np.where(al > 0, pm[..., :3] / np.maximum(al, 1e-6), 0.0)
+        levels.append(Image.fromarray((np.dstack([np.clip(rgb, 0, 1), al]) * 255.0 + 0.5).astype(np.uint8), 'RGBA'))
+    return levels
+
+
+def etc2_container(im, tmp):
+    """BTEX + PVR v2 header + the ETC2 mip chain (all levels down to 1x1)."""
+    alpha = im.getchannel('A').getextrema()[0] < 255
+    data = b''
+    for i, level in enumerate(mip_chain(im)):
+        raw, blocks = os.path.join(tmp, 'level.rgba'), os.path.join(tmp, 'level.etc')
+        with open(raw, 'wb') as fh:
+            fh.write(level.tobytes())
+        r = subprocess.run([ETC2, 'encode', raw, str(level.width), str(level.height), 'rgba' if alpha else 'rgb', blocks],
+                           capture_output=True, text=True)
+        if r.returncode != 0:
+            raise RuntimeError('dh2_etc2 failed: ' + r.stderr.strip())
+        if i == 0:
+            psnr = r.stdout.strip()
+        data += open(blocks, 'rb').read()
+    w, h = im.size
+    count = max(w, h).bit_length() - 1  # levels below the top one
+    flags = (PVR_ETC2_RGBA if alpha else PVR_ETC2_RGB) | PVR_MIPMAPS
+    hdr = struct.pack('<13I', 52, h, w, count, flags, len(data), 8 if alpha else 4, 0, 0, 0, 0, 0x21525650, 1)
+    return b'BTEXpvr\0' + hdr + data, psnr
 
 
 def pvr_info(path):
@@ -96,10 +139,13 @@ Then: py -3 tools/trackb/textures.py pack --folder <this folder> --out <a data c
 """
 
 
-def pack(folder, out, up=None):
+def pack(folder, out, up=None, gpu=None, layer=None):
     from PIL import Image
     up = up or os.path.join(folder, 'upscaled')
-    texdir = os.path.join(out, 'data', '3d', 'textures')
+    tmp = os.path.join(out, '_etc2_tmp')
+    os.makedirs(tmp, exist_ok=True)
+    texdir = os.path.join(out, 'data', 'hd', '3d', 'textures') if layer == 'hd' else os.path.join(out, 'data', '3d', 'textures')
+    os.makedirs(texdir, exist_ok=True)
     resdir = os.path.join(out, 'res')
     lines = []
     d3 = os.path.join(up, '3d')
@@ -113,6 +159,13 @@ def pack(folder, out, up=None):
                 print('SKIP (not power of two)', f, im.size)
                 continue
             dst = os.path.join(texdir, os.path.splitext(f)[0] + '.tga')
+            if gpu == 'etc2':
+                blob, psnr = etc2_container(im, tmp)
+                with open(dst, 'wb') as fh:
+                    fh.write(blob)
+                lines.append('%s  %s  %dx%d etc2 %s' % (hashlib.sha256(blob).hexdigest(), os.path.relpath(dst, out).replace(os.sep, '/'), w, h, psnr))
+                print('%-44s %s' % (f, psnr), flush=True)
+                continue
             data = im.tobytes()
             # PVR v2 header: size, height, width, mips, flags (0x12 = RGBA8888 | 0x... no twiddle), data size, bpp, masks, magic, surfaces
             hdr = struct.pack('<13I', 52, h, w, 0, 0x12, len(data), 32, 0xff, 0xff00, 0xff0000, 0xff000000, 0x21525650, 1)
@@ -140,12 +193,14 @@ def main():
     p = sub.add_parser('pack')
     p.add_argument('--folder', required=True)
     p.add_argument('--out', required=True)
+    p.add_argument('--layer', choices=['hd'], help='write the 3D textures into data/hd/3d/textures (the HD layer the game reads first) instead of replacing data/3d/textures')
+    p.add_argument('--gpu', choices=['etc2'], help='GPU-native texture format with a full mip chain (default: uncompressed RGBA)')
     p.add_argument('--upscaled', help='folder holding 3d/ and res/ (default <folder>/upscaled; e.g. the 2x output of remaster_prep.py)')
     a = ap.parse_args()
     if a.cmd == 'extract':
         extract(a.data, a.out)
     else:
-        pack(a.folder, a.out, a.upscaled)
+        pack(a.folder, a.out, a.upscaled, a.gpu, a.layer)
 
 
 if __name__ == '__main__':

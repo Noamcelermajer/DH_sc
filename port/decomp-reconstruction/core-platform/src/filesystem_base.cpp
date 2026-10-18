@@ -8,7 +8,9 @@
 
 #include <cstdio>
 #include <cstring>
+#include <mutex>
 #include <string>
+#include <unordered_map>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -95,6 +97,10 @@ bool FileSystemBase::doesSavefileExists(const char* name) {
     return opened != nullptr;
 }
 
+// Port addition (remaster): the HD texture layer is in use (set by Dh2InstallRemaster, game-app remaster_normal_maps.cpp).
+bool g_dh2HdTextures = false;
+extern const char* RES_PATH;
+
 // 0x34e96c _ZNK14FileSystemBase18ApplyFilenameHacksEPKc
 // Slot +0xb8. Hex-Rays and the listing agree line by line:
 //   * the working directory comes from the virtual at vtable +0x2c (IFileSystem::
@@ -133,6 +139,37 @@ glitch::core::stringc FileSystemBase::ApplyFilenameHacks(const char* name) const
 
     if (found != nullptr) {
         result = glitch::core::stringc(name, found + workingDirectoryLength + 1) + result;
+    }
+    // Port addition (remaster, REMASTER.md): a texture with a file in the HD layer (data/hd/3d/textures/, same name) is read from
+    // there. Switched on at start by Dh2InstallRemaster (port setting hdtextures, GPU with ETC2); every name is looked up once.
+    if (g_dh2HdTextures) {
+        const std::string path = result.c_str();
+        const std::size_t at = path.find("3d/textures/");
+        if (at != std::string::npos) {
+            static std::mutex lock;
+            static std::unordered_map<std::string, bool> known;
+            const std::string hd = path.substr(0, at) + "hd/" + path.substr(at);
+            bool exists;
+            {
+                std::lock_guard<std::mutex> guard(lock);
+                auto it = known.find(hd);
+                if (it == known.end()) {
+                    FILE* f = std::fopen(hd.c_str(), "rb");
+                    if (f == nullptr) {
+                        const char* root = RES_PATH != nullptr ? RES_PATH : "";
+                        f = std::fopen((std::string(root) + hd).c_str(), "rb");
+                    }
+                    exists = f != nullptr;
+                    if (f != nullptr) std::fclose(f);
+                    known.emplace(hd, exists);
+                } else {
+                    exists = it->second;
+                }
+            }
+            if (exists) {
+                result = hd.c_str();
+            }
+        }
     }
     return result;
 }
