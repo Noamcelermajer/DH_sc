@@ -29,7 +29,6 @@
 #include "dh2/MenuBase.hpp"
 #include "dh2/Singleton.hpp"
 #include "dh2/global/net_singletons.hpp"
-#include "dh2/global/sound_flags.hpp"
 #include "pydata-accessors/structs_records.hpp"
 #include "pydata-accessors/w7_arrays_00.hpp"
 #include "vox-audio/vox/engine_handles.hpp"
@@ -101,8 +100,8 @@ Structs::SoundAutoGen& SoundRecord(int sound) {
 // game-app/src/online_flag.cpp) which is exactly GetOnline()->IsOnlineGame(), so the call sites use it and
 // no stand-in is needed.
 //
-// The sound-allowed byte the level load sets, and the music group id GetSoundVolume(2) reads, come from the
-// globals batches (dh2/global/sound_flags.hpp, Arrays::Sounds).
+// The sound-allowed byte is Application +0xb4 (Application.hpp unk_b4); the music group id GetSoundVolume(2)
+// reads comes from Arrays::Sounds.
 
 // The EmitterHandle the binary builds on the stack for an empty slot: id -1, no engine, no handlable, zero stamps.
 vox::EmitterHandle EmptyEmitterHandle() {
@@ -465,9 +464,10 @@ void VoxSoundManager::CrossfadeMusic(int music_a, int music_b) {
 
 // 0x36bd78 _ZN15VoxSoundManager9PlayMusicEibbi
 // Verified line by line against 0x36bd78..0x36bfec and the disassembly: the body runs only while
-// GetSoundVolume(2) >= 0.5, IsDisablingSounds is clear and byte_99F7E0 (0x36be2c), the sound-allowed byte
-// Level::_LoadProcess sets, is set - that byte is in the tree (dh2/global/sound_flags.hpp,
-// soundmanager/sound_flags.cpp). music == -1 clears music_id_ and stops only when stop_if_none. Otherwise,
+// GetSoundVolume(2) >= 0.5, IsDisablingSounds is clear and the sound-allowed byte (0x36be2c, Hex-Rays byte_99F7E0)
+// is set: it is Application +0xb4 (the LDRB base is Singleton<Application>::s_inst, 0x99f72c), 1 from the
+// Application constructor and set again by Level::_LoadProcess.
+// music == -1 clears music_id_ and stops only when stop_if_none. Otherwise,
 // when music_id_ (+0x24) already is `music`: JAVA_SOUNDS re-sends the native play with Save_Current_Music_ID,
 // and the non-JAVA path takes the record's +4 data index, tests sounds_[data], fills one EmitterHandle with
 // VoxEngine::GetEmitterHandles(..., 1) and, when that count (r0, 0x36bf74) is above 0, resumes the emitter
@@ -484,7 +484,7 @@ void VoxSoundManager::PlayMusic(int music, bool loop, bool stop_if_none, int fad
     if (ReadDebugSwitch("IsDisablingSounds")) {
         return;
     }
-    if (!byte_99F7E0) {
+    if (!Singleton<Application>::s_inst.unk_b4) {
         return;
     }
     if (music == -1) {
