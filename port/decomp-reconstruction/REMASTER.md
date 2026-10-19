@@ -84,6 +84,16 @@ mapping in mind, but its fragment shader never samples a normal map. Plan:
 - Before any batch: one texture through the whole chain in the runner, then a contact sheet of six samples per tool
   (DeepBump, a monocular estimator, ArmorLab, a commercial tool if wanted) and pick per texture class.
 
+## Height maps (parallax and cavity)
+
+The textures and the world's lighting are baked, so a normal map only reacts to an invented light. World textures (`env_*`,
+`walls`, `dh1_atlas_*`, `atlas_dh2_game_objects_*`) therefore also carry a height map in their normal map's alpha
+(`remaster_normals.py clean`: luminance bands of 6 to 60 texels, percentile-stretched, shaped for broad tops and narrow
+grooves; `pack` filters the mips on straight alpha). The world shader marches the view ray into it (parallax occlusion
+mapping, 10 layers) before any texture is read, and darkens the texture with depth (cavity). Port settings `parallax`
+(percent of a 20-texel depth, default 100, 0 = off) and `cavity` (percent darkening at the deepest point, default 45).
+Vertex tangents make batched vertices larger, so `Level::_LoadBatching` doubles the batch vertex buffer when they are on.
+
 ## Status (2026-10-18)
 
 - **Textures:** all 361 upscaled by the user (6x); `tools/trackb/remaster_prep.py downscale` makes the exact 2x set

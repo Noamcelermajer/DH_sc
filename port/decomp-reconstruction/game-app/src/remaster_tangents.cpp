@@ -229,4 +229,9 @@ void BuildTangents(glitch::video::IVideoDriver* driver, glitch::scene::CMeshBuff
 
 }  // namespace
 
-void Dh2InstallTangents() { glitch::collada::g_dh2GeometryBindingHook = &BuildTangents; }
+extern bool g_dh2VertexTangents;  // game-world Level: the batch vertex buffer is sized for the larger vertices
+
+void Dh2InstallTangents() {
+    glitch::collada::g_dh2GeometryBindingHook = &BuildTangents;
+    g_dh2VertexTangents = true;
+}

@@ -36,12 +36,20 @@ def pot_or_3pot(n):
     return n > 0 and (n & (n - 1)) == 0
 
 
-def mip_chain(im):
-    """Every level down to 1x1, box-filtered on premultiplied alpha (no dark fringes at cut-out edges)."""
+def mip_chain(im, straight=False):
+    """Every level down to 1x1, box-filtered on premultiplied alpha (no dark fringes at cut-out edges); straight=True filters
+    the four channels independently (the alpha is data, e.g. the height in a normal map)."""
     import numpy as np
     from PIL import Image
     levels = [im]
     a = np.asarray(im).astype(np.float32) / 255.0
+    if straight:
+        while a.shape[0] > 1 or a.shape[1] > 1:
+            h, w = a.shape[:2]
+            h2, w2 = max(1, h // 2), max(1, w // 2)
+            a = a.reshape(h2, h // h2, w2, w // w2, 4).mean(axis=(1, 3))
+            levels.append(Image.fromarray((a * 255.0 + 0.5).astype(np.uint8), 'RGBA'))
+        return levels
     pm = np.dstack([a[..., :3] * a[..., 3:4], a[..., 3:4]])
     while pm.shape[0] > 1 or pm.shape[1] > 1:
         h, w = pm.shape[:2]
@@ -53,11 +61,11 @@ def mip_chain(im):
     return levels
 
 
-def etc2_container(im, tmp):
+def etc2_container(im, tmp, straight=False):
     """BTEX + PVR v2 header + the ETC2 mip chain (all levels down to 1x1)."""
     alpha = im.getchannel('A').getextrema()[0] < 255
     data = b''
-    for i, level in enumerate(mip_chain(im)):
+    for i, level in enumerate(mip_chain(im, straight)):
         raw, blocks = os.path.join(tmp, 'level.rgba'), os.path.join(tmp, 'level.etc')
         with open(raw, 'wb') as fh:
             fh.write(level.tobytes())

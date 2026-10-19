@@ -30,6 +30,8 @@
 #include "dh2/PlayerManager.hpp"
 #include "dh2/ScriptManager.hpp"
 #include "pydata-accessors/script_cmd.hpp"
+#include "pydata-accessors/arrays.hpp"
+#include "pydata-accessors/structs_records.hpp"
 #include "dh2/DialogMsg.hpp"
 #include "dh2/MenuMessageManager.hpp"
 #include "dh2/SavegameManager.hpp"
@@ -841,6 +843,21 @@ void botCommand(int frame, const std::string& line) {
     if (cmd == "loadlevel") {
         std::string name;
         ss >> name;
+        // A short name ("026_icy_cavern_01") resolves to its level-table file, as the world map passes it: Level matches the
+        // table by substring of that file, and a generated level is only built from its rule file ("....rule.xml") when it
+        // matches. A name that is not in the table is passed as it is.
+        std::string lowered = name;
+        for (char& c : lowered) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        const auto* rows = reinterpret_cast<const Structs::LevelDeclaration*>(Arrays::LevelList::members);
+        for (std::uint32_t row = 0; rows != nullptr && row < Arrays::LevelList::size; ++row) {
+            const std::string file = rows[row].LevelFile != nullptr ? static_cast<const char*>(rows[row].LevelFile) : "";
+            std::string fileLowered = file;
+            for (char& c : fileLowered) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            if (!fileLowered.empty() && fileLowered.find(lowered) != std::string::npos) {
+                name = file;
+                break;
+            }
+        }
         std::fprintf(g_runnerOut, "[bot] LoadLevel %s\n", name.c_str());
         ApplicationGetInstance().LoadLevel(name.c_str(), 0, 0, false, true, 0, false, 0, 0);
     } else if (cmd == "goto" && h) {

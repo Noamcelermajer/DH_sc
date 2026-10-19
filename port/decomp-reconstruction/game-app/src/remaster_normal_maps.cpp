@@ -9,6 +9,9 @@
 // Port settings: normalmaps (1 = the remaster shaders, 0 = the original ones; read at start), normalstrength (percent, default
 // 200, a pronounced relief; the static meshes with a normal map get vertex tangents, remaster_tangents.cpp), normalgreen (1 = OpenGL green-up maps, -1 = DirectX green-down), pixellighting, specular, fogcurve (percent, default
 // 100) and rimlight (percent, default 35), hdtextures (1 = the HD layer data/hd/), trilinear (1) and anisotropy (8).
+// World textures (env_*, walls, dh1_atlas_*, atlas_dh2_game_objects_*) carry a height map in their normal map's alpha
+// (tools/trackb/remaster_normals.py): parallax (percent, default 100 = a full depth of kParallaxTexels normal-map texels;
+// 0 = off) and cavity (percent darkening at the deepest point, default 45).
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -39,6 +42,7 @@ void Dh2InstallTangents();  // remaster_tangents.cpp
 namespace {
 
 constexpr const char* kShaderZip = "data/port/remaster_shaders.zip";
+constexpr float kParallaxTexels = 20.0f;  // full parallax depth at 100 %, in texels of the (3x) normal map
 glitch::io::IFileSystem* g_fileSystem = nullptr;
 int g_attached = 0;
 bool g_alphaCoverage = false;  // MSAA surface and setting alphacoverage on
@@ -148,6 +152,22 @@ void ConfigureMaterial(glitch::video::IVideoDriver* driver, glitch::video::CMate
             std::fprintf(stdout, "NMLOG strength id %u kind %u type %u set %d read %f\n", strengthId, e.kind, e.type, ok ? 1 : 0, back);
         }
 #endif
+    }
+    // Parallax and cavity: only the world textures have a height map (the others read alpha 1 and would only pay for the reads).
+    const std::size_t slash = name.find_last_of("/\\");
+    const std::string base = name.substr(slash == std::string::npos ? 0 : slash + 1);
+    const bool world = base.rfind("env_", 0) == 0 || base.rfind("walls.", 0) == 0 || base.rfind("dh1_atlas_", 0) == 0 ||
+                       base.rfind("atlas_dh2_game_objects_", 0) == 0;
+    const uint16_t parallaxU = renderer->getParameterID("ParallaxScaleU", 0);
+    const uint16_t parallaxV = renderer->getParameterID("ParallaxScaleV", 0);
+    if (parallaxU != 0xffff && parallaxV != 0xffff && world && normal->m_width > 0 && normal->m_height > 0) {
+        const float depth = kParallaxTexels * static_cast<float>(dh2port::Get("parallax", 100)) / 100.0f;
+        material->parameters.setParameter(parallaxU, 0u, depth / static_cast<float>(normal->m_width));
+        material->parameters.setParameter(parallaxV, 0u, depth / static_cast<float>(normal->m_height));
+    }
+    const uint16_t cavityId = renderer->getParameterID("Cavity", 0);
+    if (cavityId != 0xffff && world) {
+        material->parameters.setParameter(cavityId, 0u, static_cast<float>(dh2port::Get("cavity", 45)) / 100.0f);
     }
     const uint16_t greenId = renderer->getParameterID("NormalGreen", 0);
     if (greenId != 0xffff) {

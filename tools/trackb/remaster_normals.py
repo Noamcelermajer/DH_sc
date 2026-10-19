@@ -21,10 +21,14 @@ clean: StableNormal reads atlas pieces as whole 3D objects (a tilted background,
   --target-slope (0.35, about 19 degrees) on
   world textures and 40 % of that on characters; the sum is capped at --max-slope. Result:
   <out>/<name>/<name>_n.png, a tangent-space detail map in the convention of the remaster shaders (OpenGL: +x = +u,
-  +y = image up, port setting normalgreen=1).
+  +y = image up, port setting normalgreen=1). World textures also carry a height map in its alpha (1 = top, 0 = deepest)
+  for the shaders' parallax and cavity terms: the luminance bands plus a 60-texel one for whole stones, stretched to 0..1
+  between its 2nd and 98th percentiles and shaped 1 - (1 - h)^2 (broad flat tops, narrow grooves). Characters and
+  weapons keep alpha 255 (no parallax).
 
-pack: every <name>_n.png goes into <data>/data/hd/3d/textures/<name>_n.tga as ETC2 RGB with a full mip chain (the
-  HD layer the material hook reads, game-app remaster_normal_maps.cpp).
+pack: every <name>_n.png goes into <data>/data/hd/3d/textures/<name>_n.tga as ETC2 RGB (RGBA with a height map) with
+  a full mip chain filtered on straight alpha, so the height does not darken the normals (the HD layer the material hook
+  reads, game-app remaster_normal_maps.cpp).
 """
 import argparse
 import os
@@ -112,14 +116,38 @@ def generate(a):
 WORLD = re.compile(r'^(env_|walls$|dh1_atlas_|atlas_dh2_game_objects_)', re.I)
 
 
+def luminance(texture_rgba, device):
+    import torch
+    rgb = texture_rgba[..., :3].astype(np.float32) / 255.0
+    lum = 0.299 * rgb[..., 0] + 0.587 * rgb[..., 1] + 0.114 * rgb[..., 2]
+    return torch.from_numpy(np.ascontiguousarray(lum))[None, None].to(device)
+
+
+def painted_height(texture_rgba, device):
+    """Height map for parallax (0 = deepest, 1 = top): the relief bands plus whole stones (60 texels), percentile-stretched
+    and shaped so stone tops are broad and the grooves between them narrow and deep."""
+    import torch
+    from torchvision.transforms.functional import gaussian_blur
+    L = luminance(texture_rgba, device)
+    h = torch.zeros_like(L)
+    for sigma, w in ((6.0, 0.5), (14.0, 1.0), (30.0, 1.0), (60.0, 0.7)):
+        k = int(sigma * 6) | 1
+        h += w * (L - gaussian_blur(L, [k, k], [sigma, sigma]))
+    h = gaussian_blur(h, [9, 9], [1.5, 1.5])[0, 0].cpu().numpy()
+    opaque = texture_rgba[..., 3] >= 5
+    lo, hi = np.percentile(h[opaque], [2, 98]) if opaque.any() else (0.0, 1.0)
+    h = np.clip((h - lo) / max(hi - lo, 1e-6), 0, 1)
+    h = 1 - (1 - h) ** 2
+    h[~opaque] = 1
+    return h
+
+
 def painted_relief(texture_rgba, device):
     """Height from the painting (multi-scale luminance: stones and cracks at 3x are a few texels to ~30 texels wide; the
     coarse bands get more weight than the fine one so the paint grain does not become noise), as slopes (dh/du, dh/dv)."""
     import torch
     from torchvision.transforms.functional import gaussian_blur
-    rgb = texture_rgba[..., :3].astype(np.float32) / 255.0
-    lum = 0.299 * rgb[..., 0] + 0.587 * rgb[..., 1] + 0.114 * rgb[..., 2]
-    L = torch.from_numpy(np.ascontiguousarray(lum))[None, None].to(device)
+    L = luminance(texture_rgba, device)
     h = torch.zeros_like(L)
     # stone-scale bands only: a band finer than ~6 texels at 3x is brush strokes and paint grain, which read as grit
     for sigma, w in ((6.0, 0.6), (14.0, 1.0), (30.0, 0.8)):
@@ -164,8 +192,12 @@ def clean(a):
         out = np.dstack([s, np.ones(s.shape[:2], np.float32)])
         out /= np.linalg.norm(out, axis=2, keepdims=True)
         out[rgba[..., 3] < 5] = (0, 0, 1)
-        Image.fromarray(((out * 0.5 + 0.5) * 255 + 0.5).astype(np.uint8)).save(dst)
-        print('cleaned %-44s stablenormal p95 %.2f + painted relief (target %.2f)' % (name, sn_p95, target), flush=True)
+        out = ((out * 0.5 + 0.5) * 255 + 0.5).astype(np.uint8)
+        world = bool(WORLD.search(name))
+        height = (painted_height(rgba, device) * 255 + 0.5).astype(np.uint8) if world else np.full(out.shape[:2], 255, np.uint8)
+        Image.fromarray(np.dstack([out, height]), 'RGBA').save(dst)
+        print('cleaned %-44s stablenormal p95 %.2f + painted relief (target %.2f)%s' % (name, sn_p95, target,
+              ', height map' if world else ''), flush=True)
 
 
 def pack(a):
@@ -182,7 +214,7 @@ def pack(a):
         src = os.path.join(a.out, name, name + '_n.png')
         if not os.path.exists(src):
             continue
-        blob, psnr = textures.etc2_container(Image.open(src).convert('RGBA'), tmp)
+        blob, psnr = textures.etc2_container(Image.open(src).convert('RGBA'), tmp, straight=True)
         with open(os.path.join(texdir, name + '_n.tga'), 'wb') as fh:
             fh.write(blob)
         count += 1

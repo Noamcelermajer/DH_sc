@@ -442,6 +442,12 @@ void Level::Draw() const {
                        glitch::video::SColor{0xFF0080FFu});
 }
 
+// Port addition (remaster): set by game-app remaster_tangents.cpp when the normal-mapped static meshes get vertex tangents. Those
+// add 28 bytes to every batched vertex, so a level's batch vertex buffer, sized by its LevelConfig for the original vertices, gets
+// twice the capacity: otherwise a generated level's batch (the ice cavern: 92 KB) has a block larger than the whole buffer and the
+// compile overruns it.
+bool g_dh2VertexTangents = false;
+
 // 0x3f2ae4 _ZN5Level13_LoadBatchingEv
 // Unless the IsDisablingCompiledBatching switch is on: clearRenderLists on the device's scene manager (+0x1c), the clear flag unk_43c
 // (+0x43c) raised, and the LevelConfig batch sizes of the device class (high performance: +0x2a0 vertex, +0x2a4 index, +0x2a8 quantize;
@@ -464,12 +470,14 @@ void Level::_LoadBatching() {
                     static_cast<int>(config->m_progQuantize));
         batchDriver->defaultIndexBufferCapacityBytes = static_cast<std::uint32_t>(static_cast<double>(config->m_progIndexBufferSize) * 1.02);
         batchDriver->defaultVertexBufferCapacityBytes = static_cast<std::uint32_t>(static_cast<double>(config->m_progVertexBufferSize) * 1.02);
+        if (g_dh2VertexTangents) batchDriver->defaultVertexBufferCapacityBytes *= 2;
         m_batchNodeCompiler->Compile(config->m_progQuantize);
     } else {
         std::printf("*** BUFFER SIZE: %d %d %d\n", config->m_fixVertexBufferSize, config->m_fixIndexBufferSize,
                     static_cast<int>(config->m_fixQuantize));
         batchDriver->defaultIndexBufferCapacityBytes = static_cast<std::uint32_t>(static_cast<double>(config->m_fixIndexBufferSize) * 1.02);
         batchDriver->defaultVertexBufferCapacityBytes = static_cast<std::uint32_t>(static_cast<double>(config->m_fixVertexBufferSize) * 1.02);
+        if (g_dh2VertexTangents) batchDriver->defaultVertexBufferCapacityBytes *= 2;
         m_batchNodeCompiler->Compile(config->m_fixQuantize);
     }
     sceneManager->unk_43c = false;

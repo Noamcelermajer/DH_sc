@@ -16,6 +16,14 @@ runs, so each one can be switched off on its own:
   NormalStrength  (normalstrength)  normal maps (<diffuse>_n.tga): tangent frame from screen-space derivatives (no mesh
                                     tangents), plus a detail term against Light0 tipped towards a fixed oblique direction
                                     (a light from straight above shows almost no relief). NormalGreen flips green.
+  ParallaxScaleU/V (parallax)       world: parallax occlusion mapping on the height in the normal map's alpha (1 = top):
+                                    the view ray is marched into the surface in 10 layers and every texture of the
+                                    material is read where it meets the height, so grooves sink and stones stand up as the
+                                    camera moves; the scale is the full depth in texture coordinates. Lighting is baked into
+                                    these textures, so unlike the normal map this needs no light. Maps without a height read
+                                    alpha 1 and stay flat.
+  Cavity          (cavity)          world: the texture darkens with depth below the top of the height map (crevices,
+                                    mortar), whatever the lighting.
   SpecularBoost   (specular)        world: Blinn-Phong per pixel with the camera position (EyePos, an automatic engine
                                     parameter) and the game's specular maps; characters: the original specular term with
                                     the real view vector (the original used a fixed "eye" of (0,0,1)).
@@ -55,7 +63,7 @@ DERIVATIVE_FRAME = '''		highp vec3 dp1 = dFdx(vNmWorldPos);
 		highp vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
 '''
 
-NORMAL_MAP = '''		mediump vec3 nm = texture2D(NormalSampler, UV).xyz * 2.0 - 1.0;
+NORMAL_MAP = '''		mediump vec3 nm = texture2D(NormalSampler, NMUV).xyz * 2.0 - 1.0;
 		nm.y *= (NormalGreen < 0.0) ? -1.0 : 1.0;
 %FRAME%		// unit axes in the surface plane: each triangle's frame then differs from its neighbour's only by a small rotation.
 		// (Scaling both by the longer axis, the usual cotangent frame, changed the bump strength from triangle to triangle
@@ -102,6 +110,47 @@ mediump vec3 dhPointLight(highp vec3 p, mediump vec4 c, highp float r, mediump v
 	return c.rgb * (c.a * w * max(dot(n, v * inversesqrt(max(d2, 1.0))), 0.0));
 }'''
 
+PARALLAX = '''	// DH2 remaster: parallax occlusion mapping on the height in the normal map's alpha (1 = top, 0 = deepest)
+	highp vec2 dhUV = vTexCoord0.xy;
+	mediump float dhHeight = 1.0;
+	if (NormalStrength > 0.0 && ParallaxScaleU > 0.0)
+	{
+		mediump vec3 dhN = normalize(vNmWorldNormal);
+''' + VERTEX_FRAME.replace('UV', 'vTexCoord0.xy') + '''		T = T - dhN * dot(dhN, T);
+		B = B - dhN * dot(dhN, B);
+		T *= inversesqrt(max(dot(T, T), 1e-12));
+		B *= inversesqrt(max(dot(B, B), 1e-12));
+		// the view ray in texture space, one tenth of the full depth per layer (grazing views capped at 4x the depth)
+		mediump vec3 pV = normalize(vNmEyeVec);
+		highp vec2 pDelta = -vec2(dot(pV, T), dot(pV, B)) / max(dot(pV, dhN), 0.25) * vec2(ParallaxScaleU, ParallaxScaleV) * 0.1;
+		highp vec2 pUV = vTexCoord0.xy;
+		mediump float pDepth = 0.0;
+		mediump float pSurf = 1.0 - texture2D(NormalSampler, pUV).a;
+		highp vec2 pHitUV = pUV;
+		bool pHit = pSurf <= 0.0;
+		// a fixed count with every read outside the branches keeps the reads in uniform control flow (mip selection)
+		for (int i = 0; i < 10; ++i)
+		{
+			highp vec2 nUV = pUV + pDelta;
+			mediump float nSurf = 1.0 - texture2D(NormalSampler, nUV).a;
+			mediump float nDepth = pDepth + 0.1;
+			if (!pHit && nDepth >= nSurf)
+			{
+				// between the last layer above the surface and the first one below it
+				mediump float above = pSurf - pDepth;
+				mediump float below = nDepth - nSurf;
+				pHitUV = mix(pUV, nUV, above / max(above + below, 1e-4));
+				pHit = true;
+			}
+			pUV = nUV;
+			pDepth = nDepth;
+			pSurf = nSurf;
+		}
+		dhUV = pHit ? pHitUV : pUV;
+		dhHeight = texture2D(NormalSampler, dhUV).a;
+	}
+'''
+
 # ---- GL_Diffuse_L1 (world, props) ---------------------------------------------------------------------------------------
 
 DIFF_VS_DECLS = '''
@@ -137,6 +186,9 @@ uniform mediump float PixelLighting;
 uniform mediump float SpecularBoost;
 uniform mediump float FogCurve;
 uniform mediump float AlphaCoverage;
+uniform highp float ParallaxScaleU;
+uniform highp float ParallaxScaleV;
+uniform mediump float Cavity;
 uniform highp vec3 Light0Attenuation;
 uniform highp vec4 Light0Ambientcolor;
 uniform highp vec4 Light0Diffusecolor;
@@ -156,7 +208,7 @@ DIFF_FS_LIGHTING = '''
 	mediump vec3 dhNp = dhN;
 	if (NormalStrength > 0.0)
 	{
-''' + NORMAL_MAP.replace('%FRAME%', VERTEX_FRAME).replace('UV', 'vTexCoord0.xy') + '''	}
+''' + NORMAL_MAP.replace('%FRAME%', VERTEX_FRAME).replace('UV', 'vTexCoord0.xy').replace('NMvTexCoord0.xy', 'dhUV') + '''	}
 	highp float dhDist = length(vNmLightVec);
 	mediump vec3 dhL = vNmLightVec / max(dhDist, 1e-4);
 	mediump float dhAtt = 1.0 / (Light0Attenuation.x + Light0Attenuation.y * dhDist + Light0Attenuation.z * dhDist * dhDist);
@@ -246,6 +298,11 @@ def patch_fs(src):
 	else if (Diffuse.w < 0.8) discard;
 #endif''', 'fs alpha test')
     main = find_or_exit(src, 'void main()', 'fs main')
+    src = replace_once(src, '\tlowp vec4 Diffuse = texture2D(DiffuseSampler, vTexCoord0.xy);', PARALLAX +
+                       '\tlowp vec4 Diffuse = texture2D(DiffuseSampler, dhUV);\n'
+                       '\tDiffuse.xyz *= 1.0 - Cavity * (1.0 - dhHeight);  // DH2 remaster: crevices darker', 'fs parallax')
+    src = replace_once(src, 'texture2D(AlphaSampler, vTexCoord0.xy)', 'texture2D(AlphaSampler, dhUV)', 'fs alpha map')
+    src = replace_once(src, 'texture2D(SpecularSampler, vTexCoord0.xy)', 'texture2D(SpecularSampler, dhUV)', 'fs specular map')
     src = insert_after(src, '#else\n\tlowp vec4 color = Diffuse;\n#endif', '\n' + DIFF_FS_LIGHTING, 'fs colour init', main)
     src = replace_once(src, '\tspecularColor *= vAttNdotHV;', '''	if (PixelLighting > 0.0)
 	{
@@ -316,7 +373,7 @@ PC_FS_LIGHTING = '''
 	mediump vec3 dhNp = dhN;
 	if (NormalStrength > 0.0)
 	{
-''' + NORMAL_MAP.replace('%FRAME%', DERIVATIVE_FRAME).replace('UV', 'vTexCoord0') + '''	}
+''' + NORMAL_MAP.replace('%FRAME%', DERIVATIVE_FRAME).replace('UV', 'vTexCoord0').replace('NMvTexCoord0', 'vTexCoord0') + '''	}
 	highp float dhDist = length(vNmLightVec);
 	mediump vec3 dhL = vNmLightVec / max(dhDist, 1e-4);
 	mediump vec3 dhV = normalize(vNmEyeVec);
