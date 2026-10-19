@@ -13,11 +13,6 @@ body. Ghidra's output garbles some ARM tail calls and missing returns, which is
 why the earlier `partial` rows were produced; re-reconstruct those from Hex-Rays
 and replace the old ledger row in place (one row per address, never a duplicate).
 
-This tree is deliberately separate from the live-gameplay reconstruction
-(`port/level-world`, `port/game-data`, `port/engine-*`, `port/android-native`,
-`port/desktop-native`). Classes that work owns are not queued here; see
-`tools/decomp_categories.py` for the exact rule.
-
 ## Layout
 
 ```
