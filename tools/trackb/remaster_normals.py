@@ -17,7 +17,8 @@ clean: StableNormal reads atlas pieces as whole 3D objects (a tilted background,
   over-tilts some bevels. The large-scale tilt is removed (normal xy minus its Gaussian blur, --sigma pixels at 3x),
   x is flipped and transparent texels go flat. StableNormal reads a top-down painted floor as flat (ice cavern: 95 % of
   texels under 6 degrees), so the painted relief is added: height from the texture's luminance at four scales (dark
-  crevices low, lit stone tops high), scaled so its 95th percentile slope is --target-slope (0.6, about 31 degrees) on
+  crevices low, lit stone tops high; bands of 6 to 30 texels, finer is brush grain), scaled so its 95th percentile slope is
+  --target-slope (0.35, about 19 degrees) on
   world textures and 40 % of that on characters; the sum is capped at --max-slope. Result:
   <out>/<name>/<name>_n.png, a tangent-space detail map in the convention of the remaster shaders (OpenGL: +x = +u,
   +y = image up, port setting normalgreen=1).
@@ -120,10 +121,11 @@ def painted_relief(texture_rgba, device):
     lum = 0.299 * rgb[..., 0] + 0.587 * rgb[..., 1] + 0.114 * rgb[..., 2]
     L = torch.from_numpy(np.ascontiguousarray(lum))[None, None].to(device)
     h = torch.zeros_like(L)
-    for sigma, w in ((1.5, 0.5), (4.0, 1.0), (10.0, 1.2), (24.0, 0.8)):
+    # stone-scale bands only: a band finer than ~6 texels at 3x is brush strokes and paint grain, which read as grit
+    for sigma, w in ((6.0, 0.6), (14.0, 1.0), (30.0, 0.8)):
         k = int(sigma * 6) | 1
         h += w * (L - gaussian_blur(L, [k, k], [sigma, sigma]))
-    h = gaussian_blur(h, [5, 5], [1.0, 1.0])[0, 0]
+    h = gaussian_blur(h, [15, 15], [2.5, 2.5])[0, 0]
     dh_dv, dh_du = torch.gradient(h)
     return np.dstack([-dh_du.cpu().numpy(), dh_dv.cpu().numpy()])  # height up where bright: +u slope tilts the normal to -x
 
@@ -199,7 +201,7 @@ def main():
     ap.add_argument('--all', action='store_true')
     ap.add_argument('--sigma', type=float, default=12.0)
     ap.add_argument('--max-slope', type=float, default=1.0)
-    ap.add_argument('--target-slope', type=float, default=0.6)
+    ap.add_argument('--target-slope', type=float, default=0.35)
     ap.add_argument('--data', default='')
     a = ap.parse_args()
     if a.cmd == 'pack' and not a.data:
