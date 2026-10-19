@@ -173,7 +173,7 @@ DIFF_FS_LIGHTING = '''
 		mediump vec3 dhLight = Light0Ambientcolor.xyz + Light0Diffusecolor.xyz * dhDirect;
 		color = vec4(dhLight * vNmVertexColor.xyz, 1.0) * Diffuse;
 	}
-''' + RELIEF + '''	// DH2 remaster: dynamic lights
+	// DH2 remaster: dynamic lights
 	mediump vec3 dhDyn = dhPointLight(Light5Position.xyz, Light5Diffusecolor, Light5Attenuation.x, dhNp)
 	                   + dhPointLight(Light6Position.xyz, Light6Diffusecolor, Light6Attenuation.x, dhNp)
 	                   + dhPointLight(Light7Position.xyz, Light7Diffusecolor, Light7Attenuation.x, dhNp);
@@ -229,7 +229,8 @@ SOFT_CLIP = '''	// DH2 remaster: highlights roll off above 0.8 instead of clippi
 		mediump vec3 dhHi = max(color.xyz - 0.8, 0.0);
 		color.xyz = min(color.xyz, vec3(0.8)) + dhHi / (1.0 + dhHi * 5.0);
 	}
-'''
+	// the relief after the roll-off, so the bumps stay visible where the player's light is brightest
+''' + RELIEF
 
 
 def patch_fs(src):

@@ -15,7 +15,10 @@ generate: StableNormal (Stable-X, Apache-2.0; code and weights stay in the user'
 
 clean: StableNormal reads atlas pieces as whole 3D objects (a tilted background, whole armour plates leaning) and
   over-tilts some bevels. The large-scale tilt is removed (normal xy minus its Gaussian blur, --sigma pixels at 3x),
-  the slope is capped (--max-slope = tan of the steepest tilt), x is flipped and transparent texels go flat. Result:
+  x is flipped and transparent texels go flat. StableNormal reads a top-down painted floor as flat (ice cavern: 95 % of
+  texels under 6 degrees), so the painted relief is added: height from the texture's luminance at four scales (dark
+  crevices low, lit stone tops high), scaled so its 95th percentile slope is --target-slope (0.6, about 31 degrees) on
+  world textures and 40 % of that on characters; the sum is capped at --max-slope. Result:
   <out>/<name>/<name>_n.png, a tangent-space detail map in the convention of the remaster shaders (OpenGL: +x = +u,
   +y = image up, port setting normalgreen=1).
 
@@ -105,34 +108,62 @@ def generate(a):
         print('%-44s %dx%d %.1fs' % (name, w, h, time.time() - t0), flush=True)
 
 
+WORLD = re.compile(r'^(env_|walls$|dh1_atlas_|atlas_dh2_game_objects_)', re.I)
+
+
+def painted_relief(texture_rgba, device):
+    """Height from the painting (multi-scale luminance: stones and cracks at 3x are a few texels to ~30 texels wide; the
+    coarse bands get more weight than the fine one so the paint grain does not become noise), as slopes (dh/du, dh/dv)."""
+    import torch
+    from torchvision.transforms.functional import gaussian_blur
+    rgb = texture_rgba[..., :3].astype(np.float32) / 255.0
+    lum = 0.299 * rgb[..., 0] + 0.587 * rgb[..., 1] + 0.114 * rgb[..., 2]
+    L = torch.from_numpy(np.ascontiguousarray(lum))[None, None].to(device)
+    h = torch.zeros_like(L)
+    for sigma, w in ((1.5, 0.5), (4.0, 1.0), (10.0, 1.2), (24.0, 0.8)):
+        k = int(sigma * 6) | 1
+        h += w * (L - gaussian_blur(L, [k, k], [sigma, sigma]))
+    h = gaussian_blur(h, [5, 5], [1.0, 1.0])[0, 0]
+    dh_dv, dh_du = torch.gradient(h)
+    return np.dstack([-dh_du.cpu().numpy(), dh_dv.cpu().numpy()])  # height up where bright: +u slope tilts the normal to -x
+
+
 def clean(a):
     import torch
     from PIL import Image
     from torchvision.transforms.functional import gaussian_blur
     Image.MAX_IMAGE_PIXELS = None
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     k = int(a.sigma * 6) | 1
     for name in sorted(os.listdir(a.out)):
         src = os.path.join(a.out, name, 'normal.png')
         dst = os.path.join(a.out, name, name + '_n.png')
-        if not os.path.exists(src):
+        texture = os.path.join(a.src, name + '.png')
+        if not os.path.exists(src) or not os.path.exists(texture):
             continue
+        rgba = np.asarray(Image.open(texture).convert('RGBA'))
+        # 1. StableNormal's shape (characters, objects): large-scale tilt removed, kept as it is (no gain)
         n = np.asarray(Image.open(src).convert('RGB')).astype(np.float32) / 255.0 * 2 - 1
-        xy = torch.from_numpy(np.ascontiguousarray(n[..., :2].transpose(2, 0, 1)))[None]
-        if torch.cuda.is_available():
-            xy = xy.cuda()
+        xy = torch.from_numpy(np.ascontiguousarray(n[..., :2].transpose(2, 0, 1)))[None].to(device)
         d = (xy - gaussian_blur(xy, [k, k], [a.sigma, a.sigma]))[0].cpu().numpy().transpose(1, 2, 0)
         z = np.sqrt(np.clip(1 - (d ** 2).sum(2), 0.05, 1))[..., None]
-        s = d / z
+        sn = d / z
+        sn[..., 0] = -sn[..., 0]  # StableNormal +x points to the image left; tangent space +x is +u (image right)
+        sn_p95 = float(np.percentile(np.linalg.norm(sn, axis=2), 95))
+        # 2. painted relief from the texture, scaled so its 95th percentile slope is --target-slope on world textures (floors,
+        #    walls, props: stones become bumps and cracks grooves) and 40 % of that on characters and weapons (detail only)
+        pr = painted_relief(rgba, device)
+        pr_p95 = float(np.percentile(np.linalg.norm(pr, axis=2), 95))
+        target = a.target_slope if WORLD.search(name) else a.target_slope * 0.4
+        pr = pr * (target / max(pr_p95, 1e-6))
+        s = sn + pr
         m = np.linalg.norm(s, axis=2, keepdims=True)
         s = s * np.minimum(1, a.max_slope / np.maximum(m, 1e-6))
-        s[..., 0] = -s[..., 0]  # StableNormal +x points to the image left; tangent space +x is +u (image right)
         out = np.dstack([s, np.ones(s.shape[:2], np.float32)])
         out /= np.linalg.norm(out, axis=2, keepdims=True)
-        texture = os.path.join(a.src, name + '.png')
-        if os.path.exists(texture):
-            out[np.asarray(Image.open(texture).convert('RGBA'))[..., 3] < 5] = (0, 0, 1)
+        out[rgba[..., 3] < 5] = (0, 0, 1)
         Image.fromarray(((out * 0.5 + 0.5) * 255 + 0.5).astype(np.uint8)).save(dst)
-        print('cleaned', name, flush=True)
+        print('cleaned %-44s stablenormal p95 %.2f + painted relief (target %.2f)' % (name, sn_p95, target), flush=True)
 
 
 def pack(a):
@@ -167,7 +198,8 @@ def main():
     ap.add_argument('--only', default='')
     ap.add_argument('--all', action='store_true')
     ap.add_argument('--sigma', type=float, default=12.0)
-    ap.add_argument('--max-slope', type=float, default=0.8)
+    ap.add_argument('--max-slope', type=float, default=1.0)
+    ap.add_argument('--target-slope', type=float, default=0.6)
     ap.add_argument('--data', default='')
     a = ap.parse_args()
     if a.cmd == 'pack' and not a.data:
