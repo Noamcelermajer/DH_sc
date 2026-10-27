@@ -17,7 +17,7 @@ import argparse, hashlib, os, shutil, subprocess, sys, zipfile
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 SDK = (os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT") or os.path.expanduser("~/AppData/Local/Android/Sdk"))
 NDK = SDK + "/ndk/29.0.14206865"
-NDKB = NDK + "/toolchains/llvm/prebuilt/windows-x86_64/bin"
+NDKB = NDK + "/toolchains/llvm/prebuilt/" + ("windows-x86_64" if os.name == "nt" else ("darwin-x86_64" if sys.platform == "darwin" else "linux-x86_64")) + "/bin"
 BT = SDK + "/build-tools/37.0.0"
 PLAT = SDK + "/platforms/android-37.0"
 ADB = SDK + "/platform-tools/adb" + (".exe" if os.name == "nt" else "")

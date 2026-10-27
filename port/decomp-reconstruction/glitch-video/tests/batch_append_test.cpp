@@ -55,6 +55,9 @@ struct BakeCall {
 class FakeBaker : public IBatchBaker {
 public:
     mutable std::vector<BakeCall> calls;
+    // When set, bake writes the record's vertices into the append buffer the way CGenericBaker does: (b - a) vertices of the
+    // buffer's stride at vertex e. An overrun of the buffer's storage is then a heap overflow (seen by AddressSanitizer).
+    CBatchDriver* writeThrough = nullptr;
     static const uint8_t* unsetMap() {
         static uint8_t bytes[30];
         std::memset(bytes, 0xff, sizeof bytes);
@@ -92,6 +95,14 @@ public:
             call.positionsX.push_back(x);
         }
         vertexBuffer->unmap();
+        if (writeThrough != nullptr) {
+            auto* append = static_cast<glitch::scene::CAppendMeshBuffer*>(writeThrough->m_batchBuffer.get());
+            IBuffer* target = const_cast<IBuffer*>(append->vertexBuffer.get());
+            uint8_t* out = target->map(4);
+            std::memset(out + static_cast<size_t>(e) * append->vertexStride, 0x5a, static_cast<size_t>(b - a) * append->vertexStride);
+            target->unmap();
+            call.positionsX.push_back(static_cast<float>(append->vertexCapacityBytes));  // the capacity the record was written into
+        }
         calls.push_back(call);
     }
     boost::intrusive_ptr<CMaterial> getBatchMaterial(const boost::intrusive_ptr<const CMaterial>&, uint8_t) const override {
@@ -221,6 +232,29 @@ int main() {
         auto* buffer = static_cast<glitch::scene::CAppendMeshBuffer*>(driver.m_batchBuffer.get());
         check(buffer->vertexUsedBytes == 8u, "both clusters advance the append buffer (4 + 4 vertices)");
         check(buffer->indexUsedBytes == 24u, "and 2 * 2 triangles");
+    }
+
+    // ---- a record larger than the whole append buffer (port addition, the Great Sanctuary crash of v0.4.1-remaster) -----
+    // 8 vertices of stride 1 into a 4-byte buffer: the original flushes the (empty) buffer and bakes anyway, writing past its
+    // end. The port replaces the buffer by one that fits the record and keeps the larger capacity as the default.
+    {
+        CBatchDriver driver(4u, 1u << 16, &owner);
+        driver.initBuffer();
+        FakeBaker* baker = new FakeBaker();
+        baker->writeThrough = &driver;
+        driver.m_batchBaker = boost::intrusive_ptr<IBatchBaker>(baker);
+        Scene scene = makeScene(driver);
+        driver.thisAppendBatch(scene.streams, scene.primitives, noMesh);
+        check(baker->calls.size() == 1u, "oversized record: baked once");
+        auto* buffer = static_cast<glitch::scene::CAppendMeshBuffer*>(driver.m_batchBuffer.get());
+        check(buffer->vertexCapacityBytes >= 8u, "oversized record: the append buffer was grown to fit it");
+        check(driver.defaultVertexBufferCapacityBytes >= 8u, "oversized record: the grown capacity becomes the default");
+        check(buffer->vertexUsedBytes == 8u, "oversized record: the grown buffer holds the record");
+        check(driver.m_batchBuffers.size() == 1u && driver.m_batchBuffers.front().get() == driver.m_batchBuffer.get(),
+              "oversized record: the buffer list holds the new buffer only");
+        if (!baker->calls.empty()) {
+            check(baker->calls[0].e == 0 && baker->calls[0].positionsX.back() >= 8.0f, "oversized record: written at vertex 0 of the grown buffer");
+        }
     }
 
     std::printf("%s\n", failures == 0 ? "batch_append: ok" : "batch_append: FAILED");

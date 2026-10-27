@@ -271,6 +271,12 @@ void relink(ProgramObj& p) {
 }
 
 const char* extensions() {
+    // DH2_NULLGL_ETC2=1: also report ETC2, so the remaster's HD textures, normal maps and vertex tangents load as on a phone.
+    if (std::getenv("DH2_NULLGL_ETC2") != nullptr) {
+        return "GL_OES_compressed_ETC2_RGB8_texture GL_OES_depth_texture GL_OES_packed_depth_stencil GL_EXT_texture_format_BGRA8888 GL_OES_rgb8_rgba8 "
+               "GL_OES_vertex_half_float GL_OES_texture_float GL_OES_texture_half_float GL_OES_standard_derivatives GL_EXT_discard_framebuffer "
+               "GL_OES_mapbuffer GL_OES_element_index_uint GL_OES_compressed_ETC1_RGB8_texture GL_EXT_texture_filter_anisotropic GL_OES_depth24";
+    }
     return "GL_OES_depth_texture GL_OES_packed_depth_stencil GL_EXT_texture_format_BGRA8888 GL_OES_rgb8_rgba8 GL_OES_vertex_half_float GL_OES_texture_float "
            "GL_OES_texture_half_float GL_OES_standard_derivatives GL_EXT_discard_framebuffer GL_OES_mapbuffer GL_OES_element_index_uint "
            "GL_OES_compressed_ETC1_RGB8_texture GL_EXT_texture_filter_anisotropic GL_OES_depth24";
