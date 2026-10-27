@@ -1,6 +1,8 @@
 // --audio-selftest <sounds dir>: decodes every .wav and .vxn file of the sound folder with the vox decoders (DecoderMSWav: PCM and IMA ADPCM,
 // DecoderNative: the VoxN containers) and reports frames decoded against the header, peak level, and failures. No game boot needed.
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 #include <cmath>
 #include <cstdio>
@@ -15,6 +17,12 @@
 
 namespace dh2host {
 
+#ifndef _WIN32
+int audioSelfTest(const std::string& dir) {
+    std::fprintf(stderr, "--audio-selftest is Windows-only (the Linux runner has no folder walk here): %s\n", dir.c_str());
+    return 2;
+}
+#else
 int audioSelfTest(const std::string& dir) {
     WIN32_FIND_DATAA fd;
     HANDLE h = FindFirstFileA((dir + "/*").c_str(), &fd);
@@ -79,4 +87,5 @@ int audioSelfTest(const std::string& dir) {
     return bad ? 1 : 0;
 }
 
+#endif
 }  // namespace dh2host
