@@ -167,6 +167,9 @@ public:
     // pushes it on the base's +0x110 vector and stores it at +0x120. Needs no glitch-scene type: the handle is
     // opaque.
     void initBuffer();
+    // Port addition (not in the binary): makes the append buffer large enough for a record that does not fit even when empty
+    // (vertex tangents of the remaster). See batch_driver.cpp. False: the record cannot be batched.
+    bool dh2EnsureAppendSpace(uint32_t vertexCount, uint32_t indexCount);
     // 0x589f40 _ZN6glitch5video12CBatchDriver13releaseBufferEv
     // Reconstructed in glitch-video/src/batch_driver.cpp: erases the base's +0x110 vector when +0x120 is set, clears
     // +0x120, drops the base's +0x128 and calls IVideoDriver::clearImplementationDependentData (0x5adfe0, itself a

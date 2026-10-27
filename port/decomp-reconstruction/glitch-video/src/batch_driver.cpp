@@ -69,6 +69,61 @@ void releaseAppendBuffer(glitch::IReferenceCounted* buffer) {
 
 }  // namespace
 
+// Port addition (not in the binary; the Great Sanctuary crash of v0.4.1-remaster, 2026-10-26). thisAppendBatch flushes the append
+// buffer when a record does not fit and then bakes the record whatever its size: the original never checks that the record fits an
+// EMPTY buffer, because the level tables (LevelConfig vertex/index buffer sizes, Level::_LoadBatching) were tuned so that the largest
+// single mesh of each level fits at the original vertex layouts. The remaster's vertex tangents (remaster_tangents.cpp) make the batch
+// vertex up to three times larger (for example 60 bytes instead of 36 with tangent and binormal), so one big static mesh of a level
+// such as 009a_abbey.mlx (4,842 vertices = 290 KB) no longer fits in the level's whole buffer and the baker wrote past its end: on
+// arm64 a write fault in copyComponentSF (overrideVertexStreams) or a corrupted heap block found later by delete[] in
+// FlushMeshBuffers. Doubling the buffer in Level::_LoadBatching (d04cbbd5) only moved the limit. When a record still does not fit
+// after the flush, the append buffer is replaced by one large enough for it (built as initBuffer builds it, then configured by the
+// current baker, as resetBatchMaterial does), and the larger capacity stays the default for later buffers. A record of 65,536
+// vertices or more cannot be addressed by the 16-bit indices at all; it is skipped instead of overrunning the buffer.
+// Returns false when the record cannot be baked.
+bool CBatchDriver::dh2EnsureAppendSpace(uint32_t vertexCount, uint32_t indexCount) {
+    auto* current = reinterpret_cast<scene::CAppendMeshBuffer*>(m_batchBuffer.get());
+    if (current == nullptr) return false;
+    if (current->hasEnoughSpace(vertexCount, indexCount)) return true;
+#ifdef DH2_HOST_RUNNER
+    if (std::getenv("DH2_NO_BATCH_GROW") != nullptr) return true;  // A/B switch for the runner: the original (overrunning) behaviour
+#endif
+    if (vertexCount >= 0x10000u || current->vertexUsedBytes != 0 || current->indexUsedBytes != 0) {
+        std::fprintf(stderr, "DH2 batch: record of %u vertices / %u indices skipped (cannot fit a 16-bit batch)\n", vertexCount, indexCount);
+        return false;
+    }
+    const uint32_t stride = current->vertexStride != 0 ? current->vertexStride : 1u;
+    const uint32_t istride = current->indexStride != 0 ? current->indexStride : 2u;
+    uint32_t vertexBytes = current->vertexCapacityBytes;
+    uint32_t indexBytes = current->indexCapacityBytes;
+    const uint64_t needV = static_cast<uint64_t>(vertexCount) * stride;
+    const uint64_t needI = static_cast<uint64_t>(indexCount) * istride;
+    if (needV > vertexBytes) vertexBytes = static_cast<uint32_t>(needV + needV / 4u);  // 25 % slack for the next records
+    if (needI > indexBytes) indexBytes = static_cast<uint32_t>(needI + needI / 4u);
+    std::fprintf(stderr, "DH2 batch: append buffer grown %u -> %u vertex bytes, %u -> %u index bytes (record %u vertices x %u bytes)\n",
+                 current->vertexCapacityBytes, vertexBytes, current->indexCapacityBytes, indexBytes, vertexCount, stride);
+    current->endAppend();
+    auto* fresh = new glitch::scene::CAppendMeshBuffer(vertexBytes, indexBytes, static_cast<IVideoDriver*>(this),
+                                                       video::E_BUFFER_USAGE(1), kAppendBufferStride);
+    boost::intrusive_ptr<glitch::IReferenceCounted> handle(reinterpret_cast<glitch::IReferenceCounted*>(fresh), true);
+    bool replaced = false;
+    for (auto& entry : m_batchBuffers) {
+        if (entry.get() == m_batchBuffer.get()) {
+            entry = handle;
+            replaced = true;
+        }
+    }
+    if (!replaced) m_batchBuffers.push_back(handle);
+    m_batchBuffer = handle;
+    if (vertexBytes > defaultVertexBufferCapacityBytes) defaultVertexBufferCapacityBytes = vertexBytes;
+    if (indexBytes > defaultIndexBufferCapacityBytes) defaultIndexBufferCapacityBytes = indexBytes;
+    if (m_batchBaker) {
+        m_batchBaker->configureAppendBuffer(boost::intrusive_ptr<scene::CAppendMeshBuffer>(fresh, true));
+    }
+    fresh->beginAppend();
+    return fresh->hasEnoughSpace(vertexCount, indexCount);
+}
+
 // 0x5a2e20 _ZN6glitch5video12CBatchDriverC1EjjPNS0_12IVideoDriverE (complete object)
 // 0x5a2ed8 _ZN6glitch5video12CBatchDriverC2EjjPNS0_12IVideoDriverE (base object)
 // Reconstructed. The listing, in order:
@@ -447,6 +502,8 @@ void CBatchDriver::thisAppendBatch(const boost::intrusive_ptr<const CVertexStrea
                 std::puts("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
             }
             flush();  // vtable +0x1fc
+            // Port addition: a record larger than the whole (now empty) buffer gets a larger buffer instead of overrunning it.
+            if (!dh2EnsureAppendSpace(recordVertexCount, 3 * recordPrimitives.getPrimitiveCount())) continue;
         }
         appendBuffer = static_cast<scene::CAppendMeshBuffer*>(m_batchBuffer.get());
 

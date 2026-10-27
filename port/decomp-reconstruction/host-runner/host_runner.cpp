@@ -1,7 +1,28 @@
 // Host runner core: argument parsing, the fixed clock, the boot sequence (the Java classes' order) and the frame loop.
 #include "host_runner.hpp"
 
+#ifdef _WIN32
 #include <windows.h>
+#include <io.h>
+#else
+// Linux host runner (port addition): POSIX stand-ins for the few Win32 calls below; crashes are reported by AddressSanitizer.
+#include <climits>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <time.h>
+#define MAX_PATH PATH_MAX
+static unsigned long long GetTickCount64() {
+    timespec ts{};
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return static_cast<unsigned long long>(ts.tv_sec) * 1000ull + static_cast<unsigned long long>(ts.tv_nsec / 1000000);
+}
+static void Sleep(unsigned ms) { usleep(ms * 1000u); }
+typedef unsigned DWORD;
+static unsigned GetFullPathNameA(const char* in, unsigned, char* out, char**) { return realpath(in, out) != nullptr ? 1u : 0u; }
+static void CreateDirectoryA(const char* path, void*) { mkdir(path, 0755); }
+#define _dup dup
+#define _fdopen fdopen
+#endif
 
 #include <cstdarg>
 #include <thread>
@@ -11,7 +32,6 @@
 #include <cstring>
 #include <ctime>
 #include <cstdint>
-#include <io.h>
 #include <fcntl.h>
 
 extern "C" {
@@ -141,6 +161,7 @@ static void crashPrint(const char* fmt, ...) {
 
 extern "C" void dh2_pageheap_report(unsigned long long addr, void (*print)(const char*, ...), unsigned long long moduleBase) __attribute__((weak));
 
+#ifdef _WIN32
 static LONG WINAPI crashFilter(EXCEPTION_POINTERS* info) {
     const unsigned long long loaded = reinterpret_cast<unsigned long long>(GetModuleHandleA(nullptr));
     const EXCEPTION_RECORD* r = info->ExceptionRecord;
@@ -188,9 +209,12 @@ static LONG WINAPI crashFilter(EXCEPTION_POINTERS* info) {
     }
     return EXCEPTION_EXECUTE_HANDLER;
 }
+#endif
 
 bool bootGame(const Options& opt) {
+#ifdef _WIN32
     SetUnhandledExceptionFilter(crashFilter);
+#endif
     if (!opt.realtime) clockUseFixed(100000LL * 1000000LL);
     jniInstall(opt);
     // GameRenderer.nativeInit: g_appAlive == 0 -> appInit()
@@ -273,8 +297,10 @@ int runHeadlessLoop(const Options& opt) {
 // ---- POSIX functions the reconstruction calls that the Windows C runtime lacks ----
 // lrand48 (ok2-Clustering.cpp, the k-means seeding): the POSIX drand48 family, X(n+1) = (0x5DEECE66D * X(n) + 0xB) mod 2^48 with the default seed
 // 0x1234ABCD330E; it returns the high 31 bits.
+#ifdef _WIN32
 extern "C" long lrand48(void) {
     static unsigned long long x = 0x1234ABCD330EULL;
     x = (0x5DEECE66DULL * x + 0xBULL) & 0xFFFFFFFFFFFFULL;
     return static_cast<long>(x >> 17);
 }
+#endif

@@ -14,18 +14,26 @@ function(dh2_host_exe name)
   target_include_directories(${name} SYSTEM PRIVATE ${DH2_VENDOR_INCLUDES})
   # Whole archives, like libdh2.so: the game relies on static initialisers (IrrFactory::s_factory, the singletons) of objects nothing references.
   string(REPLACE ";" "," dh2_libs_csv "${DH2_LIBS}")
-  target_link_libraries(${name} PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,${dh2_libs_csv}>" ws2_32 winmm)
+  if(WIN32)
+    target_link_libraries(${name} PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,${dh2_libs_csv}>" ws2_32 winmm)
+  else()
+    target_link_libraries(${name} PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,${dh2_libs_csv}>" pthread dl m)
+  endif()
   target_link_options(${name} PRIVATE -Wl,--allow-multiple-definition)
 endfunction()
 
 dh2_host_exe(dh2_win_headless main_headless.cpp)
+if(WIN32)
 dh2_host_exe(dh2_win_window main_window.cpp host_window.cpp host_rtdump.cpp)
 target_link_libraries(dh2_win_window PRIVATE gdi32 user32)
+endif()
 
 # Debug variant: the same headless runner on a guard-page heap (host_pageheap.cpp): overruns and use-after-free fault at the faulting instruction.
 # MinGW GCC has no AddressSanitizer/UBSan runtime (libasan/libubsan are not part of the toolchain), so this is the memory-error check.
+if(WIN32)
 dh2_host_exe(dh2_win_headless_ph main_headless.cpp host_pageheap.cpp)
 target_link_options(dh2_win_headless_ph PRIVATE -Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc,--wrap=free)
+endif()
 
 # Texture decoder for the upscale pipeline (tools/trackb/textures.py): the game's own PVRTC decode to plain TGA.
 dh2_host_exe(dh2_texconv tool_texconv.cpp)

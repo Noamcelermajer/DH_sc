@@ -3,8 +3,26 @@
 //  * --audio-wav <file>: everything written is appended to a WAV file (written while paused or not: only play state counts), for headless checks;
 //  * --audio-out (default in the window runner): the frames go to the Windows waveOut device, write() blocking when four buffers are queued,
 //    as AudioTrack.write blocks on a full track.
+#ifdef _WIN32
 #include <windows.h>
 #include <mmsystem.h>
+#else
+// Linux host runner (port addition): no audio device; --audio-wav still works.
+#include <cstdint>
+#include <unistd.h>
+typedef void* HWAVEOUT;
+typedef unsigned DWORD;
+struct WAVEHDR { char* lpData; DWORD dwBufferLength; DWORD dwFlags; };
+enum { WHDR_PREPARED = 2, WHDR_DONE = 1 };
+static void Sleep(unsigned ms) { usleep(ms * 1000u); }
+static void waveOutRestart(HWAVEOUT) {}
+static void waveOutPause(HWAVEOUT) {}
+static void waveOutUnprepareHeader(HWAVEOUT, WAVEHDR*, unsigned) {}
+static void waveOutPrepareHeader(HWAVEOUT, WAVEHDR*, unsigned) {}
+static void waveOutWrite(HWAVEOUT, WAVEHDR*, unsigned) {}
+static void waveOutReset(HWAVEOUT) {}
+static void waveOutClose(HWAVEOUT) {}
+#endif
 
 #include <atomic>
 #include <cstdio>
@@ -57,6 +75,9 @@ void audioOpen(const Options& opt) {
         g_wav = std::fopen(opt.audioWav.c_str(), "wb");
         if (g_wav) { wavHeader(g_wav, 0); g_dataBytes = 0; }
     }
+#ifndef _WIN32
+    if (opt.audioOut) std::fprintf(stderr, "[audio] no audio device on the Linux runner; running without output\n");
+#else
     if (opt.audioOut) {
         WAVEFORMATEX fmt{};
         fmt.wFormatTag = WAVE_FORMAT_PCM;
@@ -72,6 +93,7 @@ void audioOpen(const Options& opt) {
             g_hwo = nullptr;
         }
     }
+#endif
 }
 
 void audioPlay(bool on) {

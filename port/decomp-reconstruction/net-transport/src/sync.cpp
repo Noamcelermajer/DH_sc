@@ -5,6 +5,7 @@
 #include <windows.h>  // libc++ on Windows (llvm-mingw): the native handle is a HANDLE
 #else
 #include <pthread.h>  // pthread_kill: winpthreads (the MinGW std::thread) implements the same liveness probe
+#include <signal.h>   // pthread_kill on glibc (Linux host runner)
 #endif
 
 #include <cerrno>

@@ -35,6 +35,10 @@ option(DH2_HOST_RUNNER "Build the Windows host runner executables (host-runner/)
 if(DH2_HOST_RUNNER)
   add_compile_definitions(DH2_HOST_RUNNER=1)
   include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/host-runner/compat)  # <android/log.h> shim for sources with Android-only debug logging
+  if(UNIX AND NOT ANDROID)
+    # Linux host runner (port addition): glibc libstdc++ lacks std::logf & co. (host-runner/compat/dh2_linux_host_compat.h).
+    add_compile_options("SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/host-runner/compat/dh2_linux_host_compat.h")
+  endif()
 endif()
 if(ANDROID)
   add_compile_options(-Wno-format-security)
@@ -225,6 +229,9 @@ target_include_directories(dh2_vendor_libtess PRIVATE ${DH2_TESS_DIR}/src/includ
 if(ANDROID)
   target_include_directories(dh2_vendor_libtess SYSTEM PRIVATE ${DH2_ANDROID_COMPAT_DIR})   # <GL/gl.h> for glu.h
 endif()
+if(DH2_HOST_RUNNER AND UNIX AND NOT ANDROID)
+  target_include_directories(dh2_vendor_libtess SYSTEM PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/host-runner/compat-linux)   # <GL/gl.h> for glu.h (Linux runner)
+endif()
 if(NOT MSVC)
   target_compile_options(dh2_vendor_libtess PRIVATE -w)
 endif()
@@ -300,7 +307,7 @@ endif()
 
 # Windows host runner (host-runner/, see reports/decomp-reconstruction/HOST-RUNNER.md): dh2_win_headless boots the reconstructed game on the
 # host with a fake JNI layer, fixed timestep and scripted input; dh2_win_window adds a real window and GLES2 (ANGLE). Off by default.
-if(DH2_HOST_RUNNER AND WIN32)
+if(DH2_HOST_RUNNER AND (WIN32 OR (UNIX AND NOT ANDROID)))  # Linux: headless runner only (port addition)
   add_subdirectory(host-runner)
 endif()
 
