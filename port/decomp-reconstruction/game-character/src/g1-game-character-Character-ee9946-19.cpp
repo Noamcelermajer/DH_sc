@@ -9,6 +9,7 @@
 // stores 0 to address 0 in the original (a deliberate crash). Here it ends the process with std::abort(), as CharAI's
 // AssertFailed and core-platform's memory.cpp do for the same store.
 
+#include "dh2/global/progress_port.hpp"
 #include <cstdio>
 #include <cstdlib>
 
@@ -94,7 +95,7 @@ int TrophyId(const char* name) {
 }
 
 // The MaxLevel row of the character design for a difficulty (CharacterDesign constants, as the original picks them).
-int MaxLevelForDifficulty(int difficulty) {
+int OriginalMaxLevelForDifficulty(int difficulty) {
     if (difficulty == 1) {
         return ApplicationGetPyDataConstants()->getConstant("CharacterDesign", "MaxLevelCHard");
     }
@@ -102,6 +103,12 @@ int MaxLevelForDifficulty(int difficulty) {
         return ApplicationGetPyDataConstants()->getConstant("CharacterDesign", "MaxLevelDVeryHard");
     }
     return ApplicationGetPyDataConstants()->getConstant("CharacterDesign", "MaxLevelBNormal");
+}
+
+// PORT FIX (PRG1, port option "levelcap", game/include/dh2/global/progress_port.hpp): the cap LevelUp and _GiveXP test is the
+// original's unless the player raised it; 0 (the default) keeps the original value exactly.
+int MaxLevelForDifficulty(int difficulty) {
+    return dh2progress::EffectiveMaxLevel(OriginalMaxLevelForDifficulty(difficulty), g_dh2LevelCap);
 }
 
 }  // namespace

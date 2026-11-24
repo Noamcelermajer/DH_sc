@@ -210,12 +210,17 @@ public:
 
 // Bank loader record (vox::BankXMLDef, 40 bytes): uid +0x00, behaviour +0x04, max playbacks
 // +0x08, threshold +0x0c and the name string +0x10.
+// PORT FIX (SND-BANK): the defaults are the fill value of vector<BankXMLDef>(uint) (0x88c760): uid 0, behaviour 3
+// ("do nothing", the XML spelling LoadXML does not match), max playbacks 0x7fffffff, threshold 0x80000001. A bank
+// row without a threshold attribute (all seven in data/sounds/sounds.xml) keeps that minimum. The port had zeros,
+// so the NPC bank (uid 5) got minimum priority 0 and PriorityBankManager::_CanAddEmitter refused every one of its
+// 141 priority -1 sounds: every enemy voice (zombie/Condemned, cherub, lizardman, skeleton, spider, goblin, ...).
 class BankXMLDef {
 public:
-    std::int32_t uid_ = 0;             // +0x00
-    std::int32_t behavior_ = 0;        // +0x04
-    std::int32_t max_playbacks_ = 0;   // +0x08
-    std::int32_t threshold_ = 0;       // +0x0c
+    std::int32_t uid_ = 0;                        // +0x00
+    std::int32_t behavior_ = 3;                   // +0x04
+    std::int32_t max_playbacks_ = 0x7fffffff;     // +0x08
+    std::int32_t threshold_ = -0x7fffffff;        // +0x0c (0x80000001)
     std::string name_;                 // +0x10
 };
 

@@ -1392,6 +1392,9 @@ void botCommand(int frame, const std::string& line) {
         std::fprintf(g_runnerOut, "[bot] hero level=%d hp=%d/%d gold=%d items=%zu skills=%s cutscene=%d visible=%d node=%d\n", h->GetLevel(), h->GetHP(), h->GetTotalHP(), h->m_gold,
                      h->m_items.size(), skills, ScriptManager::s_inst.m_inCutScene ? 1 : 0, h->m_visible ? 1 : 0,
                      (h->m_visualObject && h->m_visualObject->m_node) ? ((h->m_visualObject->m_node->flags & glitch::scene::ESNF_VISIBLE) ? 1 : 0) : -1);
+        // PRG1: the level-driven properties (XP 33, Max_XP 34, Max_HP 38, Stat_Points 148, Skill_Points 157), to check the raised level cap.
+        std::fprintf(g_runnerOut, "[bot] hero xp=%d/%d maxhp=%d statpts=%d skillpts=%d savedlevel=%d\n", h->PROPS_GetInt(33, false), h->PROPS_GetInt(34, false),
+                     h->PROPS_GetInt(38, false), h->PROPS_GetInt(148, false), h->PROPS_GetInt(157, false), h->SG_GetPlayerLevel());
     } else if (cmd == "skillinfo" && h) {
         // UI owner: skillinfo <skill> <lvl>: the Lua OnSkillInfo path the skill details of the hero screen use (AI_SkillInfo), then the display properties of the skill row from s_temp.
         unsigned skill = 0, lvl = 0;

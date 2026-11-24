@@ -25,6 +25,7 @@
 #include "dh2/PlayerManager.hpp"
 #include "dh2/RootSceneNode.hpp"
 #include "dh2/VisualObject.hpp"
+#include "dh2/global/camera_port.hpp"       // port addition (CAM1): camfov / camdist / camfollow / camlead
 #include "dh2/global/IsMultiplayerGame.hpp"  // dword_99F76C, the PlayerManager instance
 #include "dh2/global/ctrl_camera.hpp"        // Application& ApplicationGetInstance()
 #include "glitch-core-io/core/reference_counted.hpp"  // glitch::IReferenceCounted (referenceCounter)
@@ -302,6 +303,37 @@ void CameraLevel::Update() {
     Point3D<float> position = m_useObjectPosition ? m_target->m_position : GetTargetPosition();
     HandleOffset(position);
     HandleCentering(position);
+    // PORT FIX (CAM1, not in the original; game/include/dh2/global/camera_port.hpp): the player's camera settings. Level camera
+    // only (the map cameras set m_useObjectPosition); every step is skipped while its setting is at the original's default.
+    const bool portCamera = !m_useObjectPosition;
+    if (portCamera) {
+        static const glitch::scene::ICameraSceneNode* s_fovCamera = nullptr;  // camera whose base FOV is remembered
+        static float s_baseFov = 0.0f;                                         // FOV the game set (SetData, console)
+        static float s_appliedFov = -1.0f;                                     // FOV this block wrote last
+        if (g_dh2CamFovPercent != 100 || s_fovCamera == m_camera) {
+            const float current = m_camera->getFOV();
+            if (s_fovCamera != m_camera || std::fabs(current - s_appliedFov) > 1e-6f) {
+                s_fovCamera = m_camera;  // new camera, or the game changed the FOV itself: that is the new base
+                s_baseFov = current;
+            }
+            const float wanted = dh2cam::ScaledFov(s_baseFov, g_dh2CamFovPercent);
+            if (wanted != current) {
+                m_camera->setFOV(wanted);
+            }
+            s_appliedFov = wanted;
+        }
+        static dh2cam::LeadState s_lead;
+        if (g_dh2CamLeadPercent > 0) {
+            const float dtSeconds = static_cast<float>(static_cast<unsigned int>(ApplicationGetInstance().GetDt())) * 0.001f;
+            float leadX = 0.0f;
+            float leadY = 0.0f;
+            dh2cam::UpdateLead(s_lead, position.X, position.Y, dtSeconds, g_dh2CamLeadPercent, m_defaultTargetDistance, leadX, leadY);
+            position.X += leadX;
+            position.Y += leadY;
+        } else if (s_lead.valid) {
+            s_lead.Reset();
+        }
+    }
 
     // The pan offset (+0x98, +0x9c, +0xa0). With m_useObjectPosition the x and y pair is turned by 45 degrees.
     const float panZ = m_panOffset.Z;  // +0xa0
@@ -328,11 +360,21 @@ void CameraLevel::Update() {
         zoomOffset = -0.0f;
         m_zoomEffective = 0.0f;
     }
-    const float cameraZ = zoomOffset * m_defaultTargetDistance;  // +0x94
+    float cameraZ = zoomOffset * m_defaultTargetDistance;  // +0x94
+    if (portCamera && g_dh2CamDistPercent != 100) {
+        cameraZ += dh2cam::ExtraDistanceZ(m_defaultTargetDistance, g_dh2CamDistPercent);  // PORT FIX (CAM1): camdist
+    }
     m_camera->setPosition(glitch::core::vector3d<float>{0.0f, 0.0f, cameraZ});  // vtable +0xa4
 
     HandleGhostCam(position);
-    HandleDamping(position);
+    if (portCamera && g_dh2CamFollowPercent != 100) {
+        const float baseRatio = m_dampingRatio;  // PORT FIX (CAM1): camfollow scales the damping for this step only
+        m_dampingRatio = dh2cam::FollowRatio(baseRatio, g_dh2CamFollowPercent);
+        HandleDamping(position);
+        m_dampingRatio = baseRatio;
+    } else {
+        HandleDamping(position);
+    }
     m_node->setPosition(glitch::core::vector3d<float>{position.X, position.Y, position.Z});  // vtable +0xa4
 
     // A target that is being deleted is dropped (GameObject +0x81 is ObjectBase::m_markedForDeletion).

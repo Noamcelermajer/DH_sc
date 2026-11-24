@@ -12,6 +12,14 @@
 //   hudscale   HUD size in percent of the fit (100..200); 0 = automatic (125 on a tablet-shaped surface, else 100).
 //   enemybar   1 = the targeted enemy's health bar follows the enemy (above its head, back to the HUD slot when off screen), 0 = the
 //              original's fixed HUD slot (default 1; InfoHUDManager::FastUpdate).
+//   camfov / camdist / camfollow / camlead  gameplay camera: view height %, distance %, follow tightness %, look-ahead
+//              (defaults 100 / 100 / 100 / 0 = the original; see game/include/dh2/global/camera_port.hpp).
+//   levelcap   0 = the original level caps (CharacterDesign MaxLevel*: 50 / 80 / 100 by unlocked difficulty, default); 101..999 =
+//              that cap on every difficulty (game/include/dh2/global/progress_port.hpp).
+//   alertbtn   the port's "!" bubble (SessionUi): 0 always shown (default), 1 only while a menu page or the pause menu is up,
+//              2 invisible until its spot is touched (a touch shows it for a few seconds, a tap on the shown bubble opens the dialog).
+//   hudkeep    1 = the customised HUD layout is kept across restarts (hudpos.<HUDStyle>.<index>.<x|y> keys, stage pixels, range
+//              -9999..9999) and a drag is refused only when the element's centre would leave the stage (default); 0 = the original.
 //   hudelem.<HUDStyle>.<index>  size of one HUD layout element in percent (50..200, HUDControls customise page); any
 //              other key of the form [A-Za-z0-9._-]{1,63} is accepted as an int 0..400 and kept in the file.
 //

@@ -59,6 +59,10 @@ int FlashBoxHeight(const void* root);
 bool HudCoveredByPage();
 // The HUD movie shows one of its own pages (the pause menu): the HUD movie is then stretched over the surface like the menus.
 bool HudMoviePageUp();
+// Port addition (PRG1, port option "alertbtn"): once per MenuManager::Update the game thread records whether the player is out of
+// play (no level loaded, or HudCoveredByPage()); the Java "!" bubble reads it through DungeonHunter2.nativeIsUiPageUp().
+void UpdateUiPageUpFlag();
+int UiPageUp();                                                     // 1 = out of play (menus, pause page), 0 = playing
 
 // Port addition (UI4, TRACK-B.md decision 15): HUD corner anchoring and the stick touch zone, both only where the 16:9 fit applies.
 // HudAnchorUpdate (game-ui/.../HUDControls) moves the HUD movie's elements toward the real screen edges by the surface margin of the fit;
