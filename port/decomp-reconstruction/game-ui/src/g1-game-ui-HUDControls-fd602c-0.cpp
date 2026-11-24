@@ -48,6 +48,7 @@
 #include "dh2/MenuManager.hpp"
 #include "dh2/v2Controller.hpp"
 #include "core-platform/port_settings.hpp"
+#include "dh2/global/hud_keep_port.hpp"
 #include "glitch-core-io/os/device.hpp"
 #include "glitch-video/c2d_driver.hpp"
 #include "glitch-video/texture_manager.hpp"
@@ -181,6 +182,78 @@ void ElementTranslation(DebugCachedCharacter& element, float& x, float& y) {
 // The drag step of one custom-layout element: ((event + world) - source) / 20, truncated.
 float DragStep(float eventValue, float worldValue, float source) {
     return static_cast<float>(static_cast<int>(Div20((eventValue + worldValue) - source)));
+}
+
+// PORT FIX (PRG1, port option "hudkeep", default 1; 0 = the original): the original HUD customise page keeps the layout in memory
+// only (m_classicPos / m_stylePos, filled by SaveHUDPos; nothing writes them to the savegame), so every restart of the app showed the
+// default layout again, and it never checks where an element is dragged: there is no overlap or bounds test anywhere in
+// HUDControls, GameSWFUtils::MoveBtnPos or the HUD movie's ActionScript, so an element could be pushed off the stage and lost. With
+// the option on, the saved layout is also written to dh2_port.cfg (hudpos.<HUDStyle>.<index>.<x|y>, stage pixels, plus
+// hudpos.<HUDStyle>.saved) and read back when the HUD is built, and a drag is refused only when it would put an element's centre
+// outside the stage. Overlapping elements stay allowed.
+bool HudKeepLayout() { return g_dh2HudKeepLayout != 0; }
+
+void HudPosKey(char (&out)[48], int style, int index, char axis) {
+    std::snprintf(out, sizeof out, "hudpos.%d.%d.%c", style, index, axis);
+}
+
+// The saved layout of a style as world translations (twips), as m_classicPos / m_stylePos hold it. False when none was saved.
+bool LoadPersistedLayout(int style, float (&pos)[kLayoutCount][2]) {
+    char key[48];
+    std::snprintf(key, sizeof key, "hudpos.%d.saved", style);
+    if (dh2port::Get(key, 0) != 1) {
+        return false;
+    }
+    float loaded[kLayoutCount][2];
+    for (int i = 0; i < kLayoutCount; ++i) {
+        HudPosKey(key, style, i, 'x');
+        const int x = dh2port::Get(key, -100000);
+        HudPosKey(key, style, i, 'y');
+        const int y = dh2port::Get(key, -100000);
+        if (x == -100000 || y == -100000) {
+            return false;
+        }
+        loaded[i][0] = static_cast<float>(x) * 20.0f;
+        loaded[i][1] = static_cast<float>(y) * 20.0f;
+    }
+    std::memcpy(pos, loaded, sizeof loaded);
+    return true;
+}
+
+void PersistLayout(int style, const float (&pos)[kLayoutCount][2]) {
+    char key[48];
+    for (int i = 0; i < kLayoutCount; ++i) {
+        HudPosKey(key, style, i, 'x');
+        dh2port::Set(key, static_cast<int>(std::lround(pos[i][0] / 20.0f)));
+        HudPosKey(key, style, i, 'y');
+        dh2port::Set(key, static_cast<int>(std::lround(pos[i][1] / 20.0f)));
+    }
+    std::snprintf(key, sizeof key, "hudpos.%d.saved", style);
+    dh2port::Set(key, 1);
+}
+
+// True when the centre of the element's bound (stage twips, through its parent's world matrix) lies on the HUD movie's stage. A
+// missing element, root or bound counts as on the stage (nothing to refuse).
+bool ElementCentreOnStage(HUDControls& h, int index) {
+    gameswf::character* c = LayoutElement(h, index).GetChar();
+    if (c == nullptr || c->get_parent() == nullptr || h.m_menu == nullptr) {
+        return true;
+    }
+    gameswf::root* root = h.m_menu->GetRoot();
+    if (root == nullptr || root->m_def.get_ptr() == nullptr) {
+        return true;
+    }
+    gameswf::rect bound;
+    bound.m_x_min = bound.m_x_max = bound.m_y_min = bound.m_y_max = 0.0f;
+    c->get_bound(&bound);
+    if (!(bound.m_x_max >= bound.m_x_min) || !(bound.m_y_max >= bound.m_y_min) || bound.m_x_max - bound.m_x_min > 1e7f) {
+        return true;
+    }
+    gameswf::point centre((bound.m_x_min + bound.m_x_max) * 0.5f, (bound.m_y_min + bound.m_y_max) * 0.5f);
+    gameswf::point world;
+    c->get_parent()->get_world_matrix()->transform(&world, centre);
+    const gameswf::rect& stage = root->m_def->m_frame_size;
+    return dh2hudkeep::CentreInside(world.m_x, world.m_y, stage.m_x_min, stage.m_y_min, stage.m_x_max, stage.m_y_max);
 }
 
 }  // namespace
@@ -334,6 +407,17 @@ float HUDControls::OnEvent(RenderFX::Event& event) {
                 }
             }
         }
+        // PRG1 (hudkeep): the layout before this drag step, so a step that puts an element's centre off the stage can be undone.
+        float before[kLayoutCount][2];
+        bool haveBefore = false;
+        if (eventType == 5 && HudKeepLayout()) {
+            haveBefore = true;
+            for (int i = 0; i < kLayoutCount; ++i) {
+                if (!WorldTranslation(LayoutElement(*this, i).GetChar(), before[i][0], before[i][1])) {
+                    haveBefore = false;
+                }
+            }
+        }
         if (eventType == 5) {
             float x = 0.0f;
             float y = 0.0f;
@@ -370,6 +454,17 @@ float HUDControls::OnEvent(RenderFX::Event& event) {
                 GameSWFUtils::MoveBtnPos(m_posBtnPotion.GetChar(), DragStep(event.x, x, srcX), DragStep(event.y, y, srcY));
             }
         }
+        if (haveBefore) {
+            bool offStage = false;
+            for (int i = 0; i < kLayoutCount && !offStage; ++i) {
+                offStage = !ElementCentreOnStage(*this, i);
+            }
+            if (offStage) {
+                for (int i = 0; i < kLayoutCount; ++i) {
+                    GameSWFUtils::MoveBtnPos(LayoutElement(*this, i).GetChar(), before[i][0] / 20.0f, before[i][1] / 20.0f);
+                }
+            }
+        }
         if (eventType == 6) {
             if (target == m_btnCustomSave.GetChar()) {
                 m_customizing = false;
@@ -380,6 +475,10 @@ float HUDControls::OnEvent(RenderFX::Event& event) {
                     m_hasStylePos = true;
                 } else {
                     m_hasClassicPos = true;
+                }
+                if (HudKeepLayout()) {  // PRG1: the saved layout survives a restart
+                    const int style = Singleton<Application>::s_inst.GetSavedOption("HUDStyle");
+                    PersistLayout(style, style != 0 ? m_stylePos : m_classicPos);
                 }
                 if (Level* level = Singleton<Application>::s_inst.GetCurrentLevel()) {
                     level->unk_1a8 = false;
@@ -574,6 +673,12 @@ void HUDControls::initCachedChars() {
         SetCharacterFlag155(m_posItunesControls.GetChar(), true);
     }
 
+    // PRG1 (hudkeep): a layout saved in an earlier run is taken as this run's saved layout (applied below, after the defaults are captured).
+    if (HudKeepLayout() && hudStyle == 0 && !m_hasClassicPos && LoadPersistedLayout(0, m_classicPos)) {
+        m_hasClassicPos = true;
+    } else if (HudKeepLayout() && hudStyle == 1 && !m_hasStylePos && LoadPersistedLayout(1, m_stylePos)) {
+        m_hasStylePos = true;
+    }
     if (hudStyle == 0) {
         if (!m_defaultsCaptured && CaptureDefaults(*this, m_defaultWorldA)) {
             m_defaultsCaptured = true;

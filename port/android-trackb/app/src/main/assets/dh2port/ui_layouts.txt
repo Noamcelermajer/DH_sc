@@ -3,7 +3,7 @@
 # shape back. A ratio without a section (16:9 included) gets the plain original stretch. Format: game-ui/src/screen_fit_pages.cpp.
 # Edit tools/trackb/ui_layouts.body.txt and regenerate with: py -3 tools/trackb/ui_walk.py layouts
 
-[ratio 1.95-2.50]  # 18:9, 19.5:9, 20:9, 21:9 phones (Galaxy Z Fold cover screen 2520x1080 = 2.33)
+[ratio 1.85-2.50]  # 18:9, 18.5:9, 19.5:9, 20:9, 21:9 phones, also with a navigation bar left on screen (Galaxy Z Fold cover screen 2520x1080 = 2.33)
 # ---- title -----------------------------------------------------------------------------------------------------------
 menu_splash/#0                               cover  amount=0.5
 menu_splash/ClickToContinue                  shape  grow
@@ -127,6 +127,9 @@ menu_InventorySheetDetails/ItemInfo4         shape  anchor=left
 menu_InventorySheetDetails/ItemInfo5         shape  anchor=left
 menu_InventorySheetDetails/ItemReq           shape  anchor=left
 menu_InventorySheetDetails/avatarpane        shape
+menu_InventorySheetDetails/list/*/Host        shape  anchor=left
+menu_InventorySheetDetails/list/*/Number      shape  anchor=left
+menu_InventorySheetDetails/list/*/Status      shape  anchor=left
 
 # ---- faeries: the whole page as one block, centred, hanging from the top ------------------------------------------------------
 menu_FaerySheet/*                            shape  edge=top
@@ -152,6 +155,8 @@ menu_QuestLogSheetNEW/QuestMain              shape  anchor=left
 menu_QuestLogSheetNEW/QuestDetailsText       shape  anchor=left
 menu_QuestLogSheetNEW/QuestDesc              shape  anchor=left
 menu_QuestLogSheetNEW/btn_Activate           shape
+menu_QuestLogSheetNEW/AllQuests/content/Assigned/*   shape
+menu_QuestLogSheetNEW/AllQuests/content/Completed/*  shape
 
 # ---- map ------------------------------------------------------------------------------------------------------------------------
 menu_MapSheet/menu_title                     shape  anchor=left
@@ -298,6 +303,9 @@ menu_InventorySheetDetails/ItemInfo4         shape  anchor=left
 menu_InventorySheetDetails/ItemInfo5         shape  anchor=left
 menu_InventorySheetDetails/ItemReq           shape  anchor=left
 menu_InventorySheetDetails/avatarpane        shape
+menu_InventorySheetDetails/list/*/Host        shape  anchor=left
+menu_InventorySheetDetails/list/*/Number      shape  anchor=left
+menu_InventorySheetDetails/list/*/Status      shape  anchor=left
 
 # ---- faeries: the whole page as one block, centred, hanging from the top ------------------------------------------------------
 menu_FaerySheet/*                            shape  edge=top
@@ -323,6 +331,8 @@ menu_QuestLogSheetNEW/QuestMain              shape  anchor=left
 menu_QuestLogSheetNEW/QuestDetailsText       shape  anchor=left
 menu_QuestLogSheetNEW/QuestDesc              shape  anchor=left
 menu_QuestLogSheetNEW/btn_Activate           shape
+menu_QuestLogSheetNEW/AllQuests/content/Assigned/*   shape
+menu_QuestLogSheetNEW/AllQuests/content/Completed/*  shape
 
 # ---- map ------------------------------------------------------------------------------------------------------------------------
 menu_MapSheet/menu_title                     shape  anchor=left
@@ -469,6 +479,9 @@ menu_InventorySheetDetails/ItemInfo4         shape  anchor=left
 menu_InventorySheetDetails/ItemInfo5         shape  anchor=left
 menu_InventorySheetDetails/ItemReq           shape  anchor=left
 menu_InventorySheetDetails/avatarpane        shape
+menu_InventorySheetDetails/list/*/Host        shape  anchor=left
+menu_InventorySheetDetails/list/*/Number      shape  anchor=left
+menu_InventorySheetDetails/list/*/Status      shape  anchor=left
 
 # ---- faeries: the whole page as one block, centred, hanging from the top ------------------------------------------------------
 menu_FaerySheet/*                            shape  edge=top
@@ -494,6 +507,8 @@ menu_QuestLogSheetNEW/QuestMain              shape  anchor=left
 menu_QuestLogSheetNEW/QuestDetailsText       shape  anchor=left
 menu_QuestLogSheetNEW/QuestDesc              shape  anchor=left
 menu_QuestLogSheetNEW/btn_Activate           shape
+menu_QuestLogSheetNEW/AllQuests/content/Assigned/*   shape
+menu_QuestLogSheetNEW/AllQuests/content/Completed/*  shape
 
 # ---- map ------------------------------------------------------------------------------------------------------------------------
 menu_MapSheet/menu_title                     shape  anchor=left

@@ -356,6 +356,9 @@ public class DungeonHunter2 extends Activity implements SensorEventListener {
 
     public static native void nativeSetPortSetting(String key, int value);
 
+    // Port (PRG1): 1 while the player is out of play (no level, or a menu / pause page covers the HUD); the "!" bubble's mode 1 reads it.
+    public static native int nativeIsUiPageUp();
+
     public static native void nativeGetInfo(String str, String str2, String str3, String str4);
 
     public static native void nativeInit(int i);

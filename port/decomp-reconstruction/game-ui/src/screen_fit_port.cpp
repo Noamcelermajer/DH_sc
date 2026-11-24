@@ -1,6 +1,7 @@
 // Port additions (UI5, TRACK-B.md decision 15; not in the original): the per-movie Flash box table, the HUD scale and the
 // "a page covers the HUD" test declared in dh2/global/screen_size.hpp. Everything here is inert on the original's own screen
 // sizes and when the port setting "screenfit" is 0 (ScreenUsesAspectFit() false).
+#include <atomic>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -134,3 +135,22 @@ bool HudMoviePageUp() {
     }
     return false;
 }
+
+// PRG1 (alertbtn): read from the Java UI thread, written by the game thread.
+namespace {
+std::atomic<int> g_uiPageUp{1};
+}  // namespace
+
+void UpdateUiPageUpFlag() {
+    const bool out = ApplicationGetInstance().GetCurrentLevel() == nullptr || HudCoveredByPage();
+    g_uiPageUp.store(out ? 1 : 0, std::memory_order_relaxed);
+}
+
+int UiPageUp() { return g_uiPageUp.load(std::memory_order_relaxed); }
+
+#if defined(__ANDROID__)
+#include <jni.h>
+extern "C" JNIEXPORT jint JNICALL Java_com_gameloft_android_GAND_GloftD2SS_DungeonHunter2_nativeIsUiPageUp(JNIEnv*, jclass) {
+    return UiPageUp();
+}
+#endif

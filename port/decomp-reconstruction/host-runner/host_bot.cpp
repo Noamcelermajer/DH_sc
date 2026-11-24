@@ -54,6 +54,9 @@
 #include "pydata-accessors/w7_arrays_02.hpp"
 #include "pydata-accessors/w7_structs_5.hpp"
 #include "host_runner.hpp"
+#include "pydata-accessors/w7_structs_2.hpp"
+#include "vox-audio/vox/sound_manager.hpp"
+#include "vox-audio/vox/voxengine.hpp"
 #include "dh2/global/native_app_hud_level.hpp"
 #include "net-transport/connection_manager.hpp"
 #include "dh2/PlayerInfo.hpp"
@@ -979,6 +982,98 @@ void botCommand(int frame, const std::string& line) {
             std::fprintf(g_runnerOut, "[bot] char %s name='%s' pos=(%.0f,%.0f) d=%.0f hp=%d dead=%d en=%d vis=%d enemy=%d\n", typeid(*o).name(), o->m_name.c_str(), o->m_position.X, o->m_position.Y,
                          dist2d(h, o), o->GetHP(), o->IsDead() ? 1 : 0, o->m_enabled, o->m_visible, h->AI_IsEnemy(o) ? 1 : 0);
         }
+    } else if (cmd == "charsounds") {
+        // charsounds: for every character of the level, its CharSounds row and, per die/hurt/impact entry, the Arrays::Sounds index,
+        // the sound-pack data uid, the data file name and whether that file is in the data folder (missing file = silent sound).
+        Application& app = ApplicationGetInstance();
+        std::set<std::string> seen;
+        auto list = [&](const char* what, std::uint32_t n, const void* ids) {
+            for (std::uint32_t i = 0; i < n; ++i) {
+                const int sound = static_cast<const std::int32_t*>(ids)[i];
+                const auto& rec = reinterpret_cast<const Structs::SoundAutoGen*>(Arrays::Sounds::members)[sound];
+                const char* name = nullptr;
+                vox::FormatTypes format{};
+                int f16 = 0, bank = 0;
+                vox::VoxSourceLoadingFlags flags{};
+                if (VoxSoundManager::s_instance) VoxSoundManager::s_instance->sound_pack_.GetDataSourceInfo(rec.Id, name, format, f16, bank, flags);
+                const std::string file = std::string(RES_PATH) + "data/sounds/" + (name ? name : "?");
+                std::fprintf(g_runnerOut, "[bot]   %s sound=%d type=%d uid=%d file=%s present=%d\n", what, sound, rec.Type, rec.Id, name ? name : "-",
+                             name && std::filesystem::exists(file) ? 1 : 0);
+            }
+        };
+        std::string mode;
+        ss >> mode;
+        if (mode == "load") {  // charsounds load <sound index>...: LoadSound of the record's data uid, then whether vox reports it ready
+            int sound = 0;
+            while (ss >> sound) {
+                const auto& rec = reinterpret_cast<const Structs::SoundAutoGen*>(Arrays::Sounds::members)[sound];
+                VoxSoundManager* vm = VoxSoundManager::s_instance;
+                if (vm == nullptr) break;
+                if (vm->sounds_[rec.Id] == nullptr) vm->LoadSound(rec.Id);
+                const bool ready = vm->sounds_[rec.Id] != nullptr && vox::VoxEngine::IsReady(*vm->sounds_[rec.Id]) != 0;
+                std::fprintf(g_runnerOut, "[bot] soundload sound=%d uid=%d handle=%d ready=%d\n", sound, rec.Id, vm->sounds_[rec.Id] != nullptr ? 1 : 0, ready ? 1 : 0);
+            }
+        }
+        if (mode == "anims") {  // charsounds anims [filter]: the step sounds of every AnimTable entry whose name contains filter
+            std::string filter;
+            ss >> filter;
+            auto lower = [](std::string v) { for (char& c : v) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c))); return v; };
+            const auto* recs = static_cast<const Structs::AnimTpl*>(static_cast<const void*>(Arrays::AnimTable::members));
+            for (std::uint32_t a = 0; a < Arrays::AnimTable::size; ++a) {
+                const char* an = Arrays::AnimTable::m_memberNames.names ? Arrays::AnimTable::m_memberNames.names[a] : nullptr;
+                const std::string aname = an ? an : ("#" + std::to_string(a));
+                if (!filter.empty() && lower(aname).find(lower(filter)) == std::string::npos) continue;
+                const auto* steps = static_cast<const Structs::AnimStep*>(recs[a].Steps);
+                for (std::uint32_t i = 0; i < recs[a].StepsSize; ++i) {
+                    if (steps[i].Sound < 0) continue;
+                    std::fprintf(g_runnerOut, "[bot] anim %u '%s' step %u:\n", a, aname.c_str(), i);
+                    const std::int32_t one = steps[i].Sound;
+                    list("step", 1, &one);
+                }
+            }
+        }
+        if (mode == "table") {  // charsounds table: every CharSoundsTable row
+            const auto* rows = reinterpret_cast<const Structs::CharSounds*>(Arrays::CharSoundsTable::members);
+            for (std::uint32_t r = 0; r < Arrays::CharSoundsTable::size; ++r) {
+                std::fprintf(g_runnerOut, "[bot] charsoundrow %u flesh=%d metal=%d\n", r, rows[r].IsFlesh ? 1 : 0, rows[r].IsMetallic ? 1 : 0);
+                list("die", rows[r].DieSize, rows[r].Die);
+                list("hurt", rows[r].HurtSize, rows[r].Hurt);
+            }
+        }
+        for (Character* o : app.m_objectManager->m_characters) {
+            const std::string key = o->m_name + "#" + std::to_string(o->GetCharSoundsId());
+            if (!seen.insert(key).second) continue;
+            const Structs::CharSounds* s = o->GetCharSounds();
+            std::fprintf(g_runnerOut, "[bot] charsounds name='%s' row=%d flesh=%d metal=%d\n", o->m_name.c_str(), o->GetCharSoundsId(), s->IsFlesh ? 1 : 0, s->IsMetallic ? 1 : 0);
+            list("die", s->DieSize, s->Die);
+            list("hurt", s->HurtSize, s->Hurt);
+            list("impactFlesh", s->ImpactVsFleshSize, s->ImpactVsFlesh);
+            list("impactMetal", s->ImpactVsMetalSize, s->ImpactVsMetal);
+            // The character's own anim tables (CharAnimTable row): the step sounds of its attack, injured, died and spawn anims.
+            const Structs::CharAnim* t = o->GetCharAnimTable();
+            const auto* recs = static_cast<const Structs::AnimTpl*>(static_cast<const void*>(Arrays::AnimTable::members));
+            const std::pair<const char*, int> anims[] = {{"Attack", t->Attack}, {"Injured", t->Injured}, {"Died", t->Died}, {"KnockedBack", t->KnockedBack},
+                                                         {"Spawn", t->Spawn}, {"Idle", t->Idle}};
+            for (const auto& an : anims) {
+                if (an.second < 0 || static_cast<std::uint32_t>(an.second) >= Arrays::AnimTable::size) continue;
+                const char* nm = Arrays::AnimTable::m_memberNames.names ? Arrays::AnimTable::m_memberNames.names[an.second] : "?";
+                const auto* steps = static_cast<const Structs::AnimStep*>(recs[an.second].Steps);
+                int withSound = 0;
+                for (std::uint32_t i = 0; i < recs[an.second].StepsSize; ++i) {
+                    if (steps[i].Redir != 0) {
+                        std::fprintf(g_runnerOut, "[bot]   anim %s=%d '%s' step %u redirects to %d '%s'\n", an.first, an.second, nm, i, steps[i].Anim,
+                                     Arrays::AnimTable::m_memberNames.names && steps[i].Anim >= 0 ? Arrays::AnimTable::m_memberNames.names[steps[i].Anim] : "?");
+                        continue;
+                    }
+                    if (steps[i].Sound < 0) continue;
+                    ++withSound;
+                    const std::int32_t one = steps[i].Sound;
+                    std::fprintf(g_runnerOut, "[bot]   anim %s=%d '%s' step %u:\n", an.first, an.second, nm, i);
+                    list("    step", 1, &one);
+                }
+                if (withSound == 0) std::fprintf(g_runnerOut, "[bot]   anim %s=%d '%s' (%u steps) has no sound\n", an.first, an.second, nm, recs[an.second].StepsSize);
+            }
+        }
     } else if (cmd == "scriptdump") {  // Q3: command classes of script <id>
         int id = 0;
         ss >> id;
@@ -1297,6 +1392,9 @@ void botCommand(int frame, const std::string& line) {
         std::fprintf(g_runnerOut, "[bot] hero level=%d hp=%d/%d gold=%d items=%zu skills=%s cutscene=%d visible=%d node=%d\n", h->GetLevel(), h->GetHP(), h->GetTotalHP(), h->m_gold,
                      h->m_items.size(), skills, ScriptManager::s_inst.m_inCutScene ? 1 : 0, h->m_visible ? 1 : 0,
                      (h->m_visualObject && h->m_visualObject->m_node) ? ((h->m_visualObject->m_node->flags & glitch::scene::ESNF_VISIBLE) ? 1 : 0) : -1);
+        // PRG1: the level-driven properties (XP 33, Max_XP 34, Max_HP 38, Stat_Points 148, Skill_Points 157), to check the raised level cap.
+        std::fprintf(g_runnerOut, "[bot] hero xp=%d/%d maxhp=%d statpts=%d skillpts=%d savedlevel=%d\n", h->PROPS_GetInt(33, false), h->PROPS_GetInt(34, false),
+                     h->PROPS_GetInt(38, false), h->PROPS_GetInt(148, false), h->PROPS_GetInt(157, false), h->SG_GetPlayerLevel());
     } else if (cmd == "skillinfo" && h) {
         // UI owner: skillinfo <skill> <lvl>: the Lua OnSkillInfo path the skill details of the hero screen use (AI_SkillInfo), then the display properties of the skill row from s_temp.
         unsigned skill = 0, lvl = 0;

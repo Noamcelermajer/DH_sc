@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Import the original resources and the native libraries into port/android-trackb (nothing here is tracked by git).
+"""Import the original resources and the native libraries into port/android-trackb (untracked, except assets/dh2port/).
 
 usage: py -3 tools/trackb/java/import_resources.py [--apk PATH] [--so build/own-arm64/libdh2.so] [--jadx DIR] [--no-storm-stub]
 
@@ -8,7 +8,7 @@ Dungeon-Hunter-2-HD-v1-0-2.apk at build time:
   * res/        decoded to editable source XML/PNG with jadx (the APK's res/ is compiled binary XML); res/values/public.xml
                 carries the original numeric ids, which the Gameloft code uses as literals
   * assets/     copied unchanged (the original has only data.save, the payload of a repack-injected component that is
-                deliberately not reconstructed, so it is skipped and assets/ stays empty)
+                deliberately not reconstructed, so it is skipped); assets/dh2port/ is the port's own tracked UI files and is kept
   * resources/  i18n/*.properties and plasma.properties (read through Class.getResourceAsStream at run time)
 and the native side:
   * jniLibs/arm64-v8a/libDungeonHunter2.so  = our rebuilt libdh2.so (stripped), under the name System.loadLibrary("DungeonHunter2") expects
@@ -99,9 +99,21 @@ def symbolize_attrs(res_dir):
                     open(fp, "w", encoding="utf-8").write(t2)
 
 
-def clean(path):
-    if os.path.isdir(path):
+def clean(path, keep=()):
+    """Remove path, or only its entries other than the names in keep (tracked port files that live beside the imports)."""
+    if not os.path.isdir(path):
+        return
+    if not keep:
         shutil.rmtree(path)
+        return
+    for n in os.listdir(path):
+        if n in keep:
+            continue
+        p = os.path.join(path, n)
+        if os.path.isdir(p) and not os.path.islink(p):
+            shutil.rmtree(p)
+        else:
+            os.remove(p)
 
 
 def main():
@@ -115,7 +127,9 @@ def main():
         sys.exit("original APK not found: " + a.apk)
 
     # raw files: assets/, i18n/, plasma.properties
-    clean(os.path.join(PROJ, "assets"))
+    # assets/dh2port/ is tracked port source (wide-screen menu layouts, HUD size medallions; DataSetup copies it to
+    # files/data/port/), not an import: wiping it made APKs built after an import fall back to the plain stretch on wide phones.
+    clean(os.path.join(PROJ, "assets"), keep=("dh2port",))
     clean(os.path.join(PROJ, "resources"))
     with zipfile.ZipFile(a.apk) as z:
         for n in z.namelist():

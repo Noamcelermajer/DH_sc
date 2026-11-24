@@ -396,6 +396,7 @@ void MenuManager::Draw(bool /*hudOnly*/) {
 // level is not in game view), the InfoHUDManager and HUDControls updates in game view, the FlashAnimManager update, and the
 // Update() of every visible menu.
 void MenuManager::Update(bool hudOnly) {
+    UpdateUiPageUpFlag();  // PRG1 (port, alertbtn): the "!" bubble's in-play / out-of-play state
     if (leader) {
         fillLeaderBoard();
     }

@@ -50,6 +50,29 @@ void NativeInvitePlayer(const gameswf::fn_call& call);
 // 0x44de4c NativeGetParsedString
 void NativeGetParsedString(const gameswf::fn_call& call);
 
+// PORT FIX (not in the binary). The arrow handlers of the options page in data/menus/dqshared.swf (the movie every screen
+// width other than 800 and 854 loads) skip the values 4 and 5 for every selector row, not only for "Language": right from 3
+// sends 6, left from 4, 5 or 6 sends 3. The original undoes the skip for "Language" only (ResolveLanguageOption), so the
+// Auto-Transmute row went None, White, Green, Blue and then 6, shown as the string ValueStr + 6 ("French") and transmuting
+// every item, never reaching "Purple Items and Lower" (4). For the other selector rows (option Type 2) NativeSetOptions
+// passes the requested value through this: the skipped step is undone from the stored value and the result is clamped to
+// 0..max (getOptionMax). Single steps, the sliders and "Language" are not affected.
+inline int UndoSelectorSkip(int requested, int previous, int max) {
+    int value = requested;
+    if (requested == 6 && previous == 3) {
+        value = 4;
+    } else if (requested == 3 && (previous == 5 || previous == 6)) {
+        value = previous - 1;
+    }
+    if (max >= 0 && value > max) {
+        value = max;
+    }
+    if (value < 0) {
+        value = 0;
+    }
+    return value;
+}
+
 // Language value stored by NativeSetOptions for the 'Language' key (the arithmetic of 0x449e70, without the
 // gameswf argument reads). requested is the value from the script, koreanBuild is isKOREAN_BUILD, langKor is the
 // Korean-build slot lang_kor and langCurr is lang_curr (-1 when unset). The result is stored in lang_curr and passed

@@ -14,6 +14,16 @@
 int g_dh2ScreenFitMode = 1;
 int g_dh2HudScalePercent = 0;
 int g_dh2EnemyBarFollow = 1;
+// Gameplay camera (CAM1, game/include/dh2/global/camera_port.hpp); the defaults are the original's camera.
+int g_dh2CamFovPercent = 100;
+int g_dh2CamDistPercent = 100;
+int g_dh2CamFollowPercent = 100;
+int g_dh2CamLeadPercent = 0;
+// Progression and HUD extras (PRG1, game/include/dh2/global/progress_port.hpp); the defaults are the original's behaviour.
+int g_dh2LevelCap = 0;        // 0 = the original difficulty caps (50 / 80 / 100); 101..999 = raised cap
+int g_dh2AlertButtonMode = 0; // the port's "!" bubble: 0 always shown, 1 only while a page or pause menu is up, 2 hidden until touched
+int g_dh2HudKeepLayout = 1;   // 1 = the customised HUD layout is kept in dh2_port.cfg across restarts and a drag is refused only when the
+                              // element centre would leave the stage; 0 = the original (layout kept in memory only, no check)
 
 namespace dh2port {
 namespace {
@@ -25,12 +35,19 @@ struct Entry {
     int min, max;
 };
 
-int g_dynamicValues[64];  // applied values of keys that are not globals (per-element HUD sizes "hudelem.<style>.<index>")
+int g_dynamicValues[192];  // applied values of keys that are not globals (per-element HUD sizes "hudelem.<style>.<index>")
 std::vector<Entry>& Entries() {
     static std::vector<Entry> e = {
         {"screenfit", &g_dh2ScreenFitMode, 1, 0, 1},
         {"hudscale", &g_dh2HudScalePercent, 0, 0, 200},
         {"enemybar", &g_dh2EnemyBarFollow, 1, 0, 1},
+        {"camfov", &g_dh2CamFovPercent, 100, 50, 200},
+        {"camdist", &g_dh2CamDistPercent, 100, 50, 300},
+        {"camfollow", &g_dh2CamFollowPercent, 100, 50, 135},
+        {"camlead", &g_dh2CamLeadPercent, 0, 0, 100},
+        {"levelcap", &g_dh2LevelCap, 0, 0, 999},
+        {"alertbtn", &g_dh2AlertButtonMode, 0, 0, 2},
+        {"hudkeep", &g_dh2HudKeepLayout, 1, 0, 1},
     };
     return e;
 }
@@ -73,7 +90,9 @@ Entry* FindOrCreate(const char* key, int fallback) {
     DynamicKeys().emplace_back(key);
     int* slot = &g_dynamicValues[DynamicKeys().size() - 1];
     *slot = fallback;
-    Entries().push_back(Entry{DynamicKeys().back().c_str(), slot, fallback, 0, 400});
+    // "hudpos.<style>.<index>.<x|y>" (PRG1: the saved HUD layout, stage pixels) may be negative or past 400.
+    const bool position = std::strncmp(key, "hudpos.", 7) == 0;
+    Entries().push_back(Entry{DynamicKeys().back().c_str(), slot, fallback, position ? -9999 : 0, position ? 9999 : 400});
     return &Entries().back();
 }
 

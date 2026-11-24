@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 
+#include "vox-audio/vox/priority_bank.hpp"
 #include "vox-audio/vox/sound_pack_xml.hpp"
 
 namespace {
@@ -28,8 +29,9 @@ const char* kPack =
     "  </sounds>\n"
     "  <groups size=\"1\"><group uid=\"0\" pos3d=\"r\" bus=\"main\" name=\"Sfx\"/></groups>\n"
     "  <groupmasks><groupmask label=\"Sfx\" mask=\"7\"/></groupmasks>\n"
-    "  <banks size=\"1\"><bank uid=\"0\" maxplaybacks=\"3\" threshold=\"4\" name=\"Ambient\"\n"
-    "        behaviour=\"steal lowest priority\"/></banks>\n"
+    "  <banks size=\"2\"><bank uid=\"0\" maxplaybacks=\"3\" threshold=\"4\" name=\"Ambient\"\n"
+    "        behaviour=\"steal lowest priority\"/>\n"
+    "    <bank uid=\"1\" maxplaybacks=\"3\" name=\"NPC\" behaviour=\"do nothing\"/></banks>\n"
     "  <events size=\"1\">\n"
     "    <event uid=\"0\" label=\"Attack\" type=\"random\" value=\"0, 1\" params=\"1;50\"\n"
     "           customparam=\"x;y\" customparamqty=\"2\"/>\n"
@@ -91,6 +93,15 @@ int main() {
         vox::BankInfoXML bank{};
         CHECK(pack.GetBankInfo(0, bank) == 1);
         CHECK(bank.behavior == 1 && bank.field_08 == 3 && bank.field_0c == 4);
+        // A bank without a threshold keeps the binary's default minimum (0x80000001) and "do nothing" keeps
+        // behaviour 3 (the vector<BankXMLDef>(uint) fill, 0x88c760): the game's NPC bank, whose sounds have
+        // priority -1, must accept them.
+        vox::BankInfoXML npc{};
+        CHECK(pack.GetBankInfo(1, npc) == 1);
+        CHECK(npc.behavior == 3 && npc.field_08 == 3 && npc.field_0c == -0x7fffffff);
+        vox::PriorityBankManager banks(2);
+        CHECK(banks.SetPriorityBank(1, npc.field_0c, npc.field_08, npc.behavior));
+        CHECK(banks.CanAddEmitter(1, -1));
 
         // Events: uid, sound list, mode, the two parameters and the custom values.
         CHECK(pack.GetEventUid("Attack") == 0);

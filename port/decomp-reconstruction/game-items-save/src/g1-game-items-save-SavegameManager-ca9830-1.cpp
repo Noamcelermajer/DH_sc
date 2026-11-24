@@ -170,6 +170,21 @@ void SavegameManager::loadSettings(bool languageOnly) {
     IStreamBase* stream = m_settings->m_stream;  // Savegame +0x1c
     if (stream == nullptr) return;
     __loadOptions(stream, this);
+    // PORT FIX (not in the binary): a selector row other than Language saved past its range (Auto-Transmute stored as 6 by
+    // dqshared.swf's arrow handler, see UndoSelectorSkip in dh2/global/native_player_info_options.hpp) is brought back to its
+    // last value, so existing settings files stop showing "French" and transmuting every item.
+    for (auto& option : m_options) {
+        const Structs::GameOption* definition = option.second.m_definition;
+        if (definition == nullptr || definition->Type != 2 || option.first == "Language") {
+            continue;
+        }
+        const int max = definition->Max - 1;  // getOptionMax for Type 2
+        if (option.second.m_value > max) {
+            option.second.m_value = max;
+        } else if (option.second.m_value < 0) {
+            option.second.m_value = 0;
+        }
+    }
     __loadTutorials(stream, this);
     if (getLanguage() == -1) {
         setLanguage(0);

@@ -121,6 +121,9 @@ menu_InventorySheetDetails/ItemInfo4         shape  anchor=left
 menu_InventorySheetDetails/ItemInfo5         shape  anchor=left
 menu_InventorySheetDetails/ItemReq           shape  anchor=left
 menu_InventorySheetDetails/avatarpane        shape
+menu_InventorySheetDetails/list/*/Host        shape  anchor=left
+menu_InventorySheetDetails/list/*/Number      shape  anchor=left
+menu_InventorySheetDetails/list/*/Status      shape  anchor=left
 
 # ---- faeries: the whole page as one block, centred, hanging from the top ------------------------------------------------------
 menu_FaerySheet/*                            shape  edge=top
@@ -146,6 +149,8 @@ menu_QuestLogSheetNEW/QuestMain              shape  anchor=left
 menu_QuestLogSheetNEW/QuestDetailsText       shape  anchor=left
 menu_QuestLogSheetNEW/QuestDesc              shape  anchor=left
 menu_QuestLogSheetNEW/btn_Activate           shape
+menu_QuestLogSheetNEW/AllQuests/content/Assigned/*   shape
+menu_QuestLogSheetNEW/AllQuests/content/Completed/*  shape
 
 # ---- map ------------------------------------------------------------------------------------------------------------------------
 menu_MapSheet/menu_title                     shape  anchor=left

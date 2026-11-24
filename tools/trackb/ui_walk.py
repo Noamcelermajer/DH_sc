@@ -55,13 +55,15 @@ HUD = {
     '2184x1968': {'portrait': (300, 210), 'pause': (205, 490)},
     '2400x1080': {'portrait': (210, 160), 'pause': (142, 345)},
     '2160x1080': {'portrait': (210, 160), 'pause': (142, 345)},
+    '2220x1080': {'portrait': (210, 160), 'pause': (142, 345)},
+    '2076x1080': {'portrait': (210, 160), 'pause': (142, 345)},
 }
 
 BODY = os.path.join(ROOT, 'tools', 'trackb', 'ui_layouts.body.txt')
 ASSET = os.path.join(ROOT, 'port', 'android-trackb', 'app', 'src', 'main', 'assets', 'dh2port', 'ui_layouts.txt')
-# Ratio buckets (surface width / height). 16:9 (1.70-1.95) has no section: the original stretch is already right there.
+# Ratio buckets (surface width / height). 16:9 (1.70-1.85) has no section: the original stretch is already right there.
 SECTIONS = [
-    ('[ratio 1.95-2.50]', '# 18:9, 19.5:9, 20:9, 21:9 phones (Galaxy Z Fold cover screen 2520x1080 = 2.33)'),
+    ('[ratio 1.85-2.50]', '# 18:9, 18.5:9, 19.5:9, 20:9, 21:9 phones, also with a navigation bar left on screen (Galaxy Z Fold cover screen 2520x1080 = 2.33)'),
     ('[ratio 1.00-1.45 scale=1.25]', '# Galaxy Z Fold inner screen (2184x1968 = 1.11), 4:3 tablets; "grow" items 25% bigger'),
     ('[ratio 1.45-1.70 scale=1.1]', '# 16:10 and 3:2 tablets; "grow" items 10% bigger'),
 ]

@@ -209,7 +209,7 @@ the one link group. Game code may include `lua.h`, `Box2D.h` and `gameswf/gamesw
     (`edge=`, e.g. a column pinned to the right edge) or a sibling's bound (`pivot=`); `cover` scales the other axis up instead
     (pictures; `amount=0.5` = half cropped, half stretched, used for the splash art); `grow` lets a clip take the section's
     `scale=` (the Fold inner screen section has 1.25: main menu, start game, loading, pause and splash buttons get bigger, dense
-    pages keep the 16:9 size). Sections: 1.95-2.50 (18:9 to 21:9 phones, Fold cover 2520x1080), 1.00-1.45 (Fold inner 2184x1968,
+    pages keep the 16:9 size). Sections: 1.85-2.50 (18:9 to 21:9 phones, also with a navigation bar left on screen, Fold cover 2520x1080), 1.00-1.45 (Fold inner 2184x1968,
     4:3 tablets), 1.45-1.70 (16:10, 3:2). 16:9 and any unlisted ratio get the pure original stretch. Every rule works from the
     clip's timeline matrix each frame (animations stay right) and runs again before the hit test (`MenuPageLayoutForCursor`), so
     taps land on what is drawn. A matrix that keeps the scale written by the rule and changes only the translation is a move by
@@ -218,6 +218,22 @@ the one link group. Game code may include `lua.h`, `Box2D.h` and `gameswf/gamesw
     icon shrank away; the user's Fold report of 2026-10-18). (c) Regression walk: `py -3 tools/trackb/ui_walk.py run` drives the host runner through 19 shots
     (splash to the HUD customise page, a skill dropped on no slot, menu taps by clip name with the runner's `tapclip <path>`) at 1920x1080, 2520x1080 and
     2184x1968, and `ui_walk.py sheet` writes one contact sheet per size (16:9 reference next to each page).
+    CAM1 (2026-11-25, port addition, defaults = the binary): player camera settings `camfov` (visible height %, 50..200), `camdist`
+    (distance %, 50..300), `camfollow` (damping ratio %, 50..135, ratio kept <= 0.95) and `camlead` (look-ahead along the player's
+    smoothed x/y velocity, 0 = off, 0..100) in the port settings and the "!" dialog; applied by `CameraLevel::Update` to the level camera
+    only (not the map cameras, `m_useObjectPosition`), inert at the defaults (`game/include/dh2/global/camera_port.hpp`,
+    test `game-world/tests/camera_port_test.cpp`, which also checks that 2220x1080 keeps the 854x480 vertical view: Hor+).
+    PRG1 (2026-11-25, port additions, port settings + "!" dialog): (a) `levelcap` (0 = the binary's MaxLevel* caps 50/80/100 by
+    unlocked difficulty, default; 101..999 = that cap on every difficulty) through `MaxLevelForDifficulty` (Character_Stats, used by
+    LevelUp and _GiveXP). Max_XP (100 x Level), Stat_Points, Skill_Points, HP and the ratings are linear class formulas of Level, so they
+    extrapolate; no per-level table is indexed by the player level; the save field is int32 (`game/include/dh2/global/progress_port.hpp`;
+    host runner: `cheat LevelUp` x160 with `levelcap=150` stops at 150, Max_XP 15000, reloads at 150). (b) `hudkeep` (default 1): the
+    binary has no overlap or bounds check on the HUD customise page and keeps the layout in memory only; the port writes the saved
+    layout to `hudpos.<HUDStyle>.<index>.<x|y>` (+ `hudpos.<HUDStyle>.saved`) and reads it back in `initCachedChars`, and undoes a
+    drag step that would put an element's centre off the stage; 0 = the binary. (c) `alertbtn`: the Java "!" bubble always shown (0,
+    default), only out of play (1: no level, or `HudCoveredByPage()`, published by `MenuManager::Update` and read through
+    `DungeonHunter2.nativeIsUiPageUp`), or invisible until touched (2: a touch shows it for 4 s, a tap on the shown bubble opens the
+    dialog). Test `game-character/tests/progress_port_test.cpp`.
 
 ## Worker protocol (one batch = one owner class, up to about 20 functions)
 

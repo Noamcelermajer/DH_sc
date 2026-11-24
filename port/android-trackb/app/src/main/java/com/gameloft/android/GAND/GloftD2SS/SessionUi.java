@@ -89,13 +89,14 @@ public final class SessionUi {
         bg.setColor(0xCC555555);
         bg.setStroke(dp(a, 2), 0xFFFFFFFF);
         b.setBackground(bg);
-        b.setAlpha(0.4f);
+        b.setAlpha(idleAlpha());
         b.setContentDescription("Report an issue");
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(size, size, Gravity.TOP | Gravity.LEFT);
         android.content.SharedPreferences sp = a.getSharedPreferences("dh2bubble", 0);
         lp.leftMargin = sp.getInt("x", dp(a, 4));
         lp.topMargin = sp.getInt("y", dp(a, 120));
         root.addView(b, lp);
+        pollBubble(b);
         final float[] st = new float[5];   // downRawX, downRawY, startLeft, startTop, moved
         b.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View v, MotionEvent e) {
@@ -106,12 +107,17 @@ public final class SessionUi {
                         st[1] = e.getRawY();
                         st[2] = p.leftMargin;
                         st[3] = p.topMargin;
-                        st[4] = 0;
+                        // Port (PRG1, alertbtn 2): a touch on the hidden bubble only shows it; a tap on the shown bubble opens the dialog.
+                        st[4] = (bubbleMode() == 2 && android.os.SystemClock.uptimeMillis() >= revealedUntil) ? 2 : 0;
+                        revealedUntil = android.os.SystemClock.uptimeMillis() + REVEAL_MS;
                         v.setAlpha(0.9f);
                         return true;
                     case MotionEvent.ACTION_MOVE: {
                         float dx = e.getRawX() - st[0];
                         float dy = e.getRawY() - st[1];
+                        if (st[4] == 2) {
+                            return true;
+                        }
                         if (st[4] == 0 && Math.abs(dx) + Math.abs(dy) > dp(a, 8)) {
                             st[4] = 1;
                         }
@@ -123,7 +129,11 @@ public final class SessionUi {
                         return true;
                     }
                     case MotionEvent.ACTION_UP:
-                        v.setAlpha(0.4f);
+                        revealedUntil = android.os.SystemClock.uptimeMillis() + REVEAL_MS;
+                        v.setAlpha(idleAlpha());
+                        if (st[4] == 2) {
+                            return true;
+                        }
                         if (st[4] == 1) {
                             a.getSharedPreferences("dh2bubble", 0).edit().putInt("x", p.leftMargin).putInt("y", p.topMargin).apply();
                         } else {
@@ -131,11 +141,62 @@ public final class SessionUi {
                         }
                         return true;
                     case MotionEvent.ACTION_CANCEL:
-                        v.setAlpha(0.4f);
+                        v.setAlpha(idleAlpha());
                         return true;
                     default:
                         return true;
                 }
+            }
+        });
+    }
+
+    /** Port (PRG1): port setting "alertbtn": 0 always shown (default), 1 only while out of play, 2 hidden until touched. */
+    private static final long REVEAL_MS = 4000;
+    private static long revealedUntil;
+
+    private static int bubbleMode() {
+        try {
+            int m = DungeonHunter2.nativeGetPortSetting("alertbtn");
+            return m >= 0 && m <= 2 ? m : 0;
+        } catch (Throwable t) {
+            return 0;   // older native lib: the original always-shown bubble
+        }
+    }
+
+    private static float idleAlpha() {
+        if (bubbleMode() == 2 && android.os.SystemClock.uptimeMillis() >= revealedUntil) {
+            return 0f;   // invisible, still touchable
+        }
+        return 0.4f;
+    }
+
+    private static boolean outOfPlay() {
+        try {
+            return DungeonHunter2.nativeIsUiPageUp() != 0;
+        } catch (Throwable t) {
+            return true;
+        }
+    }
+
+    /** Applies the bubble mode about three times a second (the mode and the game's in-play state change from other threads). */
+    private static void pollBubble(final View b) {
+        final Handler h = new Handler(Looper.getMainLooper());
+        h.post(new Runnable() {
+            public void run() {
+                int mode = bubbleMode();
+                boolean show = mode != 1 || outOfPlay() || dialogOpen;
+                if (show != (b.getVisibility() == View.VISIBLE)) {
+                    b.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+                if (!b.isPressed()) {
+                    float alpha = idleAlpha();
+                    if (b.getAlpha() != alpha && b.getAlpha() != 0.9f) {
+                        b.setAlpha(alpha);
+                    } else if (b.getAlpha() == 0.9f && android.os.SystemClock.uptimeMillis() >= revealedUntil) {
+                        b.setAlpha(alpha);
+                    }
+                }
+                h.postDelayed(this, 300);
             }
         });
     }
@@ -224,14 +285,63 @@ public final class SessionUi {
             android.widget.HorizontalScrollView scroll = new android.widget.HorizontalScrollView(a);
             scroll.addView(sizes);
             row.addView(scroll);
+            // Port (CAM1): gameplay camera (core-platform/port_settings.hpp keys camfov / camdist / camfollow / camlead).
+            addChoiceRow(a, row, "Camera view height", "camfov", new int[] {100, 110, 120, 135, 150},
+                    new String[] {"Original", "110%", "120%", "135%", "150%"});
+            addChoiceRow(a, row, "Camera distance", "camdist", new int[] {100, 115, 130, 150, 175},
+                    new String[] {"Original", "115%", "130%", "150%", "175%"});
+            addChoiceRow(a, row, "Camera follow", "camfollow", new int[] {100, 120, 135},
+                    new String[] {"Original", "Tighter", "Tightest"});
+            addChoiceRow(a, row, "Camera look-ahead (movement direction)", "camlead", new int[] {0, 25, 50, 100},
+                    new String[] {"Off", "Low", "Medium", "High"});
+            // Port (PRG1): level cap, HUD layout keeping, this "!" bubble (keys levelcap / hudkeep / alertbtn).
+            addChoiceRow(a, row, "Level cap", "levelcap", new int[] {0, 200, 500, 999},
+                    new String[] {"Original (50/80/100)", "200", "500", "999"});
+            addChoiceRow(a, row, "Custom HUD layout", "hudkeep", new int[] {1, 0},
+                    new String[] {"Keep across restarts, free placement", "Original"});
+            addChoiceRow(a, row, "This \"!\" button", "alertbtn", new int[] {0, 1, 2},
+                    new String[] {"Always", "Only in menus / paused", "Hidden until touched"});
             TextView note = new TextView(a);
-            note.setText("Both apply at once. Off = the original stretch everywhere. HUD size only matters with the tailored layout; Auto is 125% on a square screen.");
+            note.setText("All apply at once. Off = the original stretch everywhere. HUD size only matters with the tailored layout; Auto is 125% on a square screen.");
             note.setTextSize(12f);
             row.addView(note);
         } catch (Throwable t) {
             // older native lib without the settings natives: the dialog still works for marks and logs
         }
         return row;
+    }
+
+    /** Port (CAM1): one labelled row of radio buttons bound to an int port setting. */
+    private static void addChoiceRow(Activity a, android.widget.LinearLayout parent, String title, final String key,
+                                     final int[] values, String[] names) {
+        TextView label = new TextView(a);
+        label.setText(title);
+        label.setPadding(0, dp(a, 8), 0, 0);
+        parent.addView(label);
+        android.widget.RadioGroup group = new android.widget.RadioGroup(a);
+        group.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        int current = DungeonHunter2.nativeGetPortSetting(key);
+        for (int i = 0; i < values.length; i++) {
+            android.widget.RadioButton rb = new android.widget.RadioButton(a);
+            rb.setText(names[i]);
+            rb.setId(View.generateViewId());
+            rb.setTag(values[i]);
+            group.addView(rb);
+            if (values[i] == current) {
+                rb.setChecked(true);
+            }
+        }
+        group.setOnCheckedChangeListener(new android.widget.RadioGroup.OnCheckedChangeListener() {
+            public void onCheckedChanged(android.widget.RadioGroup g, int id) {
+                View v = g.findViewById(id);
+                if (v != null && v.getTag() instanceof Integer) {
+                    DungeonHunter2.nativeSetPortSetting(key, (Integer) v.getTag());
+                }
+            }
+        });
+        android.widget.HorizontalScrollView scroll = new android.widget.HorizontalScrollView(a);
+        scroll.addView(group);
+        parent.addView(scroll);
     }
 
     private static void buildDialog(final Activity a, final Bitmap shot) {
