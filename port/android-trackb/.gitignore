@@ -5,7 +5,10 @@ build/
 local.properties
 **/__pycache__/
 app/src/main/res/
-app/src/main/assets/
+app/src/main/assets/*
+# The port's own UI files (wide-screen menu layouts, HUD size medallions) are source, not APK resources: keep them tracked,
+# so a copy of the working tree made with a plain `git add` does not silently leave them out.
+!app/src/main/assets/dh2port/
 app/src/main/resources/
 app/src/main/jniLibs/
 gradle/wrapper/gradle-wrapper.jar
