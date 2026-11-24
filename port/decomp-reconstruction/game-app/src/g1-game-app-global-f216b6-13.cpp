@@ -306,6 +306,10 @@ void NativeSetOptions(const gameswf::fn_call& call) {
         lang_curr = value;
     }
     SavegameManager* savegames = Singleton<Application>::s_inst.m_savegameManager;
+    if (!isLanguage && savegames->getOptionType(key) == 2) {
+        // PORT FIX: the selector rows other than Language undo dqshared.swf's skip of the values 4 and 5 (see UndoSelectorSkip).
+        value = UndoSelectorSkip(value, savegames->getOption(key), savegames->getOptionMax(key));
+    }
     savegames->setOption(key, value);
     UpdateSavedValues();
     if (std::strcmp(key, "VolumeFX") == 0) {

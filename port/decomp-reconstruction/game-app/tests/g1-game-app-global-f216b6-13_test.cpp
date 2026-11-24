@@ -71,6 +71,19 @@ int main() {
     CheckFormat(8, "%m/%d     %H:%M", "language 8 uses the default month/day");
     CheckFormat(-1, "%m/%d     %H:%M", "language -1 uses the default month/day");
 
+    // PORT FIX UndoSelectorSkip: dqshared.swf sends 6 after 3 and 3 before 4/5/6 for every selector; Auto-Transmute has 0..4.
+    Check(UndoSelectorSkip(1, 0, 4) == 1, "single step right is kept");
+    Check(UndoSelectorSkip(3, 2, 4) == 3, "step right to 3 is kept");
+    Check(UndoSelectorSkip(6, 3, 4) == 4, "skip 3 -> 6 becomes 4 (Purple Items and Lower)");
+    Check(UndoSelectorSkip(3, 4, 4) == 3, "step left from 4 is kept");
+    Check(UndoSelectorSkip(3, 6, 4) == 4, "left from a stored 6 is clamped to the row's max");
+    Check(UndoSelectorSkip(3, 5, 7) == 4, "skip 5 -> 3 becomes 4");
+    Check(UndoSelectorSkip(3, 6, 7) == 5, "skip 6 -> 3 becomes 5");
+    Check(UndoSelectorSkip(6, 5, 7) == 6, "single step 5 -> 6 is kept");
+    Check(UndoSelectorSkip(9, 8, 4) == 4, "values past max are clamped");
+    Check(UndoSelectorSkip(-1, 0, 4) == 0, "negative values are clamped to 0");
+    Check(UndoSelectorSkip(0, 1, 1) == 0, "two-value selector unaffected");
+
     if (g_failures == 0) {
         std::printf("g1-game-app-global-f216b6-13 tests: all checks passed\n");
         return 0;
