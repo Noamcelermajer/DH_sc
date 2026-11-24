@@ -209,7 +209,7 @@ the one link group. Game code may include `lua.h`, `Box2D.h` and `gameswf/gamesw
     (`edge=`, e.g. a column pinned to the right edge) or a sibling's bound (`pivot=`); `cover` scales the other axis up instead
     (pictures; `amount=0.5` = half cropped, half stretched, used for the splash art); `grow` lets a clip take the section's
     `scale=` (the Fold inner screen section has 1.25: main menu, start game, loading, pause and splash buttons get bigger, dense
-    pages keep the 16:9 size). Sections: 1.95-2.50 (18:9 to 21:9 phones, Fold cover 2520x1080), 1.00-1.45 (Fold inner 2184x1968,
+    pages keep the 16:9 size). Sections: 1.85-2.50 (18:9 to 21:9 phones, also with a navigation bar left on screen, Fold cover 2520x1080), 1.00-1.45 (Fold inner 2184x1968,
     4:3 tablets), 1.45-1.70 (16:10, 3:2). 16:9 and any unlisted ratio get the pure original stretch. Every rule works from the
     clip's timeline matrix each frame (animations stay right) and runs again before the hit test (`MenuPageLayoutForCursor`), so
     taps land on what is drawn. A matrix that keeps the scale written by the rule and changes only the translation is a move by
